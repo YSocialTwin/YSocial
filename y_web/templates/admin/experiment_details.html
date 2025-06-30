@@ -81,6 +81,49 @@
                         </div>
                     </div>
 
+                    {% if experiment.platform_type == "forum" %}
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">RSS Feeds Management</h3>
+                        
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">RSS Status</span>
+                                    <span class="right">
+                                        <span id="rss-status">Check RSS status...</span>
+                                    </span>
+                                </div>
+                                
+                                <div class="box-line">
+                                    <span class="left">Upload additional RSS feeds</span>
+                                    <span class="right">
+                                        <form action="/admin/upload_rss_feeds/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST" style="display: flex; align-items: center; gap: 10px;">
+                                            <input type="file" name="rss_feeds" accept=".json" style="font-size: 12px; width: 200px; padding: 4px;">
+                                            <button type="submit" class="button is-solid primary-button" style="padding: 4px 12px; font-size: 12px;">Upload</button>
+                                        </form>
+                                    </span>
+                                </div>
+                                
+                                <div class="box-line" id="rss-download-section">
+                                    <span class="left">Download Current RSS</span>
+                                    <span class="right">
+                                        <a href="/admin/download_rss_feeds/{{ experiment.idexp }}" class="link-tooltip" title="Download RSS feeds file">
+                                            <i class="mdi mdi-download" style="font-size: 24px;"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                
+                                <div class="box-line" id="rss-feeds-list" style="display: none;">
+                                    <span class="left">Current RSS Feeds</span>
+                                    <span class="right">
+                                        <div id="feeds-domains" style="font-size: 11px; color: #666; max-height: 100px; overflow-y: auto;"></div>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     {% if len(users) > 0 %}
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
@@ -233,5 +276,61 @@
     </div>
 </div>
 
+<script>
+    // Check RSS status for forum experiments
+    {% if experiment.platform_type == "forum" %}
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if RSS file exists by trying to access the download URL
+        fetch('/admin/download_rss_feeds/{{ experiment.idexp }}', {
+            method: 'HEAD'
+        }).then(function(response) {
+            const statusSpan = document.getElementById('rss-status');
+            const downloadSection = document.getElementById('rss-download-section');
+            const feedsList = document.getElementById('rss-feeds-list');
+            
+            if (response.ok) {
+                statusSpan.innerHTML = '<span style="color: green;">✓ RSS feeds configured</span>';
+                downloadSection.style.display = 'flex';
+                
+                // Load and display RSS feeds domains
+                fetch('/admin/download_rss_feeds/{{ experiment.idexp }}?format=json')
+                    .then(response => response.json())
+                    .then(data => {
+                        const feedsDomains = document.getElementById('feeds-domains');
+                        const domains = data.map(feed => {
+                            try {
+                                const url = new URL(feed.feed_url || feed.url || '');
+                                return url.hostname;
+                            } catch (e) {
+                                return feed.name || 'Unknown';
+                            }
+                        }).filter((domain, index, self) => self.indexOf(domain) === index); // Remove duplicates
+                        
+                        if (domains.length > 0) {
+                            feedsDomains.innerHTML = domains.join('<br>');
+                            feedsList.style.display = 'flex';
+                            // Update status to show count
+                            statusSpan.innerHTML = `<span style="color: green;">✓ ${data.length} RSS feeds configured</span>`;
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('Could not load RSS feeds details:', error);
+                    });
+            } else {
+                statusSpan.innerHTML = '<span style="color: orange;">○ No RSS feeds</span>';
+                downloadSection.style.display = 'none';
+                feedsList.style.display = 'none';
+            }
+        }).catch(function() {
+            const statusSpan = document.getElementById('rss-status');
+            const downloadSection = document.getElementById('rss-download-section');
+            const feedsList = document.getElementById('rss-feeds-list');
+            statusSpan.innerHTML = '<span style="color: orange;">○ No RSS feeds</span>';
+            downloadSection.style.display = 'none';
+            feedsList.style.display = 'none';
+        });
+    });
+    {% endif %}
+</script>
 
 {% include "admin/footer.html" %}

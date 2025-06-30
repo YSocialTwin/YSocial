@@ -448,6 +448,16 @@ def create_experiment():
     host = request.form.get("host")
     port = int(request.form.get("port"))
     perspective_api = request.form.get("perspective_api")
+    
+    # Handle RSS feeds file upload for forum experiments
+    rss_feeds_file = None
+    if platform_type == "forum" and "rss_feeds" in request.files:
+        rss_feeds_file = request.files["rss_feeds"]
+        if rss_feeds_file and rss_feeds_file.filename != "":
+            # Validate it's a JSON file
+            if not rss_feeds_file.filename.lower().endswith('.json'):
+                flash("RSS feeds file must be a JSON file")
+                return redirect(request.referrer)
 
     uid = uuid.uuid4()
     pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
@@ -478,6 +488,26 @@ def create_experiment():
         f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json", "w"
     ) as f:
         json.dump(config, f)
+
+    # Save RSS feeds file if uploaded for forum experiments
+    if rss_feeds_file and rss_feeds_file.filename != "":
+        try:
+            # Validate JSON format by trying to parse it
+            rss_content = rss_feeds_file.read()
+            rss_data = json.loads(rss_content.decode('utf-8'))
+            
+            # Save the RSS file to experiment directory
+            with open(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}rss_feeds.json", "w") as f:
+                json.dump(rss_data, f, indent=2)
+                
+            flash(f"RSS feeds file uploaded successfully with {len(rss_data)} feeds")
+            
+        except json.JSONDecodeError:
+            flash("Invalid JSON format in RSS feeds file")
+            return redirect(request.referrer)
+        except Exception as e:
+            flash(f"Error processing RSS feeds file: {str(e)}")
+            return redirect(request.referrer)
 
     # add the experiment to the database
 
@@ -1105,3 +1135,84 @@ def create_education():
     db.session.commit()
 
     return redirect(request.referrer)
+
+
+@experiments.route("/admin/upload_rss_feeds/<int:exp_id>", methods=["POST"])
+@login_required
+def upload_rss_feeds(exp_id):
+    check_privileges(current_user.username)
+    
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        flash("Experiment not found")
+        return redirect(request.referrer)
+    
+    if experiment.platform_type != "forum":
+        flash("RSS feeds are only supported for forum experiments")
+        return redirect(request.referrer)
+    
+    rss_feeds_file = request.files.get("rss_feeds")
+    if not rss_feeds_file or rss_feeds_file.filename == "":
+        flash("Please select an RSS feeds file")
+        return redirect(request.referrer)
+    
+    if not rss_feeds_file.filename.lower().endswith('.json'):
+        flash("RSS feeds file must be a JSON file")
+        return redirect(request.referrer)
+    
+    try:
+        # Validate JSON format
+        rss_content = rss_feeds_file.read()
+        rss_data = json.loads(rss_content.decode('utf-8'))
+        
+        # Save the RSS file to experiment directory
+        exp_dir = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+        with open(f"{exp_dir}{os.sep}rss_feeds.json", "w") as f:
+            json.dump(rss_data, f, indent=2)
+            
+        flash(f"RSS feeds file uploaded successfully with {len(rss_data)} feeds")
+        
+    except json.JSONDecodeError:
+        flash("Invalid JSON format in RSS feeds file")
+    except Exception as e:
+        flash(f"Error processing RSS feeds file: {str(e)}")
+    
+    return redirect(request.referrer)
+
+
+@experiments.route("/admin/download_rss_feeds/<int:exp_id>", methods=["GET"])
+@login_required
+def download_rss_feeds(exp_id):
+    check_privileges(current_user.username)
+    
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        if request.headers.get('Accept') == 'application/json':
+            return {"error": "Experiment not found"}, 404
+        flash("Experiment not found")
+        return redirect(request.referrer)
+    
+    exp_dir = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+    rss_file_path = f"{exp_dir}{os.sep}rss_feeds.json"
+    
+    if not os.path.exists(rss_file_path):
+        if request.headers.get('Accept') == 'application/json':
+            return {"error": "No RSS feeds file found"}, 404
+        flash("No RSS feeds file found for this experiment")
+        return redirect(request.referrer)
+    
+    # If this is an AJAX request (JSON), return the data
+    if request.headers.get('Accept') == 'application/json' or request.args.get('format') == 'json':
+        try:
+            with open(rss_file_path, 'r') as f:
+                rss_data = json.load(f)
+            return rss_data
+        except Exception as e:
+            return {"error": f"Error reading RSS file: {str(e)}"}, 500
+    
+    # Otherwise, return the file for download
+    return send_file(
+        f"experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}rss_feeds.json",
+        as_attachment=True,
+        download_name=f"{experiment.exp_name}_rss_feeds.json"
+    )

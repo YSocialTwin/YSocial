@@ -194,10 +194,8 @@ def clients(idexp):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=idexp).first()
-    # get population assigned to the experiment
-    populations = Population_Experiment.query.filter_by(id_exp=idexp).all()
-    # get the populations details
-    pops = [Population.query.filter_by(id=p.id_population).first() for p in populations]
+    # get all available populations for client creation
+    pops = Population.query.all()
 
     ollamas = ollama_status()
 

@@ -1,4 +1,5 @@
 from y_web import app, db
+import logging
 
 
 def start_app(debug=False, host="localhost", port=8080):
@@ -9,6 +10,10 @@ def start_app(debug=False, host="localhost", port=8080):
     :param port: the port to run the app on
     :param host: the host to run the app on
     """
+
+    # Enable debug logging
+    logging.basicConfig(level=logging.DEBUG)
+    app.logger.setLevel(logging.DEBUG)
 
     import nltk
 

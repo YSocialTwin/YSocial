@@ -182,11 +182,18 @@
                                         <span class="left">Platform Type</span>
                                         <span class="right" style="width: 70%;">
                                             <div class="select">
-                                                <select name="platform_type" style="width: 100%">
+                                                <select name="platform_type" id="platform_type" style="width: 100%">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
-                                                    <option value="forum" disabled>Forum (i.e., Reddit)</option>
+                                                    <option value="forum" enabled>Forum (i.e., Reddit)</option>
                                                 </select>
                                             </div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line" id="rss_upload_field" style="display: none;">
+                                        <span class="left">RSS Feeds<br><small>(JSON file - optional for Forum)</small></span>
+                                        <span class="right" style="width: 70%;">
+                                            <input type="file" name="rss_feeds" accept=".json" class="input_file">
                                         </span>
                                     </div>
 
@@ -327,5 +334,17 @@
     </div>
 
 </div>
+
+<script>
+    // Show/hide RSS upload field based on platform type selection
+    document.getElementById('platform_type').addEventListener('change', function() {
+        const rssField = document.getElementById('rss_upload_field');
+        if (this.value === 'forum') {
+            rssField.style.display = 'flex';
+        } else {
+            rssField.style.display = 'none';
+        }
+    });
+</script>
 
 {% include "admin/footer.html" %}

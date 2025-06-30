@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+y_web/db/dummy.db
+y_web/experiments/da600593-144a-4a6a-882b-e20e1afee2a7/*
+# Ignore all files in the experiment directory except for the co
+
+y_web/experiments/*
+
+# Implementation planning files
+plan.md
+CLAUDE.md
