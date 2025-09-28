@@ -26,10 +26,6 @@ def app():
         'WTF_CSRF_ENABLED': False,
         'SECRET_KEY': 'test-secret-key',
         'SQLALCHEMY_DATABASE_URI': f'sqlite:///{db_path}',
-        'SQLALCHEMY_BINDS': {
-            'db_admin': f'sqlite:///{db_path}',
-            'db_exp': f'sqlite:///{db_path}',
-        },
         'SQLALCHEMY_TRACK_MODIFICATIONS': False,
         'SQLALCHEMY_ENGINE_OPTIONS': {
             'connect_args': {'check_same_thread': False}
@@ -49,6 +45,10 @@ def app():
         y_web.models.db = db
         
         from y_web.models import Admin_users, User_mgmt
+        
+        # Override the bind_key for testing - use same db for all tables
+        Admin_users.__bind_key__ = None
+        User_mgmt.__bind_key__ = None
         
         db.create_all()
         
