@@ -1,13 +1,13 @@
-import subprocess
-import os
 import re
-import sys
 from requests import post
 import json
 import time
 import random
 from multiprocessing import Process
 import traceback
+
+from sklearn.utils import deprecated
+
 from y_web.models import (
     Client_Execution,
     Ollama_Pull
@@ -17,23 +17,14 @@ from flask import current_app
 from y_web import db, client_processes
 import requests
 from ollama import Client as oclient
-import concurrent
 import numpy as np
-
-import os
-import sys
-import subprocess
-from pathlib import Path
-import shutil
-
-
-import os
-import sys
 import shutil
 import subprocess
+import os
+import sys
 from pathlib import Path
 
-
+@deprecated
 def detect_env_handler_old():
     python_exe = sys.executable
     env_type = None
@@ -86,7 +77,7 @@ def detect_env_handler_old():
     # System Python
     return "system", None, str(Path(python_exe).parent), None
 
-
+@deprecated
 def build_screen_command_old(script_path, config_path, screen_name=None):
     env_type, env_name, env_bin, conda_sh = detect_env_handler()
     screen_name = screen_name or env_name or "experiment"
@@ -110,9 +101,6 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 
 ##############
 
-import os
-import sys
-from pathlib import Path
 
 def detect_env_handler():
     """
