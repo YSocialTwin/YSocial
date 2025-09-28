@@ -34,7 +34,7 @@ import subprocess
 from pathlib import Path
 
 
-def detect_env_handler():
+def detect_env_handler_old():
     python_exe = sys.executable
     env_type = None
     env_name = None
@@ -87,7 +87,7 @@ def detect_env_handler():
     return "system", None, str(Path(python_exe).parent), None
 
 
-def build_screen_command(script_path, config_path, screen_name=None):
+def build_screen_command_old(script_path, config_path, screen_name=None):
     env_type, env_name, env_bin, conda_sh = detect_env_handler()
     screen_name = screen_name or env_name or "experiment"
 
@@ -107,6 +107,76 @@ def build_screen_command(script_path, config_path, screen_name=None):
 
     return command
 
+
+##############
+
+import os
+import sys
+from pathlib import Path
+
+def detect_env_handler():
+    """
+    Detect the active Python environment and return a command prefix
+    that can safely execute scripts in the same environment.
+    Returns:
+        run_prefix: string, either 'python' path or activation + python
+    """
+    python_exe = Path(sys.executable)
+
+    # --- Case 1: Conda / Miniconda ---
+    conda_prefix = os.environ.get("CONDA_PREFIX")
+    if conda_prefix:
+        conda_prefix = Path(conda_prefix).resolve()
+        env_name = os.environ.get("CONDA_DEFAULT_ENV") or conda_prefix.name
+        env_bin = conda_prefix / "bin"
+
+        # Detect conda base (handle .../envs/<env_name>)
+        if conda_prefix.parent.name == "envs":
+            conda_base = conda_prefix.parent.parent
+        else:
+            conda_base = conda_prefix
+
+        conda_sh = conda_base / "etc" / "profile.d" / "conda.sh"
+        python_bin = env_bin / "python"
+
+        if conda_sh.exists():
+            # Safe approach: just use the environment's Python binary
+            return str(python_bin)
+
+    # --- Case 2: Pipenv ---
+    if os.environ.get("PIPENV_ACTIVE"):
+        return "pipenv run python"
+
+    # --- Case 3: Virtualenv / venv ---
+    venv_prefix = os.environ.get("VIRTUAL_ENV")
+    if venv_prefix:
+        python_bin = Path(venv_prefix) / "bin" / "python"
+        return str(python_bin)
+
+    # --- Case 4: System Python fallback ---
+    return str(python_exe)
+
+
+def build_screen_command(script_path, config_path, screen_name=None):
+    """
+    Build a screen command that runs a Python script in the detected env.
+    """
+    python_cmd = detect_env_handler()
+    screen_name = screen_name or "experiment"
+
+    # Quote script and config paths to handle spaces
+    script_path_quoted = f'"{script_path}"'
+    config_path_quoted = f'"{config_path}"' if config_path else ""
+
+    run_cmd = f"{python_cmd} {script_path_quoted}"
+    if config_path_quoted:
+        run_cmd += f" -c {config_path_quoted}"
+
+    # Single bash -c block inside screen
+    screen_cmd = f"screen -dmS {screen_name} bash -c '{run_cmd}'"
+    return screen_cmd
+
+#############
 
 def terminate_process_on_port(port):
     """
@@ -162,12 +232,12 @@ def start_server(exp):
             config_path=f"{config}",
             screen_name=f"{exp_uid.replace(f'{os.sep}', '')}"
         )
-        #subprocess.run(cmd, shell=True, check=True)
+        # subprocess.run(cmd, shell=True, check=True)
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
     # Command to run in the detached screen
-    #screen_command = f"screen -dmS {exp_uid.replace(f'{os.sep}', '')} {flask_command}"
+    # screen_command = f"screen -dmS {exp_uid.replace(f'{os.sep}', '')} {flask_command}"
     print(screen_command)
 
     print(f"Starting server for experiment {exp_uid} ...")
