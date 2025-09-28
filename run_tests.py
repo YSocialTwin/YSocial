@@ -21,6 +21,9 @@ def run_tests():
         'y_web/tests/test_simple_auth.py',
         'y_web/tests/test_app_structure.py',
         'y_web/tests/test_utils.py',
+        'y_web/tests/test_auth_routes.py',
+        'y_web/tests/test_admin_routes.py',
+        'y_web/tests/test_user_interaction_routes.py',
     ]
     
     total_passed = 0
