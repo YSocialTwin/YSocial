@@ -107,7 +107,12 @@ def users_data():
 @users.route("/admin/user_data", methods=["POST"])
 @login_required
 def update():
-    """Handle update operation."""
+    """
+    Update user information from form data.
+    
+    Returns:
+        Redirect to users page
+    """
     data = request.get_json()
     if "id" not in data:
         abort(400)
@@ -159,7 +164,12 @@ def user_details(uid):
 @users.route("/admin/add_user", methods=["POST"])
 @login_required
 def add_user():
-    """Handle add user operation."""
+    """
+    Create a new admin user from form data.
+    
+    Returns:
+        Redirect to users page
+    """
     check_privileges(current_user.username)
 
     username = request.form.get("username")
@@ -200,7 +210,12 @@ def delete_user(uid):
 @users.route("/admin/add_user_to_experiment", methods=["POST"])
 @login_required
 def add_user_to_experiment():
-    """Handle add user to experiment operation."""
+    """
+    Associate a user with an experiment.
+    
+    Returns:
+        Redirect to user details
+    """
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")
@@ -259,7 +274,12 @@ def add_user_to_experiment():
 @users.route("/admin/set_perspective_api_user", methods=["POST"])
 @login_required
 def set_perspective_api_user():
-    """Handle set perspective api user operation."""
+    """
+    Set Perspective API key for a user.
+    
+    Returns:
+        Redirect to user details
+    """
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")

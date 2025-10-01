@@ -415,7 +415,12 @@ def population_details(uid):
 @population.route("/admin/add_to_experiment", methods=["POST"])
 @login_required
 def add_to_experiment():
-    """Handle add to experiment operation."""
+    """
+    Associate a population with an experiment.
+    
+    Returns:
+        Redirect to population details
+    """
     check_privileges(current_user.username)
 
     population_id = request.form.get("population_id")
@@ -560,7 +565,12 @@ def download_population(uid):
 @population.route("/admin/upload_population", methods=["POST"])
 @login_required
 def upload_population():
-    """Upload population."""
+    """
+    Upload population data from JSON file.
+    
+    Returns:
+        Redirect to populations page
+    """
     check_privileges(current_user.username)
 
     population_file = request.files["population_file"]
