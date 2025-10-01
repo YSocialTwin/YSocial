@@ -1,3 +1,10 @@
+"""
+Main application routes and views.
+
+Handles the primary user-facing routes including the home feed, user profiles,
+hashtag pages, post details, and search functionality for the social media platform.
+"""
+
 from flask import Blueprint, render_template, redirect, request, flash
 from flask_login import login_required, current_user
 from .data_access import *
@@ -11,7 +18,16 @@ main = Blueprint("main", __name__)
 
 def get_safe_profile_pic(username, is_page=0):
     """
-    Safely get profile picture for a user with fallbacks
+    Safely retrieve profile picture URL for a user or page.
+    
+    Attempts multiple sources with graceful fallback handling.
+    
+    Args:
+        username: Username to get profile picture for
+        is_page: 1 if username refers to a page, 0 for regular user
+        
+    Returns:
+        Profile picture URL string, or empty string if not found
     """
     if is_page == 1:
         try:
@@ -43,6 +59,15 @@ def get_safe_profile_pic(username, is_page=0):
 
 
 def is_admin(username):
+    """
+    Check if a user has admin role.
+    
+    Args:
+        username: Username to check
+        
+    Returns:
+        True if user is admin, False otherwise
+    """
     user = Admin_users.query.filter_by(username=username).first()
     if user.role != "admin":
         return False
@@ -51,11 +76,15 @@ def is_admin(username):
 
 @main.app_errorhandler(404)
 def page_not_found(e):
+    """Handle 404 errors with custom error page."""
     return render_template("404.html"), 404
 
 
 @main.route("/")
 def index():
+    """
+    Home page route - redirects authenticated users to feed, others to login.
+    """
     if current_user.is_authenticated:
         # get active experiment if exists
         exp = Exps.query.filter(Exps.status != 0).first()

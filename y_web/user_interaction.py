@@ -1,3 +1,12 @@
+"""
+User interaction routes and handlers.
+
+Manages user actions within the social network including following/unfollowing,
+posting content, sharing posts, reacting (liking/disliking), voting, and
+commenting. Integrates sentiment analysis, toxicity detection, and LLM-based
+content annotation.
+"""
+
 from flask import Blueprint, redirect
 from flask_login import login_required, current_user
 from . import db
@@ -32,6 +41,18 @@ user = Blueprint("user_actions", __name__)
 @user.route("/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"])
 @login_required
 def follow(user_id, follower_id):
+    """
+    Handle follow/unfollow action between users.
+    
+    Toggles follow relationship and creates appropriate Follow record.
+    
+    Args:
+        user_id: ID of user to follow/unfollow
+        follower_id: ID of user performing the action
+        
+    Returns:
+        Redirect to referrer page
+    """
     # get the last round id from Rounds
     current_round = Rounds.query.order_by(Rounds.id.desc()).first()
 
@@ -70,6 +91,17 @@ def follow(user_id, follower_id):
 @user.route("/share_content")
 @login_required
 def share_content():
+    """
+    Share/retweet an existing post.
+    
+    Creates a new post that references the original as a shared post.
+    
+    Query params:
+        post_id: ID of post to share
+        
+    Returns:
+        Redirect to referrer page
+    """
     post_id = request.args.get("post_id")
 
     # get the post
