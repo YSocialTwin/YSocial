@@ -114,7 +114,15 @@ def join_simulation():
 @experiments.route("/admin/select_experiment/<int:exp_id>")
 @login_required
 def change_active_experiment(exp_id):
-    """Handle change active experiment operation."""
+    """
+    Change the currently active experiment.
+    
+    Args:
+        exp_id: ID of experiment to activate
+        
+    Returns:
+        Redirect to settings page
+    """
     check_privileges(current_user.username)
     uname = current_user.username
 
@@ -719,7 +727,12 @@ def delete_simulation(exp_id):
 @experiments.route("/admin/experiments_data")
 @login_required
 def experiments_data():
-    """Display experiments data page."""
+    """
+    Display paginated list of experiments.
+    
+    Returns:
+        Rendered experiments list template
+    """
     query = Exps.query
 
     # search filter
