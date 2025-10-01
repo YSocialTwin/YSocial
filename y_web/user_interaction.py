@@ -136,6 +136,7 @@ def share_content():
 @user.route("/react_to_content")
 @login_required
 def react():
+    """Handle react operation."""
     post_id = request.args.get("post_id")
     action = request.args.get("action")
 
@@ -176,6 +177,7 @@ def react():
 @user.route("/publish")
 @login_required
 def publish_post():
+    """Handle publish post operation."""
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -304,6 +306,7 @@ def publish_post():
 @user.route("/publish_reddit")
 @login_required
 def publish_post_reddit():
+    """Handle publish post reddit operation."""
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -496,6 +499,7 @@ def publish_post_reddit():
 @user.route("/publish_comment")
 @login_required
 def publish_comment():
+    """Handle publish comment operation."""
     text = request.args.get("post")
     pid = request.args.get("parent")
 
@@ -623,6 +627,7 @@ def publish_comment():
 @user.route("/delete_post")
 @login_required
 def delete_post():
+    """Delete post."""
     post_id = request.args.get("post_id")
 
     post = Post.query.get(int(post_id))
@@ -635,6 +640,7 @@ def delete_post():
 @user.route("/cancel_notification")
 @login_required
 def cancel_notification():
+    """Handle cancel notification operation."""
     pid = request.args.get("post_id")
 
     # check if the comment is to answer a mention

@@ -56,6 +56,11 @@ experiments = Blueprint("experiments", __name__)
 @experiments.route("/admin/experiments")
 @login_required
 def settings():
+    """
+    Display experiments settings and management page.
+    
+    Shows list of experiments, users, and database configuration.
+    """
     check_privileges(current_user.username)
 
     # load all experiments
@@ -83,6 +88,7 @@ def settings():
 @login_required
 def join_simulation():
     # get user id for the current user logged in
+    """Handle join simulation operation."""
     user_id = (
         db.session.query(User_mgmt).filter_by(username=current_user.username).first().id
     )
@@ -108,6 +114,7 @@ def join_simulation():
 @experiments.route("/admin/select_experiment/<int:exp_id>")
 @login_required
 def change_active_experiment(exp_id):
+    """Handle change active experiment operation."""
     check_privileges(current_user.username)
     uname = current_user.username
 
@@ -169,6 +176,7 @@ def change_active_experiment(exp_id):
 @experiments.route("/admin/upload_experiment", methods=["POST"])
 @login_required
 def upload_experiment():
+    """Upload experiment."""
     check_privileges(current_user.username)
 
     experiment = request.files["experiment"]
@@ -403,6 +411,7 @@ def upload_experiment():
 @experiments.route("/admin/upload_database", methods=["POST"])
 @login_required
 def upload_database():
+    """Upload database."""
     check_privileges(current_user.username)
 
     database = request.files["sqlite_filename"]
@@ -462,6 +471,7 @@ def upload_database():
 @experiments.route("/admin/create_experiment", methods=["POST", "GET"])
 @login_required
 def create_experiment():
+    """Create experiment."""
     check_privileges(current_user.username)
 
     exp_name = request.form.get("exp_name")
@@ -639,6 +649,7 @@ def create_experiment():
 @login_required
 def delete_simulation(exp_id):
     # get the experiment
+    """Delete simulation."""
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if exp:
         # remove the experiment folder
@@ -708,6 +719,7 @@ def delete_simulation(exp_id):
 @experiments.route("/admin/experiments_data")
 @login_required
 def experiments_data():
+    """Display experiments data page."""
     query = Exps.query
 
     # search filter
@@ -761,6 +773,7 @@ def experiments_data():
 @experiments.route("/admin/experiment_details/<int:uid>")
 @login_required
 def experiment_details(uid):
+    """Handle experiment details operation."""
     check_privileges(current_user.username)
 
     # get experiment details
@@ -807,6 +820,7 @@ def experiment_details(uid):
 @experiments.route("/admin/start_experiment/<int:uid>")
 @login_required
 def start_experiment(uid):
+    """Handle start experiment operation."""
     check_privileges(current_user.username)
 
     # get experiment
@@ -829,6 +843,7 @@ def start_experiment(uid):
 @experiments.route("/admin/stop_experiment/<int:uid>")
 @login_required
 def stop_experiment(uid):
+    """Handle stop experiment operation."""
     check_privileges(current_user.username)
 
     # get experiment
@@ -861,6 +876,7 @@ def stop_experiment(uid):
 @experiments.route("/admin/prompts/<int:uid>")
 @login_required
 def prompts(uid):
+    """Handle prompts operation."""
     check_privileges(current_user.username)
 
     # get experiment details
@@ -881,6 +897,7 @@ def prompts(uid):
 @experiments.route("/admin/update_prompts/<int:uid>", methods=["POST"])
 @login_required
 def update_prompts(uid):
+    """Update prompts."""
     check_privileges(current_user.username)
 
     # get experiment details
@@ -904,6 +921,7 @@ def update_prompts(uid):
 @experiments.route("/admin/download_experiment/<int:eid>", methods=["POST", "GET"])
 @login_required
 def download_experiment_file(eid):
+    """Download experiment file."""
     check_privileges(current_user.username)
 
     # get experiment details
@@ -927,6 +945,7 @@ def download_experiment_file(eid):
 @experiments.route("/admin/miscellanea/", methods=["GET"])
 @login_required
 def miscellanea():
+    """Handle miscellanea operation."""
     check_privileges(current_user.username)
 
     ollamas = ollama_status()
@@ -937,6 +956,7 @@ def miscellanea():
 @experiments.route("/admin/languages_data")
 @login_required
 def languages_data():
+    """Display languages data page."""
     query = Languages.query
 
     # search filter
@@ -987,6 +1007,7 @@ def languages_data():
 @experiments.route("/admin/leanings_data")
 @login_required
 def leanings_data():
+    """Display leanings data page."""
     query = Leanings.query
 
     # search filter
@@ -1037,6 +1058,7 @@ def leanings_data():
 @experiments.route("/admin/nationalities_data")
 @login_required
 def nationalities_data():
+    """Display nationalities data page."""
     query = Nationalities.query
 
     # search filter
@@ -1092,6 +1114,7 @@ def nationalities_data():
 @experiments.route("/admin/professions_data")
 @login_required
 def professions_data():
+    """Display professions data page."""
     query = Profession.query
 
     search = request.args.get("search")
@@ -1142,6 +1165,7 @@ def professions_data():
 @experiments.route("/admin/educations_data")
 @login_required
 def educations_data():
+    """Display educations data page."""
     query = Education.query
 
     search = request.args.get("search")
@@ -1191,6 +1215,7 @@ def educations_data():
 @experiments.route("/admin/create_language", methods=["POST"])
 @login_required
 def create_language():
+    """Create language."""
     check_privileges(current_user.username)
 
     language = request.form.get("language")
@@ -1205,6 +1230,7 @@ def create_language():
 @experiments.route("/admin/create_leaning", methods=["POST"])
 @login_required
 def create_leaning():
+    """Create leaning."""
     check_privileges(current_user.username)
 
     leaning = request.form.get("leaning")
@@ -1219,6 +1245,7 @@ def create_leaning():
 @experiments.route("/admin/create_nationality", methods=["POST"])
 @login_required
 def create_nationality():
+    """Create nationality."""
     check_privileges(current_user.username)
 
     nationality = request.form.get("nationality")
@@ -1233,6 +1260,7 @@ def create_nationality():
 @experiments.route("/admin/create_profession", methods=["POST"])
 @login_required
 def create_profession():
+    """Create profession."""
     check_privileges(current_user.username)
 
     profession = request.form.get("profession")
@@ -1248,6 +1276,7 @@ def create_profession():
 @experiments.route("/admin/create_education", methods=["POST"])
 @login_required
 def create_education():
+    """Create education."""
     check_privileges(current_user.username)
 
     education_level = request.form.get("education_level")
@@ -1262,6 +1291,7 @@ def create_education():
 @experiments.route("/admin/create_topic", methods=["POST"])
 @login_required
 def create_topic():
+    """Create topic."""
     check_privileges(current_user.username)
 
     topic = request.form.get("topic")
@@ -1282,6 +1312,7 @@ def create_topic():
 @experiments.route("/admin/topic_data")
 @login_required
 def topic_data():
+    """Display topic data page."""
     query = Topic_List.query
 
     # search filter
@@ -1330,6 +1361,7 @@ def topic_data():
 @experiments.route('/admin/delete_topic/<int:topic_id>', methods=['DELETE'])
 @login_required
 def delete_topic(topic_id):
+    """Delete topic."""
     check_privileges(current_user.username)
 
     topic = Topic_List.query.filter_by(id=topic_id).first()
@@ -1344,6 +1376,7 @@ def delete_topic(topic_id):
 @experiments.route('/admin/delete_language/<int:language_id>', methods=['DELETE'])
 @login_required
 def delete_language(language_id):
+    """Delete language."""
     check_privileges(current_user.username)
 
     language = Languages.query.filter_by(id=language_id).first()
@@ -1358,6 +1391,7 @@ def delete_language(language_id):
 @experiments.route('/admin/delete_leaning/<int:leaning_id>', methods=['DELETE'])
 @login_required
 def delete_leaning(leaning_id):
+    """Delete leaning."""
     check_privileges(current_user.username)
 
     leaning = Leanings.query.filter_by(id=leaning_id).first()
@@ -1372,6 +1406,7 @@ def delete_leaning(leaning_id):
 @experiments.route('/admin/delete_nationality/<int:nationality_id>', methods=['DELETE'])
 @login_required
 def delete_nationality(nationality_id):
+    """Delete nationality."""
     check_privileges(current_user.username)
 
     nationality = Nationalities.query.filter_by(id=nationality_id).first()
@@ -1386,6 +1421,7 @@ def delete_nationality(nationality_id):
 @experiments.route('/admin/delete_education/<int:education_level_id>', methods=['DELETE'])
 @login_required
 def delete_education_level(education_level_id):
+    """Delete education level."""
     check_privileges(current_user.username)
 
     education_level = Education.query.filter_by(id=education_level_id).first()
@@ -1400,6 +1436,7 @@ def delete_education_level(education_level_id):
 @experiments.route('/admin/delete_profession/<int:profession_id>', methods=['DELETE'])
 @login_required
 def delete_profession(profession_id):
+    """Delete profession."""
     check_privileges(current_user.username)
 
     profession = Profession.query.filter_by(id=profession_id).first()

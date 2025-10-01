@@ -318,12 +318,13 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
 
 
 def augment_text(text):
-    """
-    Augment the text by adding links to the mentions and hashtags.
+    """    Augment the text by adding links to the mentions and hashtags.
 
-    :param text: the text to augment
-    :return: the augmented text
-    """
+    Args:
+        text: the text to augment
+
+    Returns:
+        the augmented text"""
     # text = text.split("(")[0]
 
     # Extract the mentions and hashtags
@@ -367,13 +368,15 @@ def augment_text(text):
 
 
 def get_mutual_friends(user_a, user_b, limit=10):
-    """
-    Get the mutual friends between two users.
-    :param user_a:
-    :param user_b:
-    :param limit:
-    :return:
-    """
+    """    Get the mutual friends between two users.
+
+    Args:
+        user_a: 
+        user_b: 
+        limit: 
+
+    Returns:
+        """
     # Get the friends of the two users
     friends_a = Follow.query.filter_by(user_id=user_a, action="follow").distinct()
     friends_b = Follow.query.filter_by(user_id=user_b, action="follow").distinct()
@@ -415,6 +418,7 @@ def get_mutual_friends(user_a, user_b, limit=10):
 
 
 def get_top_user_hashtags(user_id, limit=10):
+    """Get top user hashtags."""
     ht = (
         Post.query.filter_by(user_id=user_id)
         .join(Post_hashtags, Post.id == Post_hashtags.post_id)
@@ -435,14 +439,15 @@ def get_top_user_hashtags(user_id, limit=10):
 
 
 def get_user_friends(user_id, limit=12, page=1):
-    """
-    Get the followers and followees of the user with pagination.
+    """    Get the followers and followees of the user with pagination.
 
-    :param user_id: int
-    :param limit: int - items per page
-    :param page: int - current page number
-    :return: (followers_list, followee_list, total_followers, total_followees)
-    """
+    Args:
+        user_id: int
+        limit: int - items per page
+        page: int - current page number
+
+    Returns:
+        (followers_list, followee_list, total_followers, total_followees)"""
     if page < 1:
         page = 1
 
@@ -545,12 +550,14 @@ def get_user_friends(user_id, limit=12, page=1):
 
 
 def get_trending_emotions(limit=10, window=120):
-    """
-    Get the trending emotions.
-    :param window:
-    :param limit:
-    :return:
-    """
+    """    Get the trending emotions.
+
+    Args:
+        window: 
+        limit: 
+
+    Returns:
+        """
 
     # get current round
     last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
@@ -578,11 +585,13 @@ def get_trending_emotions(limit=10, window=120):
 
 
 def get_trending_hashtags(limit=10, window=120):
-    """
-    Get the trending hashtags.
-    :param limit:
-    :return:
-    """
+    """    Get the trending hashtags.
+
+    Args:
+        limit: 
+
+    Returns:
+        """
 
     # get current round
 
@@ -618,6 +627,7 @@ def get_trending_hashtags(limit=10, window=120):
 
 def get_trending_topics(limit=10, window=120):
     # get current round
+    """Get trending topics."""
     last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
     last_round = last_round_obj.id if last_round_obj else 0
 
@@ -641,14 +651,15 @@ def get_trending_topics(limit=10, window=120):
 
 
 def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user=None):
-    """
-    Get the posts associated to the given hashtag.
+    """    Get the posts associated to the given hashtag.
 
-    :param hashtag_id:
-    :param page:
-    :param per_page:
-    :return:
-    """
+    Args:
+        hashtag_id: 
+        page: 
+        per_page: 
+
+    Returns:
+        """
 
     if page < 1:
         page = 1
@@ -833,14 +844,15 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
 
 
 def get_posts_associated_to_interest(interest_id, page, per_page=10, current_user=None):
-    """
-    Get the posts associated to the given interest.
+    """    Get the posts associated to the given interest.
 
-    :param interest_id:
-    :param page:
-    :param per_page:
-    :return:
-    """
+    Args:
+        interest_id: 
+        page: 
+        per_page: 
+
+    Returns:
+        """
 
     if page < 1:
         page = 1
@@ -1020,15 +1032,16 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
 
 
 def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=None):
-    """
-    Get the posts associated to the given emotion.
+    """    Get the posts associated to the given emotion.
 
-    :param current_user:
-    :param emotion_id:
-    :param page:
-    :param per_page:
-    :return:
-    """
+    Args:
+        current_user: 
+        emotion_id: 
+        page: 
+        per_page: 
+
+    Returns:
+        """
 
     if page < 1:
         page = 1
@@ -1208,6 +1221,7 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
 
 
 def get_user_recent_interests(user_id, limit=5):
+    """Get user recent interests."""
     last_round = Rounds.query.order_by(desc(Rounds.id)).first()
     last_round_id = last_round.id if last_round else 0
 
@@ -1236,6 +1250,7 @@ def get_user_recent_interests(user_id, limit=5):
 
 def get_elicited_emotions(post_id):
     # get elicited emotions names
+    """Get elicited emotions."""
     emotions = (
         Post_emotions.query.filter_by(post_id=post_id)
         .join(Emotions, Post_emotions.emotion_id == Emotions.id)
@@ -1262,6 +1277,7 @@ def get_topics(post_id, user_id):
     #    .add_columns(Post_Sentiment.user_id)
     #    .all()
     # )
+    """Get topics."""
     post = Post.query.filter_by(id=post_id).first()
     if post.image_id is not None:
         return []
@@ -1300,11 +1316,11 @@ def get_topics(post_id, user_id):
 
 
 def get_unanswered_mentions(user_id):
-    """
+    """    Args:
+        user_id: 
 
-    :param user_id:
-    :return:
-    """
+    Returns:
+        """
 
     res = (
         Mentions.query.filter_by(user_id=user_id, answered=0)

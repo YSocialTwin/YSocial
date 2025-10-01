@@ -33,6 +33,7 @@ pages = Blueprint("pages", __name__)
 @pages.route("/admin/pages")
 @login_required
 def page_data():
+    """Display page data page."""
     check_privileges(current_user.username)
 
     models = get_ollama_models()
@@ -46,6 +47,7 @@ def page_data():
 @pages.route("/admin/create_page", methods=["POST"])
 @login_required
 def create_page():
+    """Create page."""
     check_privileges(current_user.username)
 
     name = request.form.get("name")
@@ -77,6 +79,7 @@ def create_page():
 @pages.route("/admin/pages_data")
 @login_required
 def pages_data():
+    """Display pages data page."""
     query = Page.query
 
     # search filter
@@ -136,6 +139,7 @@ def pages_data():
 @pages.route("/admin/delete_page/<int:uid>")
 @login_required
 def delete_page(uid):
+    """Delete page."""
     check_privileges(current_user.username)
 
     page = Page.query.filter_by(id=uid).first()
@@ -162,6 +166,7 @@ def delete_page(uid):
 @pages.route("/admin/page_details/<int:uid>")
 @login_required
 def page_details(uid):
+    """Handle page details operation."""
     check_privileges(current_user.username)
 
     # get page details
@@ -207,6 +212,7 @@ def page_details(uid):
 @pages.route("/admin/add_topic_to_page", methods=["POST"])
 @login_required
 def add_topic_to_page():
+    """Handle add topic to page operation."""
     check_privileges(current_user.username)
 
     page_id = request.form.get("page_id")
@@ -228,6 +234,7 @@ def add_topic_to_page():
 @pages.route("/admin/add_page_to_population", methods=["POST"])
 @login_required
 def add_page_to_population():
+    """Handle add page to population operation."""
     check_privileges(current_user.username)
 
     page_id = request.form.get("page_id")
@@ -251,6 +258,7 @@ def add_page_to_population():
 @pages.route("/admin/upload_page_collection", methods=["POST"])
 @login_required
 def upload_page_collection():
+    """Upload page collection."""
     check_privileges(current_user.username)
 
     collection = request.files["collection"]
@@ -291,6 +299,7 @@ def upload_page_collection():
 @pages.route("/admin/download_pages")
 @login_required
 def download_pages():
+    """Download pages."""
     check_privileges(current_user.username)
 
     pages = Page.query.all()

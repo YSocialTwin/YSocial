@@ -263,6 +263,7 @@ def create_app(db_type="sqlite"):
 
     @login_manager.user_loader
     def load_user(user_id):
+        """Handle load user operation."""
         return User.query.get(int(user_id))
 
     # Register your blueprints here as before

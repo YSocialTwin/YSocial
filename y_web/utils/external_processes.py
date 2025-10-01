@@ -37,6 +37,7 @@ from pathlib import Path
 
 @deprecated
 def detect_env_handler_old():
+    """Handle detect env handler old operation."""
     python_exe = sys.executable
     env_type = None
     env_name = None
@@ -91,6 +92,7 @@ def detect_env_handler_old():
 
 @deprecated
 def build_screen_command_old(script_path, config_path, screen_name=None):
+    """Handle build screen command old operation."""
     env_type, env_name, env_bin, conda_sh = detect_env_handler()
     screen_name = screen_name or env_name or "experiment"
 
@@ -195,11 +197,10 @@ def build_screen_command(script_path, config_path, screen_name=None):
 
 
 def terminate_process_on_port(port):
-    """
-    Terminate the process using the specified port
+    """    Terminate the process using the specified port
 
-    :param port: the port number
-    """
+    Args:
+        port: the port number"""
     try:
         result = subprocess.run(
             ["lsof", "-t", "-i", f":{port}"], capture_output=True, text=True, check=True
@@ -218,11 +219,10 @@ def terminate_process_on_port(port):
 
 
 def start_server(exp):
-    """
-    Start the y_server in a detached screen
+    """    Start the y_server in a detached screen
 
-    :param exp: the experiment object
-    """
+    Args:
+        exp: the experiment object"""
     yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
@@ -284,6 +284,7 @@ def start_server(exp):
 
 def is_ollama_installed():
     # Step 1: Check if Ollama is installed
+    """Handle is ollama installed operation."""
     try:
         subprocess.run(
             ["ollama", "--version"], capture_output=True, text=True, check=True
@@ -300,6 +301,7 @@ def is_ollama_installed():
 
 def is_ollama_running():
     # Step 2: Check if Ollama is running
+    """Handle is ollama running operation."""
     try:
         response = requests.get("http://127.0.0.1:11434/api/version")
         if response.status_code == 200:
@@ -316,6 +318,7 @@ def is_ollama_running():
 
 
 def start_ollama_server():
+    """Handle start ollama server operation."""
     if is_ollama_installed():
         if not is_ollama_running():
             screen_command = f"screen -dmS ollama ollama serve"
@@ -332,6 +335,7 @@ def start_ollama_server():
 
 
 def pull_ollama_model(model_name):
+    """Handle pull ollama model operation."""
     if is_ollama_running():
         process = Process(target=start_ollama_pull, args=(model_name,))
         process.start()
@@ -339,6 +343,7 @@ def pull_ollama_model(model_name):
 
 
 def start_ollama_pull(model_name):
+    """Handle start ollama pull operation."""
     ol_client = oclient(
         host="http://127.0.0.1:11434", headers={"x-some-header": "some-value"}
     )
@@ -361,6 +366,7 @@ def start_ollama_pull(model_name):
 
 
 def get_ollama_models():
+    """Get ollama models."""
     pattern = r"model='(.*?)'"
     models = []
 
@@ -377,6 +383,7 @@ def get_ollama_models():
 
 
 def delete_ollama_model(model_name):
+    """Delete ollama model."""
     ol_client = oclient(
         host="http://0.0.0.0:11434", headers={"x-some-header": "some-value"}
     )
@@ -385,6 +392,7 @@ def delete_ollama_model(model_name):
 
 
 def delete_model_pull(model_name):
+    """Delete model pull."""
     if model_name in client_processes:
         process = client_processes[model_name]
         process.terminate()
@@ -396,11 +404,10 @@ def delete_model_pull(model_name):
 
 
 def terminate_client(cli, pause=False):
-    """
-    Stop the y_client
+    """    Stop the y_client
 
-    :param cli: the client object
-    """
+    Args:
+        cli: the client object"""
     process = client_processes[cli.name]
     process.terminate()
     process.join()
@@ -414,6 +421,7 @@ def terminate_client(cli, pause=False):
 
 
 def start_client(exp, cli, population, resume=False):
+    """Handle start client operation."""
     process = Process(
         target=start_client_process,
         args=(
@@ -428,6 +436,7 @@ def start_client(exp, cli, population, resume=False):
 
 
 def start_client_process(exp, cli, population, resume=False):
+    """Handle start client process operation."""
     from y_web import create_app, db
     from y_web.models import Client_Execution
     import os, sys, json

@@ -99,6 +99,7 @@ def index():
 @main.get("/profile")
 @login_required
 def profile():
+    """Handle profile operation."""
     user_id = current_user.id
     return redirect(f"/profile/{user_id}/rf/1")
 
@@ -106,6 +107,7 @@ def profile():
 @main.get("/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
 def profile_logged(user_id, page=1, mode="recent"):
+    """Handle profile logged operation."""
     user_id = int(user_id)
     user = User_mgmt.query.get(user_id)
 
@@ -205,6 +207,7 @@ def profile_logged(user_id, page=1, mode="recent"):
 @main.get("/edit_profile/<int:user_id>")
 @login_required
 def edit_profile(user_id):
+    """Handle edit profile operation."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     profile_pic = ""
@@ -242,6 +245,7 @@ def edit_profile(user_id):
 @main.route("/update_profile_data/<int:user_id>", methods=["POST"])
 @login_required
 def update_profile_data(user_id):
+    """Update profile data."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     user.email = request.form.get("email")
@@ -267,6 +271,7 @@ def update_profile_data(user_id):
 @main.route("/update_password/<int:user_id>", methods=["POST"])
 @login_required
 def update_password(user_id):
+    """Update password."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     npassword = request.form.get("new_password")
@@ -287,6 +292,7 @@ def update_password(user_id):
 @main.get("/feed")
 @login_required
 def feeed_logged():
+    """Handle feeed logged operation."""
     user_id = current_user.id
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
@@ -294,6 +300,7 @@ def feeed_logged():
 @main.get("/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
 def feed(user_id="all", timeline="timeline", mode="rf", page=1):
+    """Handle feed operation."""
     if page < 1:
         page = 1
 
@@ -397,6 +404,7 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
 @main.get("/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
 def get_post_hashtags(hashtag_id, page=1):
+    """Get post hashtags."""
     res = get_posts_associated_to_hashtags(
         hashtag_id, page, per_page=10, current_user=current_user.id
     )
@@ -452,6 +460,7 @@ def get_post_hashtags(hashtag_id, page=1):
 @main.get("/interest/<int:interest_id>/<int:page>")
 @login_required
 def get_post_interest(interest_id, page=1):
+    """Get post interest."""
     res = get_posts_associated_to_interest(
         interest_id, page, per_page=10, current_user=current_user.id
     )
@@ -507,6 +516,7 @@ def get_post_interest(interest_id, page=1):
 @main.get("/emotion/<int:emotion_id>/<int:page>")
 @login_required
 def get_post_emotion(emotion_id, page=1):
+    """Get post emotion."""
     res = get_posts_associated_to_emotion(
         emotion_id, page, per_page=10, current_user=current_user.id
     )
@@ -563,6 +573,7 @@ def get_post_emotion(emotion_id, page=1):
 @main.get("/friends/<int:user_id>/<int:page>")
 @login_required
 def get_friends(user_id, page=1):
+    """Get friends."""
     followers, followees, number_followers, number_followees = get_user_friends(
         user_id, limit=12, page=page
     )
@@ -642,6 +653,7 @@ def get_friends(user_id, page=1):
 @login_required
 def get_thread(post_id):
     # get thread_id for post_id
+    """Get thread."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
 
     # get all posts with the specified thread id
@@ -832,6 +844,7 @@ def get_thread(post_id):
 
 
 def __expand_tree(post_to_child, post_to_data):
+    """Handle   expand tree operation."""
     for pid, clds in post_to_child.items():
         for cl in clds:
             post_to_data[pid]["children"].append(post_to_data[cl])
@@ -840,6 +853,7 @@ def __expand_tree(post_to_child, post_to_data):
 
 
 def recursive_visit(data):
+    """Handle recursive visit operation."""
     if len(data["children"]) == 0:
         return data["post"]
     else:
@@ -848,6 +862,7 @@ def recursive_visit(data):
 
 
 def __get_discussions(posts, username, page):
+    """Handle   get discussions operation."""
     res = []
 
     for post in posts.items:
@@ -1043,6 +1058,7 @@ def __get_discussions(posts, username, page):
 @login_required
 def get_thread_reddit(post_id):
     # get thread_id for post_id
+    """Get thread reddit."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
 
     # get all posts with the specified thread id
@@ -1270,6 +1286,7 @@ def get_thread_reddit(post_id):
 @main.get("/rfeed")
 @login_required
 def feeed_logged_reddit():
+    """Handle feeed logged reddit operation."""
     user_id = "all"  # Show all posts including user's own posts
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
@@ -1277,6 +1294,7 @@ def feeed_logged_reddit():
 @main.get("/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
 def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+    """Handle feed reddit operation."""
     if page < 1:
         page = 1
 

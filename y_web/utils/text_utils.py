@@ -172,6 +172,7 @@ class MLStripper(HTMLParser):
     """HTML parser subclass that strips all HTML tags from text."""
     
     def __init__(self):
+        """Handle   init   operation."""
         super().__init__()
         self.reset()
         self.strict = False
@@ -179,9 +180,11 @@ class MLStripper(HTMLParser):
         self.text = StringIO()
 
     def handle_data(self, d):
+        """Display handle data page."""
         self.text.write(d)
 
     def get_data(self):
+        """Get data."""
         return self.text.getvalue()
 
 

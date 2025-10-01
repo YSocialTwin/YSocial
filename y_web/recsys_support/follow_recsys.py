@@ -91,15 +91,16 @@ def get_suggested_users(user_id, pages=False):
 
 
 def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
-    """
-    Get follow suggestions for a user based on the follow recommender system.
+    """    Get follow suggestions for a user based on the follow recommender system.
 
-    :param rectype:
-    :param user_id:
-    :param n_neighbors:
-    :param leaning_biased:
-    :return:
-    """
+    Args:
+        rectype: 
+        user_id: 
+        n_neighbors: 
+        leaning_biased: 
+
+    Returns:
+        """
 
     res = {}
     if rectype == "PreferentialAttachment":
@@ -181,12 +182,13 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
 
 
 def __get_two_hops_neighbors(node_id):
-    """
-    Get the two hops neighbors of a user.
+    """    Get the two hops neighbors of a user.
 
-    :param node_id: the user id
-    :return: the two hops neighbors
-    """
+    Args:
+        node_id: the user id
+
+    Returns:
+        the two hops neighbors"""
     # (node_id, direct_neighbors)
     first_order_followers = set(
         [
@@ -214,12 +216,13 @@ def __get_two_hops_neighbors(node_id):
 
 
 def __get_users_leanings(agents):
-    """
-    Get the political leaning of a list of users.
+    """    Get the political leaning of a list of users.
 
-    :param agents: the list of users
-    :return: the political leaning of the users
-    """
+    Args:
+        agents: the list of users
+
+    Returns:
+        the political leaning of the users"""
     leanings = {}
     for agent in agents:
         leanings[agent] = User_mgmt.query.filter_by(id=agent).first().leaning

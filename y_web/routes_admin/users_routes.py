@@ -26,6 +26,7 @@ users = Blueprint("users", __name__)
 @users.route("/admin/users")
 @login_required
 def user_data():
+    """Display user data page."""
     check_privileges(current_user.username)
     ollamas = ollama_status()
     if ollamas["status"]:
@@ -38,6 +39,7 @@ def user_data():
 @users.route("/admin/user_data")
 @login_required
 def users_data():
+    """Display users data page."""
     query = Admin_users.query
 
     # search filter
@@ -95,6 +97,7 @@ def users_data():
 @users.route("/admin/user_data", methods=["POST"])
 @login_required
 def update():
+    """Handle update operation."""
     data = request.get_json()
     if "id" not in data:
         abort(400)
@@ -109,6 +112,7 @@ def update():
 @users.route("/admin/user_details/<int:uid>")
 @login_required
 def user_details(uid):
+    """Handle user details operation."""
     check_privileges(current_user.username)
 
     # get user details
@@ -145,6 +149,7 @@ def user_details(uid):
 @users.route("/admin/add_user", methods=["POST"])
 @login_required
 def add_user():
+    """Handle add user operation."""
     check_privileges(current_user.username)
 
     username = request.form.get("username")
@@ -172,6 +177,7 @@ def add_user():
 @users.route("/admin/delete_user/<int:uid>")
 @login_required
 def delete_user(uid):
+    """Delete user."""
     check_privileges(current_user.username)
 
     user = Admin_users.query.filter_by(id=uid).first()
@@ -184,6 +190,7 @@ def delete_user(uid):
 @users.route("/admin/add_user_to_experiment", methods=["POST"])
 @login_required
 def add_user_to_experiment():
+    """Handle add user to experiment operation."""
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")
@@ -242,6 +249,7 @@ def add_user_to_experiment():
 @users.route("/admin/set_perspective_api_user", methods=["POST"])
 @login_required
 def set_perspective_api_user():
+    """Handle set perspective api user operation."""
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")
