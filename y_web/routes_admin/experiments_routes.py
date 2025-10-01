@@ -958,7 +958,12 @@ def download_experiment_file(eid):
 @experiments.route("/admin/miscellanea/", methods=["GET"])
 @login_required
 def miscellanea():
-    """Handle miscellanea operation."""
+    """
+    Display miscellaneous settings page (languages, leanings, etc.).
+    
+    Returns:
+        Rendered miscellaneous settings template
+    """
     check_privileges(current_user.username)
 
     ollamas = ollama_status()
