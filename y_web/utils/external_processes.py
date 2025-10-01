@@ -343,7 +343,12 @@ def pull_ollama_model(model_name):
 
 
 def start_ollama_pull(model_name):
-    """Handle start ollama pull operation."""
+    """
+    Start downloading an Ollama model in background.
+    
+    Args:
+        model_name: Name of model to download
+    """
     ol_client = oclient(
         host="http://127.0.0.1:11434", headers={"x-some-header": "some-value"}
     )
@@ -451,7 +456,15 @@ def start_client(exp, cli, population, resume=False):
 
 
 def start_client_process(exp, cli, population, resume=False):
-    """Handle start client process operation."""
+    """
+    Initialize and start client simulation process.
+    
+    Args:
+        exp: Experiment object
+        cli: Client configuration object
+        population: Population object
+        resume: Boolean indicating if resuming (default: False)
+    """
     from y_web import create_app, db
     from y_web.models import Client_Execution
     import os, sys, json

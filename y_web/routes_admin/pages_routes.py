@@ -217,7 +217,12 @@ def page_details(uid):
 @pages.route("/admin/add_topic_to_page", methods=["POST"])
 @login_required
 def add_topic_to_page():
-    """Handle add topic to page operation."""
+    """
+    Associate a topic with a page.
+    
+    Returns:
+        Redirect to page details
+    """
     check_privileges(current_user.username)
 
     page_id = request.form.get("page_id")
