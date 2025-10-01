@@ -294,18 +294,19 @@
                                         </div>
 
                                         <script>
-
                                             const tags = document.getElementById('tags');
     const input = document.getElementById('input-tag');
     const hiddenInput = document.getElementById('tags-hidden');
-    const createBtn = document.getElementById('create-experiment-btn');
     const tagList = [];
 
     function updateButtonState() {
-        if (tagList.length > 0) {
-            createBtn.disabled = false;
-        } else {
-            createBtn.disabled = true;
+        const createBtn = document.getElementById('create-experiment-btn');
+        if (createBtn) {
+            if (tagList.length > 0) {
+                createBtn.disabled = false;
+            } else {
+                createBtn.disabled = true;
+            }
         }
     }
 
