@@ -33,7 +33,12 @@ pages = Blueprint("pages", __name__)
 @pages.route("/admin/pages")
 @login_required
 def page_data():
-    """Display page data page."""
+    """
+    Display page management interface.
+    
+    Returns:
+        Rendered page data template with available models
+    """
     check_privileges(current_user.username)
 
     models = get_ollama_models()
@@ -299,7 +304,12 @@ def upload_page_collection():
 @pages.route("/admin/download_pages")
 @login_required
 def download_pages():
-    """Download pages."""
+    """
+    Download pages data as JSON file.
+    
+    Returns:
+        JSON file download response
+    """
     check_privileges(current_user.username)
 
     pages = Page.query.all()

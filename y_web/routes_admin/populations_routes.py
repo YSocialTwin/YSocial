@@ -143,7 +143,12 @@ def create_population():
 @population.route("/admin/populations_data")
 @login_required
 def populations_data():
-    """Display populations data page."""
+    """
+    Display populations management page.
+    
+    Returns:
+        Rendered populations data template
+    """
     query = Population.query
 
     # search filter
@@ -191,7 +196,12 @@ def populations_data():
 @population.route("/admin/populations")
 @login_required
 def populations():
-    """Handle populations operation."""
+    """
+    Display main populations overview page.
+    
+    Returns:
+        Rendered populations template with all populations
+    """
     check_privileges(current_user.username)
 
     # Regular expression to match model values

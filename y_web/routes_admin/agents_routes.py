@@ -42,7 +42,12 @@ agents = Blueprint("agents", __name__)
 @agents.route("/admin/agents")
 @login_required
 def agent_data():
-    """Display agent data page."""
+    """
+    Display agent management page.
+    
+    Returns:
+        Rendered agent data template with available models
+    """
     check_privileges(current_user.username)
 
     models = get_ollama_models()
@@ -129,7 +134,12 @@ def agents_data():
 @agents.route("/admin/create_agent", methods=["POST"])
 @login_required
 def create_agent():
-    """Create agent."""
+    """
+    Create a new AI agent from form data.
+    
+    Returns:
+        Redirect to agent data page
+    """
     check_privileges(current_user.username)
 
     user_type = request.form.get("user_type")

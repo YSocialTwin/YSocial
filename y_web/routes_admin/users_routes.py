@@ -26,7 +26,12 @@ users = Blueprint("users", __name__)
 @users.route("/admin/users")
 @login_required
 def user_data():
-    """Display user data page."""
+    """
+    Display user management page.
+    
+    Returns:
+        Rendered user data template with available models
+    """
     check_privileges(current_user.username)
     ollamas = ollama_status()
     if ollamas["status"]:
@@ -39,7 +44,12 @@ def user_data():
 @users.route("/admin/user_data")
 @login_required
 def users_data():
-    """Display users data page."""
+    """
+    Display list of all admin users.
+    
+    Returns:
+        Rendered users list template
+    """
     query = Admin_users.query
 
     # search filter
