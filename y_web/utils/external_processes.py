@@ -366,7 +366,12 @@ def start_ollama_pull(model_name):
 
 
 def get_ollama_models():
-    """Get ollama models."""
+    """
+    Get list of installed Ollama models.
+    
+    Returns:
+        List of available model names
+    """
     pattern = r"model='(.*?)'"
     models = []
 
@@ -383,7 +388,12 @@ def get_ollama_models():
 
 
 def delete_ollama_model(model_name):
-    """Delete ollama model."""
+    """
+    Delete an Ollama model from the system.
+    
+    Args:
+        model_name: Name of model to delete
+    """
     ol_client = oclient(
         host="http://0.0.0.0:11434", headers={"x-some-header": "some-value"}
     )
@@ -392,7 +402,12 @@ def delete_ollama_model(model_name):
 
 
 def delete_model_pull(model_name):
-    """Delete model pull."""
+    """
+    Cancel an ongoing model download.
+    
+    Args:
+        model_name: Name of model to cancel download for
+    """
     if model_name in client_processes:
         process = client_processes[model_name]
         process.terminate()

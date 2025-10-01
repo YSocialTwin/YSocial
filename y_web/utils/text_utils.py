@@ -184,7 +184,12 @@ class MLStripper(HTMLParser):
         self.text.write(d)
 
     def get_data(self):
-        """Get data."""
+        """
+        Get extracted text data.
+        
+        Returns:
+            String containing extracted text
+        """
         return self.text.getvalue()
 
 

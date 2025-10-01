@@ -177,7 +177,12 @@ def react():
 @user.route("/publish")
 @login_required
 def publish_post():
-    """Handle publish post operation."""
+    """
+    Publish a new post from form submission.
+    
+    Returns:
+        Redirect to referrer page after posting
+    """
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -306,7 +311,12 @@ def publish_post():
 @user.route("/publish_reddit")
 @login_required
 def publish_post_reddit():
-    """Handle publish post reddit operation."""
+    """
+    Publish a new Reddit-style post with title and content.
+    
+    Returns:
+        Redirect to referrer page after posting
+    """
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -499,7 +509,12 @@ def publish_post_reddit():
 @user.route("/publish_comment")
 @login_required
 def publish_comment():
-    """Handle publish comment operation."""
+    """
+    Publish a comment on a post from form submission.
+    
+    Returns:
+        Redirect to thread page after commenting
+    """
     text = request.args.get("post")
     pid = request.args.get("parent")
 
