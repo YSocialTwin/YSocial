@@ -294,11 +294,21 @@
                                         </div>
 
                                         <script>
-
                                             const tags = document.getElementById('tags');
     const input = document.getElementById('input-tag');
     const hiddenInput = document.getElementById('tags-hidden');
     const tagList = [];
+
+    function updateButtonState() {
+        const createBtn = document.getElementById('create-experiment-btn');
+        if (createBtn) {
+            if (tagList.length > 0) {
+                createBtn.disabled = false;
+            } else {
+                createBtn.disabled = true;
+            }
+        }
+    }
 
     input.addEventListener('keydown', function (event) {
         if (event.key === 'Enter') {
@@ -311,6 +321,7 @@
                 tags.appendChild(tag);
                 hiddenInput.value = tagList.join(',');
                 input.value = '';
+                updateButtonState();
             }
         }
     });
@@ -321,6 +332,7 @@
             tagList.splice(tagList.indexOf(tagText), 1);
             hiddenInput.value = tagList.join(',');
             event.target.parentNode.remove();
+            updateButtonState();
         }
     });
                                         </script>
@@ -335,7 +347,7 @@
                                     </div>
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create-experiment-btn" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
