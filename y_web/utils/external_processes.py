@@ -1,3 +1,13 @@
+"""
+External process management utilities.
+
+Manages simulation client processes, Ollama server interactions, and
+environment detection. Handles process lifecycle including starting,
+monitoring, and terminating simulation clients running in screen sessions.
+Provides utilities for network generation, database operations, and
+LLM model management.
+"""
+
 import re
 from requests import post
 import json
@@ -106,10 +116,14 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 
 def detect_env_handler():
     """
-    Detect the active Python environment and return a command prefix
-    that can safely execute scripts in the same environment.
+    Detect the active Python environment and return executable path.
+    
+    Detects conda, pipenv, virtualenv/venv environments and returns
+    appropriate Python command/path for running scripts in the same
+    environment context.
+    
     Returns:
-        run_prefix: string, either 'python' path or activation + python
+        String: Python executable path or command prefix (e.g., 'pipenv run python')
     """
     python_exe = Path(sys.executable)
 
@@ -149,7 +163,18 @@ def detect_env_handler():
 
 def build_screen_command(script_path, config_path, screen_name=None):
     """
-    Build a screen command that runs a Python script in the detected env.
+    Build a screen command to run Python script in detected environment.
+    
+    Creates a detached screen session running the script with the correct
+    Python interpreter for the current environment.
+    
+    Args:
+        script_path: Path to Python script to execute
+        config_path: Path to configuration file (optional)
+        screen_name: Name for screen session (default: "experiment")
+        
+    Returns:
+        String: Complete screen command ready for execution
     """
     python_cmd = detect_env_handler()
     screen_name = screen_name or "experiment"
