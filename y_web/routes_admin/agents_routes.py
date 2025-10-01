@@ -4,6 +4,7 @@ from flask import (
     Blueprint,
     render_template,
     request,
+    flash
 )
 from flask_login import login_required, current_user
 
@@ -245,6 +246,14 @@ def delete_agent(uid):
     check_privileges(current_user.username)
 
     agent = Agent.query.filter_by(id=uid).first()
+
+    # check if the agent is assigned to any population
+    agent_pop = Agent_Population.query.filter_by(agent_id=uid).first()
+    if agent_pop:
+        # if the agent is assigned to any population, do not delete raise a warning
+        flash("Agent is assigned to a population. Cannot delete.")
+        return agent_data()
+
     db.session.delete(agent)
     db.session.commit()
 

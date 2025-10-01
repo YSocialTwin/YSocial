@@ -124,9 +124,9 @@
                                             <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
                                         </a>
 
-                                        <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/stop_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Stop">
+                                       <!-- <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/stop_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Stop">
                                             <i class="mdi mdi-stop {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
+                                        </a> -->
 
                                         <!--<a class="link-tooltip" {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/reset_client/{{ client[0].id }}" {% endif %} title="Reset">
                                             <i class="mdi mdi-backup-restore {% if  experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>

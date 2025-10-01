@@ -815,7 +815,7 @@ def start_experiment(uid):
     # start the yserver
     start_server(exp)
 
-    return redirect(request.referrer)  # experiment_details(uid)
+    return experiment_details(uid)
 
 
 @experiments.route("/admin/stop_experiment/<int:uid>")

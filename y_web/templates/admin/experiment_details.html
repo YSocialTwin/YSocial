@@ -170,9 +170,12 @@
                                         <a class="link-tooltip" {% if  client.status == 0  and experiment.running == 1 %} href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Run">
                                             <i class="mdi mdi-play-box-outline {% if  client.status == 1  %}active {% elif experiment.running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
                                         </a>
-                                        <a class="link-tooltip" {% if  client.status == 1 %} href="/admin/stop_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Stop">
-                                            <i class="mdi mdi-stop {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        <a class="link-tooltip" {% if  client.status == 1 %} href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Pause">
+                                            <i class="mdi mdi-pause {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
                                         </a>
+                                        <!--<a class="link-tooltip" {% if  client.status == 1 %} href="/admin/stop_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Stop">
+                                            <i class="mdi mdi-stop {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        </a>-->
                                         <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete">
                                             <i class="mdi mdi-delete" style="font-size: 24px;"></i>
                                         </a>

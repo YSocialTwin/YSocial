@@ -24,6 +24,7 @@ import os
 import sys
 from pathlib import Path
 
+
 @deprecated
 def detect_env_handler_old():
     python_exe = sys.executable
@@ -76,6 +77,7 @@ def detect_env_handler_old():
 
     # System Python
     return "system", None, str(Path(python_exe).parent), None
+
 
 @deprecated
 def build_screen_command_old(script_path, config_path, screen_name=None):
@@ -165,6 +167,7 @@ def build_screen_command(script_path, config_path, screen_name=None):
     return screen_cmd
 
 #############
+
 
 def terminate_process_on_port(port):
     """
@@ -426,12 +429,12 @@ def start_client_process(exp, cli, population, resume=False):
             uid = exp.db_name.removeprefix('experiments_')
             filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
                 "utils/", ""
-            )
+            ) #
         else:
             uid = exp.db_name.split(os.sep)[1]
             filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
                 "utils/", ""
-            )
+            ) #.replace(' ', '')
 
         data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
         config_file = json.load(

@@ -168,7 +168,7 @@ def pause_client(uid, idexp):
     client = Client.query.filter_by(id=uid).first()
     terminate_client(client, pause=True)
 
-    return redirect(request.referrer)
+    return experiment_details(idexp)  # redirect(request.referrer)
 
 
 @clientsr.route("/admin/stop_client/<int:uid>/<int:idexp>")
@@ -184,7 +184,7 @@ def stop_client(uid, idexp):
     client = Client.query.filter_by(id=uid).first()
     terminate_client(client, pause=False)
 
-    return redirect(request.referrer)  # experiment_details(idexp)
+    return experiment_details(idexp)  # redirect(request.referrer)
 
 
 @clientsr.route("/admin/clients/<idexp>")

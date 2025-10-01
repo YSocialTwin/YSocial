@@ -524,7 +524,6 @@ def get_user_friends(user_id, limit=12, page=1):
     return followers_list, followee_list, number_followers, number_followees
 
 
-
 def get_trending_emotions(limit=10, window=120):
     """
     Get the trending emotions.
@@ -1186,6 +1185,7 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
         )
 
     return res
+
 
 def get_user_recent_interests(user_id, limit=5):
     last_round = Rounds.query.order_by(desc(Rounds.id)).first()

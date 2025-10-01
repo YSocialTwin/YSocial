@@ -1,7 +1,7 @@
 import json
 import os
 
-from flask import Blueprint, render_template, request, redirect, send_file
+from flask import Blueprint, render_template, request, redirect, send_file, flash
 from flask_login import login_required, current_user
 
 from y_web.models import (
@@ -131,6 +131,14 @@ def delete_page(uid):
     check_privileges(current_user.username)
 
     page = Page.query.filter_by(id=uid).first()
+
+    # check if page is assigned to any population
+    page_pop = Page_Population.query.filter_by(page_id=uid).first()
+    if page_pop:
+        # show an error message
+        flash("Page is assigned to a population. Cannot delete.")
+        return page_data()
+
     db.session.delete(page)
     db.session.commit()
 

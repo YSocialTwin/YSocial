@@ -395,6 +395,14 @@ def delete_population(uid):
     check_privileges(current_user.username)
 
     population = Population.query.filter_by(id=uid).first()
+
+    # check if the population is assigned to any experiment
+    pop_exp = Population_Experiment.query.filter_by(id_population=uid).first()
+    if pop_exp:
+        # if the population is assigned to any experiment, do not delete raise a warning
+        flash("Population is assigned to an experiment. Cannot delete.")
+        return populations()
+
     db.session.delete(population)
     db.session.commit()
 
