@@ -76,7 +76,15 @@ def is_admin(username):
 
 @main.app_errorhandler(404)
 def page_not_found(e):
-    """Handle 404 errors with custom error page."""
+    """
+    Handle 404 errors with custom error page.
+    
+    Args:
+        e: Error object
+        
+    Returns:
+        Tuple of (rendered 404 template, 404 status code)
+    """
     return render_template("404.html"), 404
 
 
@@ -84,6 +92,9 @@ def page_not_found(e):
 def index():
     """
     Home page route - redirects authenticated users to feed, others to login.
+    
+    Returns:
+        Redirect to appropriate page based on authentication status
     """
     if current_user.is_authenticated:
         # get active experiment if exists
@@ -292,7 +303,12 @@ def update_password(user_id):
 @main.get("/feed")
 @login_required
 def feeed_logged():
-    """Handle feeed logged operation."""
+    """
+    Display main feed for logged-in users (microblogging platform).
+    
+    Returns:
+        Redirect to feed with user ID and default parameters
+    """
     user_id = current_user.id
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
@@ -404,7 +420,16 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
 @main.get("/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
 def get_post_hashtags(hashtag_id, page=1):
-    """Get post hashtags."""
+    """
+    Display posts containing a specific hashtag.
+    
+    Args:
+        hashtag_id: ID of hashtag to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with hashtag posts
+    """
     res = get_posts_associated_to_hashtags(
         hashtag_id, page, per_page=10, current_user=current_user.id
     )
@@ -460,7 +485,16 @@ def get_post_hashtags(hashtag_id, page=1):
 @main.get("/interest/<int:interest_id>/<int:page>")
 @login_required
 def get_post_interest(interest_id, page=1):
-    """Get post interest."""
+    """
+    Display posts associated with a specific interest/topic.
+    
+    Args:
+        interest_id: ID of interest/topic to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with interest-related posts
+    """
     res = get_posts_associated_to_interest(
         interest_id, page, per_page=10, current_user=current_user.id
     )
@@ -516,7 +550,16 @@ def get_post_interest(interest_id, page=1):
 @main.get("/emotion/<int:emotion_id>/<int:page>")
 @login_required
 def get_post_emotion(emotion_id, page=1):
-    """Get post emotion."""
+    """
+    Display posts that elicit a specific emotion.
+    
+    Args:
+        emotion_id: ID of emotion to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with emotion-tagged posts
+    """
     res = get_posts_associated_to_emotion(
         emotion_id, page, per_page=10, current_user=current_user.id
     )
@@ -573,7 +616,16 @@ def get_post_emotion(emotion_id, page=1):
 @main.get("/friends/<int:user_id>/<int:page>")
 @login_required
 def get_friends(user_id, page=1):
-    """Get friends."""
+    """
+    Display user's followers and followees (friends).
+    
+    Args:
+        user_id: ID of user whose friends to display
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template showing followers and followees
+    """
     followers, followees, number_followers, number_followees = get_user_friends(
         user_id, limit=12, page=page
     )
