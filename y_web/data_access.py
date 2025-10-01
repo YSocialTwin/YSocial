@@ -418,7 +418,16 @@ def get_mutual_friends(user_a, user_b, limit=10):
 
 
 def get_top_user_hashtags(user_id, limit=10):
-    """Get top user hashtags."""
+    """
+    Get most frequently used hashtags by a user.
+    
+    Args:
+        user_id: ID of the user to get hashtags for
+        limit: Maximum number of hashtags to return (default: 10)
+        
+    Returns:
+        List of dictionaries with hashtag id, text, and usage count
+    """
     ht = (
         Post.query.filter_by(user_id=user_id)
         .join(Post_hashtags, Post.id == Post_hashtags.post_id)
@@ -626,8 +635,17 @@ def get_trending_hashtags(limit=10, window=120):
 
 
 def get_trending_topics(limit=10, window=120):
+    """
+    Get currently trending topics based on recent post activity.
+    
+    Args:
+        limit: Maximum number of topics to return (default: 10)
+        window: Number of rounds to look back for trend calculation (default: 120)
+        
+    Returns:
+        List of dictionaries with topic id, name, and post count
+    """
     # get current round
-    """Get trending topics."""
     last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
     last_round = last_round_obj.id if last_round_obj else 0
 
@@ -1221,7 +1239,16 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
 
 
 def get_user_recent_interests(user_id, limit=5):
-    """Get user recent interests."""
+    """
+    Get user's most engaged interests from recent activity.
+    
+    Args:
+        user_id: ID of the user to get interests for
+        limit: Maximum number of interests to return (default: 5)
+        
+    Returns:
+        List of tuples containing (interest_name, interest_id, engagement_count)
+    """
     last_round = Rounds.query.order_by(desc(Rounds.id)).first()
     last_round_id = last_round.id if last_round else 0
 
@@ -1249,8 +1276,16 @@ def get_user_recent_interests(user_id, limit=5):
 
 
 def get_elicited_emotions(post_id):
+    """
+    Get emotions elicited by a post.
+    
+    Args:
+        post_id: ID of the post to get emotions for
+        
+    Returns:
+        Set of tuples containing (emotion_name, icon, emotion_id)
+    """
     # get elicited emotions names
-    """Get elicited emotions."""
     emotions = (
         Post_emotions.query.filter_by(post_id=post_id)
         .join(Emotions, Post_emotions.emotion_id == Emotions.id)
@@ -1264,6 +1299,16 @@ def get_elicited_emotions(post_id):
 
 
 def get_topics(post_id, user_id):
+    """
+    Get topics associated with a post and user sentiment.
+    
+    Args:
+        post_id: ID of the post to get topics for
+        user_id: ID of the user viewing the post
+        
+    Returns:
+        List of topics with sentiment information
+    """
     # get the topics of the post
     # topics = (
     #    Post.query.filter_by(id=post_id)
