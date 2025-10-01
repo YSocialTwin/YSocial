@@ -1,3 +1,11 @@
+"""
+Authentication and user management routes.
+
+Handles user registration, login, and logout functionality for both
+administrative users and experiment participants. Manages session creation
+and validation for the YSocial platform.
+"""
+
 from flask import Blueprint, render_template, redirect, url_for, request, flash
 from flask_login import login_user, login_required, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,11 +17,21 @@ auth = Blueprint("auth", __name__)
 
 @auth.route("/signup")
 def signup():
+    """Display user registration page."""
     return render_template("register.html")
 
 
 @auth.route("/signup", methods=["POST"])
 def signup_post():
+    """
+    Process user registration form submission.
+    
+    Creates new user accounts in both admin and experiment databases,
+    with password hashing for security.
+    
+    Returns:
+        Redirect to main feed on success, or back to signup on error
+    """
     # code to validate and add user to database goes here
 
     email = request.form.get("email")
@@ -56,11 +74,22 @@ def signup_post():
 
 @auth.route("/login")
 def login():
+    """Display login page."""
     return render_template("login.html")
 
 
 @auth.route("/login", methods=["POST"])
 def login_post():
+    """
+    Process login form submission and authenticate user.
+    
+    Validates credentials, distinguishes between admin and regular users,
+    and redirects to appropriate dashboard/feed based on role.
+    
+    Returns:
+        Redirect to admin dashboard for admins, main feed for users,
+        or back to login page on authentication failure
+    """
     if request.method == "GET":
         return render_template("login.html")
     # login code goes here
@@ -109,5 +138,6 @@ def login_post():
 @auth.route("/logout")
 @login_required
 def logout():
+    """Log out the current user and return to login page."""
     logout_user()
     return render_template("login.html")

@@ -1,3 +1,18 @@
+"""
+YSocial Web Application Initialization.
+
+This module initializes the Flask application and configures database connections
+for the YSocial platform. It supports both SQLite and PostgreSQL databases and
+manages application lifecycle including subprocess cleanup on shutdown.
+
+Key components:
+- Flask app factory pattern (create_app)
+- Database initialization and schema management
+- Flask-Login user session management
+- Blueprint registration for all routes
+- Subprocess management for simulation clients
+"""
+
 import os
 import shutil
 import signal
@@ -16,6 +31,18 @@ login_manager.login_view = "auth.login"
 
 
 def create_postgresql_db(app):
+    """
+    Create and initialize PostgreSQL database for the application.
+    
+    Sets up PostgreSQL connection, creates databases if they don't exist,
+    and loads initial schema and admin user data.
+    
+    Args:
+        app: Flask application instance to configure
+        
+    Raises:
+        RuntimeError: If PostgreSQL is not installed or not running
+    """
     user = os.getenv("PG_USER", "postgres")
     password = os.getenv("PG_PASSWORD", "password")
     host = os.getenv("PG_HOST", "localhost")
@@ -161,6 +188,7 @@ def create_postgresql_db(app):
 
 
 def cleanup_subprocesses():
+    """Terminate all running simulation client subprocesses on shutdown."""
     print("Cleaning up subprocesses...")
     for _, proc in client_processes.items():
         print(f"Terminating subprocess {proc.pid}...")
@@ -170,6 +198,7 @@ def cleanup_subprocesses():
 
 
 def signal_handler(sig, frame):
+    """Handle SIGINT (Ctrl+C) by cleaning up subprocesses and exiting gracefully."""
     print("Ctrl+C detected, shutting down...")
     cleanup_subprocesses()
     exit(0)
@@ -180,6 +209,21 @@ atexit.register(cleanup_subprocesses)
 
 
 def create_app(db_type="sqlite"):
+    """
+    Create and configure the Flask application (factory pattern).
+    
+    Initializes the application with database connections, authentication,
+    and all route blueprints. Supports both SQLite and PostgreSQL backends.
+    
+    Args:
+        db_type: Database type to use, either "sqlite" or "postgresql"
+        
+    Returns:
+        Configured Flask application instance
+        
+    Raises:
+        ValueError: If unsupported db_type is provided
+    """
     app = Flask(__name__, static_url_path="/static")
 
     # Copy databases if missing (keep your existing logic)

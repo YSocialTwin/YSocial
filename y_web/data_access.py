@@ -1,3 +1,11 @@
+"""
+Data access layer for database queries and data manipulation.
+
+Provides helper functions for retrieving and processing social media data
+including posts, users, reactions, follows, and recommendations. Handles
+pagination, filtering, and data formatting for display in the web interface.
+"""
+
 from .models import (
     Post,
     Post_hashtags,
@@ -25,7 +33,16 @@ from y_web import db
 
 def get_safe_profile_pic(username, is_page=0):
     """
-    Safely get profile picture for a user with fallbacks
+    Safely retrieve profile picture URL for a user or page.
+    
+    Attempts to find profile picture from multiple sources with fallbacks.
+    
+    Args:
+        username: Username to get profile picture for
+        is_page: 1 if username refers to a page, 0 for regular user
+        
+    Returns:
+        Profile picture URL string, or empty string if not found
     """
     if is_page == 1:
         try:
@@ -58,14 +75,17 @@ def get_safe_profile_pic(username, is_page=0):
 
 def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=None):
     """
-
-    :param db:
-    :param user_id:
-    :param page:
-    :param per_page:
-    :param mode:
-    :param current_user:
-    :return:
+    Retrieve paginated posts for a specific user based on filter mode.
+    
+    Args:
+        user_id: ID of the user whose posts to retrieve
+        page: Page number for pagination (1-indexed)
+        per_page: Number of posts per page
+        mode: Filter mode - "recent", "comments", "liked", "disliked", or "rf"
+        current_user: Current user viewing the posts (for personalization)
+        
+    Returns:
+        Dictionary containing paginated posts, user info, and metadata
     """
 
     if page < 1:
