@@ -198,7 +198,13 @@ def cleanup_subprocesses():
 
 
 def signal_handler(sig, frame):
-    """Handle SIGINT (Ctrl+C) by cleaning up subprocesses and exiting gracefully."""
+    """
+    Handle SIGINT (Ctrl+C) signal for graceful shutdown.
+    
+    Args:
+        sig: Signal number received
+        frame: Current stack frame
+    """
     print("Ctrl+C detected, shutting down...")
     cleanup_subprocesses()
     exit(0)
@@ -263,7 +269,15 @@ def create_app(db_type="sqlite"):
 
     @login_manager.user_loader
     def load_user(user_id):
-        """Handle load user operation."""
+        """
+        Load user by ID for Flask-Login session management.
+        
+        Args:
+            user_id: User ID string to load
+            
+        Returns:
+            User_mgmt object if found, None otherwise
+        """
         return User.query.get(int(user_id))
 
     # Register your blueprints here as before

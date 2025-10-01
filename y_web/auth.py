@@ -17,7 +17,12 @@ auth = Blueprint("auth", __name__)
 
 @auth.route("/signup")
 def signup():
-    """Display user registration page."""
+    """
+    Display user registration page.
+    
+    Returns:
+        Rendered registration template
+    """
     return render_template("register.html")
 
 
@@ -74,7 +79,12 @@ def signup_post():
 
 @auth.route("/login")
 def login():
-    """Display login page."""
+    """
+    Display login page.
+    
+    Returns:
+        Rendered login template
+    """
     return render_template("login.html")
 
 
@@ -138,6 +148,11 @@ def login_post():
 @auth.route("/logout")
 @login_required
 def logout():
-    """Log out the current user and return to login page."""
+    """
+    Log out the current user and return to login page.
+    
+    Returns:
+        Rendered login template after logout
+    """
     logout_user()
     return render_template("login.html")
