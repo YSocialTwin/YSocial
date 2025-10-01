@@ -1,3 +1,11 @@
+"""
+Client simulation management routes.
+
+Administrative routes for configuring and managing simulation clients,
+including behavior parameters, LLM settings, network topology, and
+client execution control (start/pause/resume/terminate).
+"""
+
 import os
 import networkx as nx
 import faker

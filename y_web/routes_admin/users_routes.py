@@ -1,3 +1,10 @@
+"""
+User management routes.
+
+Administrative routes for managing admin users including viewing user lists,
+creating new users, and updating user permissions and settings.
+"""
+
 import os
 
 from flask import Blueprint, render_template, request, abort

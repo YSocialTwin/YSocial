@@ -1,3 +1,11 @@
+"""
+Population management routes.
+
+Administrative routes for creating, configuring, and managing agent populations
+including demographics, personality traits, recommendation systems, and
+association with experiments and pages.
+"""
+
 import json
 import os
 
@@ -42,6 +50,16 @@ population = Blueprint("population", __name__)
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
 @login_required
 def create_population_empty():
+    """
+    Create a new empty population with just name and description.
+    
+    Form data:
+        empty_population_name: Name for the population
+        empty_population_descr: Description of the population
+        
+    Returns:
+        Redirect to populations list
+    """
     check_privileges(current_user.username)
 
     name = request.form.get("empty_population_name")
@@ -59,6 +77,21 @@ def create_population_empty():
 @population.route("/admin/create_population", methods=["POST"])
 @login_required
 def create_population():
+    """
+    Create a new population with full configuration.
+    
+    Creates population with demographics, personality traits, interests,
+    toxicity levels, and recommendation system settings. Generates agents
+    based on the configuration.
+    
+    Form data:
+        pop_name, pop_descr, n_agents, user_type, age_min, age_max,
+        education_levels, political_leanings, toxicity_levels,
+        nationalities, languages, tags (interests), crecsys, frecsys
+        
+    Returns:
+        Redirect to populations list
+    """
     check_privileges(current_user.username)
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")

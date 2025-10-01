@@ -1,3 +1,11 @@
+"""
+Page/news organization management routes.
+
+Administrative routes for creating and managing institutional pages,
+configuring RSS feeds, political leanings, topics, and associating
+pages with populations.
+"""
+
 import json
 import os
 

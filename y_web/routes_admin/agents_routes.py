@@ -1,3 +1,11 @@
+"""
+Agent management routes.
+
+Administrative routes for creating, editing, and managing individual AI agents
+including their profiles, demographics, personality traits, and behavioral
+settings.
+"""
+
 import random
 
 from flask import (

@@ -1,3 +1,11 @@
+"""
+Experiment management routes.
+
+Administrative routes for creating, configuring, launching, and managing
+social media simulation experiments including database setup, population
+assignment, and experiment lifecycle control.
+"""
+
 import os
 
 from flask import (
