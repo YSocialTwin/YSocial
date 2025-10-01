@@ -242,7 +242,12 @@ def agent_details(uid):
 @agents.route("/admin/add_to_population", methods=["POST"])
 @login_required
 def add_to_population():
-    """Handle add to population operation."""
+    """
+    Add an agent to a population from form data.
+    
+    Returns:
+        Redirect to agent details page
+    """
     check_privileges(current_user.username)
 
     agent_id = request.form.get("agent_id")

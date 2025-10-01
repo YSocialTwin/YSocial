@@ -1338,7 +1338,12 @@ def get_thread_reddit(post_id):
 @main.get("/rfeed")
 @login_required
 def feeed_logged_reddit():
-    """Handle feeed logged reddit operation."""
+    """
+    Display Reddit-style feed for logged-in users.
+    
+    Returns:
+        Redirect to Reddit feed with default parameters
+    """
     user_id = "all"  # Show all posts including user's own posts
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
