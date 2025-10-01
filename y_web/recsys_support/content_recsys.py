@@ -1,3 +1,11 @@
+"""
+Content recommendation system algorithms.
+
+Implements various content recommendation strategies for personalizing
+the social media feed including reverse chronological, popularity-based,
+follower-based, and random sampling approaches.
+"""
+
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
 from y_web.models import (
@@ -9,9 +17,22 @@ from y_web import db
 
 def get_suggested_posts(uid, mode, page=1, per_page=10, follower_ratio=0.6):
     """
-    Return a list of candidate posts for the user as filtered by the content recommendation system.
-
-    :return: a json object with the post ids
+    Get recommended posts for a user based on specified algorithm.
+    
+    Supports multiple recommendation strategies including chronological feeds,
+    popularity-based ranking, follower-focused content, and random sampling.
+    
+    Args:
+        uid: User ID to get recommendations for, or "all" for global feed
+        mode: Recommendation algorithm - "ReverseChrono", "ReverseChronoPopularity",
+              "ReverseChronoFollowers", or "Random"
+        page: Page number for pagination
+        per_page: Number of posts per page
+        follower_ratio: Ratio of posts from followed users (for follower-based modes)
+        
+    Returns:
+        Tuple of (posts, additional_posts) where posts is paginated query result
+        and additional_posts may contain supplementary content
     """
 
     if uid == "all":

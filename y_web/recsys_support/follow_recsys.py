@@ -1,3 +1,10 @@
+"""
+Follower recommendation system algorithms.
+
+Implements user and page recommendation strategies for suggesting new accounts
+to follow based on network structure, shared interests, and user preferences.
+"""
+
 from sqlalchemy.sql.expression import func
 from y_web.models import (
     User_mgmt,
@@ -12,10 +19,17 @@ import numpy as np
 
 def get_suggested_users(user_id, pages=False):
     """
-    Get follow suggestions for a user.
-
-    :param user_id:
-    :return:
+    Get follow recommendations for a user.
+    
+    Suggests accounts to follow based on the user's recommendation system
+    preference, optionally filtering for pages or regular users.
+    
+    Args:
+        user_id: ID of user to get recommendations for, or "all" for none
+        pages: If True, return only page accounts; if False, only regular users
+        
+    Returns:
+        List of dictionaries with keys: 'username', 'id', 'profile_pic'
     """
 
     if user_id == "all":
