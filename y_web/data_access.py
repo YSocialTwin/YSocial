@@ -1309,20 +1309,7 @@ def get_topics(post_id, user_id):
     Returns:
         List of topics with sentiment information
     """
-    # get the topics of the post
-    # topics = (
-    #    Post.query.filter_by(id=post_id)
-    #    .join(Post_topics, Post.id == Post_topics.post_id)
-    #    .join(Post_Sentiment, Post.id == Post_Sentiment.post_id)
-    #    .join(Interests, Post_topics.topic_id == Interests.iid)
-    #    .add_columns(Interests.interest)
-    #    .add_columns(Interests.iid)
-    #    .add_columns(Post_Sentiment.compound)
-    #    .add_columns(Post_Sentiment.is_reaction)
-    #    .add_columns(Post_Sentiment.user_id)
-    #    .all()
-    # )
-    """Get topics."""
+
     post = Post.query.filter_by(id=post_id).first()
     if post.image_id is not None:
         return []
@@ -1361,11 +1348,12 @@ def get_topics(post_id, user_id):
 
 
 def get_unanswered_mentions(user_id):
-    """    Args:
+    """
+    Args:
         user_id: 
 
     Returns:
-        """
+    """
 
     res = (
         Mentions.query.filter_by(user_id=user_id, answered=0)
