@@ -22,6 +22,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
+from y_web import db
 from y_web.models import (
     Agent,
     Agent_Population,
@@ -41,8 +42,6 @@ from y_web.models import (
 )
 from y_web.utils import get_db_type, get_ollama_models, start_client, terminate_client
 from y_web.utils.miscellanea import check_privileges, ollama_status
-
-from y_web import db
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -123,7 +122,7 @@ def extend_simulation(id_client):
 def run_client(uid, idexp):
     """Handle run client operation."""
     from .experiments_routes import experiment_details
-    
+
     check_privileges(current_user.username)
 
     # get experiment
@@ -177,7 +176,7 @@ def resume_client(uid, idexp):
 def pause_client(uid, idexp):
     """Handle pause client operation."""
     from .experiments_routes import experiment_details
-    
+
     check_privileges(current_user.username)
 
     # get population_experiment and update the client_running status
@@ -196,7 +195,7 @@ def pause_client(uid, idexp):
 def stop_client(uid, idexp):
     """Handle stop client operation."""
     from .experiments_routes import experiment_details
-    
+
     check_privileges(current_user.username)
 
     # get population_experiment and update the client_running status
@@ -645,6 +644,7 @@ def create_client():
 
     # load experiment_details page
     from .experiments_routes import experiment_details
+
     return experiment_details(int(exp_id))
 
 
@@ -671,6 +671,7 @@ def delete_client(uid):
         print(f"File {path} does not exist.")
 
     from .experiments_routes import experiment_details
+
     return experiment_details(exp_id)
 
 
