@@ -113,40 +113,13 @@
                                         </ul>
                                     </span>
                                 </div>
+                                <div class="box-line">
+                                    <span class="left">
+                                        <small>Populations are automatically assigned to experiments when creating a client.</small>
+                                    </span>
+                                </div>
                             </div>
 
-                        </div>
-                    </div>
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Add to Experiment</h3>
-                        <div class="box-content">
-                            <form action="/admin/add_to_experiment" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">
-                                            A population can be deployed in multiple experiments.
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <input type="hidden" name="population_id" value="{{ population.id }}">
-                                        <span class="left">Experiment</span>
-                                        <div class="select">
-                                            <select name="experiment_id">
-                                                {% for experiment in experiments %}
-                                                <option value="{{ experiment.idexp }}">{{ experiment.exp_name }}
-                                                </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     </div>
 

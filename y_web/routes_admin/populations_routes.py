@@ -241,9 +241,6 @@ def population_details(uid):
     # get population details
     population = Population.query.filter_by(id=uid).first()
 
-    # get all experiments
-    experiments = Exps.query.all()
-
     # get experiment populations along with experiment names and ids
     experiment_populations = (
         db.session.query(Population_Experiment, Exps)
@@ -406,7 +403,6 @@ def population_details(uid):
     return render_template(
         "admin/population_details.html",
         population=population,
-        experiments=experiments,
         population_experiments=exps,
         agents=agents,
         data=dd,
