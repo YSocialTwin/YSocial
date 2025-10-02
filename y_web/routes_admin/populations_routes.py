@@ -34,6 +34,7 @@ from y_web.models import (
     Languages,
     Content_Recsys,
     Follow_Recsys, Exp_Topic, Topic_List,
+    Toxicity_Levels,
 )
 from y_web.utils import (
     generate_population,
@@ -212,6 +213,7 @@ def populations():
     education_levels = Education.query.all()
     nationalities = Nationalities.query.all()
     languages = Languages.query.all()
+    toxicity_levels = Toxicity_Levels.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
 
@@ -223,6 +225,7 @@ def populations():
         education_levels=education_levels,
         nationalities=nationalities,
         languages=languages,
+        toxicity_levels=toxicity_levels,
         crecsys=crecsys,
         frecsys=frecsys,
     )
