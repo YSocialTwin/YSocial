@@ -1,0 +1,54 @@
+name: Format Code with Black
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - '**.py'
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    
+    - name: Install black
+      run: |
+        python -m pip install --upgrade pip
+        pip install black
+    
+    - name: Format code with black
+      run: |
+        black .
+    
+    - name: Check for changes
+      id: verify_diff
+      run: |
+        git diff --quiet . || echo "changed=true" >> $GITHUB_OUTPUT
+    
+    - name: Commit changes
+      if: steps.verify_diff.outputs.changed == 'true'
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git add -A
+        git commit -m "Auto-format code with black"
+    
+    - name: Push changes
+      if: steps.verify_diff.outputs.changed == 'true'
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: ${{ github.ref }}
