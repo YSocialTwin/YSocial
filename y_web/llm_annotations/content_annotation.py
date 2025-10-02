@@ -36,7 +36,7 @@ class ContentAnnotator(object):
                 base_url = "http://127.0.0.1:8000/v1"
             else:  # ollama
                 base_url = "http://127.0.0.1:11434/v1"
-            
+
             self.config_list = [
                 {
                     "model": llm,

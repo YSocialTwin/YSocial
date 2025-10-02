@@ -23,6 +23,7 @@ services:
     environment:
       - FLASK_APP=/app/y_social.py
       - NVIDIA_VISIBLE_DEVICES=all
+      # - LLM_BACKEND=ollama  # Default: ollama. Options: ollama, vllm
     networks:
       my-network:
         aliases:

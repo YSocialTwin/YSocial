@@ -463,7 +463,7 @@ def is_vllm_running():
 def start_vllm_server(model_name=None):
     """
     Start vLLM server.
-    
+
     Args:
         model_name: Name of model to serve (optional, if None, server must be started manually)
     """
@@ -476,7 +476,9 @@ def start_vllm_server(model_name=None):
                 # Wait for the server to start
                 time.sleep(10)
             else:
-                print("vLLM is installed but not running. Please start manually with a model.")
+                print(
+                    "vLLM is installed but not running. Please start manually with a model."
+                )
         else:
             print("vLLM is already running.")
     else:

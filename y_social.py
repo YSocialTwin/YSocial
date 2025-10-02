@@ -4,11 +4,13 @@ from argparse import ArgumentParser
 from y_web import create_app, db
 
 
-def start_app(db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama"):
+def start_app(
+    db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama"
+):
     import nltk
 
     nltk.download("vader_lexicon")
-    
+
     # Set the LLM backend as environment variable for the app to use
     os.environ["LLM_BACKEND"] = llm_backend
 
@@ -52,4 +54,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    start_app(db_type=args.db, debug=args.debug, host=args.host, port=args.port, llm_backend=args.llm_backend)
+    start_app(
+        db_type=args.db,
+        debug=args.debug,
+        host=args.host,
+        port=args.port,
+        llm_backend=args.llm_backend,
+    )
