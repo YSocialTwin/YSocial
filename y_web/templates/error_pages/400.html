@@ -78,12 +78,35 @@
                             />
 
                         </div>
-                        <div>
-                        <h2><b>Bad Request</b></h2>
-                        <p><br>
-                        The request could not be understood by the server.<br>
-                        Please check your input and try again.
-                        </p>
+                        <div style="text-align: center; max-width: 500px; margin: 0 auto;">
+                            <h2 style="margin-bottom: 10px;"><b>Bad Request</b></h2>
+                            <p style="font-size: 1.2em; color: #999; margin-bottom: 20px;">
+                                Error {{ error.status_code if error else '400' }}
+                            </p>
+                            <p style="margin-bottom: 30px; line-height: 1.6;">
+                                {{ error.error_description if error else 'The request could not be understood by the server.' }}<br>
+                                Please check your input and try again.
+                            </p>
+                            
+                            {% if error and error.requested_url %}
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
+                                <p style="margin: 5px 0; font-size: 0.9em;"><strong>Debug Information:</strong></p>
+                                <p style="margin: 5px 0; font-size: 0.85em; word-break: break-all;">
+                                    <strong>URL:</strong> {{ error.requested_url }}
+                                </p>
+                                {% if error.method %}
+                                <p style="margin: 5px 0; font-size: 0.85em;">
+                                    <strong>Method:</strong> {{ error.method }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div style="margin-top: 30px;">
+                                <a href="/" class="button is-solid primary-button" style="padding: 10px 30px; text-decoration: none;">
+                                    Go to Homepage
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
