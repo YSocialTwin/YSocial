@@ -212,10 +212,8 @@ def clients(idexp):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=idexp).first()
-    # get population assigned to the experiment
-    populations = Population_Experiment.query.filter_by(id_exp=idexp).all()
-    # get the populations details
-    pops = [Population.query.filter_by(id=p.id_population).first() for p in populations]
+    # get all available populations from the database
+    pops = Population.query.all()
 
     ollamas = ollama_status()
 
@@ -288,6 +286,16 @@ def create_client():
     if population is None:
         flash("Population not found.", "error")
         return redirect(request.referrer)
+
+    # check if the population is already assigned to the experiment
+    # if not, add it
+    pop_exp = Population_Experiment.query.filter_by(
+        id_population=population_id, id_exp=exp_id
+    ).first()
+    if not pop_exp:
+        pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
+        db.session.add(pop_exp)
+        db.session.commit()
 
     # create the Client object
     client = Client(
