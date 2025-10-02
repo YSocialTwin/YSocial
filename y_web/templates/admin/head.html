@@ -14,7 +14,7 @@
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet"/>
-    <link href="https://cdn.jsdelivr.net/npm/fontisto@v3.0.4/css/fontisto/fontisto-brands.min.css" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='assets/vendor/fontisto/css/fontisto/fontisto-brands.min.css') }}" rel="stylesheet"/>
 
 
 
@@ -22,10 +22,10 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
 
-    <link href="https://unpkg.com/gridjs/dist/theme/mermaid.min.css" rel="stylesheet"/>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="{{ url_for('static', filename='assets/vendor/css/gridjs-mermaid.min.css') }}" rel="stylesheet"/>
+    <script src="{{ url_for('static', filename='assets/vendor/js/chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='assets/vendor/js/jquery-3.6.0.min.js') }}"></script>
+       <link rel="stylesheet" href="{{ url_for('static', filename='assets/vendor/css/bootstrap.min.css') }}">
 </head>
 
 <body>
