@@ -316,5 +316,8 @@ def create_app(db_type="sqlite"):
     from .routes_admin.clients_routes import clientsr as clients_blueprint
 
     app.register_blueprint(clients_blueprint)
+    from .error_routes import errors as errors_blueprint
+
+    app.register_blueprint(errors_blueprint)
 
     return app
