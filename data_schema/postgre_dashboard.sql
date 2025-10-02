@@ -95,6 +95,11 @@ CREATE TABLE nationalities (
     nationality TEXT NOT NULL
 );
 
+CREATE TABLE toxicity_levels (
+    id             SERIAL PRIMARY KEY,
+    toxicity_level TEXT NOT NULL
+);
+
 CREATE TABLE ollama_pull (
     id         SERIAL PRIMARY KEY,
     model_name TEXT NOT NULL,
@@ -248,6 +253,11 @@ INSERT INTO leanings (leaning) VALUES
 ('republican'),
 ('centrist');
 
+INSERT INTO toxicity_levels (toxicity_level) VALUES
+('none'),
+('low'),
+('medium'),
+('high');
 
 INSERT INTO education (education_level) VALUES
   ('high school'),
