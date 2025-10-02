@@ -412,10 +412,9 @@
                                         <span class="left">Toxicity Level</span>
                                         <div class="select">
                                             <select name="toxicity">
-                                                <option value="none"></option>
-                                                <option value="low">Low</option>
-                                                <option value="medium">Medium</option>
-                                                <option value="high">High</option>
+                                                {% for toxicity_level in toxicity_levels %}
+                                                <option value="{{ toxicity_level.toxicity_level }}">{{ toxicity_level.toxicity_level }}</option>
+                                                {% endfor %}
                                             </select>
                                         </div>
 

@@ -40,7 +40,8 @@ from y_web.models import (
     Profession,
     Education,
     Topic_List,
-    Exp_Topic
+    Exp_Topic,
+    Toxicity_Levels
 )
 from y_web.utils import terminate_process_on_port, start_server
 import json
@@ -1462,5 +1463,85 @@ def delete_profession(profession_id):
         flash("Profession not found.")
         return miscellanea()
     db.session.delete(profession)
+    db.session.commit()
+    return miscellanea()
+
+
+@experiments.route("/admin/toxicity_levels_data")
+@login_required
+def toxicity_levels_data():
+    """Display toxicity levels data page."""
+    query = Toxicity_Levels.query
+
+    search = request.args.get("search")
+    if search:
+        query = query.filter(db.or_(Toxicity_Levels.toxicity_level.like(f"%{search}%")))
+    total = query.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            name = s[1:]
+            if name not in ["toxicity_level"]:
+                name = "name"
+            col = getattr(Exps, name)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            query = query.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        query = query.offset(start).limit(length)
+
+    # response
+    res = query.all()
+
+    res = {
+        "data": [
+            {
+                "id": exp.id,
+                "toxicity_level": exp.toxicity_level,
+            }
+            for exp in res
+        ],
+        "total": total,
+    }
+
+    return res
+
+
+@experiments.route("/admin/create_toxicity_level", methods=["POST"])
+@login_required
+def create_toxicity_level():
+    """Create toxicity level."""
+    check_privileges(current_user.username)
+
+    toxicity_level = request.form.get("toxicity_level")
+
+    tox = Toxicity_Levels(toxicity_level=toxicity_level)
+    db.session.add(tox)
+    db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@experiments.route('/admin/delete_toxicity_level/<int:toxicity_level_id>', methods=['DELETE'])
+@login_required
+def delete_toxicity_level(toxicity_level_id):
+    """Delete toxicity level."""
+    check_privileges(current_user.username)
+
+    toxicity_level = Toxicity_Levels.query.filter_by(id=toxicity_level_id).first()
+    if not toxicity_level:
+        flash("Toxicity level not found.")
+        return miscellanea()
+    db.session.delete(toxicity_level)
     db.session.commit()
     return miscellanea()
