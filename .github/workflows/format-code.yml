@@ -2,11 +2,9 @@ name: Format Code
 
 on:
   push:
-    branches: [ main, develop ]
     paths:
       - '**.py'
   pull_request:
-    branches: [ main, develop ]
     paths:
       - '**.py'
 

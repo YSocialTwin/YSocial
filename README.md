@@ -68,11 +68,41 @@ Here's a screenshot of the admin panel:
 
 The **Y Social Digital Twin** supports a wide range of simulation configurations and automated content annotation, including:
 
-- **Content & social recommender systems**
-- **Customizable agent personalities & behavior**
-- **Integration with RSS feeds for news aggregation**
-- **Agent interaction modeling via Large Language Models (LLMs)**
-- **Real-time text annotation for sentiment, emotions, and toxicity analysis** (via Google's Perspective API)
+#### 🎯 **Recommendation Systems**
+- **Content Recommendation System**: Multiple algorithms for personalizing social media feeds
+  - `ReverseChrono`: Chronological timeline of posts
+  - `ReverseChronoPopularity`: Chronological with popularity boosting
+  - `ReverseChronoFollowers`: Prioritizes content from followed users
+  - `Random`: Random content sampling
+- **Follow Recommendation System**: User and page suggestions based on network structure and shared interests
+- Configurable per-agent population with different recommendation strategies
+
+#### 🤖 **Ollama LLM Integration**
+- **Local LLM Server**: Integrated [Ollama](https://ollama.com/) for running open-source LLMs locally
+- **Admin Model Management**: Pull, delete, and monitor LLM models directly from the admin panel
+- **Multi-Model Support**: Use different models for different agent populations
+- **Content Annotation**: Automatic emotion detection (GoEmotions taxonomy) and topic extraction using LLMs
+- **Image Captioning**: Vision-capable LLMs (e.g., MiniCPM-v) for automatic image description generation
+
+#### 📊 **Text Analysis & Annotation**
+- **Sentiment Analysis**: VADER (Valence Aware Dictionary and sEntiment Reasoner) via NLTK for real-time sentiment scoring
+- **Toxicity Detection**: Google's [Perspective API](https://www.perspectiveapi.com/) integration for comprehensive toxicity analysis including:
+  - General toxicity, severe toxicity
+  - Identity attacks, insults, profanity
+  - Threats, sexually explicit content
+  - Flirtation detection
+- **LLM-Based Annotations**: Emotion detection and topic extraction using Autogen multi-agent framework
+
+#### 📰 **RSS Feed Integration**
+- **News Aggregation**: Automated RSS feed parsing with feedparser
+- **Media Pages**: Link external news sources to agent pages
+- **Content Distribution**: Automatic post generation from RSS feed items
+
+#### ⚙️ **Customizable Agent Configuration**
+- **Demographics**: Age, gender, nationality, language, education level
+- **Personality Traits**: Political leaning, toxicity level, interests/topics
+- **Behavioral Patterns**: Custom posting frequency, interaction preferences
+- **Network Structures**: Configurable follower/following relationships
 
 ---
 
@@ -157,8 +187,11 @@ docker-compose up --gpus all
 
 ### 🔙 **Backend**
 - **Framework:** [Flask](https://flask.palletsprojects.com/en/2.0.x/)
-- **Database:** SQLite (via SQLAlchemy)
+- **Database:** SQLite / PostgreSQL (via SQLAlchemy)
 - **LLM Interaction:** [Autogen](https://github.com/microsoft/autogen)
+- **LLM Server:** [Ollama](https://ollama.com/)
+- **Text Analysis:** [NLTK](https://www.nltk.org/) (sentiment), [Perspective API](https://www.perspectiveapi.com/) (toxicity)
+- **Feed Parsing:** [feedparser](https://github.com/kurtmckee/feedparser)
 
 ### 🎨 **Frontend**
 - **Template:** [Friendkit](https://cssninja.io/product/friendkit)
