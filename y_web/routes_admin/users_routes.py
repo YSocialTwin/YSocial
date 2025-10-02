@@ -1,3 +1,10 @@
+"""
+User management routes.
+
+Administrative routes for managing admin users including viewing user lists,
+creating new users, and updating user permissions and settings.
+"""
+
 import os
 
 from flask import Blueprint, render_template, request, abort
@@ -19,6 +26,12 @@ users = Blueprint("users", __name__)
 @users.route("/admin/users")
 @login_required
 def user_data():
+    """
+    Display user management page.
+    
+    Returns:
+        Rendered user data template with available models
+    """
     check_privileges(current_user.username)
     ollamas = ollama_status()
     if ollamas["status"]:
@@ -31,6 +44,12 @@ def user_data():
 @users.route("/admin/user_data")
 @login_required
 def users_data():
+    """
+    Display list of all admin users.
+    
+    Returns:
+        Rendered users list template
+    """
     query = Admin_users.query
 
     # search filter
@@ -88,6 +107,12 @@ def users_data():
 @users.route("/admin/user_data", methods=["POST"])
 @login_required
 def update():
+    """
+    Update user information from form data.
+    
+    Returns:
+        Redirect to users page
+    """
     data = request.get_json()
     if "id" not in data:
         abort(400)
@@ -102,6 +127,7 @@ def update():
 @users.route("/admin/user_details/<int:uid>")
 @login_required
 def user_details(uid):
+    """Handle user details operation."""
     check_privileges(current_user.username)
 
     # get user details
@@ -138,6 +164,12 @@ def user_details(uid):
 @users.route("/admin/add_user", methods=["POST"])
 @login_required
 def add_user():
+    """
+    Create a new admin user from form data.
+    
+    Returns:
+        Redirect to users page
+    """
     check_privileges(current_user.username)
 
     username = request.form.get("username")
@@ -165,6 +197,7 @@ def add_user():
 @users.route("/admin/delete_user/<int:uid>")
 @login_required
 def delete_user(uid):
+    """Delete user."""
     check_privileges(current_user.username)
 
     user = Admin_users.query.filter_by(id=uid).first()
@@ -177,6 +210,12 @@ def delete_user(uid):
 @users.route("/admin/add_user_to_experiment", methods=["POST"])
 @login_required
 def add_user_to_experiment():
+    """
+    Associate a user with an experiment.
+    
+    Returns:
+        Redirect to user details
+    """
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")
@@ -235,6 +274,12 @@ def add_user_to_experiment():
 @users.route("/admin/set_perspective_api_user", methods=["POST"])
 @login_required
 def set_perspective_api_user():
+    """
+    Set Perspective API key for a user.
+    
+    Returns:
+        Redirect to user details
+    """
     check_privileges(current_user.username)
 
     user_id = request.form.get("user_id")

@@ -1,3 +1,11 @@
+"""
+Agent management routes.
+
+Administrative routes for creating, editing, and managing individual AI agents
+including their profiles, demographics, personality traits, and behavioral
+settings.
+"""
+
 import random
 
 from flask import (
@@ -34,6 +42,12 @@ agents = Blueprint("agents", __name__)
 @agents.route("/admin/agents")
 @login_required
 def agent_data():
+    """
+    Display agent management page.
+    
+    Returns:
+        Rendered agent data template with available models
+    """
     check_privileges(current_user.username)
 
     models = get_ollama_models()
@@ -68,6 +82,7 @@ def agent_data():
 @agents.route("/admin/agents_data")
 @login_required
 def agents_data():
+    """Display agents data page."""
     query = Agent.query
 
     # search filter
@@ -119,6 +134,12 @@ def agents_data():
 @agents.route("/admin/create_agent", methods=["POST"])
 @login_required
 def create_agent():
+    """
+    Create a new AI agent from form data.
+    
+    Returns:
+        Redirect to agent data page
+    """
     check_privileges(current_user.username)
 
     user_type = request.form.get("user_type")
@@ -185,6 +206,7 @@ def create_agent():
 @agents.route("/admin/agent_details/<int:uid>")
 @login_required
 def agent_details(uid):
+    """Handle agent details operation."""
     check_privileges(current_user.username)
     # get agent details
     agent = Agent.query.filter_by(id=uid).first()
@@ -220,6 +242,12 @@ def agent_details(uid):
 @agents.route("/admin/add_to_population", methods=["POST"])
 @login_required
 def add_to_population():
+    """
+    Add an agent to a population from form data.
+    
+    Returns:
+        Redirect to agent details page
+    """
     check_privileges(current_user.username)
 
     agent_id = request.form.get("agent_id")
@@ -243,6 +271,7 @@ def add_to_population():
 @agents.route("/admin/delete_agent/<int:uid>")
 @login_required
 def delete_agent(uid):
+    """Delete agent."""
     check_privileges(current_user.username)
 
     agent = Agent.query.filter_by(id=uid).first()

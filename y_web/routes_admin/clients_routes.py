@@ -1,3 +1,11 @@
+"""
+Client simulation management routes.
+
+Administrative routes for configuring and managing simulation clients,
+including behavior parameters, LLM settings, network topology, and
+client execution control (start/pause/resume/terminate).
+"""
+
 import os
 import networkx as nx
 import faker
@@ -39,6 +47,7 @@ clientsr = Blueprint("clientsr", __name__)
 @clientsr.route("/admin/reset_client/<int:uid>")
 @login_required
 def reset_client(uid):
+    """Handle reset client operation."""
     check_privileges(current_user.username)
 
     # delete experiment json files
@@ -78,6 +87,7 @@ def reset_client(uid):
 @clientsr.route("/admin/extend_simulation/<int:id_client>", methods=["POST", "GET"])
 @login_required
 def extend_simulation(id_client):
+    """Handle extend simulation operation."""
     check_privileges(current_user.username)
 
     # check if the client exists
@@ -108,6 +118,7 @@ def extend_simulation(id_client):
 @clientsr.route("/admin/run_client/<int:uid>/<int:idexp>")
 @login_required
 def run_client(uid, idexp):
+    """Handle run client operation."""
     check_privileges(current_user.username)
 
     # get experiment
@@ -133,6 +144,7 @@ def run_client(uid, idexp):
 @clientsr.route("/admin/resume_client/<int:uid>/<int:idexp>")
 @login_required
 def resume_client(uid, idexp):
+    """Handle resume client operation."""
     check_privileges(current_user.username)
 
     # get experiment
@@ -158,6 +170,7 @@ def resume_client(uid, idexp):
 @clientsr.route("/admin/pause_client/<int:uid>/<int:idexp>")
 @login_required
 def pause_client(uid, idexp):
+    """Handle pause client operation."""
     check_privileges(current_user.username)
 
     # get population_experiment and update the client_running status
@@ -174,6 +187,7 @@ def pause_client(uid, idexp):
 @clientsr.route("/admin/stop_client/<int:uid>/<int:idexp>")
 @login_required
 def stop_client(uid, idexp):
+    """Handle stop client operation."""
     check_privileges(current_user.username)
 
     # get population_experiment and update the client_running status
@@ -190,6 +204,7 @@ def stop_client(uid, idexp):
 @clientsr.route("/admin/clients/<idexp>")
 @login_required
 def clients(idexp):
+    """Handle clients operation."""
     check_privileges(current_user.username)
 
     # get experiment
@@ -209,6 +224,7 @@ def clients(idexp):
 @clientsr.route("/admin/create_client", methods=["POST"])
 @login_required
 def create_client():
+    """Create client."""
     check_privileges(current_user.username)
 
     name = request.form.get("name")
@@ -615,6 +631,7 @@ def create_client():
 @clientsr.route("/admin/delete_client/<int:uid>")
 @login_required
 def delete_client(uid):
+    """Delete client."""
     check_privileges(current_user.username)
 
     client = Client.query.filter_by(id=uid).first()
@@ -639,6 +656,7 @@ def delete_client(uid):
 @clientsr.route("/admin/client_details/<int:uid>")
 @login_required
 def client_details(uid):
+    """Handle client details operation."""
     check_privileges(current_user.username)
 
     # get client details
@@ -730,6 +748,7 @@ def get_progress(client_id):
 @clientsr.route("/admin/set_network/<int:uid>", methods=["POST"])
 @login_required
 def set_network(uid):
+    """Handle set network operation."""
     check_privileges(current_user.username)
 
     # get client
@@ -787,6 +806,7 @@ def set_network(uid):
 @clientsr.route("/admin/upload_network/<int:uid>", methods=["POST"])
 @login_required
 def upload_network(uid):
+    """Upload network."""
     check_privileges(current_user.username)
 
     # get client
@@ -898,6 +918,7 @@ def upload_network(uid):
 @clientsr.route("/admin/download_agent_list/<int:uid>")
 @login_required
 def download_agent_list(uid):
+    """Download agent list."""
     check_privileges(current_user.username)
 
     # get client
@@ -941,6 +962,7 @@ def download_agent_list(uid):
 @clientsr.route("/admin/update_agents_activity/<int:uid>", methods=["POST"])
 @login_required
 def update_agents_activity(uid):
+    """Update agents activity."""
     check_privileges(current_user.username)
 
     # get data from form
@@ -975,6 +997,7 @@ def update_agents_activity(uid):
 @clientsr.route("/admin/reset_agents_activity/<int:uid>")
 @login_required
 def reset_agents_activity(uid):
+    """Handle reset agents activity operation."""
     check_privileges(current_user.username)
 
     # get client details
@@ -1029,6 +1052,7 @@ def reset_agents_activity(uid):
 @clientsr.route("/admin/update_recsys/<int:uid>", methods=["POST"])
 @login_required
 def update_recsys(uid):
+    """Update recsys."""
     check_privileges(current_user.username)
 
     recsys_type = request.form.get("recsys_type")
@@ -1063,6 +1087,7 @@ def update_recsys(uid):
 @clientsr.route("/admin/update_client_llm/<int:uid>", methods=["POST"])
 @login_required
 def update_llm(uid):
+    """Update llm."""
     check_privileges(current_user.username)
 
     user_type = request.form.get("user_type")

@@ -1,3 +1,10 @@
+"""
+Main application routes and views.
+
+Handles the primary user-facing routes including the home feed, user profiles,
+hashtag pages, post details, and search functionality for the social media platform.
+"""
+
 from flask import Blueprint, render_template, redirect, request, flash
 from flask_login import login_required, current_user
 from .data_access import *
@@ -11,7 +18,16 @@ main = Blueprint("main", __name__)
 
 def get_safe_profile_pic(username, is_page=0):
     """
-    Safely get profile picture for a user with fallbacks
+    Safely retrieve profile picture URL for a user or page.
+    
+    Attempts multiple sources with graceful fallback handling.
+    
+    Args:
+        username: Username to get profile picture for
+        is_page: 1 if username refers to a page, 0 for regular user
+        
+    Returns:
+        Profile picture URL string, or empty string if not found
     """
     if is_page == 1:
         try:
@@ -43,6 +59,15 @@ def get_safe_profile_pic(username, is_page=0):
 
 
 def is_admin(username):
+    """
+    Check if a user has admin role.
+    
+    Args:
+        username: Username to check
+        
+    Returns:
+        True if user is admin, False otherwise
+    """
     user = Admin_users.query.filter_by(username=username).first()
     if user.role != "admin":
         return False
@@ -51,11 +76,26 @@ def is_admin(username):
 
 @main.app_errorhandler(404)
 def page_not_found(e):
+    """
+    Handle 404 errors with custom error page.
+    
+    Args:
+        e: Error object
+        
+    Returns:
+        Tuple of (rendered 404 template, 404 status code)
+    """
     return render_template("404.html"), 404
 
 
 @main.route("/")
 def index():
+    """
+    Home page route - redirects authenticated users to feed, others to login.
+    
+    Returns:
+        Redirect to appropriate page based on authentication status
+    """
     if current_user.is_authenticated:
         # get active experiment if exists
         exp = Exps.query.filter(Exps.status != 0).first()
@@ -70,6 +110,7 @@ def index():
 @main.get("/profile")
 @login_required
 def profile():
+    """Handle profile operation."""
     user_id = current_user.id
     return redirect(f"/profile/{user_id}/rf/1")
 
@@ -77,6 +118,7 @@ def profile():
 @main.get("/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
 def profile_logged(user_id, page=1, mode="recent"):
+    """Handle profile logged operation."""
     user_id = int(user_id)
     user = User_mgmt.query.get(user_id)
 
@@ -176,6 +218,7 @@ def profile_logged(user_id, page=1, mode="recent"):
 @main.get("/edit_profile/<int:user_id>")
 @login_required
 def edit_profile(user_id):
+    """Handle edit profile operation."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     profile_pic = ""
@@ -213,6 +256,7 @@ def edit_profile(user_id):
 @main.route("/update_profile_data/<int:user_id>", methods=["POST"])
 @login_required
 def update_profile_data(user_id):
+    """Update profile data."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     user.email = request.form.get("email")
@@ -238,6 +282,7 @@ def update_profile_data(user_id):
 @main.route("/update_password/<int:user_id>", methods=["POST"])
 @login_required
 def update_password(user_id):
+    """Update password."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
     npassword = request.form.get("new_password")
@@ -258,6 +303,12 @@ def update_password(user_id):
 @main.get("/feed")
 @login_required
 def feeed_logged():
+    """
+    Display main feed for logged-in users (microblogging platform).
+    
+    Returns:
+        Redirect to feed with user ID and default parameters
+    """
     user_id = current_user.id
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
@@ -265,6 +316,7 @@ def feeed_logged():
 @main.get("/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
 def feed(user_id="all", timeline="timeline", mode="rf", page=1):
+    """Handle feed operation."""
     if page < 1:
         page = 1
 
@@ -368,6 +420,16 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
 @main.get("/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
 def get_post_hashtags(hashtag_id, page=1):
+    """
+    Display posts containing a specific hashtag.
+    
+    Args:
+        hashtag_id: ID of hashtag to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with hashtag posts
+    """
     res = get_posts_associated_to_hashtags(
         hashtag_id, page, per_page=10, current_user=current_user.id
     )
@@ -423,6 +485,16 @@ def get_post_hashtags(hashtag_id, page=1):
 @main.get("/interest/<int:interest_id>/<int:page>")
 @login_required
 def get_post_interest(interest_id, page=1):
+    """
+    Display posts associated with a specific interest/topic.
+    
+    Args:
+        interest_id: ID of interest/topic to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with interest-related posts
+    """
     res = get_posts_associated_to_interest(
         interest_id, page, per_page=10, current_user=current_user.id
     )
@@ -478,6 +550,16 @@ def get_post_interest(interest_id, page=1):
 @main.get("/emotion/<int:emotion_id>/<int:page>")
 @login_required
 def get_post_emotion(emotion_id, page=1):
+    """
+    Display posts that elicit a specific emotion.
+    
+    Args:
+        emotion_id: ID of emotion to filter posts by
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template with emotion-tagged posts
+    """
     res = get_posts_associated_to_emotion(
         emotion_id, page, per_page=10, current_user=current_user.id
     )
@@ -534,6 +616,16 @@ def get_post_emotion(emotion_id, page=1):
 @main.get("/friends/<int:user_id>/<int:page>")
 @login_required
 def get_friends(user_id, page=1):
+    """
+    Display user's followers and followees (friends).
+    
+    Args:
+        user_id: ID of user whose friends to display
+        page: Page number for pagination (default: 1)
+        
+    Returns:
+        Rendered template showing followers and followees
+    """
     followers, followees, number_followers, number_followees = get_user_friends(
         user_id, limit=12, page=page
     )
@@ -613,6 +705,7 @@ def get_friends(user_id, page=1):
 @login_required
 def get_thread(post_id):
     # get thread_id for post_id
+    """Get thread."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
 
     # get all posts with the specified thread id
@@ -803,6 +896,7 @@ def get_thread(post_id):
 
 
 def __expand_tree(post_to_child, post_to_data):
+    """Handle   expand tree operation."""
     for pid, clds in post_to_child.items():
         for cl in clds:
             post_to_data[pid]["children"].append(post_to_data[cl])
@@ -811,6 +905,7 @@ def __expand_tree(post_to_child, post_to_data):
 
 
 def recursive_visit(data):
+    """Handle recursive visit operation."""
     if len(data["children"]) == 0:
         return data["post"]
     else:
@@ -819,6 +914,7 @@ def recursive_visit(data):
 
 
 def __get_discussions(posts, username, page):
+    """Handle   get discussions operation."""
     res = []
 
     for post in posts.items:
@@ -1014,6 +1110,7 @@ def __get_discussions(posts, username, page):
 @login_required
 def get_thread_reddit(post_id):
     # get thread_id for post_id
+    """Get thread reddit."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
 
     # get all posts with the specified thread id
@@ -1241,6 +1338,12 @@ def get_thread_reddit(post_id):
 @main.get("/rfeed")
 @login_required
 def feeed_logged_reddit():
+    """
+    Display Reddit-style feed for logged-in users.
+    
+    Returns:
+        Redirect to Reddit feed with default parameters
+    """
     user_id = "all"  # Show all posts including user's own posts
     return redirect(f"/feed/{user_id}/feed/rf/1")
 
@@ -1248,6 +1351,7 @@ def feeed_logged_reddit():
 @main.get("/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
 def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+    """Handle feed reddit operation."""
     if page < 1:
         page = 1
 

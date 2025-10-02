@@ -1,3 +1,11 @@
+"""
+Population management routes.
+
+Administrative routes for creating, configuring, and managing agent populations
+including demographics, personality traits, recommendation systems, and
+association with experiments and pages.
+"""
+
 import json
 import os
 
@@ -42,6 +50,16 @@ population = Blueprint("population", __name__)
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
 @login_required
 def create_population_empty():
+    """
+    Create a new empty population with just name and description.
+    
+    Form data:
+        empty_population_name: Name for the population
+        empty_population_descr: Description of the population
+        
+    Returns:
+        Redirect to populations list
+    """
     check_privileges(current_user.username)
 
     name = request.form.get("empty_population_name")
@@ -59,6 +77,21 @@ def create_population_empty():
 @population.route("/admin/create_population", methods=["POST"])
 @login_required
 def create_population():
+    """
+    Create a new population with full configuration.
+    
+    Creates population with demographics, personality traits, interests,
+    toxicity levels, and recommendation system settings. Generates agents
+    based on the configuration.
+    
+    Form data:
+        pop_name, pop_descr, n_agents, user_type, age_min, age_max,
+        education_levels, political_leanings, toxicity_levels,
+        nationalities, languages, tags (interests), crecsys, frecsys
+        
+    Returns:
+        Redirect to populations list
+    """
     check_privileges(current_user.username)
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
@@ -110,6 +143,12 @@ def create_population():
 @population.route("/admin/populations_data")
 @login_required
 def populations_data():
+    """
+    Display populations management page.
+    
+    Returns:
+        Rendered populations data template
+    """
     query = Population.query
 
     # search filter
@@ -157,6 +196,12 @@ def populations_data():
 @population.route("/admin/populations")
 @login_required
 def populations():
+    """
+    Display main populations overview page.
+    
+    Returns:
+        Rendered populations template with all populations
+    """
     check_privileges(current_user.username)
 
     # Regular expression to match model values
@@ -186,6 +231,7 @@ def populations():
 @population.route("/admin/population_details/<int:uid>")
 @login_required
 def population_details(uid):
+    """Handle population details operation."""
     check_privileges(current_user.username)
     # get population details
     population = Population.query.filter_by(id=uid).first()
@@ -369,6 +415,12 @@ def population_details(uid):
 @population.route("/admin/add_to_experiment", methods=["POST"])
 @login_required
 def add_to_experiment():
+    """
+    Associate a population with an experiment.
+    
+    Returns:
+        Redirect to population details
+    """
     check_privileges(current_user.username)
 
     population_id = request.form.get("population_id")
@@ -392,6 +444,7 @@ def add_to_experiment():
 @population.route("/admin/delete_population/<int:uid>")
 @login_required
 def delete_population(uid):
+    """Delete population."""
     check_privileges(current_user.username)
 
     population = Population.query.filter_by(id=uid).first()
@@ -426,6 +479,7 @@ def delete_population(uid):
 @population.route("/admin/download_population/<int:uid>")
 @login_required
 def download_population(uid):
+    """Download population."""
     check_privileges(current_user.username)
 
     # get all agents in the population
@@ -511,6 +565,12 @@ def download_population(uid):
 @population.route("/admin/upload_population", methods=["POST"])
 @login_required
 def upload_population():
+    """
+    Upload population data from JSON file.
+    
+    Returns:
+        Redirect to populations page
+    """
     check_privileges(current_user.username)
 
     population_file = request.files["population_file"]
@@ -608,6 +668,7 @@ def upload_population():
 @population.route("/admin/update_population_recsys/<int:uid>", methods=["POST"])
 @login_required
 def update_recsys(uid):
+    """Update recsys."""
     check_privileges(current_user.username)
 
     recsys_type = request.form.get("recsys_type")
@@ -635,6 +696,7 @@ def update_recsys(uid):
 @population.route("/admin/update_population_llm/<int:uid>", methods=["POST"])
 @login_required
 def update_llm(uid):
+    """Update llm."""
     check_privileges(current_user.username)
 
     user_type = request.form.get("user_type")

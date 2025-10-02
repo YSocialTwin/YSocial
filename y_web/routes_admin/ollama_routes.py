@@ -1,3 +1,11 @@
+"""
+Ollama LLM management routes.
+
+Administrative routes for managing Ollama LLM models including starting
+the server, pulling/downloading models, deleting models, and monitoring
+download progress.
+"""
+
 from flask import (
     Blueprint,
     redirect,
@@ -22,6 +30,12 @@ ollama = Blueprint("ollama", __name__)
 
 
 def ollama_status():
+    """
+    Get Ollama service status.
+    
+    Returns:
+        Dictionary with 'status' (running) and 'installed' flags
+    """
     return {
         "status": is_ollama_running(),
         "installed": is_ollama_installed(),
@@ -31,6 +45,12 @@ def ollama_status():
 @ollama.route("/admin/start_ollama/", methods=["POST", "GET"])
 @login_required
 def start_ollama():
+    """
+    Start the Ollama LLM server.
+    
+    Returns:
+        Redirect to referrer page
+    """
     check_privileges(current_user.username)
 
     # start the ollama server
@@ -42,6 +62,15 @@ def start_ollama():
 @ollama.route("/admin/ollama_pull/", methods=["POST"])
 @login_required
 def ollama_pull():
+    """
+    Initiate download of an Ollama model.
+    
+    Form data:
+        model_name: Name of model to download
+        
+    Returns:
+        Redirect to referrer page
+    """
     check_privileges(current_user.username)
 
     # get model_name by form
@@ -59,6 +88,15 @@ def ollama_pull():
 @ollama.route("/admin/ollama_cancel_pull/<string:model_name>", methods=["POST"])
 @login_required
 def ollama_cancel_pull(model_name):
+    """
+    Cancel an ongoing model download.
+    
+    Args:
+        model_name: Name of model to cancel download for
+        
+    Returns:
+        Redirect to referrer page
+    """
     check_privileges(current_user.username)
 
     delete_model_pull(model_name)
@@ -69,6 +107,15 @@ def ollama_cancel_pull(model_name):
 @ollama.route("/admin/delete_model/<string:model_name>")
 @login_required
 def delete_model(model_name):
+    """
+    Delete an Ollama model from the system.
+    
+    Args:
+        model_name: Name of model to delete
+        
+    Returns:
+        Redirect to referrer page
+    """
     check_privileges(current_user.username)
 
     # delete the model from the ollama server
@@ -82,7 +129,15 @@ def delete_model(model_name):
 
 @ollama.route("/admin/pull_progress/<string:model_name>")
 def get_pull_progress(model_name):
-    """Return the current progress as JSON."""
+    """
+    Get download progress for an Ollama model (AJAX endpoint).
+    
+    Args:
+        model_name: Name of model to check progress for
+        
+    Returns:
+        JSON with 'progress' (0-100) and 'model_name'
+    """
     # get client_execution
     model = Ollama_Pull.query.filter_by(model_name=model_name).first()
 

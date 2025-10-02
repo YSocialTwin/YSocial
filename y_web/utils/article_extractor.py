@@ -1,3 +1,11 @@
+"""
+Article metadata extraction from web URLs.
+
+Provides functions to extract article information (title, description, source)
+from web pages using Beautiful Soup. Handles various metadata formats including
+Open Graph, Twitter Cards, and standard meta tags with intelligent fallbacks.
+"""
+
 import requests
 from bs4 import BeautifulSoup
 import re
@@ -6,8 +14,17 @@ from urllib.parse import urlparse
 
 def extract_article_info(url):
     """
-    Extract title and description from a web page URL
-    Returns a dictionary with title, summary, and source
+    Extract comprehensive metadata from a web page URL.
+    
+    Fetches the page and extracts title, description/summary, and source domain
+    using multiple metadata sources with fallback strategies.
+    
+    Args:
+        url: Web page URL to extract information from
+        
+    Returns:
+        Dictionary with keys: 'title', 'summary', 'source', 'url'
+        On error, returns fallback data with generic information
     """
     try:
         # Set headers to mimic a real browser
@@ -50,7 +67,19 @@ def extract_article_info(url):
 
 
 def extract_title(soup, url):
-    """Extract page title from various sources"""
+    """
+    Extract page title from various HTML metadata sources.
+    
+    Tries Open Graph title, Twitter title, standard title tag, then falls
+    back to domain name if no title is found.
+    
+    Args:
+        soup: BeautifulSoup parsed HTML document
+        url: Original URL (for fallback domain name)
+        
+    Returns:
+        Extracted or generated title string
+    """
     # Try Open Graph title first
     og_title = soup.find('meta', property='og:title')
     if og_title and og_title.get('content'):
@@ -71,7 +100,19 @@ def extract_title(soup, url):
 
 
 def extract_description(soup):
-    """Extract page description from various sources"""
+    """
+    Extract page description from various HTML metadata sources.
+    
+    Tries multiple metadata sources in order of preference: Open Graph,
+    standard meta description, Twitter description, article description,
+    first substantial paragraph, and headers as last resort.
+    
+    Args:
+        soup: BeautifulSoup parsed HTML document
+        
+    Returns:
+        Extracted or fallback description string (max 300 chars if truncated)
+    """
     # Try Open Graph description
     og_desc = soup.find('meta', property='og:description')
     if og_desc and og_desc.get('content'):
@@ -126,7 +167,18 @@ def extract_description(soup):
 
 
 def extract_source(url):
-    """Extract clean source name from URL"""
+    """
+    Extract and clean source name from URL domain.
+    
+    Removes common prefixes (www., m.) and capitalizes the domain name
+    for display purposes.
+    
+    Args:
+        url: Full URL to extract source from
+        
+    Returns:
+        Cleaned and capitalized domain name
+    """
     domain = urlparse(url).netloc
     # Remove www. prefix and common subdomains
     domain = re.sub(r'^(www\.|m\.)', '', domain)
@@ -135,7 +187,18 @@ def extract_source(url):
 
 
 def clean_text(text):
-    """Clean and normalize text content"""
+    """
+    Clean and normalize text content by removing extra whitespace.
+    
+    Removes newlines, multiple spaces, and separates site names from titles
+    by keeping the longest meaningful part of split strings.
+    
+    Args:
+        text: Raw text to clean
+        
+    Returns:
+        Cleaned and normalized text string
+    """
     if not text:
         return ""
     

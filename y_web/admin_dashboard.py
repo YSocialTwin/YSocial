@@ -1,3 +1,11 @@
+"""
+Administrative dashboard routes.
+
+Provides routes for the admin interface including the main dashboard view,
+about page, and administrative functions for managing experiments, clients,
+and system status monitoring.
+"""
+
 from flask import (
     Blueprint,
     render_template,
@@ -20,6 +28,15 @@ admin = Blueprint("admin", __name__)
 @admin.route("/admin/dashboard")
 @login_required
 def dashboard():
+    """
+    Display main administrative dashboard.
+    
+    Shows experiments, clients, execution status, Ollama models,
+    and database connection information. Requires admin privileges.
+    
+    Returns:
+        Rendered dashboard template with system status information
+    """
     check_privileges(current_user.username)
     ollamas = ollama_status()
 
@@ -75,6 +92,12 @@ def dashboard():
 @admin.route("/admin/about")
 @login_required
 def about():
+    """
+    Display about page with team and project information.
+    
+    Returns:
+        Rendered about page template
+    """
     check_privileges(current_user.username)
     ollamas = ollama_status()
     return render_template("admin/about.html", ollamas=ollamas)

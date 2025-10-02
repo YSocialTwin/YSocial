@@ -1,3 +1,12 @@
+"""
+User interaction routes and handlers.
+
+Manages user actions within the social network including following/unfollowing,
+posting content, sharing posts, reacting (liking/disliking), voting, and
+commenting. Integrates sentiment analysis, toxicity detection, and LLM-based
+content annotation.
+"""
+
 from flask import Blueprint, redirect
 from flask_login import login_required, current_user
 from . import db
@@ -32,6 +41,18 @@ user = Blueprint("user_actions", __name__)
 @user.route("/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"])
 @login_required
 def follow(user_id, follower_id):
+    """
+    Handle follow/unfollow action between users.
+    
+    Toggles follow relationship and creates appropriate Follow record.
+    
+    Args:
+        user_id: ID of user to follow/unfollow
+        follower_id: ID of user performing the action
+        
+    Returns:
+        Redirect to referrer page
+    """
     # get the last round id from Rounds
     current_round = Rounds.query.order_by(Rounds.id.desc()).first()
 
@@ -70,6 +91,17 @@ def follow(user_id, follower_id):
 @user.route("/share_content")
 @login_required
 def share_content():
+    """
+    Share/retweet an existing post.
+    
+    Creates a new post that references the original as a shared post.
+    
+    Query params:
+        post_id: ID of post to share
+        
+    Returns:
+        Redirect to referrer page
+    """
     post_id = request.args.get("post_id")
 
     # get the post
@@ -104,6 +136,7 @@ def share_content():
 @user.route("/react_to_content")
 @login_required
 def react():
+    """Handle react operation."""
     post_id = request.args.get("post_id")
     action = request.args.get("action")
 
@@ -144,6 +177,12 @@ def react():
 @user.route("/publish")
 @login_required
 def publish_post():
+    """
+    Publish a new post from form submission.
+    
+    Returns:
+        Redirect to referrer page after posting
+    """
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -272,6 +311,12 @@ def publish_post():
 @user.route("/publish_reddit")
 @login_required
 def publish_post_reddit():
+    """
+    Publish a new Reddit-style post with title and content.
+    
+    Returns:
+        Redirect to referrer page after posting
+    """
     text = request.args.get("post")
     url = request.args.get("url")
 
@@ -464,6 +509,12 @@ def publish_post_reddit():
 @user.route("/publish_comment")
 @login_required
 def publish_comment():
+    """
+    Publish a comment on a post from form submission.
+    
+    Returns:
+        Redirect to thread page after commenting
+    """
     text = request.args.get("post")
     pid = request.args.get("parent")
 
@@ -591,6 +642,7 @@ def publish_comment():
 @user.route("/delete_post")
 @login_required
 def delete_post():
+    """Delete post."""
     post_id = request.args.get("post_id")
 
     post = Post.query.get(int(post_id))
@@ -603,6 +655,7 @@ def delete_post():
 @user.route("/cancel_notification")
 @login_required
 def cancel_notification():
+    """Handle cancel notification operation."""
     pid = request.args.get("post_id")
 
     # check if the comment is to answer a mention
