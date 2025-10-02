@@ -422,6 +422,67 @@ def delete_model_pull(model_name):
     db.session.commit()
 
 
+#############
+# vLLM Functions
+#############
+
+
+def is_vllm_installed():
+    """Check if vLLM is installed."""
+    try:
+        subprocess.run(
+            ["vllm", "--version"], capture_output=True, text=True, check=True
+        )
+        print("vLLM is installed.")
+        return True
+    except FileNotFoundError:
+        print("vLLM is not installed.")
+        return False
+    except subprocess.CalledProcessError as e:
+        print(f"Error checking vLLM installation: {e}")
+        return False
+
+
+def is_vllm_running():
+    """Check if vLLM server is running."""
+    try:
+        response = requests.get("http://127.0.0.1:8000/health")
+        if response.status_code == 200:
+            print("vLLM is running.")
+            return True
+        else:
+            print(
+                f"vLLM responded but not running correctly. Status: {response.status_code}"
+            )
+            return False
+    except requests.ConnectionError:
+        print("vLLM is not running or cannot be reached.")
+        return False
+
+
+def start_vllm_server(model_name=None):
+    """
+    Start vLLM server.
+    
+    Args:
+        model_name: Name of model to serve (optional, if None, server must be started manually)
+    """
+    if is_vllm_installed():
+        if not is_vllm_running():
+            if model_name:
+                screen_command = f"screen -dmS vllm vllm serve {model_name} --host 0.0.0.0 --port 8000"
+                print(f"Starting vLLM server with model {model_name}...")
+                subprocess.run(screen_command, shell=True, check=True)
+                # Wait for the server to start
+                time.sleep(10)
+            else:
+                print("vLLM is installed but not running. Please start manually with a model.")
+        else:
+            print("vLLM is already running.")
+    else:
+        print("vLLM is not installed.")
+
+
 def terminate_client(cli, pause=False):
     """Stop the y_client
 

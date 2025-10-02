@@ -5,6 +5,8 @@ Provides the Annotator class for generating textual descriptions of images
 using vision-capable Large Language Models through the Autogen framework.
 """
 
+import os
+
 import autogen
 from autogen.agentchat.contrib.multimodal_conversable_agent import (
     MultimodalConversableAgent,
@@ -26,10 +28,17 @@ class Annotator(object):
         Args:
             llmv: Vision-capable LLM model name/identifier
         """
+        # Determine base URL based on LLM backend
+        llm_backend = os.getenv("LLM_BACKEND", "ollama")
+        if llm_backend == "vllm":
+            base_url = "http://127.0.0.1:8000/v1"
+        else:  # ollama
+            base_url = "http://127.0.0.1:11434/v1"
+        
         self.config_list = [
             {
                 "model": llmv,
-                "base_url": "http://127.0.0.1:11434/v1",
+                "base_url": base_url,
                 "timeout": 10000,
                 "api_type": "open_ai",
                 "api_key": "NULL",

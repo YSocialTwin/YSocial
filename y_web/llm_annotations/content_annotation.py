@@ -6,6 +6,7 @@ to extract emotions (GoEmotions taxonomy) and topics from social media posts.
 Uses the Autogen framework for agent-based interaction with LLMs.
 """
 
+import os
 import re
 
 from autogen import AssistantAgent
@@ -29,10 +30,17 @@ class ContentAnnotator(object):
         """
 
         if llm is not None:
+            # Determine base URL based on LLM backend
+            llm_backend = os.getenv("LLM_BACKEND", "ollama")
+            if llm_backend == "vllm":
+                base_url = "http://127.0.0.1:8000/v1"
+            else:  # ollama
+                base_url = "http://127.0.0.1:11434/v1"
+            
             self.config_list = [
                 {
                     "model": llm,
-                    "base_url": "http://127.0.0.1:11434/v1",
+                    "base_url": base_url,
                     "timeout": 10000,
                     "api_type": "open_ai",
                     "api_key": "NULL",
