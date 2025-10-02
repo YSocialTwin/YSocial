@@ -632,6 +632,14 @@ class Languages(db.Model):
     language = db.Column(db.String(50), nullable=False)
 
 
+class Toxicity_Levels(db.Model):
+    """Available toxicity level options for agent profiles."""
+    __bind__ = "db_admin"
+    __tablename__ = "toxicity_levels"
+    id = db.Column(db.Integer, primary_key=True)
+    toxicity_level = db.Column(db.String(50), nullable=False)
+
+
 class Content_Recsys(db.Model):
     """Content recommendation system configuration options."""
     __bind__ = "db_admin"

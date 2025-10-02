@@ -1002,6 +1002,176 @@
             </div>
 
 
+            <div class="columns">
+
+                <div class="column is-12">
+                    <hr>
+                <h3 class="title is-5 is-thin" style="text-align: center">Toxicity Levels</h3>
+                </div>
+            </div>
+
+
+            <div class="columns">
+                <div class="column is-12">
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
+
+                        <div class="box-content">
+                            <div id="toxicity_table"></div>
+                           <script>
+    const tableDiv3 = document.getElementById('toxicity_table');
+
+    const updateUrl3 = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributes3 = (data, row, col) => {
+        if (row) {
+            const columnId = col.id;
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': columnId
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const grid3 = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'toxicity_level',
+                name: 'Name',
+                attributes: editableCellAttributes3
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_toxicity_level/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            grid3.forceRender();
+                                        } else {
+                                            alert("Failed to delete toxicity level.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/toxicity_levels_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrl3(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'toxicity_level'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrl3(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => updateUrl3(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    grid3.render(tableDiv3);
+
+    let savedValue3;
+
+    tableDiv3.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValue3 = ev.target.textContent;
+        }
+    });
+
+    tableDiv3.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValue3 !== ev.target.textContent) {
+                fetch('/admin/toxicity_levels_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValue3 = undefined;
+        }
+    });
+
+    tableDiv3.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValue3;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+
+                        </div>
+
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h3 class="title is-5 is-thin">New Toxicity Level</h3>
+                            <form action="/admin/create_toxicity_level" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Name</span>
+                                        <span class="right" style="width: 70%;"><input type="text" name="toxicity_level"
+                                                                                       class="input"></span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
         </div>
     </div>
 
