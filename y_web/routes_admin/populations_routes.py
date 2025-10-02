@@ -11,39 +11,39 @@ import os
 
 from flask import (
     Blueprint,
+    flash,
+    redirect,
     render_template,
     request,
     send_file,
-    redirect,
-    flash,
 )
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
+from y_web import db
 from y_web.models import (
-    Exps,
-    Population,
     Agent,
     Agent_Population,
-    Population_Experiment,
-    Page_Population,
-    Page,
     Agent_Profile,
+    Content_Recsys,
     Education,
+    Exp_Topic,
+    Exps,
+    Follow_Recsys,
+    Languages,
     Leanings,
     Nationalities,
-    Languages,
-    Content_Recsys,
-    Follow_Recsys, Exp_Topic, Topic_List,
+    Page,
+    Page_Population,
+    Population,
+    Population_Experiment,
+    Topic_List,
     Toxicity_Levels,
 )
 from y_web.utils import (
     generate_population,
     get_ollama_models,
 )
-
-from y_web import db
 from y_web.utils.miscellanea import check_privileges, ollama_status
-
 
 population = Blueprint("population", __name__)
 
@@ -53,11 +53,11 @@ population = Blueprint("population", __name__)
 def create_population_empty():
     """
     Create a new empty population with just name and description.
-    
+
     Form data:
         empty_population_name: Name for the population
         empty_population_descr: Description of the population
-        
+
     Returns:
         Redirect to populations list
     """
@@ -80,16 +80,16 @@ def create_population_empty():
 def create_population():
     """
     Create a new population with full configuration.
-    
+
     Creates population with demographics, personality traits, interests,
     toxicity levels, and recommendation system settings. Generates agents
     based on the configuration.
-    
+
     Form data:
         pop_name, pop_descr, n_agents, user_type, age_min, age_max,
         education_levels, political_leanings, toxicity_levels,
         nationalities, languages, tags (interests), crecsys, frecsys
-        
+
     Returns:
         Redirect to populations list
     """
@@ -146,7 +146,7 @@ def create_population():
 def populations_data():
     """
     Display populations management page.
-    
+
     Returns:
         Rendered populations data template
     """
@@ -187,9 +187,11 @@ def populations_data():
     # response
     res = query.all()
 
-
     return {
-        "data": [{"id": pop.id, "name": pop.name, "descr": pop.descr, "size": pop.size} for pop in res],
+        "data": [
+            {"id": pop.id, "name": pop.name, "descr": pop.descr, "size": pop.size}
+            for pop in res
+        ],
         "total": total,
     }
 
@@ -199,7 +201,7 @@ def populations_data():
 def populations():
     """
     Display main populations overview page.
-    
+
     Returns:
         Rendered populations template with all populations
     """
@@ -420,7 +422,7 @@ def population_details(uid):
 def add_to_experiment():
     """
     Associate a population with an experiment.
-    
+
     Returns:
         Redirect to population details
     """
@@ -535,11 +537,12 @@ def download_population(uid):
                 "frecsys": a[0].frecsys,
                 "profile_pic": a[0].profile_pic,
                 "daily_activity_level": a[0].daily_activity_level,
-                "profile": Agent_Profile.query.filter_by(agent_id=a[0].id)
-                .first()
-                .profile
-                if Agent_Profile.query.filter_by(agent_id=a[0].id).first() is not None
-                else None,
+                "profile": (
+                    Agent_Profile.query.filter_by(agent_id=a[0].id).first().profile
+                    if Agent_Profile.query.filter_by(agent_id=a[0].id).first()
+                    is not None
+                    else None
+                ),
             }
         )
 
@@ -570,7 +573,7 @@ def download_population(uid):
 def upload_population():
     """
     Upload population data from JSON file.
-    
+
     Returns:
         Redirect to populations page
     """
@@ -625,9 +628,9 @@ def upload_population():
                 crecsys=a["crecsys"],
                 frecsys=a["frecsys"],
                 profile_pic=a["profile_pic"],
-                daily_activity_level=a["daily_activity_level"]
-                if "daily_activity_level" in a
-                else 1,
+                daily_activity_level=(
+                    a["daily_activity_level"] if "daily_activity_level" in a else 1
+                ),
             )
             db.session.add(agent)
             db.session.commit()

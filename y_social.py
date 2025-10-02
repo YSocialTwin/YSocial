@@ -1,9 +1,11 @@
-from y_web import create_app, db
 from argparse import ArgumentParser
+
+from y_web import create_app, db
 
 
 def start_app(db_type="sqlite", debug=False, host="localhost", port=8080):
     import nltk
+
     nltk.download("vader_lexicon")
 
     app = create_app(db_type=db_type)

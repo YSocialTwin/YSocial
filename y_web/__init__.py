@@ -13,13 +13,14 @@ Key components:
 - Subprocess management for simulation clients
 """
 
+import atexit
 import os
 import shutil
 import signal
-import atexit
+
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
+from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -33,13 +34,13 @@ login_manager.login_view = "auth.login"
 def create_postgresql_db(app):
     """
     Create and initialize PostgreSQL database for the application.
-    
+
     Sets up PostgreSQL connection, creates databases if they don't exist,
     and loads initial schema and admin user data.
-    
+
     Args:
         app: Flask application instance to configure
-        
+
     Raises:
         RuntimeError: If PostgreSQL is not installed or not running
     """
@@ -50,9 +51,9 @@ def create_postgresql_db(app):
     dbname = os.getenv("PG_DBNAME", "dashboard")
     dbname_dummy = os.getenv("PG_DBNAME_DUMMY", "dummy")
 
-    app.config[
-        "SQLALCHEMY_DATABASE_URI"
-    ] = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+    )
 
     app.config["SQLALCHEMY_BINDS"] = {
         "db_admin": app.config["SQLALCHEMY_DATABASE_URI"],
@@ -74,8 +75,7 @@ def create_postgresql_db(app):
         ) from e
 
     # does dbname exist? if not, create it and load schema
-    from sqlalchemy import create_engine
-    from sqlalchemy import text
+    from sqlalchemy import create_engine, text
     from werkzeug.security import generate_password_hash
 
     # Connect to a default admin DB (typically 'postgres') to check for existence of target DBs
@@ -153,14 +153,16 @@ def create_postgresql_db(app):
             hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
 
             # Insert initial admin user
-            stmt = text("""
+            stmt = text(
+                """
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
                                                round_actions, toxicity, is_page, daily_activity_level)
                         VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                 :language, :owner, :joined_on, :frecsys_type,
                                 :round_actions, :toxicity, :is_page, :daily_activity_level)
-                        """)
+                        """
+            )
 
             dummy_conn.execute(
                 stmt,
@@ -179,7 +181,7 @@ def create_postgresql_db(app):
                     "toxicity": "none",
                     "is_page": 0,
                     "daily_activity_level": 1,
-                }
+                },
             )
 
         dummy_engine.dispose()
@@ -200,7 +202,7 @@ def cleanup_subprocesses():
 def signal_handler(sig, frame):
     """
     Handle SIGINT (Ctrl+C) signal for graceful shutdown.
-    
+
     Args:
         sig: Signal number received
         frame: Current stack frame
@@ -217,16 +219,16 @@ atexit.register(cleanup_subprocesses)
 def create_app(db_type="sqlite"):
     """
     Create and configure the Flask application (factory pattern).
-    
+
     Initializes the application with database connections, authentication,
     and all route blueprints. Supports both SQLite and PostgreSQL backends.
-    
+
     Args:
         db_type: Database type to use, either "sqlite" or "postgresql"
-        
+
     Returns:
         Configured Flask application instance
-        
+
     Raises:
         ValueError: If unsupported db_type is provided
     """
@@ -271,10 +273,10 @@ def create_app(db_type="sqlite"):
     def load_user(user_id):
         """
         Load user by ID for Flask-Login session management.
-        
+
         Args:
             user_id: User ID string to load
-            
+
         Returns:
             User_mgmt object if found, None otherwise
         """

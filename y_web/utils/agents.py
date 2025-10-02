@@ -7,26 +7,28 @@ based on population configuration parameters.
 """
 
 import random
+
 import faker
 import numpy as np
-from y_web import db
 from sqlalchemy.sql import func
-from y_web.models import Population, Agent, Agent_Population, Profession
+
+from y_web import db
+from y_web.models import Agent, Agent_Population, Population, Profession
 
 
 def __sample_age(mean, std_dev, min_age, max_age):
     """
     Sample age from Gaussian distribution within specified bounds.
-    
+
     Repeatedly samples from normal distribution until a value within the
     valid age range is obtained.
-    
+
     Args:
         mean: Mean age for the distribution
         std_dev: Standard deviation for age distribution
         min_age: Minimum allowed age
         max_age: Maximum allowed age
-        
+
     Returns:
         Integer age within [min_age, max_age]
     """
@@ -39,14 +41,14 @@ def __sample_age(mean, std_dev, min_age, max_age):
 def __sample_pareto(values, alpha=2.0):
     """
     Sample a value from a discrete set using Pareto distribution.
-    
+
     Uses Pareto distribution to model power-law behavior, normalized to
     map onto discrete value set (e.g., for activity levels).
-    
+
     Args:
         values: List of discrete values to sample from
         alpha: Pareto distribution shape parameter (default 2.0)
-        
+
     Returns:
         One value from the input list
     """
@@ -60,15 +62,15 @@ def __sample_pareto(values, alpha=2.0):
 def generate_population(population_name):
     """
     Generate a population of AI agents with realistic profiles.
-    
+
     Creates agents based on population configuration including demographics
     (age, nationality, gender), Big Five personality traits (OCEAN model),
     political leaning, toxicity level, education, language, and profession.
     Uses statistical distributions to ensure realistic diversity.
-    
+
     Args:
         population_name: Name of the population configuration to use
-        
+
     Side effects:
         Creates and persists Agent and Agent_Population records in database
     """

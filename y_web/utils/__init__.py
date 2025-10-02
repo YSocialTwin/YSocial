@@ -6,6 +6,6 @@ external process management, and miscellaneous operations.
 """
 
 from .agents import *
-from .feeds import *
 from .external_processes import *
+from .feeds import *
 from .miscellanea import *

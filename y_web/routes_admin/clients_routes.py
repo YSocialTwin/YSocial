@@ -6,40 +6,43 @@ including behavior parameters, LLM settings, network topology, and
 client execution control (start/pause/resume/terminate).
 """
 
+import json
 import os
-import networkx as nx
-import faker
+import shutil
 
+import faker
+import networkx as nx
 from flask import (
     Blueprint,
-    render_template,
-    redirect,
-    request,
     flash,
+    redirect,
+    render_template,
+    request,
     send_file,
 )
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
 from y_web.models import (
-    Exps,
-    Population,
     Agent,
     Agent_Population,
-    Page,
-    Population_Experiment,
-    Page_Population,
+    Agent_Profile,
     Client,
     Client_Execution,
-    User_mgmt,
-    Agent_Profile,
+    Content_Recsys,
+    Exp_Topic,
+    Exps,
     Follow_Recsys,
-    Content_Recsys, Exp_Topic, Topic_List
+    Page,
+    Page_Population,
+    Population,
+    Population_Experiment,
+    Topic_List,
+    User_mgmt,
 )
-from y_web.utils import start_client, terminate_client, get_ollama_models, get_db_type
-import json
-import shutil
-from . import db, experiment_details
+from y_web.utils import get_db_type, get_ollama_models, start_client, terminate_client
 from y_web.utils.miscellanea import check_privileges, ollama_status
+
+from . import db, experiment_details
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -269,11 +272,7 @@ def create_client():
     topics = Exp_Topic.query.filter_by(exp_id=exp_id).all()
     topics_ids = [t.topic_id for t in topics]
     # get the topics names from the Topic_list table
-    topics = (
-        db.session.query(Topic_List)
-        .filter(Topic_List.id.in_(topics_ids))
-        .all()
-    )
+    topics = db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
     topics = [t.name for t in topics]
 
     # if name already exists, return to the previous page
@@ -484,7 +483,7 @@ def create_client():
     config["agents"]["n_interests"] = {"min": 1, "max": 5}
 
     # check db type
-    if "database_server.db" in exp.db_name: # sqlite
+    if "database_server.db" in exp.db_name:  # sqlite
         uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
@@ -509,7 +508,9 @@ def create_client():
 
     elif exp.platform_type == "forum":
         shutil.copyfile(
-            f"{BASE_DIR}data_schema{os.sep}prompts_forum.json".replace("/y_web/utils", ""),
+            f"{BASE_DIR}data_schema{os.sep}prompts_forum.json".replace(
+                "/y_web/utils", ""
+            ),
             f"{data_base_path}prompts.json",
         )
     else:
@@ -537,13 +538,17 @@ def create_client():
         # randomly select from 1 to 5 topics without replacement and save as interests
         fake = faker.Faker()
 
-        interests = list(set(fake.random_elements(
-            elements=set(topics),
-            length=fake.random_int(
-                min=1,
-                max=5,
-            ),
-        )))
+        interests = list(
+            set(
+                fake.random_elements(
+                    elements=set(topics),
+                    length=fake.random_int(
+                        min=1,
+                        max=5,
+                    ),
+                )
+            )
+        )
 
         ints = [interests, len(interests)]
 
@@ -935,7 +940,9 @@ def download_agent_list(uid):
     # get the experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
-    BASE = os.path.dirname(os.path.abspath(__file__)).replace(f"{os.sep}routes_admin", "")
+    BASE = os.path.dirname(os.path.abspath(__file__)).replace(
+        f"{os.sep}routes_admin", ""
+    )
 
     dbtypte = get_db_type()
 

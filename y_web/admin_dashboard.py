@@ -10,17 +10,21 @@ from flask import (
     Blueprint,
     render_template,
 )
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
-from .models import Exps, Client, Client_Execution, Ollama_Pull
 from y_web.utils import (
     get_ollama_models,
 )
-
 from y_web.utils.miscellanea import ollama_status
 
-from .utils import check_privileges, get_db_type, get_db_port, check_connection, get_db_server
-
+from .models import Client, Client_Execution, Exps, Ollama_Pull
+from .utils import (
+    check_connection,
+    check_privileges,
+    get_db_port,
+    get_db_server,
+    get_db_type,
+)
 
 admin = Blueprint("admin", __name__)
 
@@ -30,10 +34,10 @@ admin = Blueprint("admin", __name__)
 def dashboard():
     """
     Display main administrative dashboard.
-    
+
     Shows experiments, clients, execution status, Ollama models,
     and database connection information. Requires admin privileges.
-    
+
     Returns:
         Rendered dashboard template with system status information
     """
@@ -94,7 +98,7 @@ def dashboard():
 def about():
     """
     Display about page with team and project information.
-    
+
     Returns:
         Rendered about page template
     """

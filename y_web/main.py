@@ -5,13 +5,15 @@ Handles the primary user-facing routes including the home feed, user profiles,
 hashtag pages, post details, and search functionality for the social media platform.
 """
 
-from flask import Blueprint, render_template, redirect, request, flash
-from flask_login import login_required, current_user
-from .data_access import *
-from .models import Admin_users, Images, Page, Exps
+from flask import Blueprint, flash, redirect, render_template, request
+from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
+
 from y_web import db
 from y_web.recsys_support import get_suggested_posts, get_suggested_users
+
+from .data_access import *
+from .models import Admin_users, Exps, Images, Page
 
 main = Blueprint("main", __name__)
 
@@ -19,13 +21,13 @@ main = Blueprint("main", __name__)
 def get_safe_profile_pic(username, is_page=0):
     """
     Safely retrieve profile picture URL for a user or page.
-    
+
     Attempts multiple sources with graceful fallback handling.
-    
+
     Args:
         username: Username to get profile picture for
         is_page: 1 if username refers to a page, 0 for regular user
-        
+
     Returns:
         Profile picture URL string, or empty string if not found
     """
@@ -61,10 +63,10 @@ def get_safe_profile_pic(username, is_page=0):
 def is_admin(username):
     """
     Check if a user has admin role.
-    
+
     Args:
         username: Username to check
-        
+
     Returns:
         True if user is admin, False otherwise
     """
@@ -78,10 +80,10 @@ def is_admin(username):
 def page_not_found(e):
     """
     Handle 404 errors with custom error page.
-    
+
     Args:
         e: Error object
-        
+
     Returns:
         Tuple of (rendered 404 template, 404 status code)
     """
@@ -92,7 +94,7 @@ def page_not_found(e):
 def index():
     """
     Home page route - redirects authenticated users to feed, others to login.
-    
+
     Returns:
         Redirect to appropriate page based on authentication status
     """
@@ -122,16 +124,26 @@ def profile_logged(user_id, page=1, mode="recent"):
     user_id = int(user_id)
     user = User_mgmt.query.get(user_id)
 
-    is_following = Follow.query.filter_by(follower_id=current_user.id, user_id=user_id).count() > 0
+    is_following = (
+        Follow.query.filter_by(follower_id=current_user.id, user_id=user_id).count() > 0
+    )
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
-    total_comments = Post.query.filter(Post.user_id==user_id, Post.comment_to != -1).count()
+    total_comments = Post.query.filter(
+        Post.user_id == user_id, Post.comment_to != -1
+    ).count()
     total_likes = Reactions.query.filter_by(user_id=user_id, type="like").count()
     total_dislikes = Reactions.query.filter_by(user_id=user_id, type="dislike").count()
-    total_articles = Post.query.filter(Post.user_id==user_id, Post.news_id.isnot(None)).count()
+    total_articles = Post.query.filter(
+        Post.user_id == user_id, Post.news_id.isnot(None)
+    ).count()
 
     hashtags = (
-        db.session.query(Hashtags.id, Hashtags.hashtag, func.count(Post_hashtags.hashtag_id).label("count"))
+        db.session.query(
+            Hashtags.id,
+            Hashtags.hashtag,
+            func.count(Post_hashtags.hashtag_id).label("count"),
+        )
         .join(Post_hashtags, Post_hashtags.hashtag_id == Hashtags.id)
         .join(Post, Post.id == Post_hashtags.post_id)
         .filter(Post.user_id == user_id)
@@ -143,7 +155,11 @@ def profile_logged(user_id, page=1, mode="recent"):
     most_used_hashtags = [(h[0], h[1], h[2]) for h in hashtags]
 
     emotions = (
-        db.session.query(Emotions.id, Emotions.emotion, func.count(Post_emotions.emotion_id).label("count"))
+        db.session.query(
+            Emotions.id,
+            Emotions.emotion,
+            func.count(Post_emotions.emotion_id).label("count"),
+        )
         .join(Post_emotions, Post_emotions.emotion_id == Emotions.id)
         .join(Post, Post.id == Post_emotions.post_id)
         .filter(Post.user_id == user_id)
@@ -154,8 +170,12 @@ def profile_logged(user_id, page=1, mode="recent"):
     )
     most_used_emotions = [(e[0], e[1], e[2]) for e in emotions]
 
-    total_followers = Follow.query.filter(Follow.user_id == user_id, Follow.follower_id != user_id).count()
-    total_followee = Follow.query.filter(Follow.follower_id == user_id, Follow.user_id != user_id).count()
+    total_followers = Follow.query.filter(
+        Follow.user_id == user_id, Follow.follower_id != user_id
+    ).count()
+    total_followee = Follow.query.filter(
+        Follow.follower_id == user_id, Follow.user_id != user_id
+    ).count()
 
     # Profile pic logic
     profile_pic = ""
@@ -214,7 +234,6 @@ def profile_logged(user_id, page=1, mode="recent"):
     )
 
 
-
 @main.get("/edit_profile/<int:user_id>")
 @login_required
 def edit_profile(user_id):
@@ -270,9 +289,9 @@ def update_profile_data(user_id):
     user.age = int(request.form.get("age"))
     profile_pic = request.form.get("profile_pic")
 
-    Admin_users.query.filter_by(
-        username=user.username
-    ).first().profile_pic = profile_pic
+    Admin_users.query.filter_by(username=user.username).first().profile_pic = (
+        profile_pic
+    )
 
     db.session.commit()
 
@@ -305,7 +324,7 @@ def update_password(user_id):
 def feeed_logged():
     """
     Display main feed for logged-in users (microblogging platform).
-    
+
     Returns:
         Redirect to feed with user ID and default parameters
     """
@@ -422,11 +441,11 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
 def get_post_hashtags(hashtag_id, page=1):
     """
     Display posts containing a specific hashtag.
-    
+
     Args:
         hashtag_id: ID of hashtag to filter posts by
         page: Page number for pagination (default: 1)
-        
+
     Returns:
         Rendered template with hashtag posts
     """
@@ -487,11 +506,11 @@ def get_post_hashtags(hashtag_id, page=1):
 def get_post_interest(interest_id, page=1):
     """
     Display posts associated with a specific interest/topic.
-    
+
     Args:
         interest_id: ID of interest/topic to filter posts by
         page: Page number for pagination (default: 1)
-        
+
     Returns:
         Rendered template with interest-related posts
     """
@@ -552,11 +571,11 @@ def get_post_interest(interest_id, page=1):
 def get_post_emotion(emotion_id, page=1):
     """
     Display posts that elicit a specific emotion.
-    
+
     Args:
         emotion_id: ID of emotion to filter posts by
         page: Page number for pagination (default: 1)
-        
+
     Returns:
         Rendered template with emotion-tagged posts
     """
@@ -618,11 +637,11 @@ def get_post_emotion(emotion_id, page=1):
 def get_friends(user_id, page=1):
     """
     Display user's followers and followees (friends).
-    
+
     Args:
         user_id: ID of user whose friends to display
         page: Page number for pagination (default: 1)
-        
+
     Returns:
         Rendered template showing followers and followees
     """
@@ -746,15 +765,17 @@ def get_thread(post_id):
         "post": augment_text(posts[0].tweet),
         "profile_pic": profile_pic,
         "image": image,
-        "shared_from": -1
-        if posts[0].shared_from == -1
-        else (
-            posts[0].shared_from,
-            db.session.query(User_mgmt)
-            .join(Post, User_mgmt.id == Post.user_id)
-            .filter(Post.id == posts[0].shared_from)
-            .first()
-            .username,
+        "shared_from": (
+            -1
+            if posts[0].shared_from == -1
+            else (
+                posts[0].shared_from,
+                db.session.query(User_mgmt)
+                .join(Post, User_mgmt.id == Post.user_id)
+                .filter(Post.id == posts[0].shared_from)
+                .first()
+                .username,
+            )
         ),
         "post_id": posts[0].id,
         "author": user.username,
@@ -971,15 +992,17 @@ def __get_discussions(posts, username, page):
                     "post_id": c.id,
                     "profile_pic": profile_pic,
                     "author": author,
-                    "shared_from": -1
-                    if c.shared_from == -1
-                    else (
-                        c.shared_from,
-                        db.session.query(User_mgmt)
-                        .join(Post, User_mgmt.id == Post.user_id)
-                        .filter(Post.id == c.shared_from)
-                        .first()
-                        .username,
+                    "shared_from": (
+                        -1
+                        if c.shared_from == -1
+                        else (
+                            c.shared_from,
+                            db.session.query(User_mgmt)
+                            .join(Post, User_mgmt.id == Post.user_id)
+                            .filter(Post.id == c.shared_from)
+                            .first()
+                            .username,
+                        )
                     ),
                     "author_id": int(c.user_id),
                     "post": augment_text(text),
@@ -1061,15 +1084,17 @@ def __get_discussions(posts, username, page):
                 "image": image,
                 "profile_pic": profile_pic,
                 "thread_id": post.thread_id,
-                "shared_from": -1
-                if post.shared_from == -1
-                else (
-                    post.shared_from,
-                    db.session.query(User_mgmt)
-                    .join(Post, User_mgmt.id == Post.user_id)
-                    .filter(Post.id == post.shared_from)
-                    .first()
-                    .username,
+                "shared_from": (
+                    -1
+                    if post.shared_from == -1
+                    else (
+                        post.shared_from,
+                        db.session.query(User_mgmt)
+                        .join(Post, User_mgmt.id == Post.user_id)
+                        .filter(Post.id == post.shared_from)
+                        .first()
+                        .username,
+                    )
                 ),
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
@@ -1168,15 +1193,17 @@ def get_thread_reddit(post_id):
         "post": processed_content,
         "profile_pic": profile_pic,
         "image": image,
-        "shared_from": -1
-        if posts[0].shared_from == -1
-        else (
-            posts[0].shared_from,
-            db.session.query(User_mgmt)
-            .join(Post, User_mgmt.id == Post.user_id)
-            .filter(Post.id == posts[0].shared_from)
-            .first()
-            .username,
+        "shared_from": (
+            -1
+            if posts[0].shared_from == -1
+            else (
+                posts[0].shared_from,
+                db.session.query(User_mgmt)
+                .join(Post, User_mgmt.id == Post.user_id)
+                .filter(Post.id == posts[0].shared_from)
+                .first()
+                .username,
+            )
         ),
         "post_id": posts[0].id,
         "author": user.username,
@@ -1340,7 +1367,7 @@ def get_thread_reddit(post_id):
 def feeed_logged_reddit():
     """
     Display Reddit-style feed for logged-in users.
-    
+
     Returns:
         Redirect to Reddit feed with default parameters
     """

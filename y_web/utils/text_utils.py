@@ -8,18 +8,21 @@ and Reddit-style post formatting.
 
 import re
 from html.parser import HTMLParser
-from y_web.models import User_mgmt, Hashtags, Post_Toxicity, Admin_users
 from io import StringIO
+
+from y_web.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
 
 # Optional imports
 try:
     from nltk.sentiment import SentimentIntensityAnalyzer
+
     NLTK_AVAILABLE = True
 except ImportError:
     NLTK_AVAILABLE = False
 
 try:
     from perspective import PerspectiveAPI
+
     PERSPECTIVE_AVAILABLE = True
 except ImportError:
     PERSPECTIVE_AVAILABLE = False
@@ -28,13 +31,13 @@ except ImportError:
 def vader_sentiment(text):
     """
     Calculate sentiment scores using VADER sentiment analysis.
-    
+
     VADER (Valence Aware Dictionary and sEntiment Reasoner) is specifically
     tuned for social media text sentiment analysis.
-    
+
     Args:
         text: Text content to analyze
-        
+
     Returns:
         Dictionary with sentiment scores: {'neg', 'neu', 'pos', 'compound'}
     """
@@ -50,17 +53,17 @@ def vader_sentiment(text):
 def toxicity(text, username, post_id, db):
     """
     Calculate toxicity scores using Google's Perspective API.
-    
+
     Analyzes text for various dimensions of toxicity including general toxicity,
     severe toxicity, identity attacks, insults, profanity, threats, sexually
     explicit content, and flirtation. Results are stored in the database.
-    
+
     Args:
         text: Text content to analyze
         username: Username of the admin user (for API key lookup)
         post_id: ID of the post being analyzed
         db: Database session for storing results
-        
+
     Returns:
         None (stores results in Post_Toxicity table)
     """
@@ -111,13 +114,13 @@ def toxicity(text, username, post_id, db):
 def augment_text(text):
     """
     Augment text by converting mentions and hashtags to clickable links.
-    
+
     Replaces @username mentions with links to user profiles and #hashtag
     with links to hashtag pages. Also capitalizes the first letter.
-    
+
     Args:
         text: Raw text with mentions and hashtags
-        
+
     Returns:
         HTML string with hyperlinked mentions and hashtags
     """
@@ -165,11 +168,11 @@ def augment_text(text):
 def extract_components(text, c_type="hashtags"):
     """
     Extract hashtags or mentions from text using regex patterns.
-    
+
     Args:
         text: Text to extract components from
         c_type: Component type - "hashtags" for #tags or "mentions" for @users
-        
+
     Returns:
         List of extracted components (including # or @ prefix)
     """
@@ -187,7 +190,7 @@ def extract_components(text, c_type="hashtags"):
 
 class MLStripper(HTMLParser):
     """HTML parser subclass that strips all HTML tags from text."""
-    
+
     def __init__(self):
         """Handle   init   operation."""
         super().__init__()
@@ -203,7 +206,7 @@ class MLStripper(HTMLParser):
     def get_data(self):
         """
         Get extracted text data.
-        
+
         Returns:
             String containing extracted text
         """
@@ -213,10 +216,10 @@ class MLStripper(HTMLParser):
 def strip_tags(html):
     """
     Remove all HTML tags from text content.
-    
+
     Args:
         html: HTML string to strip tags from
-        
+
     Returns:
         Plain text with all HTML tags removed
     """
@@ -228,19 +231,19 @@ def strip_tags(html):
 def process_reddit_post(text):
     """
     Process and format Reddit-style post text.
-    
+
     Handles posts with "TITLE: " prefix by splitting into title and content,
     and removes leading whitespace from content.
-    
+
     Args:
         text: Raw post text to process
-        
+
     Returns:
         Tuple of (title, content) where title is None if no TITLE prefix exists
     """
     if text.startswith("TITLE: "):
         # Split on first newline after title
-        lines = text.split('\n', 1)
+        lines = text.split("\n", 1)
         title = lines[0].replace("TITLE: ", "").strip()
         if len(lines) > 1:
             # Remove all leading whitespace from the content

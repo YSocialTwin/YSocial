@@ -8,31 +8,27 @@ Provides utilities for network generation, database operations, and
 LLM model management.
 """
 
-import re
-from requests import post
 import json
-import time
+import os
 import random
-from multiprocessing import Process
-import traceback
-
-from sklearn.utils import deprecated
-
-from y_web.models import (
-    Client_Execution,
-    Ollama_Pull
-)
-
-from flask import current_app
-from y_web import db, client_processes
-import requests
-from ollama import Client as oclient
-import numpy as np
+import re
 import shutil
 import subprocess
-import os
 import sys
+import time
+import traceback
+from multiprocessing import Process
 from pathlib import Path
+
+import numpy as np
+import requests
+from flask import current_app
+from ollama import Client as oclient
+from requests import post
+from sklearn.utils import deprecated
+
+from y_web import client_processes, db
+from y_web.models import Client_Execution, Ollama_Pull
 
 
 @deprecated
@@ -119,11 +115,11 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 def detect_env_handler():
     """
     Detect the active Python environment and return executable path.
-    
+
     Detects conda, pipenv, virtualenv/venv environments and returns
     appropriate Python command/path for running scripts in the same
     environment context.
-    
+
     Returns:
         String: Python executable path or command prefix (e.g., 'pipenv run python')
     """
@@ -166,15 +162,15 @@ def detect_env_handler():
 def build_screen_command(script_path, config_path, screen_name=None):
     """
     Build a screen command to run Python script in detected environment.
-    
+
     Creates a detached screen session running the script with the correct
     Python interpreter for the current environment.
-    
+
     Args:
         script_path: Path to Python script to execute
         config_path: Path to configuration file (optional)
         screen_name: Name for screen session (default: "experiment")
-        
+
     Returns:
         String: Complete screen command ready for execution
     """
@@ -193,11 +189,12 @@ def build_screen_command(script_path, config_path, screen_name=None):
     screen_cmd = f"screen -dmS {screen_name} bash -c '{run_cmd}'"
     return screen_cmd
 
+
 #############
 
 
 def terminate_process_on_port(port):
-    """    Terminate the process using the specified port
+    """Terminate the process using the specified port
 
     Args:
         port: the port number"""
@@ -219,7 +216,7 @@ def terminate_process_on_port(port):
 
 
 def start_server(exp):
-    """    Start the y_server in a detached screen
+    """Start the y_server in a detached screen
 
     Args:
         exp: the experiment object"""
@@ -231,22 +228,24 @@ def start_server(exp):
         config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
-        uid = exp.db_name.removeprefix('experiments_')
+        uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
+        config = (
+            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
+        )
 
     if exp.platform_type == "microblogging":
         screen_command = build_screen_command(
             script_path=f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py",
             config_path=f"{config}",
-            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}"
+            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
         )
 
     elif exp.platform_type == "forum":
         screen_command = build_screen_command(
             script_path=f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py",
             config_path=f"{config}",
-            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}"
+            screen_name=f"{exp_uid.replace(f'{os.sep}', '')}",
         )
         # subprocess.run(cmd, shell=True, check=True)
     else:
@@ -345,7 +344,7 @@ def pull_ollama_model(model_name):
 def start_ollama_pull(model_name):
     """
     Start downloading an Ollama model in background.
-    
+
     Args:
         model_name: Name of model to download
     """
@@ -373,7 +372,7 @@ def start_ollama_pull(model_name):
 def get_ollama_models():
     """
     Get list of installed Ollama models.
-    
+
     Returns:
         List of available model names
     """
@@ -395,7 +394,7 @@ def get_ollama_models():
 def delete_ollama_model(model_name):
     """
     Delete an Ollama model from the system.
-    
+
     Args:
         model_name: Name of model to delete
     """
@@ -409,7 +408,7 @@ def delete_ollama_model(model_name):
 def delete_model_pull(model_name):
     """
     Cancel an ongoing model download.
-    
+
     Args:
         model_name: Name of model to cancel download for
     """
@@ -424,7 +423,7 @@ def delete_model_pull(model_name):
 
 
 def terminate_client(cli, pause=False):
-    """    Stop the y_client
+    """Stop the y_client
 
     Args:
         cli: the client object"""
@@ -433,7 +432,7 @@ def terminate_client(cli, pause=False):
     process.join()
 
     # update client execution object
-    #if not pause:
+    # if not pause:
     #    ce = Client_Execution.query.filter_by(client_id=cli.id).first()
     #    ce.expected_duration_rounds = 0
     #    ce.elapsed_time = 0
@@ -458,16 +457,19 @@ def start_client(exp, cli, population, resume=False):
 def start_client_process(exp, cli, population, resume=False):
     """
     Initialize and start client simulation process.
-    
+
     Args:
         exp: Experiment object
         cli: Client configuration object
         population: Population object
         resume: Boolean indicating if resuming (default: False)
     """
+    import json
+    import os
+    import sys
+
     from y_web import create_app, db
     from y_web.models import Client_Execution
-    import os, sys, json
 
     app = create_app()  # create app instance for this subprocess
 
@@ -488,15 +490,15 @@ def start_client_process(exp, cli, population, resume=False):
 
         # postgres
         if "experiments_" in exp.db_name:
-            uid = exp.db_name.removeprefix('experiments_')
+            uid = exp.db_name.removeprefix("experiments_")
             filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
                 "utils/", ""
-            ) #
+            )  #
         else:
             uid = exp.db_name.split(os.sep)[1]
             filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
                 "utils/", ""
-            ) #.replace(' ', '')
+            )  # .replace(' ', '')
 
         data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
         config_file = json.load(
@@ -524,7 +526,9 @@ def start_client_process(exp, cli, population, resume=False):
 
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
-            cl = YClientWeb(config_file, data_base_path, first_run=first_run, network=path)
+            cl = YClientWeb(
+                config_file, data_base_path, first_run=first_run, network=path
+            )
         else:
             cl = YClientWeb(config_file, data_base_path, first_run=first_run)
 
@@ -589,7 +593,10 @@ def run_simulation(cl, cli_id, agent_file, exp):
                 weights = [w / sum(weights) for w in weights]
                 # sample agents
                 sagents = np.random.choice(
-                    cl.agents.agents, size=expected_active_users, p=weights, replace=False
+                    cl.agents.agents,
+                    size=expected_active_users,
+                    p=weights,
+                    replace=False,
                 )
             except Exception as e:
                 sagents = np.random.choice(

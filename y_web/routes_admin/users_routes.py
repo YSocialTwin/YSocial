@@ -7,18 +7,13 @@ creating new users, and updating user permissions and settings.
 
 import os
 
-from flask import Blueprint, render_template, request, abort
-from flask_login import login_required, current_user
+from flask import Blueprint, abort, current_app, render_template, request
+from flask_login import current_user, login_required
 
-from y_web.models import Exps, Admin_users, User_mgmt, User_Experiment
-
+from y_web import db  # , app
+from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.utils import get_ollama_models
-
-from y_web import db#, app
-from flask import current_app
-
 from y_web.utils.miscellanea import check_privileges, ollama_status
-
 
 users = Blueprint("users", __name__)
 
@@ -28,7 +23,7 @@ users = Blueprint("users", __name__)
 def user_data():
     """
     Display user management page.
-    
+
     Returns:
         Rendered user data template with available models
     """
@@ -46,7 +41,7 @@ def user_data():
 def users_data():
     """
     Display list of all admin users.
-    
+
     Returns:
         Rendered users list template
     """
@@ -109,7 +104,7 @@ def users_data():
 def update():
     """
     Update user information from form data.
-    
+
     Returns:
         Redirect to users page
     """
@@ -166,7 +161,7 @@ def user_details(uid):
 def add_user():
     """
     Create a new admin user from form data.
-    
+
     Returns:
         Redirect to users page
     """
@@ -212,7 +207,7 @@ def delete_user(uid):
 def add_user_to_experiment():
     """
     Associate a user with an experiment.
-    
+
     Returns:
         Redirect to user details
     """
@@ -228,9 +223,11 @@ def add_user_to_experiment():
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    #app.config["SQLALCHEMY_BINDS"]["db_exp"] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
+    # app.config["SQLALCHEMY_BINDS"]["db_exp"] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
 
-    current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
+    current_app.config["SQLALCHEMY_BINDS"][
+        "db_exp"
+    ] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
 
     # check if the user is present in the User_mgmt table
     user_exp = db.session.query(User_mgmt).filter_by(username=user.username).first()
@@ -276,7 +273,7 @@ def add_user_to_experiment():
 def set_perspective_api_user():
     """
     Set Perspective API key for a user.
-    
+
     Returns:
         Redirect to user details
     """

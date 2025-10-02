@@ -11,10 +11,10 @@ import feedparser
 def get_feed(url):
     """
     Fetch and parse an RSS feed from a given URL.
-    
+
     Args:
         url: RSS feed URL to fetch
-        
+
     Returns:
         List of dictionaries with keys: 'title', 'summary', 'link'
         Returns empty list if entries lack required fields

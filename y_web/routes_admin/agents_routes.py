@@ -7,35 +7,28 @@ settings.
 """
 
 import random
+import re
 
-from flask import (
-    Blueprint,
-    render_template,
-    request,
-    flash
-)
-from flask_login import login_required, current_user
+from flask import Blueprint, flash, render_template, request
+from flask_login import current_user, login_required
 
+from y_web import db
 from y_web.models import (
-    Population,
     Agent,
     Agent_Population,
     Agent_Profile,
-    Profession,
-    Nationalities,
-    Education,
-    Leanings,
-    Languages,
     Content_Recsys,
+    Education,
     Follow_Recsys,
+    Languages,
+    Leanings,
+    Nationalities,
+    Population,
+    Profession,
     Toxicity_Levels,
 )
 from y_web.utils import get_ollama_models
-from y_web.utils.miscellanea import ollama_status
-
-from y_web import db
-from y_web.utils.miscellanea import check_privileges
-import re
+from y_web.utils.miscellanea import check_privileges, ollama_status
 
 agents = Blueprint("agents", __name__)
 
@@ -45,7 +38,7 @@ agents = Blueprint("agents", __name__)
 def agent_data():
     """
     Display agent management page.
-    
+
     Returns:
         Rendered agent data template with available models
     """
@@ -139,7 +132,7 @@ def agents_data():
 def create_agent():
     """
     Create a new AI agent from form data.
-    
+
     Returns:
         Redirect to agent data page
     """
@@ -247,7 +240,7 @@ def agent_details(uid):
 def add_to_population():
     """
     Add an agent to a population from form data.
-    
+
     Returns:
         Redirect to agent details page
     """

@@ -15,11 +15,12 @@ from . import db
 class User_mgmt(UserMixin, db.Model):
     """
     User management model for experiment participants.
-    
+
     Stores user profile information including personality traits (Big Five),
     demographic information, preferences, and activity settings. Used in
     experimental simulations to represent both human and AI-driven agents.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), nullable=False, unique=True)
@@ -55,10 +56,11 @@ class User_mgmt(UserMixin, db.Model):
 class Post(db.Model):
     """
     Post/content model representing user-generated content.
-    
+
     Stores posts, tweets, comments, and shared content within the social network.
     Supports threading, image attachments, news article links, and tracks reactions.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     tweet = db.Column(db.String(500), nullable=False)
@@ -75,6 +77,7 @@ class Post(db.Model):
 
 class Hashtags(db.Model):
     """Hashtag model for tracking and categorizing content by topics."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     hashtag = db.Column(db.String(20), nullable=False)
@@ -82,6 +85,7 @@ class Hashtags(db.Model):
 
 class Emotions(db.Model):
     """Emotion types for post reactions (e.g., like, love, angry, sad)."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     emotion = db.Column(db.String(20), nullable=False)
@@ -90,6 +94,7 @@ class Emotions(db.Model):
 
 class Post_emotions(db.Model):
     """Association table linking posts with emotion reactions."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
@@ -98,6 +103,7 @@ class Post_emotions(db.Model):
 
 class Post_hashtags(db.Model):
     """Association table linking posts with hashtags."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
@@ -107,10 +113,11 @@ class Post_hashtags(db.Model):
 class Mentions(db.Model):
     """
     User mention tracking in posts.
-    
+
     Records when users are mentioned (@username) in posts, tracks whether
     the mention was responded to, and the round in which it occurred.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
@@ -122,10 +129,11 @@ class Mentions(db.Model):
 class Reactions(db.Model):
     """
     User reactions to posts (likes, shares, etc.).
-    
+
     Tracks all types of reactions users have to posts, including the round
     when the reaction occurred and the type of reaction.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     round = db.Column(db.Integer, nullable=False)
@@ -137,10 +145,11 @@ class Reactions(db.Model):
 class Follow(db.Model):
     """
     Follow/unfollow relationship tracking.
-    
+
     Records follower relationships between users, including follow and
     unfollow actions with timestamps (rounds).
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
@@ -152,10 +161,11 @@ class Follow(db.Model):
 class Rounds(db.Model):
     """
     Simulation time tracking.
-    
+
     Represents time units in the simulation, mapping to specific days and hours
     for coordinating agent activities and content generation.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     day = db.Column(db.Integer, nullable=False)
@@ -165,10 +175,11 @@ class Rounds(db.Model):
 class Recommendations(db.Model):
     """
     Content recommendation history.
-    
+
     Stores recommended post IDs for users at specific rounds, supporting
     personalized content feed generation.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
@@ -179,10 +190,11 @@ class Recommendations(db.Model):
 class Articles(db.Model):
     """
     News article metadata.
-    
+
     Stores articles fetched from RSS feeds, including title, summary, source
     website, and fetch timestamp for news sharing in the platform.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(200), nullable=False)
@@ -195,10 +207,11 @@ class Articles(db.Model):
 class Websites(db.Model):
     """
     News source configuration.
-    
+
     Defines news websites/RSS feeds used for article generation, including
     their political leaning, category, language, and country information.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
@@ -213,10 +226,11 @@ class Websites(db.Model):
 class Voting(db.Model):
     """
     Voting/preference tracking for content.
-    
+
     Records user voting preferences (upvote/downvote) on different content types
     for Reddit-style voting mechanisms.
     """
+
     __bind_key__ = "db_exp"
     vid = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
@@ -228,6 +242,7 @@ class Voting(db.Model):
 
 class Interests(db.Model):
     """Topic/interest categories for content classification."""
+
     __bind_key__ = "db_exp"
     iid = db.Column(db.Integer, primary_key=True)
     interest = db.Column(db.String(20), nullable=False)
@@ -235,6 +250,7 @@ class Interests(db.Model):
 
 class User_interest(db.Model):
     """Association table linking users with their interests/topics."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
@@ -244,6 +260,7 @@ class User_interest(db.Model):
 
 class Post_topics(db.Model):
     """Association table linking posts with topic categories."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
@@ -253,10 +270,11 @@ class Post_topics(db.Model):
 class Images(db.Model):
     """
     Image metadata for posts.
-    
+
     Stores image URLs, LLM-generated descriptions, and optional associations
     with news articles for multimodal content.
     """
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String(200), nullable=True)
@@ -266,6 +284,7 @@ class Images(db.Model):
 
 class Article_topics(db.Model):
     """Association table linking articles with topic categories."""
+
     __bind_key__ = "db_exp"
     id = db.Column(db.Integer, primary_key=True)
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=False)
@@ -275,10 +294,11 @@ class Article_topics(db.Model):
 class Post_Sentiment(db.Model):
     """
     Sentiment analysis results for posts.
-    
+
     Stores VADER sentiment scores (negative, neutral, positive, compound)
     for posts and comments, tracking sentiment over time and by topic.
     """
+
     __bind_key__ = "db_exp"
     __tablename__ = "post_sentiment"
     id = db.Column(db.Integer, primary_key=True)
@@ -299,11 +319,12 @@ class Post_Sentiment(db.Model):
 class Post_Toxicity(db.Model):
     """
     Toxicity analysis results for posts.
-    
+
     Stores Perspective API toxicity scores for various dimensions including
     toxicity, severe_toxicity, identity_attack, insult, profanity, threat,
     sexually_explicit content, and flirtation.
     """
+
     __bind_key__ = "db_exp"
     __tablename__ = "post_toxicity"
     id = db.Column(db.Integer, primary_key=True)
@@ -324,10 +345,11 @@ class Post_Toxicity(db.Model):
 class Admin_users(UserMixin, db.Model):
     """
     Administrative user accounts.
-    
+
     Manages user accounts for the YSocial dashboard, including authentication,
     roles, LLM preferences, and API keys for external services.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "admin_users"
     id = db.Column(db.Integer, primary_key=True)
@@ -344,10 +366,11 @@ class Admin_users(UserMixin, db.Model):
 class Exps(db.Model):
     """
     Experiment configuration and metadata.
-    
+
     Defines simulation experiments including platform type (microblogging/reddit),
     database connections, ownership, status tracking, and server configuration.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "exps"
     idexp = db.Column(db.Integer, primary_key=True)
@@ -365,10 +388,11 @@ class Exps(db.Model):
 class Exp_stats(db.Model):
     """
     Experiment statistics tracking.
-    
+
     Aggregates key metrics for experiments including total rounds, agents,
     posts, reactions, and mentions for monitoring simulation progress.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "exp_stats"
     id = db.Column(db.Integer, primary_key=True)
@@ -383,11 +407,12 @@ class Exp_stats(db.Model):
 class Population(db.Model):
     """
     Agent population configuration.
-    
+
     Defines groups of agents with shared characteristics including demographics
     (age, education, nationality), personality traits, interests, toxicity levels,
     language preferences, and recommendation system settings.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "population"
     id = db.Column(db.Integer, primary_key=True)
@@ -410,11 +435,12 @@ class Population(db.Model):
 class Agent(db.Model):
     """
     Individual AI agent profile.
-    
+
     Represents an AI-driven social media user with complete demographic profile,
     Big Five personality traits (oe, co, ex, ag, ne), political leaning,
     toxicity level, and behavioral settings for simulation participation.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "agents"
     id = db.Column(db.Integer, primary_key=True)
@@ -442,6 +468,7 @@ class Agent(db.Model):
 
 class Agent_Population(db.Model):
     """Association table linking agents to populations."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "agent_population"
     id = db.Column(db.Integer, primary_key=True)
@@ -453,6 +480,7 @@ class Agent_Population(db.Model):
 
 class Agent_Profile(db.Model):
     """Extended textual profile information for agents."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "agent_profile"
     id = db.Column(db.Integer, primary_key=True)
@@ -463,11 +491,12 @@ class Agent_Profile(db.Model):
 class Page(db.Model):
     """
     Page/news organization accounts.
-    
+
     Represents institutional accounts (news outlets, organizations) that
     generate content from RSS feeds with specific topics, political leanings,
     and visual branding.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "pages"
     id = db.Column(db.Integer, primary_key=True)
@@ -483,6 +512,7 @@ class Page(db.Model):
 
 class Population_Experiment(db.Model):
     """Association table linking populations to experiments."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "population_experiment"
     id = db.Column(db.Integer, primary_key=True)
@@ -494,6 +524,7 @@ class Population_Experiment(db.Model):
 
 class Page_Population(db.Model):
     """Association table linking pages to populations."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "page_population"
     id = db.Column(db.Integer, primary_key=True)
@@ -505,6 +536,7 @@ class Page_Population(db.Model):
 
 class User_Experiment(db.Model):
     """Association table linking admin users to experiments."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "user_experiment"
     id = db.Column(db.Integer, primary_key=True)
@@ -515,11 +547,12 @@ class User_Experiment(db.Model):
 class Client(db.Model):
     """
     Simulation client configuration.
-    
+
     Defines simulation parameters including agent behavior probabilities
     (posting, sharing, commenting, reading), attention window, LLM settings
     for content generation, and network topology configuration.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "client"
     id = db.Column(db.Integer, primary_key=True)
@@ -563,10 +596,11 @@ class Client(db.Model):
 class Client_Execution(db.Model):
     """
     Client execution state tracking.
-    
+
     Monitors simulation progress including elapsed time, expected duration,
     and current time position (day/hour) for running simulations.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "client_execution"
     id = db.Column(db.Integer, primary_key=True)
@@ -580,10 +614,11 @@ class Client_Execution(db.Model):
 class Ollama_Pull(db.Model):
     """
     Ollama model download tracking.
-    
+
     Tracks status of LLM model downloads from Ollama registry,
     with progress percentage for monitoring long-running downloads.
     """
+
     __bind_key__ = "db_admin"
     __tablename__ = "ollama_pull"
     id = db.Column(db.Integer, primary_key=True)
@@ -593,6 +628,7 @@ class Ollama_Pull(db.Model):
 
 class Profession(db.Model):
     """Professional occupation definitions with background context."""
+
     __bind__ = "db_admin"
     __tablename__ = "professions"
     id = db.Column(db.Integer, primary_key=True)
@@ -602,6 +638,7 @@ class Profession(db.Model):
 
 class Nationalities(db.Model):
     """Available nationality options for agent profiles."""
+
     __bind__ = "db_admin"
     __tablename__ = "nationalities"
     id = db.Column(db.Integer, primary_key=True)
@@ -610,6 +647,7 @@ class Nationalities(db.Model):
 
 class Education(db.Model):
     """Available education level options for agent profiles."""
+
     __bind__ = "db_admin"
     __tablename__ = "education"
     id = db.Column(db.Integer, primary_key=True)
@@ -618,6 +656,7 @@ class Education(db.Model):
 
 class Leanings(db.Model):
     """Available political leaning options for agent and page profiles."""
+
     __bind__ = "db_admin"
     __tablename__ = "leanings"
     id = db.Column(db.Integer, primary_key=True)
@@ -626,6 +665,7 @@ class Leanings(db.Model):
 
 class Languages(db.Model):
     """Available language options for agent profiles and content."""
+
     __bind__ = "db_admin"
     __tablename__ = "languages"
     id = db.Column(db.Integer, primary_key=True)
@@ -634,6 +674,7 @@ class Languages(db.Model):
 
 class Toxicity_Levels(db.Model):
     """Available toxicity level options for agent profiles."""
+
     __bind__ = "db_admin"
     __tablename__ = "toxicity_levels"
     id = db.Column(db.Integer, primary_key=True)
@@ -642,6 +683,7 @@ class Toxicity_Levels(db.Model):
 
 class Content_Recsys(db.Model):
     """Content recommendation system configuration options."""
+
     __bind__ = "db_admin"
     __tablename__ = "content_recsys"
     id = db.Column(db.Integer, primary_key=True)
@@ -651,6 +693,7 @@ class Content_Recsys(db.Model):
 
 class Follow_Recsys(db.Model):
     """Follower recommendation system configuration options."""
+
     __bind__ = "db_admin"
     __tablename__ = "follow_recsys"
     id = db.Column(db.Integer, primary_key=True)
@@ -660,6 +703,7 @@ class Follow_Recsys(db.Model):
 
 class Topic_List(db.Model):
     """Master list of available topics for experiments and content."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "topic_list"
     id = db.Column(db.Integer, primary_key=True)
@@ -668,6 +712,7 @@ class Topic_List(db.Model):
 
 class Exp_Topic(db.Model):
     """Association table linking experiments with topics."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "exp_topic"
     id = db.Column(db.Integer, primary_key=True)
@@ -677,6 +722,7 @@ class Exp_Topic(db.Model):
 
 class Page_Topic(db.Model):
     """Association table linking pages with topics."""
+
     __bind_key__ = "db_admin"
     __tablename__ = "page_topic"
     id = db.Column(db.Integer, primary_key=True)

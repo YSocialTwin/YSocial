@@ -6,22 +6,23 @@ to extract emotions (GoEmotions taxonomy) and topics from social media posts.
 Uses the Autogen framework for agent-based interaction with LLMs.
 """
 
-from autogen import AssistantAgent
 import re
+
+from autogen import AssistantAgent
 
 
 class ContentAnnotator(object):
     """
     LLM-based content annotator for emotion and topic extraction.
-    
+
     Uses Autogen's multi-agent framework with a Handler and Annotator agent
     to analyze text content for emotional content and topics.
     """
-    
+
     def __init__(self, llm=None):
         """
         Initialize the content annotator with LLM configuration.
-        
+
         Args:
             llm: LLM model name/identifier (e.g., from Ollama). If None,
                  annotator is disabled and methods return empty results.
@@ -68,13 +69,13 @@ class ContentAnnotator(object):
     def annotate_emotions(self, text):
         """
         Annotate emotions in text using GoEmotions taxonomy.
-        
+
         Analyzes text to identify emotions from the GoEmotions taxonomy,
         which includes 28 emotion categories.
-        
+
         Args:
             text: Text content to analyze
-            
+
         Returns:
             List of emotion labels found in the text (e.g., ['joy', 'excitement'])
         """
@@ -97,13 +98,13 @@ class ContentAnnotator(object):
     def annotate_topics(self, text):
         """
         Extract main topics discussed in text.
-        
+
         Uses LLM to identify up to 3 general topics in the text,
         each described in 2 words.
-        
+
         Args:
             text: Text content to analyze
-            
+
         Returns:
             List of topic strings (e.g., ['climate change', 'renewable energy'])
         """
@@ -130,13 +131,13 @@ class ContentAnnotator(object):
     def __clean_emotion(self, text):
         """
         Parse and validate emotion labels from LLM response.
-        
+
         Extracts valid GoEmotions taxonomy labels from potentially
         noisy LLM output text.
-        
+
         Args:
             text: Raw LLM response text
-            
+
         Returns:
             List of validated emotion label strings
         """
@@ -190,11 +191,11 @@ class ContentAnnotator(object):
     def extract_components(self, text, c_type="hashtags"):
         """
         Extract hashtags or mentions from text using regex.
-        
+
         Args:
             text: Text to extract components from
             c_type: Component type - "hashtags" for #tags or "mentions" for @users
-            
+
         Returns:
             List of extracted components (including # or @ prefix)
         """

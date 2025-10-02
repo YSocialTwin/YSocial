@@ -6,41 +6,43 @@ including posts, users, reactions, follows, and recommendations. Handles
 pagination, filtering, and data formatting for display in the web interface.
 """
 
-from .models import (
-    Post,
-    Post_hashtags,
-    Mentions,
-    Emotions,
-    Post_emotions,
-    Reactions,
-    Follow,
-    Articles,
-    Websites,
-    Rounds,
-    Interests,
-    User_interest,
-    Post_topics,
-    Images,
-    Page,
-    Agent,
-    Post_Sentiment,
-)
-from sqlalchemy.sql.expression import func
 from sqlalchemy import desc
-from y_web.utils.text_utils import *
+from sqlalchemy.sql.expression import func
+
 from y_web import db
+from y_web.utils.text_utils import *
+
+from .models import (
+    Agent,
+    Articles,
+    Emotions,
+    Follow,
+    Images,
+    Interests,
+    Mentions,
+    Page,
+    Post,
+    Post_emotions,
+    Post_hashtags,
+    Post_Sentiment,
+    Post_topics,
+    Reactions,
+    Rounds,
+    User_interest,
+    Websites,
+)
 
 
 def get_safe_profile_pic(username, is_page=0):
     """
     Safely retrieve profile picture URL for a user or page.
-    
+
     Attempts to find profile picture from multiple sources with fallbacks.
-    
+
     Args:
         username: Username to get profile picture for
         is_page: 1 if username refers to a page, 0 for regular user
-        
+
     Returns:
         Profile picture URL string, or empty string if not found
     """
@@ -76,14 +78,14 @@ def get_safe_profile_pic(username, is_page=0):
 def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=None):
     """
     Retrieve paginated posts for a specific user based on filter mode.
-    
+
     Args:
         user_id: ID of the user whose posts to retrieve
         page: Page number for pagination (1-indexed)
         per_page: Number of posts per page
         mode: Filter mode - "recent", "comments", "liked", "disliked", or "rf"
         current_user: Current user viewing the posts (for personalization)
-        
+
     Returns:
         Dictionary containing paginated posts, user info, and metadata
     """
@@ -188,15 +190,17 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": -1
-                    if c.shared_from == -1
-                    else (
-                        c.shared_from,
-                        db.session.query(User_mgmt)
-                        .join(Post, User_mgmt.id == Post.user_id)
-                        .filter(Post.id == c.shared_from)
-                        .first()
-                        .username,
+                    "shared_from": (
+                        -1
+                        if c.shared_from == -1
+                        else (
+                            c.shared_from,
+                            db.session.query(User_mgmt)
+                            .join(Post, User_mgmt.id == Post.user_id)
+                            .filter(Post.id == c.shared_from)
+                            .first()
+                            .username,
+                        )
                     ),
                     "author_id": int(c.user_id),
                     "post": augment_text(text),
@@ -272,15 +276,17 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
                 "article": art,
                 "image": image,
                 "thread_id": post.thread_id,
-                "shared_from": -1
-                if post.shared_from == -1
-                else (
-                    post.shared_from,
-                    db.session.query(User_mgmt)
-                    .join(Post, User_mgmt.id == Post.user_id)
-                    .filter(Post.id == post.shared_from)
-                    .first()
-                    .username,
+                "shared_from": (
+                    -1
+                    if post.shared_from == -1
+                    else (
+                        post.shared_from,
+                        db.session.query(User_mgmt)
+                        .join(Post, User_mgmt.id == Post.user_id)
+                        .filter(Post.id == post.shared_from)
+                        .first()
+                        .username,
+                    )
                 ),
                 "post_id": post.id,
                 "profile_pic": profile_pic,
@@ -318,7 +324,7 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
 
 
 def augment_text(text):
-    """    Augment the text by adding links to the mentions and hashtags.
+    """Augment the text by adding links to the mentions and hashtags.
 
     Args:
         text: the text to augment
@@ -368,15 +374,15 @@ def augment_text(text):
 
 
 def get_mutual_friends(user_a, user_b, limit=10):
-    """    Get the mutual friends between two users.
+    """Get the mutual friends between two users.
 
     Args:
-        user_a: 
-        user_b: 
-        limit: 
+        user_a:
+        user_b:
+        limit:
 
     Returns:
-        """
+    """
     # Get the friends of the two users
     friends_a = Follow.query.filter_by(user_id=user_a, action="follow").distinct()
     friends_b = Follow.query.filter_by(user_id=user_b, action="follow").distinct()
@@ -420,11 +426,11 @@ def get_mutual_friends(user_a, user_b, limit=10):
 def get_top_user_hashtags(user_id, limit=10):
     """
     Get most frequently used hashtags by a user.
-    
+
     Args:
         user_id: ID of the user to get hashtags for
         limit: Maximum number of hashtags to return (default: 10)
-        
+
     Returns:
         List of dictionaries with hashtag id, text, and usage count
     """
@@ -432,23 +438,24 @@ def get_top_user_hashtags(user_id, limit=10):
         Post.query.filter_by(user_id=user_id)
         .join(Post_hashtags, Post.id == Post_hashtags.post_id)
         .join(Hashtags, Post_hashtags.hashtag_id == Hashtags.id)
-        .with_entities(Hashtags.id, Hashtags.hashtag, func.count(Post_hashtags.hashtag_id).label("count"))
+        .with_entities(
+            Hashtags.id,
+            Hashtags.hashtag,
+            func.count(Post_hashtags.hashtag_id).label("count"),
+        )
         .group_by(Hashtags.id, Hashtags.hashtag)
         .order_by(desc("count"))
         .limit(limit)
         .all()
     )
 
-    ht = [
-        {"id": h[0], "hashtag": h[1], "count": h[2]}
-        for h in ht
-    ]
+    ht = [{"id": h[0], "hashtag": h[1], "count": h[2]} for h in ht]
 
     return ht
 
 
 def get_user_friends(user_id, limit=12, page=1):
-    """    Get the followers and followees of the user with pagination.
+    """Get the followers and followees of the user with pagination.
 
     Args:
         user_id: int
@@ -482,7 +489,9 @@ def get_user_friends(user_id, limit=12, page=1):
     followers_list = []
 
     # Controllo pagine per evitare out of range
-    if (number_followers - page * limit < -limit) and (number_followees - page * limit < -limit):
+    if (number_followers - page * limit < -limit) and (
+        number_followees - page * limit < -limit
+    ):
         return get_user_friends(user_id, limit=limit, page=page - 1)
 
     # Recupera followees con join e group_by corretto
@@ -502,7 +511,9 @@ def get_user_friends(user_id, limit=12, page=1):
                 {
                     "id": uid_f,
                     "username": f.username,
-                    "number_reactions": Reactions.query.filter_by(user_id=uid_f).count(),
+                    "number_reactions": Reactions.query.filter_by(
+                        user_id=uid_f
+                    ).count(),
                     "number_followers": (
                         db.session.query(Follow.user_id)
                         .filter(Follow.follower_id == uid_f, Follow.user_id != uid_f)
@@ -537,7 +548,9 @@ def get_user_friends(user_id, limit=12, page=1):
                 {
                     "id": uid_f,
                     "username": f.username,
-                    "number_reactions": Reactions.query.filter_by(user_id=uid_f).count(),
+                    "number_reactions": Reactions.query.filter_by(
+                        user_id=uid_f
+                    ).count(),
                     "number_followers": (
                         db.session.query(Follow.user_id)
                         .filter(Follow.follower_id == uid_f, Follow.user_id != uid_f)
@@ -559,14 +572,14 @@ def get_user_friends(user_id, limit=12, page=1):
 
 
 def get_trending_emotions(limit=10, window=120):
-    """    Get the trending emotions.
+    """Get the trending emotions.
 
     Args:
-        window: 
-        limit: 
+        window:
+        limit:
 
     Returns:
-        """
+    """
 
     # get current round
     last_round_obj = Rounds.query.order_by(desc(Rounds.id)).first()
@@ -577,7 +590,7 @@ def get_trending_emotions(limit=10, window=120):
         db.session.query(
             Emotions.id,
             Emotions.emotion,
-            func.count(Post_emotions.emotion_id).label("count")
+            func.count(Post_emotions.emotion_id).label("count"),
         )
         .join(Post_emotions, Post_emotions.emotion_id == Emotions.id)
         .join(Post, Post.id == Post_emotions.post_id)
@@ -594,13 +607,13 @@ def get_trending_emotions(limit=10, window=120):
 
 
 def get_trending_hashtags(limit=10, window=120):
-    """    Get the trending hashtags.
+    """Get the trending hashtags.
 
     Args:
-        limit: 
+        limit:
 
     Returns:
-        """
+    """
 
     # get current round
 
@@ -611,7 +624,7 @@ def get_trending_hashtags(limit=10, window=120):
         db.session.query(
             Hashtags.id,
             Hashtags.hashtag,
-            func.count(Post_hashtags.hashtag_id).label("count")
+            func.count(Post_hashtags.hashtag_id).label("count"),
         )
         .join(Post_hashtags, Post_hashtags.hashtag_id == Hashtags.id)
         .join(Post, Post.id == Post_hashtags.post_id)
@@ -637,11 +650,11 @@ def get_trending_hashtags(limit=10, window=120):
 def get_trending_topics(limit=10, window=120):
     """
     Get currently trending topics based on recent post activity.
-    
+
     Args:
         limit: Maximum number of topics to return (default: 10)
         window: Number of rounds to look back for trend calculation (default: 120)
-        
+
     Returns:
         List of dictionaries with topic id, name, and post count
     """
@@ -654,7 +667,7 @@ def get_trending_topics(limit=10, window=120):
         db.session.query(
             Interests.iid,
             Interests.interest,
-            func.count(Post_topics.topic_id).label("count")
+            func.count(Post_topics.topic_id).label("count"),
         )
         .join(Post_topics, Post_topics.topic_id == Interests.iid)
         .join(Post, Post.id == Post_topics.post_id)
@@ -669,15 +682,15 @@ def get_trending_topics(limit=10, window=120):
 
 
 def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user=None):
-    """    Get the posts associated to the given hashtag.
+    """Get the posts associated to the given hashtag.
 
     Args:
-        hashtag_id: 
-        page: 
-        per_page: 
+        hashtag_id:
+        page:
+        per_page:
 
     Returns:
-        """
+    """
 
     if page < 1:
         page = 1
@@ -732,15 +745,17 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": -1
-                    if c.shared_from == -1
-                    else (
-                        c.shared_from,
-                        db.session.query(User_mgmt)
-                        .join(Post, User_mgmt.id == Post.user_id)
-                        .filter(Post.id == c.shared_from)
-                        .first()
-                        .username,
+                    "shared_from": (
+                        -1
+                        if c.shared_from == -1
+                        else (
+                            c.shared_from,
+                            db.session.query(User_mgmt)
+                            .join(Post, User_mgmt.id == Post.user_id)
+                            .filter(Post.id == c.shared_from)
+                            .first()
+                            .username,
+                        )
                     ),
                     "author_id": int(c.user_id),
                     "post": augment_text(c.tweet.split(":")[-1]),
@@ -817,15 +832,17 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
                 "image": image,
                 "profile_pic": profile_pic,
                 "thread_id": post.thread_id,
-                "shared_from": -1
-                if post.shared_from == -1
-                else (
-                    post.shared_from,
-                    db.session.query(User_mgmt)
-                    .join(Post, User_mgmt.id == Post.user_id)
-                    .filter(Post.id == post.shared_from)
-                    .first()
-                    .username,
+                "shared_from": (
+                    -1
+                    if post.shared_from == -1
+                    else (
+                        post.shared_from,
+                        db.session.query(User_mgmt)
+                        .join(Post, User_mgmt.id == Post.user_id)
+                        .filter(Post.id == post.shared_from)
+                        .first()
+                        .username,
+                    )
                 ),
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
@@ -862,15 +879,15 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
 
 
 def get_posts_associated_to_interest(interest_id, page, per_page=10, current_user=None):
-    """    Get the posts associated to the given interest.
+    """Get the posts associated to the given interest.
 
     Args:
-        interest_id: 
-        page: 
-        per_page: 
+        interest_id:
+        page:
+        per_page:
 
     Returns:
-        """
+    """
 
     if page < 1:
         page = 1
@@ -924,15 +941,17 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": -1
-                    if c.shared_from == -1
-                    else (
-                        c.shared_from,
-                        db.session.query(User_mgmt)
-                        .join(Post, User_mgmt.id == Post.user_id)
-                        .filter(Post.id == c.shared_from)
-                        .first()
-                        .username,
+                    "shared_from": (
+                        -1
+                        if c.shared_from == -1
+                        else (
+                            c.shared_from,
+                            db.session.query(User_mgmt)
+                            .join(Post, User_mgmt.id == Post.user_id)
+                            .filter(Post.id == c.shared_from)
+                            .first()
+                            .username,
+                        )
                     ),
                     "author_id": int(c.user_id),
                     "post": augment_text(c.tweet.split(":")[-1]),
@@ -1005,15 +1024,17 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
                 "image": image,
                 "profile_pic": profile_pic,
                 "thread_id": post.thread_id,
-                "shared_from": -1
-                if post.shared_from == -1
-                else (
-                    post.shared_from,
-                    db.session.query(User_mgmt)
-                    .join(Post, User_mgmt.id == Post.user_id)
-                    .filter(Post.id == post.shared_from)
-                    .first()
-                    .username,
+                "shared_from": (
+                    -1
+                    if post.shared_from == -1
+                    else (
+                        post.shared_from,
+                        db.session.query(User_mgmt)
+                        .join(Post, User_mgmt.id == Post.user_id)
+                        .filter(Post.id == post.shared_from)
+                        .first()
+                        .username,
+                    )
                 ),
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
@@ -1050,16 +1071,16 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
 
 
 def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=None):
-    """    Get the posts associated to the given emotion.
+    """Get the posts associated to the given emotion.
 
     Args:
-        current_user: 
-        emotion_id: 
-        page: 
-        per_page: 
+        current_user:
+        emotion_id:
+        page:
+        per_page:
 
     Returns:
-        """
+    """
 
     if page < 1:
         page = 1
@@ -1113,15 +1134,17 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
                     "post_id": c.id,
                     "author": author,
                     "profile_pic": profile_pic,
-                    "shared_from": -1
-                    if c.shared_from == -1
-                    else (
-                        c.shared_from,
-                        db.session.query(User_mgmt)
-                        .join(Post, User_mgmt.id == Post.user_id)
-                        .filter(Post.id == c.shared_from)
-                        .first()
-                        .username,
+                    "shared_from": (
+                        -1
+                        if c.shared_from == -1
+                        else (
+                            c.shared_from,
+                            db.session.query(User_mgmt)
+                            .join(Post, User_mgmt.id == Post.user_id)
+                            .filter(Post.id == c.shared_from)
+                            .first()
+                            .username,
+                        )
                     ),
                     "author_id": int(c.user_id),
                     "post": augment_text(c.tweet.split(":")[-1]),
@@ -1193,15 +1216,17 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
                 "article": art,
                 "image": image,
                 "thread_id": post.thread_id,
-                "shared_from": -1
-                if post.shared_from == -1
-                else (
-                    post.shared_from,
-                    db.session.query(User_mgmt)
-                    .join(Post, User_mgmt.id == Post.user_id)
-                    .filter(Post.id == post.shared_from)
-                    .first()
-                    .username,
+                "shared_from": (
+                    -1
+                    if post.shared_from == -1
+                    else (
+                        post.shared_from,
+                        db.session.query(User_mgmt)
+                        .join(Post, User_mgmt.id == Post.user_id)
+                        .filter(Post.id == post.shared_from)
+                        .first()
+                        .username,
+                    )
                 ),
                 "post_id": post.id,
                 "profile_pic": profile_pic,
@@ -1241,11 +1266,11 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
 def get_user_recent_interests(user_id, limit=5):
     """
     Get user's most engaged interests from recent activity.
-    
+
     Args:
         user_id: ID of the user to get interests for
         limit: Maximum number of interests to return (default: 5)
-        
+
     Returns:
         List of tuples containing (interest_name, interest_id, engagement_count)
     """
@@ -1278,10 +1303,10 @@ def get_user_recent_interests(user_id, limit=5):
 def get_elicited_emotions(post_id):
     """
     Get emotions elicited by a post.
-    
+
     Args:
         post_id: ID of the post to get emotions for
-        
+
     Returns:
         Set of tuples containing (emotion_name, icon, emotion_id)
     """
@@ -1301,11 +1326,11 @@ def get_elicited_emotions(post_id):
 def get_topics(post_id, user_id):
     """
     Get topics associated with a post and user sentiment.
-    
+
     Args:
         post_id: ID of the post to get topics for
         user_id: ID of the user viewing the post
-        
+
     Returns:
         List of topics with sentiment information
     """
@@ -1350,7 +1375,7 @@ def get_topics(post_id, user_id):
 def get_unanswered_mentions(user_id):
     """
     Args:
-        user_id: 
+        user_id:
 
     Returns:
     """

@@ -5,29 +5,30 @@ Implements user and page recommendation strategies for suggesting new accounts
 to follow based on network structure, shared interests, and user preferences.
 """
 
+import numpy as np
 from sqlalchemy.sql.expression import func
+
+from y_web import db
 from y_web.models import (
-    User_mgmt,
-    Page,
+    Admin_users,
     Agent,
     Follow,
-    Admin_users,
+    Page,
+    User_mgmt,
 )
-from y_web import db
-import numpy as np
 
 
 def get_suggested_users(user_id, pages=False):
     """
     Get follow recommendations for a user.
-    
+
     Suggests accounts to follow based on the user's recommendation system
     preference, optionally filtering for pages or regular users.
-    
+
     Args:
         user_id: ID of user to get recommendations for, or "all" for none
         pages: If True, return only page accounts; if False, only regular users
-        
+
     Returns:
         List of dictionaries with keys: 'username', 'id', 'profile_pic'
     """
@@ -91,16 +92,16 @@ def get_suggested_users(user_id, pages=False):
 
 
 def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
-    """    Get follow suggestions for a user based on the follow recommender system.
+    """Get follow suggestions for a user based on the follow recommender system.
 
     Args:
-        rectype: 
-        user_id: 
-        n_neighbors: 
-        leaning_biased: 
+        rectype:
+        user_id:
+        n_neighbors:
+        leaning_biased:
 
     Returns:
-        """
+    """
 
     res = {}
     if rectype == "PreferentialAttachment":
@@ -182,7 +183,7 @@ def __follow_suggestions(rectype, user_id, n_neighbors, leaning_biased):
 
 
 def __get_two_hops_neighbors(node_id):
-    """    Get the two hops neighbors of a user.
+    """Get the two hops neighbors of a user.
 
     Args:
         node_id: the user id
@@ -216,7 +217,7 @@ def __get_two_hops_neighbors(node_id):
 
 
 def __get_users_leanings(agents):
-    """    Get the political leaning of a list of users.
+    """Get the political leaning of a list of users.
 
     Args:
         agents: the list of users

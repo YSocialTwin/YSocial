@@ -7,33 +7,33 @@ commenting. Integrates sentiment analysis, toxicity detection, and LLM-based
 content annotation.
 """
 
-from flask import Blueprint, redirect
-from flask_login import login_required, current_user
+from flask import Blueprint, redirect, request
+from flask_login import current_user, login_required
+
 from . import db
+from .llm_annotations import Annotator, ContentAnnotator
 from .models import (
-    Follow,
-    Rounds,
-    Post,
-    Hashtags,
-    Post_hashtags,
+    Admin_users,
+    Articles,
     Emotions,
-    Post_emotions,
-    Mentions,
-    User_mgmt,
+    Follow,
+    Hashtags,
+    Images,
     Interests,
-    User_interest,
+    Mentions,
+    Post,
+    Post_emotions,
+    Post_hashtags,
+    Post_Sentiment,
     Post_topics,
     Reactions,
-    Admin_users,
-    Images,
-    Post_Sentiment,
-    Articles,
+    Rounds,
+    User_interest,
+    User_mgmt,
     Websites,
 )
-from flask import request
-from .llm_annotations import ContentAnnotator, Annotator
-from .utils.text_utils import vader_sentiment, toxicity
 from .utils.article_extractor import extract_article_info
+from .utils.text_utils import toxicity, vader_sentiment
 
 user = Blueprint("user_actions", __name__)
 
@@ -43,13 +43,13 @@ user = Blueprint("user_actions", __name__)
 def follow(user_id, follower_id):
     """
     Handle follow/unfollow action between users.
-    
+
     Toggles follow relationship and creates appropriate Follow record.
-    
+
     Args:
         user_id: ID of user to follow/unfollow
         follower_id: ID of user performing the action
-        
+
     Returns:
         Redirect to referrer page
     """
@@ -93,12 +93,12 @@ def follow(user_id, follower_id):
 def share_content():
     """
     Share/retweet an existing post.
-    
+
     Creates a new post that references the original as a shared post.
-    
+
     Query params:
         post_id: ID of post to share
-        
+
     Returns:
         Redirect to referrer page
     """
@@ -179,7 +179,7 @@ def react():
 def publish_post():
     """
     Publish a new post from form submission.
-    
+
     Returns:
         Redirect to referrer page after posting
     """
@@ -313,7 +313,7 @@ def publish_post():
 def publish_post_reddit():
     """
     Publish a new Reddit-style post with title and content.
-    
+
     Returns:
         Redirect to referrer page after posting
     """
@@ -511,7 +511,7 @@ def publish_post_reddit():
 def publish_comment():
     """
     Publish a comment on a post from form submission.
-    
+
     Returns:
         Redirect to thread page after commenting
     """

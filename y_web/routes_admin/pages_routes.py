@@ -9,23 +9,23 @@ pages with populations.
 import json
 import os
 
-from flask import Blueprint, render_template, request, redirect, send_file, flash
-from flask_login import login_required, current_user
+from flask import Blueprint, flash, redirect, render_template, request, send_file
+from flask_login import current_user, login_required
 
+from y_web import db
 from y_web.models import (
-    Population,
+    Leanings,
     Page,
     Page_Population,
-    Leanings, Topic_List, Page_Topic
+    Page_Topic,
+    Population,
+    Topic_List,
 )
 from y_web.utils import (
     get_feed,
     get_ollama_models,
 )
-
-from y_web import db
-from y_web.utils.miscellanea import check_privileges
-from y_web.utils.miscellanea import ollama_status
+from y_web.utils.miscellanea import check_privileges, ollama_status
 
 pages = Blueprint("pages", __name__)
 
@@ -35,7 +35,7 @@ pages = Blueprint("pages", __name__)
 def page_data():
     """
     Display page management interface.
-    
+
     Returns:
         Rendered page data template with available models
     """
@@ -106,7 +106,14 @@ def pages_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "descr", "keywords", "page_type", "logo", "leaning"]:
+            if name not in [
+                "name",
+                "descr",
+                "keywords",
+                "page_type",
+                "logo",
+                "leaning",
+            ]:
                 name = "name"
             col = getattr(Page, name)
             if direction == "-":
@@ -219,7 +226,7 @@ def page_details(uid):
 def add_topic_to_page():
     """
     Associate a topic with a page.
-    
+
     Returns:
         Redirect to page details
     """
@@ -311,7 +318,7 @@ def upload_page_collection():
 def download_pages():
     """
     Download pages data as JSON file.
-    
+
     Returns:
         JSON file download response
     """

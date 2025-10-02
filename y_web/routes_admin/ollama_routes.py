@@ -6,24 +6,25 @@ the server, pulling/downloading models, deleting models, and monitoring
 download progress.
 """
 
+import json
+
 from flask import (
     Blueprint,
     redirect,
     request,
 )
-from flask_login import login_required, current_user
+from flask_login import current_user, login_required
 
+from y_web import db
 from y_web.models import Ollama_Pull
 from y_web.utils import (
-    start_ollama_server,
-    is_ollama_running,
-    is_ollama_installed,
-    pull_ollama_model,
-    delete_ollama_model,
     delete_model_pull,
+    delete_ollama_model,
+    is_ollama_installed,
+    is_ollama_running,
+    pull_ollama_model,
+    start_ollama_server,
 )
-import json
-from y_web import db
 from y_web.utils.miscellanea import check_privileges
 
 ollama = Blueprint("ollama", __name__)
@@ -32,7 +33,7 @@ ollama = Blueprint("ollama", __name__)
 def ollama_status():
     """
     Get Ollama service status.
-    
+
     Returns:
         Dictionary with 'status' (running) and 'installed' flags
     """
@@ -47,7 +48,7 @@ def ollama_status():
 def start_ollama():
     """
     Start the Ollama LLM server.
-    
+
     Returns:
         Redirect to referrer page
     """
@@ -64,10 +65,10 @@ def start_ollama():
 def ollama_pull():
     """
     Initiate download of an Ollama model.
-    
+
     Form data:
         model_name: Name of model to download
-        
+
     Returns:
         Redirect to referrer page
     """
@@ -90,10 +91,10 @@ def ollama_pull():
 def ollama_cancel_pull(model_name):
     """
     Cancel an ongoing model download.
-    
+
     Args:
         model_name: Name of model to cancel download for
-        
+
     Returns:
         Redirect to referrer page
     """
@@ -109,10 +110,10 @@ def ollama_cancel_pull(model_name):
 def delete_model(model_name):
     """
     Delete an Ollama model from the system.
-    
+
     Args:
         model_name: Name of model to delete
-        
+
     Returns:
         Redirect to referrer page
     """
@@ -131,10 +132,10 @@ def delete_model(model_name):
 def get_pull_progress(model_name):
     """
     Get download progress for an Ollama model (AJAX endpoint).
-    
+
     Args:
         model_name: Name of model to check progress for
-        
+
     Returns:
         JSON with 'progress' (0-100) and 'model_name'
     """
