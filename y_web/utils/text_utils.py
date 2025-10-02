@@ -10,8 +10,19 @@ import re
 from html.parser import HTMLParser
 from y_web.models import User_mgmt, Hashtags, Post_Toxicity, Admin_users
 from io import StringIO
-from nltk.sentiment import SentimentIntensityAnalyzer
-from perspective import PerspectiveAPI
+
+# Optional imports
+try:
+    from nltk.sentiment import SentimentIntensityAnalyzer
+    NLTK_AVAILABLE = True
+except ImportError:
+    NLTK_AVAILABLE = False
+
+try:
+    from perspective import PerspectiveAPI
+    PERSPECTIVE_AVAILABLE = True
+except ImportError:
+    PERSPECTIVE_AVAILABLE = False
 
 
 def vader_sentiment(text):
@@ -27,6 +38,9 @@ def vader_sentiment(text):
     Returns:
         Dictionary with sentiment scores: {'neg', 'neu', 'pos', 'compound'}
     """
+    if not NLTK_AVAILABLE:
+        # Return mock sentiment if NLTK is not available
+        return {"neg": 0.0, "neu": 1.0, "pos": 0.0, "compound": 0.0}
 
     sia = SentimentIntensityAnalyzer()
     sentiment = sia.polarity_scores(text)
@@ -50,6 +64,9 @@ def toxicity(text, username, post_id, db):
     Returns:
         None (stores results in Post_Toxicity table)
     """
+    if not PERSPECTIVE_AVAILABLE:
+        # Return None if Perspective API is not available
+        return None
 
     user = Admin_users.query.filter_by(username=username).first()
 
