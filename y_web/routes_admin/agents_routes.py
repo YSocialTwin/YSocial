@@ -28,6 +28,7 @@ from y_web.models import (
     Languages,
     Content_Recsys,
     Follow_Recsys,
+    Toxicity_Levels,
 )
 from y_web.utils import get_ollama_models
 from y_web.utils.miscellanea import ollama_status
@@ -61,6 +62,7 @@ def agent_data():
     educations = Education.query.all()
     leanings = Leanings.query.all()
     languages = Languages.query.all()
+    toxicity_levels = Toxicity_Levels.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
 
@@ -74,6 +76,7 @@ def agent_data():
         education_levels=educations,
         leanings=leanings,
         languages=languages,
+        toxicity_levels=toxicity_levels,
         crecsys=crecsys,
         frecsys=frecsys,
     )
