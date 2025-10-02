@@ -26,13 +26,13 @@
             rel="stylesheet"
     />
     <link
-            href="https://cdn.jsdelivr.net/npm/fontisto@v3.0.4/css/fontisto/fontisto-brands.min.css"
+            href="{{ url_for('static', filename='assets/vendor/fontisto/css/fontisto/fontisto-brands.min.css') }}"
             rel="stylesheet"
     />
     <!-- Core CSS -->
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/app.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
-    <link href="https://cdn.materialdesignicons.com/7.2.96/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
 
 </head>
 <body>
