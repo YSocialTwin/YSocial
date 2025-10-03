@@ -341,9 +341,18 @@ def create_client():
     db.session.add(client)
     db.session.commit()
 
+    # Determine LLM URL based on backend
+    import os
+    llm_backend = os.getenv("LLM_BACKEND", "ollama")
+    if llm_backend == "vllm":
+        llm_url = "http://127.0.0.1:8000/v1"
+    else:  # ollama
+        llm_url = "http://127.0.0.1:11434/v1"
+    
     config = {
         "servers": {
             "llm": llm,
+            "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),

@@ -14,8 +14,9 @@ from flask_login import current_user, login_required
 
 from y_web.utils import (
     get_ollama_models,
+    get_vllm_models,
 )
-from y_web.utils.miscellanea import ollama_status
+from y_web.utils.miscellanea import llm_backend_status, ollama_status
 
 from .models import Client, Client_Execution, Exps, Ollama_Pull
 from .utils import (
@@ -43,6 +44,7 @@ def dashboard():
     """
     check_privileges(current_user.username)
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     # get all experiments
     experiments = Exps.query.all()
@@ -63,10 +65,13 @@ def dashboard():
             client_executions = cl if cl is not None else -1
             res[exp]["clients"].append((client, client_executions))
 
-    # get installed ollama models, if any
+    # get installed LLM models based on backend
     models = []
     try:
-        models = get_ollama_models()
+        if llm_backend["backend"] == "vllm":
+            models = get_vllm_models()
+        else:  # ollama
+            models = get_ollama_models()
     except:
         pass
 
@@ -83,6 +88,7 @@ def dashboard():
         "admin/dashboard.html",
         experiments=res,
         ollamas=ollamas,
+        llm_backend=llm_backend,
         models=models,
         active_pulls=ollama_pulls,
         len=len,

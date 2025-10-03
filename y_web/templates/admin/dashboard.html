@@ -22,7 +22,7 @@
                     {% endfor %}
 
                     <!--Dashboard box-->
-                    {% if len(experiments) > 0 and (ollamas["status"] and  ollamas["installed"]) %}
+                    {% if len(experiments) > 0 and (llm_backend["status"] and llm_backend["installed"]) %}
                     <div class="dashboard-box">
                          <h3 class="title is-5 is-thin">Experiment Dashboard</h3>
                         <div class="box-content">
@@ -197,22 +197,29 @@
                         <hr>
                         <div class="box-content">
                             <div class="box-lines">
-                                <h4 class="title is-6 is-thin">Self-hosted LLM instance</h4>
+                                <h4 class="title is-6 is-thin">Self-hosted LLM instance ({{ llm_backend['backend']|upper }})</h4>
                                 <div class="box-line">
                                     <span class="left">Installed</span>
-                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if ollamas['installed'] %} active {% endif %}" style="font-size: 20px;"></i> </span>
+                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}" style="font-size: 20px;"></i> </span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Running</span>
-                                    <span class="right"> <i class="mdi mdi-checkbox-blank-circle {% if ollamas['status'] %} active {% endif %}" style="font-size: 20px;"></i></span>
+                                    <span class="right"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['status'] %} active {% endif %}" style="font-size: 20px;"></i></span>
                                 </div>
-                                {% if not ollamas['status'] %}
+                                {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
                                 <div class="box-line">
                                     <span class="left">Start Ollama</span>
                                     <span class="right">
-                                        <a class="link-tooltip" {% if not ollamas['status'] %} href="/admin/start_ollama/" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if not ollamas['status'] %} active {% endif %}" style="font-size: 24px;"></i>
+                                        <a class="link-tooltip" {% if not llm_backend['status'] %} href="/admin/start_ollama/" {% endif %} title="Run">
+                                            <i class="mdi mdi-play-box-outline {% if not llm_backend['status'] %} active {% endif %}" style="font-size: 24px;"></i>
                                         </a>
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if llm_backend['backend'] == 'vllm' and not llm_backend['status'] %}
+                                <div class="box-line">
+                                    <span class="left" style="font-size: 0.9em;">vLLM server not running. Start manually:<br>
+                                    <small><code>vllm serve &lt;model&gt; --host 0.0.0.0 --port 8000</code></small>
                                     </span>
                                 </div>
                                 {% endif %}
@@ -234,7 +241,7 @@
                         </div>
                     </div>
 
-                    {% if ollamas["status"] and  ollamas["installed"] %}
+                    {% if llm_backend["status"] and llm_backend["installed"] %}
 
 
                     {% if len(models) > 0 %}
@@ -246,9 +253,11 @@
                                 {% for model in models %}
                                 <div class="box-line">
                                     <span class="left">{{ model }}</span>
+                                    {% if llm_backend['backend'] == 'ollama' %}
                                     <span class="right"><a class="link-tooltip" href="/admin/delete_model/{{ model }}" title="Delete">
                                         <i class="mdi mdi-delete" style="font-size: 24px;"></i>
                                 </a></span>
+                                    {% endif %}
                                 </div>
                                 {% endfor %}
                             </div>
@@ -258,6 +267,7 @@
                     </div>
                     {% endif %}
 
+                    {% if llm_backend['backend'] == 'ollama' %}
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add LLM Model</h3>
                          <div class="box-content">
@@ -367,6 +377,7 @@
 
                         </div>
                     </div>
+                    {% endif %}
                     
                     {% endif %}
                 </div>

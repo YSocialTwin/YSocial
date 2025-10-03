@@ -485,6 +485,31 @@ def start_vllm_server(model_name=None):
         print("vLLM is not installed.")
 
 
+def get_vllm_models():
+    """
+    Get list of models available on vLLM server.
+    
+    Returns:
+        List of model names available on vLLM server
+    """
+    if not is_vllm_running():
+        return []
+    
+    try:
+        response = requests.get("http://127.0.0.1:8000/v1/models")
+        if response.status_code == 200:
+            data = response.json()
+            # vLLM returns models in OpenAI-compatible format
+            models = [model["id"] for model in data.get("data", [])]
+            return models
+        else:
+            print(f"Failed to get vLLM models. Status: {response.status_code}")
+            return []
+    except requests.ConnectionError:
+        print("vLLM server is not accessible.")
+        return []
+
+
 def terminate_client(cli, pause=False):
     """Stop the y_client
 

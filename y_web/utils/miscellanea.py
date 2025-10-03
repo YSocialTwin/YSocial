@@ -16,6 +16,8 @@ from y_web.models import (
 from y_web.utils import (
     is_ollama_installed,
     is_ollama_running,
+    is_vllm_installed,
+    is_vllm_running,
 )
 
 
@@ -58,6 +60,31 @@ def ollama_status():
         "status": is_ollama_running(),
         "installed": is_ollama_installed(),
     }
+
+
+def llm_backend_status():
+    """
+    Check LLM backend service status based on LLM_BACKEND environment variable.
+
+    Returns:
+        Dictionary with 'backend' (ollama/vllm), 'status' (running), and 'installed' boolean flags
+    """
+    import os
+    
+    backend = os.getenv("LLM_BACKEND", "ollama")
+    
+    if backend == "vllm":
+        return {
+            "backend": "vllm",
+            "status": is_vllm_running(),
+            "installed": is_vllm_installed(),
+        }
+    else:  # ollama
+        return {
+            "backend": "ollama",
+            "status": is_ollama_running(),
+            "installed": is_ollama_installed(),
+        }
 
 
 def check_connection():
