@@ -62,9 +62,7 @@ class TestErrorTemplates:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "400.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "400.html")
         assert os.path.exists(template_path), "400.html template does not exist"
 
     def test_403_template_exists(self):
@@ -73,9 +71,7 @@ class TestErrorTemplates:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "403.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "403.html")
         assert os.path.exists(template_path), "403.html template does not exist"
 
     def test_404_template_exists(self):
@@ -84,9 +80,7 @@ class TestErrorTemplates:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "404.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "404.html")
         assert os.path.exists(template_path), "404.html template does not exist"
 
     def test_500_template_exists(self):
@@ -95,9 +89,7 @@ class TestErrorTemplates:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "500.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "500.html")
         assert os.path.exists(template_path), "500.html template does not exist"
 
 
@@ -110,9 +102,7 @@ class TestErrorTemplateContent:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "400.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "400.html")
         with open(template_path, "r") as f:
             content = f.read()
             assert "400" in content or "Bad Request" in content
@@ -124,12 +114,12 @@ class TestErrorTemplateContent:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "403.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "403.html")
         with open(template_path, "r") as f:
             content = f.read()
-            assert "403" in content or "Forbidden" in content or "Access Denied" in content
+            assert (
+                "403" in content or "Forbidden" in content or "Access Denied" in content
+            )
             assert "Y Social" in content
 
     def test_404_template_content(self):
@@ -138,9 +128,7 @@ class TestErrorTemplateContent:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "404.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "404.html")
         with open(template_path, "r") as f:
             content = f.read()
             assert "404" in content
@@ -152,9 +140,7 @@ class TestErrorTemplateContent:
 
         from y_web import BASE_DIR
 
-        template_path = os.path.join(
-            BASE_DIR, "templates", "error_pages", "500.html"
-        )
+        template_path = os.path.join(BASE_DIR, "templates", "error_pages", "500.html")
         with open(template_path, "r") as f:
             content = f.read()
             assert "500" in content or "Internal Server Error" in content
@@ -170,7 +156,7 @@ class TestErrorHandlerIntegration:
             from y_web import create_app
 
             app = create_app(db_type="sqlite")
-            
+
             # Check that error handlers are registered
             assert 400 in app.error_handler_spec[None]
             assert 403 in app.error_handler_spec[None]
@@ -185,7 +171,7 @@ class TestErrorHandlerIntegration:
             from y_web import create_app
 
             app = create_app(db_type="sqlite")
-            
+
             with app.test_client() as client:
                 response = client.get("/nonexistent-page-url")
                 assert response.status_code == 404
@@ -198,12 +184,14 @@ class TestErrorHandlerIntegration:
             from y_web import create_app
 
             app = create_app(db_type="sqlite")
-            
+
             with app.test_client() as client:
                 response = client.get("/nonexistent-page-url")
                 assert response.status_code == 404
                 assert b"html" in response.data.lower()
-                assert b"Y Social" in response.data or b"y social" in response.data.lower()
+                assert (
+                    b"Y Social" in response.data or b"y social" in response.data.lower()
+                )
         except Exception as e:
             pytest.skip(f"Could not test error handler HTML response: {e}")
 
