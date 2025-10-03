@@ -198,6 +198,12 @@
                         <div class="box-content">
                             <div class="box-lines">
                                 <h4 class="title is-6 is-thin">Self-hosted LLM instance ({{ llm_backend['backend']|upper }})</h4>
+                                {% if llm_backend.get('url') %}
+                                <div class="box-line">
+                                    <span class="left">URL</span>
+                                    <span class="right"><small><code>{{ llm_backend['url'] }}</code></small></span>
+                                </div>
+                                {% endif %}
                                 <div class="box-line">
                                     <span class="left">Installed</span>
                                     <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}" style="font-size: 20px;"></i> </span>

@@ -67,21 +67,44 @@ def llm_backend_status():
     Check LLM backend service status based on LLM_BACKEND environment variable.
 
     Returns:
-        Dictionary with 'backend' (ollama/vllm), 'status' (running), and 'installed' boolean flags
+        Dictionary with 'backend', 'url', 'status' (running), and 'installed' boolean flags
     """
     import os
+    import requests
     
     backend = os.getenv("LLM_BACKEND", "ollama")
+    llm_url = os.getenv("LLM_URL")
     
-    if backend == "vllm":
+    # Check if it's a custom URL
+    if ":" in backend and backend not in ["ollama", "vllm"]:
+        # Custom URL - check if reachable
+        if not llm_url:
+            llm_url = f"http://{backend}/v1" if not backend.startswith("http") else backend
+        try:
+            # Try to reach the server
+            models_url = llm_url.replace("/v1", "/v1/models") if "/v1" in llm_url else f"{llm_url}/models"
+            response = requests.get(models_url, timeout=3)
+            status = response.status_code in [200, 404]  # 404 means server is up but endpoint may not exist
+        except:
+            status = False
+        
+        return {
+            "backend": "custom",
+            "url": llm_url,
+            "status": status,
+            "installed": True,  # For custom URLs, we assume it's "installed" if reachable
+        }
+    elif backend == "vllm":
         return {
             "backend": "vllm",
+            "url": llm_url or "http://127.0.0.1:8000/v1",
             "status": is_vllm_running(),
             "installed": is_vllm_installed(),
         }
     else:  # ollama
         return {
             "backend": "ollama",
+            "url": llm_url or "http://127.0.0.1:11434/v1",
             "status": is_ollama_running(),
             "installed": is_ollama_installed(),
         }

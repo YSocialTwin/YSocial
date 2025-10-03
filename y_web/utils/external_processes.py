@@ -510,6 +510,47 @@ def get_vllm_models():
         return []
 
 
+def get_llm_models(llm_url=None):
+    """
+    Get list of models from any OpenAI-compatible LLM server.
+    
+    Args:
+        llm_url: Base URL of the LLM server (e.g., 'http://localhost:8000/v1').
+                 If None, uses LLM_URL from environment or falls back to ollama.
+    
+    Returns:
+        List of model names available on the LLM server
+    """
+    import os
+    
+    # Determine URL
+    if llm_url is None:
+        llm_url = os.getenv("LLM_URL")
+        if not llm_url:
+            backend = os.getenv("LLM_BACKEND", "ollama")
+            if backend == "vllm":
+                llm_url = "http://127.0.0.1:8000/v1"
+            else:
+                llm_url = "http://127.0.0.1:11434/v1"
+    
+    # Construct models endpoint URL
+    models_url = llm_url.replace("/v1", "/v1/models") if "/v1" in llm_url else f"{llm_url}/models"
+    
+    try:
+        response = requests.get(models_url, timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            # OpenAI-compatible format
+            models = [model["id"] for model in data.get("data", [])]
+            return models
+        else:
+            print(f"Failed to get LLM models from {models_url}. Status: {response.status_code}")
+            return []
+    except requests.exceptions.RequestException as e:
+        print(f"LLM server at {models_url} is not accessible: {e}")
+        return []
+
+
 def terminate_client(cli, pause=False):
     """Stop the y_client
 

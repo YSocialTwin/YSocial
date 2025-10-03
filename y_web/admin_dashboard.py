@@ -13,6 +13,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web.utils import (
+    get_llm_models,
     get_ollama_models,
     get_vllm_models,
 )
@@ -65,13 +66,11 @@ def dashboard():
             client_executions = cl if cl is not None else -1
             res[exp]["clients"].append((client, client_executions))
 
-    # get installed LLM models based on backend
+    # get installed LLM models from the configured server
     models = []
     try:
-        if llm_backend["backend"] == "vllm":
-            models = get_vllm_models()
-        else:  # ollama
-            models = get_ollama_models()
+        # Use the generic function that works with any OpenAI-compatible server
+        models = get_llm_models()
     except:
         pass
 

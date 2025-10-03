@@ -341,13 +341,16 @@ def create_client():
     db.session.add(client)
     db.session.commit()
 
-    # Determine LLM URL based on backend
+    # Get LLM URL from environment (set by y_social.py)
     import os
-    llm_backend = os.getenv("LLM_BACKEND", "ollama")
-    if llm_backend == "vllm":
-        llm_url = "http://127.0.0.1:8000/v1"
-    else:  # ollama
-        llm_url = "http://127.0.0.1:11434/v1"
+    llm_url = os.getenv("LLM_URL")
+    if not llm_url:
+        # Fallback for backward compatibility
+        llm_backend = os.getenv("LLM_BACKEND", "ollama")
+        if llm_backend == "vllm":
+            llm_url = "http://127.0.0.1:8000/v1"
+        else:  # ollama
+            llm_url = "http://127.0.0.1:11434/v1"
     
     config = {
         "servers": {
