@@ -8,7 +8,9 @@ and system status monitoring.
 
 from flask import (
     Blueprint,
+    jsonify,
     render_template,
+    request,
 )
 from flask_login import current_user, login_required
 
@@ -29,6 +31,40 @@ from .utils import (
 )
 
 admin = Blueprint("admin", __name__)
+
+
+@admin.route("/admin/api/fetch_models")
+@login_required
+def fetch_models():
+    """
+    AJAX endpoint to fetch models from a custom LLM URL.
+    
+    Query params:
+        llm_url: The LLM server URL to fetch models from
+    
+    Returns:
+        JSON with models list or error message
+    """
+    from flask import jsonify
+    
+    llm_url = request.args.get("llm_url")
+    if not llm_url:
+        return jsonify({"error": "llm_url parameter is required"}), 400
+    
+    # Normalize URL
+    if not llm_url.startswith("http"):
+        llm_url = f"http://{llm_url}"
+    if not llm_url.endswith("/v1"):
+        llm_url = f"{llm_url}/v1"
+    
+    try:
+        models = get_llm_models(llm_url)
+        if models:
+            return jsonify({"models": models, "url": llm_url})
+        else:
+            return jsonify({"error": f"No models found at {llm_url}"}), 404
+    except Exception as e:
+        return jsonify({"error": f"Failed to connect to {llm_url}: {str(e)}"}), 500
 
 
 @admin.route("/admin/dashboard")

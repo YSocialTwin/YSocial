@@ -219,10 +219,21 @@
                                 <div class="box-lines">
 
                                     <div class="box-line">
+                                        <span class="left">Custom LLM URL (optional)</span>
+                                        <span class="right" style="width: 70%;">
+                                            <input type="text" id="custom_llm_url_pop" class="input" placeholder="e.g., localhost:8000 or http://server:port">
+                                            <button type="button" class="button is-solid primary-button" onclick="fetchModelsForPopulation()" style="margin-top: 5px;">
+                                                Fetch Models
+                                            </button>
+                                            <span id="llm_url_status_pop" style="display: none; margin-left: 10px;"></span>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
                                         <span class="left">Available Models</span>
                                         <span class="right">
                                             <div class="select">
-                                            <select name="user_type">
+                                            <select name="user_type" id="models_select_pop">
                                                 <option value=""></option>
                                                     {% for model in models %}
                                                     <option value="{{ model }}">{{ model }}</option>
@@ -233,6 +244,46 @@
                                     </div>
 
                                 </div>
+                                <script>
+                                function fetchModelsForPopulation() {
+                                    const urlInput = document.getElementById('custom_llm_url_pop');
+                                    const select = document.getElementById('models_select_pop');
+                                    const status = document.getElementById('llm_url_status_pop');
+                                    const llmUrl = urlInput.value.trim();
+                                    
+                                    if (!llmUrl) {
+                                        alert('Please enter an LLM server URL');
+                                        return;
+                                    }
+                                    
+                                    status.style.display = 'inline';
+                                    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+                                    
+                                    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.error) {
+                                                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                                                setTimeout(() => { status.style.display = 'none'; }, 5000);
+                                            } else {
+                                                // Clear and repopulate select
+                                                select.innerHTML = '<option value="">Select a model</option>';
+                                                data.models.forEach(model => {
+                                                    const option = document.createElement('option');
+                                                    option.value = model;
+                                                    option.textContent = model;
+                                                    select.appendChild(option);
+                                                });
+                                                status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                                                setTimeout(() => { status.style.display = 'none'; }, 3000);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+                                            setTimeout(() => { status.style.display = 'none'; }, 5000);
+                                        });
+                                }
+                                </script>
                                 <div class="button-wrap">
                                         <button class="button is-solid primary-button is-fullwidth">
                                             Save
