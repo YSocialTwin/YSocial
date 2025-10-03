@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8"/>
+    <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta http-equiv="x-ua-compatible" content="ie=edge"/>
+
+    <title>Y Social | 404</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='assets/img/favicon.png') }}"/>
+
+    <!-- Google Tag Manager -->
+
+    <!-- End Google Tag Manager -->
+
+    <!-- Fonts -->
+    <link
+            href="https://fonts.googleapis.com/css?family=Montserrat:600,700,800,900"
+            rel="stylesheet"
+    />
+    <link
+            href="https://fonts.googleapis.com/css?family=Roboto:400,500"
+            rel="stylesheet"
+    />
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/app.css') }} "/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
+</head>
+
+<body class="is-white">
+<!-- End Google Tag Manager (noscript) -->
+
+<!-- Pageloader -->
+<div class="pageloader"></div>
+<div class="infraloader is-active"></div>
+
+<div class="login-wrapper">
+    <!-- Main Wrapper -->
+    <div class="login-wrapper columns is-gapless">
+        <!--Left Side (Desktop Only)-->
+        <div class="column is-6 is-hidden-mobile hero-banner">
+            <div class="hero is-fullheight is-login">
+                <div class="hero-body">
+                    <div class="container">
+                        <div class="left-caption">
+                            <h2>Y Social </h2>
+                            <h4>Where the Digital World comes to life.</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--Right Side-->
+        <div class="column is-6">
+            <div class="hero form-hero is-fullheight">
+                <!--Logo-->
+                <div class="logo-wrap">
+                    <div class="wrap-inner">
+                        <img src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_I_white.png') }}"
+                             alt=""/>
+                    </div>
+                </div>
+                <!--Error Content-->
+                <div class="hero-body">
+                    <div class="form-wrapper">
+                        <!--Avatar-->
+                        <div class="avatar">
+                            <div class="badge">
+                                <i data-feather="x"></i>
+                            </div>
+                            <img
+                                    src="https://placehold.it/128x128"
+                                    data-demo-src="{{ url_for('static', filename='assets/img/users/sad_robot.jpg') }}"
+                                    alt=""
+                            />
+
+                        </div>
+                        <div style="text-align: center; max-width: 500px; margin: 0 auto;">
+                            <h2 style="margin-bottom: 10px;"><b>Page Not Found</b></h2>
+                            <p style="font-size: 1.2em; color: #999; margin-bottom: 20px;">
+                                Error {{ error.status_code if error else '404' }}
+                            </p>
+                            <p style="margin-bottom: 30px; line-height: 1.6;">
+                                {{ error.error_description if error else 'The page you are looking for does not exist.' }}<br>
+                                Please check the URL or go back to the homepage.
+                            </p>
+                            
+                            {% if error and error.requested_url %}
+                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
+                                <p style="margin: 5px 0; font-size: 0.9em;"><strong>Debug Information:</strong></p>
+                                <p style="margin: 5px 0; font-size: 0.85em; word-break: break-all;">
+                                    <strong>URL:</strong> {{ error.requested_url }}
+                                </p>
+                                {% if error.method %}
+                                <p style="margin: 5px 0; font-size: 0.85em;">
+                                    <strong>Method:</strong> {{ error.method }}
+                                </p>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div style="margin-top: 30px;">
+                                <a href="/" class="button is-solid primary-button" style="padding: 10px 30px; text-decoration: none;">
+                                    Go to Homepage
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
+
+<!-- Components js -->
+<script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+
+<!-- Landing page js -->
+
+<!-- Signup page js -->
+
+<!-- Feed pages js -->
+
+<!-- profile js -->
+
+<!-- stories js -->
+
+<!-- friends js -->
+
+<!-- questions js -->
+
+<!-- video js -->
+
+<!-- events js -->
+
+<!-- news js -->
+
+<!-- shop js -->
+
+<!-- inbox js -->
+
+<!-- settings js -->
+
+<!-- map page js -->
+
+<!-- elements page js -->
+</body>
+</html>

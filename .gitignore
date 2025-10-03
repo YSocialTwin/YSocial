@@ -65,6 +65,10 @@ db.sqlite3-journal
 instance/
 .webassets-cache
 
+# Database files
+*.db
+y_web/db/*.db
+
 # Scrapy stuff:
 .scrapy
 
