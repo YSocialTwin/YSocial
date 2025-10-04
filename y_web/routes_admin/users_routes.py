@@ -25,12 +25,13 @@ def user_data():
     Display user management page.
 
     Returns:
-        Rendered user data template with available models
+        Rendered user data template with available models and ollama status
     """
     check_privileges(current_user.username)
     llm_backend = llm_backend_status()
     models = get_llm_models(llm_backend["url"]) if llm_backend and llm_backend.get("url") else []
-    return render_template("admin/users.html", m=models)
+    ollamas = ollama_status()
+    return render_template("admin/users.html", m=models, ollamas=ollamas)
 
 
 @users.route("/admin/user_data")
@@ -142,6 +143,7 @@ def user_details(uid):
 
     llm_backend = llm_backend_status()
     models = get_llm_models(llm_backend["url"]) if llm_backend["url"] else []
+    ollamas = ollama_status()
 
     return render_template(
         "admin/user_details.html",
@@ -152,6 +154,7 @@ def user_details(uid):
         none=None,
         llm_backend=llm_backend,
         models=models,
+        ollamas=ollamas,
     )
 
 
