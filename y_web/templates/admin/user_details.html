@@ -53,8 +53,12 @@
                                     <span class="right">{{ user.role }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">LLM</span>
+                                    <span class="left">LLM Model</span>
                                     <span class="right">{{ user.llm }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">LLM Server URL</span>
+                                    <span class="right">{{ llm_backend['url'] if llm_backend else 'Not configured' }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Perspective API</span>
@@ -67,6 +71,50 @@
                                      class="mdi mdi-delete" style="font-size: 24px;"></i></a>
                             </div>
 
+                        </div>
+                    </div>
+
+                 <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
+                        <div class="box-content">
+                            <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+                                            Update the LLM server and model for this user. <br><br>
+                                            You can fetch models from a different LLM server by entering its URL below.
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">Custom LLM URL (optional)</label>
+                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                            <input type="text" id="custom_llm_url" name="custom_llm_url" class="input" 
+                                                   value="{{ llm_backend['url'] if llm_backend else '' }}" 
+                                                   placeholder="e.g., http://localhost:8000/v1" style="flex: 1;">
+                                            <button type="button" class="button is-solid primary-button" onclick="fetchModelsForUser()">
+                                                Fetch Models
+                                            </button>
+                                        </div>
+                                        <div id="fetch-status-user" style="min-height: 24px; margin-top: 5px; font-size: 0.9rem;"></div>
+                                    </div>
+                                    <div class="box-line">
+                                        <label class="label">LLM Model</label>
+                                        <div class="select">
+                                            <select name="llm" id="llm_model_select">
+                                                {% for model in models %}
+                                                <option value="{{ model }}" {% if model == user.llm %}selected{% endif %}>{{ model }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update LLM Configuration
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
 
@@ -187,5 +235,41 @@
     </div>
 
 </div>
+
+<script>
+function fetchModelsForUser() {
+    const urlInput = document.getElementById('custom_llm_url');
+    const statusDiv = document.getElementById('fetch-status-user');
+    const selectElement = document.getElementById('llm_model_select');
+    const llmUrl = urlInput.value.trim();
+    
+    if (!llmUrl) {
+        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+        return;
+    }
+    
+    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+    
+    fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.models.length > 0) {
+                selectElement.innerHTML = '';
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    selectElement.appendChild(option);
+                });
+                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
+            } else {
+                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
+            }
+        })
+        .catch(error => {
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error fetching models</span>';
+        });
+}
+</script>
 
 {% include "admin/footer.html" %}
