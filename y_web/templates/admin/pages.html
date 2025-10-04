@@ -259,12 +259,14 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Custom LLM URL (optional)</span>
-                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 10px;">
-                                            <input type="text" id="custom_llm_url_page" class="input" placeholder="e.g., localhost:8000" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
-                                            <button type="button" class="button is-solid primary-button" onclick="fetchModelsForPage()">
-                                                Fetch Models
-                                            </button>
-                                            <span id="llm_url_status_page" style="display: none;"></span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_page" class="input" placeholder="e.g., localhost:8000" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="fetchModelsForPage()">
+                                                    Fetch Models
+                                                </button>
+                                            </div>
+                                            <div id="llm_url_status_page" style="min-height: 24px; font-size: 0.9rem;"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -401,7 +403,6 @@ function fetchModelsForPage() {
         return;
     }
     
-    status.style.display = 'inline';
     status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
     
     fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
@@ -409,7 +410,7 @@ function fetchModelsForPage() {
         .then(data => {
             if (data.error) {
                 status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
-                setTimeout(() => { status.style.display = 'none'; }, 5000);
+                setTimeout(() => { status.innerHTML = ''; }, 5000);
             } else {
                 select.innerHTML = '<option value="">Select a model</option>';
                 data.models.forEach(model => {
@@ -419,12 +420,12 @@ function fetchModelsForPage() {
                     select.appendChild(option);
                 });
                 status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
-                setTimeout(() => { status.style.display = 'none'; }, 3000);
+                setTimeout(() => { status.innerHTML = ''; }, 3000);
             }
         })
         .catch(error => {
             status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
-            setTimeout(() => { status.style.display = 'none'; }, 5000);
+            setTimeout(() => { status.innerHTML = ''; }, 5000);
         });
 }
 </script>
