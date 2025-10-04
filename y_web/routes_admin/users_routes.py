@@ -29,8 +29,8 @@ def user_data():
     """
     check_privileges(current_user.username)
     llm_backend = llm_backend_status()
-    models = get_llm_models(llm_backend["url"]) if llm_backend["url"] else []
-    return render_template("admin/users.html", m=models, llm_backend=llm_backend)
+    models = get_llm_models(llm_backend["url"]) if llm_backend and llm_backend.get("url") else []
+    return render_template("admin/users.html", m=models)
 
 
 @users.route("/admin/user_data")
