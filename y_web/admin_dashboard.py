@@ -60,11 +60,11 @@ def fetch_models():
     try:
         models = get_llm_models(llm_url)
         if models:
-            return jsonify({"models": models, "url": llm_url})
+            return jsonify({"success": True, "models": models, "url": llm_url})
         else:
-            return jsonify({"error": f"No models found at {llm_url}"}), 404
+            return jsonify({"success": False, "message": f"No models found at {llm_url}"}), 404
     except Exception as e:
-        return jsonify({"error": f"Failed to connect to {llm_url}: {str(e)}"}), 500
+        return jsonify({"success": False, "message": f"Failed to connect to {llm_url}: {str(e)}"}), 500
 
 
 @admin.route("/admin/dashboard")
