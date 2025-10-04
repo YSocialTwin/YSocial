@@ -81,7 +81,7 @@
                                 </div>
                                 <div class="box-line">
                                     <span class="left">LLM Server URL</span>
-                                    <span class="right">{{ llm_backend['url'] if llm_backend else 'Not configured' }}</span>
+                                    <span class="right">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Perspective API</span>
@@ -115,7 +115,7 @@
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
                                         <label class="label">Custom LLM URL (optional)</label>
                                         <input type="text" id="custom_llm_url" name="custom_llm_url" class="input"
-                                               value="{{ llm_backend['url'] if llm_backend else '' }}"
+                                               value="{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else '') }}"
                                                placeholder="e.g., http://localhost:8000/v1">
                                         <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForUser()" style="margin-top: 0px; margin-left: 10px;">
                                             Fetch Models

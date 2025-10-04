@@ -274,7 +274,7 @@ def add_user_to_experiment():
 @login_required
 def update_user_llm():
     """
-    Update user's LLM configuration.
+    Update user's LLM configuration including model and server URL.
 
     Returns:
         Redirect to user details
@@ -283,9 +283,11 @@ def update_user_llm():
 
     user_id = request.form.get("user_id")
     llm = request.form.get("llm")
+    llm_url = request.form.get("custom_llm_url", "").strip()
 
     user = Admin_users.query.filter_by(id=user_id).first()
     user.llm = llm
+    user.llm_url = llm_url
     db.session.commit()
 
     return user_details(user_id)
