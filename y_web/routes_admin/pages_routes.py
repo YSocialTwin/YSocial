@@ -214,6 +214,7 @@ def page_details(uid):
     feed = get_feed(page.feed)
 
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     return render_template(
         "admin/page_details.html",
@@ -222,6 +223,7 @@ def page_details(uid):
         populations=populations,
         feeds=feed[:3],
         ollamas=ollamas,
+        llm_backend=llm_backend,
         topics=topics,
         page_topics=page_topics,
     )

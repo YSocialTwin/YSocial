@@ -43,8 +43,12 @@
                                     <span class="right">{{ population.descr }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Prevalent LLM</span>
+                                    <span class="left">Prevalent LLM Model</span>
                                     <span class="right">{{ population.llm }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">LLM Server URL</span>
+                                    <span class="right">{{ llm_backend['url'] if llm_backend else 'Not configured' }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Prevalent Content Recsys</span>

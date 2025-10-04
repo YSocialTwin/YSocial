@@ -226,6 +226,7 @@ def agent_details(uid):
     populations = Population.query.all()
 
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     return render_template(
         "admin/agent_details.html",
@@ -234,6 +235,7 @@ def agent_details(uid):
         profile=agent_profiles,
         populations=populations,
         ollamas=ollamas,
+        llm_backend=llm_backend,
     )
 
 
