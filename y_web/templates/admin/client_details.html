@@ -292,12 +292,12 @@
 
                                     <div class="box-line">
                                         <span class="left">Custom LLM URL (optional)</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="text" id="custom_llm_url_client" class="input" placeholder="e.g., localhost:8000">
-                                            <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()" style="margin-top: 5px;">
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 10px;">
+                                            <input type="text" id="custom_llm_url_client" class="input" placeholder="e.g., localhost:8000" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
+                                            <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
                                                 Fetch Models
                                             </button>
-                                            <span id="llm_url_status_client" style="display: none; margin-left: 10px;"></span>
+                                            <span id="llm_url_status_client" style="display: none;"></span>
                                         </span>
                                     </div>
 

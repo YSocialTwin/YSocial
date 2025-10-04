@@ -210,8 +210,9 @@ def populations():
 
     # Regular expression to match model values
 
-    models = get_ollama_models()
+    models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
     education_levels = Education.query.all()
     nationalities = Nationalities.query.all()
@@ -224,6 +225,7 @@ def populations():
         "admin/populations.html",
         models=models,
         ollamas=ollamas,
+        llm_backend=llm_backend,
         leanings=leanings,
         education_levels=education_levels,
         nationalities=nationalities,
