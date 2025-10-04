@@ -75,6 +75,37 @@
                     </div>
 
                  <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Add Perspective API</h3>
+                        <div class="box-content">
+                            <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+                                            Personal API key for the Perspective API. <br><br>
+                                            The <a href="https://www.perspectiveapi.com/">Perspective API</a> is a tool that helps to evaluate the toxicity of a text.
+                                            Setting a key will allow the user to use the Perspective API in the hybrid simulations.
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <input type="text" name="perspective_api" class="input">
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+
+                </div>
+
+                <!--Dashboard column - Update LLM Configuration (spans 2 columns)-->
+                <div class="column is-8">
+                    <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
                         <div class="box-content">
                             <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
@@ -117,36 +148,10 @@
                             </form>
                         </div>
                     </div>
-
-                 <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Add Perspective API</h3>
-                        <div class="box-content">
-                            <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">
-                                            Personal API key for the Perspective API. <br><br>
-                                            The <a href="https://www.perspectiveapi.com/">Perspective API</a> is a tool that helps to evaluate the toxicity of a text.
-                                            Setting a key will allow the user to use the Perspective API in the hybrid simulations.
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <input type="text" name="perspective_api" class="input">
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-
                 </div>
+            </div>
 
+            <div class="columns">
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
@@ -251,9 +256,14 @@ function fetchModelsForUser() {
     statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
     
     fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            if (data.success && data.models.length > 0) {
+            if (data.success && data.models && data.models.length > 0) {
                 selectElement.innerHTML = '';
                 data.models.forEach(model => {
                     const option = document.createElement('option');
@@ -267,7 +277,8 @@ function fetchModelsForUser() {
             }
         })
         .catch(error => {
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error fetching models</span>';
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
         });
 }
 </script>
