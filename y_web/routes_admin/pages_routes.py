@@ -23,9 +23,10 @@ from y_web.models import (
 )
 from y_web.utils import (
     get_feed,
+    get_llm_models,
     get_ollama_models,
 )
-from y_web.utils.miscellanea import check_privileges, ollama_status
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 pages = Blueprint("pages", __name__)
 
@@ -41,11 +42,16 @@ def page_data():
     """
     check_privileges(current_user.username)
 
-    models = get_ollama_models()
+    models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
     return render_template(
-        "admin/pages.html", models=models, ollamas=ollamas, leanings=leanings
+        "admin/pages.html",
+        models=models,
+        ollamas=ollamas,
+        llm_backend=llm_backend,
+        leanings=leanings,
     )
 
 
@@ -208,6 +214,7 @@ def page_details(uid):
     feed = get_feed(page.feed)
 
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     return render_template(
         "admin/page_details.html",
@@ -216,6 +223,7 @@ def page_details(uid):
         populations=populations,
         feeds=feed[:3],
         ollamas=ollamas,
+        llm_backend=llm_backend,
         topics=topics,
         page_topics=page_topics,
     )

@@ -20,6 +20,7 @@ services:
             - ./:/app/
         environment:
             - FLASK_APP=/app/y_social.py
+            # - LLM_BACKEND=ollama  # Default: ollama. Options: ollama, vllm
         networks:
             my-network:
                 aliases:

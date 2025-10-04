@@ -25,6 +25,7 @@ services:
     environment:
       - FLASK_APP=/app/y_social.py
       - DATABASE_URL=postgresql://ysocial_user:ysocial_pass@db:5432/ysocial_db
+      # - LLM_BACKEND=ollama  # Default: ollama. Options: ollama, vllm
     networks:
       my-network:
         aliases:

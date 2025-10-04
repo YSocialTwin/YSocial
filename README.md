@@ -151,6 +151,37 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 
 ---
 
+### 🔧 **LLM Backend Configuration**
+
+YSocial supports multiple LLM backends for content annotation. You can choose between:
+
+- **Ollama** (default) - Local LLM server on port 11434
+- **vLLM** - High-performance inference engine on port 8000
+
+**Command Line:**
+```bash
+# Use Ollama (default)
+python y_social.py --host localhost --port 8080
+
+# Use vLLM
+python y_social.py --host localhost --port 8080 --llm-backend vllm
+```
+
+**Docker:**
+```bash
+# Set environment variable
+docker run -e LLM_BACKEND=vllm -p 5000:5000 ysocial:latest
+```
+
+**Note:** For vLLM, you need to:
+1. Install vLLM: `pip install vllm`
+2. Start the vLLM server with your model before starting YSocial:
+   ```bash
+   vllm serve <model_name> --host 0.0.0.0 --port 8000
+   ```
+
+---
+
 ## 🔑 Admin Panel Access
 To access the **admin panel**, use the default credentials:
 
