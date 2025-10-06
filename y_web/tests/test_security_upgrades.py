@@ -30,61 +30,65 @@ class TestDependencyVersions:
 
     def test_flask_version_secure(self):
         """Test that Flask version is secure (≥3.0.0 recommended)"""
-        import flask
-        version = tuple(map(int, flask.__version__.split('.')[:2]))
+        from importlib.metadata import version as get_version
+        flask_version = get_version('flask')
+        version = tuple(map(int, flask_version.split('.')[:2]))
         
         # For now, document current version
         # After upgrade, this should assert version >= (3, 0)
-        print(f"\nCurrent Flask version: {flask.__version__}")
+        print(f"\nCurrent Flask version: {flask_version}")
         
         # Current version check (pre-upgrade)
         if version < (3, 0):
-            pytest.skip(f"Flask {flask.__version__} is pre-upgrade version")
+            pytest.skip(f"Flask {flask_version} is pre-upgrade version")
         
         # Post-upgrade requirement
-        assert version >= (3, 0), f"Flask version {flask.__version__} is below security requirement (3.0.0)"
+        assert version >= (3, 0), f"Flask version {flask_version} is below security requirement (3.0.0)"
 
     def test_werkzeug_version_secure(self):
         """Test that Werkzeug version is secure (≥3.0.0 recommended)"""
-        import werkzeug
-        version = tuple(map(int, werkzeug.__version__.split('.')[:2]))
+        from importlib.metadata import version as get_version
+        werkzeug_version = get_version('werkzeug')
+        version = tuple(map(int, werkzeug_version.split('.')[:2]))
         
-        print(f"\nCurrent Werkzeug version: {werkzeug.__version__}")
+        print(f"\nCurrent Werkzeug version: {werkzeug_version}")
         
         # Current version check (pre-upgrade)
         if version < (3, 0):
-            pytest.skip(f"Werkzeug {werkzeug.__version__} is pre-upgrade version")
+            pytest.skip(f"Werkzeug {werkzeug_version} is pre-upgrade version")
         
         # Post-upgrade requirement
-        assert version >= (3, 0), f"Werkzeug version {werkzeug.__version__} is below security requirement (3.0.0)"
+        assert version >= (3, 0), f"Werkzeug version {werkzeug_version} is below security requirement (3.0.0)"
 
     def test_jinja2_version_secure(self):
         """Test that Jinja2 version is secure (≥3.1.4 recommended)"""
-        import jinja2
-        version = tuple(map(int, jinja2.__version__.split('.')[:3]))
+        from importlib.metadata import version as get_version
+        jinja2_version = get_version('jinja2')
+        version = tuple(map(int, jinja2_version.split('.')[:3]))
         
-        print(f"\nCurrent Jinja2 version: {jinja2.__version__}")
+        print(f"\nCurrent Jinja2 version: {jinja2_version}")
         
         # Current version check (pre-upgrade)
         if version < (3, 1, 4):
-            pytest.skip(f"Jinja2 {jinja2.__version__} is pre-upgrade version")
+            pytest.skip(f"Jinja2 {jinja2_version} is pre-upgrade version")
         
         # Post-upgrade requirement
-        assert version >= (3, 1, 4), f"Jinja2 version {jinja2.__version__} is below security requirement (3.1.4)"
+        assert version >= (3, 1, 4), f"Jinja2 version {jinja2_version} is below security requirement (3.1.4)"
 
     def test_cryptography_version_secure(self):
         """Test that cryptography version is secure (≥42.0.0 recommended)"""
-        import cryptography
-        version = tuple(map(int, cryptography.__version__.split('.')[:2]))
+        from importlib.metadata import version as get_version
+        crypto_version = get_version('cryptography')
+        version = tuple(map(int, crypto_version.split('.')[:2]))
         
-        print(f"\nCurrent cryptography version: {cryptography.__version__}")
+        print(f"\nCurrent cryptography version: {crypto_version}")
         
         # Current version check (pre-upgrade)
         if version < (42, 0):
-            pytest.skip(f"cryptography {cryptography.__version__} is pre-upgrade version")
+            pytest.skip(f"cryptography {crypto_version} is pre-upgrade version")
         
         # Post-upgrade requirement
-        assert version >= (42, 0), f"cryptography version {cryptography.__version__} is below security requirement (42.0.0)"
+        assert version >= (42, 0), f"cryptography version {crypto_version} is below security requirement (42.0.0)"
 
 
 @pytest.mark.skipif(not DEPENDENCIES_AVAILABLE, reason="Required dependencies not available")
@@ -303,37 +307,14 @@ class TestPreUpgradeBaseline:
 
     def test_document_current_dependencies(self):
         """Document current dependency versions"""
+        from importlib.metadata import version as get_version
         dependencies = {}
         
-        try:
-            import flask
-            dependencies['flask'] = flask.__version__
-        except ImportError:
-            pass
-        
-        try:
-            import werkzeug
-            dependencies['werkzeug'] = werkzeug.__version__
-        except ImportError:
-            pass
-        
-        try:
-            import jinja2
-            dependencies['jinja2'] = jinja2.__version__
-        except ImportError:
-            pass
-        
-        try:
-            import cryptography
-            dependencies['cryptography'] = cryptography.__version__
-        except ImportError:
-            pass
-        
-        try:
-            import OpenSSL
-            dependencies['openssl'] = OpenSSL.__version__
-        except ImportError:
-            pass
+        for pkg in ['flask', 'werkzeug', 'jinja2', 'cryptography', 'pyopenssl']:
+            try:
+                dependencies[pkg] = get_version(pkg)
+            except Exception:
+                pass
         
         print("\nCurrent dependency versions:")
         for name, version in dependencies.items():
