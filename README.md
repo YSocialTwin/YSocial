@@ -114,6 +114,9 @@ The **Y Social Digital Twin** supports a wide range of simulation configurations
 
 ## 🏁 Getting Started
 
+**Y Social** has been tested on **GNU/Linux** and **MacOS**. 
+Windows users are advised to use **Docker**.
+
 ### 📌 **Installation**
 
 To avoid conflicts with the Python environment, we recommend using a virtual environment to install the server dependencies.
@@ -152,7 +155,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 💡 The web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
 
 🔴 **Note:** Ensure the `screen` command is installed on your system. If using Windows, **Docker is recommended**.
-
+   **Note:** Ensure to run the application in a dedicated conda/miniconda/pipenv environment to avoid dependency conflicts. Homebrew installations of Python may lead to execution issues.
 ---
 
 ### 🔧 **LLM Backend Configuration**
