@@ -40,8 +40,14 @@ from y_web.models import (
     Topic_List,
     User_mgmt,
 )
-from y_web.utils import get_db_type, get_ollama_models, start_client, terminate_client
-from y_web.utils.miscellanea import check_privileges, ollama_status
+from y_web.utils import (
+    get_db_type,
+    get_llm_models,
+    get_ollama_models,
+    start_client,
+    terminate_client,
+)
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -341,9 +347,22 @@ def create_client():
     db.session.add(client)
     db.session.commit()
 
+    # Get LLM URL from environment (set by y_social.py)
+    import os
+
+    llm_url = os.getenv("LLM_URL")
+    if not llm_url:
+        # Fallback for backward compatibility
+        llm_backend = os.getenv("LLM_BACKEND", "ollama")
+        if llm_backend == "vllm":
+            llm_url = "http://127.0.0.1:8000/v1"
+        else:  # ollama
+            llm_url = "http://127.0.0.1:11434/v1"
+
     config = {
         "servers": {
             "llm": llm,
+            "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),
@@ -724,9 +743,10 @@ def client_details(uid):
         idx.append(str(x))
         data.append(activity[str(x)])
 
-    models = get_ollama_models()
+    models = get_llm_models()  # Use generic function for any LLM server
 
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     frecsys = Follow_Recsys.query.all()
     crecsys = Content_Recsys.query.all()
@@ -742,6 +762,7 @@ def client_details(uid):
         pages=pages,
         models=models,
         ollamas=ollamas,
+        llm_backend=llm_backend,
         frecsys=frecsys,
         crecsys=crecsys,
     )

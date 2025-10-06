@@ -12,8 +12,8 @@ from flask_login import current_user, login_required
 
 from y_web import db  # , app
 from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
-from y_web.utils import get_ollama_models
-from y_web.utils.miscellanea import check_privileges, ollama_status
+from y_web.utils.external_processes import get_llm_models
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 users = Blueprint("users", __name__)
 
@@ -25,14 +25,16 @@ def user_data():
     Display user management page.
 
     Returns:
-        Rendered user data template with available models
+        Rendered user data template with available models and ollama status
     """
     check_privileges(current_user.username)
+    llm_backend = llm_backend_status()
+    models = (
+        get_llm_models(llm_backend["url"])
+        if llm_backend and llm_backend.get("url")
+        else []
+    )
     ollamas = ollama_status()
-    if ollamas["status"]:
-        models = get_ollama_models()
-    else:
-        models = []
     return render_template("admin/users.html", m=models, ollamas=ollamas)
 
 
@@ -143,6 +145,8 @@ def user_details(uid):
         for j in joined_exp
     ]
 
+    llm_backend = llm_backend_status()
+    models = get_llm_models(llm_backend["url"]) if llm_backend["url"] else []
     ollamas = ollama_status()
 
     return render_template(
@@ -152,6 +156,8 @@ def user_details(uid):
         all_experiments=all_experiments,
         user_experiments_joined=joined_exp,
         none=None,
+        llm_backend=llm_backend,
+        models=models,
         ollamas=ollamas,
     )
 
@@ -263,6 +269,29 @@ def add_user_to_experiment():
 
     db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
     db.session.query(Exps).filter_by(db_name=exp.db_name).update({Exps.status: 1})
+    db.session.commit()
+
+    return user_details(user_id)
+
+
+@users.route("/admin/update_user_llm", methods=["POST"])
+@login_required
+def update_user_llm():
+    """
+    Update user's LLM configuration including model and server URL.
+
+    Returns:
+        Redirect to user details
+    """
+    check_privileges(current_user.username)
+
+    user_id = request.form.get("user_id")
+    llm = request.form.get("llm")
+    llm_url = request.form.get("custom_llm_url", "").strip()
+
+    user = Admin_users.query.filter_by(id=user_id).first()
+    user.llm = llm
+    user.llm_url = llm_url
     db.session.commit()
 
     return user_details(user_id)

@@ -6,6 +6,7 @@ CREATE TABLE admin_users (
     last_seen       TEXT,
     role            TEXT,
     llm             TEXT DEFAULT '',
+    llm_url         TEXT DEFAULT '',
     profile_pic     TEXT DEFAULT '',
     perspective_api TEXT DEFAULT NULL
 );

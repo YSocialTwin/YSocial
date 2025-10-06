@@ -43,8 +43,12 @@
                                     <span class="right">{{ population.descr }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Prevalent LLM</span>
+                                    <span class="left">Prevalent LLM Model</span>
                                     <span class="right">{{ population.llm }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">LLM Server URL</span>
+                                    <span class="right">{{ llm_backend['url'] if llm_backend else 'Not configured' }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Prevalent Content Recsys</span>
@@ -219,10 +223,23 @@
                                 <div class="box-lines">
 
                                     <div class="box-line">
+                                        <span class="left">Custom LLM URL (optional)</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_pop" class="input" placeholder="e.g., localhost:8000 or http://server:port" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="fetchModelsForPopulation()">
+                                                    Fetch Models
+                                                </button>
+                                            </div>
+                                            <div id="llm_url_status_pop" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
                                         <span class="left">Available Models</span>
                                         <span class="right">
                                             <div class="select">
-                                            <select name="user_type">
+                                            <select name="user_type" id="models_select_pop">
                                                 <option value=""></option>
                                                     {% for model in models %}
                                                     <option value="{{ model }}">{{ model }}</option>
@@ -233,6 +250,45 @@
                                     </div>
 
                                 </div>
+                                <script>
+                                function fetchModelsForPopulation() {
+                                    const urlInput = document.getElementById('custom_llm_url_pop');
+                                    const select = document.getElementById('models_select_pop');
+                                    const status = document.getElementById('llm_url_status_pop');
+                                    const llmUrl = urlInput.value.trim();
+                                    
+                                    if (!llmUrl) {
+                                        alert('Please enter an LLM server URL');
+                                        return;
+                                    }
+                                    
+                                    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+                                    
+                                    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.error) {
+                                                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                                                setTimeout(() => { status.innerHTML = ''; }, 5000);
+                                            } else {
+                                                // Clear and repopulate select
+                                                select.innerHTML = '<option value="">Select a model</option>';
+                                                data.models.forEach(model => {
+                                                    const option = document.createElement('option');
+                                                    option.value = model;
+                                                    option.textContent = model;
+                                                    select.appendChild(option);
+                                                });
+                                                status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                                                setTimeout(() => { status.innerHTML = ''; }, 3000);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+                                            setTimeout(() => { status.innerHTML = ''; }, 5000);
+                                        });
+                                }
+                                </script>
                                 <div class="button-wrap">
                                         <button class="button is-solid primary-button is-fullwidth">
                                             Save

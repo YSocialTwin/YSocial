@@ -19,17 +19,40 @@
                 </div>
             </div>
 
+            <!-- Row 3: Guide (3 columns) -->
+            <!-- <div class="columns">
+                <div class="column is-12">
+
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <div class="help-block">
+
+                            <p>
+                                Users can own and join experiments.
+                                <br><br>
+                                <b>Owners</b> have full access to the experiment and can edit, and delete users, experiments, and populations.
+                                <br><br>
+                                <b>Joined</b> can take part to hybrid simulations.
+                                <br><br>
+                                Users that are not owners nor have joined and experiment can not access its website since they lack an active account.
+                            </p>
+                            <br>
+                        </div>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Row 1: User box (1 column), Experiments (1 column), Add to Experiments (1 column) -->
             <div class="columns">
+                {% for message in get_flashed_messages() %}
+                <div class="alert alert-warning">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ message }}
+                </div>
+                {% endfor %}
+
                 <!--Dashboard column-->
                 <div class="column is-4">
-
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">User</h3>
 
@@ -53,8 +76,12 @@
                                     <span class="right">{{ user.role }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">LLM</span>
+                                    <span class="left">LLM Model</span>
                                     <span class="right">{{ user.llm }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">LLM Server URL</span>
+                                    <span class="right">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Perspective API</span>
@@ -69,8 +96,59 @@
 
                         </div>
                     </div>
+                </div>
 
-                 <div class="dashboard-box">
+                 <div class="column is-8">
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
+                        <div class="box-content">
+                            <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+                                            Update the LLM server and model for this user.
+
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">Custom LLM URL (optional)</label>
+                                        <input type="text" id="custom_llm_url" name="custom_llm_url" class="input"
+                                               value="{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else '') }}"
+                                               placeholder="e.g., http://localhost:8000/v1">
+                                        <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForUser()" style="margin-top: 0px; margin-left: 10px;">
+                                            Fetch Models
+                                        </button>
+                                    </div>
+                                    <div id="fetch-status-user" style="min-height: 20px; margin-top: 5px; font-size: 0.9rem;"></div>
+
+                                    <div class="box-line">
+                                        <label class="label">LLM Model</label>
+                                        <div class="select">
+                                            <select name="llm" id="llm_model_select">
+                                                {% for model in models %}
+                                                <option value="{{ model }}" {% if model == user.llm %}selected{% endif %}>{{ model }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update LLM Configuration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Add Perspective API (1 column), Update LLM Configuration (2 columns) -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
                         <div class="box-content">
                             <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
@@ -95,11 +173,8 @@
                             </form>
                         </div>
                     </div>
-
-
                 </div>
 
-                <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
                      <div class="dashboard-box">
@@ -131,7 +206,9 @@
 
                         </div>
                     </div>
+                </div>
 
+                <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
                         <div class="box-content">
@@ -157,35 +234,57 @@
                             </form>
                         </div>
                     </div>
-
-
                 </div>
+                <!--Dashboard column - Update LLM Configuration (spans 2 columns)-->
 
-                <div class="column is-4">
-                    <!--Box-->
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
-                        <div class="help-block">
-
-                            <p>
-                                Users can own and join experiments.
-                                <br><br>
-                                <b>Owners</b> have full access to the experiment and can edit, and delete users, experiments, and populations.
-                                <br><br>
-                                <b>Joined</b> can take part to hybrid simulations.
-                                <br><br>
-                                Users that are not owners nor have joined and experiment can not access its website since they lack an active account.
-                            </p>
-                            <br>
-                        </div>
-                    </div>
-
-
-                </div>
             </div>
+
+
         </div>
     </div>
 
 </div>
+
+<script>
+function fetchModelsForUser() {
+    const urlInput = document.getElementById('custom_llm_url');
+    const statusDiv = document.getElementById('fetch-status-user');
+    const selectElement = document.getElementById('llm_model_select');
+    const llmUrl = urlInput.value.trim();
+    
+    if (!llmUrl) {
+        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+        return;
+    }
+    
+    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+    
+    fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.models && data.models.length > 0) {
+                selectElement.innerHTML = '';
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    selectElement.appendChild(option);
+                });
+                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
+            } else {
+                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
+        });
+}
+</script>
 
 {% include "admin/footer.html" %}

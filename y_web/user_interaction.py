@@ -186,10 +186,14 @@ def publish_post():
     text = request.args.get("post")
     url = request.args.get("url")
 
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    llm = user.llm if user.llm != "" else "llama3.2:latest"
+    llm_url = user.llm_url if user.llm_url != "" else None
+
     img_id = None
     if url is not None and url != "":
         llm_v = "minicpm-v"
-        image_annotator = Annotator(llm_v)
+        image_annotator = Annotator(llm_v, llm_url=llm_url)
         annotation = image_annotator.annotate(url)
 
         img = Images.query.filter_by(url=url).first()
@@ -222,10 +226,7 @@ def publish_post():
     toxicity(text, current_user.username, post.id, db)
     sentiment = vader_sentiment(text)
 
-    user = Admin_users.query.filter_by(username=current_user.username).first()
-    llm = user.llm if user.llm != "" else "llama3.2:latest"
-
-    annotator = ContentAnnotator(llm=llm)
+    annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")
@@ -320,6 +321,10 @@ def publish_post_reddit():
     text = request.args.get("post")
     url = request.args.get("url")
 
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    llm = user.llm if user.llm != "" else "llama3.2:latest"
+    llm_url = user.llm_url if user.llm_url != "" else None
+
     # Normalize URL: prepend http:// if missing
     if url and not url.lower().startswith(("http://", "https://")):
         url = "http://" + url
@@ -333,7 +338,7 @@ def publish_post_reddit():
         if is_image_url:
             try:
                 llm_v = "minicpm-v"
-                image_annotator = Annotator(llm_v)
+                image_annotator = Annotator(llm_v, llm_url=llm_url)
                 annotation = image_annotator.annotate(url)
 
                 img = Images.query.filter_by(url=url).first()
@@ -420,10 +425,7 @@ def publish_post_reddit():
     toxicity(text, current_user.username, post.id, db)
     sentiment = vader_sentiment(text)
 
-    user = Admin_users.query.filter_by(username=current_user.username).first()
-    llm = user.llm if user.llm != "" else "llama3.2:latest"
-
-    annotator = ContentAnnotator(llm=llm)
+    annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")
@@ -559,8 +561,9 @@ def publish_comment():
 
     user = Admin_users.query.filter_by(username=current_user.username).first()
     llm = user.llm if user.llm != "" else "llama3.1"
+    llm_url = user.llm_url if user.llm_url != "" else None
 
-    annotator = ContentAnnotator(llm=llm)
+    annotator = ContentAnnotator(llm=llm, llm_url=llm_url)
     emotions = annotator.annotate_emotions(text)
     hashtags = annotator.extract_components(text, c_type="hashtags")
     mentions = annotator.extract_components(text, c_type="mentions")

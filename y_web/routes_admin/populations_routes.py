@@ -41,9 +41,10 @@ from y_web.models import (
 )
 from y_web.utils import (
     generate_population,
+    get_llm_models,
     get_ollama_models,
 )
-from y_web.utils.miscellanea import check_privileges, ollama_status
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 population = Blueprint("population", __name__)
 
@@ -209,8 +210,9 @@ def populations():
 
     # Regular expression to match model values
 
-    models = get_ollama_models()
+    models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
     education_levels = Education.query.all()
     nationalities = Nationalities.query.all()
@@ -223,6 +225,7 @@ def populations():
         "admin/populations.html",
         models=models,
         ollamas=ollamas,
+        llm_backend=llm_backend,
         leanings=leanings,
         education_levels=education_levels,
         nationalities=nationalities,
@@ -394,8 +397,9 @@ def population_details(uid):
     except:
         pass
 
-    models = get_ollama_models()
+    models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
+    llm_backend = llm_backend_status()
 
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
@@ -408,6 +412,7 @@ def population_details(uid):
         data=dd,
         models=models,
         ollamas=ollamas,
+        llm_backend=llm_backend,
         crecsys=crecsys,
         frecsys=frecsys,
     )
