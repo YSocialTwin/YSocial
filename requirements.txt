@@ -22,12 +22,12 @@ nltk
 numpy
 openai==1.66.3
 perspective
-pillow
+pillow>=10.4.0
 pyOpenSSL>=24.3.0
 pyautogen==0.8.1
 pycparser==2.21
 pygments
-requests
+requests>=2.32.3
 SQLAlchemy ==1.4.31
 Werkzeug>=3.0.3
 zipp==3.8.0
