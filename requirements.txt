@@ -6,7 +6,7 @@ bs4
 cffi==1.15.0
 click>=8.1.7
 colorama==0.4.4
-cryptography==37.0.2
+cryptography>=42.0.8
 email_validator
 faker
 feedparser
@@ -23,7 +23,7 @@ numpy
 openai==1.66.3
 perspective
 pillow
-pyOpenSSL==22.0.0
+pyOpenSSL>=24.3.0
 pyautogen==0.8.1
 pycparser==2.21
 pygments
