@@ -21,22 +21,28 @@ class Annotator(object):
     of images for accessibility and content understanding.
     """
 
-    def __init__(self, llmv):
+    def __init__(self, llmv, llm_url=None):
         """
         Initialize the image annotator with a vision LLM.
 
         Args:
             llmv: Vision-capable LLM model name/identifier
+            llm_url: Optional custom LLM server URL. If None, uses
+                     environment variable or defaults based on backend.
         """
-        # Get base URL from environment variable (set by y_social.py)
-        base_url = os.getenv("LLM_URL")
-        if not base_url:
-            # Fallback to determining URL based on LLM backend for backward compatibility
-            llm_backend = os.getenv("LLM_BACKEND", "ollama")
-            if llm_backend == "vllm":
-                base_url = "http://127.0.0.1:8000/v1"
-            else:  # ollama
-                base_url = "http://127.0.0.1:11434/v1"
+
+        if llm_url is not None:
+            base_url = llm_url
+        else:
+            # Get base URL from environment variable (set by y_social.py)
+            base_url = os.getenv("LLM_URL")
+            if not base_url:
+                # Fallback to determining URL based on LLM backend for backward compatibility
+                llm_backend = os.getenv("LLM_BACKEND", "ollama")
+                if llm_backend == "vllm":
+                    base_url = "http://127.0.0.1:8000/v1"
+                else:  # ollama
+                    base_url = "http://127.0.0.1:11434/v1"
 
         self.config_list = [
             {

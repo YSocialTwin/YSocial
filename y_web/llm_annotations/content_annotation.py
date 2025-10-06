@@ -20,25 +20,29 @@ class ContentAnnotator(object):
     to analyze text content for emotional content and topics.
     """
 
-    def __init__(self, llm=None):
+    def __init__(self, llm=None, llm_url=None):
         """
         Initialize the content annotator with LLM configuration.
 
         Args:
             llm: LLM model name/identifier (e.g., from Ollama). If None,
                  annotator is disabled and methods return empty results.
+            llm_url: Optional custom LLM server URL. If None, uses
+                     environment variable or defaults based on backend.
         """
 
         if llm is not None:
-            # Get base URL from environment variable (set by y_social.py)
-            base_url = os.getenv("LLM_URL")
-            if not base_url:
-                # Fallback to determining URL based on LLM backend for backward compatibility
-                llm_backend = os.getenv("LLM_BACKEND", "ollama")
-                if llm_backend == "vllm":
-                    base_url = "http://127.0.0.1:8000/v1"
-                else:  # ollama
-                    base_url = "http://127.0.0.1:11434/v1"
+            if llm_url is not None:
+                base_url = llm_url
+                # Get base URL from environment variable (set by y_social.py)
+                base_url = os.getenv("LLM_URL")
+                if not base_url:
+                    # Fallback to determining URL based on LLM backend for backward compatibility
+                    llm_backend = os.getenv("LLM_BACKEND", "ollama")
+                    if llm_backend == "vllm":
+                        base_url = "http://127.0.0.1:8000/v1"
+                    else:  # ollama
+                        base_url = "http://127.0.0.1:11434/v1"
 
             self.config_list = [
                 {
