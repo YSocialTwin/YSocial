@@ -48,6 +48,9 @@ Easily configure and manage simulations through:
 - **Agent population configuration**
 - **Simulation setup, execution, and monitoring**
 - **Customizable agent behaviors, personalities, and network structures**
+- **LLM model management**: Pull, delete, and monitor models directly from the admin interface
+- **User-specific LLM configuration**: Assign different models and custom LLM servers per user
+- **Perspective API integration**: Configure per-user API keys for toxicity detection
 
 Here's a screenshot of the admin panel:
 
@@ -93,6 +96,7 @@ The **Y Social Digital Twin** supports a wide range of simulation configurations
   - Identity attacks, insults, profanity
   - Threats, sexually explicit content
   - Flirtation detection
+  - **Per-user API key configuration** via admin panel for personalized toxicity detection
 - **LLM-Based Annotations**: Emotion detection and topic extraction using Autogen multi-agent framework
 
 #### 📰 **RSS Feed Integration**
@@ -153,10 +157,11 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 
 ### 🔧 **LLM Backend Configuration**
 
-YSocial supports multiple LLM backends for content annotation. You can choose between:
+YSocial supports multiple LLM backends for content annotation and agent interactions:
 
 - **Ollama** (default) - Local LLM server on port 11434
 - **vLLM** - High-performance inference engine on port 8000
+- **Custom OpenAI-compatible servers** - Any server with OpenAI-compatible API
 
 **Command Line:**
 ```bash
@@ -165,13 +170,22 @@ python y_social.py --host localhost --port 8080
 
 # Use vLLM
 python y_social.py --host localhost --port 8080 --llm-backend vllm
+
+# Use custom OpenAI-compatible server
+python y_social.py --host localhost --port 8080 --llm-backend myserver.com:8000
 ```
 
 **Docker:**
 ```bash
 # Set environment variable
 docker run -e LLM_BACKEND=vllm -p 5000:5000 ysocial:latest
+
+# Or with custom server
+docker run -e LLM_BACKEND=myserver.com:8000 -p 5000:5000 ysocial:latest
 ```
+
+**User-Specific Configuration:**
+Each user can also configure their own LLM backend and model through the admin panel, allowing different users to use different models simultaneously.
 
 **Note:** For vLLM, you need to:
 1. Install vLLM: `pip install vllm`
@@ -179,6 +193,8 @@ docker run -e LLM_BACKEND=vllm -p 5000:5000 ysocial:latest
    ```bash
    vllm serve <model_name> --host 0.0.0.0 --port 8000
    ```
+
+📚 **See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) for detailed configuration examples**
 
 ---
 
@@ -222,13 +238,53 @@ docker-compose up --gpus all
 - **Framework:** [Flask](https://flask.palletsprojects.com/en/2.0.x/)
 - **Database:** SQLite / PostgreSQL (via SQLAlchemy)
 - **LLM Interaction:** [Autogen](https://github.com/microsoft/autogen)
-- **LLM Server:** [Ollama](https://ollama.com/)
+- **LLM Servers:** [Ollama](https://ollama.com/), [vLLM](https://github.com/vllm-project/vllm), or any OpenAI-compatible server
 - **Text Analysis:** [NLTK](https://www.nltk.org/) (sentiment), [Perspective API](https://www.perspectiveapi.com/) (toxicity)
 - **Feed Parsing:** [feedparser](https://github.com/kurtmckee/feedparser)
 
 ### 🎨 **Frontend**
 - **Template:** [Friendkit](https://cssninja.io/product/friendkit)
 - **Agent Avatars:** [Cartoon Set 15k](https://google.github.io/cartoonset/)
+
+---
+
+## 🧪 Testing & Development
+
+YSocial includes a comprehensive test suite to ensure code quality and reliability.
+
+### 📋 **Test Suite**
+- **69+ passing tests** covering models, authentication, routes, and utilities
+- **Pytest-based** testing framework with Flask test client integration
+- **Route testing**: Full coverage of authentication, admin, and user interaction endpoints
+- **Comprehensive test documentation** in `y_web/tests/README.md`
+
+### 🤖 **CI/CD Automation**
+- **Automated testing** via GitHub Actions on every push and pull request
+- **Automatic code formatting** with Black and isort
+- **Test coverage reporting** to track code quality
+
+### 🔧 **Running Tests**
+```bash
+# Run all tests
+python run_tests.py
+
+# Or use pytest directly
+pytest y_web/tests/ -v
+
+# Run with coverage
+pytest y_web/tests/ --cov=y_web --cov-report=html
+```
+
+### 📝 **Code Formatting**
+```bash
+# Format code automatically
+isort . && black .
+
+# Check formatting without changes
+isort --check-only . && black --check .
+```
+
+📚 **See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines**
 
 ---
 
