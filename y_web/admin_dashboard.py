@@ -38,33 +38,44 @@ admin = Blueprint("admin", __name__)
 def fetch_models():
     """
     AJAX endpoint to fetch models from a custom LLM URL.
-    
+
     Query params:
         llm_url: The LLM server URL to fetch models from
-    
+
     Returns:
         JSON with models list or error message
     """
     from flask import jsonify
-    
+
     llm_url = request.args.get("llm_url")
     if not llm_url:
         return jsonify({"error": "llm_url parameter is required"}), 400
-    
+
     # Normalize URL
     if not llm_url.startswith("http"):
         llm_url = f"http://{llm_url}"
     if not llm_url.endswith("/v1"):
         llm_url = f"{llm_url}/v1"
-    
+
     try:
         models = get_llm_models(llm_url)
         if models:
             return jsonify({"success": True, "models": models, "url": llm_url})
         else:
-            return jsonify({"success": False, "message": f"No models found at {llm_url}"}), 404
+            return (
+                jsonify({"success": False, "message": f"No models found at {llm_url}"}),
+                404,
+            )
     except Exception as e:
-        return jsonify({"success": False, "message": f"Failed to connect to {llm_url}: {str(e)}"}), 500
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Failed to connect to {llm_url}: {str(e)}",
+                }
+            ),
+            500,
+        )
 
 
 @admin.route("/admin/dashboard")

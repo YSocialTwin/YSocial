@@ -70,24 +70,34 @@ def llm_backend_status():
         Dictionary with 'backend', 'url', 'status' (running), and 'installed' boolean flags
     """
     import os
+
     import requests
-    
+
     backend = os.getenv("LLM_BACKEND", "ollama")
     llm_url = os.getenv("LLM_URL")
-    
+
     # Check if it's a custom URL
     if ":" in backend and backend not in ["ollama", "vllm"]:
         # Custom URL - check if reachable
         if not llm_url:
-            llm_url = f"http://{backend}/v1" if not backend.startswith("http") else backend
+            llm_url = (
+                f"http://{backend}/v1" if not backend.startswith("http") else backend
+            )
         try:
             # Try to reach the server
-            models_url = llm_url.replace("/v1", "/v1/models") if "/v1" in llm_url else f"{llm_url}/models"
+            models_url = (
+                llm_url.replace("/v1", "/v1/models")
+                if "/v1" in llm_url
+                else f"{llm_url}/models"
+            )
             response = requests.get(models_url, timeout=3)
-            status = response.status_code in [200, 404]  # 404 means server is up but endpoint may not exist
+            status = response.status_code in [
+                200,
+                404,
+            ]  # 404 means server is up but endpoint may not exist
         except:
             status = False
-        
+
         return {
             "backend": "custom",
             "url": llm_url,

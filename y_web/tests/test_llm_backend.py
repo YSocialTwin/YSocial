@@ -165,21 +165,29 @@ class TestGetLLMModels:
     def test_models_endpoint_url_format(self):
         """Test models endpoint URL format"""
         base_url = "http://127.0.0.1:11434/v1"
-        models_url = base_url.replace("/v1", "/v1/models") if "/v1" in base_url else f"{base_url}/models"
+        models_url = (
+            base_url.replace("/v1", "/v1/models")
+            if "/v1" in base_url
+            else f"{base_url}/models"
+        )
         assert models_url == "http://127.0.0.1:11434/v1/models"
 
 
 class TestLLMBackendStatus:
     """Test llm_backend_status() function"""
 
-    @patch.dict(os.environ, {"LLM_BACKEND": "ollama", "LLM_URL": "http://127.0.0.1:11434/v1"})
+    @patch.dict(
+        os.environ, {"LLM_BACKEND": "ollama", "LLM_URL": "http://127.0.0.1:11434/v1"}
+    )
     def test_ollama_backend_status(self):
         """Test status detection for Ollama backend - simple env var test"""
         # Test that environment variables are set correctly
         assert os.getenv("LLM_BACKEND") == "ollama"
         assert os.getenv("LLM_URL") == "http://127.0.0.1:11434/v1"
 
-    @patch.dict(os.environ, {"LLM_BACKEND": "vllm", "LLM_URL": "http://127.0.0.1:8000/v1"})
+    @patch.dict(
+        os.environ, {"LLM_BACKEND": "vllm", "LLM_URL": "http://127.0.0.1:8000/v1"}
+    )
     def test_vllm_backend_status(self):
         """Test status detection for vLLM backend - simple env var test"""
         # Test that environment variables are set correctly
@@ -196,7 +204,10 @@ class TestLLMBackendStatus:
         assert os.getenv("LLM_URL") == "http://myserver.com:8080/v1"
         assert ":" in os.getenv("LLM_BACKEND")
 
-    @patch.dict(os.environ, {"LLM_BACKEND": "myserver:9000", "LLM_URL": "http://myserver:9000/v1"})
+    @patch.dict(
+        os.environ,
+        {"LLM_BACKEND": "myserver:9000", "LLM_URL": "http://myserver:9000/v1"},
+    )
     def test_custom_backend_unreachable(self):
         """Test status for unreachable custom backend - simple env var test"""
         assert os.getenv("LLM_BACKEND") == "myserver:9000"
@@ -216,7 +227,9 @@ class TestContentAnnotatorWithBackends:
 
             # Check that config uses LLM_URL
             if hasattr(annotator, "config_list") and annotator.config_list:
-                assert annotator.config_list[0]["base_url"] == "http://127.0.0.1:11434/v1"
+                assert (
+                    annotator.config_list[0]["base_url"] == "http://127.0.0.1:11434/v1"
+                )
         except Exception as e:
             pytest.skip(f"ContentAnnotator test skipped: {e}")
 
@@ -229,7 +242,9 @@ class TestContentAnnotatorWithBackends:
             annotator = ContentAnnotator(llm="test-model")
 
             if hasattr(annotator, "config_list") and annotator.config_list:
-                assert annotator.config_list[0]["base_url"] == "http://127.0.0.1:8000/v1"
+                assert (
+                    annotator.config_list[0]["base_url"] == "http://127.0.0.1:8000/v1"
+                )
         except Exception as e:
             pytest.skip(f"ContentAnnotator test skipped: {e}")
 
@@ -242,7 +257,10 @@ class TestContentAnnotatorWithBackends:
             annotator = ContentAnnotator(llm="test-model")
 
             if hasattr(annotator, "config_list") and annotator.config_list:
-                assert annotator.config_list[0]["base_url"] == "http://custom.server:9000/v1"
+                assert (
+                    annotator.config_list[0]["base_url"]
+                    == "http://custom.server:9000/v1"
+                )
         except Exception as e:
             pytest.skip(f"ContentAnnotator test skipped: {e}")
 
@@ -259,7 +277,9 @@ class TestImageAnnotatorWithBackends:
             annotator = Annotator(llmv="test-vision-model")
 
             if hasattr(annotator, "config_list") and annotator.config_list:
-                assert annotator.config_list[0]["base_url"] == "http://127.0.0.1:11434/v1"
+                assert (
+                    annotator.config_list[0]["base_url"] == "http://127.0.0.1:11434/v1"
+                )
         except Exception as e:
             pytest.skip(f"Image Annotator test skipped: {e}")
 
@@ -272,15 +292,15 @@ class TestAJAXEndpoint:
         # Test the expected request/response format
         request_url = "/admin/api/fetch_models?llm_url=localhost:8000"
         assert "llm_url" in request_url
-        
+
         # Expected success response format
         success_response = {
             "models": ["model1", "model2", "model3"],
-            "url": "http://localhost:8000/v1"
+            "url": "http://localhost:8000/v1",
         }
         assert "models" in success_response
         assert isinstance(success_response["models"], list)
-        
+
         # Expected error response format
         error_response = {"error": "Failed to connect to server"}
         assert "error" in error_response
@@ -292,13 +312,14 @@ class TestAJAXEndpoint:
             "localhost:8000",
             "http://localhost:8000",
             "myserver.com:11434",
-            "http://api.example.com:8000/v1"
+            "http://api.example.com:8000/v1",
         ]
         for url in valid_urls:
             assert len(url) > 0
             # URL should be URL-encodable
             from urllib.parse import quote
-            encoded = quote(url, safe=':/')
+
+            encoded = quote(url, safe=":/")
             assert len(encoded) > 0
 
     def test_fetch_models_response_structure(self):
@@ -307,11 +328,11 @@ class TestAJAXEndpoint:
         success = {"models": ["model1", "model2"], "url": "http://server:8000/v1"}
         assert isinstance(success.get("models"), list)
         assert len(success["models"]) == 2
-        
+
         # Empty models
         empty = {"models": []}
         assert success.get("models") == [] or len(success.get("models", [])) >= 0
-        
+
         # Error case
         error = {"error": "Connection failed"}
         assert "error" in error
@@ -403,26 +424,24 @@ class TestIntegration:
         # Verify environment is set up correctly
         assert os.getenv("LLM_BACKEND") == "myserver:8000"
         assert os.getenv("LLM_URL") == "http://myserver:8000/v1"
-        
+
         # Simulate model response format
-        mock_response = {
-            "data": [{"id": "custom-model-1"}, {"id": "custom-model-2"}]
-        }
+        mock_response = {"data": [{"id": "custom-model-1"}, {"id": "custom-model-2"}]}
         models = [model["id"] for model in mock_response["data"]]
         assert len(models) == 2
         assert "custom-model-1" in models
 
-    @patch.dict(os.environ, {"LLM_BACKEND": "vllm", "LLM_URL": "http://127.0.0.1:8000/v1"})
+    @patch.dict(
+        os.environ, {"LLM_BACKEND": "vllm", "LLM_URL": "http://127.0.0.1:8000/v1"}
+    )
     def test_complete_vllm_flow(self):
         """Test environment variable configuration for vLLM backend"""
         # Verify environment is set up correctly
         assert os.getenv("LLM_BACKEND") == "vllm"
         assert os.getenv("LLM_URL") == "http://127.0.0.1:8000/v1"
-        
+
         # Simulate vLLM response format
-        mock_response = {
-            "data": [{"id": "meta-llama/Llama-3.1-8B-Instruct"}]
-        }
+        mock_response = {"data": [{"id": "meta-llama/Llama-3.1-8B-Instruct"}]}
         models = [model["id"] for model in mock_response["data"]]
         assert len(models) == 1
         assert "meta-llama/Llama-3.1-8B-Instruct" in models

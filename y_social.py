@@ -7,9 +7,10 @@ from y_web import create_app, db
 def start_app(
     db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama"
 ):
+    import sys
+
     import nltk
     import requests
-    import sys
 
     nltk.download("vader_lexicon")
 
@@ -24,25 +25,36 @@ def start_app(
         if not llm_backend.startswith("http"):
             llm_url = f"http://{llm_backend}/v1"
         else:
-            llm_url = llm_backend if llm_backend.endswith("/v1") else f"{llm_backend}/v1"
+            llm_url = (
+                llm_backend if llm_backend.endswith("/v1") else f"{llm_backend}/v1"
+            )
     else:
         print(f"Error: Invalid LLM backend '{llm_backend}'")
         print("Valid options: 'ollama', 'vllm', or custom URL (host:port)")
         sys.exit(1)
-    
+
     # Check if LLM server is reachable
     try:
         # Try to reach the models endpoint
-        models_url = llm_url.replace("/v1", "/v1/models") if "/v1" in llm_url else f"{llm_url}/models"
+        models_url = (
+            llm_url.replace("/v1", "/v1/models")
+            if "/v1" in llm_url
+            else f"{llm_url}/models"
+        )
         response = requests.get(models_url, timeout=5)
-        if response.status_code not in [200, 404]:  # 404 is ok, means endpoint exists but no route
-            print(f"Warning: LLM server at {llm_url} responded with status {response.status_code}")
+        if response.status_code not in [
+            200,
+            404,
+        ]:  # 404 is ok, means endpoint exists but no route
+            print(
+                f"Warning: LLM server at {llm_url} responded with status {response.status_code}"
+            )
     except requests.exceptions.RequestException as e:
         print(f"Error: Cannot reach LLM server at {llm_url}")
         print(f"Details: {e}")
         print("\nMake sure the LLM server is running before starting YSocial.")
         sys.exit(1)
-    
+
     # Set the LLM backend and URL as environment variables for the app to use
     os.environ["LLM_BACKEND"] = llm_backend
     os.environ["LLM_URL"] = llm_url
