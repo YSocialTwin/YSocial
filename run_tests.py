@@ -24,6 +24,7 @@ def run_tests():
         "y_web/tests/test_auth_routes.py",
         "y_web/tests/test_admin_routes.py",
         "y_web/tests/test_user_interaction_routes.py",
+        "y_web/tests/test_security_upgrades.py",
     ]
 
     total_passed = 0
