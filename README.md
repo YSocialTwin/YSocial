@@ -155,6 +155,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 💡 The web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
 
 🔴 **Note 1:** Ensure the `screen` command is installed on your system. 
+
 🔴 **Note 2:** Ensure to run the application in a dedicated conda/miniconda/pipenv environment to avoid dependency conflicts. Homebrew installations of Python may lead to execution issues.
 
 ---
