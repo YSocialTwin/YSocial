@@ -521,10 +521,14 @@ function updateLLMFromPopulation() {
         const popData = populationData[selectedPopId];
         if (popData.llmUrl) {
             llmUrlInput.value = popData.llmUrl;
+            // Check if commercial URL and show/hide model name field
+            updateCommercialFields(popData.llmUrl);
+        } else {
+            // If population doesn't have a URL, show a helpful message
+            status.innerHTML = '<span style="color: orange;"><i class="mdi mdi-information"></i> Selected population does not have a default LLM URL configured. Using form default.</span>';
+            setTimeout(() => { status.innerHTML = ''; }, 4000);
+            updateCommercialFields(llmUrlInput.value);
         }
-        
-        // Check if commercial URL and show/hide model name field
-        updateCommercialFields(popData.llmUrl);
     }
 }
 
@@ -569,7 +573,9 @@ function validateLLMModel() {
     
     const popData = populationData[selectedPopId];
     if (!popData || !popData.llmModel) {
-        alert('Selected population does not have an LLM model configured');
+        status.innerHTML = '<span style="color: orange;"><i class="mdi mdi-alert"></i> Selected population does not have an LLM model configured. Validation skipped.</span>';
+        validationStatus.value = 'true'; // Allow submission since there's nothing to validate
+        setTimeout(() => { status.innerHTML = ''; }, 4000);
         return;
     }
     
