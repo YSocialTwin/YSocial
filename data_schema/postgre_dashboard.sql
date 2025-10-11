@@ -134,7 +134,8 @@ CREATE TABLE population (
     toxicity      TEXT,
     languages     TEXT,
     frecsys       TEXT,
-    crecsys       TEXT
+    crecsys       TEXT,
+    llm_url       TEXT
 );
 
 CREATE TABLE agent_population (

@@ -26571,3 +26571,47 @@ background: #fff url('img/search.png') no-repeat 15px 15px;
     cursor: pointer;
     margin-left: 5px;
 }
+
+body {
+    font-family: Arial, sans-serif;
+    padding: 30px;
+  }
+
+  .scale-wrapper {
+    margin-bottom: 25px;
+  }
+
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .number-scale {
+    display: flex;
+    gap: 5px;
+    margin: 10px 0;
+  }
+
+  .number-box {
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+
+  .number-box:hover {
+    border-color: #888;
+  }
+
+  .number-box.selected {
+    background-color: #C1E0E6;
+    color: #888;
+    border-color: #888;
+  }

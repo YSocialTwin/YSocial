@@ -102,6 +102,8 @@ def create_population():
     age_min = int(request.form.get("age_min"))
     age_max = int(request.form.get("age_max"))
 
+    llm = request.form.get("host_llm")
+
     education_levels = request.form.getlist("education_levels")
     education_levels = ",".join(education_levels)
     political_leanings = request.form.getlist("political_leanings")
@@ -132,6 +134,7 @@ def create_population():
         toxicity=toxicity_levels,
         frecsys=frecsys,
         crecsys=crecsys,
+        llm_url=llm,
     )
 
     db.session.add(population)

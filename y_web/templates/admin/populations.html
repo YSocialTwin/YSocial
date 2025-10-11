@@ -234,7 +234,7 @@
                         <div class="dashboard-box">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
-                                <form action="/admin/create_population" enctype="multipart/form-data" method="POST">
+                                <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
 
                                     <div class="box-line">
@@ -257,7 +257,7 @@
                                         <span class="left">Custom LLM URL (optional)</span>
                                         <span class="right" style="width: 70%;">
                                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_popcreate" class="input" placeholder="e.g., localhost:8000" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
+                                                <input type="text" form="popcreate_form" name="host_llm" id="custom_llm_url_popcreate"  class="input" placeholder="e.g., localhost:8000" value="{{ llm_backend['url'] if llm_backend else '' }}" style="flex: 1;">
                                                 <button type="button" class="button is-solid primary-button" onclick="fetchModelsForPopCreate()">
                                                     Fetch Models
                                                 </button>

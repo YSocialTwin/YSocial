@@ -127,67 +127,219 @@
                                                                                        value="36"></span>
                                     </div>
                                     <hr>
-                                    <h4><b>Agents' Actions Candidate Selection Likelihood</b></h4>
+                                    <h4><b>Agents' Actions Relevance</b></h4>
+                                    All actions are scored from 0 to 10, where 0 means that the action is never performed. <br>
+                                    Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
+                                    and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
+                                    <br><br>
                                     <div class="box-line">
                                         <span class="left">Post new content</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="post"
-                                                                                       class="input"
-                                                                                       value="0.2"></span>
+                                        <span class="right" style="width: 70%;">
+                                            <!--<input type="text" name="post" class="input"  value="0.2">-->
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box selected" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="post" id="post" value="3">
+                                            </div>
+                                        </span>
                                     </div>
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Share and comment an Image</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="image"
+                                        <!--<span class="right" style="width: 70%;"><input type="text" name="image"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       value="0"></span>-->
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box selected" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="image" id="image" value="0">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Comment on a News</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                       <!-- <span class="right" style="width: 70%;"><input type="text"
                                                                                        name="news"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       value="0"></span> -->
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box selected" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="news" id="news" value="0">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     {% endif %}
                                     <div class="box-line">
                                         <span class="left">Comment a Post</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <!--<span class="right" style="width: 70%;"><input type="text"
                                                                                        name="comment"
                                                                                        class="input"
-                                                                                       value="0.5"></span>
+                                                                                       value="0.5"></span> -->
+                                         <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box selected" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="comment" id="comment" value="5">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Read a content</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" style="width: 70%;"><input type="text"
                                                                                        name="read"
                                                                                        class="input"
-                                                                                       value="0.2"></span>
+                                                                                       value="0.2"></span> -->
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box selected" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="read" id="read" value="2">
+                                            </div>
+
+                                        </span>
+
                                     </div>
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Share News from a Page</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" style="width: 70%;"><input type="text"
                                                                                        name="share"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       value="0"></span> -->
+                                         <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box selected" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="share" id="share" value="0">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     {% endif %}
                                     <div class="box-line">
                                         <span class="left">Search a Hashtag</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                       <!-- <span class="right" style="width: 70%;"><input type="text"
                                                                                        name="search"
                                                                                        class="input"
-                                                                                       value="0.1"></span>
+                                                                                       value="0.1"></span> -->
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box selected" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="search" id="search" value="1">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Cast Vote</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" style="width: 70%;"><input type="text"
                                                                                        name="vote"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       value="0"></span> -->
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper">
+                                            <div class="number-scale">
+                                                  <div class="number-box selected" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="vote" id="vote" value="0">
+                                            </div>
+
+                                        </span>
                                     </div>
                                     {% endif %}
                                     {% if experiment.platform_type == "forum" %}
@@ -312,4 +464,21 @@
         </div>
     </div>
 </div>
+
+<script>
+                                            document.querySelectorAll('.number-scale').forEach(scale => {
+                                              const boxes = scale.querySelectorAll('.number-box');
+                                              const wrapper = scale.closest('.scale-wrapper');
+                                              const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+
+                                              boxes.forEach(box => {
+                                                box.addEventListener('click', () => {
+                                                  boxes.forEach(b => b.classList.remove('selected'));
+                                                  box.classList.add('selected');
+                                                  hiddenInput.value = box.dataset.value;
+                                                  display.textContent = box.dataset.value;
+                                                });
+                                              });
+                                            });
+                                            </script>
 {% include "admin/footer.html" %}

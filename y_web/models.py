@@ -431,6 +431,7 @@ class Population(db.Model):
     languages = db.Column(db.String(100))
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
+    llm_url = db.Column(db.String(100))
 
 
 class Agent(db.Model):
