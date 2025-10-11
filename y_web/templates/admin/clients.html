@@ -53,10 +53,10 @@
                                     <div class="box-line">
                                         <span class="left">Population</span>
                                         <div class="select">
-                                            <select name="population_id">
+                                            <select name="population_id" id="population_select" onchange="updateLLMFromPopulation()">
                                                 <option value=""></option>
                                                     {% for pop in populations %}
-                                                    <option value="{{ pop.id }}">{{ pop.name }}</option>
+                                                    <option value="{{ pop.id }}" data-llm-url="{{ pop.llm_url or '' }}" data-llm-model="{{ pop.llm or '' }}">{{ pop.name }}</option>
                                                     {% endfor %}
                                             </select>
                                         </div>
@@ -354,15 +354,29 @@
                                     <hr>
                                     <h4><b>Large Language Models</b></h4>
                                     <div class="box-line">
-                                        <span class="left">LLM Server</span>
+                                        <span class="left">Custom LLM URL</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_client" name="llm" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="validateLLMModel()">
+                                                    Validate Model
+                                                </button>
+                                            </div>
+                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="llm_model_name_box" style="display: none;">
+                                        <span class="left">LLM Model Name</span>
                                         <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="llm"
+                                                                                       id="llm_model_name"
+                                                                                       name="llm_model_name"
                                                                                        class="input"
-                                                                                       value="http://127.0.0.1:11434/v1"></span>
+                                                                                       placeholder="e.g., gpt-4"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
                                         <span class="right" style="width: 70%;"><input type="text"
+                                                                                       id="llm_api_key"
                                                                                        name="llm_api_key"
                                                                                        class="input"
                                                                                        value="NULL"></span>
@@ -381,6 +395,7 @@
                                                                                        class="input"
                                                                                        value="1.5"></span>
                                     </div>
+                                    <input type="hidden" id="llm_validation_status" value="false">
                                     <hr>
                                     <h4><b>Large Language Models (Image Transcription)</b></h4>
                                     <div class="box-line">
@@ -480,5 +495,136 @@
                                                 });
                                               });
                                             });
+
+// Store population data for quick lookup
+const populationData = {};
+{% for pop in populations %}
+populationData[{{ pop.id }}] = {
+    llmUrl: "{{ pop.llm_url or '' }}",
+    llmModel: "{{ pop.llm or '' }}"
+};
+{% endfor %}
+
+// Update LLM URL when population is selected
+function updateLLMFromPopulation() {
+    const populationSelect = document.getElementById('population_select');
+    const selectedPopId = populationSelect.value;
+    const llmUrlInput = document.getElementById('custom_llm_url_client');
+    const status = document.getElementById('llm_url_status_client');
+    const validationStatus = document.getElementById('llm_validation_status');
+    
+    // Reset validation status
+    validationStatus.value = 'false';
+    status.innerHTML = '';
+    
+    if (selectedPopId && populationData[selectedPopId]) {
+        const popData = populationData[selectedPopId];
+        if (popData.llmUrl) {
+            llmUrlInput.value = popData.llmUrl;
+        }
+        
+        // Check if commercial URL and show/hide model name field
+        updateCommercialFields(popData.llmUrl);
+    }
+}
+
+// Check if URL is commercial and toggle model name field
+function updateCommercialFields(url) {
+    const modelNameBox = document.getElementById('llm_model_name_box');
+    const commercialPatterns = [
+        'api.openai.com',
+        'api.anthropic.com',
+        'generativelanguage.googleapis.com',
+        'api.together.xyz',
+        'api.groq.com'
+    ];
+    
+    const isCommercial = commercialPatterns.some(pattern => url && url.includes(pattern));
+    
+    if (isCommercial) {
+        modelNameBox.style.display = 'flex';
+    } else {
+        modelNameBox.style.display = 'none';
+    }
+}
+
+// Validate that the population's LLM model is available
+function validateLLMModel() {
+    const populationSelect = document.getElementById('population_select');
+    const selectedPopId = populationSelect.value;
+    const llmUrlInput = document.getElementById('custom_llm_url_client');
+    const status = document.getElementById('llm_url_status_client');
+    const validationStatus = document.getElementById('llm_validation_status');
+    const llmUrl = llmUrlInput.value.trim();
+    
+    if (!selectedPopId) {
+        alert('Please select a population first');
+        return;
+    }
+    
+    if (!llmUrl) {
+        alert('Please enter an LLM server URL');
+        return;
+    }
+    
+    const popData = populationData[selectedPopId];
+    if (!popData || !popData.llmModel) {
+        alert('Selected population does not have an LLM model configured');
+        return;
+    }
+    
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+    
+    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                validationStatus.value = 'false';
+                setTimeout(() => { status.innerHTML = ''; }, 5000);
+            } else {
+                // Check if population's model exists in fetched models
+                const modelExists = data.models.includes(popData.llmModel);
+                
+                if (modelExists) {
+                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + popData.llmModel + '" found and validated!</span>';
+                    validationStatus.value = 'true';
+                    setTimeout(() => { status.innerHTML = ''; }, 3000);
+                } else {
+                    status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + popData.llmModel + '" not found on this server!</span>';
+                    validationStatus.value = 'false';
+                    alert('Warning: The LLM model "' + popData.llmModel + '" configured for this population is not available on the specified server. Please check your configuration.');
+                }
+            }
+        })
+        .catch(error => {
+            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            validationStatus.value = 'false';
+            setTimeout(() => { status.innerHTML = ''; }, 5000);
+        });
+}
+
+// Prevent form submission if validation failed
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[action="/admin/create_client"]');
+    const validationStatus = document.getElementById('llm_validation_status');
+    
+    form.addEventListener('submit', function(e) {
+        const populationSelect = document.getElementById('population_select');
+        if (populationSelect.value && validationStatus.value !== 'true') {
+            e.preventDefault();
+            alert('Please validate the LLM model before submitting the form. Click the "Validate Model" button.');
+            return false;
+        }
+    });
+    
+    // Monitor URL changes to check for commercial URLs
+    const llmUrlInput = document.getElementById('custom_llm_url_client');
+    llmUrlInput.addEventListener('input', function() {
+        updateCommercialFields(this.value);
+        // Reset validation when URL changes
+        validationStatus.value = 'false';
+    });
+});
                                             </script>
 {% include "admin/footer.html" %}
