@@ -402,15 +402,21 @@
                                         <span class="left">LLM Model</span>
                                         <span class="right" style="width: 70%;">minicpm-v<input  type="hidden"
                                                                                        name="llm_v_agent"
+                                                                                       id="llm_v_agent"
                                                                                        class="input"
                                                                                        value="minicpm-v"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">LLM Server</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="llm_v"
-                                                                                       class="input"
-                                                                                       value="http://127.0.0.1:11434/v1"></span>
+                                        <span class="left">Custom LLM URL</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="validateLLMVModel()">
+                                                    Validate Model
+                                                </button>
+                                            </div>
+                                            <div id="llm_v_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                        </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
@@ -432,6 +438,10 @@
                                                                                        name="llm_v_temperature"
                                                                                        class="input"
                                                                                        value="0.5"></span>
+                                    </div>
+                                    <input type="hidden" id="llm_v_validation_status" value="false">
+                                    <div id="image_action_warning" style="display: none; padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                                        <i class="mdi mdi-alert"></i> <strong>Warning:</strong> The minicpm-v model is not available on the configured server. Image commenting/sharing has been disabled.
                                     </div>
 
                                 </div>
@@ -631,6 +641,144 @@ document.addEventListener('DOMContentLoaded', function() {
         // Reset validation when URL changes
         validationStatus.value = 'false';
     });
+    
+    // Monitor Image Transcription LLM URL changes
+    const llmVUrlInput = document.getElementById('custom_llm_url_v_client');
+    llmVUrlInput.addEventListener('input', function() {
+        // Reset validation when URL changes
+        const llmVValidationStatus = document.getElementById('llm_v_validation_status');
+        llmVValidationStatus.value = 'false';
+        enableImageAction(); // Re-enable until validation is performed
+    });
+    
+    // Update Image Transcription URL when population changes
+    const populationSelectForV = document.getElementById('population_select');
+    if (populationSelectForV) {
+        const originalOnChange = populationSelectForV.onchange;
+        populationSelectForV.onchange = function() {
+            if (originalOnChange) originalOnChange.call(this);
+            updateLLMVFromPopulation();
+        };
+    }
 });
+
+// Update Image Transcription LLM URL when population is selected
+function updateLLMVFromPopulation() {
+    const populationSelect = document.getElementById('population_select');
+    const selectedPopId = populationSelect.value;
+    const llmVUrlInput = document.getElementById('custom_llm_url_v_client');
+    const status = document.getElementById('llm_v_url_status_client');
+    const validationStatus = document.getElementById('llm_v_validation_status');
+    
+    // Reset validation status
+    validationStatus.value = 'false';
+    status.innerHTML = '';
+    enableImageAction(); // Re-enable until validation is performed
+    
+    if (selectedPopId && populationData[selectedPopId]) {
+        const popData = populationData[selectedPopId];
+        if (popData.llmUrl) {
+            llmVUrlInput.value = popData.llmUrl;
+        } else {
+            // If population doesn't have a URL, show a helpful message
+            status.innerHTML = '<span style="color: orange;"><i class="mdi mdi-information"></i> Using default LLM URL for image transcription.</span>';
+            setTimeout(() => { status.innerHTML = ''; }, 4000);
+        }
+    }
+}
+
+// Validate that the minicpm-v model is available for image transcription
+function validateLLMVModel() {
+    const llmVUrlInput = document.getElementById('custom_llm_url_v_client');
+    const status = document.getElementById('llm_v_url_status_client');
+    const validationStatus = document.getElementById('llm_v_validation_status');
+    const llmVUrl = llmVUrlInput.value.trim();
+    const modelName = 'minicpm-v';
+    
+    if (!llmVUrl) {
+        alert('Please enter an LLM server URL for image transcription');
+        return;
+    }
+    
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+    
+    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                validationStatus.value = 'false';
+                disableImageAction();
+                setTimeout(() => { status.innerHTML = ''; }, 5000);
+            } else {
+                // Check if minicpm-v model exists in fetched models
+                const modelExists = data.models.includes(modelName);
+                
+                if (modelExists) {
+                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
+                    validationStatus.value = 'true';
+                    enableImageAction();
+                    setTimeout(() => { status.innerHTML = ''; }, 3000);
+                } else {
+                    status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
+                    validationStatus.value = 'false';
+                    disableImageAction();
+                }
+            }
+        })
+        .catch(error => {
+            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            validationStatus.value = 'false';
+            disableImageAction();
+            setTimeout(() => { status.innerHTML = ''; }, 5000);
+        });
+}
+
+// Disable the "Share and comment an Image" action
+function disableImageAction() {
+    const imageScale = document.getElementById('image');
+    const imageScaleWrapper = imageScale ? imageScale.closest('.scale-wrapper') : null;
+    const warning = document.getElementById('image_action_warning');
+    
+    if (imageScaleWrapper) {
+        const numberBoxes = imageScaleWrapper.querySelectorAll('.number-box');
+        numberBoxes.forEach(box => {
+            if (box.dataset.value !== '0') {
+                box.style.opacity = '0.3';
+                box.style.pointerEvents = 'none';
+                box.style.cursor = 'not-allowed';
+            }
+        });
+        
+        // Force selection to 0
+        numberBoxes.forEach(box => box.classList.remove('selected'));
+        numberBoxes[0].classList.add('selected');
+        imageScale.value = '0';
+    }
+    
+    if (warning) {
+        warning.style.display = 'block';
+    }
+}
+
+// Enable the "Share and comment an Image" action
+function enableImageAction() {
+    const imageScale = document.getElementById('image');
+    const imageScaleWrapper = imageScale ? imageScale.closest('.scale-wrapper') : null;
+    const warning = document.getElementById('image_action_warning');
+    
+    if (imageScaleWrapper) {
+        const numberBoxes = imageScaleWrapper.querySelectorAll('.number-box');
+        numberBoxes.forEach(box => {
+            box.style.opacity = '1';
+            box.style.pointerEvents = 'auto';
+            box.style.cursor = 'pointer';
+        });
+    }
+    
+    if (warning) {
+        warning.style.display = 'none';
+    }
+}
                                             </script>
 {% include "admin/footer.html" %}
