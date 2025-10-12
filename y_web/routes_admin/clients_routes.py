@@ -351,8 +351,8 @@ def create_client():
     # Get LLM URL from environment (set by y_social.py)
     import os
 
-    #llm_url = os.getenv("LLM_URL")
-    #if not llm_url:
+    # llm_url = os.getenv("LLM_URL")
+    # if not llm_url:
     #    # Fallback for backward compatibility
     #    llm_backend = os.getenv("LLM_BACKEND", "ollama")
     #    if llm_backend == "vllm":
@@ -363,7 +363,7 @@ def create_client():
     config = {
         "servers": {
             "llm": llm,
-        #    "llm_url": llm_url,
+            #    "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),
@@ -591,7 +591,7 @@ def create_client():
                 "email": f"{a.name}@ysocial.it",
                 "password": f"{a.name}",
                 "age": a.age,
-                "type": user_type, #,a.ag_type,
+                "type": user_type,  # ,a.ag_type,
                 "leaning": a.leaning,
                 "interests": ints,
                 "oe": a.oe,
