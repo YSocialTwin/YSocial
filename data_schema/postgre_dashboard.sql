@@ -14,7 +14,7 @@ CREATE TABLE admin_users (
 CREATE TABLE agents (
     id                   SERIAL PRIMARY KEY,
     name                 TEXT NOT NULL,
-    ag_type              TEXT NOT NULL,
+    ag_type              TEXT DEFAULT '',
     leaning              TEXT,
     oe                   TEXT,
     co                   TEXT,
