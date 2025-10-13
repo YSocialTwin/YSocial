@@ -350,6 +350,322 @@
                                         </span>
                                     </div>
 
+                                    <hr style="margin: 30px 0;">
+                                    <h4><b>Activity Profiles</b></h4>
+                                    <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                                        Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile.
+                                    </p>
+
+                                    <style>
+                                        .activity-profiles-container {
+                                            display: flex;
+                                            gap: 20px;
+                                            margin-bottom: 20px;
+                                        }
+                                        .profiles-list {
+                                            flex: 1;
+                                            min-height: 200px;
+                                            border: 2px dashed #d0d0d0;
+                                            border-radius: 8px;
+                                            padding: 15px;
+                                            background-color: #fafafa;
+                                        }
+                                        .profiles-list h5 {
+                                            margin: 0 0 10px 0;
+                                            font-size: 0.95em;
+                                            font-weight: 600;
+                                            color: #333;
+                                        }
+                                        .profile-item {
+                                            background: white;
+                                            border: 1px solid #ddd;
+                                            border-radius: 6px;
+                                            padding: 10px 12px;
+                                            margin-bottom: 8px;
+                                            cursor: move;
+                                            transition: all 0.2s ease;
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: center;
+                                        }
+                                        .profile-item:hover {
+                                            border-color: #22c55e;
+                                            box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+                                            transform: translateY(-1px);
+                                        }
+                                        .profile-item.dragging {
+                                            opacity: 0.5;
+                                        }
+                                        .profile-name {
+                                            font-weight: 500;
+                                            font-size: 0.9em;
+                                        }
+                                        .profile-hours {
+                                            font-size: 0.75em;
+                                            color: #666;
+                                            margin-top: 3px;
+                                        }
+                                        .assigned-profile {
+                                            background: white;
+                                            border: 1px solid #22c55e;
+                                            border-radius: 6px;
+                                            padding: 12px;
+                                            margin-bottom: 10px;
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 10px;
+                                        }
+                                        .assigned-profile-info {
+                                            flex: 1;
+                                        }
+                                        .assigned-profile-name {
+                                            font-weight: 500;
+                                            font-size: 0.9em;
+                                            color: #333;
+                                        }
+                                        .assigned-profile-hours {
+                                            font-size: 0.75em;
+                                            color: #666;
+                                            margin-top: 2px;
+                                        }
+                                        .percentage-input {
+                                            width: 80px;
+                                            padding: 5px 8px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 4px;
+                                            text-align: center;
+                                            font-size: 0.9em;
+                                        }
+                                        .remove-profile-btn {
+                                            background: #dc3545;
+                                            color: white;
+                                            border: none;
+                                            border-radius: 4px;
+                                            padding: 5px 10px;
+                                            cursor: pointer;
+                                            font-size: 0.8em;
+                                            transition: background 0.2s;
+                                        }
+                                        .remove-profile-btn:hover {
+                                            background: #c82333;
+                                        }
+                                        .drag-over {
+                                            background-color: #e8f5e9;
+                                            border-color: #22c55e;
+                                        }
+                                        .percentage-validation {
+                                            margin-top: 10px;
+                                            padding: 10px;
+                                            border-radius: 4px;
+                                            font-size: 0.85em;
+                                        }
+                                        .percentage-validation.error {
+                                            background: #fee;
+                                            border: 1px solid #fcc;
+                                            color: #c00;
+                                        }
+                                        .percentage-validation.success {
+                                            background: #efe;
+                                            border: 1px solid #cfc;
+                                            color: #0a0;
+                                        }
+                                        .empty-state {
+                                            text-align: center;
+                                            color: #999;
+                                            font-size: 0.85em;
+                                            padding: 20px;
+                                        }
+                                    </style>
+
+                                    <div class="activity-profiles-container">
+                                        <div class="profiles-list">
+                                            <h5>Available Profiles</h5>
+                                            <div id="available-profiles">
+                                                {% if activity_profiles %}
+                                                    {% for profile in activity_profiles %}
+                                                    <div class="profile-item" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
+                                                        <div>
+                                                            <div class="profile-name">{{ profile.name }}</div>
+                                                            <div class="profile-hours">Hours: {{ profile.hours }}</div>
+                                                        </div>
+                                                        <span style="color: #999;">⋮⋮</span>
+                                                    </div>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <div class="empty-state">No activity profiles available. Create some in the Miscellanea page first.</div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <div class="profiles-list">
+                                            <h5>Assigned Profiles (with Percentages)</h5>
+                                            <div id="assigned-profiles">
+                                                <div class="empty-state">Drag profiles here to assign them</div>
+                                            </div>
+                                            <div id="percentage-validation" class="percentage-validation" style="display: none;"></div>
+                                        </div>
+                                    </div>
+
+                                    <input type="hidden" name="activity_profiles_data" id="activity_profiles_data" value="">
+
+                                    <script>
+                                        // Drag and drop functionality for activity profiles
+                                        let assignedProfiles = [];
+
+                                        function initDragAndDrop() {
+                                            const availableContainer = document.getElementById('available-profiles');
+                                            const assignedContainer = document.getElementById('assigned-profiles');
+
+                                            // Make profile items draggable
+                                            document.querySelectorAll('.profile-item').forEach(item => {
+                                                item.addEventListener('dragstart', handleDragStart);
+                                                item.addEventListener('dragend', handleDragEnd);
+                                            });
+
+                                            // Make assigned profiles area droppable
+                                            assignedContainer.addEventListener('dragover', handleDragOver);
+                                            assignedContainer.addEventListener('drop', handleDrop);
+                                            assignedContainer.addEventListener('dragleave', handleDragLeave);
+                                        }
+
+                                        function handleDragStart(e) {
+                                            e.currentTarget.classList.add('dragging');
+                                            e.dataTransfer.effectAllowed = 'copy';
+                                            e.dataTransfer.setData('text/plain', JSON.stringify({
+                                                id: e.currentTarget.dataset.profileId,
+                                                name: e.currentTarget.dataset.profileName,
+                                                hours: e.currentTarget.dataset.profileHours
+                                            }));
+                                        }
+
+                                        function handleDragEnd(e) {
+                                            e.currentTarget.classList.remove('dragging');
+                                        }
+
+                                        function handleDragOver(e) {
+                                            e.preventDefault();
+                                            e.dataTransfer.dropEffect = 'copy';
+                                            e.currentTarget.classList.add('drag-over');
+                                        }
+
+                                        function handleDragLeave(e) {
+                                            if (e.currentTarget === e.target) {
+                                                e.currentTarget.classList.remove('drag-over');
+                                            }
+                                        }
+
+                                        function handleDrop(e) {
+                                            e.preventDefault();
+                                            e.currentTarget.classList.remove('drag-over');
+                                            
+                                            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                                            
+                                            // Check if profile is already assigned
+                                            if (assignedProfiles.find(p => p.id === data.id)) {
+                                                return; // Already assigned
+                                            }
+
+                                            // Add to assigned profiles
+                                            assignedProfiles.push({
+                                                id: data.id,
+                                                name: data.name,
+                                                hours: data.hours,
+                                                percentage: 0
+                                            });
+
+                                            renderAssignedProfiles();
+                                            validatePercentages();
+                                        }
+
+                                        function renderAssignedProfiles() {
+                                            const container = document.getElementById('assigned-profiles');
+                                            
+                                            if (assignedProfiles.length === 0) {
+                                                container.innerHTML = '<div class="empty-state">Drag profiles here to assign them</div>';
+                                                return;
+                                            }
+
+                                            container.innerHTML = assignedProfiles.map(profile => `
+                                                <div class="assigned-profile">
+                                                    <div class="assigned-profile-info">
+                                                        <div class="assigned-profile-name">${profile.name}</div>
+                                                        <div class="assigned-profile-hours">Hours: ${profile.hours}</div>
+                                                    </div>
+                                                    <input type="number" 
+                                                           class="percentage-input" 
+                                                           min="0" 
+                                                           max="100" 
+                                                           step="0.01"
+                                                           placeholder="%" 
+                                                           value="${profile.percentage || ''}"
+                                                           onchange="updatePercentage('${profile.id}', this.value)">
+                                                    <span style="font-size: 0.9em; color: #666;">%</span>
+                                                    <button type="button" class="remove-profile-btn" onclick="removeProfile('${profile.id}')">Remove</button>
+                                                </div>
+                                            `).join('');
+                                        }
+
+                                        function updatePercentage(profileId, percentage) {
+                                            const profile = assignedProfiles.find(p => p.id === profileId);
+                                            if (profile) {
+                                                profile.percentage = parseFloat(percentage) || 0;
+                                                validatePercentages();
+                                                updateHiddenField();
+                                            }
+                                        }
+
+                                        function removeProfile(profileId) {
+                                            assignedProfiles = assignedProfiles.filter(p => p.id !== profileId);
+                                            renderAssignedProfiles();
+                                            validatePercentages();
+                                            updateHiddenField();
+                                        }
+
+                                        function validatePercentages() {
+                                            const validation = document.getElementById('percentage-validation');
+                                            const total = assignedProfiles.reduce((sum, p) => sum + (p.percentage || 0), 0);
+                                            
+                                            if (assignedProfiles.length === 0) {
+                                                validation.style.display = 'none';
+                                                return true;
+                                            }
+
+                                            validation.style.display = 'block';
+                                            
+                                            if (Math.abs(total - 100) < 0.01) {
+                                                validation.className = 'percentage-validation success';
+                                                validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
+                                                return true;
+                                            } else {
+                                                validation.className = 'percentage-validation error';
+                                                validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
+                                                return false;
+                                            }
+                                        }
+
+                                        function updateHiddenField() {
+                                            const data = assignedProfiles.map(p => ({
+                                                id: p.id,
+                                                name: p.name,
+                                                percentage: p.percentage || 0
+                                            }));
+                                            document.getElementById('activity_profiles_data').value = JSON.stringify(data);
+                                        }
+
+                                        // Initialize on page load
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            initDragAndDrop();
+                                        });
+
+                                        // Form validation before submit
+                                        document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
+                                                e.preventDefault();
+                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
+                                                return false;
+                                            }
+                                        });
+                                    </script>
 
                                 </div>
                                 <div class="button-wrap">
