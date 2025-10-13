@@ -328,14 +328,14 @@
                                     const select = document.getElementById('models_select_client');
                                     const status = document.getElementById('llm_url_status_client');
                                     const llmUrl = urlInput.value.trim();
-                                    
+
                                     if (!llmUrl) {
                                         alert('Please enter an LLM server URL');
                                         return;
                                     }
-                                    
+
                                     status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
-                                    
+
                                     fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
                                         .then(response => response.json())
                                         .then(data => {
