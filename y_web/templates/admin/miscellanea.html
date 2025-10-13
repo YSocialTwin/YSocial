@@ -8,21 +8,68 @@
 
         <div class="dashboard-body">
 
-            <div class="columns">
+            <style>
+                .misc-tabs {
+                    display: flex;
+                    border-bottom: 2px solid #e5e7eb;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }
+                .misc-tab {
+                    padding: 12px 24px;
+                    cursor: pointer;
+                    border: none;
+                    background: transparent;
+                    font-size: 0.95em;
+                    font-weight: 500;
+                    color: #666;
+                    transition: all 0.2s;
+                    border-bottom: 3px solid transparent;
+                    margin-bottom: -2px;
+                }
+                .misc-tab:hover {
+                    color: #22c55e;
+                    background: rgba(34, 197, 94, 0.05);
+                }
+                .misc-tab.active {
+                    color: #22c55e;
+                    border-bottom-color: #22c55e;
+                }
+                .misc-tab-content {
+                    display: none;
+                }
+                .misc-tab-content.active {
+                    display: block;
+                }
+                .misc-section-description {
+                    background: #f9fafb;
+                    border-left: 3px solid #22c55e;
+                    padding: 15px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                    color: #666;
+                    line-height: 1.6;
+                }
+            </style>
 
-                <div class="column is-12">
-                <h3 class="title is-5 is-thin" style="text-align: center">Agents' Leanings, Education and Professions</h3>
-                </div>
+            <div class="misc-tabs">
+                <button class="misc-tab active" onclick="switchMiscTab('agent-attributes')">Agent Attributes</button>
+                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics</button>
+                <button class="misc-tab" onclick="switchMiscTab('content')">Content & Topics</button>
+                <button class="misc-tab" onclick="switchMiscTab('behavior')">Behavior Profiles</button>
             </div>
 
+            <!-- Agent Attributes Tab -->
+            <div id="tab-agent-attributes" class="misc-tab-content active">
+                <div class="misc-section-description">
+                    <strong>Agent Attributes:</strong> Configure political leanings, education levels, and professions that define the social and professional characteristics of simulated agents in your experiments.
+                </div>
 
-            <div class="columns">
-
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Political Leanings</h3>
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Political Leanings</h3>
 
                         <div class="box-content">
 
@@ -506,11 +553,22 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
+                </div>
+            </div>
+            </div>
+            <!-- End Agent Attributes Tab -->
 
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Topics</h3>
+            <!-- Content & Topics Tab -->
+            <div id="tab-content" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Content & Topics:</strong> Define content topics and categories that agents can engage with, helping to create realistic content interactions and discussions within your simulations.
+                </div>
+
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Topics</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
@@ -663,28 +721,22 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="columns">
-
-                <div class="column is-12">
-                    <hr>
-                <h3 class="title is-5 is-thin" style="text-align: center">Spoken Languages and Nationalities</h3>
                 </div>
             </div>
+            </div>
+            <!-- End Content & Topics Tab -->
 
+            <!-- Demographics Tab -->
+            <div id="tab-demographics" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Demographics:</strong> Manage languages and nationalities to create diverse and realistic agent populations that reflect real-world demographic distributions.
+                </div>
 
-            <div class="columns">
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Languages</h3>
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Languages</h3>
 
                         <div class="box-content">
 
@@ -1000,22 +1052,19 @@
 
                 </div>
             </div>
-
-
-            <div class="columns">
-
-                <div class="column is-12">
-                    <hr>
-                <h3 class="title is-5 is-thin" style="text-align: center">Toxicity Levels</h3>
-                </div>
             </div>
+            <!-- End Demographics Tab -->
 
+            <!-- Behavior Profiles Tab -->
+            <div id="tab-behavior" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Behavior Profiles:</strong> Configure toxicity levels and hourly activity patterns to simulate realistic agent behaviors and interaction patterns throughout the day.
+                </div>
 
-            <div class="columns">
-                <div class="column is-12">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -1167,23 +1216,11 @@
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-
-            <div class="columns">
-
-                <div class="column is-12">
-                    <hr>
-                <h3 class="title is-5 is-thin" style="text-align: center">Hourly Activity Profiles</h3>
-                </div>
-            </div>
-
-
             <div class="columns">
                 <div class="column is-12">
-
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Available Activity Profiles</h3>
 
@@ -1457,10 +1494,27 @@
                             </script>
                         </div>
                     </div>
-
                 </div>
             </div>
+            </div>
+            <!-- End Behavior Profiles Tab -->
 
+            <script>
+                function switchMiscTab(tabName) {
+                    // Hide all tabs
+                    document.querySelectorAll('.misc-tab-content').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    // Remove active from all buttons
+                    document.querySelectorAll('.misc-tab').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Show selected tab
+                    document.getElementById('tab-' + tabName).classList.add('active');
+                    // Set button as active
+                    event.target.classList.add('active');
+                }
+            </script>
 
         </div>
     </div>
