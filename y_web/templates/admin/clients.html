@@ -447,7 +447,7 @@
 
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
@@ -511,6 +511,14 @@
 let llmModelsFetched = false;
 let llmModelSelected = false;
 
+// Check if form should be enabled
+function updateFormButtonState() {
+    const submitButton = document.getElementById('create_client_button');
+    if (submitButton) {
+        submitButton.disabled = !(llmModelsFetched && llmModelSelected);
+    }
+}
+
 // Fetch models for client LLM configuration
 function fetchModelsForClient() {
     const urlInput = document.getElementById('custom_llm_url_client');
@@ -531,6 +539,7 @@ function fetchModelsForClient() {
             if (data.error) {
                 status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                 llmModelsFetched = false;
+                updateFormButtonState();
                 setTimeout(() => { status.innerHTML = ''; }, 5000);
             } else {
                 select.innerHTML = '<option value="">Select a model</option>';
@@ -542,12 +551,16 @@ function fetchModelsForClient() {
                 });
                 status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
                 llmModelsFetched = true;
+                // Reset model selection since we just loaded new models
+                llmModelSelected = false;
+                updateFormButtonState();
                 setTimeout(() => { status.innerHTML = ''; }, 3000);
             }
         })
         .catch(error => {
             status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
             llmModelsFetched = false;
+            updateFormButtonState();
             setTimeout(() => { status.innerHTML = ''; }, 5000);
         });
 }
@@ -655,29 +668,20 @@ function enableImageAction() {
 document.addEventListener('DOMContentLoaded', function() {
     disableImageAction();
     
-    // Setup form submission validation
-    const form = document.querySelector('form[action="/admin/create_client"]');
+    // Setup form button state management
     const modelsSelect = document.getElementById('models_select_client');
+    const submitButton = document.getElementById('create_client_button');
     
-    if (form && modelsSelect) {
+    // Ensure button is disabled initially
+    if (submitButton) {
+        submitButton.disabled = true;
+    }
+    
+    if (modelsSelect) {
         // Monitor model selection
         modelsSelect.addEventListener('change', function() {
             llmModelSelected = this.value !== '';
-        });
-        
-        // Validate on form submission
-        form.addEventListener('submit', function(e) {
-            if (!llmModelsFetched) {
-                e.preventDefault();
-                alert('Please fetch the available LLM models first by clicking the "Fetch Models" button.');
-                return false;
-            }
-            
-            if (!llmModelSelected || modelsSelect.value === '') {
-                e.preventDefault();
-                alert('Please select an LLM model from the dropdown before submitting the form.');
-                return false;
-            }
+            updateFormButtonState();
         });
     }
 });
