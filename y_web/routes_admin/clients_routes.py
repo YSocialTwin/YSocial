@@ -735,6 +735,24 @@ def client_details(uid):
     else:
         config = None
 
+    # open the agent population file to get the number of agents
+    path_agents = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json".replace(
+        f"routes_admin{os.sep}", ""
+    )
+
+    if os.path.exists(path_agents):
+        with open(path_agents, "r") as f:
+            agents = json.load(f)
+    else:
+        agents = None
+
+    llms = []
+    if agents is not None:
+        for agent in agents["agents"]:
+            llms.append(agent["type"])
+
+    llms = ",".join(list(set(llms)))
+
     activity = config["simulation"]["hourly_activity"]
 
     data = []
@@ -766,6 +784,7 @@ def client_details(uid):
         llm_backend=llm_backend,
         frecsys=frecsys,
         crecsys=crecsys,
+        llms=llms,
     )
 
 
