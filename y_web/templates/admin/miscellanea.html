@@ -1172,6 +1172,278 @@
             </div>
 
 
+            <div class="columns">
+
+                <div class="column is-12">
+                    <hr>
+                <h3 class="title is-5 is-thin" style="text-align: center">Hourly Activity Profiles</h3>
+                </div>
+            </div>
+
+
+            <div class="columns">
+                <div class="column is-12">
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Available Activity Profiles</h3>
+
+                        <div class="box-content">
+                            <div id="activity_profiles_table"></div>
+                           <script>
+    const tableDivActivity = document.getElementById('activity_profiles_table');
+
+    const updateUrlActivity = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributesActivity = (data, row, col) => {
+        if (row && col.id === 'name') {
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': col.id
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const gridActivity = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'name',
+                name: 'Name',
+                attributes: editableCellAttributesActivity,
+                width: '200px'
+            },
+            {
+                id: 'hours',
+                name: 'Activity Hours',
+                width: '500px',
+                formatter: (cell) => {
+                    const hours = cell ? cell.split(',').map(h => parseInt(h.trim())) : [];
+                    const barHtml = Array.from({length: 24}, (_, i) => {
+                        const isActive = hours.includes(i);
+                        const intensity = isActive ? 1 : 0;
+                        const bgColor = isActive ? 'rgba(34, 197, 94, 0.8)' : 'rgba(229, 231, 235, 0.5)';
+                        return `<div style="display: inline-block; width: 4%; height: 20px; background-color: ${bgColor}; border: 1px solid #e5e7eb; margin: 0; title='Hour ${i}'" title="Hour ${i}"></div>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; width: 100%; gap: 0;">${barHtml}</div>`);
+                }
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                width: '100px',
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_activity_profile/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            gridActivity.forceRender();
+                                        } else {
+                                            alert("Failed to delete activity profile.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/activity_profiles_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrlActivity(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'name', 'hours'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrlActivity(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => updateUrlActivity(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    gridActivity.render(tableDivActivity);
+
+    let savedValueActivity;
+
+    tableDivActivity.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValueActivity = ev.target.textContent;
+        }
+    });
+
+    tableDivActivity.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValueActivity !== ev.target.textContent) {
+                fetch('/admin/activity_profiles_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValueActivity = undefined;
+        }
+    });
+
+    tableDivActivity.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValueActivity;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+
+                        </div>
+
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h3 class="title is-5 is-thin">New Activity Profile</h3>
+                            <form action="/admin/create_activity_profile" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Profile Name</span>
+                                        <span class="right" style="width: 70%;"><input type="text" name="name" required
+                                                                                       class="input" placeholder="e.g., Morning Active"></span>
+                                    </div>
+                                    <div class="box-line" style="display: block; padding: 15px 0;">
+                                        <label style="display: block; margin-bottom: 10px; font-weight: 500;">Select Active Hours (0-23):</label>
+                                        <div style="display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; max-width: 100%;">
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="0" style="margin-right: 4px;"> 0
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="1" style="margin-right: 4px;"> 1
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="2" style="margin-right: 4px;"> 2
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="3" style="margin-right: 4px;"> 3
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="4" style="margin-right: 4px;"> 4
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="5" style="margin-right: 4px;"> 5
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="6" style="margin-right: 4px;"> 6
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="7" style="margin-right: 4px;"> 7
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="8" style="margin-right: 4px;"> 8
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="9" style="margin-right: 4px;"> 9
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="10" style="margin-right: 4px;"> 10
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="11" style="margin-right: 4px;"> 11
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="12" style="margin-right: 4px;"> 12
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="13" style="margin-right: 4px;"> 13
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="14" style="margin-right: 4px;"> 14
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="15" style="margin-right: 4px;"> 15
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="16" style="margin-right: 4px;"> 16
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="17" style="margin-right: 4px;"> 17
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="18" style="margin-right: 4px;"> 18
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="19" style="margin-right: 4px;"> 19
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="20" style="margin-right: 4px;"> 20
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="21" style="margin-right: 4px;"> 21
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="22" style="margin-right: 4px;"> 22
+                                            </label>
+                                            <label style="display: flex; align-items: center; font-size: 0.9em;">
+                                                <input type="checkbox" name="hour" value="23" style="margin-right: 4px;"> 23
+                                            </label>
+                                        </div>
+                                        <input type="hidden" name="hours" id="hours_input" value="">
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        Create Profile
+                                    </button>
+                                </div>
+                            </form>
+                            <script>
+                                // Collect selected hours when form is submitted
+                                document.querySelector('form[action="/admin/create_activity_profile"]').addEventListener('submit', function(e) {
+                                    const checkboxes = document.querySelectorAll('input[name="hour"]:checked');
+                                    const hours = Array.from(checkboxes).map(cb => cb.value);
+                                    document.getElementById('hours_input').value = hours.join(',');
+                                });
+                            </script>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
         </div>
     </div>
 
