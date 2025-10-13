@@ -231,6 +231,13 @@ CREATE TABLE user_experiment (
     exp_id  INTEGER REFERENCES exps(idexp) ON DELETE CASCADE
 );
 
+CREATE TABLE activity_profiles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    hours VARCHAR(100) NOT NULL
+);
+
+
 INSERT INTO content_recsys (name, value) VALUES
   ('ContentRecSys', 'Random'),
   ('ReverseChrono', '(RC) Reverse Chrono'),
@@ -486,3 +493,5 @@ INSERT INTO nationalities (nationality) VALUES
 ('Thai'),
 ('Turkish'),
 ('Ukrainian');
+
+

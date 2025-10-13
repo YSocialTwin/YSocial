@@ -730,3 +730,14 @@ class Page_Topic(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     page_id = db.Column(db.Integer, db.ForeignKey("pages.id"), nullable=False)
     topic_id = db.Column(db.Integer, db.ForeignKey("topic_list.id"), nullable=False)
+
+
+class ActivityProfile(db.Model):
+    __tablename__ = 'activity_profiles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120), nullable=False, unique=True)
+    hours = db.Column(db.String(100), nullable=False)  # Comma-separated list of active hours
+
+    def to_dict(self):
+        return {"id": self.id, "name": self.name, "hours": self.hours}
