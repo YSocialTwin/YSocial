@@ -435,6 +435,76 @@
                                                                                        class="input" value=""></span>
                                     </div>
 
+                                    <hr>
+                                    <style>
+                                        .form-section-header-agent {
+                                            font-size: 0.95em;
+                                            font-weight: 600;
+                                            color: #333;
+                                            margin: 15px 0 8px 0;
+                                        }
+                                        .form-section-description-agent {
+                                            font-size: 0.85em;
+                                            color: #666;
+                                            margin-bottom: 15px;
+                                            line-height: 1.4;
+                                        }
+                                        .activity-profile-select {
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 10px;
+                                            padding: 8px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 4px;
+                                            background: white;
+                                            cursor: pointer;
+                                            transition: border-color 0.2s;
+                                        }
+                                        .activity-profile-select:hover {
+                                            border-color: #22c55e;
+                                        }
+                                        .profile-select-name {
+                                            flex: 1;
+                                            font-size: 0.9em;
+                                            font-weight: 500;
+                                        }
+                                        .profile-select-heatmap {
+                                            display: flex;
+                                            gap: 1px;
+                                            height: 12px;
+                                        }
+                                        .select-heatmap-hour {
+                                            width: 3px;
+                                            height: 100%;
+                                            background: #e5e7eb;
+                                            border-radius: 1px;
+                                        }
+                                        .select-heatmap-hour.active {
+                                            background: #22c55e;
+                                        }
+                                    </style>
+
+                                    <div class="form-section-header-agent">Activity Profile</div>
+                                    <div class="form-section-description-agent">
+                                        Select when this agent will be active during the day. The default "Always On" profile keeps the agent active 24/7.
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Activity Pattern</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="select">
+                                                <select name="activity_profile" id="activity_profile_select">
+                                                    {% if activity_profiles %}
+                                                        {% for profile in activity_profiles %}
+                                                        <option value="{{ profile.id }}" {% if profile.name == 'Always On' %}selected{% endif %}>
+                                                            {{ profile.name }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
