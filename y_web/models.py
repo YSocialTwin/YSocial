@@ -733,6 +733,14 @@ class Page_Topic(db.Model):
 
 
 class ActivityProfile(db.Model):
+    """
+    Hourly activity profiles for social media agents.
+
+    Defines when agents are active during a 24-hour period. Each profile
+    stores a comma-separated list of hours (0-23) representing active hours.
+    """
+
+    __bind_key__ = "db_admin"
     __tablename__ = "activity_profiles"
 
     id = db.Column(db.Integer, primary_key=True)

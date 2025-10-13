@@ -25,6 +25,7 @@ from flask_login import current_user, login_required
 
 from y_web import db  # , app
 from y_web.models import (
+    ActivityProfile,
     Admin_users,
     Agent,
     Agent_Population,
@@ -1575,5 +1576,108 @@ def delete_toxicity_level(toxicity_level_id):
         flash("Toxicity level not found.")
         return miscellanea()
     db.session.delete(toxicity_level)
+    db.session.commit()
+    return miscellanea()
+
+
+@experiments.route("/admin/activity_profiles_data", methods=["GET", "POST"])
+@login_required
+def activity_profiles_data():
+    """Display activity profiles data page and handle inline edits."""
+    if request.method == "POST":
+        # Handle inline edit
+        data = request.get_json()
+        profile_id = data.get("id")
+        profile = ActivityProfile.query.filter_by(id=profile_id).first()
+        if profile:
+            if "name" in data:
+                profile.name = data["name"]
+            db.session.commit()
+        return {"success": True}
+
+    query = ActivityProfile.query
+
+    search = request.args.get("search")
+    if search:
+        query = query.filter(db.or_(ActivityProfile.name.like(f"%{search}%")))
+    total = query.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            name = s[1:]
+            if name not in ["name"]:
+                name = "name"
+            col = getattr(ActivityProfile, name)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            query = query.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        query = query.offset(start).limit(length)
+
+    # response
+    res = query.all()
+
+    res = {
+        "data": [
+            {
+                "id": profile.id,
+                "name": profile.name,
+                "hours": profile.hours,
+            }
+            for profile in res
+        ],
+        "total": total,
+    }
+
+    return res
+
+
+@experiments.route("/admin/create_activity_profile", methods=["POST"])
+@login_required
+def create_activity_profile():
+    """Create activity profile."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    hours = request.form.get("hours")
+
+    if not name or not hours:
+        flash("Name and hours are required.")
+        return redirect(request.referrer)
+
+    # Check if the profile already exists
+    existing_profile = ActivityProfile.query.filter_by(name=name).first()
+    if existing_profile:
+        flash("An activity profile with this name already exists.")
+        return redirect(request.referrer)
+
+    profile = ActivityProfile(name=name, hours=hours)
+    db.session.add(profile)
+    db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@experiments.route("/admin/delete_activity_profile/<int:profile_id>", methods=["DELETE"])
+@login_required
+def delete_activity_profile(profile_id):
+    """Delete activity profile."""
+    check_privileges(current_user.username)
+
+    profile = ActivityProfile.query.filter_by(id=profile_id).first()
+    if not profile:
+        flash("Activity profile not found.")
+        return miscellanea()
+    db.session.delete(profile)
     db.session.commit()
     return miscellanea()
