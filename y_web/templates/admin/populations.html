@@ -610,7 +610,7 @@
                                             cursor: move;
                                             transition: all 0.2s ease;
                                             display: flex;
-                                            justify-content: space-between;
+                                            gap: 10px;
                                             align-items: center;
                                             font-size: 0.85em;
                                         }
@@ -623,20 +623,38 @@
                                         }
                                         .profile-name-compact {
                                             font-weight: 500;
+                                            flex: 1;
+                                        }
+                                        .profile-heatmap-compact {
+                                            display: flex;
+                                            gap: 1px;
+                                            height: 12px;
+                                        }
+                                        .heatmap-hour {
+                                            width: 3px;
+                                            height: 100%;
+                                            background: #e5e7eb;
+                                            border-radius: 1px;
+                                        }
+                                        .heatmap-hour.active {
+                                            background: #22c55e;
+                                        }
+                                        .assigned-profiles-grid {
+                                            display: flex;
+                                            flex-wrap: wrap;
+                                            gap: 8px;
                                         }
                                         .assigned-profile-compact {
                                             background: white;
                                             border: 1px solid #22c55e;
                                             border-radius: 4px;
-                                            padding: 8px 10px;
-                                            margin-bottom: 8px;
-                                            display: flex;
+                                            padding: 6px 8px;
+                                            display: inline-flex;
                                             align-items: center;
-                                            gap: 8px;
-                                            font-size: 0.85em;
+                                            gap: 6px;
+                                            font-size: 0.8em;
                                         }
                                         .assigned-profile-name-compact {
-                                            flex: 1;
                                             font-weight: 500;
                                             color: #333;
                                         }
@@ -698,6 +716,12 @@
                                                         {% for profile in activity_profiles %}
                                                         <div class="profile-item-compact" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
                                                             <div class="profile-name-compact">{{ profile.name }}</div>
+                                                            <div class="profile-heatmap-compact">
+                                                                {% set hours_list = profile.hours.split(',') %}
+                                                                {% for hour in range(24) %}
+                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}"></div>
+                                                                {% endfor %}
+                                                            </div>
                                                             <span style="color: #999; font-size: 0.9em;">⋮⋮</span>
                                                         </div>
                                                         {% endfor %}
@@ -804,9 +828,9 @@
                                                 return;
                                             }
 
-                                            container.innerHTML = assignedProfiles.map(profile => `
+                                            container.innerHTML = '<div class="assigned-profiles-grid">' + assignedProfiles.map(profile => `
                                                 <div class="assigned-profile-compact">
-                                                    <div class="assigned-profile-name-compact">${profile.name}</div>
+                                                    <span class="assigned-profile-name-compact">${profile.name}</span>
                                                     <input type="number" 
                                                            class="percentage-input-compact" 
                                                            min="0" 
@@ -815,10 +839,10 @@
                                                            placeholder="%" 
                                                            value="${profile.percentage || ''}"
                                                            onchange="updatePercentage('${profile.id}', this.value)">
-                                                    <span style="font-size: 0.85em; color: #666;">%</span>
+                                                    <span style="font-size: 0.75em; color: #666;">%</span>
                                                     <button type="button" class="remove-profile-btn-compact" onclick="removeProfile('${profile.id}')">×</button>
                                                 </div>
-                                            `).join('');
+                                            `).join('') + '</div>';
                                         }
 
                                         function updatePercentage(profileId, percentage) {
@@ -871,6 +895,23 @@
                                         // Initialize on page load
                                         document.addEventListener('DOMContentLoaded', function() {
                                             initDragAndDrop();
+                                            
+                                            // Set "Always On" as default with 100%
+                                            {% if activity_profiles %}
+                                                {% for profile in activity_profiles %}
+                                                    {% if profile.name == 'Always On' %}
+                                                        assignedProfiles.push({
+                                                            id: '{{ profile.id }}',
+                                                            name: '{{ profile.name }}',
+                                                            hours: '{{ profile.hours }}',
+                                                            percentage: 100
+                                                        });
+                                                        renderAssignedProfiles();
+                                                        validatePercentages();
+                                                        updateHiddenField();
+                                                    {% endif %}
+                                                {% endfor %}
+                                            {% endif %}
                                         });
 
                                         // Form validation before submit
