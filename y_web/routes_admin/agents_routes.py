@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.models import (
+    ActivityProfile,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -59,6 +60,7 @@ def agent_data():
     toxicity_levels = Toxicity_Levels.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
+    activity_profiles = ActivityProfile.query.all()
 
     return render_template(
         "admin/agents.html",
@@ -74,6 +76,7 @@ def agent_data():
         toxicity_levels=toxicity_levels,
         crecsys=crecsys,
         frecsys=frecsys,
+        activity_profiles=activity_profiles,
     )
 
 
