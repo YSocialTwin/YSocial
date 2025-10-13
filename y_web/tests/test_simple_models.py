@@ -176,3 +176,68 @@ def test_model_defaults():
     # Cleanup
     os.close(db_fd)
     os.unlink(db_path)
+
+
+def test_activity_profile_model():
+    """Test ActivityProfile model functionality"""
+    app = Flask(__name__)
+    db_fd, db_path = tempfile.mkstemp()
+
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
+
+    db = SQLAlchemy(app)
+
+    class TestActivityProfile(db.Model):
+        __tablename__ = "test_activity_profiles"
+        id = db.Column(db.Integer, primary_key=True)
+        name = db.Column(db.String(120), nullable=False, unique=True)
+        hours = db.Column(db.String(100), nullable=False)
+
+        def to_dict(self):
+            return {"id": self.id, "name": self.name, "hours": self.hours}
+
+    with app.app_context():
+        db.create_all()
+
+        # Create an activity profile
+        profile = TestActivityProfile(name="Morning Active", hours="6,7,8,9,10,11")
+        db.session.add(profile)
+        db.session.commit()
+
+        # Test retrieving the profile
+        retrieved_profile = TestActivityProfile.query.filter_by(
+            name="Morning Active"
+        ).first()
+        assert retrieved_profile is not None
+        assert retrieved_profile.name == "Morning Active"
+        assert retrieved_profile.hours == "6,7,8,9,10,11"
+
+        # Test to_dict method
+        profile_dict = retrieved_profile.to_dict()
+        assert profile_dict["name"] == "Morning Active"
+        assert profile_dict["hours"] == "6,7,8,9,10,11"
+
+        # Test hours parsing
+        hours_list = [int(h) for h in retrieved_profile.hours.split(",")]
+        assert len(hours_list) == 6
+        assert 6 in hours_list
+        assert 11 in hours_list
+
+        # Create another profile
+        profile2 = TestActivityProfile(name="Evening Active", hours="18,19,20,21,22,23")
+        db.session.add(profile2)
+        db.session.commit()
+
+        # Test querying all profiles
+        all_profiles = TestActivityProfile.query.all()
+        assert len(all_profiles) == 2
+
+    # Cleanup
+    os.close(db_fd)
+    os.unlink(db_path)
