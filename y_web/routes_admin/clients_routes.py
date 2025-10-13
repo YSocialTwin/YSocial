@@ -276,6 +276,7 @@ def create_client():
     llm_v_api_key = request.form.get("llm_v_api_key")
     llm_v_max_tokens = request.form.get("llm_v_max_tokens")
     llm_v_temperature = request.form.get("llm_v_temperature")
+    user_type = request.form.get("user_type")
 
     # get experiment topics
     topics = Exp_Topic.query.filter_by(exp_id=exp_id).all()
@@ -350,19 +351,19 @@ def create_client():
     # Get LLM URL from environment (set by y_social.py)
     import os
 
-    llm_url = os.getenv("LLM_URL")
-    if not llm_url:
-        # Fallback for backward compatibility
-        llm_backend = os.getenv("LLM_BACKEND", "ollama")
-        if llm_backend == "vllm":
-            llm_url = "http://127.0.0.1:8000/v1"
-        else:  # ollama
-            llm_url = "http://127.0.0.1:11434/v1"
+    # llm_url = os.getenv("LLM_URL")
+    # if not llm_url:
+    #    # Fallback for backward compatibility
+    #    llm_backend = os.getenv("LLM_BACKEND", "ollama")
+    #    if llm_backend == "vllm":
+    #        llm_url = "http://127.0.0.1:8000/v1"
+    #    else:  # ollama
+    #        llm_url = "http://127.0.0.1:11434/v1"
 
     config = {
         "servers": {
             "llm": llm,
-            "llm_url": llm_url,
+            #    "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),
@@ -526,7 +527,7 @@ def create_client():
         f"{BASE_DIR}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
         "w",
     ) as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=4)
 
     data_base_path = f"{BASE_DIR}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
@@ -590,7 +591,7 @@ def create_client():
                 "email": f"{a.name}@ysocial.it",
                 "password": f"{a.name}",
                 "age": a.age,
-                "type": a.ag_type,
+                "type": user_type,  # ,a.ag_type,
                 "leaning": a.leaning,
                 "interests": ints,
                 "oe": a.oe,
@@ -734,6 +735,24 @@ def client_details(uid):
     else:
         config = None
 
+    # open the agent population file to get the number of agents
+    path_agents = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json".replace(
+        f"routes_admin{os.sep}", ""
+    )
+
+    if os.path.exists(path_agents):
+        with open(path_agents, "r") as f:
+            agents = json.load(f)
+    else:
+        agents = None
+
+    llms = []
+    if agents is not None:
+        for agent in agents["agents"]:
+            llms.append(agent["type"])
+
+    llms = ",".join(list(set(llms)))
+
     activity = config["simulation"]["hourly_activity"]
 
     data = []
@@ -765,6 +784,7 @@ def client_details(uid):
         llm_backend=llm_backend,
         frecsys=frecsys,
         crecsys=crecsys,
+        llms=llms,
     )
 
 
