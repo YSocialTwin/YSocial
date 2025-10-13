@@ -226,6 +226,7 @@
                                     <div class="box-line">
                                         <label class="label">Custom LLM URL <small>(optional)</small></label>
                                         <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
+                                               value="{{ llm_backend['url'] if llm_backend and llm_backend.get('url') else '' }}"
                                                placeholder="e.g., http://localhost:8000/v1">
                                         <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForAddUser()" style="margin-top: 10px;">
                                             Fetch Models
@@ -237,7 +238,7 @@
                                         <span class="left">LLM <small>(for text annotation)</small></span>
                                         <div class="select">
                                             <select name="llm" id="llm_model_select_add">
-                                                <option value=""></option>
+                                                <option value="">Select a model</option>
                                                     {% for model in m %}
                                                     <option value="{{ model }}">{{ model }}</option>
                                                     {% endfor %}
@@ -312,14 +313,23 @@ function fetchModelsForAddUser() {
         })
         .then(data => {
             if (data.success && data.models && data.models.length > 0) {
+                // Clear existing options
                 selectElement.innerHTML = '';
+                
+                // Add a default option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select a model';
+                selectElement.appendChild(defaultOption);
+                
+                // Add fetched models
                 data.models.forEach(model => {
                     const option = document.createElement('option');
                     option.value = model;
                     option.textContent = model;
                     selectElement.appendChild(option);
                 });
-                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
+                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models from ' + (data.url || llmUrl) + '</span>';
             } else {
                 statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
             }
