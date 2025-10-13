@@ -224,9 +224,19 @@
                                         </div>
                                     </div>
                                     <div class="box-line">
+                                        <label class="label">Custom LLM URL <small>(optional)</small></label>
+                                        <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
+                                               placeholder="e.g., http://localhost:8000/v1">
+                                        <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForAddUser()" style="margin-top: 10px;">
+                                            Fetch Models
+                                        </button>
+                                    </div>
+                                    <div id="fetch-status-add-user" style="min-height: 20px; margin-top: 5px; margin-bottom: 10px; font-size: 0.9rem;"></div>
+
+                                    <div class="box-line">
                                         <span class="left">LLM <small>(for text annotation)</small></span>
                                         <div class="select">
-                                            <select name="llm">
+                                            <select name="llm" id="llm_model_select_add">
                                                 <option value=""></option>
                                                     {% for model in m %}
                                                     <option value="{{ model }}">{{ model }}</option>
@@ -278,5 +288,47 @@
     </div>
 
 </div>
+
+<script>
+function fetchModelsForAddUser() {
+    const urlInput = document.getElementById('custom_llm_url_add');
+    const statusDiv = document.getElementById('fetch-status-add-user');
+    const selectElement = document.getElementById('llm_model_select_add');
+    const llmUrl = urlInput.value.trim();
+    
+    if (!llmUrl) {
+        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+        return;
+    }
+    
+    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+    
+    fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success && data.models && data.models.length > 0) {
+                selectElement.innerHTML = '';
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    selectElement.appendChild(option);
+                });
+                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
+            } else {
+                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
+        });
+}
+</script>
 
 {% include "admin/footer.html" %}
