@@ -1668,7 +1668,9 @@ def create_activity_profile():
     return redirect(request.referrer)
 
 
-@experiments.route("/admin/delete_activity_profile/<int:profile_id>", methods=["DELETE"])
+@experiments.route(
+    "/admin/delete_activity_profile/<int:profile_id>", methods=["DELETE"]
+)
 @login_required
 def delete_activity_profile(profile_id):
     """Delete activity profile."""
