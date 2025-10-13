@@ -733,11 +733,13 @@ class Page_Topic(db.Model):
 
 
 class ActivityProfile(db.Model):
-    __tablename__ = 'activity_profiles'
+    __tablename__ = "activity_profiles"
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False, unique=True)
-    hours = db.Column(db.String(100), nullable=False)  # Comma-separated list of active hours
+    hours = db.Column(
+        db.String(100), nullable=False
+    )  # Comma-separated list of active hours
 
     def to_dict(self):
         return {"id": self.id, "name": self.name, "hours": self.hours}
