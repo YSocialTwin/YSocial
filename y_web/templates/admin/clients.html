@@ -354,11 +354,27 @@
                                     <hr>
                                     <h4><b>Large Language Models</b></h4>
                                     <div class="box-line">
-                                        <span class="left">LLM Server</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="llm"
-                                                                                       class="input"
-                                                                                       value="http://127.0.0.1:11434/v1"></span>
+                                        <span class="left">LLM Server URL</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_client" name="llm" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
+                                                    Fetch Models
+                                                </button>
+                                            </div>
+                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">LLM Model</span>
+                                        <div class="select">
+                                            <select name="user_type" id="models_select_client">
+                                                <option value=""></option>
+                                                {% for model in models %}
+                                                <option value="{{ model }}">{{ model }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
@@ -385,17 +401,23 @@
                                     <h4><b>Large Language Models (Image Transcription)</b></h4>
                                     <div class="box-line">
                                         <span class="left">LLM Model</span>
-                                        <span class="right" style="width: 70%;">minicpm-v<input  type="hidden"
+                                        <span class="right" style="width: 70%;">minicpm-v:latest<input  type="hidden"
                                                                                        name="llm_v_agent"
+                                                                                       id="llm_v_agent"
                                                                                        class="input"
                                                                                        value="minicpm-v"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">LLM Server</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
-                                                                                       name="llm_v"
-                                                                                       class="input"
-                                                                                       value="http://127.0.0.1:11434/v1"></span>
+                                        <span class="left">LLM Server URL</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                                <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                                <button type="button" class="button is-solid primary-button" onclick="validateImageLLMModel()">
+                                                    Validate Model
+                                                </button>
+                                            </div>
+                                            <div id="llm_v_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                        </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
@@ -418,10 +440,14 @@
                                                                                        class="input"
                                                                                        value="0.5"></span>
                                     </div>
+                                    <input type="hidden" id="llm_v_validation_status" value="false">
+                                    <div id="image_action_warning" style="padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+                                        <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
+                                    </div>
 
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
@@ -480,5 +506,184 @@
                                                 });
                                               });
                                             });
+
+// Track if models have been fetched and validated
+let llmModelsFetched = false;
+let llmModelSelected = false;
+
+// Check if form should be enabled
+function updateFormButtonState() {
+    const submitButton = document.getElementById('create_client_button');
+    if (submitButton) {
+        submitButton.disabled = !(llmModelsFetched && llmModelSelected);
+    }
+}
+
+// Fetch models for client LLM configuration
+function fetchModelsForClient() {
+    const urlInput = document.getElementById('custom_llm_url_client');
+    const select = document.getElementById('models_select_client');
+    const status = document.getElementById('llm_url_status_client');
+    const llmUrl = urlInput.value.trim();
+    
+    if (!llmUrl) {
+        alert('Please enter an LLM server URL');
+        return;
+    }
+    
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    
+    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                llmModelsFetched = false;
+                updateFormButtonState();
+                setTimeout(() => { status.innerHTML = ''; }, 5000);
+            } else {
+                select.innerHTML = '<option value="">Select a model</option>';
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    select.appendChild(option);
+                });
+                status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                llmModelsFetched = true;
+                // Reset model selection since we just loaded new models
+                llmModelSelected = false;
+                updateFormButtonState();
+                setTimeout(() => { status.innerHTML = ''; }, 3000);
+            }
+        })
+        .catch(error => {
+            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            llmModelsFetched = false;
+            updateFormButtonState();
+            setTimeout(() => { status.innerHTML = ''; }, 5000);
+        });
+}
+
+// Validate that minicpm-v:latest is available for image transcription
+function validateImageLLMModel() {
+    const llmVUrlInput = document.getElementById('custom_llm_url_v_client');
+    const status = document.getElementById('llm_v_url_status_client');
+    const validationStatus = document.getElementById('llm_v_validation_status');
+    const llmVUrl = llmVUrlInput.value.trim();
+    const modelName = 'minicpm-v:latest';
+    
+    if (!llmVUrl) {
+        alert('Please enter an LLM server URL for image transcription');
+        return;
+    }
+    
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+    
+    fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                validationStatus.value = 'false';
+                disableImageAction();
+                alert('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+                setTimeout(() => { status.innerHTML = ''; }, 5000);
+            } else {
+                // Check if minicpm-v:latest model exists in fetched models
+                const modelExists = data.models.includes(modelName);
+                
+                if (modelExists) {
+                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
+                    validationStatus.value = 'true';
+                    enableImageAction();
+                    setTimeout(() => { status.innerHTML = ''; }, 3000);
+                } else {
+                    status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
+                    validationStatus.value = 'false';
+                    disableImageAction();
+                    alert('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.');
+                    // Set llm_v to empty/None to signal model unavailability
+                    llmVUrlInput.value = '';
+                }
+            }
+        })
+        .catch(error => {
+            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            validationStatus.value = 'false';
+            disableImageAction();
+            alert('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
+            setTimeout(() => { status.innerHTML = ''; }, 5000);
+        });
+}
+
+// Disable the "Share and comment an Image" action
+function disableImageAction() {
+    const imageScale = document.getElementById('image');
+    const imageScaleWrapper = imageScale ? imageScale.closest('.scale-wrapper') : null;
+    const warning = document.getElementById('image_action_warning');
+    
+    if (imageScaleWrapper) {
+        const numberBoxes = imageScaleWrapper.querySelectorAll('.number-box');
+        numberBoxes.forEach(box => {
+            if (box.dataset.value !== '0') {
+                box.style.opacity = '0.3';
+                box.style.pointerEvents = 'none';
+                box.style.cursor = 'not-allowed';
+            }
+        });
+        
+        // Force selection to 0
+        numberBoxes.forEach(box => box.classList.remove('selected'));
+        numberBoxes[0].classList.add('selected');
+        imageScale.value = '0';
+    }
+    
+    if (warning) {
+        warning.style.display = 'block';
+    }
+}
+
+// Enable the "Share and comment an Image" action
+function enableImageAction() {
+    const imageScale = document.getElementById('image');
+    const imageScaleWrapper = imageScale ? imageScale.closest('.scale-wrapper') : null;
+    const warning = document.getElementById('image_action_warning');
+    
+    if (imageScaleWrapper) {
+        const numberBoxes = imageScaleWrapper.querySelectorAll('.number-box');
+        numberBoxes.forEach(box => {
+            box.style.opacity = '1';
+            box.style.pointerEvents = 'auto';
+            box.style.cursor = 'pointer';
+        });
+    }
+    
+    if (warning) {
+        warning.style.display = 'none';
+    }
+}
+
+// On page load, disable image action by default and setup form validation
+document.addEventListener('DOMContentLoaded', function() {
+    disableImageAction();
+    
+    // Setup form button state management
+    const modelsSelect = document.getElementById('models_select_client');
+    const submitButton = document.getElementById('create_client_button');
+    
+    // Ensure button is disabled initially
+    if (submitButton) {
+        submitButton.disabled = true;
+    }
+    
+    if (modelsSelect) {
+        // Monitor model selection
+        modelsSelect.addEventListener('change', function() {
+            llmModelSelected = this.value !== '';
+            updateFormButtonState();
+        });
+    }
+});
                                             </script>
 {% include "admin/footer.html" %}
