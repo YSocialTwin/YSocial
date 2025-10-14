@@ -218,13 +218,13 @@
                                         <span class="left">Role</span>
                                         <div class="select">
                                             <select name="role">
-                                                <option value="Admin">admin</option>
-                                                <option value="Admin">user</option>
+                                                <option value="admin">admin</option>
+                                                <option value="user">user</option>
                                             </select>
                                         </div>
                                     </div>
                                     <div class="box-line">
-                                        <label class="label">Custom LLM URL <small>(optional)</small></label>
+                                        <span class="left">Custom LLM URL <small>(optional)</small></span>
                                         <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
                                                value="{{ llm_backend['url'] if llm_backend and llm_backend.get('url') else '' }}"
                                                placeholder="e.g., http://localhost:8000/v1">
