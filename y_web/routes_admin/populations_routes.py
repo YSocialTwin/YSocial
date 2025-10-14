@@ -800,12 +800,16 @@ def merge_populations():
     selected_ids = request.form.get("selected_population_ids")
 
     if not merged_name or not selected_ids:
-        flash("Please provide a population name and select at least 2 populations to merge.")
+        flash(
+            "Please provide a population name and select at least 2 populations to merge."
+        )
         return redirect(request.referrer)
 
     # Parse the selected population IDs
     try:
-        population_ids = [int(pid.strip()) for pid in selected_ids.split(",") if pid.strip()]
+        population_ids = [
+            int(pid.strip()) for pid in selected_ids.split(",") if pid.strip()
+        ]
     except ValueError:
         flash("Invalid population IDs provided.")
         return redirect(request.referrer)
@@ -842,7 +846,11 @@ def merge_populations():
     unique_page_ids = set(pp.page_id for pp in page_populations)
 
     # Fetch all unique agents to aggregate their properties
-    agents = Agent.query.filter(Agent.id.in_(unique_agent_ids)).all() if unique_agent_ids else []
+    agents = (
+        Agent.query.filter(Agent.id.in_(unique_agent_ids)).all()
+        if unique_agent_ids
+        else []
+    )
 
     # Aggregate properties from all agents
     ages = [a.age for a in agents if a.age is not None]
@@ -906,7 +914,7 @@ def merge_populations():
         toxicity=toxicity,
         crecsys=crecsys,
         frecsys=frecsys,
-        llm_url=llm_url
+        llm_url=llm_url,
     )
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing
@@ -914,21 +922,21 @@ def merge_populations():
     # Add unique agents to the new population
     for agent_id in unique_agent_ids:
         agent_population = Agent_Population(
-            agent_id=agent_id,
-            population_id=merged_population.id
+            agent_id=agent_id, population_id=merged_population.id
         )
         db.session.add(agent_population)
 
     # Add unique pages to the new population
     for page_id in unique_page_ids:
         page_population = Page_Population(
-            page_id=page_id,
-            population_id=merged_population.id
+            page_id=page_id, population_id=merged_population.id
         )
         db.session.add(page_population)
 
     # Single commit for all operations to ensure atomicity
     db.session.commit()
 
-    flash(f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages.")
+    flash(
+        f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages."
+    )
     return populations()
