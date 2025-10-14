@@ -81,6 +81,22 @@
                                     <span class="left">Spoken Languages</span>
                                     <span class="right">{{ population.languages }}</span>
                                 </div>
+                                <hr>
+                                <b>Activity Profiles</b>
+                                {% if activity_profiles.profiles %}
+                                {% for i in range(activity_profiles.profiles|length) %}
+                                <div class="box-line">
+                                    <span class="left">{{ activity_profiles.profiles[i] }}</span>
+                                    <span class="right">
+                                        {{ activity_profiles.assigned_count[i] }} agents ({{ "%.1f"|format(activity_profiles.expected_pct[i]) }}% expected)
+                                    </span>
+                                </div>
+                                {% endfor %}
+                                {% else %}
+                                <div class="box-line">
+                                    <span class="left">No activity profiles assigned</span>
+                                </div>
+                                {% endif %}
 
                             </div>
                                 <div class="buttons" style="display: flex; justify-content: right">

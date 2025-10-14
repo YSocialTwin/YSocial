@@ -421,6 +421,25 @@ def population_details(uid):
     except:
         pass
 
+    # Get activity profile distribution for this population
+    activity_profile_dist = (
+        db.session.query(PopulationActivityProfile, ActivityProfile)
+        .join(ActivityProfile)
+        .filter(PopulationActivityProfile.population_id == uid)
+        .all()
+    )
+
+    # Calculate actual agent distribution across activity profiles
+    agent_profiles = {"profiles": [], "assigned_count": [], "expected_pct": []}
+    for dist, profile in activity_profile_dist:
+        agent_profiles["profiles"].append(profile.name)
+        agent_profiles["expected_pct"].append(dist.percentage)
+        # Count actual agents with this profile
+        actual_count = sum(
+            1 for a in agents if a[0].activity_profile == profile.id
+        )
+        agent_profiles["assigned_count"].append(actual_count)
+
     models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
@@ -434,6 +453,7 @@ def population_details(uid):
         population_experiments=exps,
         agents=agents,
         data=dd,
+        activity_profiles=agent_profiles,
         models=models,
         ollamas=ollamas,
         llm_backend=llm_backend,
