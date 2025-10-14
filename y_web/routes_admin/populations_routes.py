@@ -776,3 +776,95 @@ def update_llm(uid):
 
     db.session.commit()
     return redirect(request.referrer)
+
+
+@population.route("/admin/merge_populations", methods=["POST"])
+@login_required
+def merge_populations():
+    """
+    Merge multiple populations into a new one.
+
+    Creates a new population and assigns agents and pages from selected populations,
+    avoiding duplicates.
+
+    Form data:
+        merged_population_name: Name for the new merged population
+        selected_population_ids: Comma-separated list of population IDs to merge
+
+    Returns:
+        Redirect to populations page
+    """
+    check_privileges(current_user.username)
+
+    merged_name = request.form.get("merged_population_name")
+    selected_ids = request.form.get("selected_population_ids")
+
+    if not merged_name or not selected_ids:
+        flash("Please provide a population name and select at least 2 populations to merge.")
+        return redirect(request.referrer)
+
+    # Parse the selected population IDs
+    try:
+        population_ids = [int(pid.strip()) for pid in selected_ids.split(",") if pid.strip()]
+    except ValueError:
+        flash("Invalid population IDs provided.")
+        return redirect(request.referrer)
+
+    if len(population_ids) < 2:
+        flash("Please select at least 2 populations to merge.")
+        return redirect(request.referrer)
+
+    # Check if merged population name already exists
+    existing_pop = Population.query.filter_by(name=merged_name).first()
+    if existing_pop:
+        flash(f"Population with name '{merged_name}' already exists.")
+        return redirect(request.referrer)
+
+    # Create the new merged population
+    merged_population = Population(
+        name=merged_name,
+        descr=f"Merged from {len(population_ids)} populations"
+    )
+    db.session.add(merged_population)
+    db.session.commit()
+
+    # Collect unique agent IDs from all selected populations
+    unique_agent_ids = set()
+    for pop_id in population_ids:
+        agent_populations = Agent_Population.query.filter_by(population_id=pop_id).all()
+        for ap in agent_populations:
+            unique_agent_ids.add(ap.agent_id)
+
+    # Add unique agents to the new population
+    for agent_id in unique_agent_ids:
+        agent_population = Agent_Population(
+            agent_id=agent_id,
+            population_id=merged_population.id
+        )
+        db.session.add(agent_population)
+    
+    db.session.commit()
+
+    # Collect unique page IDs from all selected populations
+    unique_page_ids = set()
+    for pop_id in population_ids:
+        page_populations = Page_Population.query.filter_by(population_id=pop_id).all()
+        for pp in page_populations:
+            unique_page_ids.add(pp.page_id)
+
+    # Add unique pages to the new population
+    for page_id in unique_page_ids:
+        page_population = Page_Population(
+            page_id=page_id,
+            population_id=merged_population.id
+        )
+        db.session.add(page_population)
+    
+    db.session.commit()
+
+    # Update the size of the new population
+    merged_population.size = len(unique_agent_ids)
+    db.session.commit()
+
+    flash(f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages.")
+    return populations()

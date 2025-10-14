@@ -967,6 +967,275 @@
                             </div>
                         </div>
 
+                        <div class="dashboard-box is-compact">
+                            <h3 class="title is-5 is-thin">Merge Populations</h3>
+                            <div class="box-content">
+                                <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
+                                    <div class="box-lines">
+                                        <div class="box-line">
+                                            <span class="left" style="width: 100%; font-size: 0.9em; color: #666; margin-bottom: 10px;">
+                                                Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
+                                            </span>
+                                        </div>
+                                        
+                                        <div class="box-line">
+                                            <span class="left">New Population Name</span>
+                                            <span class="right" style="width: 100%;"><input type="text" name="merged_population_name" class="input" required></span>
+                                        </div>
+
+                                        <style>
+                                            .merge-populations-container {
+                                                margin: 15px 0;
+                                            }
+                                            .merge-section-title {
+                                                font-size: 0.85em;
+                                                font-weight: 600;
+                                                color: #555;
+                                                margin-bottom: 8px;
+                                            }
+                                            .merge-available-populations {
+                                                border: 1px solid #e0e0e0;
+                                                border-radius: 4px;
+                                                padding: 10px;
+                                                background-color: #fafafa;
+                                                min-height: 100px;
+                                                max-height: 200px;
+                                                overflow-y: auto;
+                                            }
+                                            .merge-selected-populations {
+                                                border: 2px dashed #22c55e;
+                                                border-radius: 4px;
+                                                padding: 10px;
+                                                background-color: #f0fdf4;
+                                                min-height: 100px;
+                                                max-height: 200px;
+                                                overflow-y: auto;
+                                            }
+                                            .merge-population-item {
+                                                background: white;
+                                                border: 1px solid #ddd;
+                                                border-radius: 3px;
+                                                padding: 6px 10px;
+                                                margin-bottom: 5px;
+                                                cursor: move;
+                                                transition: all 0.2s ease;
+                                                display: flex;
+                                                justify-content: space-between;
+                                                align-items: center;
+                                                font-size: 0.85em;
+                                            }
+                                            .merge-population-item:hover {
+                                                border-color: #22c55e;
+                                                box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
+                                            }
+                                            .merge-population-item.dragging {
+                                                opacity: 0.5;
+                                            }
+                                            .merge-population-name {
+                                                font-weight: 500;
+                                                flex: 1;
+                                            }
+                                            .merge-population-size {
+                                                color: #666;
+                                                font-size: 0.9em;
+                                                margin-left: 8px;
+                                            }
+                                            .merge-drag-over {
+                                                background-color: #dcfce7;
+                                                border-color: #22c55e;
+                                            }
+                                            .merge-empty-state {
+                                                text-align: center;
+                                                color: #999;
+                                                font-size: 0.8em;
+                                                padding: 20px;
+                                            }
+                                            .merge-remove-btn {
+                                                background: #dc3545;
+                                                color: white;
+                                                border: none;
+                                                border-radius: 3px;
+                                                padding: 2px 6px;
+                                                cursor: pointer;
+                                                font-size: 0.75em;
+                                                margin-left: 8px;
+                                            }
+                                            .merge-remove-btn:hover {
+                                                background: #c82333;
+                                            }
+                                        </style>
+
+                                        <div class="merge-populations-container">
+                                            <div class="merge-section-title">Available Populations (Drag to select)</div>
+                                            <div class="merge-available-populations" id="merge-available-populations">
+                                                <div class="merge-empty-state">Loading populations...</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="merge-populations-container">
+                                            <div class="merge-section-title">Selected Populations to Merge</div>
+                                            <div class="merge-selected-populations" id="merge-selected-populations">
+                                                <div class="merge-empty-state">Drag populations here</div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="selected_population_ids" id="selected_population_ids" value="">
+                                    </div>
+
+                                    <div class="button-wrap">
+                                        <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                            Merge Populations
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <script>
+                            // Merge populations drag and drop functionality
+                            let mergeAvailablePopulations = [];
+                            let mergeSelectedPopulations = [];
+
+                            // Load populations from the API
+                            function loadMergePopulations() {
+                                fetch('/admin/populations_data')
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        mergeAvailablePopulations = data.data.map(pop => ({
+                                            id: pop.id,
+                                            name: pop.name,
+                                            size: pop.size || 0
+                                        }));
+                                        renderMergeAvailablePopulations();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error loading populations:', error);
+                                        document.getElementById('merge-available-populations').innerHTML = 
+                                            '<div class="merge-empty-state">Error loading populations</div>';
+                                    });
+                            }
+
+                            function renderMergeAvailablePopulations() {
+                                const container = document.getElementById('merge-available-populations');
+                                
+                                // Filter out already selected populations
+                                const available = mergeAvailablePopulations.filter(pop => 
+                                    !mergeSelectedPopulations.find(selected => selected.id === pop.id)
+                                );
+
+                                if (available.length === 0) {
+                                    container.innerHTML = '<div class="merge-empty-state">No populations available</div>';
+                                    return;
+                                }
+
+                                container.innerHTML = available.map(pop => `
+                                    <div class="merge-population-item" 
+                                         draggable="true" 
+                                         data-pop-id="${pop.id}"
+                                         data-pop-name="${pop.name}"
+                                         data-pop-size="${pop.size}">
+                                        <span class="merge-population-name">${pop.name}</span>
+                                        <span class="merge-population-size">${pop.size} agents</span>
+                                    </div>
+                                `).join('');
+
+                                // Add drag event listeners
+                                container.querySelectorAll('.merge-population-item').forEach(item => {
+                                    item.addEventListener('dragstart', handleMergeDragStart);
+                                    item.addEventListener('dragend', handleMergeDragEnd);
+                                });
+                            }
+
+                            function renderMergeSelectedPopulations() {
+                                const container = document.getElementById('merge-selected-populations');
+                                
+                                if (mergeSelectedPopulations.length === 0) {
+                                    container.innerHTML = '<div class="merge-empty-state">Drag populations here</div>';
+                                    return;
+                                }
+
+                                container.innerHTML = mergeSelectedPopulations.map(pop => `
+                                    <div class="merge-population-item">
+                                        <span class="merge-population-name">${pop.name}</span>
+                                        <span class="merge-population-size">${pop.size} agents</span>
+                                        <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(${pop.id})">×</button>
+                                    </div>
+                                `).join('');
+
+                                // Update hidden field
+                                document.getElementById('selected_population_ids').value = 
+                                    mergeSelectedPopulations.map(p => p.id).join(',');
+                            }
+
+                            function handleMergeDragStart(e) {
+                                e.currentTarget.classList.add('dragging');
+                                e.dataTransfer.effectAllowed = 'move';
+                                e.dataTransfer.setData('text/plain', JSON.stringify({
+                                    id: e.currentTarget.dataset.popId,
+                                    name: e.currentTarget.dataset.popName,
+                                    size: e.currentTarget.dataset.popSize
+                                }));
+                            }
+
+                            function handleMergeDragEnd(e) {
+                                e.currentTarget.classList.remove('dragging');
+                            }
+
+                            function handleMergeDragOver(e) {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                                e.currentTarget.classList.add('merge-drag-over');
+                            }
+
+                            function handleMergeDragLeave(e) {
+                                if (e.currentTarget === e.target) {
+                                    e.currentTarget.classList.remove('merge-drag-over');
+                                }
+                            }
+
+                            function handleMergeDrop(e) {
+                                e.preventDefault();
+                                e.currentTarget.classList.remove('merge-drag-over');
+                                
+                                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+                                
+                                // Add to selected if not already there
+                                if (!mergeSelectedPopulations.find(p => p.id === data.id)) {
+                                    mergeSelectedPopulations.push({
+                                        id: data.id,
+                                        name: data.name,
+                                        size: data.size
+                                    });
+                                    renderMergeSelectedPopulations();
+                                    renderMergeAvailablePopulations();
+                                }
+                            }
+
+                            function removeMergePopulation(popId) {
+                                mergeSelectedPopulations = mergeSelectedPopulations.filter(p => p.id !== popId);
+                                renderMergeSelectedPopulations();
+                                renderMergeAvailablePopulations();
+                            }
+
+                            // Initialize merge drag and drop
+                            document.addEventListener('DOMContentLoaded', function() {
+                                loadMergePopulations();
+                                
+                                const selectedContainer = document.getElementById('merge-selected-populations');
+                                selectedContainer.addEventListener('dragover', handleMergeDragOver);
+                                selectedContainer.addEventListener('drop', handleMergeDrop);
+                                selectedContainer.addEventListener('dragleave', handleMergeDragLeave);
+                            });
+
+                            // Form validation
+                            document.getElementById('merge_populations_form').addEventListener('submit', function(e) {
+                                if (mergeSelectedPopulations.length < 2) {
+                                    e.preventDefault();
+                                    alert('Please select at least 2 populations to merge');
+                                    return false;
+                                }
+                            });
+                        </script>
 
                     </div>
                 </div>
