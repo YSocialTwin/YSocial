@@ -81,6 +81,29 @@
         }
       },
       {
+        id: 'activity_profile',
+        name: 'Activity Profile',
+        sort: true,                                        // <-- sortable
+        width: '250px',
+        formatter: (cell) => {
+          if (!cell || !cell.hours) {
+            return gridjs.html('<span style="color: #999; font-size: 0.85em;">Not assigned</span>');
+          }
+          const hours = cell.hours.split(',').map(h => parseInt(h.trim()));
+          const barHtml = Array.from({length: 24}, (_, i) => {
+            const isActive = hours.includes(i);
+            const bgColor = isActive ? 'rgba(34, 197, 94, 0.8)' : 'rgba(229, 231, 235, 0.5)';
+            return `<div style="display: inline-block; width: 3.5%; height: 12px; background-color: ${bgColor}; border: 0.5px solid #e5e7eb; margin: 0;" title="Hour ${i}"></div>`;
+          }).join('');
+          return gridjs.html(`
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <div style="font-size: 0.8em; font-weight: 500;">${cell.name}</div>
+              <div style="display: flex; width: 100%; gap: 0;">${barHtml}</div>
+            </div>
+          `);
+        }
+      },
+      {
         id: 'actions',
         name: 'Actions',
         sort: false,
@@ -121,7 +144,7 @@
       server: {
         url: (prev, columns) => {
           // Ensure these column ids match your backend's sort fields exactly
-          const columnIds = ['id', 'name', 'age', 'profession', 'daily_activity_level'];
+          const columnIds = ['id', 'name', 'age', 'profession', 'daily_activity_level', 'activity_profile'];
           const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
           return updateUrl(prev, { sort });
         },

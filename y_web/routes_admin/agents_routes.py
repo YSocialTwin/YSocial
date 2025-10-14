@@ -99,13 +99,23 @@ def agents_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "profession", "age", "daily_activity_level"]:
+            if name not in ["name", "profession", "age", "daily_activity_level", "activity_profile"]:
                 name = "name"
-            col = getattr(Agent, name)
-            if direction == "-":
-                col = col.desc()
-            order.append(col)
+            # Handle activity_profile sorting by joining with ActivityProfile table
+            if name == "activity_profile":
+                col = ActivityProfile.name
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
+            else:
+                col = getattr(Agent, name)
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
         if order:
+            # Join with ActivityProfile if sorting by activity_profile
+            if any('activity_profile' in str(o) for o in order):
+                query = query.outerjoin(ActivityProfile, Agent.activity_profile == ActivityProfile.id)
             query = query.order_by(*order)
 
     # pagination
@@ -117,17 +127,28 @@ def agents_data():
     # response
     res = query.all()
 
+    data = []
+    for agent in res:
+        activity_profile_data = None
+        if agent.activity_profile:
+            profile = ActivityProfile.query.get(agent.activity_profile)
+            if profile:
+                activity_profile_data = {
+                    "name": profile.name,
+                    "hours": profile.hours
+                }
+        
+        data.append({
+            "id": agent.id,
+            "name": " ".join(re.findall("[A-Z][^A-Z]*", agent.name)),
+            "age": agent.age,
+            "profession": agent.profession,
+            "daily_activity_level": agent.daily_activity_level,
+            "activity_profile": activity_profile_data,
+        })
+
     return {
-        "data": [
-            {
-                "id": agent.id,
-                "name": " ".join(re.findall("[A-Z][^A-Z]*", agent.name)),
-                "age": agent.age,
-                "profession": agent.profession,
-                "daily_activity_level": agent.daily_activity_level,
-            }
-            for agent in res
-        ],
+        "data": data,
         "total": total,
     }
 
