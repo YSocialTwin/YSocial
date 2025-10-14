@@ -403,11 +403,11 @@ def population_details(uid):
     # get topics associated to the experiments this population is part of
     exp_topics = (
         db.session.query(Exp_Topic, Topic_List)
-            .join(Topic_List)
-            .join(Exps, Exp_Topic.exp_id == Exps.idexp)
-            .join(Population_Experiment, Population_Experiment.id_exp == Exps.idexp)
-            .filter(Population_Experiment.id_population == uid)
-            .all()
+        .join(Topic_List)
+        .join(Exps, Exp_Topic.exp_id == Exps.idexp)
+        .join(Population_Experiment, Population_Experiment.id_exp == Exps.idexp)
+        .filter(Population_Experiment.id_population == uid)
+        .all()
     )
     topics = [t[1].name for t in exp_topics]
 
