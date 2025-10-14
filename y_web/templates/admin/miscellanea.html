@@ -8,21 +8,68 @@
 
         <div class="dashboard-body">
 
-            <div class="columns">
+            <style>
+                .misc-tabs {
+                    display: flex;
+                    border-bottom: 2px solid #e5e7eb;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }
+                .misc-tab {
+                    padding: 12px 24px;
+                    cursor: pointer;
+                    border: none;
+                    background: transparent;
+                    font-size: 0.95em;
+                    font-weight: 500;
+                    color: #666;
+                    transition: all 0.2s;
+                    border-bottom: 3px solid transparent;
+                    margin-bottom: -2px;
+                }
+                .misc-tab:hover {
+                    color: #22c55e;
+                    background: rgba(34, 197, 94, 0.05);
+                }
+                .misc-tab.active {
+                    color: #22c55e;
+                    border-bottom-color: #22c55e;
+                }
+                .misc-tab-content {
+                    display: none;
+                }
+                .misc-tab-content.active {
+                    display: block;
+                }
+                .misc-section-description {
+                    background: #f9fafb;
+                    border-left: 3px solid #22c55e;
+                    padding: 15px 20px;
+                    margin-bottom: 20px;
+                    border-radius: 4px;
+                    font-size: 0.9em;
+                    color: #666;
+                    line-height: 1.6;
+                }
+            </style>
 
-                <div class="column is-12">
-                <h3 class="title is-5 is-thin" style="text-align: center">Agents' Leanings, Education and Professions</h3>
-                </div>
+            <div class="misc-tabs">
+                <button class="misc-tab active" onclick="switchMiscTab('agent-attributes')">Agent Attributes</button>
+                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics</button>
+                <button class="misc-tab" onclick="switchMiscTab('content')">Content & Topics</button>
+                <button class="misc-tab" onclick="switchMiscTab('behavior')">Behavior Profiles</button>
             </div>
 
+            <!-- Agent Attributes Tab -->
+            <div id="tab-agent-attributes" class="misc-tab-content active">
+                <div class="misc-section-description">
+                    <strong>Agent Attributes:</strong> Configure political leanings, education levels, and professions that define the social and professional characteristics of simulated agents in your experiments.
+                </div>
 
-            <div class="columns">
-
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Political Leanings</h3>
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Political Leanings</h3>
 
                         <div class="box-content">
 
@@ -506,11 +553,22 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
+                </div>
+            </div>
+            </div>
+            <!-- End Agent Attributes Tab -->
 
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Topics</h3>
+            <!-- Content & Topics Tab -->
+            <div id="tab-content" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Content & Topics:</strong> Define content topics and categories that agents can engage with, helping to create realistic content interactions and discussions within your simulations.
+                </div>
+
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Topics</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
@@ -663,28 +721,22 @@
                                 </div>
                             </form>
                         </div>
-
                     </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="columns">
-
-                <div class="column is-12">
-                    <hr>
-                <h3 class="title is-5 is-thin" style="text-align: center">Spoken Languages and Nationalities</h3>
                 </div>
             </div>
+            </div>
+            <!-- End Content & Topics Tab -->
 
+            <!-- Demographics Tab -->
+            <div id="tab-demographics" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Demographics:</strong> Manage languages and nationalities to create diverse and realistic agent populations that reflect real-world demographic distributions.
+                </div>
 
-            <div class="columns">
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Languages</h3>
+                <div class="columns">
+                    <div class="column is-6">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Languages</h3>
 
                         <div class="box-content">
 
@@ -1000,22 +1052,19 @@
 
                 </div>
             </div>
-
-
-            <div class="columns">
-
-                <div class="column is-12">
-                    <hr>
-                <h3 class="title is-5 is-thin" style="text-align: center">Toxicity Levels</h3>
-                </div>
             </div>
+            <!-- End Demographics Tab -->
 
+            <!-- Behavior Profiles Tab -->
+            <div id="tab-behavior" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>Behavior Profiles:</strong> Configure toxicity levels and hourly activity patterns to simulate realistic agent behaviors and interaction patterns throughout the day.
+                </div>
 
-            <div class="columns">
-                <div class="column is-12">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
+                <div class="columns">
+                    <div class="column is-12">
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -1167,10 +1216,305 @@
                             </form>
                         </div>
                     </div>
-
                 </div>
             </div>
 
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Available Activity Profiles</h3>
+
+                        <div class="box-content">
+                            <div id="activity_profiles_table"></div>
+                           <script>
+    const tableDivActivity = document.getElementById('activity_profiles_table');
+
+    const updateUrlActivity = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributesActivity = (data, row, col) => {
+        if (row && col.id === 'name') {
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': col.id
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const gridActivity = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'name',
+                name: 'Name',
+                attributes: editableCellAttributesActivity,
+                width: '200px'
+            },
+            {
+                id: 'hours',
+                name: 'Activity Hours',
+                width: '500px',
+                formatter: (cell) => {
+                    const hours = cell ? cell.split(',').map(h => parseInt(h.trim())) : [];
+                    const barHtml = Array.from({length: 24}, (_, i) => {
+                        const isActive = hours.includes(i);
+                        const intensity = isActive ? 1 : 0;
+                        const bgColor = isActive ? 'rgba(34, 197, 94, 0.8)' : 'rgba(229, 231, 235, 0.5)';
+                        return `<div style="display: inline-block; width: 4%; height: 20px; background-color: ${bgColor}; border: 1px solid #e5e7eb; margin: 0; title='Hour ${i}'" title="Hour ${i}"></div>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; width: 100%; gap: 0;">${barHtml}</div>`);
+                }
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                width: '100px',
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_activity_profile/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            gridActivity.forceRender();
+                                        } else {
+                                            alert("Failed to delete activity profile.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/activity_profiles_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrlActivity(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'name', 'hours'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrlActivity(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => updateUrlActivity(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    gridActivity.render(tableDivActivity);
+
+    let savedValueActivity;
+
+    tableDivActivity.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValueActivity = ev.target.textContent;
+        }
+    });
+
+    tableDivActivity.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValueActivity !== ev.target.textContent) {
+                fetch('/admin/activity_profiles_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValueActivity = undefined;
+        }
+    });
+
+    tableDivActivity.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValueActivity;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+
+                        </div>
+
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h3 class="title is-5 is-thin">New Activity Profile</h3>
+                            <form action="/admin/create_activity_profile" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Profile Name</span>
+                                        <span class="right" style="width: 70%;"><input type="text" name="name" required
+                                                                                       class="input" placeholder="e.g., Morning Active"></span>
+                                    </div>
+                                    <div class="box-line" style="display: block; padding: 15px 0;">
+                                        <label style="display: block; margin-bottom: 12px; font-weight: 500;">Select Active Hours (0-23):</label>
+                                        <style>
+                                            .hour-selector {
+                                                display: flex;
+                                                flex-wrap: wrap;
+                                                gap: 6px;
+                                                max-width: 100%;
+                                            }
+                                            .hour-toggle {
+                                                position: relative;
+                                                display: inline-block;
+                                            }
+                                            .hour-toggle input[type="checkbox"] {
+                                                position: absolute;
+                                                opacity: 0;
+                                                width: 0;
+                                                height: 0;
+                                            }
+                                            .hour-toggle label {
+                                                display: inline-block;
+                                                min-width: 40px;
+                                                padding: 6px 10px;
+                                                text-align: center;
+                                                font-size: 0.85em;
+                                                font-weight: 500;
+                                                border: 2px solid #e0e0e0;
+                                                border-radius: 6px;
+                                                background-color: #f8f9fa;
+                                                color: #666;
+                                                cursor: pointer;
+                                                transition: all 0.2s ease;
+                                                user-select: none;
+                                            }
+                                            .hour-toggle input[type="checkbox"]:checked + label {
+                                                background-color: #22c55e;
+                                                border-color: #16a34a;
+                                                color: white;
+                                                box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
+                                            }
+                                            .hour-toggle label:hover {
+                                                border-color: #22c55e;
+                                                transform: translateY(-1px);
+                                            }
+                                            .hour-selector-controls {
+                                                margin-top: 10px;
+                                                display: flex;
+                                                gap: 8px;
+                                            }
+                                            .hour-selector-controls button {
+                                                padding: 4px 12px;
+                                                font-size: 0.8em;
+                                                border: 1px solid #ddd;
+                                                background: white;
+                                                border-radius: 4px;
+                                                cursor: pointer;
+                                                transition: all 0.2s ease;
+                                            }
+                                            .hour-selector-controls button:hover {
+                                                background: #f0f0f0;
+                                                border-color: #999;
+                                            }
+                                        </style>
+                                        <div class="hour-selector">
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="0" id="hour_0"><label for="hour_0">0</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="1" id="hour_1"><label for="hour_1">1</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="2" id="hour_2"><label for="hour_2">2</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="3" id="hour_3"><label for="hour_3">3</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="4" id="hour_4"><label for="hour_4">4</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="5" id="hour_5"><label for="hour_5">5</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="6" id="hour_6"><label for="hour_6">6</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="7" id="hour_7"><label for="hour_7">7</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="8" id="hour_8"><label for="hour_8">8</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="9" id="hour_9"><label for="hour_9">9</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="10" id="hour_10"><label for="hour_10">10</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="11" id="hour_11"><label for="hour_11">11</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="12" id="hour_12"><label for="hour_12">12</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="13" id="hour_13"><label for="hour_13">13</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="14" id="hour_14"><label for="hour_14">14</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="15" id="hour_15"><label for="hour_15">15</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="16" id="hour_16"><label for="hour_16">16</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="17" id="hour_17"><label for="hour_17">17</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="18" id="hour_18"><label for="hour_18">18</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="19" id="hour_19"><label for="hour_19">19</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="20" id="hour_20"><label for="hour_20">20</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="21" id="hour_21"><label for="hour_21">21</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="22" id="hour_22"><label for="hour_22">22</label></div>
+                                            <div class="hour-toggle"><input type="checkbox" name="hour" value="23" id="hour_23"><label for="hour_23">23</label></div>
+                                        </div>
+                                        <div class="hour-selector-controls">
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = true)">Select All</button>
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach(cb => cb.checked = false)">Clear All</button>
+                                            <button type="button" onclick="document.querySelectorAll('.hour-toggle input[type=checkbox]').forEach((cb, i) => cb.checked = i >= 9 && i <= 17)">Business Hours (9-17)</button>
+                                        </div>
+                                        <input type="hidden" name="hours" id="hours_input" value="">
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        Create Profile
+                                    </button>
+                                </div>
+                            </form>
+                            <script>
+                                // Collect selected hours when form is submitted
+                                document.querySelector('form[action="/admin/create_activity_profile"]').addEventListener('submit', function(e) {
+                                    const checkboxes = document.querySelectorAll('input[name="hour"]:checked');
+                                    const hours = Array.from(checkboxes).map(cb => cb.value);
+                                    document.getElementById('hours_input').value = hours.join(',');
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            </div>
+            <!-- End Behavior Profiles Tab -->
+
+            <script>
+                function switchMiscTab(tabName) {
+                    // Hide all tabs
+                    document.querySelectorAll('.misc-tab-content').forEach(tab => {
+                        tab.classList.remove('active');
+                    });
+                    // Remove active from all buttons
+                    document.querySelectorAll('.misc-tab').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Show selected tab
+                    document.getElementById('tab-' + tabName).classList.add('active');
+                    // Set button as active
+                    event.target.classList.add('active');
+                }
+            </script>
 
         </div>
     </div>

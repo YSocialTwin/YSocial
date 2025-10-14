@@ -24,6 +24,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.models import (
+    ActivityProfile,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -37,6 +38,7 @@ from y_web.models import (
     Page_Population,
     Population,
     Population_Experiment,
+    PopulationActivityProfile,
     Topic_List,
     User_mgmt,
 )
@@ -351,14 +353,23 @@ def create_client():
     # Get LLM URL from environment (set by y_social.py)
     import os
 
-    # llm_url = os.getenv("LLM_URL")
-    # if not llm_url:
-    #    # Fallback for backward compatibility
-    #    llm_backend = os.getenv("LLM_BACKEND", "ollama")
-    #    if llm_backend == "vllm":
-    #        llm_url = "http://127.0.0.1:8000/v1"
-    #    else:  # ollama
-    #        llm_url = "http://127.0.0.1:11434/v1"
+    # get population activity profiles
+    activity_profiles = (
+        db.session.query(PopulationActivityProfile)
+        .filter(PopulationActivityProfile.population == population_id)
+        .all()
+    )
+
+    activity_profiles = [a.activity_profile for a in activity_profiles]
+
+    # get all activity profiles from the db where id in activity_profiles
+    activity_profiles = (
+        db.session.query(ActivityProfile)
+        .filter(ActivityProfile.id.in_([a for a in activity_profiles]))
+        .all()
+    )
+
+    profiles = {ap.name: ap.hours for ap in activity_profiles}
 
     config = {
         "servers": {
@@ -383,6 +394,7 @@ def create_client():
             "percentage_removed_agents_iteration": float(
                 percentage_removed_agents_iteration
             ),
+            "activity_profiles": profiles,
             "hourly_activity": {
                 "10": 0.021,
                 "16": 0.032,
@@ -612,6 +624,10 @@ def create_client():
                 "prompts": custom_prompt if custom_prompt else None,
                 "daily_activity_level": a.daily_activity_level,
                 "profession": a.profession,
+                "activity_profile": db.session.query(ActivityProfile)
+                .filter_by(id=a.activity_profile)
+                .first()
+                .name,
             }
         )
 
@@ -637,7 +653,7 @@ def create_client():
                 "email": f"{p.name}@ysocial.it",
                 "password": f"{p.name}",
                 "age": 0,
-                "type": p.pg_type,
+                "type": user_type,
                 "leaning": p.leaning,
                 "interests": [page_topics, len(page_topics)],
                 "oe": "",

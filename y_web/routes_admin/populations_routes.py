@@ -8,6 +8,7 @@ association with experiments and pages.
 
 import json
 import os
+from pydoc_data.topics import topics
 
 from flask import (
     Blueprint,
@@ -21,6 +22,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.models import (
+    ActivityProfile,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -36,6 +38,7 @@ from y_web.models import (
     Page_Population,
     Population,
     Population_Experiment,
+    PopulationActivityProfile,
     Topic_List,
     Toxicity_Levels,
 )
@@ -119,6 +122,13 @@ def create_population():
     frecsys = request.form.get("frecsys_type")
     crecsys = request.form.get("recsys_type")
 
+    # Get activity profiles data from the hidden field
+    activity_profiles_data = request.form.get("activity_profiles_data", "[]")
+    try:
+        activity_profiles_json = json.loads(activity_profiles_data)
+    except:
+        activity_profiles_json = []
+
     population = Population(
         name=name,
         descr=descr,
@@ -138,6 +148,16 @@ def create_population():
     )
 
     db.session.add(population)
+    db.session.commit()
+
+    # Store population-activity profile associations
+    for profile_data in activity_profiles_json:
+        profile_assoc = PopulationActivityProfile(
+            population=population.id,
+            activity_profile=int(profile_data["id"]),
+            percentage=float(profile_data["percentage"]),
+        )
+        db.session.add(profile_assoc)
     db.session.commit()
 
     generate_population(name)
@@ -223,6 +243,7 @@ def populations():
     toxicity_levels = Toxicity_Levels.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
+    activity_profiles = ActivityProfile.query.all()
 
     return render_template(
         "admin/populations.html",
@@ -236,6 +257,7 @@ def populations():
         toxicity_levels=toxicity_levels,
         crecsys=crecsys,
         frecsys=frecsys,
+        activity_profiles=activity_profiles,
     )
 
 
@@ -378,6 +400,17 @@ def population_details(uid):
             else:
                 llm[a[0].ag_type] = 1
 
+    # get topics associated to the experiments this population is part of
+    exp_topics = (
+        db.session.query(Exp_Topic, Topic_List)
+        .join(Topic_List)
+        .join(Exps, Exp_Topic.exp_id == Exps.idexp)
+        .join(Population_Experiment, Population_Experiment.id_exp == Exps.idexp)
+        .filter(Population_Experiment.id_population == uid)
+        .all()
+    )
+    topics = [t[1].name for t in exp_topics]
+
     try:
         population_updated_details = {
             "id": population.id,
@@ -400,6 +433,23 @@ def population_details(uid):
     except:
         pass
 
+    # Get activity profile distribution for this population
+    activity_profile_dist = (
+        db.session.query(PopulationActivityProfile, ActivityProfile)
+        .join(ActivityProfile)
+        .filter(PopulationActivityProfile.population == uid)
+        .all()
+    )
+
+    # Calculate actual agent distribution across activity profiles
+    agent_profiles = {"profiles": [], "assigned_count": [], "expected_pct": []}
+    for dist, profile in activity_profile_dist:
+        agent_profiles["profiles"].append(profile.name)
+        agent_profiles["expected_pct"].append(dist.percentage)
+        # Count actual agents with this profile
+        actual_count = sum(1 for a in agents if a[0].activity_profile == profile.id)
+        agent_profiles["assigned_count"].append(actual_count)
+
     models = get_llm_models()  # Use generic function for any LLM server
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
@@ -413,6 +463,7 @@ def population_details(uid):
         population_experiments=exps,
         agents=agents,
         data=dd,
+        activity_profiles=agent_profiles,
         models=models,
         ollamas=ollamas,
         llm_backend=llm_backend,

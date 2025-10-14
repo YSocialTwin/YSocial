@@ -29,10 +29,15 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Experiment Summary</h3>
+                        <h3 class="title is-5 is-thin">Experiment Overview</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Core information about this simulation experiment, including configuration and access details.
+                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
+                                <b>Basic Information</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ experiment.exp_name }}</span>
@@ -51,11 +56,17 @@
                                 </div>
 
                                 {% if experiment.running == 1 %}
+                                <hr>
+                                <b>Connection Details</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Server endpoint for active experiment.</p>
                                 <div class="box-line">
-                                    <span class="left">Connection Endpoint</span>
-                                    <span class="right">http://{{ experiment.server }}:{{ experiment.port }}</span>
+                                    <span class="left">Endpoint</span>
+                                    <span class="right" style="word-break: break-all;">http://{{ experiment.server }}:{{ experiment.port }}</span>
                                 </div>
                                 {% endif %}
+                                <hr>
+                                <b>Actions</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Manage experiment data and configuration.</p>
                             </div>
                             {% if len(clients)>0 %}
                             <div class="box-line">
@@ -86,6 +97,9 @@
                     {% if len(users) > 0 %}
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Users with access to participate in this experiment.
+                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
@@ -94,7 +108,7 @@
                                     <span class="left">
                                         {% for user, user_exp in users %}
                                             <a href="/admin/user_details/{{ user.id }}"
-                                               style="border: #0d95e8 1px solid; padding: 2px; margin: 2px;">{{ user.username }}</a>
+                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ user.username }}</a>
                                         {% endfor %}
                                     </span>
 
@@ -114,7 +128,10 @@
                     <!--Box-->
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">YServer</h3>
+                        <h3 class="title is-5 is-thin">YServer Status</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Simulation server status and control panel.
+                        </p>
                         <div class="box-content">
                             <div class="box-line">
                                 <span class="left">Web Interface</span>

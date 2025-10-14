@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.models import (
+    ActivityProfile,
     Leanings,
     Page,
     Page_Population,
@@ -46,12 +47,14 @@ def page_data():
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
+    activity_profiles = ActivityProfile.query.all()
     return render_template(
         "admin/pages.html",
         models=models,
         ollamas=ollamas,
         llm_backend=llm_backend,
         leanings=leanings,
+        activity_profiles=activity_profiles,
     )
 
 
