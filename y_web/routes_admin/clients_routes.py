@@ -653,7 +653,7 @@ def create_client():
                 "email": f"{p.name}@ysocial.it",
                 "password": f"{p.name}",
                 "age": 0,
-                "type": p.pg_type,
+                "type": user_type,
                 "leaning": p.leaning,
                 "interests": [page_topics, len(page_topics)],
                 "oe": "",

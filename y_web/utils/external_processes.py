@@ -18,6 +18,7 @@ import sys
 import time
 import traceback
 from multiprocessing import Process
+from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
@@ -28,7 +29,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import client_processes, db
-from y_web.models import Client_Execution, Ollama_Pull
+from y_web.models import Client_Execution, Ollama_Pull, PopulationActivityProfile, ActivityProfile
 
 
 @deprecated
@@ -679,10 +680,49 @@ def start_client_process(exp, cli, population, resume=False):
         if not os.path.exists(filename):
             cl.save_agents(filename)
 
-        run_simulation(cl, cli.id, filename, exp)
+        run_simulation(cl, cli.id, filename, exp, population)
 
 
-def run_simulation(cl, cli_id, agent_file, exp):
+def get_users_per_hour(population, agents):
+    # get population activity profiles
+    activity_profiles = defaultdict(list)
+    population_activity_profiles = (db.session.query(PopulationActivityProfile).
+                                    filter(PopulationActivityProfile.population==population.id).all())
+    for ap in population_activity_profiles:
+        profile = db.session.query(ActivityProfile).filter(ActivityProfile.id == ap.activity_profile).first()
+        activity_profiles[profile.name] = [int(x) for x in profile.hours.split(",")]
+
+    hours_to_users = defaultdict(list)
+    for ag in agents:
+        profile = activity_profiles[ag.activity_profile]
+
+        for h in profile:
+            hours_to_users[h].append(ag)
+
+    return hours_to_users
+
+
+def sample_agents(agents, expected_active_users):
+    weights = [a.daily_activity_level for a in agents]
+    # normalize weights to sum to 1
+    weights = [w / sum(weights) for w in weights]
+
+    try:
+        sagents = np.random.choice(
+            agents,
+            size=expected_active_users,
+            p=weights,
+            replace=False,
+        )
+    except Exception as e:
+        sagents = np.random.choice(
+            agents, size=expected_active_users, replace=False
+        )
+
+    return sagents
+
+
+def run_simulation(cl, cli_id, agent_file, exp, population):
     """
     Run the simulation
     """
@@ -691,19 +731,25 @@ def run_simulation(cl, cli_id, agent_file, exp):
     total_days = int(cl.days)
     daily_slots = int(cl.slots)
 
+    page_agents = [p for p in cl.agents.agents if p.is_page]
+
     for d1 in range(total_days):
+        common_agents = [p for p in cl.agents.agents if not p.is_page]
+        hour_to_users = get_users_per_hour(population, common_agents)
+
         daily_active = {}
         tid, _, _ = cl.sim_clock.get_current_slot()
 
         for _ in range(daily_slots):
             tid, d, h = cl.sim_clock.get_current_slot()
 
-            # get expected active users for this time slot (at least 1)
+            # get expected active users for this time slot considering the global population (at least 1)
             expected_active_users = max(
                 int(len(cl.agents.agents) * cl.hourly_activity[str(h)]), 1
             )
 
-            page_agents = [p for p in cl.agents.agents if p.is_page]
+            # take the minimum between expected active over the whole population and available users at time h
+            expected_active_users = min(expected_active_users, len(hour_to_users[h]))
 
             if platform_type == "microblogging":
                 # pages post at least a news each slot of the day (7-22), more if they were selected randomly
@@ -721,24 +767,8 @@ def run_simulation(cl, cli_id, agent_file, exp):
                 break
 
             # get the daily activities of each agent
-            # @todo: simplifiy once the daily_activity_level is always set on YReddit
-            try:
-                weights = [a.daily_activity_level for a in cl.agents.agents]
-                # normalize weights to sum to 1
-                weights = [w / sum(weights) for w in weights]
-                # sample agents
-                sagents = np.random.choice(
-                    cl.agents.agents,
-                    size=expected_active_users,
-                    p=weights,
-                    replace=False,
-                )
-            except Exception as e:
-                sagents = np.random.choice(
-                    cl.agents.agents, size=expected_active_users, replace=False
-                )
+            sagents = sample_agents(hour_to_users[h], expected_active_users)
 
-            # available actions
             # shuffle agents
             random.shuffle(sagents)
 
