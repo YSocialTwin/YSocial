@@ -820,10 +820,20 @@ def merge_populations():
         flash(f"Population with name '{merged_name}' already exists.")
         return redirect(request.referrer)
 
-    # Create the new merged population
+    # Verify all selected populations exist
+    source_populations = []
+    for pop_id in population_ids:
+        pop = Population.query.filter_by(id=pop_id).first()
+        if not pop:
+            flash(f"Population with ID {pop_id} not found.")
+            return redirect(request.referrer)
+        source_populations.append(pop)
+
+    # Create the new merged population with detailed description
+    source_names = ", ".join([pop.name for pop in source_populations])
     merged_population = Population(
         name=merged_name,
-        descr=f"Merged from {len(population_ids)} populations"
+        descr=f"Merged from: {source_names}"
     )
     db.session.add(merged_population)
     db.session.commit()
