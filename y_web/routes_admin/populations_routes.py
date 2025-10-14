@@ -838,12 +838,17 @@ def merge_populations():
     db.session.add(merged_population)
     db.session.commit()
 
-    # Collect unique agent IDs from all selected populations
-    unique_agent_ids = set()
-    for pop_id in population_ids:
-        agent_populations = Agent_Population.query.filter_by(population_id=pop_id).all()
-        for ap in agent_populations:
-            unique_agent_ids.add(ap.agent_id)
+    # Collect unique agent IDs from all selected populations (optimized query)
+    agent_populations = Agent_Population.query.filter(
+        Agent_Population.population_id.in_(population_ids)
+    ).all()
+    unique_agent_ids = set(ap.agent_id for ap in agent_populations)
+
+    # Collect unique page IDs from all selected populations (optimized query)
+    page_populations = Page_Population.query.filter(
+        Page_Population.population_id.in_(population_ids)
+    ).all()
+    unique_page_ids = set(pp.page_id for pp in page_populations)
 
     # Add unique agents to the new population
     for agent_id in unique_agent_ids:
@@ -852,15 +857,6 @@ def merge_populations():
             population_id=merged_population.id
         )
         db.session.add(agent_population)
-    
-    db.session.commit()
-
-    # Collect unique page IDs from all selected populations
-    unique_page_ids = set()
-    for pop_id in population_ids:
-        page_populations = Page_Population.query.filter_by(population_id=pop_id).all()
-        for pp in page_populations:
-            unique_page_ids.add(pp.page_id)
 
     # Add unique pages to the new population
     for page_id in unique_page_ids:
@@ -869,11 +865,11 @@ def merge_populations():
             population_id=merged_population.id
         )
         db.session.add(page_population)
-    
-    db.session.commit()
 
     # Update the size of the new population
     merged_population.size = len(unique_agent_ids)
+    
+    # Single commit for all operations to ensure atomicity
     db.session.commit()
 
     flash(f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages.")
