@@ -32,7 +32,8 @@ CREATE TABLE agents (
     frecsys              TEXT,
     profile_pic          TEXT DEFAULT '',
     daily_activity_level INTEGER DEFAULT 1,
-    profession           TEXT
+    profession           TEXT,
+    activity_profile INTEGER REFERENCES activity_profiles(id)
 );
 
 CREATE TABLE agent_profile (
@@ -235,6 +236,17 @@ CREATE TABLE activity_profiles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(120) NOT NULL UNIQUE,
     hours VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE population_activity_profile (
+    id SERIAL PRIMARY KEY,
+    population INTEGER NOT NULL
+        REFERENCES population(id)
+        ON DELETE CASCADE,
+    activity_profile INTEGER NOT NULL
+        REFERENCES activity_profiles(id)
+        ON DELETE CASCADE,
+    percentage REAL NOT NULL
 );
 
 
