@@ -829,15 +829,6 @@ def merge_populations():
             return redirect(request.referrer)
         source_populations.append(pop)
 
-    # Create the new merged population with detailed description
-    source_names = ", ".join([pop.name for pop in source_populations])
-    merged_population = Population(
-        name=merged_name,
-        descr=f"Merged from: {source_names}"
-    )
-    db.session.add(merged_population)
-    db.session.commit()
-
     # Collect unique agent IDs from all selected populations (optimized query)
     agent_populations = Agent_Population.query.filter(
         Agent_Population.population_id.in_(population_ids)
@@ -849,6 +840,16 @@ def merge_populations():
         Page_Population.population_id.in_(population_ids)
     ).all()
     unique_page_ids = set(pp.page_id for pp in page_populations)
+
+    # Create the new merged population with detailed description
+    source_names = ", ".join([pop.name for pop in source_populations])
+    merged_population = Population(
+        name=merged_name,
+        descr=f"Merged from: {source_names}",
+        size=len(unique_agent_ids)
+    )
+    db.session.add(merged_population)
+    db.session.flush()  # Flush to get the ID without committing
 
     # Add unique agents to the new population
     for agent_id in unique_agent_ids:
@@ -866,9 +867,6 @@ def merge_populations():
         )
         db.session.add(page_population)
 
-    # Update the size of the new population
-    merged_population.size = len(unique_agent_ids)
-    
     # Single commit for all operations to ensure atomicity
     db.session.commit()
 
