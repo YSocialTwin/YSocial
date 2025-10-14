@@ -86,9 +86,9 @@ def generate_population(population_name):
     population = Population.query.filter_by(name=population_name).first()
 
     # Get activity profile distribution for this population
-    profile_distributions = (
-        PopulationActivityProfile.query.filter_by(population=population.id).all()
-    )
+    profile_distributions = PopulationActivityProfile.query.filter_by(
+        population=population.id
+    ).all()
 
     # Build cumulative distribution for activity profile assignment
     activity_profile_cdf = []
