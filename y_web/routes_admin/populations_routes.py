@@ -36,6 +36,7 @@ from y_web.models import (
     Page,
     Page_Population,
     Population,
+    PopulationActivityProfile,
     Population_Experiment,
     Topic_List,
     Toxicity_Levels,
@@ -120,6 +121,13 @@ def create_population():
     frecsys = request.form.get("frecsys_type")
     crecsys = request.form.get("recsys_type")
 
+    # Get activity profiles data from the hidden field
+    activity_profiles_data = request.form.get("activity_profiles_data", "[]")
+    try:
+        activity_profiles_json = json.loads(activity_profiles_data)
+    except:
+        activity_profiles_json = []
+
     population = Population(
         name=name,
         descr=descr,
@@ -139,6 +147,16 @@ def create_population():
     )
 
     db.session.add(population)
+    db.session.commit()
+
+    # Store population-activity profile associations
+    for profile_data in activity_profiles_json:
+        profile_assoc = PopulationActivityProfile(
+            population_id=population.id,
+            activity_profile_id=int(profile_data["id"]),
+            percentage=float(profile_data["percentage"]),
+        )
+        db.session.add(profile_assoc)
     db.session.commit()
 
     generate_population(name)

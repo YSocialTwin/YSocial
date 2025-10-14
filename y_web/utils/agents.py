@@ -13,7 +13,13 @@ import numpy as np
 from sqlalchemy.sql import func
 
 from y_web import db
-from y_web.models import Agent, Agent_Population, Population, Profession
+from y_web.models import (
+    Agent,
+    Agent_Population,
+    Population,
+    PopulationActivityProfile,
+    Profession,
+)
 
 
 def __sample_age(mean, std_dev, min_age, max_age):
@@ -65,7 +71,8 @@ def generate_population(population_name):
 
     Creates agents based on population configuration including demographics
     (age, nationality, gender), Big Five personality traits (OCEAN model),
-    political leaning, toxicity level, education, language, and profession.
+    political leaning, toxicity level, education, language, profession,
+    and activity profiles based on specified distribution percentages.
     Uses statistical distributions to ensure realistic diversity.
 
     Args:
@@ -77,6 +84,22 @@ def generate_population(population_name):
 
     # get population by name
     population = Population.query.filter_by(name=population_name).first()
+
+    # Get activity profile distribution for this population
+    profile_distributions = (
+        PopulationActivityProfile.query.filter_by(population_id=population.id).all()
+    )
+
+    # Build cumulative distribution for activity profile assignment
+    activity_profile_cdf = []
+    cumulative = 0
+    for dist in profile_distributions:
+        cumulative += dist.percentage / 100.0
+        activity_profile_cdf.append((cumulative, dist.activity_profile_id))
+
+    # If no profiles assigned, use None
+    if not activity_profile_cdf:
+        activity_profile_cdf = [(1.0, None)]
 
     for _ in range(population.size):
         try:
@@ -142,6 +165,14 @@ def generate_population(population_name):
         # get random profession from db
         profession = Profession.query.order_by(func.random()).first()
 
+        # Assign activity profile based on population distribution
+        rand_val = random.random()
+        assigned_profile_id = None
+        for cumulative_prob, profile_id in activity_profile_cdf:
+            if rand_val <= cumulative_prob:
+                assigned_profile_id = profile_id
+                break
+
         agent = Agent(
             name=name.replace(" ", ""),
             age=age,
@@ -162,6 +193,7 @@ def generate_population(population_name):
             crecsys=population.crecsys,
             daily_activity_level=daily_activity_level,
             profession=profession.profession,
+            activity_profile=assigned_profile_id,
         )
 
         db.session.add(agent)
