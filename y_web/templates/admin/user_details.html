@@ -54,15 +54,20 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">User</h3>
+                        <h3 class="title is-5 is-thin">User Profile</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Account information and API configurations for this user.
+                        </p>
 
                         <div class="box-content">
                             {% if user.profile_pic != "" %}
                             <div class="box-lines" style="display: flex; justify-content: center">
-                                <img src="{{ user.profile_pic }}" alt="Logo" style="width: 40%; height: auto;">
+                                <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
                             </div>
                             {% endif %}
                             <div class="box-lines">
+                                <b>Account Details</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Basic user information and role.</p>
                                 <div class="box-line">
                                     <span class="left">Username</span>
                                     <span class="right">{{ user.username }}</span>
@@ -75,17 +80,20 @@
                                     <span class="left">Role</span>
                                     <span class="right">{{ user.role }}</span>
                                 </div>
+                                <hr>
+                                <b>API Configuration</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">LLM and toxicity analysis settings.</p>
                                 <div class="box-line">
                                     <span class="left">LLM Model</span>
                                     <span class="right">{{ user.llm }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">LLM Server URL</span>
-                                    <span class="right">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
+                                    <span class="right" style="word-break: break-all;">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Perspective API</span>
-                                    <span class="right">{% if user.perspective_api is none %} Not {% endif %} Set </span>
+                                    <span class="right">{% if user.perspective_api is none %} Not {% endif %} Configured </span>
                                 </div>
                             </div>
 
@@ -102,13 +110,15 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configure the LLM server URL and select a model for text generation tasks.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/update_user_llm" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            Update the LLM server and model for this user.
-
+                                            <small style="color: #666;">ℹ️ Update the LLM server and model for this user.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -150,14 +160,18 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configure Google's Perspective API for text toxicity analysis.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            Personal API key for the Perspective API. <br><br>
-                                            The <a href="https://www.perspectiveapi.com/">Perspective API</a> is a tool that helps to evaluate the toxicity of a text.
-                                            Setting a key will allow the user to use the Perspective API in the hybrid simulations.
+                                            <small style="color: #666;">
+                                            Personal API key for the <a href="https://www.perspectiveapi.com/" target="_blank">Perspective API</a>. <br><br>
+                                            ℹ️ This tool evaluates text toxicity and enables toxicity analysis in hybrid simulations.
+                                            </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -178,28 +192,39 @@
                 <div class="column is-4">
                     <!--Box-->
                      <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Experiments</h3>
+                        <h3 class="title is-5 is-thin">Experiment Participation</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Experiments this user owns or participates in.
+                        </p>
                         <div class="box-content">
                             <div class="box-lines">
+                                <b>Owned Experiments</b>
                                 <div class="box-line">
-                                    <span class="left">Owner of</span>
                                     <span class="right">
+                                        {% if user_experiments %}
                                         <ul>
                                         {% for exp in user_experiments %}
                                             <li><a href="/admin/experiment_details/{{ exp.idexp }}">{{ exp.exp_name }}</a></li>
                                         {% endfor %}
                                         </ul>
+                                        {% else %}
+                                        Not owning any experiments
+                                        {% endif %}
                                     </span>
                                 </div>
                                 <hr>
+                                <b>Joined Experiments</b>
                                  <div class="box-line">
-                                    <span class="left">Joined</span>
                                     <span class="right">
+                                        {% if user_experiments_joined %}
                                         <ul>
                                         {% for exp in user_experiments_joined %}
                                             <li><a href="/admin/experiment_details/{{ exp[0] }}">{{ exp[1] }}</a></li>
                                         {% endfor %}
                                         </ul>
+                                        {% else %}
+                                        Not participating in any experiments
+                                        {% endif %}
                                     </span>
                                 </div>
                             </div>
@@ -211,12 +236,15 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Grant this user access to participate in an experiment.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <span class="left">Experiment</span>
+                                        <span class="left">Select Experiment</span>
                                         <div class="select">
                                             <select name="experiment_id">
                                                 {% for exp in all_experiments %}
