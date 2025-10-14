@@ -841,12 +841,72 @@ def merge_populations():
     ).all()
     unique_page_ids = set(pp.page_id for pp in page_populations)
 
-    # Create the new merged population with detailed description
+    # Fetch all unique agents to aggregate their properties
+    agents = Agent.query.filter(Agent.id.in_(unique_agent_ids)).all() if unique_agent_ids else []
+
+    # Aggregate properties from all agents
+    ages = [a.age for a in agents if a.age is not None]
+    age_min = min(ages) if ages else None
+    age_max = max(ages) if ages else None
+
+    education_set = set(a.education_level for a in agents if a.education_level)
+    education_levels = ",".join(sorted(education_set)) if education_set else None
+
+    leanings_set = set(a.leaning for a in agents if a.leaning)
+    leanings = ",".join(sorted(leanings_set)) if leanings_set else None
+
+    nationalities_set = set(a.nationality for a in agents if a.nationality)
+    nationalities = ",".join(sorted(nationalities_set)) if nationalities_set else None
+
+    languages_set = set(a.language for a in agents if a.language)
+    languages = ",".join(sorted(languages_set)) if languages_set else None
+
+    toxicity_set = set(a.toxicity for a in agents if a.toxicity)
+    toxicity = ",".join(sorted(toxicity_set)) if toxicity_set else None
+
+    # Get most common LLM type
+    llm_types = [a.ag_type for a in agents if a.ag_type]
+    llm = max(set(llm_types), key=llm_types.count) if llm_types else None
+
+    # Get most common recommendation systems
+    crecsys_list = [a.crecsys for a in agents if a.crecsys]
+    crecsys = max(set(crecsys_list), key=crecsys_list.count) if crecsys_list else None
+
+    frecsys_list = [a.frecsys for a in agents if a.frecsys]
+    frecsys = max(set(frecsys_list), key=frecsys_list.count) if frecsys_list else None
+
+    # Aggregate interests from source populations
+    interests_set = set()
+    for pop in source_populations:
+        if pop.interests:
+            interests_set.update(pop.interests.split(","))
+    interests = ",".join(sorted(interests_set)) if interests_set else None
+
+    # Get LLM URL from first population that has it
+    llm_url = None
+    for pop in source_populations:
+        if pop.llm_url:
+            llm_url = pop.llm_url
+            break
+
+    # Create the new merged population with detailed description and all aggregated properties
     source_names = ", ".join([pop.name for pop in source_populations])
     merged_population = Population(
         name=merged_name,
         descr=f"Merged from: {source_names}",
-        size=len(unique_agent_ids)
+        size=len(unique_agent_ids),
+        llm=llm,
+        age_min=age_min,
+        age_max=age_max,
+        education=education_levels,
+        leanings=leanings,
+        nationalities=nationalities,
+        languages=languages,
+        interests=interests,
+        toxicity=toxicity,
+        crecsys=crecsys,
+        frecsys=frecsys,
+        llm_url=llm_url
     )
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing
