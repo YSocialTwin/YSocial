@@ -87,7 +87,7 @@ def generate_population(population_name):
 
     # Get activity profile distribution for this population
     profile_distributions = (
-        PopulationActivityProfile.query.filter_by(population_id=population.id).all()
+        PopulationActivityProfile.query.filter_by(population=population.id).all()
     )
 
     # Build cumulative distribution for activity profile assignment
@@ -95,7 +95,7 @@ def generate_population(population_name):
     cumulative = 0
     for dist in profile_distributions:
         cumulative += dist.percentage / 100.0
-        activity_profile_cdf.append((cumulative, dist.activity_profile_id))
+        activity_profile_cdf.append((cumulative, dist.activity_profile))
 
     # If no profiles assigned, use None
     if not activity_profile_cdf:

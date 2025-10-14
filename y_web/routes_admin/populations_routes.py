@@ -152,8 +152,8 @@ def create_population():
     # Store population-activity profile associations
     for profile_data in activity_profiles_json:
         profile_assoc = PopulationActivityProfile(
-            population_id=population.id,
-            activity_profile_id=int(profile_data["id"]),
+            population=population.id,
+            activity_profile=int(profile_data["id"]),
             percentage=float(profile_data["percentage"]),
         )
         db.session.add(profile_assoc)
@@ -425,7 +425,7 @@ def population_details(uid):
     activity_profile_dist = (
         db.session.query(PopulationActivityProfile, ActivityProfile)
         .join(ActivityProfile)
-        .filter(PopulationActivityProfile.population_id == uid)
+        .filter(PopulationActivityProfile.population == uid)
         .all()
     )
 

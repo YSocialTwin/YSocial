@@ -766,10 +766,10 @@ class PopulationActivityProfile(db.Model):
     __tablename__ = "population_activity_profile"
 
     id = db.Column(db.Integer, primary_key=True)
-    population_id = db.Column(
+    population = db.Column(
         db.Integer, db.ForeignKey("population.id", ondelete="CASCADE"), nullable=False
     )
-    activity_profile_id = db.Column(
+    activity_profile = db.Column(
         db.Integer,
         db.ForeignKey("activity_profiles.id", ondelete="CASCADE"),
         nullable=False,
