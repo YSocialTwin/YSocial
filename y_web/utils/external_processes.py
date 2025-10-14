@@ -17,8 +17,8 @@ import subprocess
 import sys
 import time
 import traceback
-from multiprocessing import Process
 from collections import defaultdict
+from multiprocessing import Process
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +29,12 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import client_processes, db
-from y_web.models import Client_Execution, Ollama_Pull, PopulationActivityProfile, ActivityProfile
+from y_web.models import (
+    ActivityProfile,
+    Client_Execution,
+    Ollama_Pull,
+    PopulationActivityProfile,
+)
 
 
 @deprecated
@@ -686,10 +691,17 @@ def start_client_process(exp, cli, population, resume=False):
 def get_users_per_hour(population, agents):
     # get population activity profiles
     activity_profiles = defaultdict(list)
-    population_activity_profiles = (db.session.query(PopulationActivityProfile).
-                                    filter(PopulationActivityProfile.population==population.id).all())
+    population_activity_profiles = (
+        db.session.query(PopulationActivityProfile)
+        .filter(PopulationActivityProfile.population == population.id)
+        .all()
+    )
     for ap in population_activity_profiles:
-        profile = db.session.query(ActivityProfile).filter(ActivityProfile.id == ap.activity_profile).first()
+        profile = (
+            db.session.query(ActivityProfile)
+            .filter(ActivityProfile.id == ap.activity_profile)
+            .first()
+        )
         activity_profiles[profile.name] = [int(x) for x in profile.hours.split(",")]
 
     hours_to_users = defaultdict(list)
@@ -715,9 +727,7 @@ def sample_agents(agents, expected_active_users):
             replace=False,
         )
     except Exception as e:
-        sagents = np.random.choice(
-            agents, size=expected_active_users, replace=False
-        )
+        sagents = np.random.choice(agents, size=expected_active_users, replace=False)
 
     return sagents
 
