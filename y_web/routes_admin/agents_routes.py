@@ -228,6 +228,13 @@ def agent_details(uid):
     # get all populations
     populations = Population.query.all()
 
+    # Get agent's activity profile
+    activity_profile = None
+    if agent.activity_profile:
+        activity_profile = ActivityProfile.query.filter_by(
+            id=agent.activity_profile
+        ).first()
+
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
@@ -237,6 +244,7 @@ def agent_details(uid):
         agent_populations=pops,
         profile=agent_profiles,
         populations=populations,
+        activity_profile=activity_profile,
         ollamas=ollamas,
         llm_backend=llm_backend,
     )

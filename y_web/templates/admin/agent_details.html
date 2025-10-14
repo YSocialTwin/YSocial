@@ -116,6 +116,25 @@
                                     <span class="left">Activity Level</span>
                                     <span class="right">{{ agent.daily_activity_level }}</span>
                                 </div>
+                                <div class="box-line">
+                                    <span class="left">Activity Profile</span>
+                                    <span class="right">
+                                        {% if activity_profile %}
+                                            {{ activity_profile.name }}
+                                            <span style="display: inline-block; margin-left: 8px;">
+                                                {% for hour in range(24) %}
+                                                    {% if hour|string in activity_profile.hours.split(',') %}
+                                                        <span style="display: inline-block; width: 3px; height: 12px; background: #4caf50; margin: 0 1px; vertical-align: middle;"></span>
+                                                    {% else %}
+                                                        <span style="display: inline-block; width: 3px; height: 12px; background: #ddd; margin: 0 1px; vertical-align: middle;"></span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% else %}
+                                            Not assigned
+                                        {% endif %}
+                                    </span>
+                                </div>
 
                                 {% if profile is not none %}
                                 <hr>
