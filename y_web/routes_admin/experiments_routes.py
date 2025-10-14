@@ -630,7 +630,7 @@ def create_experiment():
     with open(
         f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json", "w"
     ) as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=4)
 
     # add the experiment to the database
 
