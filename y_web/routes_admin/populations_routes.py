@@ -36,8 +36,8 @@ from y_web.models import (
     Page,
     Page_Population,
     Population,
-    PopulationActivityProfile,
     Population_Experiment,
+    PopulationActivityProfile,
     Topic_List,
     Toxicity_Levels,
 )
@@ -435,9 +435,7 @@ def population_details(uid):
         agent_profiles["profiles"].append(profile.name)
         agent_profiles["expected_pct"].append(dist.percentage)
         # Count actual agents with this profile
-        actual_count = sum(
-            1 for a in agents if a[0].activity_profile == profile.id
-        )
+        actual_count = sum(1 for a in agents if a[0].activity_profile == profile.id)
         agent_profiles["assigned_count"].append(actual_count)
 
     models = get_llm_models()  # Use generic function for any LLM server
