@@ -467,7 +467,8 @@ class Agent(db.Model):
     daily_activity_level = db.Column(db.Integer, default=1)
     profession = db.Column(db.String(50), default="")
     activity_profile = db.Column(
-        db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True)
+        db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True
+    )
 
 
 class Agent_Population(db.Model):
@@ -760,19 +761,17 @@ class PopulationActivityProfile(db.Model):
     Association table linking a population with an activity profile.
     Defines what percentage of the population follows a given profile.
     """
+
     __bind_key__ = "db_admin"
-    __tablename__ = 'population_activity_profile'
+    __tablename__ = "population_activity_profile"
 
     id = db.Column(db.Integer, primary_key=True)
     population_id = db.Column(
-        db.Integer,
-        db.ForeignKey('population.id', ondelete='CASCADE'),
-        nullable=False
+        db.Integer, db.ForeignKey("population.id", ondelete="CASCADE"), nullable=False
     )
     activity_profile_id = db.Column(
         db.Integer,
-        db.ForeignKey('activity_profiles.id', ondelete='CASCADE'),
-        nullable=False
+        db.ForeignKey("activity_profiles.id", ondelete="CASCADE"),
+        nullable=False,
     )
     percentage = db.Column(db.Float, nullable=False)
-
