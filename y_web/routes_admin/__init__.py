@@ -13,3 +13,4 @@ from .ollama_routes import *
 from .pages_routes import *
 from .populations_routes import *
 from .users_routes import *
+from .jupyterlab_routes import *

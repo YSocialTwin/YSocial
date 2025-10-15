@@ -515,9 +515,7 @@ def create_experiment():
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
-
         if db_type == "sqlite":
-
             shutil.copyfile(
                 f"data_schema{os.sep}database_clean_server.db",
                 f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
@@ -693,7 +691,6 @@ def delete_simulation(exp_id):
         # remove the experiment folder
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
-
             shutil.rmtree(
                 f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
                 ignore_errors=True,

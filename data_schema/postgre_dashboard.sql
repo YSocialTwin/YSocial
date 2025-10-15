@@ -250,6 +250,14 @@ CREATE TABLE population_activity_profile (
 );
 
 
+CREATE TABLE jupyter_instances (
+    id SERIAL PRIMARY KEY,
+    exp_id INTEGER NOT NULL REFERENCES exps(idexp) ON DELETE CASCADE,
+    port INTEGER NOT NULL,
+    notebook_dir VARCHAR(300) NOT NULL,
+    process INTEGER NOT NULL
+);
+
 INSERT INTO content_recsys (name, value) VALUES
   ('ContentRecSys', 'Random'),
   ('ReverseChrono', '(RC) Reverse Chrono'),

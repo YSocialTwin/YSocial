@@ -320,4 +320,7 @@ def create_app(db_type="sqlite"):
 
     app.register_blueprint(errors_blueprint)
 
+    from .routes_admin.jupyterlab_routes import lab as lab_blueprint
+    app.register_blueprint(lab_blueprint)
+
     return app
