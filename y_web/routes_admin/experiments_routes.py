@@ -36,6 +36,7 @@ from y_web.models import (
     Exp_stats,
     Exp_Topic,
     Exps,
+    Jupyter_instances,
     Languages,
     Leanings,
     Nationalities,
@@ -846,6 +847,9 @@ def experiment_details(uid):
     elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
         dbtype = "postgresql"
 
+    # get jupyter instance for this experiment
+    jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
+
     return render_template(
         "admin/experiment_details.html",
         experiment=experiment,
@@ -854,6 +858,7 @@ def experiment_details(uid):
         len=len,
         ollamas=ollamas,
         dbtype=dbtype,
+        jupyter_instance=jupyter_instance,
     )
 
 

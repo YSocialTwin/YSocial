@@ -211,10 +211,72 @@
                     </div>
 
                     <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Data Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            JupyterLab environment for data exploration and analysis.
+                        </p>
                         <div class="box-content">
-                            <h3 class="title is-5 is-thin">Data Analysis</h3>
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">JupyterLab Service</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" 
+                                           {% if jupyter_instance %}
+                                           href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;"
+                                           {% else %}
+                                           href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;"
+                                           {% endif %}
+                                           title="{% if jupyter_instance %}Stop{% else %}Start{% endif %}">
+                                            <i class="mdi {% if jupyter_instance %}mdi-stop active{% else %}mdi-play-box-outline{% endif %}" 
+                                               style="font-size: 24px;"></i>
+                                        </a>
+                                        {% if jupyter_instance %}
+                                        <a class="link-tooltip" 
+                                           href="/admin/lab/{{ experiment.idexp }}" 
+                                           target="_blank"
+                                           title="Open JupyterLab">
+                                            <i class="mdi mdi-open-in-new active" style="font-size: 24px;"></i>
+                                        </a>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+                    <script>
+                        function startJupyter(expId) {
+                            fetch(`/admin/lab_start/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        location.reload();
+                                    } else {
+                                        alert('Error: ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    alert('Error starting JupyterLab: ' + error);
+                                });
+                        }
+
+                        function stopJupyter(instanceId) {
+                            fetch(`/admin/lab_stop/${instanceId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        location.reload();
+                                    } else {
+                                        alert('Error: ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    alert('Error stopping JupyterLab: ' + error);
+                                });
+                        }
+                    </script>
                 </div>
 
                 <div class="column is-4">
