@@ -29,10 +29,15 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Client</h3>
+                        <h3 class="title is-5 is-thin">Client Overview</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Information about this simulation client, including assigned population and content sources.
+                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
+                                <b>Basic Information</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Client identification and configuration.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ client.name }}</span>
@@ -41,19 +46,26 @@
                                     <span class="left">Description</span>
                                     <span class="right">{{ client.descr }}</span>
                                 </div>
+                                <hr>
+                                <b>Assigned Resources</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Population and content pages used in this simulation.</p>
                                 <div class="box-line">
                                     <span class="left">Population</span>
                                     <span class="right"><a href="/admin/population_details/{{ population.id }}">{{ population.name }}</a></span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Pages</span>
+                                    <span class="left">Content Pages</span>
 
                                     <span class="right">
+                                        {% if pages %}
                                         <ul>
                                         {% for page in pages %}
                                             <li><a href="/admin/page_details/{{ page[0].id }}">{{ page[0].name }}</a></li>
                                         {% endfor %}
                                         </ul>
+                                        {% else %}
+                                        No pages assigned
+                                        {% endif %}
                                     </span>
                                 </div>
 
@@ -69,8 +81,13 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Simulation Parameters</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configuration settings controlling simulation behavior and dynamics.
+                        </p>
                         <div class="box-content">
                             <div class="box-lines">
+                                <b>Duration & Growth</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Simulation length and population dynamics.</p>
                                 <div class="box-line">
                                     <span class="left">Simulation Length (days)</span>
                                     <span class="right">{{ client.days }}</span>
@@ -83,6 +100,9 @@
                                     <span class="left">% Daily Churn</span>
                                     <span class="right">{{ client.percentage_removed_agents_iteration }}</span>
                                 </div>
+                                <hr>
+                                <b>Behavioral Settings</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent interaction and engagement parameters.</p>
                                 <div class="box-line">
                                     <span class="left">Thread Context Length</span>
                                     <span class="right">{{ client.max_length_thread_reading }}</span>
@@ -328,14 +348,14 @@
                                     const select = document.getElementById('models_select_client');
                                     const status = document.getElementById('llm_url_status_client');
                                     const llmUrl = urlInput.value.trim();
-                                    
+
                                     if (!llmUrl) {
                                         alert('Please enter an LLM server URL');
                                         return;
                                     }
-                                    
+
                                     status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
-                                    
+
                                     fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
                                         .then(response => response.json())
                                         .then(data => {

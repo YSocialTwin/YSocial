@@ -29,10 +29,15 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Page</h3>
+                        <h3 class="title is-5 is-thin">Page Overview</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Information about this content source page, including topics and populations where it's deployed.
+                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
+                                <b>Basic Information</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Page identification and RSS feed configuration.</p>
 
                                 <div class="box-line">
                                     <span class="left">Page Name</span>
@@ -43,35 +48,45 @@
                                     <span class="right">{{ page.page_type }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Descr</span>
+                                    <span class="left">Description</span>
                                     <span class="right">{{ page.descr }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Feed url</span>
-                                    <span class="right">{{ page.feed }}</span>
+                                    <span class="left">Feed URL</span>
+                                    <span class="right" style="word-break: break-all;">{{ page.feed }}</span>
                                 </div>
 
                                 <hr>
+                                <b>Content & Deployment</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Topics covered and population assignments.</p>
 
                                 <div class="box-line">
                                     <span class="left">Topics</span>
                                     <span class="right">
+                                        {% if page_topics %}
                                         <ul>
                                         {% for pt in page_topics %}
-                                            {{ pt }}
+                                            <li>{{ pt }}</li>
                                         {% endfor %}
                                         </ul>
+                                        {% else %}
+                                        No topics assigned
+                                        {% endif %}
                                     </span>
                                 </div>
 
                                  <div class="box-line">
-                                    <span class="left">Deployed on (Populations)</span>
+                                    <span class="left">Active Populations</span>
                                     <span class="right">
+                                        {% if page_populations %}
                                         <ul>
                                         {% for population in page_populations %}
                                             <li><a href="/admin/population_details/{{ population[1] }}">{{ population[0] }}</a></li>
                                         {% endfor %}
                                         </ul>
+                                        {% else %}
+                                        Not deployed to any population
+                                        {% endif %}
                                     </span>
                                 </div>
 
@@ -89,12 +104,15 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Population</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Deploy this page to agent populations so they can interact with its content.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/add_page_to_population" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            A page can be added to multiple agents' populations.
+                                            <small style="color: #666;">ℹ️ A page can be added to multiple populations.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -120,12 +138,15 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add Topic to Page</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Associate content topics with this page for better categorization.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/add_topic_to_page" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            Multiple topics can be associated with a same page.
+                                            <small style="color: #666;">ℹ️ Multiple topics can be associated with the same page.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -166,11 +187,14 @@
                     </div>
 
                     <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Recent News</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Latest articles from this page's RSS feed.
+                        </p>
 
                         <div class="box-content">
 
                             <div class="box-lines">
-                                <h3 class="title is-5 is-thin">Recent News</h3>
                                 {% for feed in feeds %}
                                 <div class="box-line">
                                     <span class="right"><a href="{{ feed.link }}">{{ feed.title }}</a></span>

@@ -35,7 +35,9 @@ def user_data():
         else []
     )
     ollamas = ollama_status()
-    return render_template("admin/users.html", m=models, ollamas=ollamas)
+    return render_template(
+        "admin/users.html", m=models, ollamas=ollamas, llm_backend=llm_backend
+    )
 
 
 @users.route("/admin/user_data")

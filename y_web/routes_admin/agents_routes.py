@@ -14,6 +14,7 @@ from flask_login import current_user, login_required
 
 from y_web import db
 from y_web.models import (
+    ActivityProfile,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -59,6 +60,7 @@ def agent_data():
     toxicity_levels = Toxicity_Levels.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
+    activity_profiles = ActivityProfile.query.all()
 
     return render_template(
         "admin/agents.html",
@@ -74,6 +76,7 @@ def agent_data():
         toxicity_levels=toxicity_levels,
         crecsys=crecsys,
         frecsys=frecsys,
+        activity_profiles=activity_profiles,
     )
 
 
@@ -96,13 +99,31 @@ def agents_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "profession", "age", "daily_activity_level"]:
+            if name not in [
+                "name",
+                "profession",
+                "age",
+                "daily_activity_level",
+                "activity_profile",
+            ]:
                 name = "name"
-            col = getattr(Agent, name)
-            if direction == "-":
-                col = col.desc()
-            order.append(col)
+            # Handle activity_profile sorting by joining with ActivityProfile table
+            if name == "activity_profile":
+                col = ActivityProfile.name
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
+            else:
+                col = getattr(Agent, name)
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
         if order:
+            # Join with ActivityProfile if sorting by activity_profile
+            if any("activity_profile" in str(o) for o in order):
+                query = query.outerjoin(
+                    ActivityProfile, Agent.activity_profile == ActivityProfile.id
+                )
             query = query.order_by(*order)
 
     # pagination
@@ -114,17 +135,27 @@ def agents_data():
     # response
     res = query.all()
 
-    return {
-        "data": [
+    data = []
+    for agent in res:
+        activity_profile_data = None
+        if agent.activity_profile:
+            profile = ActivityProfile.query.get(agent.activity_profile)
+            if profile:
+                activity_profile_data = {"name": profile.name, "hours": profile.hours}
+
+        data.append(
             {
                 "id": agent.id,
                 "name": " ".join(re.findall("[A-Z][^A-Z]*", agent.name)),
                 "age": agent.age,
                 "profession": agent.profession,
                 "daily_activity_level": agent.daily_activity_level,
+                "activity_profile": activity_profile_data,
             }
-            for agent in res
-        ],
+        )
+
+    return {
+        "data": data,
         "total": total,
     }
 
@@ -225,6 +256,13 @@ def agent_details(uid):
     # get all populations
     populations = Population.query.all()
 
+    # Get agent's activity profile
+    activity_profile = None
+    if agent.activity_profile:
+        activity_profile = ActivityProfile.query.filter_by(
+            id=agent.activity_profile
+        ).first()
+
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
@@ -234,6 +272,7 @@ def agent_details(uid):
         agent_populations=pops,
         profile=agent_profiles,
         populations=populations,
+        activity_profile=activity_profile,
         ollamas=ollamas,
         llm_backend=llm_backend,
     )

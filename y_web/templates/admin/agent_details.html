@@ -29,11 +29,15 @@
 
                     <!--Dashboard box-->
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Agent</h3>
+                        <h3 class="title is-5 is-thin">Agent Profile</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Comprehensive profile of this synthetic agent, including demographics, personality, and behavioral characteristics.
+                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <h4><b>Simulation Models</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Recommendation algorithms used by this agent.</p>
 
                                 <div class="box-line">
                                     <span class="left">Content RecSys</span>
@@ -45,6 +49,7 @@
                                 </div>
                                 <hr>
                                 <h4><b>Demographic Information</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Basic demographic attributes and language preferences.</p>
                                 <div class="box-line">
                                     <span class="left">Agent Name</span>
                                     <span class="right">{{ agent.name }}</span>
@@ -71,6 +76,7 @@
                                 </div>
                                 <hr>
                                 <h4><b>Thematic Characterization</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Professional and ideological identity traits.</p>
                                 <div class="box-line">
                                     <span class="left">Profession</span>
                                     <span class="right">{{ agent.profession }}</span>
@@ -83,7 +89,8 @@
 
                                 <hr>
 
-                                <h4><b>Big Five Personality profile</b></h4>
+                                <h4><b>Big Five Personality Profile</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Scores for the five major personality dimensions (0.0 - 1.0 scale).</p>
                                 <div class="box-line">
                                     <span class="left">Openness to Experience</span>
                                     <span class="right">{{ agent.oe }}</span>
@@ -107,6 +114,7 @@
 
                                 <hr>
                                 <h4><b>Expected Social Behavior</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Behavioral patterns and activity characteristics.</p>
                                 <div class="box-line">
                                     <span class="left">Toxicity Level</span>
                                     <span class="right">{{ agent.toxicity }}</span>
@@ -116,11 +124,33 @@
                                     <span class="left">Activity Level</span>
                                     <span class="right">{{ agent.daily_activity_level }}</span>
                                 </div>
+                                <div class="box-line">
+                                    <span class="left">Activity Profile</span>
+                                    <span class="right">
+                                        {% if activity_profile %}
+                                            {{ activity_profile.name }}
+                                            <span style="display: inline-block; margin-left: 8px;">
+                                                {% for hour in range(24) %}
+                                                    {% if hour|string in activity_profile.hours.split(',') %}
+                                                        <span style="display: inline-block; width: 3px; height: 12px; background: #4caf50; margin: 0 1px; vertical-align: middle;"></span>
+                                                    {% else %}
+                                                        <span style="display: inline-block; width: 3px; height: 12px; background: #ddd; margin: 0 1px; vertical-align: middle;"></span>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </span>
+                                        {% else %}
+                                            Not assigned
+                                        {% endif %}
+                                    </span>
+                                </div>
 
                                 {% if profile is not none %}
                                 <hr>
-                                <h4><b>Advanced Role-Playing</b></h4>
+                                <h4><b>Advanced Role-Playing Profile</b></h4>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Custom behavioral instructions for enhanced agent simulation.</p>
+                                <div class="box-line">
                                 <span class="right">{{ profile.profile }}</span>
+                                </div>
                                 {% endif %}
 
                             </div>
@@ -152,11 +182,15 @@
                      {% endif %}
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Populations</h3>
+                        <h3 class="title is-5 is-thin">Population Memberships</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Populations where this agent is currently deployed.
+                        </p>
                         <div class="box-content">
                             <div class="box-lines">
+                                {% if agent_populations %}
                                 <div class="box-line">
-                                    <span class="left">Deployed on</span>
+                                    <span class="left">Active Populations</span>
                                     <span class="right">
                                         <ul>
                                         {% for population in agent_populations %}
@@ -165,6 +199,11 @@
                                         </ul>
                                     </span>
                                 </div>
+                                {% else %}
+                                <div class="box-line">
+                                    <span class="left">Not assigned to any population</span>
+                                </div>
+                                {% endif %}
                             </div>
 
                         </div>
@@ -172,12 +211,15 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Population</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Assign this agent to additional populations for use in experiments.
+                        </p>
                         <div class="box-content">
                             <form action="/admin/add_to_population" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            An agent can be added to multiple populations.
+                                            <small style="color: #666;">ℹ️ An agent can be added to multiple populations.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
