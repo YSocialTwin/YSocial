@@ -145,6 +145,57 @@ def dashboard():
     )
 
 
+@admin.route("/admin/models_data")
+@login_required
+def models_data():
+    """
+    API endpoint for LLM models data table.
+
+    Returns server-side paginated models data for DataTable display.
+
+    Returns:
+        JSON with 'data' array of model objects and 'total' count
+    """
+    check_privileges(current_user.username)
+    llm_backend = llm_backend_status()
+
+    # get installed LLM models from the configured server
+    models = []
+    try:
+        models = get_llm_models()
+    except:
+        pass
+
+    # search filter
+    search = request.args.get("search")
+    if search:
+        models = [m for m in models if search.lower() in m.lower()]
+
+    total = len(models)
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        for s in sort.split(","):
+            direction = s[0]
+            # For simple list, we just sort by name
+            if direction == "-":
+                models = sorted(models, reverse=True)
+            else:
+                models = sorted(models)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        models = models[start : start + length]
+
+    return {
+        "data": [{"model_name": model, "backend": llm_backend["backend"]} for model in models],
+        "total": total,
+    }
+
+
 @admin.route("/admin/about")
 @login_required
 def about():

@@ -255,20 +255,84 @@
                         <h3 class="title is-5 is-thin">Available LLMs</h3>
 
                         <div class="box-content">
-                            <div class="box-lines">
-                                {% for model in models %}
-                                <div class="box-line">
-                                    <span class="left">{{ model }}</span>
-                                    {% if llm_backend['backend'] == 'ollama' %}
-                                    <span class="right"><a class="link-tooltip" href="/admin/delete_model/{{ model }}" title="Delete">
-                                        <i class="mdi mdi-delete" style="font-size: 24px;"></i>
-                                </a></span>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                            </div>
+                            <div id="models-table"></div>
 
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
+                            <style>
+                              #models-table td {
+                                vertical-align: middle !important;
+                              }
+                            </style>
+
+                            <script>
+                                const modelsTableDiv = document.getElementById('models-table');
+
+                                const updateUrl = (prev, query) => {
+                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+                                };
+
+                                new gridjs.Grid({
+                                    columns: [
+                                        { id: 'model_name', name: 'Model Name', sort: true },
+                                        {
+                                            id: 'actions',
+                                            name: 'Actions',
+                                            sort: false,
+                                            formatter: (cell, row) => {
+                                                const modelName = row.cells[0].data;
+                                                const backend = '{{ llm_backend["backend"] }}';
+                                                
+                                                // Only show delete button for Ollama backend
+                                                if (backend === 'ollama') {
+                                                    return gridjs.html(`
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
+                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Delete
+                                                            </a>
+                                                        </div>
+                                                    `);
+                                                } else {
+                                                    return gridjs.html(`<div style="text-align: center;">-</div>`);
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    server: {
+                                        url: '/admin/models_data',
+                                        then: results => results.data,
+                                        total: results => results.total,
+                                    },
+                                    search: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, search) => {
+                                                return updateUrl(prev, { search });
+                                            },
+                                        },
+                                    },
+                                    sort: {
+                                        enabled: true,
+                                        multiColumn: false,
+                                        server: {
+                                            url: (prev, columns) => {
+                                                const columnIds = ['model_name'];
+                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                                                return updateUrl(prev, { sort });
+                                            },
+                                        },
+                                    },
+                                    pagination: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, page, limit) => {
+                                                return updateUrl(prev, { start: page * limit, length: limit });
+                                            },
+                                        },
+                                    },
+                                }).render(modelsTableDiv);
+                            </script>
                         </div>
                     </div>
                     {% endif %}
