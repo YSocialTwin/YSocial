@@ -776,3 +776,167 @@ def update_llm(uid):
 
     db.session.commit()
     return redirect(request.referrer)
+
+
+@population.route("/admin/merge_populations", methods=["POST"])
+@login_required
+def merge_populations():
+    """
+    Merge multiple populations into a new one.
+
+    Creates a new population and assigns agents and pages from selected populations,
+    avoiding duplicates.
+
+    Form data:
+        merged_population_name: Name for the new merged population
+        selected_population_ids: Comma-separated list of population IDs to merge
+
+    Returns:
+        Redirect to populations page
+    """
+    check_privileges(current_user.username)
+
+    merged_name = request.form.get("merged_population_name")
+    selected_ids = request.form.get("selected_population_ids")
+
+    if not merged_name or not selected_ids:
+        flash(
+            "Please provide a population name and select at least 2 populations to merge."
+        )
+        return redirect(request.referrer)
+
+    # Parse the selected population IDs
+    try:
+        population_ids = [
+            int(pid.strip()) for pid in selected_ids.split(",") if pid.strip()
+        ]
+    except ValueError:
+        flash("Invalid population IDs provided.")
+        return redirect(request.referrer)
+
+    if len(population_ids) < 2:
+        flash("Please select at least 2 populations to merge.")
+        return redirect(request.referrer)
+
+    # Check if merged population name already exists
+    existing_pop = Population.query.filter_by(name=merged_name).first()
+    if existing_pop:
+        flash(f"Population with name '{merged_name}' already exists.")
+        return redirect(request.referrer)
+
+    # Verify all selected populations exist
+    source_populations = []
+    for pop_id in population_ids:
+        pop = Population.query.filter_by(id=pop_id).first()
+        if not pop:
+            flash(f"Population with ID {pop_id} not found.")
+            return redirect(request.referrer)
+        source_populations.append(pop)
+
+    # Collect unique agent IDs from all selected populations (optimized query)
+    agent_populations = Agent_Population.query.filter(
+        Agent_Population.population_id.in_(population_ids)
+    ).all()
+    unique_agent_ids = set(ap.agent_id for ap in agent_populations)
+
+    # Collect unique page IDs from all selected populations (optimized query)
+    page_populations = Page_Population.query.filter(
+        Page_Population.population_id.in_(population_ids)
+    ).all()
+    unique_page_ids = set(pp.page_id for pp in page_populations)
+
+    # Fetch all unique agents to aggregate their properties
+    agents = (
+        Agent.query.filter(Agent.id.in_(unique_agent_ids)).all()
+        if unique_agent_ids
+        else []
+    )
+
+    # Aggregate properties from all agents
+    ages = [a.age for a in agents if a.age is not None]
+    age_min = min(ages) if ages else None
+    age_max = max(ages) if ages else None
+
+    education_set = set(a.education_level for a in agents if a.education_level)
+    education_levels = ",".join(sorted(education_set)) if education_set else None
+
+    leanings_set = set(a.leaning for a in agents if a.leaning)
+    leanings = ",".join(sorted(leanings_set)) if leanings_set else None
+
+    nationalities_set = set(a.nationality for a in agents if a.nationality)
+    nationalities = ",".join(sorted(nationalities_set)) if nationalities_set else None
+
+    languages_set = set(a.language for a in agents if a.language)
+    languages = ",".join(sorted(languages_set)) if languages_set else None
+
+    toxicity_set = set(a.toxicity for a in agents if a.toxicity)
+    toxicity = ",".join(sorted(toxicity_set)) if toxicity_set else None
+
+    # Get most common LLM type
+    llm_types = [a.ag_type for a in agents if a.ag_type]
+    llm = max(set(llm_types), key=llm_types.count) if llm_types else None
+
+    # Get most common recommendation systems
+    crecsys_list = [a.crecsys for a in agents if a.crecsys]
+    crecsys = max(set(crecsys_list), key=crecsys_list.count) if crecsys_list else None
+
+    frecsys_list = [a.frecsys for a in agents if a.frecsys]
+    frecsys = max(set(frecsys_list), key=frecsys_list.count) if frecsys_list else None
+
+    # Aggregate interests from source populations
+    interests_set = set()
+    for pop in source_populations:
+        if pop.interests:
+            interests_set.update(pop.interests.split(","))
+    interests = ",".join(sorted(interests_set)) if interests_set else None
+
+    # Get LLM URL from first population that has it
+    llm_url = None
+    for pop in source_populations:
+        if pop.llm_url:
+            llm_url = pop.llm_url
+            break
+
+    # Create the new merged population with detailed description and all aggregated properties
+    source_names = ", ".join([pop.name for pop in source_populations])
+    merged_population = Population(
+        name=merged_name,
+        descr=f"Merged from: {source_names}",
+        size=len(unique_agent_ids),
+        llm=llm,
+        age_min=age_min,
+        age_max=age_max,
+        education=education_levels,
+        leanings=leanings,
+        nationalities=nationalities,
+        languages=languages,
+        interests=interests,
+        toxicity=toxicity,
+        crecsys=crecsys,
+        frecsys=frecsys,
+        llm_url=llm_url,
+    )
+    db.session.add(merged_population)
+    db.session.flush()  # Flush to get the ID without committing
+
+    # Add unique agents to the new population
+    for agent_id in unique_agent_ids:
+        agent_population = Agent_Population(
+            agent_id=agent_id, population_id=merged_population.id
+        )
+        db.session.add(agent_population)
+
+    # Add unique pages to the new population
+    for page_id in unique_page_ids:
+        page_population = Page_Population(
+            page_id=page_id, population_id=merged_population.id
+        )
+        db.session.add(page_population)
+
+    # Single commit for all operations to ensure atomicity
+    db.session.commit()
+
+    flash(
+        f"Successfully created merged population '{merged_name}' with {len(unique_agent_ids)} agents and {len(unique_page_ids)} pages."
+    )
+    return populations()
