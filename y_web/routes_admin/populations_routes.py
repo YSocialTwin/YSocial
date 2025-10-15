@@ -8,7 +8,6 @@ association with experiments and pages.
 
 import json
 import os
-from pydoc_data.topics import topics
 
 from flask import (
     Blueprint,
