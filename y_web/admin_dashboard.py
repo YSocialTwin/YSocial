@@ -163,7 +163,7 @@ def models_data():
     models = []
     try:
         models = get_llm_models()
-    except:
+    except Exception:
         pass
 
     # search filter
@@ -177,12 +177,13 @@ def models_data():
     sort = request.args.get("sort")
     if sort:
         for s in sort.split(","):
-            direction = s[0]
-            # For simple list, we just sort by name
-            if direction == "-":
-                models = sorted(models, reverse=True)
-            else:
-                models = sorted(models)
+            if len(s) > 0:
+                direction = s[0]
+                # For simple list, we just sort by name
+                if direction == "-":
+                    models = sorted(models, reverse=True)
+                else:
+                    models = sorted(models)
 
     # pagination
     start = request.args.get("start", type=int, default=-1)
