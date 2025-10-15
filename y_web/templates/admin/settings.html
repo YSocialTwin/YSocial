@@ -23,16 +23,9 @@
                         <div class="box-content">
 
 
-                            <div id="table"></div>
+                            <div id="table" class="gridjs-table-vertical-middle"></div>
 
                             <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-
-                            <style>
-
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
 
 <script>
     const tableDiv = document.getElementById('table');
@@ -69,17 +62,14 @@
                 formatter: (cell, row) => {
                     const id = row.cells[0].data;
                     return gridjs.html(`
-                        <div style="display: flex; gap: 8px; justify-content: center;">
-                            <a href="/admin/experiment_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                        <div class="action-button-group">
+                            <a href="/admin/experiment_details/${id}" class="action-button-green">
                                 Details
                             </a>
-                            <a href="/admin/delete_simulation/${id}"
-                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                            <a href="/admin/delete_simulation/${id}" class="action-button-red">
                                 Delete
                             </a>
-                         <!--   <button class="delete-button" data-id="${id}"
-                                style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 0.85rem; cursor: pointer;">
+                         <!--   <button class="delete-button action-button-red" data-id="${id}">
                                 Delete
                             </button> -->
                         </div>
@@ -238,9 +228,9 @@
 
                                     <div class="box-line">
                                         <span class="left">Platform Type</span>
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right form-input-wide">
                                             <div class="select">
-                                                <select name="platform_type" style="width: 100%">
+                                                <select name="platform_type" class="form-input-full">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
                                                     <option value="forum" disabled>Forum (i.e., Reddit)</option>
                                                 </select>
@@ -250,17 +240,17 @@
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="exp_name"
+                                        <span class="right form-input-wide"><input type="text" name="exp_name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="textarea" name="exp_descr"
+                                        <span class="right form-input-wide"><input type="textarea" name="exp_descr"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Owner</span>
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right form-input-wide">
                                             <div class="select">
                                                 <select name="owner">
                                                     {% for user in users %}
@@ -272,25 +262,25 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Host</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="host"
+                                        <span class="right form-input-wide"><input type="text" name="host"
                                                                                        class="input"
                                                                                        value="127.0.0.1"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Port</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="port"
+                                        <span class="right form-input-wide"><input type="text" name="port"
                                                                                        class="input"
                                                                                        value="5010"></span>
                                     </div>
 
                                        <div class="box-line">
                                         <span class="left">Simulation Topics</span>
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right form-input-wide">
 
-                                            <div class="tags-input" style="width: 100%;">
+                                            <div class="tags-input form-input-full">
                                             <ul id="tags"></ul>
                                             <input type="hidden" id="tags-hidden" name="tags">
-                                            <input type="text" id="input-tag" placeholder="Enter topic name" style="width: 100%;"/>
+                                            <input type="text" id="input-tag" placeholder="Enter topic name" class="form-input-full"/>
                                         </div>
 
                                         <script>
@@ -341,7 +331,7 @@
 
                                     <div class="box-line">
                                         <span class="left">Perspective API<br> <small>(Toxicity annotation - optional)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
+                                        <span class="right form-input-wide"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
                                     </div>
@@ -367,7 +357,7 @@
                                     <img class="subscriber-avatar" src="https://via.placeholder.com/300x300"
                                          data-demo-src="{{ url_for('static', filename='assets/img/icons/emoji/robot.svg') }}"
                                          data-user-popover="10" alt=""/>
-                                    <div class="subscriber-meta" style="width: 80%;">
+                                    <div class="subscriber-meta form-input-wide">
                                         <span class="meta-title">{{ exp.exp_name }}</span>
                                         <span class="meta-content">Description: {{ exp.exp_descr }}</span>
                                         <span class="meta-content">Owner: {{ exp.owner }} </span>

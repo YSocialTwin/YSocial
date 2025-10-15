@@ -14,16 +14,9 @@
 
                             <div class="box-content">
 
-                                <div id="table"></div>
+                                <div id="table" class="gridjs-table-vertical-middle"></div>
 
                                 <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-
-                                <style>
-
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
 
 
                                 <script>
@@ -58,14 +51,12 @@
         formatter: (cell, row) => {
           const id = row.cells[0].data;
           return gridjs.html(`
-            <div style="display: flex; gap: 8px; justify-content: center;">
-              <a href="/admin/population_details/${id}"
-                 style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+            <div class="action-button-group">
+              <a href="/admin/population_details/${id}" class="action-button-green-small">
                 Details
               </a>
               </a>
-               <a href="/admin/delete_population/${id}"
-                 style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+               <a href="/admin/delete_population/${id}" class="action-button-red-small">
                 Delete
               </a>
             </div>
@@ -237,91 +228,6 @@
                                 <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
 
-                                    <style>
-                                        .form-section-header {
-                                            font-size: 0.95em;
-                                            font-weight: 600;
-                                            color: #333;
-                                            margin: 20px 0 8px 0;
-                                            padding-bottom: 5px;
-                                            border-bottom: 1px solid #e0e0e0;
-                                        }
-                                        .form-section-description {
-                                            font-size: 0.85em;
-                                            color: #666;
-                                            margin-bottom: 15px;
-                                            line-height: 1.4;
-                                        }
-                                        .multi-select-wrapper {
-                                            position: relative;
-                                        }
-                                        .multi-select-display {
-                                            min-height: 38px;
-                                            padding: 6px 10px;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            background: white;
-                                            cursor: pointer;
-                                            display: flex;
-                                            flex-wrap: wrap;
-                                            gap: 5px;
-                                            align-items: center;
-                                        }
-                                        .multi-select-display:hover {
-                                            border-color: #22c55e;
-                                        }
-                                        .multi-select-tag {
-                                            background: #22c55e;
-                                            color: white;
-                                            padding: 3px 8px;
-                                            border-radius: 3px;
-                                            font-size: 0.85em;
-                                            display: inline-flex;
-                                            align-items: center;
-                                            gap: 5px;
-                                        }
-                                        .multi-select-tag-remove {
-                                            cursor: pointer;
-                                            font-weight: bold;
-                                        }
-                                        .multi-select-placeholder {
-                                            color: #999;
-                                            font-size: 0.9em;
-                                        }
-                                        .multi-select-dropdown {
-                                            position: absolute;
-                                            top: 100%;
-                                            left: 0;
-                                            right: 0;
-                                            max-height: 200px;
-                                            overflow-y: auto;
-                                            background: white;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                            z-index: 1000;
-                                            display: none;
-                                            margin-top: 2px;
-                                        }
-                                        .multi-select-dropdown.active {
-                                            display: block;
-                                        }
-                                        .multi-select-option {
-                                            padding: 8px 12px;
-                                            cursor: pointer;
-                                            font-size: 0.9em;
-                                            transition: background 0.15s;
-                                        }
-                                        .multi-select-option:hover {
-                                            background: #f0f0f0;
-                                        }
-                                        .multi-select-option.selected {
-                                            background: #e8f5e9;
-                                            color: #22c55e;
-                                            font-weight: 500;
-                                        }
-                                    </style>
-
                                     <div class="form-section-header">Basic Information</div>
                                     <div class="form-section-description">
                                         Define the population name, description, and size. These settings identify the population and determine the number of synthetic agents to generate.
@@ -329,11 +235,11 @@
 
                                     <div class="box-line">
                                         <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_name"  class="input"></span>
+                                        <span class="right form-input-wide"><input type="text" name="pop_name"  class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
+                                        <span class="right form-input-wide"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Population Size</span>
@@ -573,139 +479,6 @@
                                         Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile. Total must equal 100%.
                                     </div>
 
-                                    <style>
-                                        .activity-profiles-section {
-                                            max-height: 0;
-                                            overflow: hidden;
-                                            transition: max-height 0.3s ease-out;
-                                        }
-                                        .activity-profiles-section.expanded {
-                                            max-height: 800px;
-                                            transition: max-height 0.5s ease-in;
-                                        }
-                                        .activity-profiles-compact {
-                                            display: flex;
-                                            flex-direction: column;
-                                            gap: 15px;
-                                            margin-bottom: 20px;
-                                        }
-                                        .profiles-section {
-                                            border: 1px solid #e0e0e0;
-                                            border-radius: 6px;
-                                            padding: 12px;
-                                            background-color: #fafafa;
-                                        }
-                                        .profiles-section-title {
-                                            font-size: 0.9em;
-                                            font-weight: 600;
-                                            color: #555;
-                                            margin-bottom: 10px;
-                                        }
-                                        .profile-item-compact {
-                                            background: white;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            padding: 6px 10px;
-                                            margin-bottom: 6px;
-                                            cursor: move;
-                                            transition: all 0.2s ease;
-                                            display: flex;
-                                            gap: 10px;
-                                            align-items: center;
-                                            font-size: 0.85em;
-                                        }
-                                        .profile-item-compact:hover {
-                                            border-color: #22c55e;
-                                            box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
-                                        }
-                                        .profile-item-compact.dragging {
-                                            opacity: 0.5;
-                                        }
-                                        .profile-name-compact {
-                                            font-weight: 500;
-                                            flex: 1;
-                                        }
-                                        .profile-heatmap-compact {
-                                            display: flex;
-                                            gap: 1px;
-                                            height: 12px;
-                                        }
-                                        .heatmap-hour {
-                                            width: 3px;
-                                            height: 100%;
-                                            background: #e5e7eb;
-                                            border-radius: 1px;
-                                        }
-                                        .heatmap-hour.active {
-                                            background: #22c55e;
-                                        }
-                                        .assigned-profiles-grid {
-                                            display: flex;
-                                            flex-wrap: wrap;
-                                            gap: 8px;
-                                        }
-                                        .assigned-profile-compact {
-                                            background: white;
-                                            border: 1px solid #22c55e;
-                                            border-radius: 4px;
-                                            padding: 6px 8px;
-                                            display: inline-flex;
-                                            align-items: center;
-                                            gap: 6px;
-                                            font-size: 0.8em;
-                                        }
-                                        .assigned-profile-name-compact {
-                                            font-weight: 500;
-                                            color: #333;
-                                        }
-                                        .percentage-input-compact {
-                                            width: 60px;
-                                            padding: 4px 6px;
-                                            border: 1px solid #ddd;
-                                            border-radius: 3px;
-                                            text-align: center;
-                                            font-size: 0.85em;
-                                        }
-                                        .remove-profile-btn-compact {
-                                            background: #dc3545;
-                                            color: white;
-                                            border: none;
-                                            border-radius: 3px;
-                                            padding: 3px 8px;
-                                            cursor: pointer;
-                                            font-size: 0.75em;
-                                            transition: background 0.2s;
-                                        }
-                                        .remove-profile-btn-compact:hover {
-                                            background: #c82333;
-                                        }
-                                        .drag-over-compact {
-                                            background-color: #e8f5e9;
-                                            border-color: #22c55e;
-                                        }
-                                        .percentage-validation-compact {
-                                            margin-top: 8px;
-                                            padding: 8px;
-                                            border-radius: 4px;
-                                            font-size: 0.8em;
-                                        }
-                                        .percentage-validation-compact.error {
-                                            background: #fee;
-                                            border: 1px solid #fcc;
-                                            color: #c00;
-                                        }
-                                        .percentage-validation-compact.success {
-                                            background: #efe;
-                                            border: 1px solid #cfc;
-                                            color: #0a0;
-                                        }
-                                        .empty-state-compact {
-                                            text-align: center;
-                                            color: #999;
-                                            font-size: 0.8em;
-                                            padding: 15px;
-                                        }
-                                    </style>
 
                                     <div class="activity-profiles-section" id="activity-profiles-section">
                                         <div class="activity-profiles-compact">
@@ -983,87 +756,6 @@
                                             <span class="right" style="width: 100%;"><input type="text" name="merged_population_name" class="input" required></span>
                                         </div>
 
-                                        <style>
-                                            .merge-populations-container {
-                                                margin: 15px 0;
-                                            }
-                                            .merge-section-title {
-                                                font-size: 0.85em;
-                                                font-weight: 600;
-                                                color: #555;
-                                                margin-bottom: 8px;
-                                            }
-                                            .merge-available-populations {
-                                                border: 1px solid #e0e0e0;
-                                                border-radius: 4px;
-                                                padding: 10px;
-                                                background-color: #fafafa;
-                                                min-height: 100px;
-                                                max-height: 200px;
-                                                overflow-y: auto;
-                                            }
-                                            .merge-selected-populations {
-                                                border: 2px dashed #22c55e;
-                                                border-radius: 4px;
-                                                padding: 10px;
-                                                background-color: #f0fdf4;
-                                                min-height: 100px;
-                                                max-height: 200px;
-                                                overflow-y: auto;
-                                            }
-                                            .merge-population-item {
-                                                background: white;
-                                                border: 1px solid #ddd;
-                                                border-radius: 3px;
-                                                padding: 6px 10px;
-                                                margin-bottom: 5px;
-                                                cursor: move;
-                                                transition: all 0.2s ease;
-                                                display: flex;
-                                                justify-content: space-between;
-                                                align-items: center;
-                                                font-size: 0.85em;
-                                            }
-                                            .merge-population-item:hover {
-                                                border-color: #22c55e;
-                                                box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
-                                            }
-                                            .merge-population-item.dragging {
-                                                opacity: 0.5;
-                                            }
-                                            .merge-population-name {
-                                                font-weight: 500;
-                                                flex: 1;
-                                            }
-                                            .merge-population-size {
-                                                color: #666;
-                                                font-size: 0.9em;
-                                                margin-left: 8px;
-                                            }
-                                            .merge-drag-over {
-                                                background-color: #dcfce7;
-                                                border-color: #22c55e;
-                                            }
-                                            .merge-empty-state {
-                                                text-align: center;
-                                                color: #999;
-                                                font-size: 0.8em;
-                                                padding: 20px;
-                                            }
-                                            .merge-remove-btn {
-                                                background: #dc3545;
-                                                color: white;
-                                                border: none;
-                                                border-radius: 3px;
-                                                padding: 2px 6px;
-                                                cursor: pointer;
-                                                font-size: 0.75em;
-                                                margin-left: 8px;
-                                            }
-                                            .merge-remove-btn:hover {
-                                                background: #c82333;
-                                            }
-                                        </style>
 
                                         <div class="merge-populations-container">
                                             <div class="merge-section-title">Available Populations (Drag to select)</div>

@@ -25,15 +25,9 @@
                         <div class="box-content">
 
 
-                            <div id="table"></div>
+                            <div id="table" class="gridjs-table-vertical-middle"></div>
 
                             <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-                            <style>
-
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
 <script>
   const tableDiv = document.getElementById('table');
 
@@ -77,16 +71,14 @@
           const isAdmin = role.toLowerCase() === 'admin';
 
           const deleteButton = isAdmin
-            ? `<button disabled style="background-color: #ccc; color: #666; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem;">Delete</button>`
-            : `<button class="delete-button" data-id="${id}"
-                  style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; border: none; font-size: 0.85rem; cursor: pointer;">
+            ? `<button disabled class="action-button-disabled">Delete</button>`
+            : `<button class="delete-button action-button-red-small" data-id="${id}">
                   Delete
                </button>`;
 
           return gridjs.html(`
-            <div style="display: flex; gap: 8px; justify-content: center;">
-              <a href="/admin/user_details/${id}"
-                 style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.9rem;">
+            <div class="action-button-group">
+              <a href="/admin/user_details/${id}" class="action-button-green-detail">
                  Details
               </a>
               ${deleteButton}
@@ -201,17 +193,17 @@
 
                                     <div class="box-line">
                                         <span class="left">Username</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="username"
+                                        <span class="right form-input-wide"><input type="text" name="username"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Password</span>
-                                        <span class="right" style="width: 70%;"><input type="password" name="password"
+                                        <span class="right form-input-wide"><input type="password" name="password"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Email</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="email"
+                                        <span class="right form-input-wide"><input type="text" name="email"
                                                                                        class="input" value=""></span>
                                     </div>
                                     <div class="box-line">
@@ -228,11 +220,11 @@
                                         <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
                                                value="{{ llm_backend['url'] if llm_backend and llm_backend.get('url') else '' }}"
                                                placeholder="e.g., http://localhost:8000/v1">
-                                        <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForAddUser()" style="margin-top: 10px;">
+                                        <button type="button" class="button is-solid primary-button is-1-desktop user-fetch-button" onclick="fetchModelsForAddUser()">
                                             Fetch Models
                                         </button>
                                     </div>
-                                    <div id="fetch-status-add-user" style="min-height: 20px; margin-top: 5px; margin-bottom: 10px; font-size: 0.9rem;"></div>
+                                    <div id="fetch-status-add-user" class="user-fetch-status"></div>
 
                                     <div class="box-line">
                                         <span class="left">LLM <small>(for text annotation)</small></span>
@@ -245,7 +237,7 @@
                                 </div>
                                 <div class="box-line">
                                         <span class="left">Profile Picture <small>(url, optional)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="profile_pic"
+                                        <span class="right form-input-wide"><input type="text" name="profile_pic"
                                                                                        class="input" value=""></span>
                                     </div>
                                 <div class="button-wrap">
@@ -295,11 +287,11 @@ function fetchModelsForAddUser() {
     const llmUrl = urlInput.value.trim();
     
     if (!llmUrl) {
-        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
+        statusDiv.innerHTML = '<span class="status-color-error">Please enter an LLM URL</span>';
         return;
     }
     
-    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
+    statusDiv.innerHTML = '<span class="status-color-fetching">Fetching models...</span>';
     
     fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
         .then(response => {
@@ -326,14 +318,14 @@ function fetchModelsForAddUser() {
                     option.textContent = model;
                     selectElement.appendChild(option);
                 });
-                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models from ' + (data.url || llmUrl) + '</span>';
+                statusDiv.innerHTML = '<span class="status-color-success">✓ Loaded ' + data.models.length + ' models from ' + (data.url || llmUrl) + '</span>';
             } else {
-                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
+                statusDiv.innerHTML = '<span class="status-color-error">✗ ' + (data.message || 'No models found') + '</span>';
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
+            statusDiv.innerHTML = '<span class="status-color-error">✗ Error: Could not fetch models. Check if server is reachable.</span>';
         });
 }
 </script>

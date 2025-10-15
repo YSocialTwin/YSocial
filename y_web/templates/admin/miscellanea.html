@@ -8,51 +8,6 @@
 
         <div class="dashboard-body">
 
-            <style>
-                .misc-tabs {
-                    display: flex;
-                    border-bottom: 2px solid #e5e7eb;
-                    margin-bottom: 20px;
-                    flex-wrap: wrap;
-                }
-                .misc-tab {
-                    padding: 12px 24px;
-                    cursor: pointer;
-                    border: none;
-                    background: transparent;
-                    font-size: 0.95em;
-                    font-weight: 500;
-                    color: #666;
-                    transition: all 0.2s;
-                    border-bottom: 3px solid transparent;
-                    margin-bottom: -2px;
-                }
-                .misc-tab:hover {
-                    color: #22c55e;
-                    background: rgba(34, 197, 94, 0.05);
-                }
-                .misc-tab.active {
-                    color: #22c55e;
-                    border-bottom-color: #22c55e;
-                }
-                .misc-tab-content {
-                    display: none;
-                }
-                .misc-tab-content.active {
-                    display: block;
-                }
-                .misc-section-description {
-                    background: #f9fafb;
-                    border-left: 3px solid #22c55e;
-                    padding: 15px 20px;
-                    margin-bottom: 20px;
-                    border-radius: 4px;
-                    font-size: 0.9em;
-                    color: #666;
-                    line-height: 1.6;
-                }
-            </style>
-
             <div class="misc-tabs">
                 <button class="misc-tab active" onclick="switchMiscTab('agent-attributes')">Agent Attributes</button>
                 <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics</button>
@@ -213,7 +168,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="leaning"
+                                        <span class="right" class="form-input-wide"><input type="text" name="leaning"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -372,7 +327,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="education_level"
+                                        <span class="right" class="form-input-wide"><input type="text" name="education_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -537,12 +492,12 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="profession"
+                                        <span class="right" class="form-input-wide"><input type="text" name="profession"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Category</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="background"
+                                        <span class="right" class="form-input-wide"><input type="text" name="background"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -710,7 +665,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="topic"
+                                        <span class="right" class="form-input-wide"><input type="text" name="topic"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -879,7 +834,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="language"
+                                        <span class="right" class="form-input-wide"><input type="text" name="language"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -1037,7 +992,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="nationality"
+                                        <span class="right" class="form-input-wide"><input type="text" name="nationality"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -1204,7 +1159,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="toxicity_level"
+                                        <span class="right" class="form-input-wide"><input type="text" name="toxicity_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -1378,72 +1333,11 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Profile Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="name" required
+                                        <span class="right" class="form-input-wide"><input type="text" name="name" required
                                                                                        class="input" placeholder="e.g., Morning Active"></span>
                                     </div>
                                     <div class="box-line" style="display: block; padding: 15px 0;">
                                         <label style="display: block; margin-bottom: 12px; font-weight: 500;">Select Active Hours (0-23):</label>
-                                        <style>
-                                            .hour-selector {
-                                                display: flex;
-                                                flex-wrap: wrap;
-                                                gap: 6px;
-                                                max-width: 100%;
-                                            }
-                                            .hour-toggle {
-                                                position: relative;
-                                                display: inline-block;
-                                            }
-                                            .hour-toggle input[type="checkbox"] {
-                                                position: absolute;
-                                                opacity: 0;
-                                                width: 0;
-                                                height: 0;
-                                            }
-                                            .hour-toggle label {
-                                                display: inline-block;
-                                                min-width: 40px;
-                                                padding: 6px 10px;
-                                                text-align: center;
-                                                font-size: 0.85em;
-                                                font-weight: 500;
-                                                border: 2px solid #e0e0e0;
-                                                border-radius: 6px;
-                                                background-color: #f8f9fa;
-                                                color: #666;
-                                                cursor: pointer;
-                                                transition: all 0.2s ease;
-                                                user-select: none;
-                                            }
-                                            .hour-toggle input[type="checkbox"]:checked + label {
-                                                background-color: #22c55e;
-                                                border-color: #16a34a;
-                                                color: white;
-                                                box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
-                                            }
-                                            .hour-toggle label:hover {
-                                                border-color: #22c55e;
-                                                transform: translateY(-1px);
-                                            }
-                                            .hour-selector-controls {
-                                                margin-top: 10px;
-                                                display: flex;
-                                                gap: 8px;
-                                            }
-                                            .hour-selector-controls button {
-                                                padding: 4px 12px;
-                                                font-size: 0.8em;
-                                                border: 1px solid #ddd;
-                                                background: white;
-                                                border-radius: 4px;
-                                                cursor: pointer;
-                                                transition: all 0.2s ease;
-                                            }
-                                            .hour-selector-controls button:hover {
-                                                background: #f0f0f0;
-                                                border-color: #999;
-                                            }
-                                        </style>
                                         <div class="hour-selector">
                                             <div class="hour-toggle"><input type="checkbox" name="hour" value="0" id="hour_0"><label for="hour_0">0</label></div>
                                             <div class="hour-toggle"><input type="checkbox" name="hour" value="1" id="hour_1"><label for="hour_1">1</label></div>

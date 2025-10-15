@@ -23,20 +23,9 @@
                         <div class="box-content">
 
 
-                            <div id="table"></div>
+                            <div id="table" class="gridjs-table-vertical-middle"></div>
 
                             <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-<style>
-  td[data-column-id="logo"] {
-    padding: 0 !important;       /* Remove padding */
-    text-align: center;          /* Center horizontally */
-    vertical-align: middle;      /* Center vertically */
-  }
-
-  #table td {
-    vertical-align: middle !important;
-  }
-</style>
 
 <script>
     const tableDiv = document.getElementById('table');
@@ -84,13 +73,11 @@
                 formatter: (cell, row) => {
                     const id = row.cells[1].data; // id at index 1
                     return gridjs.html(`
-                        <div style="display: flex; gap: 8px; justify-content: center;">
-                            <a href="/admin/page_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                        <div class="action-button-group">
+                            <a href="/admin/page_details/${id}" class="action-button-green">
                                 Details
                             </a>
-                            <a href="/admin/delete_page/${id}"
-                                style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                            <a href="/admin/delete_page/${id}" class="action-button-red">
                                 Delete
                               </a>
                         </div>
@@ -240,12 +227,12 @@
 
                                     <div class="box-line">
                                         <span class="left">Page Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="name"
+                                        <span class="right form-input-wide"><input type="text" name="name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="descr"
+                                        <span class="right form-input-wide"><input type="text" name="descr"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
@@ -271,7 +258,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">RSS Feed</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="feed"
+                                        <span class="right form-input-wide"><input type="text" name="feed"
                                                                                        class="input"></span>
                                     </div>
                                     <!-- <div class="box-line">
@@ -320,25 +307,11 @@
 
                                     <div class="box-line">
                                         <span class="left">Logo Image<small>(public url)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="logo"
+                                        <span class="right form-input-wide"><input type="text" name="logo"
                                                                                        class="input"></span>
                                     </div>
 
                                     <hr>
-                                    <style>
-                                        .form-section-header-page {
-                                            font-size: 0.95em;
-                                            font-weight: 600;
-                                            color: #333;
-                                            margin: 15px 0 8px 0;
-                                        }
-                                        .form-section-description-page {
-                                            font-size: 0.85em;
-                                            color: #666;
-                                            margin-bottom: 15px;
-                                            line-height: 1.4;
-                                        }
-                                    </style>
 
                                     <div class="form-section-header-page">Activity Profile</div>
                                     <div class="form-section-description-page">
