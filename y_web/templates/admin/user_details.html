@@ -61,7 +61,7 @@
 
                         <div class="box-content">
                             {% if user.profile_pic != "" %}
-                            <div class="box-lines" class="display-flex-center">
+                            <div class="box-lines display-flex-center">
                                 <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
                             </div>
                             {% endif %}
@@ -97,9 +97,9 @@
                                 </div>
                             </div>
 
-                            <div class="buttons" class="details-button-group">
+                            <div class="buttons details-button-group">
                                 <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" class="icon-size-24"></i></a>
+                                     class="mdi mdi-delete icon-size-24"></i></a>
                             </div>
 
                         </div>
