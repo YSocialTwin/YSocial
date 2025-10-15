@@ -31,23 +31,23 @@
                             <div class="box-line">
                                 <span class="left" style="width: 22%;"><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a></span>
                                 <span class="right" style="width: 60%;"></span>
-                                <span class="right" style="width: 20%;">
+                                <span class="right" class="width-20">
                                     <a class="link-tooltip" {% if experiments[exp]['experiment'].running == 0 %} href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Run">
-                                        <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" class="icon-size-24"></i>
                                     </a>
 
                                      <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop">
-                                        <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                     </a>
 
                                     <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load">
-                                        <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" class="icon-size-24"></i>
                                     </a>
                                     <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 1 %} href="/admin/join_simulation" {% endif %} title="Join" >
-                                        <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                     </a>
                                     <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 0 %} href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Delete" >
-                                        <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" class="icon-size-24"></i>
                                     </a>
 
 
@@ -59,7 +59,7 @@
                                 {% for client in experiments[exp]["clients"] %}
 
                                 <div class="box-line" style="height: 40px;">
-                                    <span class="left" style="width: 20%;"><a href="/admin/client_details/{{client[0].id}}">{{ client[0].name }}</a></span>
+                                    <span class="left" class="width-20"><a href="/admin/client_details/{{client[0].id}}">{{ client[0].name }}</a></span>
 
                                     <span class="right" style="width: 60%;">
                                         <div class="progress" style="height: 22px; width: 90%;" >
@@ -107,33 +107,33 @@
 
                                     </script>
 
-                                    <span class="right" style="width: 20%;">
+                                    <span class="right" class="width-20">
                                         {% if client[1] != -1 %}
                                         <a class="link-tooltip"
                                            {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time == 0 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %} href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>
                                         {% else %}
                                         <a class="link-tooltip"
                                            {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>
                                         {% endif %}
 
                                         <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Pause">
-                                            <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>
 
                                        <!-- <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/stop_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Stop">
-                                            <i class="mdi mdi-stop {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-stop {% if  client[0].status == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a> -->
 
                                         <!--<a class="link-tooltip" {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/reset_client/{{ client[0].id }}" {% endif %} title="Reset">
-                                            <i class="mdi mdi-backup-restore {% if  experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-backup-restore {% if  experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>-->
 
                                         <a class="link-tooltip" {% if client[0].status == 0 %} href="/admin/delete_client/{{ client[0].id }}" {% endif %} title="Delete" >
-                                        <i class="mdi mdi-delete {% if client[0].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-delete {% if client[0].status == 1 %} disabled {% endif %}" class="icon-size-24"></i>
                                     </a>
                                     </span>
 
@@ -206,18 +206,18 @@
                                 {% endif %}
                                 <div class="box-line">
                                     <span class="left">Installed</span>
-                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}" style="font-size: 20px;"></i> </span>
+                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}" class="icon-size-20"></i> </span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Running</span>
-                                    <span class="right"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['status'] %} active {% endif %}" style="font-size: 20px;"></i></span>
+                                    <span class="right"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['status'] %} active {% endif %}" class="icon-size-20"></i></span>
                                 </div>
                                 {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
                                 <div class="box-line">
                                     <span class="left">Start Ollama</span>
                                     <span class="right">
                                         <a class="link-tooltip" {% if not llm_backend['status'] %} href="/admin/start_ollama/" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if not llm_backend['status'] %} active {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-play-box-outline {% if not llm_backend['status'] %} active {% endif %}" class="icon-size-24"></i>
                                         </a>
                                     </span>
                                 </div>
@@ -239,7 +239,7 @@
                                 <h4 class="title is-6 is-thin">Database Management System</h4>
                                 <div class="box-line">
                                     <span class="left">{{ dbtype }} {%if db_server %} <small>({{ db_server }}:{{dbport}})</small> {% endif %}</span>
-                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if db_conn %} active {% endif %}" style="font-size: 20px;"></i> </span>
+                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if db_conn %} active {% endif %}" class="icon-size-20"></i> </span>
                                 </div>
                             </div>
 
@@ -261,7 +261,7 @@
                                     <span class="left">{{ model }}</span>
                                     {% if llm_backend['backend'] == 'ollama' %}
                                     <span class="right"><a class="link-tooltip" href="/admin/delete_model/{{ model }}" title="Delete">
-                                        <i class="mdi mdi-delete" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-delete" class="icon-size-24"></i>
                                 </a></span>
                                     {% endif %}
                                 </div>
@@ -328,7 +328,7 @@
                                  </span>
                                     <span class="right" style="height: 22px; width: 10%;">
                                         <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="Delete">
-                                        <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+                                        <i class="mdi mdi-delete" class="icon-size-20"></i>
                                     </a>
                                     </span>
                                 </div>

@@ -30,14 +30,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Population Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Core information about this synthetic population, including configuration and agent demographics.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Population name, description, and configuration settings.</p>
+                                <p class="form-field-description">Population name, description, and configuration settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ population.name }}</span>
@@ -61,7 +61,7 @@
                                 </div>
                                 <hr>
                                 <b>Demographics & Attributes</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent characteristics and diversity settings for this population.</p>
+                                <p class="form-field-description">Agent characteristics and diversity settings for this population.</p>
                                 <div class="box-line">
                                     <span class="left">Age Range</span>
                                     <span class="right">{{ population.age_min }} - {{ population.age_max }}</span>
@@ -88,7 +88,7 @@
                                 </div>
                                 <hr>
                                 <b>Activity Profiles Distribution</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Hourly activity patterns assigned to agents in this population.</p>
+                                <p class="form-field-description">Hourly activity patterns assigned to agents in this population.</p>
                                 {% if activity_profiles.profiles %}
                                 {% for i in range(activity_profiles.profiles|length) %}
                                 <div class="box-line">
@@ -107,9 +107,9 @@
                             </div>
                                 <div class="buttons" class="details-button-group">
                                     <a class="link-tooltip" href="/admin/download_population/{{ population.id }}" title="Download"><i
-                                     class="mdi mdi-download" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-download" class="icon-size-24"></i></a>
                                 <a class="link-tooltip" href="/admin/delete_population/{{ population.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-delete" class="icon-size-24"></i></a>
                             </div>
 
                         </div>
@@ -120,7 +120,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Deployments</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Experiments where this population is currently deployed.
                         </p>
                         <div class="box-content">
@@ -163,7 +163,7 @@
 
                 <div class="column is-12">
                     <hr style="margin: 2em 0;">
-                <h3 class="title is-5 is-thin" style="text-align: center">Recommender Systems Configuration</h3>
+                <h3 class="title is-5 is-thin" class="text-center">Recommender Systems Configuration</h3>
                 <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
                     Update recommendation algorithms for content and friendship suggestions across all agents in this population.
                 </p>
@@ -179,7 +179,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">
+                                            <small class="color-gray">
                                             ℹ️ Updates apply to all agents in this population.<br>
                                             Changes take effect in future simulation runs only (not active experiments).
                                             </small>
@@ -247,7 +247,7 @@
 
                 <div class="column is-12">
                     <hr style="margin: 2em 0;">
-                <h3 class="title is-5 is-thin" style="text-align: center">Population Statistics & Analytics</h3>
+                <h3 class="title is-5 is-thin" class="text-center">Population Statistics & Analytics</h3>
                 <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
                     Visual analysis of agent distribution across demographics, attributes, and behavior patterns.
                 </p>
@@ -261,7 +261,7 @@
                      <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="leanings" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="leanings" class="width-max-700"></canvas>
                             <script>
                                 new Chart("leanings", {
                                     type: 'bar',
@@ -289,7 +289,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="nationalities" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="nationalities" class="width-max-700"></canvas>
                             <script>
                                 new Chart("nationalities", {
                                     type: 'bar',
@@ -320,7 +320,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="ages" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="ages" class="width-max-700"></canvas>
                             <script>
                                 new Chart("ages", {
                                     type: 'bar',
@@ -352,7 +352,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="languages" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="languages" class="width-max-700"></canvas>
                             <script>
                                 new Chart("languages", {
                                     type: 'bar',
@@ -388,7 +388,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="edu" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="edu" class="width-max-700"></canvas>
                             <script>
                                 new Chart("edu", {
                                     type: 'bar',
@@ -419,7 +419,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="tox" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="tox" class="width-max-700"></canvas>
                             <script>
                                 new Chart("tox", {
                                     type: 'bar',
@@ -459,7 +459,7 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="activity" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="activity" class="width-max-700"></canvas>
                             <script>
                                 new Chart("activity", {
                                     type: 'bar',

@@ -55,19 +55,19 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">User Profile</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Account information and API configurations for this user.
                         </p>
 
                         <div class="box-content">
                             {% if user.profile_pic != "" %}
-                            <div class="box-lines" style="display: flex; justify-content: center">
+                            <div class="box-lines" class="display-flex-center">
                                 <img src="{{ user.profile_pic }}" alt="Profile Picture" style="width: 40%; height: auto; border-radius: 8px;">
                             </div>
                             {% endif %}
                             <div class="box-lines">
                                 <b>Account Details</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Basic user information and role.</p>
+                                <p class="form-field-description">Basic user information and role.</p>
                                 <div class="box-line">
                                     <span class="left">Username</span>
                                     <span class="right">{{ user.username }}</span>
@@ -82,14 +82,14 @@
                                 </div>
                                 <hr>
                                 <b>API Configuration</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">LLM and toxicity analysis settings.</p>
+                                <p class="form-field-description">LLM and toxicity analysis settings.</p>
                                 <div class="box-line">
                                     <span class="left">LLM Model</span>
                                     <span class="right">{{ user.llm }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">LLM Server URL</span>
-                                    <span class="right" style="word-break: break-all;">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
+                                    <span class="right" class="word-break-all">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Perspective API</span>
@@ -97,9 +97,9 @@
                                 </div>
                             </div>
 
-                            <div class="buttons" style="display: flex; justify-content: right">
+                            <div class="buttons" class="details-button-group">
                                 <a class="link-tooltip" href="/admin/delete_user/{{ user.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-delete" class="icon-size-24"></i></a>
                             </div>
 
                         </div>
@@ -110,7 +110,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Configure the LLM server URL and select a model for text generation tasks.
                         </p>
                         <div class="box-content">
@@ -118,7 +118,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">ℹ️ Update the LLM server and model for this user.</small>
+                                            <small class="color-gray">ℹ️ Update the LLM server and model for this user.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -160,7 +160,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Configure Google's Perspective API for text toxicity analysis.
                         </p>
                         <div class="box-content">
@@ -168,7 +168,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">
+                                            <small class="color-gray">
                                             Personal API key for the <a href="https://www.perspectiveapi.com/" target="_blank">Perspective API</a>. <br><br>
                                             ℹ️ This tool evaluates text toxicity and enables toxicity analysis in hybrid simulations.
                                             </small>
@@ -193,7 +193,7 @@
                     <!--Box-->
                      <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Experiments this user owns or participates in.
                         </p>
                         <div class="box-content">
@@ -236,7 +236,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Grant this user access to participate in an experiment.
                         </p>
                         <div class="box-content">

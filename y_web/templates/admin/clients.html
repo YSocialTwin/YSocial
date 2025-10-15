@@ -40,13 +40,13 @@
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="textarea"
+                                        <span class="right" class="form-input-wide"><input type="textarea"
                                                                                        name="descr"
                                                                                        class="input"></span>
                                     </div>
@@ -65,63 +65,63 @@
                                     <h4><b>Simulation Parameters</b></h4>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="days"
                                                                                        class="input"
                                                                                        value="30"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% New Agents (daily)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="percentage_new_agents_iteration"
                                                                                        class="input"
                                                                                        value="0"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% Daily Churn</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="percentage_removed_agents_iteration"
                                                                                        class="input"
                                                                                        value="0"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Thread Context Length</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="max_length_thread_reading"
                                                                                        class="input"
                                                                                        value="5"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Timeline Follower Ratio</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="reading_from_follower_ratio"
                                                                                        class="input"
                                                                                        value="0.6"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Daily Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="probability_of_daily_follow"
                                                                                        class="input"
                                                                                        value="0.1"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Secondary Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="probability_of_secondary_follow"
                                                                                        class="input"
                                                                                        value="0.0"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Agents' Memory (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="attention_window"
                                                                                        class="input"
                                                                                        value="336"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Content Visibility (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="visibility_rounds"
                                                                                        class="input"
                                                                                        value="36"></span>
@@ -134,7 +134,7 @@
                                     <br><br>
                                     <div class="box-line">
                                         <span class="left">Post new content</span>
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <!--<input type="text" name="post" class="input"  value="0.2">-->
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
@@ -157,10 +157,10 @@
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Share and comment an Image</span>
-                                        <!--<span class="right" style="width: 70%;"><input type="text" name="image"
+                                        <!--<span class="right" class="form-input-wide"><input type="text" name="image"
                                                                                        class="input"
                                                                                        value="0"></span>-->
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box selected" data-value="0">0</div>
@@ -182,11 +182,11 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Comment on a News</span>
-                                       <!-- <span class="right" style="width: 70%;"><input type="text"
+                                       <!-- <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="news"
                                                                                        class="input"
                                                                                        value="0"></span> -->
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box selected" data-value="0">0</div>
@@ -209,11 +209,11 @@
                                     {% endif %}
                                     <div class="box-line">
                                         <span class="left">Comment a Post</span>
-                                        <!--<span class="right" style="width: 70%;"><input type="text"
+                                        <!--<span class="right" class="form-input-wide"><input type="text"
                                                                                        name="comment"
                                                                                        class="input"
                                                                                        value="0.5"></span> -->
-                                         <span class="right" style="width: 70%;">
+                                         <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -235,11 +235,11 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Read a content</span>
-                                        <!-- <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="read"
                                                                                        class="input"
                                                                                        value="0.2"></span> -->
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -263,11 +263,11 @@
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Share News from a Page</span>
-                                        <!-- <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="share"
                                                                                        class="input"
                                                                                        value="0"></span> -->
-                                         <span class="right" style="width: 70%;">
+                                         <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box selected" data-value="0">0</div>
@@ -290,11 +290,11 @@
                                     {% endif %}
                                     <div class="box-line">
                                         <span class="left">Search a Hashtag</span>
-                                       <!-- <span class="right" style="width: 70%;"><input type="text"
+                                       <!-- <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="search"
                                                                                        class="input"
                                                                                        value="0.1"></span> -->
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -317,11 +317,11 @@
                                     {% if experiment.platform_type == "microblogging" %}
                                     <div class="box-line">
                                         <span class="left">Cast Vote</span>
-                                        <!-- <span class="right" style="width: 70%;"><input type="text"
+                                        <!-- <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="vote"
                                                                                        class="input"
                                                                                        value="0"></span> -->
-                                        <span class="right" style="width: 70%;">
+                                        <span class="right" class="form-input-wide">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box selected" data-value="0">0</div>
@@ -345,7 +345,7 @@
                                     {% if experiment.platform_type == "forum" %}
                                     <div class="box-line">
                                         <span class="left">Share Link</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="share_link"
                                                                                        class="input"
                                                                                        value="0"></span>
@@ -355,14 +355,14 @@
                                     <h4><b>Large Language Models</b></h4>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_client" name="llm" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                        <span class="right" class="form-input-wide">
+                                            <div class="flex-row-gap">
+                                                <input type="text" id="custom_llm_url_client" name="llm" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" class="flex-item">
                                                 <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
                                                     Fetch Models
                                                 </button>
                                             </div>
-                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                            <div id="llm_url_status_client" class="min-height-24"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -378,21 +378,21 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_api_key"
                                                                                        class="input"
                                                                                        value="NULL"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Max tokens</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_max_tokens"
                                                                                        class="input"
                                                                                        value="-1"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Temperature</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_temperature"
                                                                                        class="input"
                                                                                        value="1.5"></span>
@@ -401,7 +401,7 @@
                                     <h4><b>Large Language Models (Image Transcription)</b></h4>
                                     <div class="box-line">
                                         <span class="left">LLM Model</span>
-                                        <span class="right" style="width: 70%;">minicpm-v:latest<input  type="hidden"
+                                        <span class="right" class="form-input-wide">minicpm-v:latest<input  type="hidden"
                                                                                        name="llm_v_agent"
                                                                                        id="llm_v_agent"
                                                                                        class="input"
@@ -409,33 +409,33 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" style="flex: 1;">
+                                        <span class="right" class="form-input-wide">
+                                            <div class="flex-row-gap">
+                                                <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input" placeholder="e.g., localhost:8000" value="http://127.0.0.1:11434/v1" class="flex-item">
                                                 <button type="button" class="button is-solid primary-button" onclick="validateImageLLMModel()">
                                                     Validate Model
                                                 </button>
                                             </div>
-                                            <div id="llm_v_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                            <div id="llm_v_url_status_client" class="min-height-24"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_v_api_key"
                                                                                        class="input"
                                                                                        value="NULL"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Max tokens</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_v_max_tokens"
                                                                                        class="input"
                                                                                        value="300"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Temperature</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" class="form-input-wide"><input type="text"
                                                                                        name="llm_v_temperature"
                                                                                        class="input"
                                                                                        value="0.5"></span>
@@ -537,7 +537,7 @@ function fetchModelsForClient() {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                 llmModelsFetched = false;
                 updateFormButtonState();
                 setTimeout(() => { status.innerHTML = ''; }, 5000);
@@ -549,7 +549,7 @@ function fetchModelsForClient() {
                     option.textContent = model;
                     select.appendChild(option);
                 });
-                status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                status.innerHTML = '<span class="color-success"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
                 llmModelsFetched = true;
                 // Reset model selection since we just loaded new models
                 llmModelSelected = false;
@@ -558,7 +558,7 @@ function fetchModelsForClient() {
             }
         })
         .catch(error => {
-            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> Connection failed</span>';
             llmModelsFetched = false;
             updateFormButtonState();
             setTimeout(() => { status.innerHTML = ''; }, 5000);
@@ -584,7 +584,7 @@ function validateImageLLMModel() {
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                 validationStatus.value = 'false';
                 disableImageAction();
                 alert('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
@@ -594,12 +594,12 @@ function validateImageLLMModel() {
                 const modelExists = data.models.includes(modelName);
                 
                 if (modelExists) {
-                    status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
+                    status.innerHTML = '<span class="color-success"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
                     validationStatus.value = 'true';
                     enableImageAction();
                     setTimeout(() => { status.innerHTML = ''; }, 3000);
                 } else {
-                    status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
+                    status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
                     validationStatus.value = 'false';
                     disableImageAction();
                     alert('The minicpm-v:latest model is not available on the specified server. Image sharing/commenting functionality will remain disabled.');
@@ -609,7 +609,7 @@ function validateImageLLMModel() {
             }
         })
         .catch(error => {
-            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+            status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> Connection failed</span>';
             validationStatus.value = 'false';
             disableImageAction();
             alert('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');

@@ -31,14 +31,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">LLM Prompts Configuration</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Configure system prompts that guide agent and page behavior during simulation. These instructions are sent to the LLM before each action.
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_prompts/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <h4 class="title is-6 is-thin">Agents Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Instructions that define agent behavior and roleplay characteristics.</p>
+                                    <p class="form-field-description">Instructions that define agent behavior and roleplay characteristics.</p>
                                     <div class="box-line">
                                         <span class="left">Roleplay</span>
                                         <span class="right" class="form-input-wide">
@@ -65,7 +65,7 @@
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Page Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Instructions for content pages to generate posts and responses.</p>
+                                    <p class="form-field-description">Instructions for content pages to generate posts and responses.</p>
                                     <div class="box-line">
                                         <span class="left">Roleplay</span>
                                         <span class="right" class="form-input-wide">
@@ -74,7 +74,7 @@
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Handler Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Core simulation handler instructions for processing agent actions.</p>
+                                    <p class="form-field-description">Core simulation handler instructions for processing agent actions.</p>
                                     <div class="box-line">
                                         <span class="left">Instructions</span>
                                         <span class="right" class="form-input-wide">
@@ -95,7 +95,7 @@
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Handler Actions Provided Instructions</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Specific prompts for different agent action types (post, comment, share, etc.).</p>
+                                    <p class="form-field-description">Specific prompts for different agent action types (post, comment, share, etc.).</p>
                                     <div class="box-line">
                                         <span class="left">Action Selection</span>
                                         <span class="right" class="form-input-wide">

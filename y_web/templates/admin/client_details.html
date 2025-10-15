@@ -30,14 +30,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Client Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Information about this simulation client, including assigned population and content sources.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Client identification and configuration.</p>
+                                <p class="form-field-description">Client identification and configuration.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ client.name }}</span>
@@ -48,7 +48,7 @@
                                 </div>
                                 <hr>
                                 <b>Assigned Resources</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Population and content pages used in this simulation.</p>
+                                <p class="form-field-description">Population and content pages used in this simulation.</p>
                                 <div class="box-line">
                                     <span class="left">Population</span>
                                     <span class="right"><a href="/admin/population_details/{{ population.id }}">{{ population.name }}</a></span>
@@ -72,22 +72,22 @@
                             </div>
                             <div class="buttons" class="details-button-group">
                                 <a class="link-tooltip" href="/admin/download_agent_list/{{ client.id }}" title="Download Agent List"><i
-                                     class="mdi mdi-account-star" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-account-star" class="icon-size-24"></i></a>
                                 <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-delete" class="icon-size-24"></i></a>
                             </div>
                         </div>
                     </div>
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Simulation Parameters</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Configuration settings controlling simulation behavior and dynamics.
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Duration & Growth</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Simulation length and population dynamics.</p>
+                                <p class="form-field-description">Simulation length and population dynamics.</p>
                                 <div class="box-line">
                                     <span class="left">Simulation Length (days)</span>
                                     <span class="right">{{ client.days }}</span>
@@ -102,7 +102,7 @@
                                 </div>
                                 <hr>
                                 <b>Behavioral Settings</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent interaction and engagement parameters.</p>
+                                <p class="form-field-description">Agent interaction and engagement parameters.</p>
                                 <div class="box-line">
                                     <span class="left">Thread Context Length</span>
                                     <span class="right">{{ client.max_length_thread_reading }}</span>
@@ -317,13 +317,13 @@
                                     <div class="box-line">
                                         <span class="left">Custom LLM URL (optional)</span>
                                         <span class="right" class="form-input-wide">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_client" class="input" placeholder="e.g., localhost:8000" value="{{ client.llm }}" style="flex: 1;">
+                                            <div class="flex-row-gap">
+                                                <input type="text" id="custom_llm_url_client" class="input" placeholder="e.g., localhost:8000" value="{{ client.llm }}" class="flex-item">
                                                 <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
                                                     Fetch Models
                                                 </button>
                                             </div>
-                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+                                            <div id="llm_url_status_client" class="min-height-24"></div>
                                         </span>
                                     </div>
 
@@ -360,7 +360,7 @@
                                         .then(response => response.json())
                                         .then(data => {
                                             if (data.error) {
-                                                status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
+                                                status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
                                                 setTimeout(() => { status.innerHTML = ''; }, 5000);
                                             } else {
                                                 select.innerHTML = '<option value="">Select a model</option>';
@@ -370,12 +370,12 @@
                                                     option.textContent = model;
                                                     select.appendChild(option);
                                                 });
-                                                status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
+                                                status.innerHTML = '<span class="color-success"><i class="mdi mdi-check"></i> ' + data.models.length + ' models loaded</span>';
                                                 setTimeout(() => { status.innerHTML = ''; }, 3000);
                                             }
                                         })
                                         .catch(error => {
-                                            status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
+                                            status.innerHTML = '<span class="color-error"><i class="mdi mdi-alert"></i> Connection failed</span>';
                                             setTimeout(() => { status.innerHTML = ''; }, 5000);
                                         });
                                 }
@@ -400,7 +400,7 @@
                                     <span class="left">Each client can be deployed by imposing a starting social network among the agents of its populations.
                                     <br><br> The network can be either synthetically generated or custom-made and uploaded.
                                         To create a custom network file download the agent name list using
-                                        <i class="mdi mdi-account-star" style="font-size: 16px;"></i>
+                                        <i class="mdi mdi-account-star" class="icon-size-16"></i>
                                     </span>
 
                                 </div>
@@ -566,7 +566,7 @@
                                         </div>
                                         <div class="right">
                                             <a class="link-tooltip" href="/admin/reset_agents_activity/{{ client.id }}" title="Reset">
-                                                <i class="mdi mdi-backup-restore" style="font-size: 24px;"></i>
+                                                <i class="mdi mdi-backup-restore" class="icon-size-24"></i>
                                             </a>
                                         </div>
                                     </div>

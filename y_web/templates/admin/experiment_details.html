@@ -30,14 +30,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Core information about this simulation experiment, including configuration and access details.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
+                                <p class="form-field-description">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ experiment.exp_name }}</span>
@@ -58,22 +58,22 @@
                                 {% if experiment.running == 1 %}
                                 <hr>
                                 <b>Connection Details</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Server endpoint for active experiment.</p>
+                                <p class="form-field-description">Server endpoint for active experiment.</p>
                                 <div class="box-line">
                                     <span class="left">Endpoint</span>
-                                    <span class="right" style="word-break: break-all;">http://{{ experiment.server }}:{{ experiment.port }}</span>
+                                    <span class="right" class="word-break-all">http://{{ experiment.server }}:{{ experiment.port }}</span>
                                 </div>
                                 {% endif %}
                                 <hr>
                                 <b>Actions</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Manage experiment data and configuration.</p>
+                                <p class="form-field-description">Manage experiment data and configuration.</p>
                             </div>
                             {% if len(clients)>0 %}
                             <div class="box-line">
                                     <span class="left">Edit LLM Prompts</span>
                                     <span class="right">
                                         <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="Edit">
-                                            <i class="mdi mdi-credit-card" style="font-size: 24px;"></i></a>
+                                            <i class="mdi mdi-credit-card" class="icon-size-24"></i></a>
                                     </span>
                                 </div>
                             {% endif %}
@@ -82,13 +82,13 @@
                             <div class="box-line">
                                     <span class="left">Download Experiment</span>
                                     <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i
-                                     class="mdi mdi-download" style="font-size: 24px;"></i></a></span>
+                                     class="mdi mdi-download" class="icon-size-24"></i></a></span>
                                 </div>
                             {% endif %}
                             <div class="box-line">
                                     <span class="left">Delete Experiment</span>
                                     <span class="right"> <a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a></span>
+                                     class="mdi mdi-delete" class="icon-size-24"></i></a></span>
                                 </div>
 
                         </div>
@@ -97,7 +97,7 @@
                     {% if len(users) > 0 %}
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Users with access to participate in this experiment.
                         </p>
 
@@ -129,7 +129,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">YServer Status</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Simulation server status and control panel.
                         </p>
                         <div class="box-content">
@@ -139,11 +139,11 @@
                                          <a class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}"
                                             title="Load"><i
                                                  class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}"
-                                                 style="font-size: 24px;"></i></a>
+                                                 class="icon-size-24"></i></a>
                                          <a class="link-tooltip" {% if experiment.status== 1 %} href="/admin/join_simulation" {%
                                             endif %} title="Join"><i
                                                  class="mdi mdi-plus-box {% if experiment.status == 0 %} disabled {% endif %}"
-                                                 style="font-size: 24px;"></i></a>
+                                                 class="icon-size-24"></i></a>
 
                                     </span>
                             </div>
@@ -153,14 +153,14 @@
                                 <span class="right">
                                      <a class="link-tooltip" {% if experiment.running == 0 %} href="/admin/start_experiment/{{ experiment.idexp }}" {% endif %}title="Run">
                                             <i class="mdi mdi-play-box-outline {% if experiment.running %}active{% endif %}"
-                                               style="font-size: 24px;"></i>
+                                               class="icon-size-24"></i>
                                         </a>
 
                                      <a class="link-tooltip" {% if experiment.running == 1 %} href="/admin/stop_experiment/{{ experiment.idexp }}" {% endif %}
                                         title="Stop">
 
                                     <i class="mdi mdi-stop {% if experiment.running == 0 %} disabled {% endif %}"
-                                       style="font-size: 24px;"></i>
+                                       class="icon-size-24"></i>
                                     </a>
 
                                     </span>
@@ -185,25 +185,25 @@
 
                                 <span class="right">
                                         <a class="link-tooltip" {% if  client.status == 0  and experiment.running == 1 %} href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client.status == 1  %}active {% elif experiment.running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-play-box-outline {% if  client.status == 1  %}active {% elif experiment.running == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>
                                         <a class="link-tooltip" {% if  client.status == 1 %} href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Pause">
-                                            <i class="mdi mdi-pause {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-pause {% if  client.status == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>
                                         <!--<a class="link-tooltip" {% if  client.status == 1 %} href="/admin/stop_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Stop">
-                                            <i class="mdi mdi-stop {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-stop {% if  client.status == 0 %} disabled {% endif %}" class="icon-size-24"></i>
                                         </a>-->
                                         <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete">
-                                            <i class="mdi mdi-delete" style="font-size: 24px;"></i>
+                                            <i class="mdi mdi-delete" class="icon-size-24"></i>
                                         </a>
                                     </span>
                             </div>
                             {% endfor %}
 
-                            <div style="text-align: center">
+                            <div class="text-center">
                                  <hr style="margin-bottom: 5px; margin-top: 5px;">
                                 <a class="link-tooltip" href="/admin/clients/{{ experiment.idexp }}" title="Add">
-                                    <i class="mdi mdi-plus-circle-outline" style="font-size: 24px;"></i>
+                                    <i class="mdi mdi-plus-circle-outline" class="icon-size-24"></i>
                                 </a>
                             </div>
 
@@ -220,8 +220,8 @@
 
                             <p>
                                 <b>Web Interface</b> allows to interact with the experiment through an online social platform-like interface.<br><br>
-                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> activates the experiment's web interface.<br>
-                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> access the web interface.
+                                <i class="mdi mdi-select-all" class="icon-size-16"></i> activates the experiment's web interface.<br>
+                                <i class="mdi mdi-plus-box" class="icon-size-16"></i> access the web interface.
                                 <br><br>
                                 <em>Note: Only one web interface can be active at a time, even for non-running experiments.</em>
                             </p>
@@ -239,7 +239,7 @@
                             <p>
                                 <b>Prompts</b> specify the instruction that the LLM agents will be required to follow during the experiment.<br><br>
 
-                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> allows to edit the prompts to tune them to the simulation needs.
+                                <i class="mdi mdi-credit-card" class="icon-size-16"></i> allows to edit the prompts to tune them to the simulation needs.
                             </p>
 
                         </div>

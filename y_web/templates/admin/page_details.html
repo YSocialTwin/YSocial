@@ -30,14 +30,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Page Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Information about this content source page, including topics and populations where it's deployed.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Page identification and RSS feed configuration.</p>
+                                <p class="form-field-description">Page identification and RSS feed configuration.</p>
 
                                 <div class="box-line">
                                     <span class="left">Page Name</span>
@@ -53,12 +53,12 @@
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Feed URL</span>
-                                    <span class="right" style="word-break: break-all;">{{ page.feed }}</span>
+                                    <span class="right" class="word-break-all">{{ page.feed }}</span>
                                 </div>
 
                                 <hr>
                                 <b>Content & Deployment</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Topics covered and population assignments.</p>
+                                <p class="form-field-description">Topics covered and population assignments.</p>
 
                                 <div class="box-line">
                                     <span class="left">Topics</span>
@@ -93,9 +93,9 @@
                                 <hr>
                             </div>
 
-                            <div class="buttons" style="display: flex; justify-content: right">
+                            <div class="buttons" class="details-button-group">
                                 <a class="link-tooltip" href="/admin/delete_page/{{ page.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+                                     class="mdi mdi-delete" class="icon-size-24"></i></a>
                             </div>
 
                         </div>
@@ -104,7 +104,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Population</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Deploy this page to agent populations so they can interact with its content.
                         </p>
                         <div class="box-content">
@@ -112,7 +112,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">ℹ️ A page can be added to multiple populations.</small>
+                                            <small class="color-gray">ℹ️ A page can be added to multiple populations.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -138,7 +138,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add Topic to Page</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Associate content topics with this page for better categorization.
                         </p>
                         <div class="box-content">
@@ -146,7 +146,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">ℹ️ Multiple topics can be associated with the same page.</small>
+                                            <small class="color-gray">ℹ️ Multiple topics can be associated with the same page.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -179,7 +179,7 @@
                     <div class="dashboard-box">
 
                         <div class="box-content">
-                            <div class="box-lines" style="display: flex; justify-content: center">
+                            <div class="box-lines" class="display-flex-center">
                                 <img src="{{ page.logo }}" alt="Logo" style="width: 50%; height: auto;">
                             </div>
 
@@ -188,7 +188,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Recent News</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                        <p class="form-field-help">
                             Latest articles from this page's RSS feed.
                         </p>
 
