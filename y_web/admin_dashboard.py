@@ -192,7 +192,9 @@ def models_data():
         models = models[start : start + length]
 
     return {
-        "data": [{"model_name": model, "backend": llm_backend["backend"]} for model in models],
+        "data": [
+            {"model_name": model, "backend": llm_backend["backend"]} for model in models
+        ],
         "total": total,
     }
 

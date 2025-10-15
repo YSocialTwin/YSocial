@@ -1,11 +1,13 @@
-import os
-import sys
-import subprocess
-import signal
-import time
 import json
+import os
+import signal
+import subprocess
+import sys
+import time
 from pathlib import Path
+
 import psutil
+
 from y_web import db
 from y_web.models import Jupyter_instances
 
@@ -224,7 +226,6 @@ def start_jupyter(expid, notebook_dir=None):
             stderr=subprocess.PIPE,
             preexec_fn=os.setsid if os.name != "nt" else None,
         )
-
 
         # Store instance info
         instance = Jupyter_instances(

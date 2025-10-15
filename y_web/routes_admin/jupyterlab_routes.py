@@ -1,10 +1,9 @@
-from flask import Blueprint, render_template, jsonify, request, redirect, url_for
+from flask import Blueprint, jsonify, redirect, render_template, request, url_for
 from flask_login import login_required
 
 from y_web import db
-from y_web.models import Jupyter_instances, Exps
+from y_web.models import Exps, Jupyter_instances
 from y_web.utils.jupyter_utils import *
-
 
 lab = Blueprint("lab", __name__)
 
@@ -15,7 +14,12 @@ def api_start_jupyter(experiment_id):
     """API endpoint to start Jupyter Lab"""
 
     exp_id = experiment_id  # Use experiment_dir as notebook_dir
-    path = db.session.query(Exps).filter_by(idexp=int(exp_id)).first().db_name.split(os.sep)
+    path = (
+        db.session.query(Exps)
+        .filter_by(idexp=int(exp_id))
+        .first()
+        .db_name.split(os.sep)
+    )
 
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
@@ -44,7 +48,9 @@ def api_jupyter_instances():
 @login_required
 def api_create_notebook(expid):
     """API endpoint to create a new notebook"""
-    path = db.session.query(Exps).filter_by(idexp=int(expid)).first().db_name.split(os.sep)
+    path = (
+        db.session.query(Exps).filter_by(idexp=int(expid)).first().db_name.split(os.sep)
+    )
 
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
