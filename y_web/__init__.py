@@ -209,9 +209,11 @@ def cleanup_db_jupyter_with_new_app():
     try:
         # Create a fresh app instance (use same DB_TYPE env var)
         from y_web import create_app
+
         app = create_app(os.getenv("DB_TYPE", "sqlite"))
         with app.app_context():
             from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+
             stop_all_jupyter_instances()
     except Exception as e:
         print("Error during DB/Jupyter cleanup with fresh app:", e)
