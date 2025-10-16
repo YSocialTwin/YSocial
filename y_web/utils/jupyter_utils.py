@@ -123,34 +123,67 @@ def find_instance_by_notebook_dir(notebook_dir):
     return None
 
 
-def ensure_kernel_installed():
-    """Ensure IPython kernel is installed in the current environment"""
+def ensure_kernel_installed(kernel_name="python3"):
+    """
+    Ensure an IPython kernel is installed and registered in the current environment.
+
+    Steps:
+    1. Check if 'ipykernel' module exists.
+    2. If not, install it via pip.
+    3. Verify that the kernel spec is registered.
+    4. If missing, create/register it.
+    """
     try:
-        # Check if kernel is already installed
+        # 1. Check if ipykernel is importable
+        try:
+            __import__("ipykernel")
+        except ImportError:
+            print("ipykernel not found, installing...")
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "ipykernel"],
+                check=True
+            )
+
+        # 2. Check if kernel spec already exists
         result = subprocess.run(
-            [sys.executable, "-m", "ipykernel", "--version"],
+            [sys.executable, "-m", "jupyter", "kernelspec", "list", "--json"],
             capture_output=True,
             text=True,
         )
 
         if result.returncode == 0:
-            # Kernel module exists, now ensure it's registered
-            subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "ipykernel",
-                    "install",
-                    "--user",
-                    "--name",
-                    "python3",
-                ],
-                check=False,  # Don't fail if already installed
-            )
-            return True
+            data = json.loads(result.stdout)
+            kernels = data.get("kernelspecs", {})
+            if kernel_name in kernels:
+                print(f"Kernel '{kernel_name}' already registered.")
+                return True
+
+        # 3. Register the kernel if missing
+        print(f"Registering kernel '{kernel_name}'...")
+        subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "ipykernel",
+                "install",
+                "--user",
+                "--name",
+                kernel_name,
+                "--display-name",
+                f"Python ({kernel_name})",
+            ],
+            check=True,
+        )
+
+        print(f"Kernel '{kernel_name}' successfully installed and registered.")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error while installing/registering kernel: {e}")
         return False
+
     except Exception as e:
-        print(f"Error checking/installing kernel: {e}")
+        print(f"Unexpected error: {e}")
         return False
 
 
@@ -164,6 +197,9 @@ def start_jupyter(expid, notebook_dir=None):
     Returns:
         tuple: (success, message, instance_id)
     """
+
+    # Ensure kernel is installed
+    ensure_kernel_installed()
 
     notebook_dir = Path(notebook_dir)
     notebook_dir.mkdir(exist_ok=True, parents=True)
@@ -187,9 +223,6 @@ def start_jupyter(expid, notebook_dir=None):
             f"Jupyter Lab is already running on port {inst['port']} with this notebook directory",
             existing_instance_id,
         )
-
-    # Ensure kernel is installed
-    ensure_kernel_installed()
 
     # Find a free port
     port = find_free_port()
@@ -242,6 +275,8 @@ def start_jupyter(expid, notebook_dir=None):
 
         # Check if process is still running
         if process.poll() is None:
+            create_notebook_with_template(notebook_dir=str(notebook_dir))
+
             return True, f"Jupyter Lab started on port {port}", None
         else:
             stderr = process.stderr.read().decode() if process.stderr else ""
@@ -251,6 +286,8 @@ def start_jupyter(expid, notebook_dir=None):
             return False, f"Failed to start Jupyter Lab: {stderr}", None
 
     except Exception as e:
+        db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+        db.session.commit()
         return False, f"Error starting Jupyter Lab: {str(e)}", None
 
 
@@ -280,7 +317,7 @@ def stop_jupyter(instance_id=None):
         try:
             proc = psutil.Process(pid)
         except psutil.NoSuchProcess:
-            db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
             db.session.commit()
             return (
                 True,
@@ -299,14 +336,14 @@ def stop_jupyter(instance_id=None):
                 )
 
             proc.wait(timeout=5)
-            db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
             db.session.commit()
             return True, f"Instance {instance_id} (PID {pid}) stopped gracefully."
         except psutil.TimeoutExpired:
             # Force kill
             try:
                 proc.kill()
-                db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+                db.session.query(Jupyter_instances).filter_by(process=pid).delete()
                 db.session.commit()
                 return True, f"Instance {instance_id} (PID {pid}) force-stopped."
             except Exception as e:
@@ -326,7 +363,7 @@ def stop_jupyter(instance_id=None):
         pid = int(inst["pid"])
 
         if not pid:
-            db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
             db.session.commit()
             return True, f"Instance {instance_id} has no PID stored (removed from DB)."
 
@@ -354,7 +391,7 @@ def stop_jupyter(instance_id=None):
     )
 
 
-def create_notebook_with_template(filename, notebook_dir=None):
+def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None):
     """Create a new notebook with predefined cells
 
     Args:
@@ -362,68 +399,70 @@ def create_notebook_with_template(filename, notebook_dir=None):
         notebook_dir: Directory to create the notebook in. If None, uses default.
                      If provided as a string, it will be created under experiments/ folder.
     """
-    notebook_dir = Path(notebook_dir)
-    notebook_dir.mkdir(exist_ok=True, parents=True)
+    # check if file exists
 
-    notebook_content = {
-        "cells": [
-            {
-                "cell_type": "markdown",
-                "metadata": {},
-                "source": [
-                    "# New Notebook\n",
-                    "\n",
-                    "This notebook was created with predefined imports and setup.",
-                ],
-            },
-            {
-                "cell_type": "code",
-                "execution_count": None,
-                "metadata": {},
-                "outputs": [],
-                "source": [
-                    "# Standard imports\n",
-                    "import numpy as np\n",
-                    "import pandas as pd\n",
-                    "import matplotlib.pyplot as plt\n",
-                    "\n",
-                    "# Display settings\n",
-                    "%matplotlib inline\n",
-                    "pd.set_option('display.max_columns', None)\n",
-                    "\n",
-                    "print('Environment ready!')",
-                ],
-            },
-            {
-                "cell_type": "code",
-                "execution_count": None,
-                "metadata": {},
-                "outputs": [],
-                "source": ["# Your code here"],
-            },
-        ],
-        "metadata": {
-            "kernelspec": {
-                "display_name": "Python 3",
-                "language": "python",
-                "name": "python3",
-            },
-            "language_info": {
-                "codemirror_mode": {"name": "ipython", "version": 3},
-                "file_extension": ".py",
-                "mimetype": "text/x-python",
-                "name": "python",
-                "nbconvert_exporter": "python",
-                "pygments_lexer": "ipython3",
-                "version": "3.8.0",
-            },
-        },
-        "nbformat": 4,
-        "nbformat_minor": 4,
-    }
+    if (Path(f"{notebook_dir}{os.sep}{filename}")).exists():
+        return False, f"Notebook {filename} already exists."
 
-    filepath = notebook_dir / filename
-    with open(filepath, "w") as f:
-        json.dump(notebook_content, f, indent=2)
+    else:
+        notebook_content = {
+            "cells": [
+                {
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": [
+                        "# New Notebook\n",
+                        "\n",
+                        "This notebook was created with predefined imports and setup.",
+                    ],
+                },
+                {
+                    "cell_type": "code",
+                    "execution_count": None,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": [
+                        "# Standard imports\n",
+                        "import ysight as ys\n",
+                        "import matplotlib.pyplot as plt\n",
+                        "\n",
+                        "# Display settings\n",
+                        "%matplotlib inline\n",
+                        "pd.set_option('display.max_columns', None)\n",
+                        "\n",
+                        "print('Environment ready!')",
+                    ],
+                },
+                {
+                    "cell_type": "code",
+                    "execution_count": None,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": ["# Your code here"],
+                },
+            ],
+            "metadata": {
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3",
+                },
+                "language_info": {
+                    "codemirror_mode": {"name": "ipython", "version": 3},
+                    "file_extension": ".py",
+                    "mimetype": "text/x-python",
+                    "name": "python",
+                    "nbconvert_exporter": "python",
+                    "pygments_lexer": "ipython3",
+                    "version": "3.8.0",
+                },
+            },
+            "nbformat": 4,
+            "nbformat_minor": 4,
+        }
 
-    return filepath
+        filepath = Path(f"{notebook_dir}{os.sep}{filename}")
+        with open(filepath, "w") as f:
+            json.dump(notebook_content, f, indent=2)
+
+    return True

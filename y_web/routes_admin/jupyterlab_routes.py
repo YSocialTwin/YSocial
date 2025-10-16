@@ -1,9 +1,11 @@
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, jsonify, render_template
 from flask_login import login_required
 
 from y_web import db
 from y_web.models import Exps, Jupyter_instances
 from y_web.utils.jupyter_utils import *
+from y_web.routes_admin.experiments_routes import experiment_details
+from y_web.utils.miscellanea import ollama_status
 
 lab = Blueprint("lab", __name__)
 
@@ -68,10 +70,11 @@ def api_create_notebook(expid):
         )
 
 
-@lab.route("/admin/lab/<exp_id>")
+@lab.route("/admin/lab/<int:exp_id>")
 @login_required
 def jupyter_page(exp_id):
     """Jupyter Lab embedded page for specific instance"""
+
     instances = db.session.query(Jupyter_instances).all()
     JUPYTER_INSTANCES = {
         inst.exp_id: {
@@ -83,20 +86,28 @@ def jupyter_page(exp_id):
     }
 
     if exp_id not in JUPYTER_INSTANCES:
-        return redirect(url_for("index"))
+        return experiment_details(exp_id)
 
     inst = JUPYTER_INSTANCES[exp_id]
-    proc = int(inst["process"])
-
-    if not proc or proc.poll() is not None:
-        return redirect(url_for("index"))
+    try:
+        proc = psutil.Process(int(inst["process"]))
+        if not proc.is_running():
+            return experiment_details(exp_id)
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return experiment_details(exp_id)
 
     jupyter_url = f"http://localhost:{inst['port']}/lab?token=embed-jupyter-token"
+
+    ollamas = ollama_status()
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+
     return render_template(
-        "jupyter.html",
+        "admin/jupyter.html",
         jupyter_url=jupyter_url,
         expid=exp_id,
         jupyter_port=inst["port"],
         jupyter_token="embed-jupyter-token",
         notebook_dir=str(inst["notebook_dir"]),
+        ollamas=ollamas,
+        experiment=experiment
     )
