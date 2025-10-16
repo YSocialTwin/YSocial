@@ -206,6 +206,7 @@ def cleanup_db_jupyter_with_new_app():
     Create a fresh app instance to get a valid app context, then run DB cleanup.
     Call this from the main runner's shutdown handler or as final step in atexit.
     """
+    print("Cleaning up db...")
     try:
         # Create a fresh app instance (use same DB_TYPE env var)
         from y_web import create_app
@@ -213,10 +214,13 @@ def cleanup_db_jupyter_with_new_app():
         app = create_app(os.getenv("DB_TYPE", "sqlite"))
         with app.app_context():
             from y_web.utils.jupyter_utils import stop_all_jupyter_instances
-
             stop_all_jupyter_instances()
+
+            from y_web.utils.external_processes import stop_all_exps
+            stop_all_exps()
+
     except Exception as e:
-        print("Error during DB/Jupyter cleanup with fresh app:", e)
+        print("Error during DB cleanup with fresh app:", e)
 
 
 atexit.register(cleanup_subprocesses_only)

@@ -34,7 +34,23 @@ from y_web.models import (
     Client_Execution,
     Ollama_Pull,
     PopulationActivityProfile,
+    Exps,
+    Client
 )
+
+
+def stop_all_exps():
+    """Stop all clients"""
+    # set to 0 all Exps.running
+    exps = db.session.query(Exps).all()
+    for exp in exps:
+        exp.running = 0
+        db.session.commit()
+    # terminate all clients
+    clis = db.session.query(Client).all()
+    for cli in clis:
+        cli.status = 0
+        db.session.commit()
 
 
 @deprecated
