@@ -22,7 +22,15 @@ from y_web.utils import (
 from y_web.utils.jupyter_utils import get_jupyter_instances
 from y_web.utils.miscellanea import llm_backend_status, ollama_status
 
-from .models import Admin_users, Client, Client_Execution, Exps, Jupyter_instances, Ollama_Pull, User_Experiment
+from .models import (
+    Admin_users,
+    Client,
+    Client_Execution,
+    Exps,
+    Jupyter_instances,
+    Ollama_Pull,
+    User_Experiment,
+)
 from .utils import (
     check_connection,
     check_privileges,
@@ -130,13 +138,14 @@ def dashboard():
     dbport = get_db_port()
     db_conn = check_connection()
     db_server = get_db_server()
-    
+
     # Get jupyter instances and create a mapping by exp_id
     jupyter_instances = Jupyter_instances.query.all()
     jupyter_by_exp = {}
     for jupyter in jupyter_instances:
         # Check if process is actually running
         import psutil
+
         is_running = False
         if jupyter.process is not None:
             try:
@@ -145,14 +154,14 @@ def dashboard():
                     is_running = True
             except (psutil.NoSuchProcess, ValueError, TypeError):
                 pass
-        
+
         jupyter_by_exp[jupyter.exp_id] = {
-            'port': jupyter.port,
-            'notebook_dir': jupyter.notebook_dir,
-            'status': 'Active' if is_running else 'Inactive',
-            'running': is_running,
+            "port": jupyter.port,
+            "notebook_dir": jupyter.notebook_dir,
+            "status": "Active" if is_running else "Inactive",
+            "running": is_running,
         }
-    
+
     has_jupyter_sessions = len(jupyter_instances) > 0
 
     return render_template(
@@ -239,35 +248,34 @@ def jupyter_data():
         JSON with 'data' array of jupyter session objects and 'total' count
     """
     import psutil
-    
+
     check_privileges(current_user.username)
-    
+
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+
     # Get all jupyter instances from database
     all_db_instances = Jupyter_instances.query.all()
-    
+
     # Filter instances based on user access
     filtered_instances = []
     for db_inst in all_db_instances:
         exp_id = db_inst.exp_id
-        
+
         # Get experiment details
         exp = Exps.query.filter_by(idexp=exp_id).first()
         if not exp:
             continue
-            
+
         # Check if user is admin or has access to this experiment
-        if user.role == 'admin':
+        if user.role == "admin":
             has_access = True
         else:
             user_exp = User_Experiment.query.filter_by(
-                user_id=user.id, 
-                exp_id=exp_id
+                user_id=user.id, exp_id=exp_id
             ).first()
             has_access = user_exp is not None
-        
+
         if has_access:
             # Check if process is actually running
             is_running = False
@@ -278,26 +286,27 @@ def jupyter_data():
                         is_running = True
                 except (psutil.NoSuchProcess, ValueError, TypeError):
                     pass
-            
-            filtered_instances.append({
-                'exp_id': exp_id,
-                'exp_name': exp.exp_name,
-                'port': db_inst.port,
-                'notebook_dir': db_inst.notebook_dir,
-                'status': 'Active' if is_running else 'Inactive',
-                'running': is_running,
-            })
-    
+
+            filtered_instances.append(
+                {
+                    "exp_id": exp_id,
+                    "exp_name": exp.exp_name,
+                    "port": db_inst.port,
+                    "notebook_dir": db_inst.notebook_dir,
+                    "status": "Active" if is_running else "Inactive",
+                    "running": is_running,
+                }
+            )
+
     # search filter
     search = request.args.get("search")
     if search:
         filtered_instances = [
-            i for i in filtered_instances 
-            if search.lower() in i['exp_name'].lower()
+            i for i in filtered_instances if search.lower() in i["exp_name"].lower()
         ]
-    
+
     total = len(filtered_instances)
-    
+
     # sorting
     sort = request.args.get("sort")
     if sort:
@@ -306,26 +315,26 @@ def jupyter_data():
                 direction = s[0]
                 field = s[1:]
                 reverse = direction == "-"
-                
-                if field == 'exp_name':
+
+                if field == "exp_name":
                     filtered_instances = sorted(
-                        filtered_instances, 
-                        key=lambda x: x.get('exp_name', ''),
-                        reverse=reverse
+                        filtered_instances,
+                        key=lambda x: x.get("exp_name", ""),
+                        reverse=reverse,
                     )
-                elif field == 'status':
+                elif field == "status":
                     filtered_instances = sorted(
-                        filtered_instances, 
-                        key=lambda x: x.get('status', ''),
-                        reverse=reverse
+                        filtered_instances,
+                        key=lambda x: x.get("status", ""),
+                        reverse=reverse,
                     )
-    
+
     # pagination
     start = request.args.get("start", type=int, default=-1)
     length = request.args.get("length", type=int, default=-1)
     if start != -1 and length != -1:
         filtered_instances = filtered_instances[start : start + length]
-    
+
     return {
         "data": filtered_instances,
         "total": total,
