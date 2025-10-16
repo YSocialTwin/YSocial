@@ -131,8 +131,28 @@ def dashboard():
     db_conn = check_connection()
     db_server = get_db_server()
     
-    # Check if there are any jupyter instances
+    # Get jupyter instances and create a mapping by exp_id
     jupyter_instances = Jupyter_instances.query.all()
+    jupyter_by_exp = {}
+    for jupyter in jupyter_instances:
+        # Check if process is actually running
+        import psutil
+        is_running = False
+        if jupyter.process is not None:
+            try:
+                proc = psutil.Process(int(jupyter.process))
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    is_running = True
+            except (psutil.NoSuchProcess, ValueError, TypeError):
+                pass
+        
+        jupyter_by_exp[jupyter.exp_id] = {
+            'port': jupyter.port,
+            'notebook_dir': jupyter.notebook_dir,
+            'status': 'Active' if is_running else 'Inactive',
+            'running': is_running,
+        }
+    
     has_jupyter_sessions = len(jupyter_instances) > 0
 
     return render_template(
@@ -148,6 +168,7 @@ def dashboard():
         db_conn=db_conn,
         db_server=db_server,
         has_jupyter_sessions=has_jupyter_sessions,
+        jupyter_by_exp=jupyter_by_exp,
     )
 
 

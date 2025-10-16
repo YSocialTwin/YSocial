@@ -32,57 +32,87 @@
                         {% for exp in experiments %}
                         <div class="box-content">
                             <div class="box-lines">
-                                <div class="box-line">
-                                    <span class="left"><strong><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a></strong></span>
-                                    <span class="right">
-                                        <a class="link-tooltip" {% if experiments[exp]['experiment'].running == 0 %} href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop">
-                                            <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load">
-                                            <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 1 %} href="/admin/join_simulation" {% endif %} title="Join" >
-                                            <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 0 %} href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Delete" >
-                                            <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
+                                <div class="box-line" style="border-bottom: 2px solid #f5f5f5; padding-bottom: 10px; margin-bottom: 10px;">
+                                    <span class="left" style="display: flex; align-items: center; gap: 10px;">
+                                        <strong><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a></strong>
+                                        {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
+                                        <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; color: #666;">
+                                            <i class="mdi mdi-flask" style="font-size: 16px;"></i>
+                                            {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
+                                            <span style="color: #28a745; font-weight: 500;">Lab Active</span>
+                                            {% else %}
+                                            <span style="color: #dc3545; font-weight: 500;">Lab Inactive</span>
+                                            {% endif %}
+                                        </span>
+                                        {% endif %}
+                                    </span>
+                                    <span class="right" style="display: flex; gap: 8px; align-items: center;">
+                                        <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
+                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].running == 0 %} href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Run Experiment">
+                                                <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" style="font-size: 24px;"></i>
+                                            </a>
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop Experiment">
+                                                <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            </a>
+                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load Experiment">
+                                                <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+                                            </a>
+                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 1 %} href="/admin/join_simulation" {% endif %} title="Join Simulation" >
+                                                <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            </a>
+                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 0 %} href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Delete Experiment" >
+                                                <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            </a>
+                                        </div>
+                                        {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
+                                        <div style="display: flex; gap: 3px;">
+                                            {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
+                                            <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
+                                                <i class="mdi mdi-flask-empty-off" style="font-size: 24px; color: #dc3545;"></i>
+                                            </a>
+                                            <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" target="_blank" title="Open JupyterLab">
+                                                <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #28a745;"></i>
+                                            </a>
+                                            {% else %}
+                                            <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
+                                                <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #28a745;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
                                     </span>
                                 </div>
                                 
                                 {% if len(experiments[exp]["clients"]) > 0 %}
                                 {% for client in experiments[exp]["clients"] %}
-                                <div class="box-line" style="padding-left: 20px;">
-                                    <span class="left" style="font-size: 0.9em;">
-                                        <i class="mdi mdi-chevron-right" style="font-size: 14px; color: #999;"></i>
+                                <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">
+                                    <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
+                                        <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         <a href="/admin/client_details/{{client[0].id}}">{{ client[0].name }}</a>
                                     </span>
-                                    <span class="right" style="width: 50%; display: flex; align-items: center; gap: 10px;">
-                                        <div class="progress" style="height: 20px; flex: 1; margin: 0;">
-                                            <div id="progress-bar-{{client[0].id}}" class="progress-bar progress-bar-striped progress_exp" role="progressbar"
-                                                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                                                0%
+                                    <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
+                                        <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f0f0f0 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
+                                            <div id="progress-bar-{{client[0].id}}" class="sleek-progress-bar" 
+                                                 style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%); border-radius: 20px; transition: width 0.4s ease-in-out, background 0.3s ease; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,242,254,0.3);">
+                                                <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">0%</span>
                                             </div>
                                         </div>
-                                        <div style="display: flex; gap: 5px;">
+                                        <div style="display: flex; gap: 3px;">
                                             {% if client[1] != -1 %}
                                             <a class="link-tooltip"
-                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time == 0 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %} href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
+                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time == 0 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %} href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run Client">
                                                 <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
                                             </a>
                                             {% else %}
                                             <a class="link-tooltip"
-                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
+                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run Client">
                                                 <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
                                             </a>
                                             {% endif %}
-                                            <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Pause">
+                                            <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Pause Client">
                                                 <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
                                             </a>
-                                            <a class="link-tooltip" {% if client[0].status == 0 %} href="/admin/delete_client/{{ client[0].id }}" {% endif %} title="Delete" >
+                                            <a class="link-tooltip" {% if client[0].status == 0 %} href="/admin/delete_client/{{ client[0].id }}" {% endif %} title="Delete Client" >
                                                 <i class="mdi mdi-delete {% if client[0].status == 1 %} disabled {% endif %}" style="font-size: 20px;"></i>
                                             </a>
                                         </div>
@@ -105,7 +135,15 @@
                                                     const percentage = data.progress;
                                                     const progressBar = $('#progress-bar-{{client[0].id}}');
                                                     progressBar.css('width', percentage + '%');
-                                                    progressBar.text(percentage + '%');
+                                                    progressBar.find('span').text(percentage + '%');
+                                                    
+                                                    // Update gradient based on progress
+                                                    if (percentage >= 75) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)');
+                                                    } else if (percentage >= 50) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #fa709a 0%, #fee140 100%)');
+                                                    }
+                                                    
                                                     if (percentage < 100) {
                                                         setTimeout(pollProgress, 500);
                                                     }
@@ -135,171 +173,40 @@
                     </div>
                     {% endif %}
 
-                    {% if has_jupyter_sessions %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">JupyterLab Sessions</h3>
+                    {% if len(experiments) > 0 and (llm_backend["status"] and llm_backend["installed"]) %}
+                    <script>
+                        function startJupyterSession(expId) {
+                            fetch(`/admin/lab_start/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        location.reload();
+                                    } else {
+                                        alert('Error: ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    alert('Error starting JupyterLab: ' + error);
+                                });
+                        }
 
-                        <div class="box-content">
-                            <div id="jupyter-table"></div>
-
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-
-                            <style>
-                              #jupyter-table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
-
-                            <script>
-                                const jupyterTableDiv = document.getElementById('jupyter-table');
-
-                                const updateUrl = (prev, query) => {
-                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-                                };
-
-                                new gridjs.Grid({
-                                    columns: [
-                                        { id: 'exp_id', hidden: true },
-                                        { 
-                                            id: 'exp_name', 
-                                            name: 'Experiment', 
-                                            sort: true,
-                                            formatter: (cell, row) => {
-                                                const expId = row.cells[0].data;
-                                                const expName = cell;
-                                                return gridjs.html(`<a href="/admin/experiment_details/${expId}">${expName}</a>`);
-                                            }
-                                        },
-                                        { 
-                                            id: 'port', 
-                                            name: 'Port', 
-                                            sort: false,
-                                            formatter: (cell, row) => {
-                                                const port = cell;
-                                                const running = row.cells[3].data;
-                                                if (running && port && port !== -1) {
-                                                    return port;
-                                                }
-                                                return '';
-                                            }
-                                        },
-                                        { 
-                                            id: 'status', 
-                                            name: 'Status', 
-                                            sort: true,
-                                            formatter: (cell) => {
-                                                const running = cell === 'Active';
-                                                const color = running ? '#28a745' : '#dc3545';
-                                                const title = running ? 'Active' : 'Inactive';
-                                                return gridjs.html(`
-                                                    <div style="display: flex; justify-content: center; align-items: center;">
-                                                        <div style="width: 16px; height: 16px; border-radius: 50%; background-color: ${color};" title="${title}"></div>
-                                                    </div>
-                                                `);
-                                            }
-                                        },
-                                        {
-                                            id: 'actions',
-                                            name: 'Actions',
-                                            sort: false,
-                                            formatter: (cell, row) => {
-                                                const expId = row.cells[0].data;
-                                                const running = row.cells[3].data === 'Active';
-                                                
-                                                if (running) {
-                                                    return gridjs.html(`
-                                                        <div style="display: flex; gap: 8px; justify-content: center;">
-                                                            <a href="#" onclick="stopJupyterSession('${expId}'); return false;"
-                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                                                Stop
-                                                            </a>
-                                                            <a href="/admin/lab/${expId}" target="_blank"
-                                                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                                                Open
-                                                            </a>
-                                                        </div>
-                                                    `);
-                                                } else {
-                                                    return gridjs.html(`
-                                                        <div style="display: flex; gap: 8px; justify-content: center;">
-                                                            <a href="#" onclick="startJupyterSession('${expId}'); return false;"
-                                                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                                                Start
-                                                            </a>
-                                                        </div>
-                                                    `);
-                                                }
-                                            }
-                                        },
-                                    ],
-                                    server: {
-                                        url: '/admin/jupyter_data',
-                                        then: results => results.data,
-                                        total: results => results.total,
-                                    },
-                                    search: {
-                                        enabled: true,
-                                        server: {
-                                            url: (prev, search) => {
-                                                return updateUrl(prev, { search });
-                                            },
-                                        },
-                                    },
-                                    sort: {
-                                        enabled: true,
-                                        multiColumn: false,
-                                        server: {
-                                            url: (prev, columns) => {
-                                                const columnIds = ['exp_id', 'exp_name', 'port', 'status'];
-                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                                                return updateUrl(prev, { sort });
-                                            },
-                                        },
-                                    },
-                                    pagination: {
-                                        enabled: true,
-                                        server: {
-                                            url: (prev, page, limit) => {
-                                                return updateUrl(prev, { start: page * limit, length: limit });
-                                            },
-                                        },
-                                    },
-                                }).render(jupyterTableDiv);
-
-                                function startJupyterSession(expId) {
-                                    fetch(`/admin/lab_start/${expId}`)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.success) {
-                                                alert(data.message);
-                                                location.reload();
-                                            } else {
-                                                alert('Error: ' + data.message);
-                                            }
-                                        })
-                                        .catch(error => {
-                                            alert('Error starting JupyterLab: ' + error);
-                                        });
-                                }
-
-                                function stopJupyterSession(expId) {
-                                    fetch(`/admin/lab_stop/${expId}`)
-                                        .then(response => response.json())
-                                        .then(data => {
-                                            if (data.success) {
-                                                alert(data.message);
-                                                location.reload();
-                                            } else {
-                                                alert('Error: ' + data.message);
-                                            }
-                                        })
-                                        .catch(error => {
-                                            alert('Error stopping JupyterLab: ' + error);
-                                        });
-                                }
-                            </script>
-                        </div>
-                    </div>
+                        function stopJupyterSession(expId) {
+                            fetch(`/admin/lab_stop/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        alert(data.message);
+                                        location.reload();
+                                    } else {
+                                        alert('Error: ' + data.message);
+                                    }
+                                })
+                                .catch(error => {
+                                    alert('Error stopping JupyterLab: ' + error);
+                                });
+                        }
+                    </script>
                     {% endif %}
 
                     <div class="dashboard-box">
