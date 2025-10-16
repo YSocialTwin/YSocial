@@ -224,9 +224,10 @@ def populations_data():
         )
         population_profiles[pop.id] = [p.name for p in profiles]
 
-    # Get recsys names
-    crecsys_dict = {r.id: r.name for r in Content_Recsys.query.all()}
-    frecsys_dict = {r.id: r.name for r in Follow_Recsys.query.all()}
+    # Get lookup dictionaries for education, leanings, and toxicity
+    education_dict = {str(e.id): e.education_level for e in Education.query.all()}
+    leanings_dict = {str(l.id): l.leaning for l in Leanings.query.all()}
+    toxicity_dict = {str(t.id): t.toxicity_level for t in Toxicity_Levels.query.all()}
 
     return {
         "data": [
@@ -234,16 +235,21 @@ def populations_data():
                 "id": pop.id,
                 "name": pop.name,
                 "size": pop.size,
-                "crecsys": (
-                    crecsys_dict.get(pop.crecsys, "Not set")
-                    if pop.crecsys
-                    else "Not set"
-                ),
-                "frecsys": (
-                    frecsys_dict.get(pop.frecsys, "Not set")
-                    if pop.frecsys
-                    else "Not set"
-                ),
+                "education": [
+                    education_dict.get(e_id.strip(), e_id.strip())
+                    for e_id in (pop.education or "").split(",")
+                    if e_id.strip()
+                ],
+                "leanings": [
+                    leanings_dict.get(l_id.strip(), l_id.strip())
+                    for l_id in (pop.leanings or "").split(",")
+                    if l_id.strip()
+                ],
+                "toxicity": [
+                    toxicity_dict.get(t_id.strip(), t_id.strip())
+                    for t_id in (pop.toxicity or "").split(",")
+                    if t_id.strip()
+                ],
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
             for pop in res
