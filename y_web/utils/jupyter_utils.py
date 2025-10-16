@@ -142,8 +142,7 @@ def ensure_kernel_installed(kernel_name="python3"):
         except ImportError:
             print("ipykernel not found, installing...")
             subprocess.run(
-                [sys.executable, "-m", "pip", "install", "ipykernel"],
-                check=True
+                [sys.executable, "-m", "pip", "install", "ipykernel"], check=True
             )
 
         # 2. Check if kernel spec already exists

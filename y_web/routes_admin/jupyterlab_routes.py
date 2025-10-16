@@ -3,8 +3,8 @@ from flask_login import login_required
 
 from y_web import db
 from y_web.models import Exps, Jupyter_instances
-from y_web.utils.jupyter_utils import *
 from y_web.routes_admin.experiments_routes import experiment_details
+from y_web.utils.jupyter_utils import *
 from y_web.utils.miscellanea import ollama_status
 
 lab = Blueprint("lab", __name__)
@@ -109,5 +109,5 @@ def jupyter_page(exp_id):
         jupyter_token="embed-jupyter-token",
         notebook_dir=str(inst["notebook_dir"]),
         ollamas=ollamas,
-        experiment=experiment
+        experiment=experiment,
     )
