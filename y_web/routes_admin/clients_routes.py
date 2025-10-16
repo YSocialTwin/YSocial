@@ -670,6 +670,10 @@ def create_client():
                 "toxicity": "none",
                 "is_page": 1,
                 "feed_url": p.feed,
+                "activity_profile": db.session.query(ActivityProfile)
+                .filter_by(id=p.activity_profile)
+                .first()
+                .name,
             }
         )
 
