@@ -250,12 +250,13 @@ def jupyter_data():
         if has_access:
             # Check if process is actually running
             is_running = False
-            try:
-                proc = psutil.Process(int(db_inst.process))
-                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
-                    is_running = True
-            except (psutil.NoSuchProcess, ValueError):
-                pass
+            if db_inst.process is not None:
+                try:
+                    proc = psutil.Process(int(db_inst.process))
+                    if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                        is_running = True
+                except (psutil.NoSuchProcess, ValueError, TypeError):
+                    pass
             
             filtered_instances.append({
                 'exp_id': exp_id,
