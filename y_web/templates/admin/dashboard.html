@@ -34,7 +34,7 @@
                             <div class="box-lines">
                                 <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                                     <span class="left" style="display: flex; align-items: center; gap: 10px;">
-                                        <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a>
+                                        <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" style="font-size: 1.1em; color: #039be5; text-decoration: none;">{{ experiments[exp]['experiment'].exp_name }}</a>
                                         {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
                                         <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; color: #666;">
                                             <i class="mdi mdi-flask" style="font-size: 16px;"></i>
@@ -48,21 +48,29 @@
                                     </span>
                                     <span class="right" style="display: flex; gap: 8px; align-items: center;">
                                         <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
-                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].running == 0 %} href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Run Experiment">
-                                                <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" style="font-size: 24px;"></i>
+                                            {% if experiments[exp]['experiment'].running == 0 %}
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Run Experiment">
+                                                <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
                                             </a>
+                                            {% endif %}
+                                            {% if experiments[exp]['experiment'].running == 1 %}
                                             <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop Experiment">
-                                                <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                                <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
                                             </a>
+                                            {% endif %}
                                             <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load Experiment">
                                                 <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>
-                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 1 %} href="/admin/join_simulation" {% endif %} title="Join Simulation" >
-                                                <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            {% if experiments[exp]['experiment'].status == 1 %}
+                                            <a class="link-tooltip" href="/admin/join_simulation" title="Join Simulation">
+                                                <i class="mdi mdi-plus-box" style="font-size: 24px;"></i>
                                             </a>
-                                            <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 0 %} href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Delete Experiment" >
-                                                <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
+                                            {% endif %}
+                                            {% if experiments[exp]['experiment'].status == 0 %}
+                                            <a class="link-tooltip" href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" title="Delete Experiment">
+                                                <i class="mdi mdi-delete" style="font-size: 24px;"></i>
                                             </a>
+                                            {% endif %}
                                         </div>
                                         {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
                                         <div style="display: flex; gap: 3px;">
@@ -99,23 +107,33 @@
                                             </div>
                                         </div>
                                         <div style="display: flex; gap: 3px;">
-                                            {% if client[1] != -1 %}
-                                            <a class="link-tooltip"
-                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time == 0 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %} href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run Client">
-                                                <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
-                                            </a>
-                                            {% else %}
-                                            <a class="link-tooltip"
-                                               {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run Client">
-                                                <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
+                                            {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 %}
+                                                {% if client[1] != -1 %}
+                                                    {% if client[1].elapsed_time == 0 %}
+                                                    <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                                                        <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                    </a>
+                                                    {% elif client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %}
+                                                    <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
+                                                        <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                {% else %}
+                                                <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                </a>
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if client[0].status == 1 %}
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Pause Client">
+                                                <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
                                             </a>
                                             {% endif %}
-                                            <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Pause Client">
-                                                <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 20px;"></i>
+                                            {% if client[0].status == 0 %}
+                                            <a class="link-tooltip" href="/admin/delete_client/{{ client[0].id }}" title="Delete Client">
+                                                <i class="mdi mdi-delete" style="font-size: 20px;"></i>
                                             </a>
-                                            <a class="link-tooltip" {% if client[0].status == 0 %} href="/admin/delete_client/{{ client[0].id }}" {% endif %} title="Delete Client" >
-                                                <i class="mdi mdi-delete {% if client[0].status == 1 %} disabled {% endif %}" style="font-size: 20px;"></i>
-                                            </a>
+                                            {% endif %}
                                         </div>
                                     </span>
                                 </div>
