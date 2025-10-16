@@ -20,6 +20,7 @@ from y_web.models import (
     Page_Population,
     Page_Topic,
     Population,
+    PopulationActivityProfile,
     Topic_List,
 )
 from y_web.utils import (
@@ -140,16 +141,44 @@ def pages_data():
     # response
     res = query.all()
 
+    # Get activity profiles from associated populations
+    page_profiles = {}
+    for page in res:
+        # Get all populations associated with this page
+        page_populations = (
+            db.session.query(Population)
+            .join(Page_Population, Population.id == Page_Population.population_id)
+            .filter(Page_Population.page_id == page.id)
+            .all()
+        )
+
+        # Collect unique activity profiles from all associated populations
+        profiles_set = set()
+        for pop in page_populations:
+            profiles = (
+                db.session.query(ActivityProfile)
+                .join(
+                    PopulationActivityProfile,
+                    ActivityProfile.id == PopulationActivityProfile.profile_id,
+                )
+                .filter(PopulationActivityProfile.population == pop.id)
+                .all()
+            )
+            for p in profiles:
+                profiles_set.add(p.name)
+
+        page_profiles[page.id] = list(profiles_set)
+
     return {
         "data": [
             {
                 "id": page.id,
                 "name": page.name,
-                "descr": page.descr,
                 "keywords": page.keywords,
                 "page_type": page.page_type,
                 "logo": page.logo,
                 "leaning": page.leaning,
+                "activity_profiles": page_profiles.get(page.id, []),
             }
             for page in res
         ],

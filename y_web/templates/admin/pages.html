@@ -75,9 +75,22 @@
             },
             { id: 'id', hidden: true },
             { id: 'name', name: 'Name', attributes: editableCellAttributes },
-            { id: 'descr', name: 'Description' },
             { id: 'page_type', name: 'Type' },
             { id: 'leaning', name: 'Political Leaning' },
+            { 
+                id: 'activity_profiles', 
+                name: 'Activity Profiles',
+                sort: false,
+                formatter: (cell) => {
+                    if (!cell || cell.length === 0) {
+                        return '';
+                    }
+                    const tags = cell.map(profile => 
+                        `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${profile}</span>`
+                    ).join(' ');
+                    return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+                }
+            },
             {
                 id: 'actions',
                 name: 'Actions',
@@ -116,7 +129,7 @@
             multiColumn: true,
             server: {
                 url: (prev, columns) => {
-                    const columnIds = ['id', 'name', 'page_type', 'descr', 'leaning'];
+                    const columnIds = ['logo', 'id', 'name', 'page_type', 'leaning', 'activity_profiles'];
                     const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
                     return updateUrl(prev, { sort });
                 },

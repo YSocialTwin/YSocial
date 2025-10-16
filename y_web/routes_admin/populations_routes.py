@@ -210,9 +210,42 @@ def populations_data():
     # response
     res = query.all()
 
+    # Get activity profiles for each population
+    population_profiles = {}
+    for pop in res:
+        profiles = (
+            db.session.query(ActivityProfile)
+            .join(
+                PopulationActivityProfile,
+                ActivityProfile.id == PopulationActivityProfile.profile_id,
+            )
+            .filter(PopulationActivityProfile.population == pop.id)
+            .all()
+        )
+        population_profiles[pop.id] = [p.name for p in profiles]
+
+    # Get recsys names
+    crecsys_dict = {r.id: r.name for r in Content_Recsys.query.all()}
+    frecsys_dict = {r.id: r.name for r in Follow_Recsys.query.all()}
+
     return {
         "data": [
-            {"id": pop.id, "name": pop.name, "descr": pop.descr, "size": pop.size}
+            {
+                "id": pop.id,
+                "name": pop.name,
+                "size": pop.size,
+                "crecsys": (
+                    crecsys_dict.get(int(pop.crecsys), "Not set")
+                    if pop.crecsys
+                    else "Not set"
+                ),
+                "frecsys": (
+                    frecsys_dict.get(int(pop.frecsys), "Not set")
+                    if pop.frecsys
+                    else "Not set"
+                ),
+                "activity_profiles": population_profiles.get(pop.id, []),
+            }
             for pop in res
         ],
         "total": total,

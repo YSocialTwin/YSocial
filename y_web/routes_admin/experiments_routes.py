@@ -809,16 +809,34 @@ def experiments_data():
     # response
     res = query.all()
 
+    # Get JupyterLab status for each experiment
+    import psutil
+
+    jupyter_status = {}
+    jupyter_instances = Jupyter_instances.query.all()
+    for jupyter in jupyter_instances:
+        is_running = False
+        if jupyter.process is not None:
+            try:
+                proc = psutil.Process(int(jupyter.process))
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    is_running = True
+            except (psutil.NoSuchProcess, ValueError, TypeError):
+                pass
+        jupyter_status[jupyter.exp_id] = is_running
+
     return {
         "data": [
             {
                 "idexp": exp.idexp,
                 "exp_name": exp.exp_name,
-                "exp_descr": exp.exp_descr,
                 "platform_type": exp.platform_type,
                 "owner": exp.owner,
                 "web": "Loaded" if exp.status == 1 else "Not loaded",
                 "running": "Running" if exp.running == 1 else "Stopped",
+                "jupyter_status": (
+                    "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
+                ),
             }
             for exp in res
         ],

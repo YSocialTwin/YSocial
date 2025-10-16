@@ -49,8 +49,23 @@
     columns: [
       { id: 'id', hidden: true },
       { id: 'name', name: 'Name', attributes: editableCellAttributes },
-      { id: 'descr', name: 'Description' },
-        {id: "size", name: 'Number of Agents'},
+      { id: "size", name: 'Agents' },
+      { id: 'crecsys', name: 'Content RecSys', sort: false },
+      { id: 'frecsys', name: 'Follow RecSys', sort: false },
+      { 
+        id: 'activity_profiles', 
+        name: 'Activity Profiles',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(profile => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${profile}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
       {
         id: 'actions',
         name: 'Actions',
@@ -62,7 +77,6 @@
               <a href="/admin/population_details/${id}"
                  style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
                 Details
-              </a>
               </a>
                <a href="/admin/delete_population/${id}"
                  style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
@@ -91,7 +105,7 @@
       multiColumn: true,
       server: {
         url: (prev, columns) => {
-          const columnIds = ['id', 'name', 'descr', 'size'];
+          const columnIds = ['id', 'name', 'size', 'crecsys', 'frecsys', 'activity_profiles'];
           const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
           return updateUrl(prev, { sort });
         },
