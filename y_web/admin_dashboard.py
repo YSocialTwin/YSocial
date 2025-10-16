@@ -19,9 +19,10 @@ from y_web.utils import (
     get_ollama_models,
     get_vllm_models,
 )
+from y_web.utils.jupyter_utils import get_jupyter_instances
 from y_web.utils.miscellanea import llm_backend_status, ollama_status
 
-from .models import Client, Client_Execution, Exps, Ollama_Pull
+from .models import Admin_users, Client, Client_Execution, Exps, Jupyter_instances, Ollama_Pull, User_Experiment
 from .utils import (
     check_connection,
     check_privileges,
@@ -129,6 +130,10 @@ def dashboard():
     dbport = get_db_port()
     db_conn = check_connection()
     db_server = get_db_server()
+    
+    # Check if there are any jupyter instances
+    jupyter_instances = Jupyter_instances.query.all()
+    has_jupyter_sessions = len(jupyter_instances) > 0
 
     return render_template(
         "admin/dashboard.html",
@@ -142,6 +147,7 @@ def dashboard():
         dbport=dbport,
         db_conn=db_conn,
         db_server=db_server,
+        has_jupyter_sessions=has_jupyter_sessions,
     )
 
 
@@ -195,6 +201,111 @@ def models_data():
         "data": [
             {"model_name": model, "backend": llm_backend["backend"]} for model in models
         ],
+        "total": total,
+    }
+
+
+@admin.route("/admin/jupyter_data")
+@login_required
+def jupyter_data():
+    """
+    API endpoint for JupyterLab sessions data table.
+
+    Returns JupyterLab sessions for experiments the current user has access to.
+    Shows only sessions for experiments where user is admin or has explicit access.
+
+    Returns:
+        JSON with 'data' array of jupyter session objects and 'total' count
+    """
+    import psutil
+    
+    check_privileges(current_user.username)
+    
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Get all jupyter instances from database
+    all_db_instances = Jupyter_instances.query.all()
+    
+    # Filter instances based on user access
+    filtered_instances = []
+    for db_inst in all_db_instances:
+        exp_id = db_inst.exp_id
+        
+        # Get experiment details
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if not exp:
+            continue
+            
+        # Check if user is admin or has access to this experiment
+        if user.role == 'admin':
+            has_access = True
+        else:
+            user_exp = User_Experiment.query.filter_by(
+                user_id=user.id, 
+                exp_id=exp_id
+            ).first()
+            has_access = user_exp is not None
+        
+        if has_access:
+            # Check if process is actually running
+            is_running = False
+            try:
+                proc = psutil.Process(int(db_inst.process))
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    is_running = True
+            except (psutil.NoSuchProcess, ValueError):
+                pass
+            
+            filtered_instances.append({
+                'exp_id': exp_id,
+                'exp_name': exp.exp_name,
+                'port': db_inst.port,
+                'notebook_dir': db_inst.notebook_dir,
+                'status': 'Active' if is_running else 'Inactive',
+                'running': is_running,
+            })
+    
+    # search filter
+    search = request.args.get("search")
+    if search:
+        filtered_instances = [
+            i for i in filtered_instances 
+            if search.lower() in i['exp_name'].lower()
+        ]
+    
+    total = len(filtered_instances)
+    
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        for s in sort.split(","):
+            if len(s) > 0:
+                direction = s[0]
+                field = s[1:]
+                reverse = direction == "-"
+                
+                if field == 'exp_name':
+                    filtered_instances = sorted(
+                        filtered_instances, 
+                        key=lambda x: x.get('exp_name', ''),
+                        reverse=reverse
+                    )
+                elif field == 'status':
+                    filtered_instances = sorted(
+                        filtered_instances, 
+                        key=lambda x: x.get('status', ''),
+                        reverse=reverse
+                    )
+    
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        filtered_instances = filtered_instances[start : start + length]
+    
+    return {
+        "data": filtered_instances,
         "total": total,
     }
 

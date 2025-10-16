@@ -157,6 +157,136 @@
                     </div>
                     {% endif %}
 
+                    {% if has_jupyter_sessions %}
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">JupyterLab Sessions</h3>
+
+                        <div class="box-content">
+                            <div id="jupyter-table"></div>
+
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+
+                            <style>
+                              #jupyter-table td {
+                                vertical-align: middle !important;
+                              }
+                            </style>
+
+                            <script>
+                                const jupyterTableDiv = document.getElementById('jupyter-table');
+
+                                const updateUrl = (prev, query) => {
+                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+                                };
+
+                                new gridjs.Grid({
+                                    columns: [
+                                        { id: 'exp_name', name: 'Experiment', sort: true },
+                                        { id: 'status', name: 'Status', sort: true },
+                                        {
+                                            id: 'actions',
+                                            name: 'Actions',
+                                            sort: false,
+                                            formatter: (cell, row) => {
+                                                const expId = row.cells[0].data;
+                                                const running = row.cells[1].data === 'Active';
+                                                
+                                                if (running) {
+                                                    return gridjs.html(`
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="#" onclick="stopJupyterSession('${expId}'); return false;"
+                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Stop
+                                                            </a>
+                                                            <a href="/admin/lab/${expId}" target="_blank"
+                                                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Open
+                                                            </a>
+                                                        </div>
+                                                    `);
+                                                } else {
+                                                    return gridjs.html(`
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="#" onclick="startJupyterSession('${expId}'); return false;"
+                                                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Start
+                                                            </a>
+                                                        </div>
+                                                    `);
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    server: {
+                                        url: '/admin/jupyter_data',
+                                        then: results => results.data,
+                                        total: results => results.total,
+                                    },
+                                    search: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, search) => {
+                                                return updateUrl(prev, { search });
+                                            },
+                                        },
+                                    },
+                                    sort: {
+                                        enabled: true,
+                                        multiColumn: false,
+                                        server: {
+                                            url: (prev, columns) => {
+                                                const columnIds = ['exp_name', 'status'];
+                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                                                return updateUrl(prev, { sort });
+                                            },
+                                        },
+                                    },
+                                    pagination: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, page, limit) => {
+                                                return updateUrl(prev, { start: page * limit, length: limit });
+                                            },
+                                        },
+                                    },
+                                }).render(jupyterTableDiv);
+
+                                function startJupyterSession(expId) {
+                                    fetch(`/admin/lab_start/${expId}`)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                alert(data.message);
+                                                location.reload();
+                                            } else {
+                                                alert('Error: ' + data.message);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            alert('Error starting JupyterLab: ' + error);
+                                        });
+                                }
+
+                                function stopJupyterSession(expId) {
+                                    fetch(`/admin/lab_stop/${expId}`)
+                                        .then(response => response.json())
+                                        .then(data => {
+                                            if (data.success) {
+                                                alert(data.message);
+                                                location.reload();
+                                            } else {
+                                                alert('Error: ' + data.message);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            alert('Error stopping JupyterLab: ' + error);
+                                        });
+                                }
+                            </script>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div class="dashboard-box">
                         <div class="box-content">
                             <h3 class="title is-5 is-thin">Guide</h3>
