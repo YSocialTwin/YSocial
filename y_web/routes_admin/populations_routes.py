@@ -217,7 +217,7 @@ def populations_data():
             db.session.query(ActivityProfile)
             .join(
                 PopulationActivityProfile,
-                ActivityProfile.id == PopulationActivityProfile.profile_id,
+                ActivityProfile.id == PopulationActivityProfile.id,
             )
             .filter(PopulationActivityProfile.population == pop.id)
             .all()
@@ -235,12 +235,12 @@ def populations_data():
                 "name": pop.name,
                 "size": pop.size,
                 "crecsys": (
-                    crecsys_dict.get(int(pop.crecsys), "Not set")
+                    crecsys_dict.get(pop.crecsys, "Not set")
                     if pop.crecsys
                     else "Not set"
                 ),
                 "frecsys": (
-                    frecsys_dict.get(int(pop.frecsys), "Not set")
+                    frecsys_dict.get(pop.frecsys, "Not set")
                     if pop.frecsys
                     else "Not set"
                 ),
