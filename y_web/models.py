@@ -793,3 +793,4 @@ class Jupyter_instances(db.Model):
     port = db.Column(db.Integer, nullable=False)
     notebook_dir = db.Column(db.String(300), nullable=False)
     process = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(10), nullable=False, default="stopped")

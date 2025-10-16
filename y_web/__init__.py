@@ -189,31 +189,36 @@ def create_postgresql_db(app):
     admin_engine.dispose()
 
 
-def cleanup_subprocesses():
-    """Terminate all running simulation client subprocesses on shutdown."""
-    print("Cleaning up subprocesses...")
-    for _, proc in client_processes.items():
-        print(f"Terminating subprocess {proc.pid}...")
-        proc.terminate()
-        proc.join()
-    print("All subprocesses terminated.")
+def cleanup_subprocesses_only():
+    """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
+    print("Cleaning up subprocesses (OS-level only)...")
+    for name, proc in client_processes.items():
+        try:
+            print(f"Terminating {name} pid={getattr(proc, 'pid', None)}")
+            proc.terminate()
+            proc.join(timeout=5)
+        except Exception as e:
+            print("Error terminating subprocess:", e)
 
 
-def signal_handler(sig, frame):
+def cleanup_db_jupyter_with_new_app():
     """
-    Handle SIGINT (Ctrl+C) signal for graceful shutdown.
-
-    Args:
-        sig: Signal number received
-        frame: Current stack frame
+    Create a fresh app instance to get a valid app context, then run DB cleanup.
+    Call this from the main runner's shutdown handler or as final step in atexit.
     """
-    print("Ctrl+C detected, shutting down...")
-    cleanup_subprocesses()
-    exit(0)
+    try:
+        # Create a fresh app instance (use same DB_TYPE env var)
+        from y_web import create_app
+        app = create_app(os.getenv("DB_TYPE", "sqlite"))
+        with app.app_context():
+            from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+            stop_all_jupyter_instances()
+    except Exception as e:
+        print("Error during DB/Jupyter cleanup with fresh app:", e)
 
 
-signal.signal(signal.SIGINT, signal_handler)
-atexit.register(cleanup_subprocesses)
+atexit.register(cleanup_subprocesses_only)
+atexit.register(cleanup_db_jupyter_with_new_app)
 
 
 def create_app(db_type="sqlite"):

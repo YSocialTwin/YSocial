@@ -249,13 +249,13 @@ CREATE TABLE population_activity_profile (
     percentage REAL NOT NULL
 );
 
-
 CREATE TABLE jupyter_instances (
     id SERIAL PRIMARY KEY,
     exp_id INTEGER NOT NULL REFERENCES exps(idexp) ON DELETE CASCADE,
     port INTEGER NOT NULL,
     notebook_dir VARCHAR(300) NOT NULL,
-    process INTEGER NOT NULL
+    process INTEGER,
+    status VARCHAR(10) NOT NULL DEFAULT 'active'
 );
 
 INSERT INTO content_recsys (name, value) VALUES

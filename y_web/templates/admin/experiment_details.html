@@ -219,18 +219,19 @@
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">JupyterLab Service</span>
+
                                     <span class="right">
                                         <a class="link-tooltip" 
-                                           {% if jupyter_instance %}
+                                           {% if jupyter_instance.status=='running' %}
                                            href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;"
                                            {% else %}
                                            href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;"
                                            {% endif %}
-                                           title="{% if jupyter_instance %}Stop{% else %}Start{% endif %}">
-                                            <i class="mdi {% if jupyter_instance %}mdi-stop active{% else %}mdi-play-box-outline{% endif %}" 
+                                           title="{% if jupyter_instance.status!='stopped' %}Stop{% else %}Start{% endif %}">
+                                            <i class="mdi {% if jupyter_instance.status!='stopped' %}mdi-stop active{% else %}mdi-play-box-outline{% endif %}"
                                                style="font-size: 24px;"></i>
                                         </a>
-                                        {% if jupyter_instance %}
+                                        {% if jupyter_instance.status!='stopped' %}
                                         <a class="link-tooltip" 
                                            href="/admin/lab/{{ experiment.idexp }}"
                                            >

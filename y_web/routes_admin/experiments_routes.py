@@ -22,6 +22,7 @@ from flask import (
     send_file,
 )
 from flask_login import current_user, login_required
+from traitlets import Instance
 
 from y_web import db  # , app
 from y_web.models import (
@@ -52,6 +53,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.utils import start_server, terminate_process_on_port
+from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 
 experiments = Blueprint("experiments", __name__)
@@ -679,6 +681,12 @@ def create_experiment():
             db.session.add(exp_topic)
             db.session.commit()
 
+    jn_instance = Jupyter_instances(
+        port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"
+    )
+    db.session.add(jn_instance)
+    db.session.commit()
+
     return settings()
 
 
@@ -747,6 +755,13 @@ def delete_simulation(exp_id):
 
         # delete experiment topics
         db.session.query(Exp_Topic).filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+
+        # delete jupyter instances
+        instances = db.session.query(Instance).filter_by(exp_id=exp_id).all()
+        stop_process(instances.process, instances.exp_id)
+
+        db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).delete()
         db.session.commit()
 
     return settings()
@@ -847,7 +862,8 @@ def experiment_details(uid):
     elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
         dbtype = "postgresql"
 
-    # get jupyter instance for this experiment
+    # get jupyter instance for this experiment if exists
+
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
 
     return render_template(

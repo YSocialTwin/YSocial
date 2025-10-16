@@ -112,6 +112,8 @@ def find_instance_by_notebook_dir(notebook_dir):
     for instance_id, inst in JUPYTER_INSTANCES.items():
         if inst["notebook_dir"].absolute() == notebook_dir:
             proc_pid = inst["process"]
+            if not proc_pid:
+                return None
 
             try:
                 proc = psutil.Process(int(proc_pid))
@@ -261,10 +263,12 @@ def start_jupyter(expid, notebook_dir=None):
         )
 
         # Store instance info
-        instance = Jupyter_instances(
-            port=port, notebook_dir=str(notebook_dir), process=process.pid, exp_id=expid
-        )
-        db.session.add(instance)
+        # update the process to store the pid
+        instance = db.session.query(Jupyter_instances).filter_by(exp_id=expid).first()
+        instance.port = port
+        instance.process = process.pid
+        instance.notebook_dir = str(notebook_dir)
+        instance.status = "running"
         db.session.commit()
 
         # Optionally get the new ID
@@ -280,15 +284,72 @@ def start_jupyter(expid, notebook_dir=None):
             return True, f"Jupyter Lab started on port {port}", None
         else:
             stderr = process.stderr.read().decode() if process.stderr else ""
-            db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+            ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
+            ysession.status = "stopped"
+            ysession.process = None
+            ysession.port = -1
             db.session.commit()
             del JUPYTER_INSTANCES[instance_id]
             return False, f"Failed to start Jupyter Lab: {stderr}", None
 
     except Exception as e:
-        db.session.query(Jupyter_instances).filter_by(id=instance_id).delete()
+        ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
+        ysession.status = "stopped"
+        ysession.process = None
+        ysession.port = -1
         db.session.commit()
         return False, f"Error starting Jupyter Lab: {str(e)}", None
+
+
+def stop_process(pid, instance_id):
+    try:
+        proc = psutil.Process(pid)
+    except psutil.NoSuchProcess:
+        ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
+        ysession.status = "stopped"
+        ysession.process = None
+        ysession.port = -1
+        db.session.commit()
+        return (
+            True,
+            f"Instance {instance_id}: process {pid} not found (already stopped).",
+        )
+
+    try:
+        # Graceful terminate
+        if os.name != "nt":
+            proc.terminate()
+        else:
+            proc.send_signal(
+                signal.CTRL_BREAK_EVENT
+                if hasattr(signal, "CTRL_BREAK_EVENT")
+                else signal.SIGTERM
+            )
+
+        proc.wait(timeout=5)
+        ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+        ysession.status = "stopped"
+        ysession.process = None
+        ysession.port = -1
+        db.session.commit()
+        return True, f"Instance {instance_id} (PID {pid}) stopped gracefully."
+    except psutil.TimeoutExpired:
+        # Force kill
+        try:
+            proc.kill()
+            ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+            ysession.status = "stopped"
+            ysession.process = None
+            ysession.port = -1
+            db.session.commit()
+            return True, f"Instance {instance_id} (PID {pid}) force-stopped."
+        except Exception as e:
+            return (
+                False,
+                f"Instance {instance_id} (PID {pid}) could not be killed: {e}",
+            )
+    except Exception as e:
+        return False, f"Error stopping instance {instance_id} (PID {pid}): {e}"
 
 
 def stop_jupyter(instance_id=None):
@@ -313,57 +374,19 @@ def stop_jupyter(instance_id=None):
 
     instance_id = int(instance_id)
 
-    def stop_process(pid, instance_id):
-        try:
-            proc = psutil.Process(pid)
-        except psutil.NoSuchProcess:
-            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
-            db.session.commit()
-            return (
-                True,
-                f"Instance {instance_id}: process {pid} not found (already stopped).",
-            )
-
-        try:
-            # Graceful terminate
-            if os.name != "nt":
-                proc.terminate()
-            else:
-                proc.send_signal(
-                    signal.CTRL_BREAK_EVENT
-                    if hasattr(signal, "CTRL_BREAK_EVENT")
-                    else signal.SIGTERM
-                )
-
-            proc.wait(timeout=5)
-            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
-            db.session.commit()
-            return True, f"Instance {instance_id} (PID {pid}) stopped gracefully."
-        except psutil.TimeoutExpired:
-            # Force kill
-            try:
-                proc.kill()
-                db.session.query(Jupyter_instances).filter_by(process=pid).delete()
-                db.session.commit()
-                return True, f"Instance {instance_id} (PID {pid}) force-stopped."
-            except Exception as e:
-                return (
-                    False,
-                    f"Instance {instance_id} (PID {pid}) could not be killed: {e}",
-                )
-        except Exception as e:
-            return False, f"Error stopping instance {instance_id} (PID {pid}): {e}"
-
     # Stop one instance
     if instance_id:
         if instance_id not in JUPYTER_INSTANCES:
             return False, f"Instance {instance_id} not found in database."
 
         inst = JUPYTER_INSTANCES[instance_id]
-        pid = int(inst["pid"])
+        pid = inst["pid"]
 
         if not pid:
-            db.session.query(Jupyter_instances).filter_by(process=pid).delete()
+            ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+            ysession.status = "stopped"
+            ysession.process = None
+            ysession.port = -1
             db.session.commit()
             return True, f"Instance {instance_id} has no PID stored (removed from DB)."
 
@@ -466,3 +489,14 @@ def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None
             json.dump(notebook_content, f, indent=2)
 
     return True
+
+
+def stop_all_jupyter_instances():
+    instances = db.session.query(Jupyter_instances).all()
+    for inst in instances:
+        if inst.status == "running":
+            stop_process(inst.process, inst.exp_id)
+            inst.status = "stopped"
+            inst.process = None
+            inst.port = -1
+            db.session.commit()
