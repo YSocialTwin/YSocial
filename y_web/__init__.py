@@ -214,9 +214,11 @@ def cleanup_db_jupyter_with_new_app():
         app = create_app(os.getenv("DB_TYPE", "sqlite"))
         with app.app_context():
             from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+
             stop_all_jupyter_instances()
 
             from y_web.utils.external_processes import stop_all_exps
+
             stop_all_exps()
 
     except Exception as e:
