@@ -659,14 +659,16 @@
                                             background: white;
                                             border: 1px solid #ddd;
                                             border-radius: 4px;
-                                            padding: 6px 10px;
-                                            margin-bottom: 6px;
+                                            padding: 6px 8px;
+                                            margin-bottom: 0;
                                             cursor: move;
                                             transition: all 0.2s ease;
                                             display: flex;
-                                            gap: 10px;
-                                            align-items: center;
-                                            font-size: 0.85em;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                            align-items: stretch;
+                                            font-size: 0.8em;
+                                            width: 100%;
                                         }
                                         .profile-item-compact:hover {
                                             border-color: #22c55e;
@@ -677,21 +679,30 @@
                                         }
                                         .profile-name-compact {
                                             font-weight: 500;
-                                            flex: 1;
+                                            white-space: nowrap;
+                                            overflow: hidden;
+                                            text-overflow: ellipsis;
+                                            font-size: 0.9em;
                                         }
                                         .profile-heatmap-compact {
                                             display: flex;
                                             gap: 1px;
-                                            height: 12px;
+                                            height: 10px;
+                                            width: 100%;
                                         }
                                         .heatmap-hour {
-                                            width: 3px;
+                                            flex: 1;
                                             height: 100%;
                                             background: #e5e7eb;
                                             border-radius: 1px;
                                         }
                                         .heatmap-hour.active {
                                             background: #22c55e;
+                                        }
+                                        #available-profiles {
+                                            display: grid;
+                                            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                                            gap: 8px;
                                         }
                                         .assigned-profiles-grid {
                                             display: flex;
@@ -769,14 +780,13 @@
                                                     {% if activity_profiles %}
                                                         {% for profile in activity_profiles %}
                                                         <div class="profile-item-compact" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
-                                                            <div class="profile-name-compact">{{ profile.name }}</div>
+                                                            <div class="profile-name-compact" title="{{ profile.name }}">{{ profile.name }}</div>
                                                             <div class="profile-heatmap-compact">
                                                                 {% set hours_list = profile.hours.split(',') %}
                                                                 {% for hour in range(24) %}
-                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}"></div>
+                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}" title="Hour {{ hour }}"></div>
                                                                 {% endfor %}
                                                             </div>
-                                                            <span style="color: #999; font-size: 0.9em;">⋮⋮</span>
                                                         </div>
                                                         {% endfor %}
                                                     {% else %}
