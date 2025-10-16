@@ -73,6 +73,7 @@ def create_page():
     logo = request.form.get("logo")
     pg_type = request.form.get("pg_type")
     leaning = request.form.get("leaning")
+    activity_profile_id = request.form.get("activity_profile")
 
     page = Page(
         name=name,
@@ -83,6 +84,7 @@ def create_page():
         logo=logo,
         pg_type=pg_type,
         leaning=leaning,
+        activity_profile=activity_profile_id
     )
 
     db.session.add(page)
@@ -138,37 +140,12 @@ def pages_data():
     if start != -1 and length != -1:
         query = query.offset(start).limit(length)
 
+    # get host and port of the server
+    host = request.host.split(":")[0]
+    port = request.host.split(":")[1] if ":" in request.host else "80"
+
     # response
     res = query.all()
-
-    # Get activity profiles from associated populations
-    page_profiles = {}
-    for page in res:
-        # Get all populations associated with this page
-        page_populations = (
-            db.session.query(Population)
-            .join(Page_Population, Population.id == Page_Population.population_id)
-            .filter(Page_Population.page_id == page.id)
-            .all()
-        )
-
-        # Collect unique activity profiles from all associated populations
-        profiles_set = set()
-        for pop in page_populations:
-            profiles = (
-                db.session.query(ActivityProfile)
-                .join(
-                    PopulationActivityProfile,
-                    ActivityProfile.id == PopulationActivityProfile.profile_id,
-                )
-                .filter(PopulationActivityProfile.population == pop.id)
-                .all()
-            )
-            for p in profiles:
-                profiles_set.add(p.name)
-
-        page_profiles[page.id] = list(profiles_set)
-
     return {
         "data": [
             {
@@ -176,9 +153,13 @@ def pages_data():
                 "name": page.name,
                 "keywords": page.keywords,
                 "page_type": page.page_type,
-                "logo": page.logo,
+                "logo": page.logo if page.logo!="" else f"http://{host}:{port}/static/assets/img/vector/logo/Ysocial_l.png",
                 "leaning": page.leaning,
-                "activity_profiles": page_profiles.get(page.id, []),
+                "activity_profile": [
+                    db.session.query(ActivityProfile)
+                    .filter(ActivityProfile.id == int(page.activity_profile))
+                    .first().name
+                ] if page.activity_profile else []
             }
             for page in res
         ],

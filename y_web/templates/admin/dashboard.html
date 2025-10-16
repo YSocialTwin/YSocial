@@ -35,16 +35,7 @@
                                 <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                                     <span class="left" style="display: flex; align-items: center; gap: 10px;">
                                         Experiment: <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" style="font-size: 1.1em; color: #039be5; text-decoration: none;">{{ experiments[exp]['experiment'].exp_name }}</a>
-                                       <!-- {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
-                                        <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 0.85em; color: #666;">
-                                            <i class="mdi mdi-flask" style="font-size: 16px;"></i>
-                                            {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
-                                            <span style="color: #28a745; font-weight: 500;">Lab Active</span>
-                                            {% else %}
-                                            <span style="color: #dc3545; font-weight: 500;">Lab Inactive</span>
-                                            {% endif %}
-                                        </span>
-                                        {% endif %} -->
+
                                     </span>
                                     <span class="right" style="display: flex; gap: 8px; align-items: center;">
                                         <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
