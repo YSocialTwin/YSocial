@@ -18,12 +18,20 @@ def api_start_jupyter(experiment_id):
     try:
         exp_id = int(experiment_id)
     except (ValueError, TypeError):
-        return jsonify({"success": False, "message": f"Invalid experiment ID: {experiment_id}"}), 400
-    
+        return (
+            jsonify(
+                {"success": False, "message": f"Invalid experiment ID: {experiment_id}"}
+            ),
+            400,
+        )
+
     exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
     if not exp:
-        return jsonify({"success": False, "message": f"Experiment not found: {exp_id}"}), 404
-    
+        return (
+            jsonify({"success": False, "message": f"Experiment not found: {exp_id}"}),
+            404,
+        )
+
     path = exp.db_name.split(os.sep)
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
@@ -39,7 +47,12 @@ def api_stop_jupyter(instance_id):
     try:
         instance_id_int = int(instance_id)
     except (ValueError, TypeError):
-        return jsonify({"success": False, "message": f"Invalid instance ID: {instance_id}"}), 400
+        return (
+            jsonify(
+                {"success": False, "message": f"Invalid instance ID: {instance_id}"}
+            ),
+            400,
+        )
 
     success, message = stop_jupyter(instance_id_int)
     return jsonify({"success": success, "message": message})

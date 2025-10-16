@@ -117,7 +117,10 @@ CREATE TABLE pages (
     keywords  TEXT,
     logo      TEXT,
     pg_type   TEXT,
-    leaning   TEXT DEFAULT ''
+    leaning   TEXT DEFAULT '',
+    activity_profile INTEGER NOT NULL
+        REFERENCES activity_profiles(id)
+        ON DELETE CASCADE,
 );
 
 CREATE TABLE population (
@@ -524,7 +527,6 @@ INSERT INTO activity_profiles (name, hours) VALUES
 ('Professional Broadcaster', '8,9,10,11,12,13,14,15,16,17'),
 ('Evening Commentator', '18,19,20,21,22,23'),
 ('Night Owl', '22,23,0,1,2,3'),
-('Weekend Gamer', '20,21,22,23,0,1'),
 ('Activist Pulse', '10,11,12,18,19,20,21'),
 ('Global Connector', '6,7,9,11,13,15,17,19,21,23,1,3'),
 ('Casual Scroller', '8,12,19,21'),
@@ -537,4 +539,3 @@ INSERT INTO activity_profiles (name, hours) VALUES
 ('Community Builder', '8,9,10,11,18,19,20,21'),
 ('Storyteller', '10,11,12,13,19,20,21'),
 ('Casual Poster', '8,13,19'),
-('Frequent Lurker', '9,10,11,22,23,0,1');

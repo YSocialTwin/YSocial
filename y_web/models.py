@@ -514,6 +514,9 @@ class Page(db.Model):
     logo = db.Column(db.String(300))
     pg_type = db.Column(db.String(100))
     leaning = db.Column(db.String(50), default="")
+    activity_profile = db.Column(
+        db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True
+    )
 
 
 class Population_Experiment(db.Model):

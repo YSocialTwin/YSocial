@@ -57,11 +57,50 @@
         columns: [
             { id: 'idexp', hidden: true },
             { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
-            { id: 'exp_descr', name: 'Description', sort: false },
             { id: 'owner', name: 'Owner', sort: false },
             { id: 'platform_type', name: 'Platform Type', sort: true },
-            { id: 'web', name: 'Web Interface', sort: true },
-            { id: 'running', name: 'YServer Status', sort: true },
+            { 
+                id: 'web', 
+                name: 'Web Interface', 
+                sort: true,
+                formatter: (cell) => {
+                    const isLoaded = cell === 'Loaded';
+                    const color = isLoaded ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            { 
+                id: 'running', 
+                name: 'Simulation Status', 
+                sort: true,
+                formatter: (cell) => {
+                    const isRunning = cell === 'Running';
+                    const color = isRunning ? '#28a745' : '#dc3545';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            { 
+                id: 'jupyter_status', 
+                name: 'JupyterLab', 
+                sort: true,
+                formatter: (cell) => {
+                    const isActive = cell === 'Active';
+                    const color = isActive ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
             {
                 id: 'details',
                 name: 'Actions',
@@ -78,10 +117,6 @@
                                style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
                                 Delete
                             </a>
-                         <!--   <button class="delete-button" data-id="${id}"
-                                style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 0.85rem; cursor: pointer;">
-                                Delete
-                            </button> -->
                         </div>
                     `);
                 }

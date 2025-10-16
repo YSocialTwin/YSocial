@@ -49,8 +49,63 @@
     columns: [
       { id: 'id', hidden: true },
       { id: 'name', name: 'Name', attributes: editableCellAttributes },
-      { id: 'descr', name: 'Description' },
-        {id: "size", name: 'Number of Agents'},
+      { id: "size", name: 'Agents' },
+      { 
+        id: 'education', 
+        name: 'Education',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'leanings', 
+        name: 'Political Leaning',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'toxicity', 
+        name: 'Toxicity',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'activity_profiles', 
+        name: 'Activity Profiles',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(profile => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${profile}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
       {
         id: 'actions',
         name: 'Actions',
@@ -62,7 +117,6 @@
               <a href="/admin/population_details/${id}"
                  style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
                 Details
-              </a>
               </a>
                <a href="/admin/delete_population/${id}"
                  style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
@@ -91,7 +145,7 @@
       multiColumn: true,
       server: {
         url: (prev, columns) => {
-          const columnIds = ['id', 'name', 'descr', 'size'];
+          const columnIds = ['id', 'name', 'size', 'education', 'leanings', 'toxicity', 'activity_profiles'];
           const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
           return updateUrl(prev, { sort });
         },
@@ -605,14 +659,16 @@
                                             background: white;
                                             border: 1px solid #ddd;
                                             border-radius: 4px;
-                                            padding: 6px 10px;
-                                            margin-bottom: 6px;
+                                            padding: 6px 8px;
+                                            margin-bottom: 0;
                                             cursor: move;
                                             transition: all 0.2s ease;
                                             display: flex;
-                                            gap: 10px;
-                                            align-items: center;
-                                            font-size: 0.85em;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                            align-items: stretch;
+                                            font-size: 0.8em;
+                                            width: 100%;
                                         }
                                         .profile-item-compact:hover {
                                             border-color: #22c55e;
@@ -623,21 +679,30 @@
                                         }
                                         .profile-name-compact {
                                             font-weight: 500;
-                                            flex: 1;
+                                            white-space: nowrap;
+                                            overflow: hidden;
+                                            text-overflow: ellipsis;
+                                            font-size: 0.9em;
                                         }
                                         .profile-heatmap-compact {
                                             display: flex;
                                             gap: 1px;
-                                            height: 12px;
+                                            height: 10px;
+                                            width: 100%;
                                         }
                                         .heatmap-hour {
-                                            width: 3px;
+                                            flex: 1;
                                             height: 100%;
                                             background: #e5e7eb;
                                             border-radius: 1px;
                                         }
                                         .heatmap-hour.active {
                                             background: #22c55e;
+                                        }
+                                        #available-profiles {
+                                            display: grid;
+                                            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                                            gap: 8px;
                                         }
                                         .assigned-profiles-grid {
                                             display: flex;
@@ -715,14 +780,13 @@
                                                     {% if activity_profiles %}
                                                         {% for profile in activity_profiles %}
                                                         <div class="profile-item-compact" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
-                                                            <div class="profile-name-compact">{{ profile.name }}</div>
+                                                            <div class="profile-name-compact" title="{{ profile.name }}">{{ profile.name }}</div>
                                                             <div class="profile-heatmap-compact">
                                                                 {% set hours_list = profile.hours.split(',') %}
                                                                 {% for hour in range(24) %}
-                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}"></div>
+                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}" title="Hour {{ hour }}"></div>
                                                                 {% endfor %}
                                                             </div>
-                                                            <span style="color: #999; font-size: 0.9em;">⋮⋮</span>
                                                         </div>
                                                         {% endfor %}
                                                     {% else %}
