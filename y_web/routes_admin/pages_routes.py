@@ -84,7 +84,7 @@ def create_page():
         logo=logo,
         pg_type=pg_type,
         leaning=leaning,
-        activity_profile=activity_profile_id
+        activity_profile=activity_profile_id,
     )
 
     db.session.add(page)
@@ -153,13 +153,22 @@ def pages_data():
                 "name": page.name,
                 "keywords": page.keywords,
                 "page_type": page.page_type,
-                "logo": page.logo if page.logo!="" else f"http://{host}:{port}/static/assets/img/vector/logo/Ysocial_l.png",
+                "logo": (
+                    page.logo
+                    if page.logo != ""
+                    else f"http://{host}:{port}/static/assets/img/vector/logo/Ysocial_l.png"
+                ),
                 "leaning": page.leaning,
-                "activity_profile": [
-                    db.session.query(ActivityProfile)
-                    .filter(ActivityProfile.id == int(page.activity_profile))
-                    .first().name
-                ] if page.activity_profile else []
+                "activity_profile": (
+                    [
+                        db.session.query(ActivityProfile)
+                        .filter(ActivityProfile.id == int(page.activity_profile))
+                        .first()
+                        .name
+                    ]
+                    if page.activity_profile
+                    else []
+                ),
             }
             for page in res
         ],
