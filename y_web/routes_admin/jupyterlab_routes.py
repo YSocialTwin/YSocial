@@ -15,14 +15,16 @@ lab = Blueprint("lab", __name__)
 def api_start_jupyter(experiment_id):
     """API endpoint to start Jupyter Lab"""
 
-    exp_id = experiment_id  # Use experiment_dir as notebook_dir
-    path = (
-        db.session.query(Exps)
-        .filter_by(idexp=int(exp_id))
-        .first()
-        .db_name.split(os.sep)
-    )
-
+    try:
+        exp_id = int(experiment_id)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": f"Invalid experiment ID: {experiment_id}"}), 400
+    
+    exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+    if not exp:
+        return jsonify({"success": False, "message": f"Experiment not found: {exp_id}"}), 404
+    
+    path = exp.db_name.split(os.sep)
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
     success, message, instance_id = start_jupyter(exp_id, notebook_dir)
@@ -34,7 +36,12 @@ def api_start_jupyter(experiment_id):
 def api_stop_jupyter(instance_id):
     """API endpoint to stop Jupyter Lab"""
 
-    success, message = stop_jupyter(instance_id)
+    try:
+        instance_id_int = int(instance_id)
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": f"Invalid instance ID: {instance_id}"}), 400
+
+    success, message = stop_jupyter(instance_id_int)
     return jsonify({"success": success, "message": message})
 
 

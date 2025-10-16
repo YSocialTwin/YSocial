@@ -181,15 +181,52 @@
 
                                 new gridjs.Grid({
                                     columns: [
-                                        { id: 'exp_name', name: 'Experiment', sort: true },
-                                        { id: 'status', name: 'Status', sort: true },
+                                        { id: 'exp_id', hidden: true },
+                                        { 
+                                            id: 'exp_name', 
+                                            name: 'Experiment', 
+                                            sort: true,
+                                            formatter: (cell, row) => {
+                                                const expId = row.cells[0].data;
+                                                const expName = cell;
+                                                return gridjs.html(`<a href="/admin/experiment_details/${expId}">${expName}</a>`);
+                                            }
+                                        },
+                                        { 
+                                            id: 'port', 
+                                            name: 'Port', 
+                                            sort: false,
+                                            formatter: (cell, row) => {
+                                                const port = cell;
+                                                const running = row.cells[3].data;
+                                                if (running && port && port !== -1) {
+                                                    return port;
+                                                }
+                                                return '';
+                                            }
+                                        },
+                                        { 
+                                            id: 'status', 
+                                            name: 'Status', 
+                                            sort: true,
+                                            formatter: (cell) => {
+                                                const running = cell === 'Active';
+                                                const color = running ? '#28a745' : '#dc3545';
+                                                const title = running ? 'Active' : 'Inactive';
+                                                return gridjs.html(`
+                                                    <div style="display: flex; justify-content: center; align-items: center;">
+                                                        <div style="width: 16px; height: 16px; border-radius: 50%; background-color: ${color};" title="${title}"></div>
+                                                    </div>
+                                                `);
+                                            }
+                                        },
                                         {
                                             id: 'actions',
                                             name: 'Actions',
                                             sort: false,
                                             formatter: (cell, row) => {
                                                 const expId = row.cells[0].data;
-                                                const running = row.cells[1].data === 'Active';
+                                                const running = row.cells[3].data === 'Active';
                                                 
                                                 if (running) {
                                                     return gridjs.html(`
@@ -235,7 +272,7 @@
                                         multiColumn: false,
                                         server: {
                                             url: (prev, columns) => {
-                                                const columnIds = ['exp_name', 'status'];
+                                                const columnIds = ['exp_id', 'exp_name', 'port', 'status'];
                                                 const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
                                                 return updateUrl(prev, { sort });
                                             },
