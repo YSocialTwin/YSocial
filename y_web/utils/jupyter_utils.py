@@ -283,7 +283,9 @@ def start_jupyter(expid, notebook_dir=None):
             return True, f"Jupyter Lab started on port {port}", None
         else:
             stderr = process.stderr.read().decode() if process.stderr else ""
-            ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
+            ysession = (
+                db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
+            )
             ysession.status = "stopped"
             ysession.process = None
             ysession.port = -1
@@ -326,7 +328,9 @@ def stop_process(pid, instance_id):
             )
 
         proc.wait(timeout=5)
-        ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+        ysession = (
+            db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+        )
         ysession.status = "stopped"
         ysession.process = None
         ysession.port = -1
@@ -336,7 +340,11 @@ def stop_process(pid, instance_id):
         # Force kill
         try:
             proc.kill()
-            ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+            ysession = (
+                db.session.query(Jupyter_instances)
+                .filter_by(exp_id=instance_id)
+                .first()
+            )
             ysession.status = "stopped"
             ysession.process = None
             ysession.port = -1
@@ -382,7 +390,11 @@ def stop_jupyter(instance_id=None):
         pid = inst["pid"]
 
         if not pid:
-            ysession = db.session.query(Jupyter_instances).filter_by(exp_id=instance_id).first()
+            ysession = (
+                db.session.query(Jupyter_instances)
+                .filter_by(exp_id=instance_id)
+                .first()
+            )
             ysession.status = "stopped"
             ysession.process = None
             ysession.port = -1
