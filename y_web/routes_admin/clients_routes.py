@@ -545,7 +545,6 @@ def create_client():
     # copy prompts.json into the experiment folder
 
     if exp.platform_type == "microblogging":
-
         shutil.copyfile(
             f"{BASE_DIR}data_schema{os.sep}prompts.json".replace("/y_web/utils", ""),
             f"{data_base_path}prompts.json",
@@ -636,7 +635,6 @@ def create_client():
     pages = [Page.query.filter_by(id=p.page_id).first() for p in pages]
 
     for p in pages:
-
         # get pages topics
         page_topics = (
             db.session.query(Exp_Topic, Topic_List)

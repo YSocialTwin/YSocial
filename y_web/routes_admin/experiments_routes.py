@@ -22,6 +22,7 @@ from flask import (
     send_file,
 )
 from flask_login import current_user, login_required
+from traitlets import Instance
 
 from y_web import db  # , app
 from y_web.models import (
@@ -36,6 +37,7 @@ from y_web.models import (
     Exp_stats,
     Exp_Topic,
     Exps,
+    Jupyter_instances,
     Languages,
     Leanings,
     Nationalities,
@@ -51,6 +53,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.utils import start_server, terminate_process_on_port
+from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 
 experiments = Blueprint("experiments", __name__)
@@ -515,9 +518,7 @@ def create_experiment():
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
-
         if db_type == "sqlite":
-
             shutil.copyfile(
                 f"data_schema{os.sep}database_clean_server.db",
                 f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
@@ -680,6 +681,12 @@ def create_experiment():
             db.session.add(exp_topic)
             db.session.commit()
 
+    jn_instance = Jupyter_instances(
+        port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"
+    )
+    db.session.add(jn_instance)
+    db.session.commit()
+
     return settings()
 
 
@@ -693,7 +700,6 @@ def delete_simulation(exp_id):
         # remove the experiment folder
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
-
             shutil.rmtree(
                 f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
                 ignore_errors=True,
@@ -751,6 +757,13 @@ def delete_simulation(exp_id):
         db.session.query(Exp_Topic).filter_by(exp_id=exp_id).delete()
         db.session.commit()
 
+        # delete jupyter instances
+        instances = db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).all()
+        stop_process(instances.process, instances.exp_id)
+
+        db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+
     return settings()
 
 
@@ -796,16 +809,34 @@ def experiments_data():
     # response
     res = query.all()
 
+    # Get JupyterLab status for each experiment
+    import psutil
+
+    jupyter_status = {}
+    jupyter_instances = Jupyter_instances.query.all()
+    for jupyter in jupyter_instances:
+        is_running = False
+        if jupyter.process is not None:
+            try:
+                proc = psutil.Process(int(jupyter.process))
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    is_running = True
+            except (psutil.NoSuchProcess, ValueError, TypeError):
+                pass
+        jupyter_status[jupyter.exp_id] = is_running
+
     return {
         "data": [
             {
                 "idexp": exp.idexp,
                 "exp_name": exp.exp_name,
-                "exp_descr": exp.exp_descr,
                 "platform_type": exp.platform_type,
                 "owner": exp.owner,
                 "web": "Loaded" if exp.status == 1 else "Not loaded",
                 "running": "Running" if exp.running == 1 else "Stopped",
+                "jupyter_status": (
+                    "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
+                ),
             }
             for exp in res
         ],
@@ -849,6 +880,10 @@ def experiment_details(uid):
     elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
         dbtype = "postgresql"
 
+    # get jupyter instance for this experiment if exists
+
+    jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
+
     return render_template(
         "admin/experiment_details.html",
         experiment=experiment,
@@ -857,6 +892,7 @@ def experiment_details(uid):
         len=len,
         ollamas=ollamas,
         dbtype=dbtype,
+        jupyter_instance=jupyter_instance,
     )
 
 

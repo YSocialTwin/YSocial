@@ -514,6 +514,9 @@ class Page(db.Model):
     logo = db.Column(db.String(300))
     pg_type = db.Column(db.String(100))
     leaning = db.Column(db.String(50), default="")
+    activity_profile = db.Column(
+        db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True
+    )
 
 
 class Population_Experiment(db.Model):
@@ -776,3 +779,21 @@ class PopulationActivityProfile(db.Model):
         nullable=False,
     )
     percentage = db.Column(db.Float, nullable=False)
+
+
+class Jupyter_instances(db.Model):
+    """
+    Jupyter Lab instance tracking.
+
+    Stores information about running Jupyter Lab instances including
+    instance ID, notebook directory, port, and start time.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "jupyter_instances"
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    port = db.Column(db.Integer, nullable=False)
+    notebook_dir = db.Column(db.String(300), nullable=False)
+    process = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(10), nullable=False, default="stopped")
