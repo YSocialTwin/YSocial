@@ -758,7 +758,7 @@ def delete_simulation(exp_id):
         db.session.commit()
 
         # delete jupyter instances
-        instances = db.session.query(Instance).filter_by(exp_id=exp_id).all()
+        instances = db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).all()
         stop_process(instances.process, instances.exp_id)
 
         db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).delete()
