@@ -30,9 +30,9 @@
                         </p>
                         
                         {% for exp in experiments %}
-                        <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                        <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
                             <div class="box-lines">
-                                <div class="box-line" style="border-bottom: 2px solid #e6e6e6; padding-bottom: 10px; margin-bottom: 10px;">
+                                <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                                     <span class="left" style="display: flex; align-items: center; gap: 10px;">
                                         <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a>
                                         {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
@@ -68,7 +68,7 @@
                                         <div style="display: flex; gap: 3px;">
                                             {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
                                             <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
-                                                <i class="mdi mdi-flask-empty-off" style="font-size: 24px; color: #dc3545;"></i>
+                                                <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
                                             </a>
                                             <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" target="_blank" title="Open JupyterLab">
                                                 <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
@@ -84,8 +84,9 @@
                                 </div>
                                 
                                 {% if len(experiments[exp]["clients"]) > 0 %}
+                                <hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">
                                 {% for client in experiments[exp]["clients"] %}
-                                <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;">
+                                <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;  ">
                                     <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
                                         <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         <a href="/admin/client_details/{{client[0].id}}">{{ client[0].name }}</a>
