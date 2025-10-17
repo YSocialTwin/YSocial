@@ -9,7 +9,7 @@ from pathlib import Path
 import psutil
 
 from y_web import db
-from y_web.models import Jupyter_instances, Exps
+from y_web.models import Exps, Jupyter_instances
 
 
 def find_free_port(start_port=8889):
