@@ -9,7 +9,7 @@ from pathlib import Path
 import psutil
 
 from y_web import db
-from y_web.models import Jupyter_instances
+from y_web.models import Jupyter_instances, Exps
 
 
 def find_free_port(start_port=8889):
@@ -125,7 +125,7 @@ def find_instance_by_notebook_dir(notebook_dir):
     return None
 
 
-def ensure_kernel_installed(kernel_name="python3"):
+def ensure_kernel_installed(kernel_name="python3_ysocial"):
     """
     Ensure an IPython kernel is installed and registered in the current environment.
 
@@ -230,6 +230,18 @@ def start_jupyter(expid, notebook_dir=None):
     if port is None:
         return False, "No free ports available", None
 
+    # get experiment db
+    exp = db.session.query(Exps).filter_by(idexp=expid).first()
+
+    if "database_server.db" in exp.db_name:
+        db_name = f"y_web{os.sep}{exp.db_name}"  # SQLite path
+    else:
+        db_name = f"postgresql://postgresql:password@localhost:5432/{exp.db_name}"  # PostgreSQL connection string
+
+    # inject environment variables
+    env = os.environ.copy()
+    env["DB"] = str(os.path.abspath(db_name))
+
     try:
         # Start Jupyter Lab with proper configuration for embedding
         cmd = [
@@ -256,6 +268,7 @@ def start_jupyter(expid, notebook_dir=None):
 
         process = subprocess.Popen(
             cmd,
+            env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             preexec_fn=os.setsid if os.name != "nt" else None,
@@ -439,65 +452,12 @@ def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None
         return False, f"Notebook {filename} already exists."
 
     else:
-        notebook_content = {
-            "cells": [
-                {
-                    "cell_type": "markdown",
-                    "metadata": {},
-                    "source": [
-                        "# New Notebook\n",
-                        "\n",
-                        "This notebook was created with predefined imports and setup.",
-                    ],
-                },
-                {
-                    "cell_type": "code",
-                    "execution_count": None,
-                    "metadata": {},
-                    "outputs": [],
-                    "source": [
-                        "# Standard imports\n",
-                        "import ysight as ys\n",
-                        "import matplotlib.pyplot as plt\n",
-                        "\n",
-                        "# Display settings\n",
-                        "%matplotlib inline\n",
-                        "pd.set_option('display.max_columns', None)\n",
-                        "\n",
-                        "print('Environment ready!')",
-                    ],
-                },
-                {
-                    "cell_type": "code",
-                    "execution_count": None,
-                    "metadata": {},
-                    "outputs": [],
-                    "source": ["# Your code here"],
-                },
-            ],
-            "metadata": {
-                "kernelspec": {
-                    "display_name": "Python 3",
-                    "language": "python",
-                    "name": "python3",
-                },
-                "language_info": {
-                    "codemirror_mode": {"name": "ipython", "version": 3},
-                    "file_extension": ".py",
-                    "mimetype": "text/x-python",
-                    "name": "python",
-                    "nbconvert_exporter": "python",
-                    "pygments_lexer": "ipython3",
-                    "version": "3.8.0",
-                },
-            },
-            "nbformat": 4,
-            "nbformat_minor": 4,
-        }
+        # copy notebook template from sample_notebook/start_here.ipynb
+        import shutil
 
-        filepath = Path(f"{notebook_dir}{os.sep}{filename}")
-        with open(filepath, "w") as f:
-            json.dump(notebook_content, f, indent=2)
+        base_notebook = f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"  # SQLite path
+        abs_path = os.path.abspath(base_notebook)
+        shutil.copy(abs_path, f"{notebook_dir}{os.sep}{filename}")
 
     return True
 
