@@ -670,7 +670,7 @@ def create_experiment():
         status=0,
         port=int(port),
         server=host,
-        annotations=annotations
+        annotations=annotations,
     )
 
     db.session.add(exp)
