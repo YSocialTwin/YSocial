@@ -860,6 +860,7 @@ def experiments_data():
                 "jupyter_status": (
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
+                "annotations": exp.annotations if exp.annotations else "",
             }
             for exp in res
         ],
