@@ -91,6 +91,7 @@ def settings():
         users=users,
         ollamas=ollamas,
         dbtype=dbtype,
+        enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
     )
 
 

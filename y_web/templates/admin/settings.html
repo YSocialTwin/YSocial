@@ -59,48 +59,6 @@
             { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
             { id: 'owner', name: 'Owner', sort: false },
             { id: 'platform_type', name: 'Platform Type', sort: true },
-            { 
-                id: 'web', 
-                name: 'Web Interface', 
-                sort: true,
-                formatter: (cell) => {
-                    const isLoaded = cell === 'Loaded';
-                    const color = isLoaded ? '#28a745' : '#6c757d';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
-                }
-            },
-            { 
-                id: 'running', 
-                name: 'Simulation Status', 
-                sort: true,
-                formatter: (cell) => {
-                    const isRunning = cell === 'Running';
-                    const color = isRunning ? '#28a745' : '#dc3545';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
-                }
-            },
-            { 
-                id: 'jupyter_status', 
-                name: 'JupyterLab', 
-                sort: true,
-                formatter: (cell) => {
-                    const isActive = cell === 'Active';
-                    const color = isActive ? '#28a745' : '#6c757d';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
-                }
-            },
             {
                 id: 'annotations',
                 name: 'Annotations',
@@ -122,6 +80,50 @@
                     return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
                 }
             },
+            { 
+                id: 'running', 
+                name: 'Simulation', 
+                sort: true,
+                formatter: (cell) => {
+                    const isRunning = cell === 'Running';
+                    const color = isRunning ? '#28a745' : '#dc3545';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            { 
+                id: 'web', 
+                name: 'Web', 
+                sort: true,
+                formatter: (cell) => {
+                    const isLoaded = cell === 'Loaded';
+                    const color = isLoaded ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            {% if enable_notebook %}
+            { 
+                id: 'jupyter_status', 
+                name: 'Notebook', 
+                sort: true,
+                formatter: (cell) => {
+                    const isActive = cell === 'Active';
+                    const color = isActive ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            {% endif %}
             {
                 id: 'details',
                 name: 'Actions',
