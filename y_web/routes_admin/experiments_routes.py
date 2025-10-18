@@ -91,6 +91,7 @@ def settings():
         users=users,
         ollamas=ollamas,
         dbtype=dbtype,
+        enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
     )
 
 
@@ -503,7 +504,15 @@ def create_experiment():
     platform_type = request.form.get("platform_type")
     host = request.form.get("host")
     port = int(request.form.get("port"))
-    perspective_api = request.form.get("perspective_api")
+
+    # Get annotation settings
+    toxicity_annotation = request.form.get("toxicity_annotation") == "true"
+    perspective_api = (
+        request.form.get("perspective_api") if toxicity_annotation else None
+    )
+    sentiment_annotation = request.form.get("sentiment_annotation") == "true"
+    emotion_annotation = request.form.get("emotion_annotation") == "true"
+
     topics = request.form.get("tags").split(",")
 
     # identify db type
@@ -625,7 +634,11 @@ def create_experiment():
         "debug": "False",
         "reset_db": "False",
         "modules": ["news", "voting", "image"],
-        "perspective_api": perspective_api if len(perspective_api) > 0 else None,
+        "perspective_api": (
+            perspective_api if perspective_api and len(perspective_api) > 0 else None
+        ),
+        "sentiment_annotation": sentiment_annotation,
+        "emotion_annotation": emotion_annotation,
     }
 
     with open(
@@ -634,6 +647,16 @@ def create_experiment():
         json.dump(config, f, indent=4)
 
     # add the experiment to the database
+
+    annotations = ""
+    if toxicity_annotation:
+        annotations += "toxicity,"
+    if sentiment_annotation:
+        annotations += "sentiment,"
+    if emotion_annotation:
+        annotations += "emotion,"
+    # remove trailing comma
+    annotations = annotations.rstrip(",")
 
     exp = Exps(
         exp_name=exp_name,
@@ -648,6 +671,7 @@ def create_experiment():
         status=0,
         port=int(port),
         server=host,
+        annotations=annotations,
     )
 
     db.session.add(exp)
@@ -788,15 +812,26 @@ def experiments_data():
     sort = request.args.get("sort")
     if sort:
         order = []
+        # Map column IDs to actual database field names
+        column_mapping = {
+            "exp_name": "exp_name",
+            "owner": "owner",
+            "platform_type": "platform_type",
+            "exp_descr": "exp_descr",
+            "annotations": "annotations",
+            "running": "running",
+            "web": "status",  # web interface status
+        }
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["exp_name", "exp_descr", "owner"]:
-                name = "name"
-            col = getattr(Exps, name)
-            if direction == "-":
-                col = col.desc()
-            order.append(col)
+            # Only sort by columns that have database fields
+            if name in column_mapping:
+                db_field = column_mapping[name]
+                col = getattr(Exps, db_field)
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
         if order:
             query = query.order_by(*order)
 
@@ -837,6 +872,7 @@ def experiments_data():
                 "jupyter_status": (
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
+                "annotations": exp.annotations if exp.annotations else "",
             }
             for exp in res
         ],

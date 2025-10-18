@@ -385,6 +385,7 @@ class Exps(db.Model):
     running = db.Column(db.Integer, nullable=False, default=0)
     port = db.Column(db.Integer, nullable=False)
     server = db.Column(db.String(50), nullable=False, default="127.0.0.1")
+    annotations = db.Column(db.String(500), nullable=False, default="")
 
 
 class Exp_stats(db.Model):

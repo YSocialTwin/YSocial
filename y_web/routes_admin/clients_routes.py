@@ -371,6 +371,9 @@ def create_client():
 
     profiles = {ap.name: ap.hours for ap in activity_profiles}
 
+    annotations = exp.annotations.split(",")
+    emotion_annotation = "emotion" in annotations
+
     config = {
         "servers": {
             "llm": llm,
@@ -432,6 +435,7 @@ def create_client():
                 "cast": float(vote) if vote is not None else 0,
                 "share_link": float(share_link) if share_link is not None else 0,
             },
+            "emotion_annotation": emotion_annotation,
         },
         "posts": {
             "visibility_rounds": int(visibility_rounds),
