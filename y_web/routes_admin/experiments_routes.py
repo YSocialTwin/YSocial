@@ -503,13 +503,15 @@ def create_experiment():
     platform_type = request.form.get("platform_type")
     host = request.form.get("host")
     port = int(request.form.get("port"))
-    
+
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
-    perspective_api = request.form.get("perspective_api") if toxicity_annotation else None
+    perspective_api = (
+        request.form.get("perspective_api") if toxicity_annotation else None
+    )
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
-    
+
     topics = request.form.get("tags").split(",")
 
     # identify db type
@@ -631,7 +633,9 @@ def create_experiment():
         "debug": "False",
         "reset_db": "False",
         "modules": ["news", "voting", "image"],
-        "perspective_api": perspective_api if perspective_api and len(perspective_api) > 0 else None,
+        "perspective_api": (
+            perspective_api if perspective_api and len(perspective_api) > 0 else None
+        ),
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
     }
