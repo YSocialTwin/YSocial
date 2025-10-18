@@ -812,15 +812,26 @@ def experiments_data():
     sort = request.args.get("sort")
     if sort:
         order = []
+        # Map column IDs to actual database field names
+        column_mapping = {
+            "exp_name": "exp_name",
+            "owner": "owner",
+            "platform_type": "platform_type",
+            "exp_descr": "exp_descr",
+            "annotations": "annotations",
+            "running": "running",
+            "web": "status",  # web interface status
+        }
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["exp_name", "exp_descr", "owner"]:
-                name = "name"
-            col = getattr(Exps, name)
-            if direction == "-":
-                col = col.desc()
-            order.append(col)
+            # Only sort by columns that have database fields
+            if name in column_mapping:
+                db_field = column_mapping[name]
+                col = getattr(Exps, db_field)
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
         if order:
             query = query.order_by(*order)
 
