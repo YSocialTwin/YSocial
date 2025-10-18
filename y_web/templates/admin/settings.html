@@ -102,6 +102,27 @@
                 }
             },
             {
+                id: 'annotations',
+                name: 'Annotations',
+                sort: false,
+                formatter: (cell) => {
+                    if (!cell || cell === '') {
+                        return gridjs.html('<div style="text-align: center;">-</div>');
+                    }
+                    const annotations = cell.split(',').filter(a => a.trim());
+                    const tags = annotations.map(annotation => {
+                        const colors = {
+                            'toxicity': '#dc3545',
+                            'sentiment': '#28a745',
+                            'emotion': '#17a2b8'
+                        };
+                        const color = colors[annotation.trim()] || '#6c757d';
+                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 2px 8px; margin: 2px; border-radius: 12px; font-size: 0.75rem;">${annotation.trim()}</span>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
+                }
+            },
+            {
                 id: 'details',
                 name: 'Actions',
                 sort: false,

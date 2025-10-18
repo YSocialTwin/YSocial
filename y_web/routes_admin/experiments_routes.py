@@ -670,7 +670,7 @@ def create_experiment():
         status=0,
         port=int(port),
         server=host,
-        annotations=annotations
+        annotations=annotations,
     )
 
     db.session.add(exp)
@@ -860,6 +860,7 @@ def experiments_data():
                 "jupyter_status": (
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
+                "annotations": exp.annotations if exp.annotations else "",
             }
             for exp in res
         ],
