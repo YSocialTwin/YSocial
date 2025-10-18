@@ -375,10 +375,40 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Perspective API<br> <small>(Toxicity annotation - optional)</small></span>
+                                        <span class="left">Toxicity Annotation<br> <small>(Perspective API)</small></span>
+                                        <span class="right" style="width: 70%;">
+                                            <label class="switch">
+                                                <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line" id="perspective_api_field" style="display: none;">
+                                        <span class="left">Perspective API Key<br> <small>(Required for toxicity)</small></span>
                                         <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Sentiment Annotation<br> <small>(Agent generated texts)</small></span>
+                                        <span class="right" style="width: 70%;">
+                                            <label class="switch">
+                                                <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Emotion Annotation<br> <small>(Agent generated texts)</small></span>
+                                        <span class="right" style="width: 70%;">
+                                            <label class="switch">
+                                                <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
@@ -389,6 +419,81 @@
                             </form>
                         </div>
                     </div>
+
+                    <style>
+                        /* Toggle Switch Styles */
+                        .switch {
+                            position: relative;
+                            display: inline-block;
+                            width: 60px;
+                            height: 34px;
+                        }
+
+                        .switch input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider:before {
+                            position: absolute;
+                            content: "";
+                            height: 26px;
+                            width: 26px;
+                            left: 4px;
+                            bottom: 4px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider:before {
+                            transform: translateX(26px);
+                        }
+
+                        .slider.round {
+                            border-radius: 34px;
+                        }
+
+                        .slider.round:before {
+                            border-radius: 50%;
+                        }
+                    </style>
+
+                    <script>
+                        // Show/hide Perspective API field based on toxicity annotation toggle
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
+                            const perspectiveApiField = document.getElementById('perspective_api_field');
+
+                            toxicityToggle.addEventListener('change', function() {
+                                if (this.checked) {
+                                    perspectiveApiField.style.display = 'flex';
+                                } else {
+                                    perspectiveApiField.style.display = 'none';
+                                }
+                            });
+                        });
+                    </script>
+
                     <!--Dashboard box-->
                     <!-- <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Available Experiments</h3>
