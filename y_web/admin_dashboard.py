@@ -6,13 +6,7 @@ about page, and administrative functions for managing experiments, clients,
 and system status monitoring.
 """
 
-from flask import (
-    Blueprint,
-    jsonify,
-    render_template,
-    request,
-    current_app
-)
+from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import current_user, login_required
 
 from y_web.utils import (
@@ -179,7 +173,7 @@ def dashboard():
         db_server=db_server,
         has_jupyter_sessions=has_jupyter_sessions,
         jupyter_by_exp=jupyter_by_exp,
-        notebook=current_app.config["ENABLE_NOTEBOOK"]
+        notebook=current_app.config["ENABLE_NOTEBOOK"],
     )
 
 

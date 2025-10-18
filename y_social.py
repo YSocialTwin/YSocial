@@ -5,7 +5,12 @@ from y_web import create_app, db
 
 
 def start_app(
-    db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama", notebook=False
+    db_type="sqlite",
+    debug=False,
+    host="localhost",
+    port=8080,
+    llm_backend="ollama",
+    notebook=False,
 ):
     import sys
 

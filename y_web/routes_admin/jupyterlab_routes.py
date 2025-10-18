@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template, current_app
+from flask import Blueprint, current_app, jsonify, render_template
 from flask_login import login_required
 
 from y_web import db

@@ -893,7 +893,7 @@ def experiment_details(uid):
         ollamas=ollamas,
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
-        notebooks=current_app.config["ENABLE_NOTEBOOK"]
+        notebooks=current_app.config["ENABLE_NOTEBOOK"],
     )
 
 
