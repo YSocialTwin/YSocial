@@ -372,7 +372,7 @@ def create_client():
     profiles = {ap.name: ap.hours for ap in activity_profiles}
 
     annotations = exp.annotations.split(",")
-    emotion_annotation = "emotions" in annotations
+    emotion_annotation = "emotion" in annotations
 
     config = {
         "servers": {
