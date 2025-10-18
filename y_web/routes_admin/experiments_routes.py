@@ -647,6 +647,16 @@ def create_experiment():
 
     # add the experiment to the database
 
+    annotations = ""
+    if toxicity_annotation:
+        annotations += "toxicity,"
+    if sentiment_annotation:
+        annotations += "sentiment,"
+    if emotion_annotation:
+        annotations += "emotion,"
+    # remove trailing comma
+    annotations = annotations.rstrip(",")
+
     exp = Exps(
         exp_name=exp_name,
         platform_type=platform_type,
@@ -660,6 +670,7 @@ def create_experiment():
         status=0,
         port=int(port),
         server=host,
+        annotations=annotations
     )
 
     db.session.add(exp)
