@@ -375,12 +375,31 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Toxicity Annotation<br> <small>(Perspective API)</small></span>
+                                        <span class="left">Generated Content Annotation</span>
                                         <span class="right" style="width: 70%;">
-                                            <label class="switch">
-                                                <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
-                                                <span class="slider round"></span>
-                                            </label>
+                                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Toxicity</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Sentiment</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Emotion</span>
+                                                </div>
+                                            </div>
                                         </span>
                                     </div>
 
@@ -389,26 +408,6 @@
                                         <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Sentiment Annotation<br> <small>(Agent generated texts)</small></span>
-                                        <span class="right" style="width: 70%;">
-                                            <label class="switch">
-                                                <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
-                                                <span class="slider round"></span>
-                                            </label>
-                                        </span>
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Emotion Annotation<br> <small>(Agent generated texts)</small></span>
-                                        <span class="right" style="width: 70%;">
-                                            <label class="switch">
-                                                <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
-                                                <span class="slider round"></span>
-                                            </label>
-                                        </span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
@@ -474,6 +473,62 @@
                         }
 
                         .slider.round:before {
+                            border-radius: 50%;
+                        }
+
+                        /* Small Toggle Switch Styles */
+                        .switch-small {
+                            position: relative;
+                            display: inline-block;
+                            width: 40px;
+                            height: 22px;
+                        }
+
+                        .switch-small input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider-small {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider-small:before {
+                            position: absolute;
+                            content: "";
+                            height: 16px;
+                            width: 16px;
+                            left: 3px;
+                            bottom: 3px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider-small {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider-small {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider-small:before {
+                            transform: translateX(18px);
+                        }
+
+                        .slider-small.round {
+                            border-radius: 22px;
+                        }
+
+                        .slider-small.round:before {
                             border-radius: 50%;
                         }
                     </style>
