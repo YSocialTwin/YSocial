@@ -11,6 +11,7 @@ from flask import (
     jsonify,
     render_template,
     request,
+    current_app
 )
 from flask_login import current_user, login_required
 
@@ -178,6 +179,7 @@ def dashboard():
         db_server=db_server,
         has_jupyter_sessions=has_jupyter_sessions,
         jupyter_by_exp=jupyter_by_exp,
+        notebook=current_app.config["ENABLE_NOTEBOOK"]
     )
 
 

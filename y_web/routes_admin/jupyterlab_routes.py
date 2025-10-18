@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, render_template
+from flask import Blueprint, jsonify, render_template, current_app
 from flask_login import login_required
 
 from y_web import db
@@ -10,10 +10,29 @@ from y_web.utils.miscellanea import ollama_status
 lab = Blueprint("lab", __name__)
 
 
+def __check_notebook_enabled():
+    """Check if Jupyter Notebook functionality is enabled"""
+    if current_app.config["ENABLE_NOTEBOOK"] != False:
+        return False
+    else:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Jupyter Notebook functionality is disabled.",
+                }
+            ),
+            403,
+        )
+
+
 @lab.route("/admin/lab_start/<experiment_id>", methods=["GET"])
 @login_required
 def api_start_jupyter(experiment_id):
     """API endpoint to start Jupyter Lab"""
+    disabled = __check_notebook_enabled()
+    if disabled != False:
+        return disabled
 
     try:
         exp_id = int(experiment_id)
@@ -43,6 +62,9 @@ def api_start_jupyter(experiment_id):
 @login_required
 def api_stop_jupyter(instance_id):
     """API endpoint to stop Jupyter Lab"""
+    disabled = __check_notebook_enabled()
+    if disabled != False:
+        return disabled
 
     try:
         instance_id_int = int(instance_id)
@@ -62,6 +84,10 @@ def api_stop_jupyter(instance_id):
 @login_required
 def api_jupyter_instances():
     """API endpoint to get all Jupyter Lab instances"""
+    disabled = __check_notebook_enabled()
+    if disabled != False:
+        return disabled
+
     instances = get_jupyter_instances()
     return jsonify({"instances": instances})
 
@@ -70,6 +96,10 @@ def api_jupyter_instances():
 @login_required
 def api_create_notebook(expid):
     """API endpoint to create a new notebook"""
+    disabled = __check_notebook_enabled()
+    if disabled != False:
+        return disabled
+
     path = (
         db.session.query(Exps).filter_by(idexp=int(expid)).first().db_name.split(os.sep)
     )
@@ -94,6 +124,9 @@ def api_create_notebook(expid):
 @login_required
 def jupyter_page(exp_id):
     """Jupyter Lab embedded page for specific instance"""
+    disabled = __check_notebook_enabled()
+    if disabled != False:
+        return disabled
 
     instances = db.session.query(Jupyter_instances).all()
     JUPYTER_INSTANCES = {

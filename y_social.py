@@ -5,7 +5,7 @@ from y_web import create_app, db
 
 
 def start_app(
-    db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama"
+    db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama", notebook=False
 ):
     import sys
 
@@ -69,6 +69,8 @@ def start_app(
             exp.status = 0
         db.session.commit()
 
+    app.config["ENABLE_NOTEBOOK"] = notebook
+
     app.run(debug=debug, host=host, port=port)
 
 
@@ -95,6 +97,13 @@ if __name__ == "__main__":
         default="ollama",
         help="LLM backend to use: 'ollama' (default), 'vllm', or custom URL (host:port)",
     )
+    parser.add_argument(
+        "-n",
+        "--no_notebook",
+        default=True,
+        action="store_true",
+        help="Enable Jupyter Notebook server launch for experiments",
+    )
 
     args = parser.parse_args()
 
@@ -104,4 +113,5 @@ if __name__ == "__main__":
         host=args.host,
         port=args.port,
         llm_backend=args.llm_backend,
+        notebook=args.no_notebook,
     )

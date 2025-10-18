@@ -64,20 +64,22 @@
                                             {% endif %}
                                         </div>
                                         {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
-                                        <div style="display: flex; gap: 3px;">
-                                            {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
-                                            <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
-                                                <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
-                                            </a>
-                                            <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" target="_blank" title="Open JupyterLab">
-                                                <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
-                                            </a>
-                                            {% else %}
-                                            <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
-                                                <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
-                                            </a>
+                                            {% if notebook %}
+                                            <div style="display: flex; gap: 3px;">
+                                                {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
+                                                <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
+                                                    <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
+                                                </a>
+                                                <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" target="_blank" title="Open JupyterLab">
+                                                    <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
+                                                </a>
+                                                {% else %}
+                                                <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
+                                                    <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
                                             {% endif %}
-                                        </div>
                                         {% endif %}
                                     </span>
                                 </div>
