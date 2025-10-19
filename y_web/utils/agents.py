@@ -65,6 +65,49 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
+def __sample_actions(min_val, max_val, distribution, param=None):
+    """
+    Sample number of actions based on specified distribution.
+
+    Args:
+        min_val: Minimum number of actions
+        max_val: Maximum number of actions
+        distribution: Distribution type ('Uniform', 'Poisson', 'Geometric', 'Zipfs')
+        param: Distribution parameter (lambda for Poisson, p for Geometric, s for Zipf's)
+
+    Returns:
+        Integer number of actions within [min_val, max_val]
+    """
+    if distribution == "Uniform":
+        return np.random.randint(min_val, max_val + 1)
+    
+    elif distribution == "Poisson":
+        lam = param if param is not None else 0.88
+        sample = np.random.poisson(lam) + min_val
+        return int(np.clip(sample, min_val, max_val))
+    
+    elif distribution == "Geometric":
+        p = param if param is not None else 2.0/3.0
+        # Geometric distribution starts from 1, so we adjust
+        sample = np.random.geometric(p) + min_val - 1
+        return int(np.clip(sample, min_val, max_val))
+    
+    elif distribution == "Zipfs":
+        s = param if param is not None else 2.5
+        # Zipf's law: generate a sample from Zipf distribution
+        # We create a discrete range and sample using Zipf
+        range_size = max_val - min_val + 1
+        sample = np.random.zipf(s)
+        # Map to our range
+        if sample > range_size:
+            sample = range_size
+        return int(min_val + sample - 1)
+    
+    else:
+        # Default to uniform if unknown distribution
+        return np.random.randint(min_val, max_val + 1)
+
+
 def generate_population(population_name):
     """
     Generate a population of AI agents with realistic profiles.
@@ -152,12 +195,16 @@ def generate_population(population_name):
             elements=(population.education.split(","))
         )
 
+        # Sample round_actions using population configuration
         try:
-            round_actions = fake.random_int(
-                min=1,
-                max=4,
-            )
-        except:
+            actions_min = population.actions_min if population.actions_min else 1
+            actions_max = population.actions_max if population.actions_max else 4
+            actions_dist = population.actions_distribution if population.actions_distribution else "Uniform"
+            actions_param = population.actions_dist_param
+            
+            round_actions = __sample_actions(actions_min, actions_max, actions_dist, actions_param)
+        except Exception as e:
+            # Fallback to default if there's any issue
             round_actions = 3
 
         daily_activity_level = __sample_pareto([1, 2, 3, 4, 5])

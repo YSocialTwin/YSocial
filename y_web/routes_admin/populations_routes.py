@@ -128,6 +128,16 @@ def create_population():
     except:
         activity_profiles_json = []
 
+    # Get actions per user configuration
+    actions_min = int(request.form.get("actions_min", 1))
+    actions_max = int(request.form.get("actions_max", 4))
+    actions_distribution = request.form.get("actions_distribution", "Uniform")
+    actions_dist_param = request.form.get("actions_dist_param")
+    if actions_dist_param:
+        actions_dist_param = float(actions_dist_param)
+    else:
+        actions_dist_param = None
+
     population = Population(
         name=name,
         descr=descr,
@@ -144,6 +154,10 @@ def create_population():
         frecsys=frecsys,
         crecsys=crecsys,
         llm_url=llm,
+        actions_min=actions_min,
+        actions_max=actions_max,
+        actions_distribution=actions_distribution,
+        actions_dist_param=actions_dist_param,
     )
 
     db.session.add(population)

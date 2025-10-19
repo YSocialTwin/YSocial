@@ -570,7 +570,7 @@
                                         <span id="activity-profiles-toggle">▼</span> Activity Profiles <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
-                                        Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile. Total must equal 100%.
+                                        Configure when agents are active and how many actions they perform. Assign activity profiles to define daily activity windows, and set the distribution for actions per user.
                                     </div>
 
                                     <style>
@@ -580,8 +580,62 @@
                                             transition: max-height 0.3s ease-out;
                                         }
                                         .activity-profiles-section.expanded {
-                                            max-height: 800px;
+                                            max-height: 1200px;
                                             transition: max-height 0.5s ease-in;
+                                        }
+                                        .subsection-box {
+                                            background-color: #f9f9f9;
+                                            border: 1px solid #e0e0e0;
+                                            border-radius: 6px;
+                                            padding: 15px;
+                                            margin-bottom: 20px;
+                                        }
+                                        .subsection-title {
+                                            font-size: 0.9em;
+                                            font-weight: 600;
+                                            color: #444;
+                                            margin-bottom: 12px;
+                                            padding-bottom: 8px;
+                                            border-bottom: 1px solid #ddd;
+                                        }
+                                        .form-row {
+                                            display: flex;
+                                            gap: 15px;
+                                            margin-bottom: 12px;
+                                            align-items: center;
+                                        }
+                                        .form-field {
+                                            flex: 1;
+                                        }
+                                        .form-label {
+                                            font-size: 0.85em;
+                                            font-weight: 500;
+                                            color: #555;
+                                            margin-bottom: 5px;
+                                            display: block;
+                                        }
+                                        .form-input {
+                                            width: 100%;
+                                            padding: 8px 10px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 4px;
+                                            font-size: 0.9em;
+                                        }
+                                        .form-input:focus {
+                                            outline: none;
+                                            border-color: #22c55e;
+                                            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                        }
+                                        .distribution-param-field {
+                                            display: none;
+                                        }
+                                        .distribution-param-field.active {
+                                            display: block;
+                                        }
+                                        .help-text {
+                                            font-size: 0.75em;
+                                            color: #888;
+                                            margin-top: 3px;
                                         }
                                         .activity-profiles-compact {
                                             display: flex;
@@ -708,7 +762,67 @@
                                     </style>
 
                                     <div class="activity-profiles-section" id="activity-profiles-section">
-                                        <div class="activity-profiles-compact">
+                                        <!-- Actions per User Configuration -->
+                                        <div class="subsection-box">
+                                            <div class="subsection-title">Actions per User (Once Active)</div>
+                                            
+                                            <div class="form-row">
+                                                <div class="form-field">
+                                                    <label class="form-label">Minimum Actions</label>
+                                                    <input type="number" name="actions_min" class="form-input" min="1" value="1" required>
+                                                    <div class="help-text">Minimum number of actions an active user performs</div>
+                                                </div>
+                                                <div class="form-field">
+                                                    <label class="form-label">Maximum Actions</label>
+                                                    <input type="number" name="actions_max" class="form-input" min="1" value="4" required>
+                                                    <div class="help-text">Maximum number of actions an active user performs</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-row">
+                                                <div class="form-field">
+                                                    <label class="form-label">Distribution Type</label>
+                                                    <select name="actions_distribution" id="actions_distribution" class="form-input" onchange="updateDistributionParam()">
+                                                        <option value="Uniform" selected>Uniform</option>
+                                                        <option value="Poisson">Poisson</option>
+                                                        <option value="Geometric">Geometric</option>
+                                                        <option value="Zipfs">Zipf's</option>
+                                                    </select>
+                                                    <div class="help-text">Statistical distribution for sampling action counts</div>
+                                                </div>
+                                                
+                                                <div class="form-field distribution-param-field" id="poisson-param">
+                                                    <label class="form-label">Lambda (λ)</label>
+                                                    <input type="number" name="actions_dist_param" class="form-input" step="0.01" value="0.88" min="0.01">
+                                                    <div class="help-text">Rate parameter for Poisson distribution</div>
+                                                </div>
+                                                
+                                                <div class="form-field distribution-param-field" id="geometric-param">
+                                                    <label class="form-label">Probability (p)</label>
+                                                    <input type="number" name="actions_dist_param" class="form-input" step="0.01" value="0.67" min="0.01" max="1">
+                                                    <div class="help-text">Success probability for Geometric distribution</div>
+                                                </div>
+                                                
+                                                <div class="form-field distribution-param-field" id="zipfs-param">
+                                                    <label class="form-label">Exponent (s)</label>
+                                                    <input type="number" name="actions_dist_param" class="form-input" step="0.1" value="2.5" min="0.1">
+                                                    <div class="help-text">Exponent parameter for Zipf's distribution</div>
+                                                </div>
+
+                                                <div class="form-field distribution-param-field" id="uniform-placeholder">
+                                                    <label class="form-label">&nbsp;</label>
+                                                    <div class="help-text" style="padding-top: 8px;">No additional parameters needed for Uniform distribution</div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Activity Time Windows -->
+                                        <div class="subsection-box">
+                                            <div class="subsection-title">Activity Time Windows</div>
+                                            <div style="font-size: 0.85em; color: #666; margin-bottom: 12px;">
+                                                Assign activity profiles to define when agents are active during the day. Drag profiles from the available list, then specify the percentage of agents for each profile. Total must equal 100%.
+                                            </div>
+                                            <div class="activity-profiles-compact">
                                             <div class="profiles-section">
                                                 <div class="profiles-section-title">Available Profiles (Drag to assign)</div>
                                                 <div id="available-profiles">
@@ -750,6 +864,38 @@
                                             const toggle = document.getElementById('activity-profiles-toggle');
                                             section.classList.toggle('expanded');
                                             toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
+                                        }
+
+                                        // Update distribution parameter field visibility
+                                        function updateDistributionParam() {
+                                            const distSelect = document.getElementById('actions_distribution');
+                                            const selectedDist = distSelect.value;
+                                            
+                                            // Hide all parameter fields
+                                            document.querySelectorAll('.distribution-param-field').forEach(field => {
+                                                field.classList.remove('active');
+                                                // Disable inputs in hidden fields
+                                                const input = field.querySelector('input');
+                                                if (input) input.disabled = true;
+                                            });
+                                            
+                                            // Show the relevant parameter field
+                                            let activeField = null;
+                                            if (selectedDist === 'Poisson') {
+                                                activeField = document.getElementById('poisson-param');
+                                            } else if (selectedDist === 'Geometric') {
+                                                activeField = document.getElementById('geometric-param');
+                                            } else if (selectedDist === 'Zipfs') {
+                                                activeField = document.getElementById('zipfs-param');
+                                            } else {
+                                                activeField = document.getElementById('uniform-placeholder');
+                                            }
+                                            
+                                            if (activeField) {
+                                                activeField.classList.add('active');
+                                                const input = activeField.querySelector('input');
+                                                if (input) input.disabled = false;
+                                            }
                                         }
 
                                         // Drag and drop functionality for activity profiles
@@ -894,6 +1040,9 @@
 
                                         // Initialize on page load
                                         document.addEventListener('DOMContentLoaded', function() {
+                                            // Initialize distribution parameter display
+                                            updateDistributionParam();
+                                            
                                             initDragAndDrop();
                                             
                                             // Set "Always On" as default with 100%

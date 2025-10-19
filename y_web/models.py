@@ -433,6 +433,11 @@ class Population(db.Model):
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
     llm_url = db.Column(db.String(100))
+    # Actions per user configuration
+    actions_min = db.Column(db.Integer, default=1)
+    actions_max = db.Column(db.Integer, default=4)
+    actions_distribution = db.Column(db.String(20), default="Uniform")
+    actions_dist_param = db.Column(db.Float, nullable=True)
 
 
 class Agent(db.Model):
