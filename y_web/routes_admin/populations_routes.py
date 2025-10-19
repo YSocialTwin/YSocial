@@ -114,6 +114,24 @@ def create_population():
     toxicity_levels = request.form.getlist("toxicity_levels")
     toxicity_levels = ",".join(toxicity_levels)
 
+    # Retrieve percentage data for education, political leanings, and toxicity
+    # These will be used in future implementations for weighted distribution
+    education_percentages_str = request.form.get("education_levels_percentages", "{}")
+    political_percentages_str = request.form.get("political_leanings_percentages", "{}")
+    toxicity_percentages_str = request.form.get("toxicity_levels_percentages", "{}")
+
+    try:
+        education_percentages = json.loads(education_percentages_str)
+        political_percentages = json.loads(political_percentages_str)
+        toxicity_percentages = json.loads(toxicity_percentages_str)
+    except (json.JSONDecodeError, ValueError):
+        education_percentages = {}
+        political_percentages = {}
+        toxicity_percentages = {}
+
+    # TODO: Store percentages in a separate table or extend Population model
+    # For now, the percentages are retrieved but not persisted, maintaining backward compatibility
+
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
     interests = request.form.get("tags")

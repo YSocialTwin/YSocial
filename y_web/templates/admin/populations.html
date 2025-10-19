@@ -476,12 +476,19 @@
                                                 </div>
                                                 <div class="multi-select-dropdown" id="education_levels_dropdown">
                                                     {% for education_level in education_levels %}
-                                                    <div class="multi-select-option" onclick="toggleOption('education_levels', '{{ education_level.education_level }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('education_levels', '{{ education_level.education_level }}', '{{ education_level.id }}')">
                                                         {{ education_level.education_level }}
                                                     </div>
                                                     {% endfor %}
                                                 </div>
                                             </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="education_levels_percentages_container" style="display: none;">
+                                        <span class="left">Education %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="education_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="education_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -493,12 +500,19 @@
                                                 </div>
                                                 <div class="multi-select-dropdown" id="political_leanings_dropdown">
                                                     {% for political_leaning in leanings %}
-                                                    <div class="multi-select-option" onclick="toggleOption('political_leanings', '{{ political_leaning.leaning }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('political_leanings', '{{ political_leaning.leaning }}', '{{ political_leaning.id }}')">
                                                         {{ political_leaning.leaning }}
                                                     </div>
                                                     {% endfor %}
                                                 </div>
                                             </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="political_leanings_percentages_container" style="display: none;">
+                                        <span class="left">Political %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="political_leanings_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="political_leanings_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -510,7 +524,7 @@
                                                 </div>
                                                 <div class="multi-select-dropdown" id="toxicity_levels_dropdown">
                                                     {% for toxicity_level in toxicity_levels %}
-                                                    <div class="multi-select-option" onclick="toggleOption('toxicity_levels', '{{ toxicity_level.toxicity_level }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('toxicity_levels', '{{ toxicity_level.toxicity_level }}', '{{ toxicity_level.id }}')">
                                                         {{ toxicity_level.toxicity_level }}
                                                     </div>
                                                     {% endfor %}
@@ -518,13 +532,20 @@
                                             </div>
                                         </span>
                                     </div>
+                                    <div class="box-line" id="toxicity_levels_percentages_container" style="display: none;">
+                                        <span class="left">Toxicity %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="toxicity_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="toxicity_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
 
                                     <script>
-                                        // Multi-select functionality
+                                        // Multi-select functionality with percentages
                                         const multiSelectData = {
-                                            education_levels: [],
-                                            political_leanings: [],
-                                            toxicity_levels: []
+                                            education_levels: {},  // Changed to object: {id: {label, percentage}}
+                                            political_leanings: {},
+                                            toxicity_levels: {}
                                         };
 
                                         function toggleDropdown(fieldName) {
@@ -539,41 +560,42 @@
                                             });
                                         }
 
-                                        function toggleOption(fieldName, value) {
+                                        function toggleOption(fieldName, label, id) {
                                             const data = multiSelectData[fieldName];
-                                            const index = data.indexOf(value);
                                             
-                                            if (index > -1) {
-                                                data.splice(index, 1);
+                                            if (data[id]) {
+                                                delete data[id];
                                             } else {
-                                                data.push(value);
+                                                data[id] = {label: label, percentage: 0};
                                             }
                                             
                                             updateDisplay(fieldName);
                                             updateOptionStyles(fieldName);
+                                            updatePercentages(fieldName);
                                         }
 
-                                        function removeTag(fieldName, value) {
+                                        function removeTag(fieldName, id) {
                                             const data = multiSelectData[fieldName];
-                                            const index = data.indexOf(value);
-                                            if (index > -1) {
-                                                data.splice(index, 1);
+                                            if (data[id]) {
+                                                delete data[id];
                                             }
                                             updateDisplay(fieldName);
                                             updateOptionStyles(fieldName);
+                                            updatePercentages(fieldName);
                                         }
 
                                         function updateDisplay(fieldName) {
                                             const display = document.getElementById(fieldName + '_display');
                                             const data = multiSelectData[fieldName];
+                                            const items = Object.entries(data);
                                             
-                                            if (data.length === 0) {
+                                            if (items.length === 0) {
                                                 display.innerHTML = '<span class="multi-select-placeholder">Click to select...</span>';
                                             } else {
-                                                display.innerHTML = data.map(value => 
+                                                display.innerHTML = items.map(([id, item]) => 
                                                     `<span class="multi-select-tag">
-                                                        ${value}
-                                                        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${value}')">×</span>
+                                                        ${item.label}
+                                                        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${id}')">×</span>
                                                     </span>`
                                                 ).join('');
                                             }
@@ -584,13 +606,84 @@
                                             const data = multiSelectData[fieldName];
                                             
                                             dropdown.querySelectorAll('.multi-select-option').forEach(option => {
-                                                const value = option.textContent.trim();
-                                                if (data.includes(value)) {
+                                                const label = option.textContent.trim();
+                                                const isSelected = Object.values(data).some(item => item.label === label);
+                                                if (isSelected) {
                                                     option.classList.add('selected');
                                                 } else {
                                                     option.classList.remove('selected');
                                                 }
                                             });
+                                        }
+
+                                        function updatePercentages(fieldName) {
+                                            const data = multiSelectData[fieldName];
+                                            const items = Object.entries(data);
+                                            const container = document.getElementById(fieldName + '_percentages');
+                                            const containerRow = document.getElementById(fieldName + '_percentages_container');
+                                            
+                                            if (items.length === 0) {
+                                                containerRow.style.display = 'none';
+                                                return;
+                                            }
+                                            
+                                            containerRow.style.display = '';
+                                            
+                                            // Split evenly by default
+                                            const evenSplit = (100 / items.length).toFixed(2);
+                                            items.forEach(([id, item]) => {
+                                                if (item.percentage === 0) {
+                                                    item.percentage = parseFloat(evenSplit);
+                                                }
+                                            });
+                                            
+                                            // Render percentage inputs
+                                            container.innerHTML = items.map(([id, item]) => `
+                                                <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px;">
+                                                    <span style="flex: 1; font-size: 0.9em; font-weight: 500;">${item.label}</span>
+                                                    <input type="number" 
+                                                           class="percentage-input-compact" 
+                                                           min="0" 
+                                                           max="100" 
+                                                           step="0.01"
+                                                           value="${item.percentage}"
+                                                           onchange="updatePercentageValue('${fieldName}', '${id}', this.value)"
+                                                           style="width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 3px; text-align: center;">
+                                                    <span style="font-size: 0.85em; color: #666;">%</span>
+                                                </div>
+                                            `).join('');
+                                            
+                                            validatePercentageTotal(fieldName);
+                                        }
+
+                                        function updatePercentageValue(fieldName, id, value) {
+                                            const data = multiSelectData[fieldName];
+                                            if (data[id]) {
+                                                data[id].percentage = parseFloat(value) || 0;
+                                            }
+                                            validatePercentageTotal(fieldName);
+                                        }
+
+                                        function validatePercentageTotal(fieldName) {
+                                            const data = multiSelectData[fieldName];
+                                            const items = Object.values(data);
+                                            const validation = document.getElementById(fieldName + '_validation');
+                                            
+                                            if (items.length === 0) {
+                                                validation.style.display = 'none';
+                                                return;
+                                            }
+                                            
+                                            const total = items.reduce((sum, item) => sum + item.percentage, 0);
+                                            validation.style.display = 'block';
+                                            
+                                            if (Math.abs(total - 100) < 0.01) {
+                                                validation.className = 'percentage-validation-compact success';
+                                                validation.textContent = `✓ Total: ${total.toFixed(2)}%`;
+                                            } else {
+                                                validation.className = 'percentage-validation-compact error';
+                                                validation.textContent = `⚠ Total: ${total.toFixed(2)}% (must equal 100%)`;
+                                            }
                                         }
 
                                         // Close dropdowns when clicking outside
@@ -604,18 +697,50 @@
 
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+                                            // Validate percentages before submission
+                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels'];
+                                            for (const fieldName of fieldsToValidate) {
+                                                const data = multiSelectData[fieldName];
+                                                const items = Object.values(data);
+                                                if (items.length > 0) {
+                                                    const total = items.reduce((sum, item) => sum + item.percentage, 0);
+                                                    if (Math.abs(total - 100) > 0.01) {
+                                                        e.preventDefault();
+                                                        alert(`Please ensure ${fieldName.replace(/_/g, ' ')} percentages sum to 100%`);
+                                                        return false;
+                                                    }
+                                                }
+                                            }
+                                            
                                             // Remove old hidden inputs
                                             this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"]').forEach(input => input.remove());
                                             
-                                            // Add new hidden inputs for multi-select values
+                                            // Add new hidden inputs for multi-select values (IDs for backward compatibility)
                                             Object.keys(multiSelectData).forEach(fieldName => {
-                                                multiSelectData[fieldName].forEach(value => {
+                                                const data = multiSelectData[fieldName];
+                                                Object.entries(data).forEach(([id, item]) => {
                                                     const input = document.createElement('input');
                                                     input.type = 'hidden';
                                                     input.name = fieldName;
-                                                    input.value = value;
+                                                    input.value = id;
                                                     this.appendChild(input);
                                                 });
+                                            });
+                                            
+                                            // Add hidden inputs for percentages (JSON format for easy parsing)
+                                            Object.keys(multiSelectData).forEach(fieldName => {
+                                                const data = multiSelectData[fieldName];
+                                                const percentageData = {};
+                                                Object.entries(data).forEach(([id, item]) => {
+                                                    percentageData[id] = item.percentage;
+                                                });
+                                                
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = fieldName + '_percentages';
+                                                input.value = JSON.stringify(percentageData);
+                                                this.appendChild(input);
                                             });
                                         });
                                     </script>
@@ -763,6 +888,19 @@
                                             background: #efe;
                                             border: 1px solid #cfc;
                                             color: #0a0;
+                                        }
+                                        .percentage-input-compact {
+                                            width: 80px;
+                                            padding: 6px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 3px;
+                                            text-align: center;
+                                            font-size: 0.9em;
+                                        }
+                                        .percentage-input-compact:focus {
+                                            outline: none;
+                                            border-color: #22c55e;
+                                            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
                                         }
                                         .empty-state-compact {
                                             text-align: center;
