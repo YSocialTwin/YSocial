@@ -170,9 +170,9 @@ def create_population():
         "min": actions_min,
         "max": actions_max,
         "distribution": actions_distribution,
-        "poisson_lambda": poisson_lambda,
-        "geometric_p": geometric_p,
-        "zipf_s": zipf_s,
+        "Poisson": poisson_lambda,
+        "Geometric": geometric_p,
+        "Zipf": zipf_s,
     }
 
     population = Population(
@@ -206,7 +206,7 @@ def create_population():
         db.session.add(profile_assoc)
     db.session.commit()
 
-    generate_population(name, percentages)
+    generate_population(name, percentages, actions_config)
 
     return populations()
 

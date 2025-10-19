@@ -10,6 +10,7 @@ import random
 
 import faker
 import numpy as np
+import math
 from sqlalchemy.sql import func
 
 from y_web import db
@@ -21,6 +22,69 @@ from y_web.models import (
     Profession,
 )
 
+
+def __sample_round_actions(min_v: int, max_v: int,  param: float, dist: str = "uniform",) -> int:
+    """
+    Sample actions-per-active-slot (round_actions) using the configured distribution
+    truncated to the integer support [min, max]. Falls back to uniform if invalid.
+    """
+
+    min_v = int(min_v)
+    max_v = int(max_v)
+
+    if min_v >= max_v:
+        return max(min_v, 1)
+
+    support = list(range(min_v, max_v + 1))
+    R = len(support)
+
+    # Map support to k in [1..R] for simpler formulas
+    def to_value(k: int) -> int:
+        return support[0] + (k - 1)
+
+    # Uniform
+    if dist == "uniform" or dist is None:
+        return random.randint(min_v, max_v)
+
+    if param is not None:
+        param = float(param)
+
+    # Build weights for k=1..R then sample
+    weights = []
+    if dist == "poisson":
+        lam = float(param) if (param is not None) else 0.88
+        if lam <= 0:
+            return random.randint(min_v, max_v)
+        # Unnormalized Poisson pmf over k=1..R (exclude zero)
+        for k in range(1, R + 1):
+            # compute poisson at k
+            w = math.exp(-lam) * (lam ** k) / math.factorial(k)
+            weights.append(w)
+
+    elif dist == "geometric":
+        p = float(param) if (param is not None) else (2.0 / 3.0)
+        if not (0 < p <= 1):
+            return random.randint(min_v, max_v)
+        for k in range(1, R + 1):
+            w = p * ((1 - p) ** (k - 1))
+            weights.append(w)
+    elif dist == "zipf":
+        s = float(param) if (param is not None) else 2.5
+        if s <= 1:
+            return random.randint(min_v, max_v)
+        for k in range(1, R + 1):
+            w = (k ** (-s))
+            weights.append(w)
+    else:
+        return random.randint(min_v, max_v)
+
+    total = sum(weights)
+    if total <= 0 or any(math.isnan(w) or math.isinf(w) for w in weights):
+        return random.randint(min_v, max_v)
+
+    # Sample k in [1..R] then map to support
+    k = random.choices(range(1, R + 1), weights=weights, k=1)[0]
+    return to_value(k)
 
 def __sample_age(mean, std_dev, min_age, max_age):
     """
@@ -65,7 +129,7 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
-def generate_population(population_name, percentages=None):
+def generate_population(population_name, percentages=None, actions_config=None):
     """
     Generate a population of AI agents with realistic profiles.
 
@@ -79,6 +143,8 @@ def generate_population(population_name, percentages=None):
         population_name: Name of the population configuration to use
         percentages: Optional dict specifying percentage distributions for
                      certain attributes
+        actions_config : Optional dict specifying configuration for round_actions
+                         sampling (min, max, distribution type, parameter)
 
     Side effects:
         Creates and persists Agent and Agent_Population records in database
@@ -157,10 +223,10 @@ def generate_population(population_name, percentages=None):
         ne = fake.random_element(elements=("sensitive/nervous", "resilient/confident"))
 
         try:
-            round_actions = fake.random_int(
-                min=1,
-                max=4,
-            )
+            round_actions = __sample_round_actions(actions_config["min"],
+                                               actions_config["max"],
+                                               actions_config[actions_config["distribution"]] if actions_config["distribution"] in actions_config else None,
+                                               actions_config["distribution"])
         except:
             round_actions = 3
 
