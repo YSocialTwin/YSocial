@@ -58,6 +58,11 @@ Easily configure and manage simulations through:
 - **LLM model management**: Pull, delete, and monitor models directly from the admin interface
 - **User-specific LLM configuration**: Assign different models and custom LLM servers per user
 - **Perspective API integration**: Configure per-user API keys for toxicity detection
+- **Jupyter Lab Integration**: Preconfigured analytical environment for each experiment
+  - **ySights Library**: Purpose-built Python library for analyzing simulation data
+  - Per-experiment notebook environment with database access
+  - Interactive data exploration, visualization, and custom SQL queries
+  - **Security Control**: Enable/disable Jupyter Lab functionality on startup with `--no_notebook` flag
 
 Here's a screenshot of the admin panel:
 
@@ -210,6 +215,51 @@ Each user can also configure their own LLM backend and model through the admin p
    ```
 
 📚 **See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) for detailed configuration examples**
+
+---
+
+### 📊 **Jupyter Lab Integration & ySights**
+
+YSocial includes integrated **Jupyter Lab** support with the **ySights** library, providing a preconfigured analytical environment for each experiment.
+
+#### What is ySights?
+
+[ySights](https://ysocialtwin.github.io/ysights/) is a Python library specifically designed for analyzing YSocial simulation data. It provides:
+
+- **YDataHandler**: Main interface to query simulation databases
+- **Agent Analysis**: Filter and analyze agent properties (demographics, interests, behavior)
+- **Post Analysis**: Query and examine content generated during simulations
+- **Network Analysis**: Extract and analyze social network structures
+- **Visualization**: Built-in plotting capabilities for simulation data
+- **Custom Queries**: Execute custom SQL queries for advanced analysis
+
+#### Starting YSocial with Jupyter Lab
+
+By default, Jupyter Lab is **enabled**. You can control this behavior:
+
+```bash
+# Start with Jupyter Lab enabled (default)
+python y_social.py --host localhost --port 8080
+
+# Disable Jupyter Lab for security
+python y_social.py --host localhost --port 8080 --no_notebook
+```
+
+**Security Note:** For production deployments or security-sensitive environments, use the `--no_notebook` flag to disable Jupyter Lab functionality.
+
+#### Using Jupyter Lab with Experiments
+
+1. **Start an experiment** from the admin panel
+2. **Launch Jupyter Lab** for the experiment (button in experiment details)
+3. **Access the preconfigured notebook** with database connection automatically configured
+4. **Analyze your simulation data** using ySights
+
+Each experiment gets its own isolated Jupyter Lab instance with:
+- Automatic database connection via environment variable
+- Sample notebook (`start_here.ipynb`) with common analysis patterns
+- Full access to ySights library for data exploration
+
+📚 **See the [ySights documentation](https://ysocialtwin.github.io/ysights/) for detailed tutorials and API reference**
 
 ---
 
