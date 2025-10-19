@@ -65,7 +65,7 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
-def generate_population(population_name):
+def generate_population(population_name, percentages=None):
     """
     Generate a population of AI agents with realistic profiles.
 
@@ -77,6 +77,8 @@ def generate_population(population_name):
 
     Args:
         population_name: Name of the population configuration to use
+        percentages: Optional dict specifying percentage distributions for
+                     certain attributes
 
     Side effects:
         Creates and persists Agent and Agent_Population records in database
@@ -102,6 +104,21 @@ def generate_population(population_name):
         activity_profile_cdf = [(1.0, None)]
 
     for _ in range(population.size):
+
+        # sample attributes based on provided percentages
+        sampled = {
+            attr: random.choices(
+                population=list(values.keys()),
+                weights=list(values.values()),
+                k=1
+            )[0]
+            for attr, values in percentages.items()
+        }
+
+        education_level = int(sampled["education"])
+        toxicity = int(sampled["toxicity_levels"])
+        political_leaning = int(sampled["political_leanings"])
+
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
                 0
@@ -118,10 +135,6 @@ def generate_population(population_name):
         else:
             name = fake.name_female()
 
-        political_leaning = fake.random_element(
-            elements=(population.leanings.split(","))
-        ).strip()
-
         # Gaussian distribution for age
         age = __sample_age(
             np.mean([population.age_min, population.age_max]),
@@ -130,9 +143,6 @@ def generate_population(population_name):
             population.age_max,
         )
 
-        toxicity = fake.random_element(
-            elements=(population.toxicity.split(","))
-        ).strip()
         language = fake.random_element(
             elements=(population.languages.split(","))
         ).strip()
@@ -148,9 +158,7 @@ def generate_population(population_name):
         )
         ne = fake.random_element(elements=("sensitive/nervous", "resilient/confident"))
 
-        education_level = fake.random_element(
-            elements=(population.education.split(","))
-        )
+
 
         try:
             round_actions = fake.random_int(

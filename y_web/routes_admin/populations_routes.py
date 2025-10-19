@@ -129,6 +129,12 @@ def create_population():
         political_percentages = {}
         toxicity_percentages = {}
 
+    percentages = {
+        "education": education_percentages,
+        "political_leanings": political_percentages,
+        "toxicity_levels": toxicity_percentages,
+    }
+
     # TODO: Store percentages in a separate table or extend Population model
     # For now, the percentages are retrieved but not persisted, maintaining backward compatibility
 
@@ -177,7 +183,7 @@ def create_population():
         db.session.add(profile_assoc)
     db.session.commit()
 
-    generate_population(name)
+    generate_population(name, percentages)
 
     return populations()
 
