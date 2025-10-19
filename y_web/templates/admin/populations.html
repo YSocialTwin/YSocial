@@ -712,6 +712,13 @@
                                                 }
                                             }
                                             
+                                            // Validate activity profiles percentages
+                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
+                                                e.preventDefault();
+                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
+                                                return false;
+                                            }
+                                            
                                             // Remove old hidden inputs
                                             this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
                                             this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"]').forEach(input => input.remove());
@@ -991,7 +998,8 @@
                                                                    style="flex: 1; padding: 6px; font-size: 0.9em;" 
                                                                    step="0.01" 
                                                                    value="0.88"
-                                                                   placeholder="Lambda parameter">
+                                                                   placeholder="Lambda parameter"
+                                                                   disabled>
                                                             <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
                                                         </div>
                                                     </div>
@@ -1008,7 +1016,8 @@
                                                                    min="0" 
                                                                    max="1" 
                                                                    value="0.6667"
-                                                                   placeholder="Probability parameter">
+                                                                   placeholder="Probability parameter"
+                                                                   disabled>
                                                             <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
                                                         </div>
                                                     </div>
@@ -1023,7 +1032,8 @@
                                                                    style="flex: 1; padding: 6px; font-size: 0.9em;" 
                                                                    step="0.1" 
                                                                    value="2.5"
-                                                                   placeholder="Exponent parameter">
+                                                                   placeholder="Exponent parameter"
+                                                                   disabled>
                                                             <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
                                                         </div>
                                                     </div>
@@ -1205,34 +1215,36 @@
                                             {% endif %}
                                         });
 
-                                        // Form validation before submit
-                                        document.getElementById('popcreate_form').addEventListener('submit', function(e) {
-                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
-                                                e.preventDefault();
-                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
-                                                return false;
-                                            }
-                                        });
-
                                         // Function to show/hide distribution-specific parameters
                                         function updateDistributionParams() {
                                             const distribution = document.getElementById('actions_distribution').value;
                                             
-                                            // Hide all parameter sections
-                                            document.getElementById('poisson-params').style.display = 'none';
-                                            document.getElementById('geometric-params').style.display = 'none';
-                                            document.getElementById('zipf-params').style.display = 'none';
+                                            // Hide all parameter sections and disable their inputs
+                                            const poissonParams = document.getElementById('poisson-params');
+                                            const geometricParams = document.getElementById('geometric-params');
+                                            const zipfParams = document.getElementById('zipf-params');
                                             
-                                            // Show the relevant parameter section
+                                            poissonParams.style.display = 'none';
+                                            geometricParams.style.display = 'none';
+                                            zipfParams.style.display = 'none';
+                                            
+                                            document.getElementById('poisson_lambda').disabled = true;
+                                            document.getElementById('geometric_p').disabled = true;
+                                            document.getElementById('zipf_s').disabled = true;
+                                            
+                                            // Show the relevant parameter section and enable its input
                                             switch(distribution) {
                                                 case 'Poisson':
-                                                    document.getElementById('poisson-params').style.display = 'block';
+                                                    poissonParams.style.display = 'block';
+                                                    document.getElementById('poisson_lambda').disabled = false;
                                                     break;
                                                 case 'Geometric':
-                                                    document.getElementById('geometric-params').style.display = 'block';
+                                                    geometricParams.style.display = 'block';
+                                                    document.getElementById('geometric_p').disabled = false;
                                                     break;
                                                 case 'Zipf':
-                                                    document.getElementById('zipf-params').style.display = 'block';
+                                                    zipfParams.style.display = 'block';
+                                                    document.getElementById('zipf_s').disabled = false;
                                                     break;
                                                 // Uniform doesn't need extra parameters
                                             }
