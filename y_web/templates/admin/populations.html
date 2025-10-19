@@ -240,52 +240,6 @@
 
                         <!--Dashboard box-->
                         <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Load Population from file</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">File (json)</span>
-                                        <span class="right"><input type="file" id="population_file" name="population_file"
-                                                                   class="input_file"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Upload
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Create Empty Population</h3>
-                            <div class="box-content">
-                                <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_name"  class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_descr" class="input"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Create
-                                    </button>
-                                </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-box">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
                                 <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST">
@@ -382,17 +336,17 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_name"  class="input"></span>
+                                        <span class="left">Population Name <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
                                         <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Size</span>
+                                        <span class="left">Population Size <span style="color: red;">*</span></span>
                                         <div class="slider-timeline">
-                                            <input name="n_agents" type="text" value="100" class="input">
+                                            <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
                                         </div>
                                     </div>
 
@@ -468,10 +422,10 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Education Levels</span>
+                                        <span class="left">Education Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('education_levels')">
+                                                <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
                                                     <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="education_levels_dropdown">
@@ -492,10 +446,10 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Political Leanings</span>
+                                        <span class="left">Political Leanings <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('political_leanings')">
+                                                <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
                                                     <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="political_leanings_dropdown">
@@ -516,10 +470,10 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Toxicity Levels</span>
+                                        <span class="left">Toxicity Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('toxicity_levels')">
+                                                <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
                                                     <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="toxicity_levels_dropdown">
@@ -598,6 +552,11 @@
                                                         <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${id}')">×</span>
                                                     </span>`
                                                 ).join('');
+                                            }
+                                            
+                                            // Trigger validation check when display updates
+                                            if (typeof validateFormFields === 'function') {
+                                                validateFormFields();
                                             }
                                         }
 
@@ -712,6 +671,13 @@
                                                 }
                                             }
                                             
+                                            // Validate activity profiles percentages
+                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
+                                                e.preventDefault();
+                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
+                                                return false;
+                                            }
+                                            
                                             // Remove old hidden inputs
                                             this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
                                             this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"]').forEach(input => input.remove());
@@ -746,10 +712,10 @@
                                     </script>
 
                                     <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleActivityProfiles()">
-                                        <span id="activity-profiles-toggle">▼</span> Activity Profiles <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+                                        <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
-                                        Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile. Total must equal 100%.
+                                        Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
                                     </div>
 
                                     <style>
@@ -940,6 +906,98 @@
                                                 </div>
                                                 <div id="percentage-validation" class="percentage-validation-compact" style="display: none;"></div>
                                             </div>
+
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Actions Per User Once Active</div>
+                                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Min:</label>
+                                                        <input type="number" 
+                                                               id="actions_min" 
+                                                               name="actions_min" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="1"
+                                                               placeholder="Minimum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Max:</label>
+                                                        <input type="number" 
+                                                               id="actions_max" 
+                                                               name="actions_max" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="10"
+                                                               placeholder="Maximum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Distribution:</label>
+                                                        <select id="actions_distribution" 
+                                                                name="actions_distribution" 
+                                                                class="input" 
+                                                                style="flex: 1; padding: 6px; font-size: 0.9em;"
+                                                                onchange="updateDistributionParams()">
+                                                            <option value="Uniform" selected>Uniform</option>
+                                                            <option value="Poisson">Poisson</option>
+                                                            <option value="Geometric">Geometric</option>
+                                                            <option value="Zipf">Zipf</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Distribution-specific parameter fields -->
+                                                    <div id="poisson-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Lambda (λ):</label>
+                                                            <input type="number" 
+                                                                   id="poisson_lambda" 
+                                                                   name="poisson_lambda" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   value="0.88"
+                                                                   placeholder="Lambda parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="geometric-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">p:</label>
+                                                            <input type="number" 
+                                                                   id="geometric_p" 
+                                                                   name="geometric_p" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   min="0" 
+                                                                   max="1" 
+                                                                   value="0.6667"
+                                                                   placeholder="Probability parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="zipf-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
+                                                            <input type="number" 
+                                                                   id="zipf_s" 
+                                                                   name="zipf_s" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.1" 
+                                                                   value="2.5"
+                                                                   placeholder="Exponent parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1116,19 +1174,89 @@
                                             {% endif %}
                                         });
 
-                                        // Form validation before submit
-                                        document.getElementById('popcreate_form').addEventListener('submit', function(e) {
-                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
-                                                e.preventDefault();
-                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
-                                                return false;
+                                        // Function to show/hide distribution-specific parameters
+                                        function updateDistributionParams() {
+                                            const distribution = document.getElementById('actions_distribution').value;
+                                            
+                                            // Hide all parameter sections and disable their inputs
+                                            const poissonParams = document.getElementById('poisson-params');
+                                            const geometricParams = document.getElementById('geometric-params');
+                                            const zipfParams = document.getElementById('zipf-params');
+                                            
+                                            poissonParams.style.display = 'none';
+                                            geometricParams.style.display = 'none';
+                                            zipfParams.style.display = 'none';
+                                            
+                                            document.getElementById('poisson_lambda').disabled = true;
+                                            document.getElementById('geometric_p').disabled = true;
+                                            document.getElementById('zipf_s').disabled = true;
+                                            
+                                            // Show the relevant parameter section and enable its input
+                                            switch(distribution) {
+                                                case 'Poisson':
+                                                    poissonParams.style.display = 'block';
+                                                    document.getElementById('poisson_lambda').disabled = false;
+                                                    break;
+                                                case 'Geometric':
+                                                    geometricParams.style.display = 'block';
+                                                    document.getElementById('geometric_p').disabled = false;
+                                                    break;
+                                                case 'Zipf':
+                                                    zipfParams.style.display = 'block';
+                                                    document.getElementById('zipf_s').disabled = false;
+                                                    break;
+                                                // Uniform doesn't need extra parameters
                                             }
+                                        }
+
+                                        // Form validation to enable/disable submit button
+                                        function validateFormFields() {
+                                            const popName = document.getElementById('pop_name').value.trim();
+                                            const nAgents = document.getElementById('n_agents').value;
+                                            const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
+                                            const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
+                                            const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
+                                            
+                                            const submitBtn = document.getElementById('create_population_btn');
+                                            const isValid = popName && nAgents && hasEducation && hasPolitical && hasToxicity;
+                                            
+                                            submitBtn.disabled = !isValid;
+                                            
+                                            // Visual feedback for required fields
+                                            if (!hasEducation) {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasPolitical) {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasToxicity) {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            return isValid;
+                                        }
+
+                                        // Add event listeners to all fields that affect validation
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.getElementById('pop_name').addEventListener('input', validateFormFields);
+                                            document.getElementById('n_agents').addEventListener('input', validateFormFields);
+                                            
+                                            // Initial validation
+                                            validateFormFields();
                                         });
                                     </script>
 
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create_population_btn" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
@@ -1145,45 +1273,195 @@
                     <!--Dashboard column-->
                     <div class="column is-4">
                         <!--Box-->
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Guide</h3>
+                        <style>
+                            .sidebar-box {
+                                background: #fff;
+                                border: 1px solid #e5e7eb;
+                                border-radius: 6px;
+                                padding: 16px;
+                                margin-bottom: 16px;
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                            }
+                            .sidebar-box h3 {
+                                font-size: 1em;
+                                font-weight: 600;
+                                color: #1f2937;
+                                margin: 0 0 12px 0;
+                                padding-bottom: 8px;
+                                border-bottom: 1px solid #e5e7eb;
+                            }
+                            .sidebar-box .help-block {
+                                font-size: 0.85em;
+                                line-height: 1.5;
+                                color: #6b7280;
+                            }
+                            .sidebar-box .help-block p {
+                                margin: 0 0 10px 0;
+                            }
+                            .sidebar-box .help-block p:last-child {
+                                margin-bottom: 0;
+                            }
+                            .sidebar-box .help-block b {
+                                color: #374151;
+                                font-weight: 600;
+                            }
+                            .sidebar-box .box-line {
+                                margin-bottom: 10px;
+                                display: flex;
+                                flex-direction: column;
+                            }
+                            .sidebar-box .box-line .left {
+                                font-size: 0.85em;
+                                font-weight: 500;
+                                color: #374151;
+                                margin-bottom: 4px;
+                            }
+                            .sidebar-box .box-line .right {
+                                width: 100%;
+                            }
+                            .sidebar-box .input {
+                                width: 100%;
+                                padding: 8px 10px;
+                                border: 1px solid #d1d5db;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                transition: border-color 0.2s;
+                            }
+                            .sidebar-box .input:focus {
+                                outline: none;
+                                border-color: #22c55e;
+                                box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+                            }
+                            .sidebar-box .button-wrap {
+                                margin-top: 12px;
+                            }
+                            .sidebar-box .button {
+                                width: 100%;
+                                padding: 8px 16px;
+                                font-size: 0.9em;
+                                font-weight: 500;
+                            }
+                        </style>
+                        
+                        <div class="sidebar-box">
+                            <h3>Guide</h3>
                             <div class="help-block">
-
                                 <p>
-                                    <b>What is a Population?</b>
+                                    <b>What is a Population?</b><br>
                                     A population is a group of agents/pages that are used in a simulation.
-                                    Each simulation can have multiple populations.
                                 </p>
-                                <br>
-                                    <p>
-                                        <b>Empty Populations</b>
-                                         are used to create populations from scratch.
-                                        Once created, you can add agents to the them.
-                                </p>
-                                <br>
                                 <p>
-                                    <b>Synthetic Populations</b>
-                                     are created using a predefined set of parameters.
-                                    Leveraging the parameters provided as input, agents are generated and added to the population.
+                                    <b>Empty Populations</b><br>
+                                    Create populations from scratch. Once created, you can add agents to them.
+                                </p>
+                                <p>
+                                    <b>Synthetic Populations</b><br>
+                                    Created using predefined parameters. Agents are automatically generated.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Merge Populations</h3>
-                            <div class="box-content">
-                                <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
-                                    <div class="box-lines">
-                                        <div class="box-line">
-                                            <span class="left" style="width: 100%; font-size: 0.9em; color: #666; margin-bottom: 10px;">
-                                                Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="box-line">
-                                            <span class="left">New Population Name</span>
-                                            <span class="right" style="width: 100%;"><input type="text" name="merged_population_name" class="input" required></span>
-                                        </div>
+                        <div class="sidebar-box">
+                            <h3>Load Population from file</h3>
+                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
+                                <style>
+                                    .file-upload-wrapper {
+                                        position: relative;
+                                        overflow: hidden;
+                                        display: block;
+                                        margin-bottom: 12px;
+                                    }
+                                    .file-upload-wrapper input[type=file] {
+                                        position: absolute;
+                                        left: -9999px;
+                                    }
+                                    .file-upload-label {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 10px 12px;
+                                        background: #f9fafb;
+                                        border: 1px dashed #d1d5db;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        font-size: 0.85em;
+                                    }
+                                    .file-upload-label:hover {
+                                        background: #f3f4f6;
+                                        border-color: #22c55e;
+                                    }
+                                    .file-upload-icon {
+                                        margin-right: 8px;
+                                        font-size: 1.1em;
+                                    }
+                                    .file-upload-text {
+                                        color: #6b7280;
+                                    }
+                                    .file-name-display {
+                                        margin-top: 6px;
+                                        font-size: 0.8em;
+                                        color: #22c55e;
+                                        font-weight: 500;
+                                        text-align: center;
+                                    }
+                                </style>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="population_file" name="population_file" accept=".json" onchange="displayFileName(this)">
+                                    <label for="population_file" class="file-upload-label">
+                                        <span class="file-upload-icon">📁</span>
+                                        <span class="file-upload-text">Choose JSON file...</span>
+                                    </label>
+                                    <div id="file-name-display" class="file-name-display"></div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload
+                                    </button>
+                                </div>
+                            </form>
+                            <script>
+                                function displayFileName(input) {
+                                    const display = document.getElementById('file-name-display');
+                                    if (input.files && input.files[0]) {
+                                        display.textContent = '✓ ' + input.files[0].name;
+                                    } else {
+                                        display.textContent = '';
+                                    }
+                                }
+                            </script>
+                        </div>
+
+                        <div class="sidebar-box">
+                            <h3>Create Empty Population</h3>
+                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
+                                <div class="box-line">
+                                    <span class="left">Population Name</span>
+                                    <span class="right"><input type="text" name="empty_population_name" class="input" placeholder="Enter name"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="Enter description"></span>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="sidebar-box">
+                            <h3>Merge Populations</h3>
+                            <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
+                                <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 12px; line-height: 1.4;">
+                                    Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
+                                </p>
+                                
+                                <div class="box-line">
+                                    <span class="left">New Population Name</span>
+                                    <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="Enter name" required></span>
+                                </div>
 
                                         <style>
                                             .merge-populations-container {
@@ -1282,15 +1560,13 @@
                                         </div>
 
                                         <input type="hidden" name="selected_population_ids" id="selected_population_ids" value="">
-                                    </div>
 
-                                    <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth" type="submit">
-                                            Merge Populations
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Merge Populations
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
                         <script>

@@ -91,7 +91,9 @@ def create_population():
     Form data:
         pop_name, pop_descr, n_agents, user_type, age_min, age_max,
         education_levels, political_leanings, toxicity_levels,
-        nationalities, languages, tags (interests), crecsys, frecsys
+        nationalities, languages, tags (interests), crecsys, frecsys,
+        actions_min, actions_max, actions_distribution, poisson_lambda,
+        geometric_p, zipf_s
 
     Returns:
         Redirect to populations list
@@ -152,6 +154,27 @@ def create_population():
     except:
         activity_profiles_json = []
 
+    # Get actions per user once active data
+    actions_min = request.form.get("actions_min", "1")
+    actions_max = request.form.get("actions_max", "10")
+    actions_distribution = request.form.get("actions_distribution", "Uniform")
+
+    # Get distribution-specific parameters
+    poisson_lambda = request.form.get("poisson_lambda", "0.88")
+    geometric_p = request.form.get("geometric_p", "0.6667")
+    zipf_s = request.form.get("zipf_s", "2.5")
+
+    # Store actions configuration for future use
+    # Note: Not persisted yet, maintaining backward compatibility
+    actions_config = {
+        "min": actions_min,
+        "max": actions_max,
+        "distribution": actions_distribution,
+        "Poisson": poisson_lambda,
+        "Geometric": geometric_p,
+        "Zipf": zipf_s,
+    }
+
     population = Population(
         name=name,
         descr=descr,
@@ -183,7 +206,7 @@ def create_population():
         db.session.add(profile_assoc)
     db.session.commit()
 
-    generate_population(name, percentages)
+    generate_population(name, percentages, actions_config)
 
     return populations()
 
