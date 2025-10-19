@@ -240,52 +240,6 @@
 
                         <!--Dashboard box-->
                         <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Load Population from file</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">File (json)</span>
-                                        <span class="right"><input type="file" id="population_file" name="population_file"
-                                                                   class="input_file"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Upload
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Create Empty Population</h3>
-                            <div class="box-content">
-                                <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_name"  class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_descr" class="input"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Create
-                                    </button>
-                                </div>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div class="dashboard-box">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
                                 <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST">
@@ -382,17 +336,17 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_name"  class="input"></span>
+                                        <span class="left">Population Name <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
                                         <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Size</span>
+                                        <span class="left">Population Size <span style="color: red;">*</span></span>
                                         <div class="slider-timeline">
-                                            <input name="n_agents" type="text" value="100" class="input">
+                                            <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
                                         </div>
                                     </div>
 
@@ -468,10 +422,10 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Education Levels</span>
+                                        <span class="left">Education Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('education_levels')">
+                                                <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
                                                     <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="education_levels_dropdown">
@@ -492,10 +446,10 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Political Leanings</span>
+                                        <span class="left">Political Leanings <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('political_leanings')">
+                                                <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
                                                     <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="political_leanings_dropdown">
@@ -516,10 +470,10 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Toxicity Levels</span>
+                                        <span class="left">Toxicity Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('toxicity_levels')">
+                                                <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
                                                     <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="toxicity_levels_dropdown">
@@ -598,6 +552,11 @@
                                                         <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${id}')">×</span>
                                                     </span>`
                                                 ).join('');
+                                            }
+                                            
+                                            // Trigger validation check when display updates
+                                            if (typeof validateFormFields === 'function') {
+                                                validateFormFields();
                                             }
                                         }
 
@@ -753,10 +712,10 @@
                                     </script>
 
                                     <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleActivityProfiles()">
-                                        <span id="activity-profiles-toggle">▼</span> Activity Profiles <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+                                        <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
-                                        Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile. Total must equal 100%.
+                                        Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
                                     </div>
 
                                     <style>
@@ -1249,11 +1208,55 @@
                                                 // Uniform doesn't need extra parameters
                                             }
                                         }
+
+                                        // Form validation to enable/disable submit button
+                                        function validateFormFields() {
+                                            const popName = document.getElementById('pop_name').value.trim();
+                                            const nAgents = document.getElementById('n_agents').value;
+                                            const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
+                                            const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
+                                            const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
+                                            
+                                            const submitBtn = document.getElementById('create_population_btn');
+                                            const isValid = popName && nAgents && hasEducation && hasPolitical && hasToxicity;
+                                            
+                                            submitBtn.disabled = !isValid;
+                                            
+                                            // Visual feedback for required fields
+                                            if (!hasEducation) {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasPolitical) {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasToxicity) {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            return isValid;
+                                        }
+
+                                        // Add event listeners to all fields that affect validation
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.getElementById('pop_name').addEventListener('input', validateFormFields);
+                                            document.getElementById('n_agents').addEventListener('input', validateFormFields);
+                                            
+                                            // Initial validation
+                                            validateFormFields();
+                                        });
                                     </script>
 
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create_population_btn" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
@@ -1291,6 +1294,51 @@
                                      are created using a predefined set of parameters.
                                     Leveraging the parameters provided as input, agents are generated and added to the population.
                                 </p>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-box is-compact">
+                            <h3 class="title is-5 is-thin">Load Population from file</h3>
+                            <div class="box-content">
+                                <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
+                                    <div class="box-lines">
+
+                                        <div class="box-line">
+                                            <span class="left">File (json)</span>
+                                            <span class="right"><input type="file" id="population_file" name="population_file"
+                                                                       class="input_file"></span>
+                                        </div>
+                                    </div>
+                                    <div class="button-wrap">
+                                        <button class="button is-solid primary-button is-fullwidth">
+                                            Upload
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-box is-compact">
+                            <h3 class="title is-5 is-thin">Create Empty Population</h3>
+                            <div class="box-content">
+                                <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+
+                                    <div class="box-line">
+                                        <span class="left">Population Name</span>
+                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_name"  class="input"></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Description</span>
+                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_descr" class="input"></span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                                </form>
                             </div>
                         </div>
 
