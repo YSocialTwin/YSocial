@@ -976,7 +976,7 @@
                                                             <option value="Uniform" selected>Uniform</option>
                                                             <option value="Poisson">Poisson</option>
                                                             <option value="Geometric">Geometric</option>
-                                                            <option value="Zipfs">Zipfs</option>
+                                                            <option value="Zipf">Zipf</option>
                                                         </select>
                                                     </div>
                                                     
@@ -1013,12 +1013,12 @@
                                                         </div>
                                                     </div>
                                                     
-                                                    <div id="zipfs-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                    <div id="zipf-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
                                                         <div style="display: flex; gap: 10px; align-items: center;">
                                                             <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
                                                             <input type="number" 
-                                                                   id="zipfs_s" 
-                                                                   name="zipfs_s" 
+                                                                   id="zipf_s" 
+                                                                   name="zipf_s" 
                                                                    class="input" 
                                                                    style="flex: 1; padding: 6px; font-size: 0.9em;" 
                                                                    step="0.1" 
@@ -1221,7 +1221,7 @@
                                             // Hide all parameter sections
                                             document.getElementById('poisson-params').style.display = 'none';
                                             document.getElementById('geometric-params').style.display = 'none';
-                                            document.getElementById('zipfs-params').style.display = 'none';
+                                            document.getElementById('zipf-params').style.display = 'none';
                                             
                                             // Show the relevant parameter section
                                             switch(distribution) {
@@ -1231,8 +1231,8 @@
                                                 case 'Geometric':
                                                     document.getElementById('geometric-params').style.display = 'block';
                                                     break;
-                                                case 'Zipfs':
-                                                    document.getElementById('zipfs-params').style.display = 'block';
+                                                case 'Zipf':
+                                                    document.getElementById('zipf-params').style.display = 'block';
                                                     break;
                                                 // Uniform doesn't need extra parameters
                                             }

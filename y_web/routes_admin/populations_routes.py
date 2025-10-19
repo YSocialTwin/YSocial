@@ -93,7 +93,7 @@ def create_population():
         education_levels, political_leanings, toxicity_levels,
         nationalities, languages, tags (interests), crecsys, frecsys,
         actions_min, actions_max, actions_distribution, poisson_lambda,
-        geometric_p, zipfs_s
+        geometric_p, zipf_s
 
     Returns:
         Redirect to populations list
@@ -162,7 +162,7 @@ def create_population():
     # Get distribution-specific parameters
     poisson_lambda = request.form.get("poisson_lambda", "0.88")
     geometric_p = request.form.get("geometric_p", "0.6667")
-    zipfs_s = request.form.get("zipfs_s", "2.5")
+    zipf_s = request.form.get("zipf_s", "2.5")
     
     # Store actions configuration for future use
     # Note: Not persisted yet, maintaining backward compatibility
@@ -172,7 +172,7 @@ def create_population():
         "distribution": actions_distribution,
         "poisson_lambda": poisson_lambda,
         "geometric_p": geometric_p,
-        "zipfs_s": zipfs_s,
+        "zipf_s": zipf_s,
     }
 
     population = Population(
