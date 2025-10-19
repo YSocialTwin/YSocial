@@ -158,12 +158,12 @@ def create_population():
     actions_min = request.form.get("actions_min", "1")
     actions_max = request.form.get("actions_max", "10")
     actions_distribution = request.form.get("actions_distribution", "Uniform")
-    
+
     # Get distribution-specific parameters
     poisson_lambda = request.form.get("poisson_lambda", "0.88")
     geometric_p = request.form.get("geometric_p", "0.6667")
     zipf_s = request.form.get("zipf_s", "2.5")
-    
+
     # Store actions configuration for future use
     # Note: Not persisted yet, maintaining backward compatibility
     actions_config = {

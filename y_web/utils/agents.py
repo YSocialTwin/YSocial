@@ -6,11 +6,11 @@ demographic profiles, personality traits, and behavioral characteristics
 based on population configuration parameters.
 """
 
+import math
 import random
 
 import faker
 import numpy as np
-import math
 from sqlalchemy.sql import func
 
 from y_web import db
@@ -23,7 +23,12 @@ from y_web.models import (
 )
 
 
-def __sample_round_actions(min_v: int, max_v: int,  param: float, dist: str = "uniform",) -> int:
+def __sample_round_actions(
+    min_v: int,
+    max_v: int,
+    param: float,
+    dist: str = "uniform",
+) -> int:
     """
     Sample actions-per-active-slot (round_actions) using the configured distribution
     truncated to the integer support [min, max]. Falls back to uniform if invalid.
@@ -58,7 +63,7 @@ def __sample_round_actions(min_v: int, max_v: int,  param: float, dist: str = "u
         # Unnormalized Poisson pmf over k=1..R (exclude zero)
         for k in range(1, R + 1):
             # compute poisson at k
-            w = math.exp(-lam) * (lam ** k) / math.factorial(k)
+            w = math.exp(-lam) * (lam**k) / math.factorial(k)
             weights.append(w)
 
     elif dist == "geometric":
@@ -73,7 +78,7 @@ def __sample_round_actions(min_v: int, max_v: int,  param: float, dist: str = "u
         if s <= 1:
             return random.randint(min_v, max_v)
         for k in range(1, R + 1):
-            w = (k ** (-s))
+            w = k ** (-s)
             weights.append(w)
     else:
         return random.randint(min_v, max_v)
@@ -85,6 +90,7 @@ def __sample_round_actions(min_v: int, max_v: int,  param: float, dist: str = "u
     # Sample k in [1..R] then map to support
     k = random.choices(range(1, R + 1), weights=weights, k=1)[0]
     return to_value(k)
+
 
 def __sample_age(mean, std_dev, min_age, max_age):
     """
@@ -223,10 +229,16 @@ def generate_population(population_name, percentages=None, actions_config=None):
         ne = fake.random_element(elements=("sensitive/nervous", "resilient/confident"))
 
         try:
-            round_actions = __sample_round_actions(actions_config["min"],
-                                               actions_config["max"],
-                                               actions_config[actions_config["distribution"]] if actions_config["distribution"] in actions_config else None,
-                                               actions_config["distribution"])
+            round_actions = __sample_round_actions(
+                actions_config["min"],
+                actions_config["max"],
+                (
+                    actions_config[actions_config["distribution"]]
+                    if actions_config["distribution"] in actions_config
+                    else None
+                ),
+                actions_config["distribution"],
+            )
         except:
             round_actions = 3
 
