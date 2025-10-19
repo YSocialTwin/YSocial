@@ -108,9 +108,7 @@ def generate_population(population_name, percentages=None):
         # sample attributes based on provided percentages
         sampled = {
             attr: random.choices(
-                population=list(values.keys()),
-                weights=list(values.values()),
-                k=1
+                population=list(values.keys()), weights=list(values.values()), k=1
             )[0]
             for attr, values in percentages.items()
         }
@@ -157,8 +155,6 @@ def generate_population(population_name, percentages=None):
             elements=("friendly/compassionate", "critical/judgmental")
         )
         ne = fake.random_element(elements=("sensitive/nervous", "resilient/confident"))
-
-
 
         try:
             round_actions = fake.random_int(
