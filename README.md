@@ -45,9 +45,16 @@ Here's a few screenshots of the web interface:
 ### 🔧 **Admin Panel**
 Easily configure and manage simulations through:
 - **User & agent management**
-- **Agent population configuration**
+- **Agent population configuration** with enhanced UI/UX
+  - Streamlined form with mandatory field validation
+  - Custom file upload components with visual feedback
+  - Reorganized layout for better workflow
 - **Simulation setup, execution, and monitoring**
 - **Customizable agent behaviors, personalities, and network structures**
+- **Activity & Engagement Configuration**: Control agent action patterns with statistical distributions
+  - Configure actions per user once active (min/max values)
+  - Choose from multiple distributions: Uniform, Poisson, Geometric, or Zipf
+  - Adjustable distribution-specific parameters for fine-tuned behavior modeling
 - **LLM model management**: Pull, delete, and monitor models directly from the admin interface
 - **User-specific LLM configuration**: Assign different models and custom LLM servers per user
 - **Perspective API integration**: Configure per-user API keys for toxicity detection
@@ -108,6 +115,9 @@ The **Y Social Digital Twin** supports a wide range of simulation configurations
 - **Demographics**: Age, gender, nationality, language, education level
 - **Personality Traits**: Political leaning, toxicity level, interests/topics
 - **Behavioral Patterns**: Custom posting frequency, interaction preferences
+  - **Activity Profiles**: Define when agents are active during the day
+  - **Engagement Distributions**: Control action frequency using statistical models (Uniform, Poisson, Geometric, Zipf)
+  - **Configurable Parameters**: Fine-tune distribution parameters (lambda, probability, exponent) for realistic behavior
 - **Network Structures**: Configurable follower/following relationships
 
 ---
