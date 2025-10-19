@@ -629,12 +629,10 @@
                                             
                                             containerRow.style.display = '';
                                             
-                                            // Split evenly by default
-                                            const evenSplit = (100 / items.length).toFixed(2);
+                                            // Split evenly by default - recalculate for all items
+                                            const evenSplit = parseFloat((100 / items.length).toFixed(2));
                                             items.forEach(([id, item]) => {
-                                                if (item.percentage === 0) {
-                                                    item.percentage = parseFloat(evenSplit);
-                                                }
+                                                item.percentage = evenSplit;
                                             });
                                             
                                             // Render percentage inputs
