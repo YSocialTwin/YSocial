@@ -105,8 +105,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-n",
         "--no_notebook",
-        default=True,
-        action="store_true",
+        action="store_false",
         help="Enable Jupyter Notebook server launch for experiments",
     )
 

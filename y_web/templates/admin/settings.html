@@ -59,23 +59,30 @@
             { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
             { id: 'owner', name: 'Owner', sort: false },
             { id: 'platform_type', name: 'Platform Type', sort: true },
-            { 
-                id: 'web', 
-                name: 'Web Interface', 
-                sort: true,
+            {
+                id: 'annotations',
+                name: 'Annotations',
+                sort: false,
                 formatter: (cell) => {
-                    const isLoaded = cell === 'Loaded';
-                    const color = isLoaded ? '#28a745' : '#6c757d';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
+                    if (!cell || cell === '') {
+                        return gridjs.html('<div style="text-align: center;">-</div>');
+                    }
+                    const annotations = cell.split(',').filter(a => a.trim());
+                    const tags = annotations.map(annotation => {
+                        const colors = {
+                            'toxicity': '#dc3545',
+                            'sentiment': '#28a745',
+                            'emotion': '#17a2b8'
+                        };
+                        const color = colors[annotation.trim()] || '#6c757d';
+                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 2px 8px; margin: 2px; border-radius: 12px; font-size: 0.75rem;">${annotation.trim()}</span>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
                 }
             },
             { 
                 id: 'running', 
-                name: 'Simulation Status', 
+                name: 'Simulation', 
                 sort: true,
                 formatter: (cell) => {
                     const isRunning = cell === 'Running';
@@ -88,8 +95,23 @@
                 }
             },
             { 
+                id: 'web', 
+                name: 'Web', 
+                sort: true,
+                formatter: (cell) => {
+                    const isLoaded = cell === 'Loaded';
+                    const color = isLoaded ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            {% if enable_notebook %}
+            { 
                 id: 'jupyter_status', 
-                name: 'JupyterLab', 
+                name: 'Notebook', 
                 sort: true,
                 formatter: (cell) => {
                     const isActive = cell === 'Active';
@@ -101,6 +123,7 @@
                     `);
                 }
             },
+            {% endif %}
             {
                 id: 'details',
                 name: 'Actions',
@@ -375,7 +398,36 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Perspective API<br> <small>(Toxicity annotation - optional)</small></span>
+                                        <span class="left">Generated Content Annotation</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Toxicity</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Sentiment</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Emotion</span>
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line" id="perspective_api_field" style="display: none;">
+                                        <span class="left">Perspective API Key<br> <small>(Required for toxicity)</small></span>
                                         <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
@@ -389,6 +441,137 @@
                             </form>
                         </div>
                     </div>
+
+                    <style>
+                        /* Toggle Switch Styles */
+                        .switch {
+                            position: relative;
+                            display: inline-block;
+                            width: 60px;
+                            height: 34px;
+                        }
+
+                        .switch input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider:before {
+                            position: absolute;
+                            content: "";
+                            height: 26px;
+                            width: 26px;
+                            left: 4px;
+                            bottom: 4px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider:before {
+                            transform: translateX(26px);
+                        }
+
+                        .slider.round {
+                            border-radius: 34px;
+                        }
+
+                        .slider.round:before {
+                            border-radius: 50%;
+                        }
+
+                        /* Small Toggle Switch Styles */
+                        .switch-small {
+                            position: relative;
+                            display: inline-block;
+                            width: 40px;
+                            height: 22px;
+                        }
+
+                        .switch-small input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider-small {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider-small:before {
+                            position: absolute;
+                            content: "";
+                            height: 16px;
+                            width: 16px;
+                            left: 3px;
+                            bottom: 3px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider-small {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider-small {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider-small:before {
+                            transform: translateX(18px);
+                        }
+
+                        .slider-small.round {
+                            border-radius: 22px;
+                        }
+
+                        .slider-small.round:before {
+                            border-radius: 50%;
+                        }
+                    </style>
+
+                    <script>
+                        // Show/hide Perspective API field based on toxicity annotation toggle
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
+                            const perspectiveApiField = document.getElementById('perspective_api_field');
+
+                            toxicityToggle.addEventListener('change', function() {
+                                if (this.checked) {
+                                    perspectiveApiField.style.display = 'flex';
+                                } else {
+                                    perspectiveApiField.style.display = 'none';
+                                }
+                            });
+                        });
+                    </script>
+
                     <!--Dashboard box-->
                     <!-- <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Available Experiments</h3>
