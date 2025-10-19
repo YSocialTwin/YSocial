@@ -940,6 +940,95 @@
                                                 </div>
                                                 <div id="percentage-validation" class="percentage-validation-compact" style="display: none;"></div>
                                             </div>
+
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Actions Per User Once Active</div>
+                                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Min:</label>
+                                                        <input type="number" 
+                                                               id="actions_min" 
+                                                               name="actions_min" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="1"
+                                                               placeholder="Minimum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Max:</label>
+                                                        <input type="number" 
+                                                               id="actions_max" 
+                                                               name="actions_max" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="10"
+                                                               placeholder="Maximum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Distribution:</label>
+                                                        <select id="actions_distribution" 
+                                                                name="actions_distribution" 
+                                                                class="input" 
+                                                                style="flex: 1; padding: 6px; font-size: 0.9em;"
+                                                                onchange="updateDistributionParams()">
+                                                            <option value="Uniform" selected>Uniform</option>
+                                                            <option value="Poisson">Poisson</option>
+                                                            <option value="Geometric">Geometric</option>
+                                                            <option value="Zipfs">Zipfs</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Distribution-specific parameter fields -->
+                                                    <div id="poisson-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Lambda (λ):</label>
+                                                            <input type="number" 
+                                                                   id="poisson_lambda" 
+                                                                   name="poisson_lambda" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   value="0.88"
+                                                                   placeholder="Lambda parameter">
+                                                            <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="geometric-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">p:</label>
+                                                            <input type="number" 
+                                                                   id="geometric_p" 
+                                                                   name="geometric_p" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   min="0" 
+                                                                   max="1" 
+                                                                   value="0.6667"
+                                                                   placeholder="Probability parameter">
+                                                            <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="zipfs-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
+                                                            <input type="number" 
+                                                                   id="zipfs_s" 
+                                                                   name="zipfs_s" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.1" 
+                                                                   value="2.5"
+                                                                   placeholder="Exponent parameter">
+                                                            <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1124,6 +1213,30 @@
                                                 return false;
                                             }
                                         });
+
+                                        // Function to show/hide distribution-specific parameters
+                                        function updateDistributionParams() {
+                                            const distribution = document.getElementById('actions_distribution').value;
+                                            
+                                            // Hide all parameter sections
+                                            document.getElementById('poisson-params').style.display = 'none';
+                                            document.getElementById('geometric-params').style.display = 'none';
+                                            document.getElementById('zipfs-params').style.display = 'none';
+                                            
+                                            // Show the relevant parameter section
+                                            switch(distribution) {
+                                                case 'Poisson':
+                                                    document.getElementById('poisson-params').style.display = 'block';
+                                                    break;
+                                                case 'Geometric':
+                                                    document.getElementById('geometric-params').style.display = 'block';
+                                                    break;
+                                                case 'Zipfs':
+                                                    document.getElementById('zipfs-params').style.display = 'block';
+                                                    break;
+                                                // Uniform doesn't need extra parameters
+                                            }
+                                        }
                                     </script>
 
                                 </div>
