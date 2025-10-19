@@ -1273,90 +1273,195 @@
                     <!--Dashboard column-->
                     <div class="column is-4">
                         <!--Box-->
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Guide</h3>
+                        <style>
+                            .sidebar-box {
+                                background: #fff;
+                                border: 1px solid #e5e7eb;
+                                border-radius: 6px;
+                                padding: 16px;
+                                margin-bottom: 16px;
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                            }
+                            .sidebar-box h3 {
+                                font-size: 1em;
+                                font-weight: 600;
+                                color: #1f2937;
+                                margin: 0 0 12px 0;
+                                padding-bottom: 8px;
+                                border-bottom: 1px solid #e5e7eb;
+                            }
+                            .sidebar-box .help-block {
+                                font-size: 0.85em;
+                                line-height: 1.5;
+                                color: #6b7280;
+                            }
+                            .sidebar-box .help-block p {
+                                margin: 0 0 10px 0;
+                            }
+                            .sidebar-box .help-block p:last-child {
+                                margin-bottom: 0;
+                            }
+                            .sidebar-box .help-block b {
+                                color: #374151;
+                                font-weight: 600;
+                            }
+                            .sidebar-box .box-line {
+                                margin-bottom: 10px;
+                                display: flex;
+                                flex-direction: column;
+                            }
+                            .sidebar-box .box-line .left {
+                                font-size: 0.85em;
+                                font-weight: 500;
+                                color: #374151;
+                                margin-bottom: 4px;
+                            }
+                            .sidebar-box .box-line .right {
+                                width: 100%;
+                            }
+                            .sidebar-box .input {
+                                width: 100%;
+                                padding: 8px 10px;
+                                border: 1px solid #d1d5db;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                transition: border-color 0.2s;
+                            }
+                            .sidebar-box .input:focus {
+                                outline: none;
+                                border-color: #22c55e;
+                                box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+                            }
+                            .sidebar-box .button-wrap {
+                                margin-top: 12px;
+                            }
+                            .sidebar-box .button {
+                                width: 100%;
+                                padding: 8px 16px;
+                                font-size: 0.9em;
+                                font-weight: 500;
+                            }
+                        </style>
+                        
+                        <div class="sidebar-box">
+                            <h3>Guide</h3>
                             <div class="help-block">
-
                                 <p>
-                                    <b>What is a Population?</b>
+                                    <b>What is a Population?</b><br>
                                     A population is a group of agents/pages that are used in a simulation.
-                                    Each simulation can have multiple populations.
                                 </p>
-                                <br>
-                                    <p>
-                                        <b>Empty Populations</b>
-                                         are used to create populations from scratch.
-                                        Once created, you can add agents to the them.
-                                </p>
-                                <br>
                                 <p>
-                                    <b>Synthetic Populations</b>
-                                     are created using a predefined set of parameters.
-                                    Leveraging the parameters provided as input, agents are generated and added to the population.
+                                    <b>Empty Populations</b><br>
+                                    Create populations from scratch. Once created, you can add agents to them.
+                                </p>
+                                <p>
+                                    <b>Synthetic Populations</b><br>
+                                    Created using predefined parameters. Agents are automatically generated.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Load Population from file</h3>
-                            <div class="box-content">
-                                <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
-                                    <div class="box-lines">
-
-                                        <div class="box-line">
-                                            <span class="left">File (json)</span>
-                                            <span class="right"><input type="file" id="population_file" name="population_file"
-                                                                       class="input_file"></span>
-                                        </div>
-                                    </div>
-                                    <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth">
-                                            Upload
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                        <div class="sidebar-box">
+                            <h3>Load Population from file</h3>
+                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
+                                <style>
+                                    .file-upload-wrapper {
+                                        position: relative;
+                                        overflow: hidden;
+                                        display: block;
+                                        margin-bottom: 12px;
+                                    }
+                                    .file-upload-wrapper input[type=file] {
+                                        position: absolute;
+                                        left: -9999px;
+                                    }
+                                    .file-upload-label {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 10px 12px;
+                                        background: #f9fafb;
+                                        border: 1px dashed #d1d5db;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        font-size: 0.85em;
+                                    }
+                                    .file-upload-label:hover {
+                                        background: #f3f4f6;
+                                        border-color: #22c55e;
+                                    }
+                                    .file-upload-icon {
+                                        margin-right: 8px;
+                                        font-size: 1.1em;
+                                    }
+                                    .file-upload-text {
+                                        color: #6b7280;
+                                    }
+                                    .file-name-display {
+                                        margin-top: 6px;
+                                        font-size: 0.8em;
+                                        color: #22c55e;
+                                        font-weight: 500;
+                                        text-align: center;
+                                    }
+                                </style>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="population_file" name="population_file" accept=".json" onchange="displayFileName(this)">
+                                    <label for="population_file" class="file-upload-label">
+                                        <span class="file-upload-icon">📁</span>
+                                        <span class="file-upload-text">Choose JSON file...</span>
+                                    </label>
+                                    <div id="file-name-display" class="file-name-display"></div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload
+                                    </button>
+                                </div>
+                            </form>
+                            <script>
+                                function displayFileName(input) {
+                                    const display = document.getElementById('file-name-display');
+                                    if (input.files && input.files[0]) {
+                                        display.textContent = '✓ ' + input.files[0].name;
+                                    } else {
+                                        display.textContent = '';
+                                    }
+                                }
+                            </script>
                         </div>
 
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Create Empty Population</h3>
-                            <div class="box-content">
-                                <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_name"  class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_descr" class="input"></span>
-                                    </div>
+                        <div class="sidebar-box">
+                            <h3>Create Empty Population</h3>
+                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
+                                <div class="box-line">
+                                    <span class="left">Population Name</span>
+                                    <span class="right"><input type="text" name="empty_population_name" class="input" placeholder="Enter name"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="Enter description"></span>
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
                                         Create
                                     </button>
                                 </div>
-                                </form>
-                            </div>
+                            </form>
                         </div>
 
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Merge Populations</h3>
-                            <div class="box-content">
-                                <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
-                                    <div class="box-lines">
-                                        <div class="box-line">
-                                            <span class="left" style="width: 100%; font-size: 0.9em; color: #666; margin-bottom: 10px;">
-                                                Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="box-line">
-                                            <span class="left">New Population Name</span>
-                                            <span class="right" style="width: 100%;"><input type="text" name="merged_population_name" class="input" required></span>
-                                        </div>
+                        <div class="sidebar-box">
+                            <h3>Merge Populations</h3>
+                            <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
+                                <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 12px; line-height: 1.4;">
+                                    Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
+                                </p>
+                                
+                                <div class="box-line">
+                                    <span class="left">New Population Name</span>
+                                    <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="Enter name" required></span>
+                                </div>
 
                                         <style>
                                             .merge-populations-container {
@@ -1455,15 +1560,13 @@
                                         </div>
 
                                         <input type="hidden" name="selected_population_ids" id="selected_population_ids" value="">
-                                    </div>
 
-                                    <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth" type="submit">
-                                            Merge Populations
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Merge Populations
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
                         <script>
