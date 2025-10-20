@@ -66,10 +66,78 @@
                     <strong>Agent Attributes:</strong> Configure political leanings, education levels, and professions that define the social and professional characteristics of simulated agents in your experiments.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-6">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Political Leanings</h3>
+                <style>
+                    .misc-grid {
+                        display: grid;
+                        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                        gap: 20px;
+                        margin-bottom: 20px;
+                    }
+                    
+                    @media (min-width: 1920px) {
+                        .misc-grid {
+                            grid-template-columns: repeat(4, 1fr);
+                        }
+                    }
+                    
+                    @media (min-width: 1400px) and (max-width: 1919px) {
+                        .misc-grid {
+                            grid-template-columns: repeat(3, 1fr);
+                        }
+                    }
+                    
+                    @media (min-width: 1024px) and (max-width: 1399px) {
+                        .misc-grid {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+                    
+                    .misc-compact-box {
+                        background: #fff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 8px;
+                        padding: 16px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                        transition: box-shadow 0.2s;
+                    }
+                    
+                    .misc-compact-box:hover {
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                    
+                    .misc-compact-box h3 {
+                        font-size: 1em;
+                        font-weight: 600;
+                        margin-bottom: 12px;
+                        color: #1f2937;
+                        border-bottom: 1px solid #e5e7eb;
+                        padding-bottom: 8px;
+                    }
+                    
+                    .misc-compact-box .box-content {
+                        margin-top: 12px;
+                    }
+                    
+                    .misc-compact-box .input {
+                        font-size: 0.9em;
+                        padding: 6px 10px;
+                    }
+                    
+                    .misc-compact-box .button {
+                        font-size: 0.9em;
+                        padding: 8px 12px;
+                    }
+                    
+                    .misc-compact-box #leaning_table,
+                    .misc-compact-box #edu_table,
+                    .misc-compact-box #profession_table {
+                        font-size: 0.85em;
+                    }
+                </style>
+
+                <div class="misc-grid">
+                    <div class="misc-compact-box">
+                        <h3>Political Leanings</h3>
 
                         <div class="box-content">
 
@@ -226,9 +294,8 @@
                         </div>
                     </div>
 
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Education Levels</h3>
+                    <div class="misc-compact-box">
+                        <h3>Education Levels</h3>
 
                         <div class="box-content">
 
@@ -385,12 +452,8 @@
                         </div>
                     </div>
 
-
-                </div>
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
+                    <div class="misc-compact-box">
+                        <h3>Professions</h3>
                         <h3 class="title is-5 is-thin">Available Professions</h3>
 
                         <div class="box-content">
@@ -554,8 +617,10 @@
                             </form>
                         </div>
                     </div>
+                    
+                    <!-- Placeholder for grid alignment -->
+                    <div class="misc-compact-box" style="visibility: hidden;"></div>
                 </div>
-            </div>
             </div>
             <!-- End Agent Attributes Tab -->
 
@@ -565,10 +630,9 @@
                     <strong>Content & Topics:</strong> Define content topics and categories that agents can engage with, helping to create realistic content interactions and discussions within your simulations.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-12">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Topics</h3>
+                <div class="misc-grid" style="grid-template-columns: 1fr;">
+                    <div class="misc-compact-box">
+                        <h3>Topics</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
@@ -724,7 +788,6 @@
                     </div>
                 </div>
             </div>
-            </div>
             <!-- End Content & Topics Tab -->
 
             <!-- Demographics Tab -->
@@ -733,10 +796,9 @@
                     <strong>Demographics:</strong> Manage languages and nationalities to create diverse and realistic agent populations that reflect real-world demographic distributions.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-6">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Languages</h3>
+                <div class="misc-grid">
+                    <div class="misc-compact-box">
+                        <h3>Languages</h3>
 
                         <div class="box-content">
 
@@ -892,12 +954,8 @@
                         </div>
                     </div>
 
-                </div>
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Nationalities</h3>
+                    <div class="misc-compact-box">
+                        <h3>Nationalities</h3>
 
                         <div class="box-content">
                             <div id="nationality_table"></div>
@@ -1049,9 +1107,7 @@
                             </form>
                         </div>
                     </div>
-
                 </div>
-            </div>
             </div>
             <!-- End Demographics Tab -->
 
@@ -1061,10 +1117,9 @@
                     <strong>Behavior Profiles:</strong> Configure toxicity levels and hourly activity patterns to simulate realistic agent behaviors and interaction patterns throughout the day.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-12">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
+                <div class="misc-grid" style="grid-template-columns: 1fr;">
+                    <div class="misc-compact-box">
+                        <h3>Toxicity Levels</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -1216,13 +1271,9 @@
                             </form>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="columns">
-                <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Activity Profiles</h3>
+                    <div class="misc-compact-box">
+                        <h3>Activity Profiles</h3>
 
                         <div class="box-content">
                             <div id="activity_profiles_table"></div>
@@ -1495,7 +1546,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
             </div>
             <!-- End Behavior Profiles Tab -->
 
