@@ -1301,12 +1301,12 @@
                 id: 'name',
                 name: 'Name',
                 attributes: editableCellAttributesActivity,
-                width: '200px'
+                width: '10%'
             },
             {
                 id: 'hours',
                 name: 'Activity Hours',
-                width: '500px',
+                width: '80%',
                 formatter: (cell) => {
                     const hours = cell ? cell.split(',').map(h => parseInt(h.trim())) : [];
                     const barHtml = Array.from({length: 24}, (_, i) => {
@@ -1321,7 +1321,7 @@
             {
                 name: 'Actions',
                 attributes: () => ({ style: 'text-align: center;' }),
-                width: '100px',
+                width: '10%',
                 formatter: (cell, row) => {
                     return gridjs.h(
                         'div',
