@@ -614,13 +614,18 @@
                                             
                                             containerRow.style.display = '';
                                             
-                                            // Split evenly across all items - always recalculate when items are added/removed
-                                            // This ensures consistent behavior: adding/removing items resets to even distribution
-                                            // Users can then manually adjust specific percentages as needed
-                                            const evenSplit = parseFloat((100 / items.length).toFixed(2));
-                                            items.forEach(([id, item]) => {
-                                                item.percentage = evenSplit;
-                                            });
+                                            // Check if all percentages are 0 (uninitialized)
+                                            const allZero = items.every(([id, item]) => item.percentage === 0);
+                                            
+                                            // Only split evenly if all percentages are 0 (uninitialized)
+                                            // This preserves hardcoded defaults for age_classes while maintaining
+                                            // the even split behavior for other fields
+                                            if (allZero) {
+                                                const evenSplit = parseFloat((100 / items.length).toFixed(2));
+                                                items.forEach(([id, item]) => {
+                                                    item.percentage = evenSplit;
+                                                });
+                                            }
                                             
                                             // Render percentage inputs
                                             container.innerHTML = items.map(([id, item]) => `
