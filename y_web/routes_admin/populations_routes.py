@@ -374,36 +374,48 @@ def population_details(uid):
         .all()
     )
 
+    # Fetch label mappings from database
+    leanings_map = {str(l.id): l.leaning for l in Leanings.query.all()}
+    education_map = {str(e.id): e.education_level for e in Education.query.all()}
+    toxicity_map = {str(t.id): t.toxicity_level for t in Toxicity_Levels.query.all()}
+    
     ln = {"leanings": [], "total": []}
 
     for a in agents:
-        if a[0].leaning in ln["leanings"]:
-            ln["total"][ln["leanings"].index(a[0].leaning)] += 1
+        # Convert ID to label
+        leaning_label = leanings_map.get(a[0].leaning, a[0].leaning)
+        if leaning_label in ln["leanings"]:
+            ln["total"][ln["leanings"].index(leaning_label)] += 1
         else:
-            ln["leanings"].append(a[0].leaning)
+            ln["leanings"].append(leaning_label)
             ln["total"].append(1)
 
+    # Bin ages according to AgeClass ranges
+    age_classes = AgeClass.query.order_by(AgeClass.age_start).all()
     age = {"age": [], "total": []}
-
+    
+    # Initialize bins for each age class
+    for age_class in age_classes:
+        age["age"].append(f"{age_class.name} ({age_class.age_start}-{age_class.age_end})")
+        age["total"].append(0)
+    
+    # Count agents in each age class bin
     for a in agents:
-        if a[0].age in age["age"]:
-            age["total"][age["age"].index(a[0].age)] += 1
-        else:
-            age["age"].append(a[0].age)
-            age["total"].append(1)
-
-    sorted_age = dict(sorted(zip(age["age"], age["total"])))
-
-    # Convert back to dictionary format with separate lists
-    age = {"age": list(sorted_age.keys()), "total": list(sorted_age.values())}
+        agent_age = a[0].age
+        for idx, age_class in enumerate(age_classes):
+            if age_class.age_start <= agent_age <= age_class.age_end:
+                age["total"][idx] += 1
+                break
 
     edu = {"education": [], "total": []}
 
     for a in agents:
-        if a[0].education_level in edu["education"]:
-            edu["total"][edu["education"].index(a[0].education_level)] += 1
+        # Convert ID to label
+        education_label = education_map.get(a[0].education_level, a[0].education_level)
+        if education_label in edu["education"]:
+            edu["total"][edu["education"].index(education_label)] += 1
         else:
-            edu["education"].append(a[0].education_level)
+            edu["education"].append(education_label)
             edu["total"].append(1)
 
     nat = {"nationalities": [], "total": []}
@@ -424,11 +436,13 @@ def population_details(uid):
 
     tox = {"toxicity": [], "total": []}
     for a in agents:
-        if a[0].toxicity in tox["toxicity"]:
-            tox["total"][tox["toxicity"].index(a[0].toxicity)] += 1
-        else:
-            if a[0].toxicity is not None:
-                tox["toxicity"].append(a[0].toxicity)
+        if a[0].toxicity is not None:
+            # Convert ID to label
+            toxicity_label = toxicity_map.get(a[0].toxicity, a[0].toxicity)
+            if toxicity_label in tox["toxicity"]:
+                tox["total"][tox["toxicity"].index(toxicity_label)] += 1
+            else:
+                tox["toxicity"].append(toxicity_label)
                 tox["total"].append(1)
 
     activity = {"activity": [], "total": []}
@@ -499,14 +513,19 @@ def population_details(uid):
     topics = [t[1].name for t in exp_topics]
 
     try:
+        # Calculate actual age min/max from agents
+        agent_ages = [a[0].age for a in agents if a[0].age is not None]
+        age_min_val = min(agent_ages) if agent_ages else None
+        age_max_val = max(agent_ages) if agent_ages else None
+        
         population_updated_details = {
             "id": population.id,
             "name": population.name,
             "descr": population.descr,
             "size": len(agents),
             "llm": max(llm, key=llm.get),
-            "age_min": min(dd["age"]["age"]),
-            "age_max": max(dd["age"]["age"]),
+            "age_min": age_min_val,
+            "age_max": age_max_val,
             "education": ", ".join(dd["education"]["education"]),
             "leanings": ", ".join(dd["leaning"]["leanings"]),
             "nationalities": ", ".join(dd["nationalities"]["nationalities"]),
