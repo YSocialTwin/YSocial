@@ -687,6 +687,15 @@
 
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+                                            // Validate that age_classes is selected (mandatory field)
+                                            const ageClassesData = multiSelectData['age_classes'];
+                                            const ageClassesItems = Object.values(ageClassesData);
+                                            if (ageClassesItems.length === 0) {
+                                                e.preventDefault();
+                                                alert('Please select at least one Age Class. This field is required.');
+                                                return false;
+                                            }
+                                            
                                             // Validate percentages before submission
                                             const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
                                             for (const fieldName of fieldsToValidate) {
