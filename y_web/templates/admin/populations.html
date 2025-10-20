@@ -736,13 +736,21 @@
                                             });
                                         });
 
-                                        // Initialize age classes with default values from database
+                                        // Initialize age classes with default values
                                         document.addEventListener('DOMContentLoaded', function() {
+                                            // Hardcoded default percentages for age classes
+                                            const defaultPercentages = {
+                                                'Youth': 35,
+                                                'Adults': 42,
+                                                'Middle-aged': 18,
+                                                'Elderly': 5
+                                            };
+                                            
                                             const ageClassDefaults = {
                                                 {% for age_class in age_classes %}
                                                 '{{ age_class.id }}': {
                                                     label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
-                                                    percentage: {{ age_class.default_percentage }}
+                                                    percentage: defaultPercentages['{{ age_class.name }}'] || 0
                                                 }{% if not loop.last %},{% endif %}
                                                 {% endfor %}
                                             };

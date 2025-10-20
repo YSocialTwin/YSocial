@@ -990,11 +990,6 @@
                 attributes: editableCellAttributesAgeClasses
             },
             {
-                id: 'default_percentage',
-                name: 'Default %',
-                attributes: editableCellAttributesAgeClasses
-            },
-            {
                 name: 'Actions',
                 attributes: () => ({ style: 'text-align: center;' }),
                 formatter: (cell, row) => {
@@ -1040,7 +1035,7 @@
             multiColumn: true,
             server: {
                 url: (prev, columns) => {
-                    const columnIds = ['id', 'name', 'age_start', 'age_end', 'default_percentage'];
+                    const columnIds = ['id', 'name', 'age_start', 'age_end'];
                     const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
                     return updateUrlAgeClasses(prev, { sort });
                 },
@@ -1111,10 +1106,6 @@
                                     <div class="box-line">
                                         <span class="left">Age End</span>
                                         <span class="right"><input type="number" name="age_end" class="input" min="0" max="150" value="100" required></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Default %</span>
-                                        <span class="right"><input type="number" name="default_percentage" class="input" min="0" max="100" value="0" required></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">

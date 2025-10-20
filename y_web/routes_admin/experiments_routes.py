@@ -1671,8 +1671,6 @@ def age_classes_data():
                     age_class.age_start = int(data["age_start"])
                 if "age_end" in data:
                     age_class.age_end = int(data["age_end"])
-                if "default_percentage" in data:
-                    age_class.default_percentage = int(data["default_percentage"])
                 db.session.commit()
             except (ValueError, TypeError):
                 return {"success": False, "error": "Invalid value provided"}, 400
@@ -1694,7 +1692,7 @@ def age_classes_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "age_start", "age_end", "default_percentage"]:
+            if name not in ["name", "age_start", "age_end"]:
                 name = "name"
             col = getattr(AgeClass, name)
             if direction == "-":
@@ -1719,7 +1717,6 @@ def age_classes_data():
                 "name": ac.name,
                 "age_start": ac.age_start,
                 "age_end": ac.age_end,
-                "default_percentage": ac.default_percentage,
             }
             for ac in res
         ],
@@ -1739,16 +1736,14 @@ def create_age_class():
     try:
         age_start = int(request.form.get("age_start", 0))
         age_end = int(request.form.get("age_end", 100))
-        default_percentage = int(request.form.get("default_percentage", 0))
     except (ValueError, TypeError):
-        flash("Invalid age or percentage value provided.")
+        flash("Invalid age value provided.")
         return miscellanea()
 
     age_class = AgeClass(
         name=name,
         age_start=age_start,
         age_end=age_end,
-        default_percentage=default_percentage,
     )
     db.session.add(age_class)
     db.session.commit()

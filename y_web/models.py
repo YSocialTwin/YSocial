@@ -692,7 +692,7 @@ class Toxicity_Levels(db.Model):
 
 
 class AgeClass(db.Model):
-    """Available age class options for agent profiles with age ranges and default percentages."""
+    """Available age class options for agent profiles with age ranges."""
 
     __bind__ = "db_admin"
     __tablename__ = "age_classes"
@@ -700,7 +700,6 @@ class AgeClass(db.Model):
     name = db.Column(db.String(50), nullable=False)
     age_start = db.Column(db.Integer, nullable=False)
     age_end = db.Column(db.Integer, nullable=False)
-    default_percentage = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Content_Recsys(db.Model):
