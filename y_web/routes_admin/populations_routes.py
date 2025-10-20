@@ -463,6 +463,43 @@ def population_details(uid):
         "activity": list(sorted_activity.keys()),
         "total": list(sorted_activity.values()),
     }
+    
+    # Gender distribution
+    gender = {"genders": [], "total": []}
+    for a in agents:
+        if a[0].gender:
+            if a[0].gender in gender["genders"]:
+                gender["total"][gender["genders"].index(a[0].gender)] += 1
+            else:
+                gender["genders"].append(a[0].gender)
+                gender["total"].append(1)
+    
+    # Professions distribution (top-k for wordcloud)
+    professions = {}
+    for a in agents:
+        if a[0].profession:
+            professions[a[0].profession] = professions.get(a[0].profession, 0) + 1
+    
+    # Sort professions by frequency and prepare for word cloud
+    sorted_professions = dict(sorted(professions.items(), key=lambda x: x[1], reverse=True))
+    prof = {
+        "professions": list(sorted_professions.keys()),
+        "total": list(sorted_professions.values())
+    }
+    
+    # Activity profiles distribution
+    activity_prof = {"profiles": [], "total": []}
+    for a in agents:
+        if a[0].activity_profile:
+            # Get activity profile name
+            profile = ActivityProfile.query.get(a[0].activity_profile)
+            if profile:
+                profile_name = profile.name
+                if profile_name in activity_prof["profiles"]:
+                    activity_prof["total"][activity_prof["profiles"].index(profile_name)] += 1
+                else:
+                    activity_prof["profiles"].append(profile_name)
+                    activity_prof["total"].append(1)
 
     dd = {
         "age": age,
@@ -472,6 +509,9 @@ def population_details(uid):
         "languages": lang,
         "toxicity": tox,
         "activity": activity,
+        "gender": gender,
+        "professions": prof,
+        "activity_profiles": activity_prof,
     }
 
     # most frequent crecsys amon agents

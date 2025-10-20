@@ -59,57 +59,17 @@
                                     <span class="left">Initial Size<small>(initial agents)</small></span>
                                     <span class="right">{{ population.size }}</span>
                                 </div>
-                                <hr>
-                                <b>Demographics & Attributes</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent characteristics and diversity settings for this population.</p>
-                                <div class="box-line">
-                                    <span class="left">Age Range</span>
-                                    <span class="right">{{ population.age_min }} - {{ population.age_max }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Education</span>
-                                    <span class="right">{{ population.education }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Political Leaning</span>
-                                    <span class="right">{{ population.leanings }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Nationalities</span>
-                                    <span class="right">{{ population.nationalities }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Toxicity Level</span>
-                                    <span class="right">{{ population.toxicity }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Spoken Languages</span>
-                                    <span class="right">{{ population.languages }}</span>
-                                </div>
-                                <hr>
-                                <b>Activity Profiles Distribution</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Hourly activity patterns assigned to agents in this population.</p>
-                                {% if activity_profiles.profiles %}
-                                {% for i in range(activity_profiles.profiles|length) %}
-                                <div class="box-line">
-                                    <span class="left">{{ activity_profiles.profiles[i] }}</span>
-                                    <span class="right">
-                                        {{ activity_profiles.assigned_count[i] }} agents ({{ "%.1f"|format(activity_profiles.expected_pct[i]) }}% expected)
-                                    </span>
-                                </div>
-                                {% endfor %}
-                                {% else %}
-                                <div class="box-line">
-                                    <span class="left">No activity profiles assigned</span>
-                                </div>
-                                {% endif %}
 
                             </div>
-                                <div class="buttons" style="display: flex; justify-content: right">
-                                    <a class="link-tooltip" href="/admin/download_population/{{ population.id }}" title="Download"><i
-                                     class="mdi mdi-download" style="font-size: 24px;"></i></a>
-                                <a class="link-tooltip" href="/admin/delete_population/{{ population.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+                                <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
+                                    <a class="button is-info" href="/admin/download_population/{{ population.id }}" style="display: flex; align-items: center; gap: 5px;">
+                                        <i class="mdi mdi-download"></i>
+                                        <span>Download</span>
+                                    </a>
+                                    <a class="button is-danger" href="/admin/delete_population/{{ population.id }}" style="display: flex; align-items: center; gap: 5px;">
+                                        <i class="mdi mdi-delete"></i>
+                                        <span>Delete</span>
+                                    </a>
                             </div>
 
                         </div>
@@ -254,110 +214,11 @@
                 </div>
             </div>
 
+            <!-- Demographics Row 1 -->
             <div class="columns">
-
-                <!-- left column -->
                 <div class="column is-4">
                      <div class="dashboard-box">
                         <div class="box-content">
-
-                            <canvas id="leanings" style="width:100%;height:250px"></canvas>
-                            <script>
-                                new Chart("leanings", {
-                                    type: 'bar',
-                                    data: {
-                                        datasets: [{
-                                            label: 'Political Leanings',
-                                            data:  {{ data["leaning"]["total"] }},
-                                            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-                                            borderColor: 'rgba(34, 197, 94, 1)',
-                                            borderWidth: 1
-                                        }],
-                                        labels: {{ data["leaning"]["leanings"]|tojson }}
-                                      },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            title: {
-                                                display: true,
-                                                text: 'Political Leanings',
-                                                font: { size: 14, weight: 'bold' }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                ticks: { font: { size: 11 } }
-                                            },
-                                            x: {
-                                                ticks: { font: { size: 11 } }
-                                            }
-                                        }
-                                    }
-
-                                });
-                            </script>
-                        </div>
-
-                    </div>
-
-                    <div class="dashboard-box">
-                        <div class="box-content">
-
-                            <canvas id="nationalities" style="width:100%;height:250px"></canvas>
-                            <script>
-                                new Chart("nationalities", {
-                                    type: 'bar',
-                                    data: {
-                                        datasets: [{
-                                            label: 'Nationalities',
-                                            data:  {{ data["nationalities"]["total"] }},
-                                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                                            borderColor: 'rgba(59, 130, 246, 1)',
-                                            borderWidth: 1
-                                        }],
-                                        labels: {{ data["nationalities"]["nationalities"]|tojson  }}
-                                      },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            title: {
-                                                display: true,
-                                                text: 'Nationalities',
-                                                font: { size: 14, weight: 'bold' }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                ticks: { font: { size: 11 } }
-                                            },
-                                            x: {
-                                                ticks: { font: { size: 11 } }
-                                            }
-                                        }
-                                    }
-
-                                });
-                            </script>
-                        </div>
-
-                    </div>
-
-                </div>
-                <!-- center column -->
-                <div class="column is-4">
-                    <div class="dashboard-box">
-                        <div class="box-content">
-
                             <canvas id="ages" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("ages", {
@@ -376,9 +237,7 @@
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: {
-                                                display: false
-                                            },
+                                            legend: { display: false },
                                             title: {
                                                 display: true,
                                                 text: 'Age Distribution',
@@ -399,40 +258,37 @@
                                             }
                                         }
                                     }
-
                                 });
                             </script>
                         </div>
-
                     </div>
+                </div>
 
+                <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-
-                            <canvas id="languages" style="width:100%;height:250px"></canvas>
+                            <canvas id="gender" style="width:100%;height:250px"></canvas>
                             <script>
-                                new Chart("languages", {
+                                new Chart("gender", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
-                                            label: 'Spoken Languages',
-                                            data:  {{ data["languages"]["total"] }},
-                                            backgroundColor: 'rgba(234, 179, 8, 0.7)',
-                                            borderColor: 'rgba(234, 179, 8, 1)',
+                                            label: 'Gender',
+                                            data:  {{ data["gender"]["total"] }},
+                                            backgroundColor: 'rgba(139, 92, 246, 0.7)',
+                                            borderColor: 'rgba(139, 92, 246, 1)',
                                             borderWidth: 1
                                         }],
-                                        labels: {{ data["languages"]["languages"]|tojson  }}
+                                        labels: {{ data["gender"]["genders"]|tojson }}
                                       },
                                     options: {
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: {
-                                                display: false
-                                            },
+                                            legend: { display: false },
                                             title: {
                                                 display: true,
-                                                text: 'Spoken Languages',
+                                                text: 'Gender Distribution',
                                                 font: { size: 14, weight: 'bold' }
                                             }
                                         },
@@ -446,20 +302,62 @@
                                             }
                                         }
                                     }
-
                                 });
                             </script>
                         </div>
-
                     </div>
-                <div>
-            </div>
-        </div>
-                <!-- right column -->
+                </div>
+
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
+                            <canvas id="nationalities" style="width:100%;height:250px"></canvas>
+                            <script>
+                                new Chart("nationalities", {
+                                    type: 'bar',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Nationalities',
+                                            data:  {{ data["nationalities"]["total"] }},
+                                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                            borderColor: 'rgba(59, 130, 246, 1)',
+                                            borderWidth: 1
+                                        }],
+                                        labels: {{ data["nationalities"]["nationalities"]|tojson  }}
+                                      },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false },
+                                            title: {
+                                                display: true,
+                                                text: 'Nationalities',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
+                                            }
+                                        }
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
+            <!-- Demographics Row 2 -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
                             <canvas id="edu" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("edu", {
@@ -478,9 +376,7 @@
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: {
-                                                display: false
-                                            },
+                                            legend: { display: false },
                                             title: {
                                                 display: true,
                                                 text: 'Education Levels',
@@ -497,15 +393,160 @@
                                             }
                                         }
                                     }
-
                                 });
                             </script>
                         </div>
                     </div>
+                </div>
 
+                <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
+                            <canvas id="languages" style="width:100%;height:250px"></canvas>
+                            <script>
+                                new Chart("languages", {
+                                    type: 'bar',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Spoken Languages',
+                                            data:  {{ data["languages"]["total"] }},
+                                            backgroundColor: 'rgba(234, 179, 8, 0.7)',
+                                            borderColor: 'rgba(234, 179, 8, 1)',
+                                            borderWidth: 1
+                                        }],
+                                        labels: {{ data["languages"]["languages"]|tojson  }}
+                                      },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false },
+                                            title: {
+                                                display: true,
+                                                text: 'Spoken Languages',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
+                                            }
+                                        }
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+                            <canvas id="professions" style="width:100%;height:250px"></canvas>
+                            <script>
+                                // Create word cloud effect using bar chart
+                                const profData = {{ data["professions"]["total"] }};
+                                const profLabels = {{ data["professions"]["professions"]|tojson }};
+                                
+                                // Take top 10 for readability
+                                const topCount = Math.min(10, profLabels.length);
+                                const topProfLabels = profLabels.slice(0, topCount);
+                                const topProfData = profData.slice(0, topCount);
+                                
+                                new Chart("professions", {
+                                    type: 'bar',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Professions',
+                                            data: topProfData,
+                                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                                            borderColor: 'rgba(16, 185, 129, 1)',
+                                            borderWidth: 1
+                                        }],
+                                        labels: topProfLabels
+                                      },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        indexAxis: 'y',
+                                        plugins: {
+                                            legend: { display: false },
+                                            title: {
+                                                display: true,
+                                                text: 'Top Professions',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
+                                        scales: {
+                                            x: {
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            y: {
+                                                ticks: { font: { size: 10 } }
+                                            }
+                                        }
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attributes Row -->
+            <div class="columns">
+                <div class="column is-4">
+                     <div class="dashboard-box">
+                        <div class="box-content">
+                            <canvas id="leanings" style="width:100%;height:250px"></canvas>
+                            <script>
+                                new Chart("leanings", {
+                                    type: 'bar',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Political Leanings',
+                                            data:  {{ data["leaning"]["total"] }},
+                                            backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                                            borderColor: 'rgba(34, 197, 94, 1)',
+                                            borderWidth: 1
+                                        }],
+                                        labels: {{ data["leaning"]["leanings"]|tojson }}
+                                      },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false },
+                                            title: {
+                                                display: true,
+                                                text: 'Political Leanings',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
+                                            }
+                                        }
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
                             <canvas id="tox" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("tox", {
@@ -524,9 +565,7 @@
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: {
-                                                display: false
-                                            },
+                                            legend: { display: false },
                                             title: {
                                                 display: true,
                                                 text: 'Toxicity Levels',
@@ -543,27 +582,17 @@
                                             }
                                         }
                                     }
-
                                 });
                             </script>
                         </div>
                     </div>
-                <div>
-            </div>
-        </div>
-            </div>
-
-
-            <div class="columns">
+                </div>
 
                 <div class="column is-4">
-
                     <div class="dashboard-box">
                         <div class="box-content">
-
                             <canvas id="activity" style="width:100%;height:250px"></canvas>
                             <script>
-                                // Map numeric activity levels to descriptive labels
                                 const activityLevels = {{ data["activity"]["activity"]|tojson }};
                                 const activityLabels = activityLevels.map(level => {
                                     const labelMap = {
@@ -592,9 +621,7 @@
                                         responsive: true,
                                         maintainAspectRatio: false,
                                         plugins: {
-                                            legend: {
-                                                display: false
-                                            },
+                                            legend: { display: false },
                                             title: {
                                                 display: true,
                                                 text: 'Daily Activity Levels',
@@ -611,16 +638,58 @@
                                             }
                                         }
                                     }
-
                                 });
                             </script>
                         </div>
-
                     </div>
-                <div>
+                </div>
             </div>
-        </div>
 
+            <!-- Activity Profiles Row -->
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <div class="box-content">
+                            <canvas id="activity_profiles" style="width:100%;height:250px"></canvas>
+                            <script>
+                                new Chart("activity_profiles", {
+                                    type: 'bar',
+                                    data: {
+                                        datasets: [{
+                                            label: 'Activity Profiles',
+                                            data:  {{ data["activity_profiles"]["total"] }},
+                                            backgroundColor: 'rgba(99, 102, 241, 0.7)',
+                                            borderColor: 'rgba(99, 102, 241, 1)',
+                                            borderWidth: 1
+                                        }],
+                                        labels: {{ data["activity_profiles"]["profiles"]|tojson }}
+                                      },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: { display: false },
+                                            title: {
+                                                display: true,
+                                                text: 'Activity Profiles Distribution',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
+                                            }
+                                        }
+                                    }
+                                });
+                            </script>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 </div>
