@@ -1664,15 +1664,18 @@ def age_classes_data():
         age_class_id = data.get("id")
         age_class = AgeClass.query.filter_by(id=age_class_id).first()
         if age_class:
-            if "name" in data:
-                age_class.name = data["name"]
-            if "age_start" in data:
-                age_class.age_start = int(data["age_start"])
-            if "age_end" in data:
-                age_class.age_end = int(data["age_end"])
-            if "default_percentage" in data:
-                age_class.default_percentage = int(data["default_percentage"])
-            db.session.commit()
+            try:
+                if "name" in data:
+                    age_class.name = data["name"]
+                if "age_start" in data:
+                    age_class.age_start = int(data["age_start"])
+                if "age_end" in data:
+                    age_class.age_end = int(data["age_end"])
+                if "default_percentage" in data:
+                    age_class.default_percentage = int(data["default_percentage"])
+                db.session.commit()
+            except (ValueError, TypeError):
+                return {"success": False, "error": "Invalid value provided"}, 400
         return {"success": True}
 
     # GET request - return data for grid
@@ -1733,9 +1736,13 @@ def create_age_class():
     check_privileges(current_user.username)
 
     name = request.form.get("name")
-    age_start = int(request.form.get("age_start", 0))
-    age_end = int(request.form.get("age_end", 100))
-    default_percentage = int(request.form.get("default_percentage", 0))
+    try:
+        age_start = int(request.form.get("age_start", 0))
+        age_end = int(request.form.get("age_end", 100))
+        default_percentage = int(request.form.get("default_percentage", 0))
+    except (ValueError, TypeError):
+        flash("Invalid age or percentage value provided.")
+        return redirect(request.referrer)
 
     age_class = AgeClass(
         name=name,
