@@ -27,8 +27,8 @@
  * Ensure Jupyter container uses full available width
  */
 .jupyter-container {
-    width: 100%;
-    max-width: none;
+    width: 100% !important;
+    max-width: none !important;
 }
 
 /*
