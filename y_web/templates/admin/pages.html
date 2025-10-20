@@ -1,5 +1,61 @@
 {% include "admin/head.html" %}
 
+<style>
+    .sidebar-box {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar-box h3 {
+        font-size: 1em;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .sidebar-box .help-block {
+        font-size: 0.85em;
+        line-height: 1.5;
+        color: #6b7280;
+    }
+    .sidebar-box .help-block p {
+        margin: 0 0 10px 0;
+    }
+    .sidebar-box .help-block p:last-child {
+        margin-bottom: 0;
+    }
+    .sidebar-box .help-block b {
+        color: #374151;
+        font-weight: 600;
+    }
+    .sidebar-box .input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: border-color 0.2s;
+    }
+    .sidebar-box .input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    .sidebar-box .button-wrap {
+        margin-top: 12px;
+    }
+    .sidebar-box .button {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -216,26 +272,6 @@
                     <!--Dashboard box-->
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Pages Collections</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_page_collection" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">Pages json file</span>
-                                        <span class="right"><input type="file" id="collection" name="collection"
-                                                                   class="input_file"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Load Experiment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                    <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Create Page</h3>
                         <div class="box-content">
                             <form action="/admin/create_page" enctype="multipart/form-data" method="POST">
@@ -338,8 +374,8 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                    <div class="sidebar-box">
+                        <h3>Guide</h3>
                         <div class="help-block">
 
                             <p>
@@ -356,6 +392,77 @@
 
                             </p>
                         </div>
+                    </div>
+
+                    <div class="sidebar-box">
+                        <h3>Load Pages Collection</h3>
+                        <form action="/admin/upload_page_collection" enctype="multipart/form-data" method="POST">
+                            <style>
+                                .file-upload-wrapper-pages {
+                                    position: relative;
+                                    overflow: hidden;
+                                    display: block;
+                                    margin-bottom: 12px;
+                                }
+                                .file-upload-wrapper-pages input[type=file] {
+                                    position: absolute;
+                                    left: -9999px;
+                                }
+                                .file-upload-label-pages {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    padding: 10px 12px;
+                                    background: #f9fafb;
+                                    border: 1px dashed #d1d5db;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    transition: all 0.2s;
+                                    font-size: 0.85em;
+                                }
+                                .file-upload-label-pages:hover {
+                                    background: #f3f4f6;
+                                    border-color: #22c55e;
+                                }
+                                .file-upload-icon-pages {
+                                    margin-right: 8px;
+                                    font-size: 1.1em;
+                                }
+                                .file-upload-text-pages {
+                                    color: #6b7280;
+                                }
+                                .file-name-display-pages {
+                                    margin-top: 6px;
+                                    font-size: 0.8em;
+                                    color: #22c55e;
+                                    font-weight: 500;
+                                    text-align: center;
+                                }
+                            </style>
+                            <div class="file-upload-wrapper-pages">
+                                <input type="file" id="collection_file" name="collection" accept=".json" onchange="displayPageCollectionFileName(this)">
+                                <label for="collection_file" class="file-upload-label-pages">
+                                    <span class="file-upload-icon-pages">📁</span>
+                                    <span class="file-upload-text-pages">Choose JSON file...</span>
+                                </label>
+                                <div id="collection-file-name-display" class="file-name-display-pages"></div>
+                            </div>
+                            <div class="button-wrap">
+                                <button class="button is-solid primary-button is-fullwidth">
+                                    Upload Collection
+                                </button>
+                            </div>
+                        </form>
+                        <script>
+                            function displayPageCollectionFileName(input) {
+                                const display = document.getElementById('collection-file-name-display');
+                                if (input.files && input.files[0]) {
+                                    display.textContent = '✓ ' + input.files[0].name;
+                                } else {
+                                    display.textContent = '';
+                                }
+                            }
+                        </script>
                     </div>
 
 
