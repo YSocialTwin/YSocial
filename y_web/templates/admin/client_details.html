@@ -529,69 +529,77 @@
                                 <canvas id="activity_rates"></canvas>
                             </div>
                             <script>
-                                // Calculate max value from data for dynamic y-axis
-                                const activityData = {{ data }};
-                                const maxValue = Math.max(...activityData);
-                                const yAxisMax = Math.ceil(maxValue * 1.1); // Add 10% padding
-                                
-                                new Chart("activity_rates", {
-                                    type: 'bar',
-                                    data: {
-                                        datasets: [{
-                                            label: 'Activity %',
-                                            data: activityData,
-                                            backgroundColor: 'rgba(34, 197, 94, 0.6)',
-                                            borderColor: 'rgba(34, 197, 94, 1)',
-                                            borderWidth: 1,
-                                            borderRadius: 4
-                                        }],
-                                        labels: {{ idx|tojson }}
-                                    },
-                                    options: {
-                                        responsive: true,
-                                        maintainAspectRatio: false,
-                                        plugins: {
-                                            legend: {
-                                                display: false
-                                            },
-                                            tooltip: {
-                                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                                padding: 8,
-                                                titleFont: { size: 12 },
-                                                bodyFont: { size: 11 },
-                                                callbacks: {
-                                                    label: function(context) {
-                                                        return 'Active: ' + context.parsed.y + '%';
-                                                    }
-                                                }
-                                            }
-                                        },
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true,
-                                                max: yAxisMax,
-                                                ticks: {
-                                                    font: { size: 10 },
-                                                    callback: function(value) {
-                                                        return value + '%';
-                                                    }
-                                                },
-                                                grid: {
-                                                    color: 'rgba(0, 0, 0, 0.05)'
-                                                }
-                                            },
-                                            x: {
-                                                ticks: {
-                                                    font: { size: 9 }
-                                                },
-                                                grid: {
-                                                    display: false
-                                                }
-                                            }
-                                        }
-                                    }
-                                });
-                            </script>
+    // Parse backend data safely (ensures it's a valid JS array)
+    const rawData = {{ data | tojson }};
+    const labels = {{ idx | tojson }};
+
+    // Convert to percentages (e.g., 0.023 → 2.3)
+    const activityData = rawData.map(v => v * 100);
+
+    // Compute y-axis upper limit with 10% padding
+    const maxValue = Math.max(...activityData);
+    const yAxisMax = Math.ceil(maxValue * 1.1);
+
+    // Create Chart.js bar chart
+    new Chart("activity_rates", {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Activity %',
+                data: activityData,
+                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 8,
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 11 },
+                    callbacks: {
+                        label: function(context) {
+                            return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: yAxisMax, // dynamically computed max
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 9 }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+
                         </div>
 
                         <form action="/admin/update_agents_activity/{{ client.id }}" enctype="multipart/form-data" method="POST">
