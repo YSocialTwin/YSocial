@@ -273,7 +273,7 @@ def populations_data():
             db.session.query(ActivityProfile)
             .join(
                 PopulationActivityProfile,
-                ActivityProfile.id == PopulationActivityProfile.id,
+                ActivityProfile.id == PopulationActivityProfile.activity_profile,
             )
             .filter(PopulationActivityProfile.population == pop.id)
             .all()
