@@ -2,12 +2,14 @@
 
 /* 
  * Expand dashboard container to use more available screen space
- * while maintaining balanced spacing on widescreen monitors
+ * while maintaining balanced spacing on widescreen monitors.
+ * Uses !important to override the core.css max-width: 1200px constraint.
  */
-.dashboard-container {
+.view-wrapper.is-dashboard .dashboard-container {
     max-width: none !important;
     width: calc(100% - 4rem) !important;
     margin: 0 2rem !important;
+    padding: 0 1rem !important;
 }
 
 /* 
@@ -15,7 +17,7 @@
  * but much wider than the original 1200px constraint
  */
 @media only screen and (min-width: 2560px) {
-    .dashboard-container {
+    .view-wrapper.is-dashboard .dashboard-container {
         max-width: 2400px !important;
         margin: 0 auto !important;
     }
@@ -25,23 +27,18 @@
  * Ensure Jupyter container uses full available width
  */
 .jupyter-container {
-    width: 100% !important;
-}
-
-/*
- * Adjust dashboard body for better spacing
- */
-.dashboard-body {
-    padding: 0 !important;
+    width: 100%;
+    max-width: none;
 }
 
 /*
  * Maintain tablet responsiveness
  */
 @media only screen and (min-width: 768px) and (max-width: 1024px) {
-    .dashboard-container {
+    .view-wrapper.is-dashboard .dashboard-container {
         width: calc(100% - 2rem) !important;
         margin: 0 1rem !important;
+        padding: 0 0.75rem !important;
     }
 }
 
@@ -49,9 +46,9 @@
  * Maintain mobile responsiveness
  */
 @media only screen and (max-width: 767px) {
-    .dashboard-container {
-        width: calc(100% - 1rem) !important;
-        margin: 0 0.5rem !important;
+    .view-wrapper.is-dashboard .dashboard-container {
+        width: 100% !important;
+        margin: 0 !important;
         padding: 0 0.5rem !important;
     }
 }
