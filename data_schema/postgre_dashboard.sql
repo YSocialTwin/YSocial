@@ -103,6 +103,14 @@ CREATE TABLE toxicity_levels (
     toxicity_level TEXT NOT NULL
 );
 
+CREATE TABLE age_classes (
+    id                 SERIAL PRIMARY KEY,
+    name               TEXT NOT NULL,
+    age_start          INTEGER NOT NULL,
+    age_end            INTEGER NOT NULL,
+    default_percentage INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE ollama_pull (
     id         SERIAL PRIMARY KEY,
     model_name TEXT NOT NULL,
@@ -291,6 +299,12 @@ INSERT INTO toxicity_levels (toxicity_level) VALUES
 ('low'),
 ('medium'),
 ('high');
+
+INSERT INTO age_classes (name, age_start, age_end, default_percentage) VALUES
+('Youth', 14, 24, 35),
+('Adults', 25, 44, 42),
+('Middle-aged', 45, 64, 18),
+('Elderly', 65, 100, 5);
 
 INSERT INTO education (education_level) VALUES
   ('high school'),

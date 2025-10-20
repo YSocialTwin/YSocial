@@ -22,6 +22,7 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.models import (
     ActivityProfile,
+    AgeClass,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -116,25 +117,29 @@ def create_population():
     toxicity_levels = request.form.getlist("toxicity_levels")
     toxicity_levels = ",".join(toxicity_levels)
 
-    # Retrieve percentage data for education, political leanings, and toxicity
+    # Retrieve percentage data for education, political leanings, toxicity, and age classes
     # These will be used in future implementations for weighted distribution
     education_percentages_str = request.form.get("education_levels_percentages", "{}")
     political_percentages_str = request.form.get("political_leanings_percentages", "{}")
     toxicity_percentages_str = request.form.get("toxicity_levels_percentages", "{}")
+    age_classes_percentages_str = request.form.get("age_classes_percentages", "{}")
 
     try:
         education_percentages = json.loads(education_percentages_str)
         political_percentages = json.loads(political_percentages_str)
         toxicity_percentages = json.loads(toxicity_percentages_str)
+        age_classes_percentages = json.loads(age_classes_percentages_str)
     except (json.JSONDecodeError, ValueError):
         education_percentages = {}
         political_percentages = {}
         toxicity_percentages = {}
+        age_classes_percentages = {}
 
     percentages = {
         "education": education_percentages,
         "political_leanings": political_percentages,
         "toxicity_levels": toxicity_percentages,
+        "age_classes": age_classes_percentages,
     }
 
     # TODO: Store percentages in a separate table or extend Population model
@@ -326,6 +331,7 @@ def populations():
     nationalities = Nationalities.query.all()
     languages = Languages.query.all()
     toxicity_levels = Toxicity_Levels.query.all()
+    age_classes = AgeClass.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
@@ -340,6 +346,7 @@ def populations():
         nationalities=nationalities,
         languages=languages,
         toxicity_levels=toxicity_levels,
+        age_classes=age_classes,
         crecsys=crecsys,
         frecsys=frecsys,
         activity_profiles=activity_profiles,

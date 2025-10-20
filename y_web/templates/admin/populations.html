@@ -416,6 +416,31 @@
                                         </span>
                                     </div>
 
+                                    <div class="box-line">
+                                        <span class="left">Age Classes <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
+                                                    <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="age_classes_dropdown">
+                                                    {% for age_class in age_classes %}
+                                                    <div class="multi-select-option" onclick="toggleOption('age_classes', '{{ age_class.name }}', '{{ age_class.id }}')">
+                                                        {{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="age_classes_percentages_container" style="display: none;">
+                                        <span class="left">Age Classes %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="age_classes_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="age_classes_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
+
                                     <div class="form-section-header">Social Attributes</div>
                                     <div class="form-section-description">
                                         Select diverse values for education, political leanings, and toxicity levels to create a varied and realistic population. Click to select multiple options.
@@ -499,7 +524,8 @@
                                         const multiSelectData = {
                                             education_levels: {},  // Changed to object: {id: {label, percentage}}
                                             political_leanings: {},
-                                            toxicity_levels: {}
+                                            toxicity_levels: {},
+                                            age_classes: {}
                                         };
 
                                         function toggleDropdown(fieldName) {
@@ -657,7 +683,7 @@
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
                                             // Validate percentages before submission
-                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels'];
+                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
                                             for (const fieldName of fieldsToValidate) {
                                                 const data = multiSelectData[fieldName];
                                                 const items = Object.values(data);
@@ -679,8 +705,8 @@
                                             }
                                             
                                             // Remove old hidden inputs
-                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
-                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
                                             
                                             // Add new hidden inputs for multi-select values (IDs for backward compatibility)
                                             Object.keys(multiSelectData).forEach(fieldName => {
@@ -708,6 +734,24 @@
                                                 input.value = JSON.stringify(percentageData);
                                                 this.appendChild(input);
                                             });
+                                        });
+
+                                        // Initialize age classes with default values from database
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const ageClassDefaults = {
+                                                {% for age_class in age_classes %}
+                                                '{{ age_class.id }}': {
+                                                    label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
+                                                    percentage: {{ age_class.default_percentage }}
+                                                }{% if not loop.last %},{% endif %}
+                                                {% endfor %}
+                                            };
+                                            
+                                            // Set default age classes
+                                            multiSelectData.age_classes = ageClassDefaults;
+                                            updateDisplay('age_classes');
+                                            updateOptionStyles('age_classes');
+                                            updatePercentages('age_classes');
                                         });
                                     </script>
 
