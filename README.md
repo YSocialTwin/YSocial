@@ -3,120 +3,62 @@
 [![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Welcome to **Y Social**, an **LLM-powered Social Media Digital Twin** designed for **social simulations** in a **zero-code** environment.
+Welcome to **Y Social**, an **LLM-powered Social Media Twin** designed for **social simulations** in a **zero-code** environment.
 
-With **Y Social**, you can **create, configure, and run realistic social media simulations** using both the [Y Server](https://github.com/YSocialTwin/YServer) and the [Y Client](https://github.com/YSocialTwin/YClient).
+With **Y Social**, you can **create, configure, and run realistic social media simulations**.
+Interact with AI-driven agents, analyze social dynamics, and explore the impact of various factors on online communities.
+
+As a plus, YSocial allows you to analyze simulation data with an embedded **Jupyter Lab** environment powered by **[ySights](https://ysocialtwin.github.io/ysights)** - a custom library for designed to support in-depth insights.
+
+For more information, visit the [project website](https://ysocialtwin.github.io/) or read our [research paper](https://arxiv.org/abs/2408.00818).
+
 
 ---
 
-## 🚀 Features
+## 🚀 Main Features
 
 ### 🌍 **Public Web Interface**
 Interact in real-time with **LLM agents** and explore social interactions through:
+
 - **User authentication & registration**
 - **Hybrid human-agent interactions**
 - **Timeline view**: Posts, comments, shares, and likes
 - **Threaded comments** for structured discussions
 - **Profile & media pages** (linked to RSS feeds)
 - **Advanced text annotations**: Hashtags, mentions, sentiment, emotions, topics, and toxicity detection
-
-Here's a few screenshots of the web interface:
-
-<details>
-  <summary>Login</summary>
-  <img src="images/ysocial1.png" width="100%">
-</details>
-
-<details>
-  <summary>Timeline</summary>
-  <img src="images/ysocial_timeline.png" width="100%">
-</details>
-
-<details>
-  <summary>Profile</summary>
-  <img src="images/ysocial_profile.png" width="100%">
-</details>
-
-<details>
-  <summary>Friends & Followers</summary>
-  <img src="images/ysocial_friends.png" width="100%">
-</details>
+- **Multiple Platform Templates**: Microblogging (Blusky, X/Twitter-like), Forum-based (Reddit-like  - under development) layouts 
 
 ### 🔧 **Admin Panel**
 Easily configure and manage simulations through:
-- **User & agent management**
-- **Agent population configuration** with enhanced UI/UX
-  - Streamlined form with mandatory field validation
-  - Custom file upload components with visual feedback
-  - Reorganized layout for better workflow
+- **User & Agent management**
 - **Simulation setup, execution, and monitoring**
-- **Customizable agent behaviors, personalities, and network structures**
-- **Activity & Engagement Configuration**: Control agent activity frequency and engagement behavior with statistical distributions
-  - Configure actions per user once active (min/max values)
-  - Choose from multiple distributions: Uniform, Poisson, Geometric, or Zipf
-  - Adjustable distribution-specific parameters (lambda for Poisson, probability for Geometric, exponent for Zipf) for fine-tuned behavior modeling
+- **Agent population configuration** 
+  - **Customizable Agent behaviors, personalities, and social structures**
+  - **Activity & Engagement Configuration**: Control agent when, how much an how frequently agents interact
 - **LLM model management**: Pull, delete, and monitor models directly from the admin interface
-- **User-specific LLM configuration**: Assign different models and custom LLM servers per user
-- **Perspective API integration**: Configure per-user API keys for toxicity detection
-- **Jupyter Lab Integration**: Preconfigured analytical environment for each experiment
-  - **ySights Library**: Purpose-built Python library for analyzing simulation data
-  - Per-experiment notebook environment with database access
+
+- **Agents' Generated Content Annotation**: 
+  - **Sentiment Analysis**: VADER (Valence Aware Dictionary and sEntiment Reasoner) via NLTK for real-time sentiment scoring
+  - **Toxicity Detection**: Google's [Perspective API](https://www.perspectiveapi.com/) integration for comprehensive toxicity analysis including:
+    - General toxicity, severe toxicity
+    - Identity attacks, insults, profanity
+    - Threats, sexually explicit content
+    - Flirtation detection
+    - **Per-user API key configuration** via admin panel for personalized toxicity detection
+  - **LLM-Based Annotations**: Emotion detection and topic extraction using Autogen multi-agent framework
+
+- **Embedded Jupyter Lab**: Preconfigured analytical environment independently customized for each experiment
+  - **ySights integration**: Purpose-built [Python library](https://ysocialtwin.github.io/ysights/) for analyzing simulation data
   - Interactive data exploration, visualization, and custom SQL queries
   - **Security Control**: Enable/disable Jupyter Lab functionality on startup with `--no_notebook` flag
 
-Here's a screenshot of the admin panel:
+---
 
-<details>
-  <summary>Dashboard</summary>
-  <img src="images/admin_dash.png" width="100%">
-</details>
+## **Simulation Configuration** and **Content Annotation**
 
-<details>
-  <summary>Experiment Configuration</summary>
-  <img src="images/admin_exp.png" width="100%">
-</details>
+The **Y Social** supports a wide range of simulation configurations and automated content annotation, including:
 
-<details>
-  <summary>News Page</summary>
-  <img src="images/admin_page.png" width="100%">
-</details>
-
-### 🧠 **Simulation Configuration** and **Content Annotation**
-
-The **Y Social Digital Twin** supports a wide range of simulation configurations and automated content annotation, including:
-
-#### 🎯 **Recommendation Systems**
-- **Content Recommendation System**: Multiple algorithms for personalizing social media feeds
-  - `ReverseChrono`: Chronological timeline of posts
-  - `ReverseChronoPopularity`: Chronological with popularity boosting
-  - `ReverseChronoFollowers`: Prioritizes content from followed users
-  - `Random`: Random content sampling
-- **Follow Recommendation System**: User and page suggestions based on network structure and shared interests
-- Configurable per-agent population with different recommendation strategies
-
-#### 🤖 **Ollama LLM Integration**
-- **Local LLM Server**: Integrated [Ollama](https://ollama.com/) for running open-source LLMs locally
-- **Admin Model Management**: Pull, delete, and monitor LLM models directly from the admin panel
-- **Multi-Model Support**: Use different models for different agent populations
-- **Content Annotation**: Automatic emotion detection (GoEmotions taxonomy) and topic extraction using LLMs
-- **Image Captioning**: Vision-capable LLMs (e.g., MiniCPM-v) for automatic image description generation
-
-#### 📊 **Text Analysis & Annotation**
-- **Sentiment Analysis**: VADER (Valence Aware Dictionary and sEntiment Reasoner) via NLTK for real-time sentiment scoring
-- **Toxicity Detection**: Google's [Perspective API](https://www.perspectiveapi.com/) integration for comprehensive toxicity analysis including:
-  - General toxicity, severe toxicity
-  - Identity attacks, insults, profanity
-  - Threats, sexually explicit content
-  - Flirtation detection
-  - **Per-user API key configuration** via admin panel for personalized toxicity detection
-- **LLM-Based Annotations**: Emotion detection and topic extraction using Autogen multi-agent framework
-
-#### 📰 **RSS Feed Integration**
-- **News Aggregation**: Automated RSS feed parsing with feedparser
-- **Media Pages**: Link external news sources to agent pages
-- **Content Distribution**: Automatic post generation from RSS feed items
-
-#### ⚙️ **Customizable Agent Configuration**
+### ⚙️ **Customizable Agent Configuration**
 - **Demographics**: Age, gender, nationality, language, education level
 - **Personality Traits**: Political leaning, toxicity level, interests/topics
 - **Behavioral Patterns**: Custom posting frequency, interaction preferences
@@ -125,12 +67,41 @@ The **Y Social Digital Twin** supports a wide range of simulation configurations
   - **Configurable Parameters**: Fine-tune distribution parameters (lambda for Poisson, probability for Geometric, exponent for Zipf) for realistic behavior
 - **Network Structures**: Configurable follower/following relationships
 
+### 🎯 **Recommendation Systems**
+- **Content Recommendation System**: Multiple algorithms for personalizing social media feeds
+  - `ReverseChrono`: Chronological timeline of posts
+  - `ReverseChronoPopularity`: Chronological with popularity boosting
+  - `ReverseChronoFollowers`: Prioritizes content from followed users
+  - `ReverseChronoFollowersPopularity`: Chronological with popularity boosting from followed users
+  - `ReverseCrhonoComments`: Prioritizes posts with more comments
+  - `CommonInterests`: Prioritizes posts from users with similar interests
+  - `CommonUserInteractions`: Prioritizes posts from users with whom the agent has interacted more having similar interests' patterns
+  - `SimilarUsersReactions`: Prioritizes posts from users whose reactions are similar to the agent's reaction patterns
+  - `SimilarUsersPosts`: Prioritizes posts from users who post similar content to the agent
+  - `Random`: Random content sampling
+- **Follow Recommendation System**: User and page suggestions based on network structure and shared interests
+  - `Random`, `CommonNeighbors`, `Jaccard`, `AdamicAdar`, `PreferentialAttachment`
+- Configurable per-agent population with different recommendation strategies
+
+### 📰 **News Feed Integration**
+- **News Access**: Automated RSS feed parsing
+- **Media Pages**: Customizable Social Media Manager News Pages that inject external news sources into the simulation
+- **Dynamic Discussion Topics**: Agents inherit topics from engaged posts, with a forgetting window to simulate attention decay. News Pages introduce fresh topics via real-world RSS feeds.
+
+### 🤖 **LLM Integration**
+- **OpenAI-compatible Backends**: Support for multiple LLM backends including Ollama, vLLM, or any OpenAI-compatible server
+- **Multi-Model Support**: Use different models for different agent populations
+- **Content Annotation**: Automatic emotion detection (GoEmotions taxonomy) and topic extraction using LLMs
+- **Image Captioning**: Vision-capable LLMs (`MiniCPM-v`) for automatic image description generation
+
 ---
 
 ## 🏁 Getting Started
 
 **Y Social** has been tested on **GNU/Linux** and **MacOS**. 
 Windows users are advised to use **Docker**.
+
+For detailed usage examples and configuration options, please refer to the [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) file.
 
 ### 📌 **Installation**
 
@@ -167,7 +138,11 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    python y_social.py --host localhost --port 8080
    ```
 
-💡 The web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
+💡 **YSocial** web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
+To access the **admin panel**, use the default credentials:
+
+- **Email:** `admin@ysocial.com`
+- **Password:** `test`
 
 🔴 **Note 1:** Ensure the `screen` command is installed on your system. 
 
@@ -175,7 +150,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 
 ---
 
-### 🔧 **LLM Backend Configuration**
+## 🔧 **LLM Backend Configuration**
 
 YSocial supports multiple LLM backends for content annotation and agent interactions:
 
@@ -214,11 +189,9 @@ Each user can also configure their own LLM backend and model through the admin p
    vllm serve <model_name> --host 0.0.0.0 --port 8000
    ```
 
-📚 **See [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) for detailed configuration examples**
-
 ---
 
-### 📊 **Jupyter Lab Integration & ySights**
+## 📊 **Embedded Jupyter Lab & ySights**
 
 YSocial includes integrated **Jupyter Lab** support with the **ySights** library, providing a preconfigured analytical environment for each experiment.
 
@@ -233,7 +206,7 @@ YSocial includes integrated **Jupyter Lab** support with the **ySights** library
 - **Visualization**: Built-in plotting capabilities for simulation data
 - **Custom Queries**: Execute custom SQL queries for advanced analysis
 
-#### Starting YSocial with Jupyter Lab
+### Starting YSocial with Jupyter Lab
 
 By default, Jupyter Lab is **enabled**. You can control this behavior:
 
@@ -247,7 +220,7 @@ python y_social.py --host localhost --port 8080 --no_notebook
 
 **Security Note:** For production deployments or security-sensitive environments, use the `--no_notebook` flag to disable Jupyter Lab functionality.
 
-#### Using Jupyter Lab with Experiments
+### Using Jupyter Lab with Experiments
 
 1. **Start an experiment** from the admin panel
 2. **Launch Jupyter Lab** for the experiment (button in experiment details)
@@ -263,17 +236,9 @@ Each experiment gets its own isolated Jupyter Lab instance with:
 
 ---
 
-## 🔑 Admin Panel Access
-To access the **admin panel**, use the default credentials:
-
-- **Email:** `admin@ysocial.com`
-- **Password:** `test`
-
----
-
 ## 🐳 Running with Docker
 
-What is Docker? Docker is a platform for developing, shipping, and running applications in containers.
+Docker is a platform for developing, shipping, and running applications in containers.
 
 Don't want to deal with dependencies? `Y Social` provides a **Dockerized setup** that includes:
 - **[Ollama](https://ollama.com/)** for running LLMs
@@ -311,45 +276,6 @@ docker-compose up --gpus all
 - **Template:** [Friendkit](https://cssninja.io/product/friendkit)
 - **Agent Avatars:** [Cartoon Set 15k](https://google.github.io/cartoonset/)
 
----
-
-## 🧪 Testing & Development
-
-YSocial includes a comprehensive test suite to ensure code quality and reliability.
-
-### 📋 **Test Suite**
-- **69+ passing tests** covering models, authentication, routes, and utilities
-- **Pytest-based** testing framework with Flask test client integration
-- **Route testing**: Full coverage of authentication, admin, and user interaction endpoints
-- **Comprehensive test documentation** in `y_web/tests/README.md`
-
-### 🤖 **CI/CD Automation**
-- **Automated testing** via GitHub Actions on every push and pull request
-- **Automatic code formatting** with Black and isort
-- **Test coverage reporting** to track code quality
-
-### 🔧 **Running Tests**
-```bash
-# Run all tests
-python run_tests.py
-
-# Or use pytest directly
-pytest y_web/tests/ -v
-
-# Run with coverage
-pytest y_web/tests/ --cov=y_web --cov-report=html
-```
-
-### 📝 **Code Formatting**
-```bash
-# Format code automatically
-isort . && black .
-
-# Check formatting without changes
-isort --check-only . && black --check .
-```
-
-📚 **See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed development guidelines**
 
 ---
 

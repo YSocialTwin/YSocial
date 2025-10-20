@@ -76,105 +76,12 @@ Start:
 docker-compose up
 ```
 
-### Docker Compose with vLLM
-```yaml
-# docker-compose.yml
-services:
-  ysocial:
-    image: ysocial:latest
-    environment:
-      - LLM_BACKEND=vllm
-    ports:
-      - "5000:5000"
-```
-
-Start:
-```bash
-docker-compose up
-```
-
-### Docker Run with Environment Variable
-```bash
-# With Ollama
-docker run -e LLM_BACKEND=ollama -p 5000:5000 ysocial:latest
-
-# With vLLM
-docker run -e LLM_BACKEND=vllm -p 5000:5000 ysocial:latest
-```
-
-## Multi-Container Setup
-
-### YSocial + vLLM with Docker Compose
-```yaml
-version: '3.8'
-services:
-  vllm:
-    image: vllm/vllm-openai:latest
-    command: --model meta-llama/Llama-3.1-8B-Instruct --host 0.0.0.0 --port 8000
-    ports:
-      - "8000:8000"
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - capabilities: [gpu]
-    
-  ysocial:
-    image: ysocial:latest
-    depends_on:
-      - vllm
-    environment:
-      - LLM_BACKEND=vllm
-    ports:
-      - "5000:5000"
-```
-
-## Verifying Your Configuration
-
-### Check if Ollama is Running
-```bash
-curl http://127.0.0.1:11434/api/version
-```
-
-Expected response:
-```json
-{"version":"0.x.x"}
-```
-
-### Check if vLLM is Running
-```bash
-curl http://127.0.0.1:8000/health
-```
-
-Expected response:
-```json
-{"status":"ok"}
-```
-
-### Test the OpenAI-compatible Endpoint
-
-For Ollama:
-```bash
-curl http://127.0.0.1:11434/v1/models
-```
-
-For vLLM:
-```bash
-curl http://127.0.0.1:8000/v1/models
-```
-
 ## Troubleshooting
 
 ### Issue: Backend not responding
 **Solution:** Verify the backend server is running:
 - Ollama: `ps aux | grep ollama`
 - vLLM: `ps aux | grep vllm`
-
-### Issue: Wrong base URL
-**Solution:** Check the `LLM_BACKEND` environment variable:
-```bash
-echo $LLM_BACKEND
-```
 
 ### Issue: Models not found
 **Solution:** 
@@ -201,13 +108,13 @@ Similarly, if using a custom vLLM port (not 8000), modify the base URL in the sa
 ### vLLM
 - Best for: Production, high-throughput scenarios
 - Pros: Optimized inference, better performance
-- Cons: Requires more setup, manual model management
+- Cons: Requires more setup, manual model management, single model at a time (no image captioning with minicpm-v) 
 
 ---
 
 ## Jupyter Lab Integration Examples
 
-YSocial provides integrated Jupyter Lab support with the ySights library for analyzing simulation data.
+YSocial provides integrated Jupyter Lab support with the **[ySights](https://ysocialtwin.github.io/ysights/)** library for analyzing simulation data.
 
 ### Starting YSocial with Jupyter Lab
 
@@ -265,7 +172,7 @@ python y_social.py \
 
 ### Using ySights Library
 
-The ySights library is automatically available in Jupyter Lab instances. Here's a quick example:
+The **ySights** library is automatically available in Jupyter Lab instances. Here's a quick example:
 
 ```python
 import os
