@@ -107,6 +107,14 @@ def create_population():
 
     llm = request.form.get("host_llm")
 
+    # Get gender distribution
+    male_percentage = int(request.form.get("male_percentage", "50"))
+    female_percentage = int(request.form.get("female_percentage", "50"))
+    gender_distribution = {
+        "male": male_percentage,
+        "female": female_percentage
+    }
+
     education_levels = request.form.getlist("education_levels")
     education_levels = ",".join(education_levels)
     political_leanings = request.form.getlist("political_leanings")
@@ -138,6 +146,7 @@ def create_population():
         "political_leanings": political_percentages,
         "toxicity_levels": toxicity_percentages,
         "age_classes": age_classes_percentages,
+        "gender": gender_distribution,
     }
 
     nationalities = request.form.get("nationalities")

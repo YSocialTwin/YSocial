@@ -236,7 +236,15 @@ def generate_population(population_name, percentages=None, actions_config=None):
         except:
             nationality = "American"
 
-        gender = random.sample(["male", "female"], 1)[0]
+        # Use weighted gender sampling based on provided percentages
+        if percentages and "gender" in percentages:
+            gender_dist = percentages["gender"]
+            genders = list(gender_dist.keys())
+            weights = list(gender_dist.values())
+            gender = random.choices(genders, weights=weights, k=1)[0]
+        else:
+            # Default to equal probability if no gender distribution provided
+            gender = random.sample(["male", "female"], 1)[0]
 
         fake = faker.Faker(__locales[nationality])
 

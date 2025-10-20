@@ -431,6 +431,27 @@
                                         </span>
                                     </div>
 
+                                    <div class="box-line">
+                                        <span class="left">Gender Distribution</span>
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="male_percentage" style="margin: 0; font-size: 0.9em;">Male:</label>
+                                                <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateFemalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="female_percentage" style="margin: 0; font-size: 0.9em;">Female:</label>
+                                                <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateMalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
+                                        </span>
+                                    </div>
+
                                     <div class="form-section-header">Social Attributes</div>
                                     <div class="form-section-description">
                                         Select diverse values for education, political leanings, and toxicity levels to create a varied and realistic population. Click to select multiple options.
@@ -517,6 +538,30 @@
                                             toxicity_levels: {},
                                             age_classes: {}
                                         };
+
+                                        function updateFemalePercentage() {
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = 100 - malePercentage;
+                                            if (femalePercentage >= 0 && femalePercentage <= 100) {
+                                                document.getElementById('female_percentage').value = femalePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
+
+                                        function updateMalePercentage() {
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            const malePercentage = 100 - femalePercentage;
+                                            if (malePercentage >= 0 && malePercentage <= 100) {
+                                                document.getElementById('male_percentage').value = malePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
 
                                         function toggleDropdown(fieldName) {
                                             const dropdown = document.getElementById(fieldName + '_dropdown');
@@ -677,6 +722,15 @@
 
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+                                            // Validate gender percentages
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            if (malePercentage + femalePercentage !== 100) {
+                                                e.preventDefault();
+                                                alert('Gender distribution must total 100%');
+                                                return false;
+                                            }
+                                            
                                             // Validate that age_classes is selected (mandatory field)
                                             const ageClassesData = multiSelectData['age_classes'];
                                             const ageClassesItems = Object.values(ageClassesData);
