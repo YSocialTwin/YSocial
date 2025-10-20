@@ -30,6 +30,7 @@ from y_web.models import (
     Agent,
     Agent_Population,
     Agent_Profile,
+    AgeClasses,
     Client,
     Client_Execution,
     Education,
@@ -1260,6 +1261,58 @@ def educations_data():
     return res
 
 
+@experiments.route("/admin/age_classes_data")
+@login_required
+def age_classes_data():
+    """Display age classes data page."""
+    query = AgeClasses.query
+
+    search = request.args.get("search")
+    if search:
+        query = query.filter(db.or_(AgeClasses.name.like(f"%{search}%")))
+    total = query.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            name = s[1:]
+            if name not in ["name", "age_start", "age_end"]:
+                name = "name"
+            col = getattr(AgeClasses, name)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            query = query.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        query = query.offset(start).limit(length)
+
+    # response
+    res = query.all()
+
+    res = {
+        "data": [
+            {
+                "id": ac.id,
+                "name": ac.name,
+                "age_start": ac.age_start,
+                "age_end": ac.age_end,
+            }
+            for ac in res
+        ],
+        "total": total,
+    }
+
+    return res
+
+
 @experiments.route("/admin/create_language", methods=["POST"])
 @login_required
 def create_language():
@@ -1331,6 +1384,23 @@ def create_education():
 
     ed = Education(education_level=education_level)
     db.session.add(ed)
+    db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@experiments.route("/admin/create_age_class", methods=["POST"])
+@login_required
+def create_age_class():
+    """Create age class."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    age_start = request.form.get("age_start")
+    age_end = request.form.get("age_end")
+
+    ac = AgeClasses(name=name, age_start=age_start, age_end=age_end)
+    db.session.add(ac)
     db.session.commit()
 
     return redirect(request.referrer)
@@ -1479,6 +1549,21 @@ def delete_education_level(education_level_id):
         flash("Education level not found.")
         return miscellanea()
     db.session.delete(education_level)
+    db.session.commit()
+    return miscellanea()
+
+
+@experiments.route("/admin/delete_age_class/<int:age_class_id>", methods=["DELETE"])
+@login_required
+def delete_age_class(age_class_id):
+    """Delete age class."""
+    check_privileges(current_user.username)
+
+    age_class = AgeClasses.query.filter_by(id=age_class_id).first()
+    if not age_class:
+        flash("Age class not found.")
+        return miscellanea()
+    db.session.delete(age_class)
     db.session.commit()
     return miscellanea()
 

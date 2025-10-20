@@ -22,6 +22,7 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.models import (
     ActivityProfile,
+    AgeClasses,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -36,6 +37,7 @@ from y_web.models import (
     Page,
     Page_Population,
     Population,
+    PopulationAgeClass,
     Population_Experiment,
     PopulationActivityProfile,
     Topic_List,
@@ -128,6 +130,13 @@ def create_population():
     except:
         activity_profiles_json = []
 
+    # Get age classes data from the hidden field
+    age_classes_data = request.form.get("age_classes_data", "[]")
+    try:
+        age_classes_json = json.loads(age_classes_data)
+    except:
+        age_classes_json = []
+
     population = Population(
         name=name,
         descr=descr,
@@ -157,6 +166,16 @@ def create_population():
             percentage=float(profile_data["percentage"]),
         )
         db.session.add(profile_assoc)
+    db.session.commit()
+
+    # Store population-age class associations
+    for age_class_data in age_classes_json:
+        age_class_assoc = PopulationAgeClass(
+            population=population.id,
+            age_class=int(age_class_data["id"]),
+            percentage=float(age_class_data["percentage"]),
+        )
+        db.session.add(age_class_assoc)
     db.session.commit()
 
     generate_population(name)
@@ -243,6 +262,7 @@ def populations():
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
+    age_classes = AgeClasses.query.all()
 
     return render_template(
         "admin/populations.html",
@@ -257,6 +277,7 @@ def populations():
         crecsys=crecsys,
         frecsys=frecsys,
         activity_profiles=activity_profiles,
+        age_classes=age_classes,
     )
 
 

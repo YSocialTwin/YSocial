@@ -408,6 +408,69 @@
                                         </span>
                                     </div>
 
+                                    <div class="box-line">
+                                        <span class="left">Age Classes</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="age-classes-container">
+                                                {% for age_class in age_classes %}
+                                                <div class="age-class-item" style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                                    <span style="min-width: 120px; font-size: 0.9em;">{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})</span>
+                                                    <input type="number" 
+                                                           id="age_class_{{ age_class.id }}" 
+                                                           class="age-class-percentage" 
+                                                           data-age-class-id="{{ age_class.id }}"
+                                                           data-age-class-name="{{ age_class.name }}"
+                                                           min="0" 
+                                                           max="100" 
+                                                           value="{% if age_class.name == 'Youth' %}35{% elif age_class.name == 'Adults' %}42{% elif age_class.name == 'Middle-aged' %}18{% elif age_class.name == 'Elderly' %}5{% else %}0{% endif %}"
+                                                           style="width: 60px; padding: 4px 6px; border: 1px solid #ddd; border-radius: 3px; text-align: center;">
+                                                    <span style="font-size: 0.9em; color: #666;">%</span>
+                                                </div>
+                                                {% endfor %}
+                                                <div id="age-classes-validation" style="margin-top: 8px; padding: 8px; border-radius: 4px; font-size: 0.8em; display: none;"></div>
+                                            </div>
+                                        </span>
+                                    </div>
+
+                                    <script>
+                                        // Age classes percentage validation
+                                        const ageClassInputs = document.querySelectorAll('.age-class-percentage');
+                                        const ageClassesValidation = document.getElementById('age-classes-validation');
+
+                                        function validateAgeClasses() {
+                                            let total = 0;
+                                            ageClassInputs.forEach(input => {
+                                                total += parseFloat(input.value) || 0;
+                                            });
+                                            
+                                            if (total === 0) {
+                                                ageClassesValidation.style.display = 'none';
+                                                return true;
+                                            } else if (Math.abs(total - 100) < 0.01) {
+                                                ageClassesValidation.style.display = 'block';
+                                                ageClassesValidation.style.background = '#efe';
+                                                ageClassesValidation.style.border = '1px solid #cfc';
+                                                ageClassesValidation.style.color = '#0a0';
+                                                ageClassesValidation.textContent = `Total: ${total.toFixed(1)}% ✓`;
+                                                return true;
+                                            } else {
+                                                ageClassesValidation.style.display = 'block';
+                                                ageClassesValidation.style.background = '#fee';
+                                                ageClassesValidation.style.border = '1px solid #fcc';
+                                                ageClassesValidation.style.color = '#c00';
+                                                ageClassesValidation.textContent = `Total: ${total.toFixed(1)}% (must equal 100% or be 0%)`;
+                                                return false;
+                                            }
+                                        }
+
+                                        ageClassInputs.forEach(input => {
+                                            input.addEventListener('input', validateAgeClasses);
+                                        });
+
+                                        // Initial validation
+                                        validateAgeClasses();
+                                    </script>
+
                                     <div class="form-section-header">Social Attributes</div>
                                     <div class="form-section-description">
                                         Select diverse values for education, political leanings, and toxicity levels to create a varied and realistic population. Click to select multiple options.
@@ -742,6 +805,7 @@
                                     </div>
 
                                     <input type="hidden" name="activity_profiles_data" id="activity_profiles_data" value="">
+                                    <input type="hidden" name="age_classes_data" id="age_classes_data" value="">
 
                                     <script>
                                         // Toggle activity profiles section
@@ -921,6 +985,32 @@
                                                 alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
                                                 return false;
                                             }
+
+                                            // Collect age classes data with non-zero percentages
+                                            const ageClassesData = [];
+                                            document.querySelectorAll('.age-class-percentage').forEach(input => {
+                                                const percentage = parseFloat(input.value) || 0;
+                                                if (percentage > 0) {
+                                                    ageClassesData.push({
+                                                        id: input.dataset.ageClassId,
+                                                        name: input.dataset.ageClassName,
+                                                        percentage: percentage
+                                                    });
+                                                }
+                                            });
+
+                                            // Validate age classes total if any are set
+                                            if (ageClassesData.length > 0) {
+                                                const total = ageClassesData.reduce((sum, ac) => sum + ac.percentage, 0);
+                                                if (Math.abs(total - 100) > 0.01) {
+                                                    e.preventDefault();
+                                                    alert('Please ensure that the total percentage of age classes equals 100%');
+                                                    return false;
+                                                }
+                                            }
+
+                                            // Set age classes data in hidden field
+                                            document.getElementById('age_classes_data').value = JSON.stringify(ageClassesData);
                                         });
                                     </script>
 

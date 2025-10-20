@@ -660,6 +660,38 @@ class Education(db.Model):
     education_level = db.Column(db.String(50), nullable=False)
 
 
+class AgeClasses(db.Model):
+    """Available age class options for population demographics."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "age_classes"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    age_start = db.Column(db.Integer, nullable=False)
+    age_end = db.Column(db.Integer, nullable=False)
+
+
+class PopulationAgeClass(db.Model):
+    """
+    Association table linking a population with an age class.
+    Defines what percentage of the population belongs to a given age class.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "population_age_class"
+
+    id = db.Column(db.Integer, primary_key=True)
+    population = db.Column(
+        db.Integer, db.ForeignKey("population.id", ondelete="CASCADE"), nullable=False
+    )
+    age_class = db.Column(
+        db.Integer,
+        db.ForeignKey("age_classes.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    percentage = db.Column(db.Float, nullable=False)
+
+
 class Leanings(db.Model):
     """Available political leaning options for agent and page profiles."""
 

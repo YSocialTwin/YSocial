@@ -53,6 +53,13 @@ CREATE TABLE education (
     education_level TEXT NOT NULL
 );
 
+CREATE TABLE age_classes (
+    id        SERIAL PRIMARY KEY,
+    name      TEXT NOT NULL,
+    age_start INTEGER NOT NULL,
+    age_end   INTEGER NOT NULL
+);
+
 CREATE TABLE exps (
     idexp         SERIAL PRIMARY KEY,
     exp_name      TEXT,
@@ -249,6 +256,17 @@ CREATE TABLE population_activity_profile (
     percentage REAL NOT NULL
 );
 
+CREATE TABLE population_age_class (
+    id SERIAL PRIMARY KEY,
+    population INTEGER NOT NULL
+        REFERENCES population(id)
+        ON DELETE CASCADE,
+    age_class INTEGER NOT NULL
+        REFERENCES age_classes(id)
+        ON DELETE CASCADE,
+    percentage REAL NOT NULL
+);
+
 
 INSERT INTO content_recsys (name, value) VALUES
   ('ContentRecSys', 'Random'),
@@ -285,6 +303,12 @@ INSERT INTO education (education_level) VALUES
   ('bachelor'),
   ('master'),
   ('phd');
+
+INSERT INTO age_classes (name, age_start, age_end) VALUES
+  ('Youth', 14, 24),
+  ('Adults', 25, 44),
+  ('Middle-aged', 45, 64),
+  ('Elderly', 65, 100);
 
 INSERT INTO professions (profession, background) VALUES
 ('Doctor', 'Healthcare'),
