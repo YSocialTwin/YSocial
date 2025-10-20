@@ -449,21 +449,221 @@
                             </form>
                             <hr>
                             <form action="/admin/upload_network/{{ client.id }}" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <h4 class="title is-5 is-thin">Upload Custom Network</h4>
-                                    <div class="box-line">
-                                        <span class="left">Edge list file</span>
-                                        <span class="right"><input type="file" id="network_file" name="network_file"
-                                                                   class="input_file"></span>
-                                    </div>
+                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload Custom Network</h4>
+                                <style>
+                                    .file-upload-wrapper-network {
+                                        position: relative;
+                                        overflow: hidden;
+                                        display: block;
+                                        margin-bottom: 12px;
+                                    }
+                                    .file-upload-wrapper-network input[type=file] {
+                                        position: absolute;
+                                        left: -9999px;
+                                    }
+                                    .file-upload-label-network {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 10px 12px;
+                                        background: #f9fafb;
+                                        border: 1px dashed #d1d5db;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        font-size: 0.85em;
+                                    }
+                                    .file-upload-label-network:hover {
+                                        background: #f3f4f6;
+                                        border-color: #22c55e;
+                                    }
+                                    .file-upload-icon-network {
+                                        margin-right: 8px;
+                                        font-size: 1.1em;
+                                    }
+                                    .file-upload-text-network {
+                                        color: #6b7280;
+                                    }
+                                    .file-name-display-network {
+                                        margin-top: 6px;
+                                        font-size: 0.8em;
+                                        color: #22c55e;
+                                        font-weight: 500;
+                                        text-align: center;
+                                    }
+                                </style>
+                                <div class="file-upload-wrapper-network">
+                                    <input type="file" id="network_file" name="network_file" onchange="displayNetworkFileName(this)">
+                                    <label for="network_file" class="file-upload-label-network">
+                                        <span class="file-upload-icon-network">📊</span>
+                                        <span class="file-upload-text-network">Choose edge list file...</span>
+                                    </label>
+                                    <div id="network-file-name-display" class="file-name-display-network"></div>
                                 </div>
                                 <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth">
-                                            Load
-                                        </button>
-                                    </div>
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload Network
+                                    </button>
+                                </div>
+                                <script>
+                                    function displayNetworkFileName(input) {
+                                        const display = document.getElementById('network-file-name-display');
+                                        if (input.files && input.files[0]) {
+                                            display.textContent = '✓ ' + input.files[0].name;
+                                        } else {
+                                            display.textContent = '';
+                                        }
+                                    }
+                                </script>
                             </form>
                         </div>
+                    </div>
+
+                    <!-- Hourly Activity Rates Box -->
+                    <div class="dashboard-box" style="padding: 16px; margin-top: 20px;">
+                        <h3 class="title is-5 is-thin">Hourly Activity Rates</h3>
+                        <small style="font-size: 0.8em; color: #6b7280;">Default values from <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a></small>
+                        
+                        <div class="box-content" style="margin-top: 12px;">
+                            <div style="height: 200px; position: relative;">
+                                <canvas id="activity_rates"></canvas>
+                            </div>
+                            <script>
+    // Parse backend data safely (ensures it's a valid JS array)
+    const rawData = {{ data | tojson }};
+    const labels = {{ idx | tojson }};
+
+    // Convert to percentages (e.g., 0.023 → 2.3)
+    const activityData = rawData.map(v => v * 100);
+
+    // Compute y-axis upper limit with 10% padding
+    const maxValue = Math.max(...activityData);
+    const yAxisMax = Math.ceil(maxValue * 1.1);
+
+    // Create Chart.js bar chart
+    new Chart("activity_rates", {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Activity %',
+                data: activityData,
+                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                borderColor: 'rgba(34, 197, 94, 1)',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 8,
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 11 },
+                    callbacks: {
+                        label: function(context) {
+                            return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    suggestedMax: yAxisMax, // dynamically computed max
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            return value + '%';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 9 }
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+                        </div>
+
+                        <form action="/admin/update_agents_activity/{{ client.id }}" enctype="multipart/form-data" method="POST">
+                            <div class="box-content" style="margin-top: 16px;">
+                                <p style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-weight: 500;">Hourly Activity Percentages:</p>
+                                <style>
+                                    .activity-grid {
+                                        display: grid;
+                                        grid-template-columns: repeat(12, 1fr);
+                                        gap: 8px;
+                                        margin-bottom: 16px;
+                                    }
+                                    .activity-hour {
+                                        display: flex;
+                                        flex-direction: column;
+                                        align-items: center;
+                                    }
+                                    .activity-hour label {
+                                        font-size: 0.75em;
+                                        color: #666;
+                                        margin-bottom: 4px;
+                                        font-weight: 500;
+                                    }
+                                    .activity-hour input {
+                                        width: 100%;
+                                        padding: 4px 6px;
+                                        text-align: center;
+                                        font-size: 0.85em;
+                                        border: 1px solid #d1d5db;
+                                        border-radius: 4px;
+                                    }
+                                    .activity-hour input:focus {
+                                        outline: none;
+                                        border-color: #22c55e;
+                                        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                    }
+                                </style>
+                                <div class="activity-grid">
+                                    {% for hour in range(12) %}
+                                    <div class="activity-hour">
+                                        <label>{{ hour }}h</label>
+                                        <input type="text" name="{{ hour }}" value="{{ activity[hour|string] }}">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                <div class="activity-grid">
+                                    {% for hour in range(12, 24) %}
+                                    <div class="activity-hour">
+                                        <label>{{ hour }}h</label>
+                                        <input type="text" name="{{ hour }}" value="{{ activity[hour|string] }}">
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end;">
+                                    <a class="link-tooltip" href="/admin/reset_agents_activity/{{ client.id }}" title="Reset to default values" style="padding: 8px;">
+                                        <i class="mdi mdi-backup-restore" style="font-size: 24px; color: #6b7280;"></i>
+                                    </a>
+                                    <button class="button is-solid primary-button" style="padding: 8px 24px;">
+                                        Update Activity Rates
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                             <script>
                         document.getElementById('options').addEventListener('change', function () {
@@ -482,104 +682,9 @@
                         });
                     </script>
                 </div>
-            </div>
-
-            <div class="columns">
-                 <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-12 is-thin">Percentage Active Agents per Hour</h3>
-                        <small>Default values fitted on longitudinal <a href="https://zenodo.org/records/14669616">Bluesy Data</a></small>
-                            <div class="box-content">
-
-                            <canvas id="activity_rates" style="width:100%;"></canvas>
-                            <script>
-                                new Chart("activity_rates", {
-                                    type: 'bar',
-                                    data: {
-                                        datasets: [{
-                                            label: 'Hourly activity rates',
-                                          data:  {{ data }},
-                                        }],
-                                        labels: {{ idx|tojson  }}
-                                      },
-                                    options: {
-                                        scales: {
-                                            y: {
-                                                beginAtZero: true
-                                            },
-                                            x: {
-                                                min: 0,
-                                                max: 100,
-                                              }
-                                        }
-                                    }
-
-                                });
-                            </script>
-                        </div>
-
-                        <form action="/admin/update_agents_activity/{{ client.id }}" enctype="multipart/form-data" method="POST">
-                        <div class="box-content">
-                            <div class="box-lines">
-
-                                <div class="box-line">
-                                   <div class="left" style="text-align: center; padding: 2px;">0 <input type="text" name="0" class="input" value="{{ activity['0'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">1 <input type="text" name="1" class="input" value="{{ activity['1'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">2 <input type="text" name="2" class="input" value="{{ activity['2'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">3 <input type="text" name="3" class="input" value="{{ activity['3'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">4 <input type="text" name="4" class="input" value="{{ activity['4'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">5 <input type="text" name="5" class="input" value="{{ activity['5'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">6 <input type="text" name="6" class="input" value="{{ activity['6'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">7 <input type="text" name="7" class="input" value="{{ activity['7'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">8 <input type="text" name="8" class="input" value="{{ activity['8'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">9 <input type="text" name="9" class="input" value="{{ activity['9'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">10 <input type="text" name="10" class="input" value="{{ activity['10'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">11 <input type="text" name="11" class="input" value="{{ activity['11'] }}"></div>
-                                </div>
-                                 <div class="box-line">
-                                    <div class="left" style="text-align: center; padding: 2px;">12 <input type="text" name="12" class="input" value="{{ activity['12'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">13 <input type="text" name="13" class="input" value="{{ activity['13'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">14 <input type="text" name="14" class="input" value="{{ activity['14'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">15 <input type="text" name="15" class="input" value="{{ activity['15'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">16 <input type="text" name="16" class="input" value="{{ activity['16'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">17 <input type="text" name="17" class="input" value="{{ activity['17'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">18 <input type="text" name="18" class="input" value="{{ activity['18'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">19 <input type="text" name="19" class="input" value="{{ activity['19'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">20 <input type="text" name="20" class="input" value="{{ activity['20'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">21 <input type="text" name="21" class="input" value="{{ activity['21'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">22 <input type="text" name="22" class="input" value="{{ activity['22'] }}"></div>
-                                    <div class="left" style="text-align: center; padding: 2px;">23 <input type="text" name="23" class="input" value="{{ activity['23'] }}"></div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                            <div class="box-content">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <div class="left">
-                                            <div class="button-wrap">
-                                                <button class="button is-solid primary-button is-fullwidth">
-                                                    Update
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <div class="right">
-                                            <a class="link-tooltip" href="/admin/reset_agents_activity/{{ client.id }}" title="Reset">
-                                                <i class="mdi mdi-backup-restore" style="font-size: 24px;"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-
-
-                </div>
 
             </div>
+
         </div>
     </div>
 

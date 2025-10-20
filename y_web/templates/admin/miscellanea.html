@@ -54,22 +54,107 @@
             </style>
 
             <div class="misc-tabs">
-                <button class="misc-tab active" onclick="switchMiscTab('agent-attributes')">Agent Attributes</button>
-                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics</button>
-                <button class="misc-tab" onclick="switchMiscTab('content')">Content & Topics</button>
-                <button class="misc-tab" onclick="switchMiscTab('behavior')">Behavior Profiles</button>
+                <button class="misc-tab active" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
+                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
             </div>
 
-            <!-- Agent Attributes Tab -->
-            <div id="tab-agent-attributes" class="misc-tab-content active">
+            <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
+            <div id="tab-demographics" class="misc-tab-content active">
                 <div class="misc-section-description">
-                    <strong>Agent Attributes:</strong> Configure political leanings, education levels, and professions that define the social and professional characteristics of simulated agents in your experiments.
+                    <strong>Demographics & Attributes:</strong> Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-6">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Political Leanings</h3>
+                <style>
+                    .misc-grid {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 20px;
+                        margin-bottom: 20px;
+                    }
+                    
+                    @media (max-width: 1400px) {
+                        .misc-grid {
+                            grid-template-columns: repeat(2, 1fr);
+                        }
+                    }
+                    
+                    @media (max-width: 768px) {
+                        .misc-grid {
+                            grid-template-columns: 1fr;
+                        }
+                    }
+                    
+                    .misc-compact-box {
+                        background: #fff;
+                        border: 1px solid #e5e7eb;
+                        border-radius: 8px;
+                        padding: 16px;
+                        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                        transition: box-shadow 0.2s;
+                    }
+                    
+                    .misc-compact-box:hover {
+                        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    }
+                    
+                    .misc-compact-box h3 {
+                        font-size: 1em;
+                        font-weight: 600;
+                        margin-bottom: 12px;
+                        color: #1f2937;
+                        border-bottom: 1px solid #e5e7eb;
+                        padding-bottom: 8px;
+                    }
+                    
+                    .misc-compact-box .box-content {
+                        margin-top: 12px;
+                    }
+                    
+                    .misc-compact-box .input {
+                        font-size: 0.9em;
+                        padding: 6px 10px;
+                    }
+                    
+                    .misc-compact-box .button {
+                        font-size: 0.9em;
+                        padding: 8px 12px;
+                    }
+                    
+                    .misc-compact-box #leaning_table,
+                    .misc-compact-box #edu_table,
+                    .misc-compact-box #profession_table,
+                    .misc-compact-box #language_table,
+                    .misc-compact-box #nationality_table {
+                        font-size: 0.85em;
+                    }
+                    
+                    .misc-compact-box .box-lines {
+                        margin-top: 12px;
+                    }
+                    
+                    .misc-compact-box .box-line {
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                        margin-bottom: 8px;
+                    }
+                    
+                    .misc-compact-box .box-line .left {
+                        flex: 0 0 auto;
+                        font-size: 0.85em;
+                        font-weight: 500;
+                        color: #374151;
+                        min-width: 60px;
+                    }
+                    
+                    .misc-compact-box .box-line .right {
+                        flex: 1;
+                    }
+                </style>
+
+                <div class="misc-grid">
+                    <div class="misc-compact-box">
+                        <h3>Political Leanings</h3>
 
                         <div class="box-content">
 
@@ -157,7 +242,9 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
+            limit: 5,
             server: {
                 url: (prev, page, limit) => updateUrl(prev, { start: page * limit, length: limit }),
             },
@@ -208,12 +295,12 @@
                         </div>
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Political Leaning</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Political Leaning</h4>
                             <form action="/admin/create_leaning" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="leaning"
+                                        <span class="right" ><input type="text" name="leaning"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -226,9 +313,8 @@
                         </div>
                     </div>
 
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Education Levels</h3>
+                    <div class="misc-compact-box">
+                        <h3>Education Levels</h3>
 
                         <div class="box-content">
 
@@ -316,6 +402,7 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
             server: {
                 url: (prev, page, limit) => updateUrl5(prev, { start: page * limit, length: limit }),
@@ -367,12 +454,12 @@
                         </div>
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Education Level</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Education Level</h4>
                             <form action="/admin/create_education" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="education_level"
+                                        <span class="right" ><input type="text" name="education_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -385,12 +472,8 @@
                         </div>
                     </div>
 
-
-                </div>
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
+                    <div class="misc-compact-box">
+                        <h3>Professions</h3>
                         <h3 class="title is-5 is-thin">Available Professions</h3>
 
                         <div class="box-content">
@@ -483,6 +566,7 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
             server: {
                 url: (prev, page, limit) => updateUrl4(prev, { start: page * limit, length: limit }),
@@ -532,18 +616,324 @@
                         </div>
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Profession</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Profession</h4>
                             <form action="/admin/create_profession" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="profession"
+                                        <span class="right" ><input type="text" name="profession"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Category</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="background"
+                                        <span class="right" ><input type="text" name="background"
                                                                                        class="input"></span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="misc-compact-box">
+                        <h3>Languages</h3>
+
+                        <div class="box-content">
+                            <div id="language_table"></div>
+                            <script>
+    const tableDiv1 = document.getElementById('language_table');
+
+    const updateUrl1 = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributes1 = (data, row, col) => {
+        if (row) {
+            const columnId = col.id;
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': columnId
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const grid1 = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'language',
+                name: 'Name',
+                attributes: editableCellAttributes1
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_language/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            grid1.forceRender();
+                                        } else {
+                                            alert("Failed to delete language.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/languages_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrl1(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'language'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrl1(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            limit: 5,
+            enabled: true,
+            limit: 5,
+            server: {
+                url: (prev, page, limit) => updateUrl1(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    grid1.render(tableDiv1);
+
+    let savedValue1;
+
+    tableDiv1.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValue1 = ev.target.textContent;
+        }
+    });
+
+    tableDiv1.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValue1 !== ev.target.textContent) {
+                fetch('/admin/languages_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValue1 = undefined;
+        }
+    });
+
+    tableDiv1.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValue1;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+                        </div>
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Language</h4>
+                            <form action="/admin/create_language" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Name</span>
+                                        <span class="right"><input type="text" name="language" class="input"></span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="misc-compact-box">
+                        <h3>Nationalities</h3>
+
+                        <div class="box-content">
+                            <div id="nationality_table"></div>
+                           <script>
+    const tableDiv2 = document.getElementById('nationality_table');
+
+    const updateUrl2 = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributes2 = (data, row, col) => {
+        if (row) {
+            const columnId = col.id;
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': columnId
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const grid2 = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'nationality',
+                name: 'Name',
+                attributes: editableCellAttributes2
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_nationality/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            grid2.forceRender();
+                                        } else {
+                                            alert("Failed to delete nationality.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/nationalities_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrl2(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'nationality'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrl2(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            limit: 5,
+            enabled: true,
+            limit: 5,
+            server: {
+                url: (prev, page, limit) => updateUrl2(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    grid2.render(tableDiv2);
+
+    let savedValue2;
+
+    tableDiv2.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValue2 = ev.target.textContent;
+        }
+    });
+
+    tableDiv2.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValue2 !== ev.target.textContent) {
+                fetch('/admin/nationalities_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValue2 = undefined;
+        }
+    });
+
+    tableDiv2.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValue2;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+                        </div>
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Nationality</h4>
+                            <form action="/admin/create_nationality" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Name</span>
+                                        <span class="right"><input type="text" name="nationality" class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
@@ -556,19 +946,19 @@
                     </div>
                 </div>
             </div>
-            </div>
-            <!-- End Agent Attributes Tab -->
+            <!-- End Demographics & Attributes Tab -->
 
-            <!-- Content & Topics Tab -->
-            <div id="tab-content" class="misc-tab-content">
+
+
+            <!-- Content & Behavior Tab -->
+            <div id="tab-content-behavior" class="misc-tab-content">
                 <div class="misc-section-description">
-                    <strong>Content & Topics:</strong> Define content topics and categories that agents can engage with, helping to create realistic content interactions and discussions within your simulations.
+                    <strong>Content & Behavior:</strong> Define content topics, toxicity levels, and activity patterns to create realistic agent behaviors and content interactions within your simulations.
                 </div>
 
-                <div class="columns">
-                    <div class="column is-12">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Topics</h3>
+                <div class="misc-grid">
+                    <div class="misc-compact-box">
+                        <h3>Topics</h3>
 
                         <div class="box-content">
                             <div id="topics_table"></div>
@@ -654,7 +1044,9 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
+            limit: 5,
             server: {
                 url: (prev, page, limit) => updateUrl6(prev, { start: page * limit, length: limit }),
             },
@@ -700,187 +1092,15 @@
         }
     });
 </script>
-
-
                         </div>
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Topic</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Topic</h4>
                             <form action="/admin/create_topic" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="topic"
-                                                                                       class="input"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Create
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            </div>
-            <!-- End Content & Topics Tab -->
-
-            <!-- Demographics Tab -->
-            <div id="tab-demographics" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>Demographics:</strong> Manage languages and nationalities to create diverse and realistic agent populations that reflect real-world demographic distributions.
-                </div>
-
-                <div class="columns">
-                    <div class="column is-6">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Languages</h3>
-
-                        <div class="box-content">
-
-
-                            <div id="language_table"></div>
-                            <script>
-    const tableDiv1 = document.getElementById('language_table');
-
-    const updateUrl1 = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    const editableCellAttributes1 = (data, row, col) => {
-        if (row) {
-            const columnId = col.id;
-            return {
-                contentEditable: 'true',
-                'data-element-id': row.cells[0].data,
-                'data-column-id': columnId
-            };
-        } else {
-            return {};
-        }
-    };
-
-    const grid1 = new gridjs.Grid({
-        columns: [
-            { id: 'id', hidden: true },
-            {
-                id: 'language',
-                name: 'Name',
-                attributes: editableCellAttributes1
-            },
-            {
-                name: 'Actions',
-                attributes: () => ({ style: 'text-align: center;' }),
-                formatter: (cell, row) => {
-                    return gridjs.h(
-                        'div',
-                        { style: 'display: flex; justify-content: center;' },
-                        gridjs.h(
-                            'button',
-                            {
-                                className: 'btn btn-sm btn-danger',
-                                onClick: () => {
-                                    const id = row.cells[0].data;
-                                    fetch(`/admin/delete_language/${id}`, {
-                                        method: 'DELETE',
-                                    }).then(res => {
-                                        if (res.ok) {
-                                            grid1.forceRender();
-                                        } else {
-                                            alert("Failed to delete language.");
-                                        }
-                                    });
-                                }
-                            },
-                            'Delete'
-                        )
-                    );
-                }
-            }
-        ],
-        server: {
-            url: '/admin/languages_data',
-            then: results => results.data,
-            total: results => results.total,
-        },
-        search: {
-            enabled: true,
-            server: {
-                url: (prev, search) => updateUrl1(prev, { search }),
-            },
-        },
-        sort: {
-            enabled: true,
-            multiColumn: true,
-            server: {
-                url: (prev, columns) => {
-                    const columnIds = ['id', 'language'];
-                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                    return updateUrl1(prev, { sort });
-                },
-            },
-        },
-        pagination: {
-            enabled: true,
-            server: {
-                url: (prev, page, limit) => updateUrl1(prev, { start: page * limit, length: limit }),
-            },
-        },
-    });
-
-    grid1.render(tableDiv1);
-
-    let savedValue1;
-
-    tableDiv1.addEventListener('focusin', ev => {
-        if (ev.target.tagName === 'TD') {
-            savedValue1 = ev.target.textContent;
-        }
-    });
-
-    tableDiv1.addEventListener('focusout', ev => {
-        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
-            if (savedValue1 !== ev.target.textContent) {
-                fetch('/admin/languages_data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: ev.target.dataset.elementId,
-                        [ev.target.dataset.columnId]: ev.target.textContent
-                    }),
-                });
-            }
-            savedValue1 = undefined;
-        }
-    });
-
-    tableDiv1.addEventListener('keydown', ev => {
-        if (ev.target.tagName === 'TD') {
-            if (ev.key === 'Escape') {
-                ev.target.textContent = savedValue1;
-                ev.target.blur();
-            } else if (ev.key === 'Enter') {
-                ev.preventDefault();
-                ev.target.blur();
-            }
-        }
-    });
-</script>
-
-
-                        </div>
-
-
-                        <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Language</h3>
-                            <form action="/admin/create_language" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="language"
-                                                                                       class="input"></span>
+                                        <span class="right"><input type="text" name="topic" class="input"></span>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
@@ -892,179 +1112,8 @@
                         </div>
                     </div>
 
-                </div>
-
-                <div class="column is-6">
-
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Nationalities</h3>
-
-                        <div class="box-content">
-                            <div id="nationality_table"></div>
-                           <script>
-    const tableDiv2 = document.getElementById('nationality_table');
-
-    const updateUrl2 = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    const editableCellAttributes2 = (data, row, col) => {
-        if (row) {
-            const columnId = col.id;
-            return {
-                contentEditable: 'true',
-                'data-element-id': row.cells[0].data,
-                'data-column-id': columnId
-            };
-        } else {
-            return {};
-        }
-    };
-
-    const grid2 = new gridjs.Grid({
-        columns: [
-            { id: 'id', hidden: true },
-            {
-                id: 'nationality',
-                name: 'Name',
-                attributes: editableCellAttributes2
-            },
-            {
-                name: 'Actions',
-                attributes: () => ({ style: 'text-align: center;' }),
-                formatter: (cell, row) => {
-                    return gridjs.h(
-                        'div',
-                        { style: 'display: flex; justify-content: center;' },
-                        gridjs.h(
-                            'button',
-                            {
-                                className: 'btn btn-sm btn-danger',
-                                onClick: () => {
-                                    const id = row.cells[0].data;
-                                    fetch(`/admin/delete_nationality/${id}`, {
-                                        method: 'DELETE',
-                                    }).then(res => {
-                                        if (res.ok) {
-                                            grid2.forceRender();
-                                        } else {
-                                            alert("Failed to delete nationality.");
-                                        }
-                                    });
-                                }
-                            },
-                            'Delete'
-                        )
-                    );
-                }
-            }
-        ],
-        server: {
-            url: '/admin/nationalities_data',
-            then: results => results.data,
-            total: results => results.total,
-        },
-        search: {
-            enabled: true,
-            server: {
-                url: (prev, search) => updateUrl2(prev, { search }),
-            },
-        },
-        sort: {
-            enabled: true,
-            multiColumn: true,
-            server: {
-                url: (prev, columns) => {
-                    const columnIds = ['id', 'nationality'];
-                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                    return updateUrl2(prev, { sort });
-                },
-            },
-        },
-        pagination: {
-            enabled: true,
-            server: {
-                url: (prev, page, limit) => updateUrl2(prev, { start: page * limit, length: limit }),
-            },
-        },
-    });
-
-    grid2.render(tableDiv2);
-
-    let savedValue2;
-
-    tableDiv2.addEventListener('focusin', ev => {
-        if (ev.target.tagName === 'TD') {
-            savedValue2 = ev.target.textContent;
-        }
-    });
-
-    tableDiv2.addEventListener('focusout', ev => {
-        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
-            if (savedValue2 !== ev.target.textContent) {
-                fetch('/admin/nationalities_data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        id: ev.target.dataset.elementId,
-                        [ev.target.dataset.columnId]: ev.target.textContent
-                    }),
-                });
-            }
-            savedValue2 = undefined;
-        }
-    });
-
-    tableDiv2.addEventListener('keydown', ev => {
-        if (ev.target.tagName === 'TD') {
-            if (ev.key === 'Escape') {
-                ev.target.textContent = savedValue2;
-                ev.target.blur();
-            } else if (ev.key === 'Enter') {
-                ev.preventDefault();
-                ev.target.blur();
-            }
-        }
-    });
-</script>
-
-                        </div>
-
-
-                        <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Nationality</h3>
-                            <form action="/admin/create_nationality" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="nationality"
-                                                                                       class="input"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Create
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            </div>
-            <!-- End Demographics Tab -->
-
-            <!-- Behavior Profiles Tab -->
-            <div id="tab-behavior" class="misc-tab-content">
-                <div class="misc-section-description">
-                    <strong>Behavior Profiles:</strong> Configure toxicity levels and hourly activity patterns to simulate realistic agent behaviors and interaction patterns throughout the day.
-                </div>
-
-                <div class="columns">
-                    <div class="column is-12">
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Available Toxicity Levels</h3>
+                    <div class="misc-compact-box">
+                        <h3>Toxicity Levels</h3>
 
                         <div class="box-content">
                             <div id="toxicity_table"></div>
@@ -1149,6 +1198,7 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
             server: {
                 url: (prev, page, limit) => updateUrl3(prev, { start: page * limit, length: limit }),
@@ -1199,12 +1249,12 @@
 
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Toxicity Level</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Toxicity Level</h4>
                             <form action="/admin/create_toxicity_level" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="toxicity_level"
+                                        <span class="right" ><input type="text" name="toxicity_level"
                                                                                        class="input"></span>
                                     </div>
                                 </div>
@@ -1217,12 +1267,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="columns">
-                <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Activity Profiles</h3>
+                <!-- Activity Profiles in its own row spanning 2 columns -->
+                <div class="misc-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="misc-compact-box" style="grid-column: span 2;">
+                        <h3>Activity Profiles</h3>
 
                         <div class="box-content">
                             <div id="activity_profiles_table"></div>
@@ -1252,12 +1301,12 @@
                 id: 'name',
                 name: 'Name',
                 attributes: editableCellAttributesActivity,
-                width: '200px'
+                width: '10%'
             },
             {
                 id: 'hours',
                 name: 'Activity Hours',
-                width: '500px',
+                width: '80%',
                 formatter: (cell) => {
                     const hours = cell ? cell.split(',').map(h => parseInt(h.trim())) : [];
                     const barHtml = Array.from({length: 24}, (_, i) => {
@@ -1272,7 +1321,7 @@
             {
                 name: 'Actions',
                 attributes: () => ({ style: 'text-align: center;' }),
-                width: '100px',
+                width: '10%',
                 formatter: (cell, row) => {
                     return gridjs.h(
                         'div',
@@ -1323,6 +1372,7 @@
             },
         },
         pagination: {
+            limit: 5,
             enabled: true,
             server: {
                 url: (prev, page, limit) => updateUrlActivity(prev, { start: page * limit, length: limit }),
@@ -1373,12 +1423,12 @@
 
 
                         <div class="box-content" style="margin-top: 30px;">
-                            <h3 class="title is-5 is-thin">New Activity Profile</h3>
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Activity Profile</h4>
                             <form action="/admin/create_activity_profile" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Profile Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="name" required
+                                        <span class="right" ><input type="text" name="name" required
                                                                                        class="input" placeholder="e.g., Morning Active"></span>
                                     </div>
                                     <div class="box-line" style="display: block; padding: 15px 0;">
@@ -1496,8 +1546,7 @@
                     </div>
                 </div>
             </div>
-            </div>
-            <!-- End Behavior Profiles Tab -->
+            <!-- End Content & Behavior Tab -->
 
             <script>
                 function switchMiscTab(tabName) {
