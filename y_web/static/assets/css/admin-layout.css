@@ -25,10 +25,11 @@
 
 /* 
  * Ensure Jupyter container uses full available width
+ * More specific selector to avoid !important
  */
-.jupyter-container {
-    width: 100% !important;
-    max-width: none !important;
+.view-wrapper.is-dashboard .dashboard-container .jupyter-container {
+    width: 100%;
+    max-width: none;
 }
 
 /*
