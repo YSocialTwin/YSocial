@@ -90,7 +90,7 @@ def create_population():
     based on the configuration.
 
     Form data:
-        pop_name, pop_descr, n_agents, user_type, age_min, age_max,
+        pop_name, pop_descr, n_agents, user_type,
         education_levels, political_leanings, toxicity_levels,
         nationalities, languages, tags (interests), crecsys, frecsys,
         actions_min, actions_max, actions_distribution, poisson_lambda,
@@ -104,8 +104,6 @@ def create_population():
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
     user_type = request.form.get("user_type")
-    age_min = int(request.form.get("age_min"))
-    age_max = int(request.form.get("age_max"))
 
     llm = request.form.get("host_llm")
 
@@ -182,8 +180,8 @@ def create_population():
         descr=descr,
         size=n_agents,
         llm=user_type,
-        age_min=age_min,
-        age_max=age_max,
+        age_min=None,
+        age_max=None,
         education=education_levels,
         leanings=political_leanings,
         nationalities=nationalities,

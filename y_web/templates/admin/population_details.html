@@ -261,21 +261,40 @@
                      <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="leanings" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="leanings" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("leanings", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Political Leanings',
-                                          data:  {{ data["leaning"]["total"] }},
+                                            data:  {{ data["leaning"]["total"] }},
+                                            backgroundColor: 'rgba(34, 197, 94, 0.7)',
+                                            borderColor: 'rgba(34, 197, 94, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["leaning"]["leanings"]|tojson }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Political Leanings',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
                                             }
                                         }
                                     }
@@ -289,21 +308,40 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="nationalities" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="nationalities" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("nationalities", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Nationalities',
-                                          data:  {{ data["nationalities"]["total"] }},
+                                            data:  {{ data["nationalities"]["total"] }},
+                                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                            borderColor: 'rgba(59, 130, 246, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["nationalities"]["nationalities"]|tojson  }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Nationalities',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
+                                            },
+                                            x: {
+                                                ticks: { font: { size: 11 } }
                                             }
                                         }
                                     }
@@ -320,26 +358,45 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="ages" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="ages" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("ages", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Age',
-                                          data:  {{ data["age"]["total"] }},
+                                            data:  {{ data["age"]["total"] }},
+                                            backgroundColor: 'rgba(168, 85, 247, 0.7)',
+                                            borderColor: 'rgba(168, 85, 247, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["age"]["age"]|tojson  }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Age Distribution',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
                                             },
                                             x: {
-                                                min: 0,
-                                                max: 100,
-                                              }
+                                                ticks: { 
+                                                    font: { size: 11 },
+                                                    maxRotation: 45,
+                                                    minRotation: 45
+                                                }
+                                            }
                                         }
                                     }
 
@@ -352,26 +409,41 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="languages" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="languages" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("languages", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Spoken Languages',
-                                          data:  {{ data["languages"]["total"] }},
+                                            data:  {{ data["languages"]["total"] }},
+                                            backgroundColor: 'rgba(234, 179, 8, 0.7)',
+                                            borderColor: 'rgba(234, 179, 8, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["languages"]["languages"]|tojson  }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Spoken Languages',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
                                             },
                                             x: {
-                                                min: 0,
-                                                max: 100,
-                                              }
+                                                ticks: { font: { size: 11 } }
+                                            }
                                         }
                                     }
 
@@ -388,26 +460,41 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="edu" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="edu" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("edu", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Education',
-                                          data:  {{ data["education"]["total"] }},
+                                            data:  {{ data["education"]["total"] }},
+                                            backgroundColor: 'rgba(236, 72, 153, 0.7)',
+                                            borderColor: 'rgba(236, 72, 153, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["education"]["education"]|tojson  }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Education Levels',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
                                             },
                                             x: {
-                                                min: 0,
-                                                max: 100,
-                                              }
+                                                ticks: { font: { size: 11 } }
+                                            }
                                         }
                                     }
 
@@ -419,26 +506,41 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="tox" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="tox" style="width:100%;height:250px"></canvas>
                             <script>
                                 new Chart("tox", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
                                             label: 'Toxicity Levels',
-                                          data:  {{ data["toxicity"]["total"] }},
+                                            data:  {{ data["toxicity"]["total"] }},
+                                            backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                                            borderColor: 'rgba(239, 68, 68, 1)',
+                                            borderWidth: 1
                                         }],
                                         labels: {{ data["toxicity"]["toxicity"]|tojson  }}
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Toxicity Levels',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
                                             },
                                             x: {
-                                                min: 0,
-                                                max: 100,
-                                              }
+                                                ticks: { font: { size: 11 } }
+                                            }
                                         }
                                     }
 
@@ -459,26 +561,54 @@
                     <div class="dashboard-box">
                         <div class="box-content">
 
-                            <canvas id="activity" style="width:100%;max-width:700px"></canvas>
+                            <canvas id="activity" style="width:100%;height:250px"></canvas>
                             <script>
+                                // Map numeric activity levels to descriptive labels
+                                const activityLevels = {{ data["activity"]["activity"]|tojson }};
+                                const activityLabels = activityLevels.map(level => {
+                                    const labelMap = {
+                                        1: 'Very Low',
+                                        2: 'Low',
+                                        3: 'Medium',
+                                        4: 'High',
+                                        5: 'Very High'
+                                    };
+                                    return labelMap[level] || `Level ${level}`;
+                                });
+                                
                                 new Chart("activity", {
                                     type: 'bar',
                                     data: {
                                         datasets: [{
-                                            label: 'Daily Activity levels',
-                                          data:  {{ data["activity"]["total"] }},
+                                            label: 'Daily Activity Levels',
+                                            data:  {{ data["activity"]["total"] }},
+                                            backgroundColor: 'rgba(20, 184, 166, 0.7)',
+                                            borderColor: 'rgba(20, 184, 166, 1)',
+                                            borderWidth: 1
                                         }],
-                                        labels: {{ data["activity"]["activity"]|tojson  }}
+                                        labels: activityLabels
                                       },
                                     options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                            legend: {
+                                                display: false
+                                            },
+                                            title: {
+                                                display: true,
+                                                text: 'Daily Activity Levels',
+                                                font: { size: 14, weight: 'bold' }
+                                            }
+                                        },
                                         scales: {
                                             y: {
-                                                beginAtZero: true
+                                                beginAtZero: true,
+                                                ticks: { font: { size: 11 } }
                                             },
                                             x: {
-                                                min: 0,
-                                                max: 5,
-                                              }
+                                                ticks: { font: { size: 11 } }
+                                            }
                                         }
                                     }
 
