@@ -142,9 +142,6 @@ def create_population():
         "age_classes": age_classes_percentages,
     }
 
-    # TODO: Store percentages in a separate table or extend Population model
-    # For now, the percentages are retrieved but not persisted, maintaining backward compatibility
-
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
     interests = request.form.get("tags")

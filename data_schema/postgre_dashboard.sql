@@ -432,7 +432,8 @@ INSERT INTO professions (profession, background) VALUES
 ('Busker', 'Informal Work'),
 ('Escort', 'Informal Work'),
 ('Gambler', 'Informal Work'),
-('Scavenger', 'Informal Work');
+('Scavenger', 'Informal Work'),
+('Student', 'Student');
 
 INSERT INTO languages (language) VALUES
 ('English'),
