@@ -1742,7 +1742,7 @@ def create_age_class():
         default_percentage = int(request.form.get("default_percentage", 0))
     except (ValueError, TypeError):
         flash("Invalid age or percentage value provided.")
-        return redirect(request.referrer)
+        return miscellanea()
 
     age_class = AgeClass(
         name=name,
@@ -1753,7 +1753,7 @@ def create_age_class():
     db.session.add(age_class)
     db.session.commit()
 
-    return redirect(request.referrer)
+    return miscellanea()
 
 
 @experiments.route("/admin/delete_age_class/<int:age_class_id>", methods=["DELETE"])
