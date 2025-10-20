@@ -1,5 +1,61 @@
 {% include "admin/head.html" %}
 
+<style>
+    .sidebar-box {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar-box h3 {
+        font-size: 1em;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .sidebar-box .help-block {
+        font-size: 0.85em;
+        line-height: 1.5;
+        color: #6b7280;
+    }
+    .sidebar-box .help-block p {
+        margin: 0 0 10px 0;
+    }
+    .sidebar-box .help-block p:last-child {
+        margin-bottom: 0;
+    }
+    .sidebar-box .help-block b {
+        color: #374151;
+        font-weight: 600;
+    }
+    .sidebar-box .input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: border-color 0.2s;
+    }
+    .sidebar-box .input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    .sidebar-box .button-wrap {
+        margin-top: 12px;
+    }
+    .sidebar-box .button {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -252,41 +308,6 @@
                 <!--Dashboard column-->
                 <div class="column is-8">
                     <!--Dashboard box-->
-
-                    {%if dbtype=="sqlite" %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Upload Experiment</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Experiment zip</span>
-                                        <span class="right"><input type="file" id="experiment" name="experiment"
-                                                                   class="input_file"></span>
-                                    </div>
-<!--
-                                    <div class="box-line">
-                                        <span class="left">SQlite file path</span>
-                                        <span class="right"><input type="file" id="sqlite" name="sqlite_filename"
-                                                                   class="input_file"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">YServer configuration file</span>
-                                        <span class="right"><input type="file" id="yserver_conf" name="yserver_filename"
-                                                                   class="input_file"></span>
-                                    </div>
-                                    -->
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Load Experiment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    {% endif %}
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">New Experiment</h3>
@@ -626,8 +647,8 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                    <div class="sidebar-box">
+                        <h3>Guide</h3>
                         <div class="help-block">
 
                             <p>
@@ -654,6 +675,79 @@
                             </p>
                         </div>
                     </div>
+
+                    {%if dbtype=="sqlite" %}
+                    <div class="sidebar-box">
+                        <h3>Upload Experiment</h3>
+                        <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
+                            <style>
+                                .file-upload-wrapper-exp {
+                                    position: relative;
+                                    overflow: hidden;
+                                    display: block;
+                                    margin-bottom: 12px;
+                                }
+                                .file-upload-wrapper-exp input[type=file] {
+                                    position: absolute;
+                                    left: -9999px;
+                                }
+                                .file-upload-label-exp {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    padding: 10px 12px;
+                                    background: #f9fafb;
+                                    border: 1px dashed #d1d5db;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    transition: all 0.2s;
+                                    font-size: 0.85em;
+                                }
+                                .file-upload-label-exp:hover {
+                                    background: #f3f4f6;
+                                    border-color: #22c55e;
+                                }
+                                .file-upload-icon-exp {
+                                    margin-right: 8px;
+                                    font-size: 1.1em;
+                                }
+                                .file-upload-text-exp {
+                                    color: #6b7280;
+                                }
+                                .file-name-display-exp {
+                                    margin-top: 6px;
+                                    font-size: 0.8em;
+                                    color: #22c55e;
+                                    font-weight: 500;
+                                    text-align: center;
+                                }
+                            </style>
+                            <div class="file-upload-wrapper-exp">
+                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)">
+                                <label for="experiment" class="file-upload-label-exp">
+                                    <span class="file-upload-icon-exp">📦</span>
+                                    <span class="file-upload-text-exp">Choose ZIP file...</span>
+                                </label>
+                                <div id="experiment-file-name-display" class="file-name-display-exp"></div>
+                            </div>
+                            <div class="button-wrap">
+                                <button class="button is-solid primary-button is-fullwidth">
+                                    Upload Experiment
+                                </button>
+                            </div>
+                        </form>
+                        <script>
+                            function displayExperimentFileName(input) {
+                                const display = document.getElementById('experiment-file-name-display');
+                                if (input.files && input.files[0]) {
+                                    display.textContent = '✓ ' + input.files[0].name;
+                                } else {
+                                    display.textContent = '';
+                                }
+                            }
+                        </script>
+                    </div>
+                    {% endif %}
 
 
                 </div>
