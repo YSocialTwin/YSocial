@@ -28,6 +28,7 @@ from y_web import db  # , app
 from y_web.models import (
     ActivityProfile,
     Admin_users,
+    AgeClass,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -1649,6 +1650,116 @@ def delete_toxicity_level(toxicity_level_id):
         flash("Toxicity level not found.")
         return miscellanea()
     db.session.delete(toxicity_level)
+    db.session.commit()
+    return miscellanea()
+
+
+@experiments.route("/admin/age_classes_data", methods=["GET", "POST"])
+@login_required
+def age_classes_data():
+    """Display age classes data page and handle inline edits."""
+    if request.method == "POST":
+        # Handle inline edit
+        data = request.get_json()
+        age_class_id = data.get("id")
+        age_class = AgeClass.query.filter_by(id=age_class_id).first()
+        if age_class:
+            if "name" in data:
+                age_class.name = data["name"]
+            if "age_start" in data:
+                age_class.age_start = int(data["age_start"])
+            if "age_end" in data:
+                age_class.age_end = int(data["age_end"])
+            if "default_percentage" in data:
+                age_class.default_percentage = int(data["default_percentage"])
+            db.session.commit()
+        return {"success": True}
+
+    # GET request - return data for grid
+    query = AgeClass.query
+
+    # search filter
+    search = request.args.get("search")
+    if search:
+        query = query.filter(db.or_(AgeClass.name.like(f"%{search}%")))
+    total = query.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            name = s[1:]
+            if name not in ["name", "age_start", "age_end", "default_percentage"]:
+                name = "name"
+            col = getattr(AgeClass, name)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            query = query.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        query = query.offset(start).limit(length)
+
+    # response
+    res = query.all()
+
+    res = {
+        "data": [
+            {
+                "id": ac.id,
+                "name": ac.name,
+                "age_start": ac.age_start,
+                "age_end": ac.age_end,
+                "default_percentage": ac.default_percentage,
+            }
+            for ac in res
+        ],
+        "total": total,
+    }
+
+    return res
+
+
+@experiments.route("/admin/create_age_class", methods=["POST"])
+@login_required
+def create_age_class():
+    """Create age class."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    age_start = int(request.form.get("age_start", 0))
+    age_end = int(request.form.get("age_end", 100))
+    default_percentage = int(request.form.get("default_percentage", 0))
+
+    age_class = AgeClass(
+        name=name,
+        age_start=age_start,
+        age_end=age_end,
+        default_percentage=default_percentage,
+    )
+    db.session.add(age_class)
+    db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@experiments.route("/admin/delete_age_class/<int:age_class_id>", methods=["DELETE"])
+@login_required
+def delete_age_class(age_class_id):
+    """Delete age class."""
+    check_privileges(current_user.username)
+
+    age_class = AgeClass.query.filter_by(id=age_class_id).first()
+    if not age_class:
+        flash("Age class not found.")
+        return miscellanea()
+    db.session.delete(age_class)
     db.session.commit()
     return miscellanea()
 

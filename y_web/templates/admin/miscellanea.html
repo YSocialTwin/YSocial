@@ -943,6 +943,188 @@
                             </form>
                         </div>
                     </div>
+
+                    <div class="misc-compact-box">
+                        <h3>Age Classes</h3>
+
+                        <div class="box-content">
+                            <div id="age_classes_table"></div>
+
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                            <script>
+    const tableDivAgeClasses = document.getElementById('age_classes_table');
+
+    const updateUrlAgeClasses = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributesAgeClasses = (data, row, col) => {
+        if (row) {
+            const columnId = col.id;
+            return {
+                contentEditable: 'true',
+                'data-element-id': row.cells[0].data,
+                'data-column-id': columnId
+            };
+        } else {
+            return {};
+        }
+    };
+
+    const gridAgeClasses = new gridjs.Grid({
+        columns: [
+            { id: 'id', hidden: true },
+            {
+                id: 'name',
+                name: 'Name',
+                attributes: editableCellAttributesAgeClasses
+            },
+            {
+                id: 'age_start',
+                name: 'Age Start',
+                attributes: editableCellAttributesAgeClasses
+            },
+            {
+                id: 'age_end',
+                name: 'Age End',
+                attributes: editableCellAttributesAgeClasses
+            },
+            {
+                id: 'default_percentage',
+                name: 'Default %',
+                attributes: editableCellAttributesAgeClasses
+            },
+            {
+                name: 'Actions',
+                attributes: () => ({ style: 'text-align: center;' }),
+                formatter: (cell, row) => {
+                    return gridjs.h(
+                        'div',
+                        { style: 'display: flex; justify-content: center;' },
+                        gridjs.h(
+                            'button',
+                            {
+                                className: 'btn btn-sm btn-danger',
+                                onClick: () => {
+                                    const id = row.cells[0].data;
+                                    fetch(`/admin/delete_age_class/${id}`, {
+                                        method: 'DELETE',
+                                    }).then(res => {
+                                        if (res.ok) {
+                                            gridAgeClasses.forceRender();
+                                        } else {
+                                            alert("Failed to delete age class.");
+                                        }
+                                    });
+                                }
+                            },
+                            'Delete'
+                        )
+                    );
+                }
+            }
+        ],
+        server: {
+            url: '/admin/age_classes_data',
+            then: results => results.data,
+            total: results => results.total,
+        },
+        search: {
+            enabled: true,
+            server: {
+                url: (prev, search) => updateUrlAgeClasses(prev, { search }),
+            },
+        },
+        sort: {
+            enabled: true,
+            multiColumn: true,
+            server: {
+                url: (prev, columns) => {
+                    const columnIds = ['id', 'name', 'age_start', 'age_end', 'default_percentage'];
+                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                    return updateUrlAgeClasses(prev, { sort });
+                },
+            },
+        },
+        pagination: {
+            limit: 5,
+            enabled: true,
+            server: {
+                url: (prev, page, limit) => updateUrlAgeClasses(prev, { start: page * limit, length: limit }),
+            },
+        },
+    });
+
+    gridAgeClasses.render(tableDivAgeClasses);
+
+    // Inline editing
+    let savedValueAgeClasses;
+
+    tableDivAgeClasses.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD') {
+            savedValueAgeClasses = ev.target.textContent;
+        }
+    });
+
+    tableDivAgeClasses.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.dataset.elementId) {
+            if (savedValueAgeClasses !== ev.target.textContent) {
+                fetch('/admin/age_classes_data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: ev.target.dataset.elementId,
+                        [ev.target.dataset.columnId]: ev.target.textContent
+                    }),
+                });
+            }
+            savedValueAgeClasses = undefined;
+        }
+    });
+
+    tableDivAgeClasses.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD') {
+            if (ev.key === 'Escape') {
+                ev.target.textContent = savedValueAgeClasses;
+                ev.target.blur();
+            } else if (ev.key === 'Enter') {
+                ev.preventDefault();
+                ev.target.blur();
+            }
+        }
+    });
+</script>
+                        </div>
+
+                        <div class="box-content" style="margin-top: 30px;">
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px;">New Age Class</h4>
+                            <form action="/admin/create_age_class" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Name</span>
+                                        <span class="right"><input type="text" name="name" class="input" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Age Start</span>
+                                        <span class="right"><input type="number" name="age_start" class="input" min="0" max="150" value="0" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Age End</span>
+                                        <span class="right"><input type="number" name="age_end" class="input" min="0" max="150" value="100" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Default %</span>
+                                        <span class="right"><input type="number" name="default_percentage" class="input" min="0" max="100" value="0" required></span>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- End Demographics & Attributes Tab -->
