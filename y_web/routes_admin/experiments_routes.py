@@ -1399,11 +1399,31 @@ def create_age_class():
     age_start = request.form.get("age_start")
     age_end = request.form.get("age_end")
 
+    # Validate inputs
+    if not name or not name.strip():
+        flash("Age class name cannot be empty.")
+        return redirect(request.referrer or "/admin/miscellanea")
+
+    try:
+        age_start = int(age_start)
+        age_end = int(age_end)
+    except (ValueError, TypeError):
+        flash("Age start and end must be valid integers.")
+        return redirect(request.referrer or "/admin/miscellanea")
+
+    if age_start < 0 or age_end < 0:
+        flash("Age values must be positive.")
+        return redirect(request.referrer or "/admin/miscellanea")
+
+    if age_start > age_end:
+        flash("Age start must be less than or equal to age end.")
+        return redirect(request.referrer or "/admin/miscellanea")
+
     ac = AgeClasses(name=name, age_start=age_start, age_end=age_end)
     db.session.add(ac)
     db.session.commit()
 
-    return redirect(request.referrer)
+    return redirect(request.referrer or "/admin/miscellanea")
 
 
 @experiments.route("/admin/create_topic", methods=["POST"])
