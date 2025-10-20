@@ -6,9 +6,9 @@ demographic profiles, personality traits, and behavioral characteristics
 based on population configuration parameters.
 """
 
+import json
 import math
 import random
-import json
 
 import faker
 import numpy as np
@@ -16,12 +16,13 @@ from sqlalchemy.sql import func
 
 from y_web import db
 from y_web.models import (
+    AgeClass,
     Agent,
     Agent_Population,
+    Education,
     Population,
     PopulationActivityProfile,
     Profession,
-    AgeClass, Education
 )
 
 
@@ -135,7 +136,8 @@ def __sample_age_degree_profession(age_class, edu_classes):
         profession = Profession.query.order_by(func.random()).first()
 
     sampled = random.choices(
-                population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1)[0]
+        population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
+    )[0]
     education_level = int(sampled)
 
     return age, profession, education_level
@@ -211,7 +213,9 @@ def generate_population(population_name, percentages=None, actions_config=None):
 
     for _ in range(population.size):
 
-        age, profession, education_level = __sample_age_degree_profession(age_classes, edu_classes)
+        age, profession, education_level = __sample_age_degree_profession(
+            age_classes, edu_classes
+        )
 
         # sample attributes based on provided percentages
         sampled = {
