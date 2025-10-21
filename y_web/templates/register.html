@@ -49,11 +49,7 @@
         if ('async') {
             script.async = true;
         }
-        script.src = '{{ url_for('
-        static
-        ', filename='
-        assets / js / browser - sync - client.js
-        ') }}';
+        script.src = "{{ url_for('static', filename='assets/js/browser-sync-client.js') }}";
         if (document.body) {
             document.body.appendChild(script);
         } else if (document.head) {
