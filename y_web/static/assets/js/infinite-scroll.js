@@ -148,10 +148,37 @@
             state.postsContainer.appendChild(tempDiv.firstChild);
         }
 
+        // Initialize demo images for newly added posts
+        initializeDemoImages();
+
         // Reinitialize any UI components that need it
         if (window.feather) {
             feather.replace();
         }
+    }
+
+    /**
+     * Initialize demo images by converting data-demo-src to src
+     * This replicates the functionality from global.js for dynamically loaded content
+     */
+    function initializeDemoImages() {
+        // Get all elements with data-demo-src within the posts container
+        const demoImages = state.postsContainer.querySelectorAll('[data-demo-src]');
+        demoImages.forEach(function(img) {
+            const newSrc = img.getAttribute('data-demo-src');
+            if (newSrc) {
+                img.setAttribute('src', newSrc);
+            }
+        });
+
+        // Also handle data-demo-background if present
+        const demoBackgrounds = state.postsContainer.querySelectorAll('[data-demo-background]');
+        demoBackgrounds.forEach(function(elem) {
+            const newBg = elem.getAttribute('data-demo-background');
+            if (newBg) {
+                elem.style.backgroundImage = `url('${newBg}')`;
+            }
+        });
     }
 
     /**
