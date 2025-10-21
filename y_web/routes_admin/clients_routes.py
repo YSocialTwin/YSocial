@@ -229,10 +229,12 @@ def clients(idexp):
     # get only populations already associated with this experiment
     pop_exp_associations = Population_Experiment.query.filter_by(id_exp=idexp).all()
     population_ids = [pe.id_population for pe in pop_exp_associations]
+
+    # get only populations  that are not associated with this experiment
     pops = (
-        Population.query.filter(Population.id.in_(population_ids)).all()
+        Population.query.filter(~Population.id.in_(population_ids)).all()
         if population_ids
-        else []
+        else Population.query.all()
     )
 
     ollamas = ollama_status()
@@ -861,8 +863,20 @@ def delete_client(uid):
     check_privileges(current_user.username)
 
     client = Client.query.filter_by(id=uid).first()
-
     exp_id = client.id_exp
+
+    # delete association of population and experiment if no other client is using it
+    pop_exp = Population_Experiment.query.filter_by(
+        id_population=client.population_id, id_exp=exp_id
+    ).first()
+    if pop_exp:
+        other_clients = Client.query.filter_by(
+            id_exp=exp_id, population_id=client.population_id
+        ).all()
+        if len(other_clients) == 0:
+            db.session.delete(pop_exp)
+            db.session.commit()
+
     db.session.delete(client)
     db.session.commit()
 
