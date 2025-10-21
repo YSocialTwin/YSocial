@@ -311,31 +311,31 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
 
                             <p>
-                                <b>Web Interface</b> allows to interact with the experiment through an online social platform-like interface.<br><br>
-                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> activates the experiment's web interface.<br>
-                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> access the web interface.
+                                <b>Server & Analysis Controls</b><br>
+                                Unified control panel for managing the simulation server, web interface, and data analysis tools.<br><br>
+                                <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i> Start the experiment server<br>
+                                <i class="mdi mdi-stop" style="font-size: 16px;"></i> Stop the experiment server<br>
+                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
+                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
+                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
                                 <br><br>
-                                <em>Note: Only one web interface can be active at a time, even for non-running experiments.</em>
+                                <em>Note: Only one web interface can be active at a time.</em>
                             </p>
                             <hr>
                             <p>
-                                <b>YServer</b>
-                                 is the main component of the experiment. It is responsible for
-                                the execution of the experiment.
-                            </p>
-                            <p>
-                                <b>YClients.</b>
-                                Each client simulates a population of agents. Clients can be started and stopped while the server is running.<br>
+                                <b>Simulation Clients</b><br>
+                                Each client manages a population of agents that interact in the simulation. Clients can be started and paused independently while the server is running.<br><br>
+                                Progress bars show real-time completion status for each client.
                             </p>
                             <hr>
                             <p>
-                                <b>Prompts</b> specify the instruction that the LLM agents will be required to follow during the experiment.<br><br>
-
-                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> allows to edit the prompts to tune them to the simulation needs.
+                                <b>LLM Prompts</b><br>
+                                Define the instructions that LLM agents follow during the experiment.<br><br>
+                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> Edit prompts to customize agent behavior
                             </p>
 
                         </div>
