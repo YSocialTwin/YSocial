@@ -1,6 +1,6 @@
-<div id="feed-post-1" class="card is-post" style="margin-bottom: 0px;">
+<div id="feed-post-{{ thread['post_id'] }}" class="card is-post" style="margin-bottom: 0.75rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);">
     <div class="comments-wrap">
-        <div class="comments-body has-slimscroll">
+        <div class="comments-body has-slimscroll" style="padding: 1rem;">
 
             <div class="media is-comment">
 
@@ -26,8 +26,8 @@
                         {{ thread["post"]|safe }}
                     </p>
 
-                    <div class="card-footer" style="display: flex;">
-                        <div class="likers-text" style="display: inline">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(thread['emotions']) > 0 %}
                             <p style="font-size: .8rem">Emotions</p>
                             {% for em in thread['emotions'] %}
@@ -35,7 +35,7 @@
                             {% endfor %}
                             {% endif %}
                         </div>
-                         <div class="likers-text" style="display: inline">
+                         <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(thread['topics']) > 0 %}
                             <p style="font-size: .8rem">Topics</p>
                             {% for tp in thread['topics'] %}
@@ -50,13 +50,13 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="controls">
+                    <div class="controls" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-top: 0.75rem;">
 
-                        <div class="like-count" id="like-count-{{ thread['post_id'] }}">
+                        <div class="like-count" id="like-count-{{ thread['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
                         <i data-feather="thumbs-up" {% if not bool(thread["is_liked"]) %}style="stroke: #69a2e6;"{% endif %}></i>
                         <span {% if not bool(thread["is_liked"]) %}style="color: #69a2e6;"{% endif %}>{{ thread["likes"] }}</span>
                     </div>
-                    <div class="dislike-count" id="dislike-count-{{ thread['post_id'] }}">
+                    <div class="dislike-count" id="dislike-count-{{ thread['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
                     <i data-feather="thumbs-down" {% if not bool(thread["is_disliked"]) %}style="stroke: #69a2e6;"{% endif %} ></i>
                     <span {% if not bool(thread["is_disliked"]) %}style="color: #69a2e6;"{% endif %}>{{ thread["dislikes"] }}</span>
                 </div>
@@ -71,13 +71,14 @@
                 <a id='{{ thread["post_id"] }}' onClick="editLink(this.id)">Reply</a>
             </div>
             <p id="message-{{ thread['post_id'] }}"></p>
-            <form class="comment_form" id="comment_form-{{ thread['post_id'] }}">
-            <textarea rows="3" class="reply_comment" id="comment-{{ thread['post_id'] }}">@{{ thread["author"] }} </textarea>
+            <form class="comment_form" id="comment_form-{{ thread['post_id'] }}" style="margin-top: 1rem;">
+            <textarea rows="3" class="reply_comment" id="comment-{{ thread['post_id'] }}" style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; resize: vertical; margin-bottom: 0.75rem;">@{{ thread["author"] }} </textarea>
             <button
                     id="add_comment"
                     type="button"
                     class="button is-solid accent-button is-fullwidth"
                     val="{{ thread['post_id'] }}"
+                    style="border-radius: 8px; padding: 0.75rem 1.5rem; transition: all 0.2s ease;"
             >
             Comment
             </button>

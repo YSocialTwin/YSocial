@@ -86,9 +86,9 @@
             <div class="hero is-fullheight is-login">
                 <div class="hero-body">
                     <div class="container">
-                        <div class="left-caption">
-                            <h2>Y Social </h2>
-                            <h4>Where the Digital World comes to life.</h4>
+                        <div class="left-caption" style="padding: 2rem;">
+                            <h2 style="font-size: 2.5rem; font-weight: 700; margin-bottom: 1rem; color: white;">Y Social </h2>
+                            <h4 style="font-size: 1.25rem; font-weight: 400; color: rgba(255, 255, 255, 0.9); line-height: 1.6;">Where the Digital World comes to life.</h4>
                         </div>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                         </div>
                         <!--Form-->
 
-                        <form method="POST" action="{{ url_for('auth.signup') }}">
+                        <form method="POST" action="{{ url_for('auth.signup') }}" style="width: 100%; max-width: 400px;">
                             <div class="login-form">
 
                                 {% with messages = get_flashed_messages() %}
@@ -131,7 +131,7 @@
                                 {% endif %}
                                 {% endwith %}
 
-                                <div class="field">
+                                <div class="field" style="margin-bottom: 1.5rem;">
                                     <div class="control">
                                         <input
                                                 class="input email-input"
@@ -139,42 +139,46 @@
                                                 name="email"
                                                 placeholder="Your email"
                                                 autofocus=""
+                                                style="padding: 0.75rem 1rem 0.75rem 3rem; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; transition: border-color 0.2s ease;"
                                         />
-                                        <div class="input-icon">
+                                        <div class="input-icon" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);">
                                             <i data-feather="user"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="field">
+                                <div class="field" style="margin-bottom: 1.5rem;">
                                     <div class="control">
                                         <input
                                                 class="input password-input"
                                                 type="text"
                                                 placeholder="Username"
                                                 name="name"
+                                                style="padding: 0.75rem 1rem 0.75rem 3rem; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; transition: border-color 0.2s ease;"
                                         />
-                                        <div class="input-icon">
+                                        <div class="input-icon" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);">
                                             <i data-feather="user"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="field">
+                                <div class="field" style="margin-bottom: 1.5rem;">
                                     <div class="control">
                                         <input
                                                 class="input password-input"
                                                 type="password"
                                                 placeholder="Your Password"
                                                 name="password"
+                                                style="padding: 0.75rem 1rem 0.75rem 3rem; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem; transition: border-color 0.2s ease;"
                                         />
-                                        <div class="input-icon">
+                                        <div class="input-icon" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%);">
                                             <i data-feather="lock"></i>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="field">
+                                <div class="field" style="margin-top: 2rem;">
                                     <div class="control">
                                         <button
                                                 class="button is-solid primary-button raised is-rounded is-fullwidth"
+                                                style="padding: 0.875rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(50, 115, 220, 0.3);"
                                         >
                                             Sign Up
                                         </button>
