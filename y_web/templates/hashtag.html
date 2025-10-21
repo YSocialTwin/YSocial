@@ -354,7 +354,7 @@
                         today...
                     </div>
 
-                    <div class="profile-timeline">
+                    <div class="profile-timeline" id="posts-container">
                         {% include "components/posts.html" %}
                     </div>
                     <!-- POST #1 -->
@@ -417,6 +417,19 @@
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for hashtag posts
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/api/hashtag_posts/{{hashtag_id}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
 
 <!-- profile js -->
 
