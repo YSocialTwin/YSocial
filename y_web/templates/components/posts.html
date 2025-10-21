@@ -1,7 +1,7 @@
 {% for index, item in enumerate(items) %}
-<div id="feed-post-1" class="card is-post">
+<div id="feed-post-{{ item['post_id'] }}" class="card is-post" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease;">
 
-    <div class="content-wrap" id="post-{{ item['post_id'] }}">
+    <div class="content-wrap" id="post-{{ item['post_id'] }}" style="padding: 1rem;">
         <!-- Post header -->
         <div class="card-heading">
             <!-- User meta -->
@@ -83,20 +83,20 @@
                 <p>
                     {{ item["post"]|safe }}
                     {% if item['image'] != "" and item["article"] == 0  %}
-                    <div class="post-image" style="text-align: center; width: 100%">
-                        <img src="{{ item['image'].url }}" style="width: 80%; height: auto; margin: auto; display: block;" alt="{{ item['image'].description }}"/>
+                    <div class="post-image" style="text-align: center; width: 100%; margin-top: 1rem;">
+                        <img src="{{ item['image'].url }}" style="max-width: 100%; width: auto; height: auto; margin: auto; display: block; border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);" alt="{{ item['image'].description }}"/>
                      </div>
                     {% endif %}
                     {% if item["article"] != 0 %}
-                    <div class="media-body-news" style="padding: 10px; margin: 10px; background-color: #f9f9f9; border-radius: 15px; box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.2)">
+                    <div class="media-body-news" style="padding: 1rem; margin: 1rem 0; background-color: #f9f9f9; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
                     <object data="{{ item['article']['url'] }}" width="100%" height="300" type="text/html">
-                        <h7><a href="{{ item['article']['url'] }}">{{ item["article"]["title"] }}</a></h7>
+                        <h7><a href="{{ item['article']['url'] }}" style="font-weight: 600; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ item["article"]["title"] }}</a></h7>
                         {% if item['image'] != "" %}
-                        <div class="post-image" style="text-align: center; width: 100%">
-                            <img src="{{ item['image'].url }}" style="width: 80%; height: auto; margin: auto; display: block;" alt="{{ item['image'].description }}"/>
+                        <div class="post-image" style="text-align: center; width: 100%; margin-top: 1rem;">
+                            <img src="{{ item['image'].url }}" style="max-width: 100%; width: auto; height: auto; margin: auto; display: block; border-radius: 8px;" alt="{{ item['image'].description }}"/>
                         </div>
                         {% endif %}
-                        <p class="card-text text-justify" style="font-size: 80%;">{{ item["article"]["summary"] }}</p>
+                        <p class="card-text text-justify" style="font-size: 0.9rem; margin-top: 0.75rem; line-height: 1.5;">{{ item["article"]["summary"] }}</p>
                     </object>
                     </div>
 
@@ -109,11 +109,11 @@
         <!-- /Post body -->
 
         <!-- Post footer -->
-        <div class="card-footer" style="display: flex;">
+        <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; padding: 1rem;">
             <!-- Followers avatars -->
 
             <!-- Followers text -->
-            <div class="likers-text" style="display: inline">
+            <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 {% if len(item['emotions']) > 0 %}
                 <p>Emotions</p>
                 {% for em in item['emotions'] %}
@@ -121,7 +121,7 @@
                 {% endfor %}
                 {% endif %}
             </div>
-            <div class="likers-text" style="display: inline">
+            <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                 {% if len(item['topics']) > 0 %}
                 <p>Topics</p>
                 {% for tp in item['topics'] %}
@@ -136,28 +136,27 @@
                 {% endif %}
             </div>
             <!-- Post statistics -->
-            <div class="social-count">
+            <div class="social-count" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-left: auto; align-items: center;">
 
-                <div class="likes-count" id="share-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="share-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
                     <div class="like-wrapper" id="share-{{ item['post_id'] }}">
-                        <a class="share-button" id="s{{ item['post_id']}}" >
+                        <a class="share-button" id="s{{ item['post_id']}}" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;">
                         <i data-feather="repeat"></i>
                         <span id="span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
                     </div>
                 </div>
 
-
-                <div class="likes-count" id="likes-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="likes-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
-                        <a class="like-button" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} style="background: #6aa3e7;"{% endif %} >
+                        <a class="like-button" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} style="background: #6aa3e7; display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% else %}style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% endif %} >
                         <i data-feather="thumbs-up" {% if not bool(item['is_liked']) %}style="stroke: #ffffff;"{% endif %}></i>
                         <span id="span-{{item['post_id']}}" {% if not bool(item['is_liked']) %}style="color: #ffffff;"{% endif %}>{{ item['likes'] }}</span> </a>
                     </div>
                 </div>
 
-                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
-                        <a class="dislike-button" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} style="background: #6aa3e7;"{% endif %} >
+                        <a class="dislike-button" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} style="background: #6aa3e7; display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% else %}style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% endif %} >
                         <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %} style="stroke: #ffffff;" {% endif %}></i>
                         <span id="span-{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %}style="color: #ffffff;" {% endif %}>{{ item["dislikes"] }}</span>
                         </a>
@@ -170,8 +169,8 @@
 
                 <!--<div class="comments-count">-->
 
-                <div class="fab-wrapper is-comment">
-                    <a href="javascript:void(0);" class="small-fab"><i data-feather="message-circle"></i>
+                <div class="fab-wrapper is-comment" style="flex-shrink: 0;">
+                    <a href="javascript:void(0);" class="small-fab" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"><i data-feather="message-circle"></i>
                         <span>{{  item["t_comments"]  }}</span></a>
                 </div>
 
@@ -203,8 +202,8 @@
                     <div class="post-text">
                         <p> {{ item["post"]|safe }}</p>
                     </div>
-                    <div class="card-footer" style="display: flex;">
-                        <div class="likers-text" style="display: inline">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(item['emotions']) > 0 %}
                             <p>Emotions</p>
                             {% for em in item['emotions'] %}
@@ -212,7 +211,7 @@
                             {% endfor %}
                             {% endif %}
                         </div>
-                        <div class="likers-text" style="display: inline">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(item['topics']) > 0 %}
                             <p>Topics</p>
                             {% for tp in item['topics'] %}
@@ -232,13 +231,14 @@
                         <a id='{{ item["post_id"] }}' onClick="editLink(this.id)">Reply</a>
                     </div>
                     <p id="message-{{ item['post_id']}}"></p>
-                    <form class="comment_form" id="comment_form-{{item['post_id']}}">
-                    <textarea rows="3" class="reply_comment" id="comment-{{ item['post_id'] }}">@{{ item["author"]}} </textarea>
+                    <form class="comment_form" id="comment_form-{{item['post_id']}}" style="margin-top: 1rem;">
+                    <textarea rows="3" class="reply_comment" id="comment-{{ item['post_id'] }}" style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; resize: vertical; margin-bottom: 0.75rem;">@{{ item["author"]}} </textarea>
                     <button
                             id="add_comment"
                             type="button"
                             class="button is-solid accent-button is-fullwidth"
                             val="{{ item['post_id'] }}"
+                            style="border-radius: 8px; padding: 0.75rem 1.5rem; transition: all 0.2s ease;"
                     >
                     Comment
                     </button>
@@ -272,8 +272,8 @@
                         {{ cm["post"]|safe }}
                     </p>
                     <!-- Actions -->
-                    <div class="card-footer" style="display: flex;">
-                        <div class="likers-text" style="display: inline">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(cm['emotions']) > 0 %}
                             <p>Emotions</p>
                             {% for em in cm['emotions'] %}
@@ -281,7 +281,7 @@
                             {% endfor %}
                             {% endif %}
                         </div>
-                        <div class="likers-text" style="display: inline">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
                             {% if len(cm['topics']) > 0 %}
                             <p>Topics</p>
                             {% for tp in cm['topics'] %}
@@ -296,17 +296,17 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="controls">
-                        <div class="like-count" id="like-count-{{cm['post_id']}}">
+                    <div class="controls" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                        <div class="like-count" id="like-count-{{cm['post_id']}}" style="display: flex; align-items: center; gap: 0.25rem;">
                             <i data-feather="thumbs-up" {% if not bool(cm["is_liked"]) %}style="stroke: #69a2e6;"{% endif %}></i>
                             <span {% if not bool(cm["is_liked"]) %}style="color: #69a2e6;"{% endif %}>{{ cm["likes"] }}</span>
                         </div>
 
-                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}">
+                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
                             <i data-feather="thumbs-down" {% if not bool(cm["is_disliked"]) %}style="stroke: #69a2e6;"{% endif %} ></i>
                             <span {% if not bool(cm["is_disliked"]) %} style="color: #69a2e6;"{% endif %}>{{ cm["dislikes"] }}</span>
                         </div>
-                        <div class="share-count" id="share-count-{{ cm['post_id'] }}">
+                        <div class="share-count" id="share-count-{{ cm['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
                             <i data-feather="repeat"></i>
                             <span>{{ cm["is_shared"] }}</span>
                         </div>
@@ -322,13 +322,14 @@
                 <a id='{{ cm["post_id"] }}' onClick="editLink(this.id)">Reply</a>
             </div>
             <p id="message-{{ cm['post_id'] }}"></p>
-            <form class="comment_form" id="comment_form-{{cm['post_id']}}">
-            <textarea rows="3" class="reply_comment" id="comment-{{ cm['post_id'] }}">@{{ cm["author"] }} </textarea>
+            <form class="comment_form" id="comment_form-{{cm['post_id']}}" style="margin-top: 1rem;">
+            <textarea rows="3" class="reply_comment" id="comment-{{ cm['post_id'] }}" style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; resize: vertical; margin-bottom: 0.75rem;">@{{ cm["author"] }} </textarea>
             <button
                     id="add_comment"
                     type="button"
                     class="button is-solid accent-button is-fullwidth"
                     val="{{cm['post_id']}}"
+                    style="border-radius: 8px; padding: 0.75rem 1.5rem; transition: all 0.2s ease;"
             >
             Comment
             </button>
