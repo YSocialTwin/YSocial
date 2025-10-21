@@ -1542,7 +1542,7 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in feed.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     if page < 1:
         page = 1
@@ -1573,7 +1573,10 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
-    return jsonify({"posts": res, "has_more": len(res) > 0})
+    html = render_template("components/posts.html", items=res, enumerate=enumerate, 
+                          user_id=int(user_id) if user_id != "all" else current_user.id,
+                          str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(res) > 0})
 
 
 @main.get("/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
@@ -1582,7 +1585,7 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in Reddit-style feed.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     if page < 1:
         page = 1
@@ -1675,7 +1678,10 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
-    return jsonify({"posts": res, "has_more": len(res) > 0})
+    html = render_template("reddit/components/posts.html", items=res, enumerate=enumerate,
+                          user_id=int(user_id) if user_id != "all" else current_user.id,
+                          str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(res) > 0})
 
 
 @main.get("/api/hashtag_posts/<int:hashtag_id>/<int:page>")
@@ -1684,12 +1690,14 @@ def api_hashtag_posts(hashtag_id, page=1):
     """
     API endpoint for infinite scrolling in hashtag posts.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_hashtags(
         hashtag_id, page, per_page=10, current_user=current_user.id
     )
-    return jsonify({"posts": res, "has_more": len(res) > 0})
+    html = render_template("components/posts.html", items=res, enumerate=enumerate,
+                          user_id=current_user.id, str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(res) > 0})
 
 
 @main.get("/api/interest/<int:interest_id>/<int:page>")
@@ -1698,12 +1706,14 @@ def api_interest_posts(interest_id, page=1):
     """
     API endpoint for infinite scrolling in interest posts.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_interest(
         interest_id, page, per_page=10, current_user=current_user.id
     )
-    return jsonify({"posts": res, "has_more": len(res) > 0})
+    html = render_template("components/posts.html", items=res, enumerate=enumerate,
+                          user_id=current_user.id, str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(res) > 0})
 
 
 @main.get("/api/emotion/<int:emotion_id>/<int:page>")
@@ -1712,12 +1722,14 @@ def api_emotion_posts(emotion_id, page=1):
     """
     API endpoint for infinite scrolling in emotion posts.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_emotion(
         emotion_id, page, per_page=10, current_user=current_user.id
     )
-    return jsonify({"posts": res, "has_more": len(res) > 0})
+    html = render_template("components/posts.html", items=res, enumerate=enumerate,
+                          user_id=current_user.id, str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(res) > 0})
 
 
 @main.get("/api/profile/<int:user_id>/<string:mode>/<int:page>")
@@ -1726,7 +1738,9 @@ def api_profile_posts(user_id, page=1, mode="recent"):
     """
     API endpoint for infinite scrolling in profile posts.
     
-    Returns JSON with posts data for the specified page.
+    Returns rendered HTML for posts.
     """
     rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
-    return jsonify({"posts": rp, "has_more": len(rp) > 0})
+    html = render_template("components/posts.html", items=rp, enumerate=enumerate,
+                          user_id=user_id, str=str, bool=bool, len=len)
+    return jsonify({"html": html, "has_more": len(rp) > 0})

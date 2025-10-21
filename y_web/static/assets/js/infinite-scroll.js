@@ -118,8 +118,8 @@
 
             const data = await response.json();
             
-            if (data.posts && data.posts.length > 0) {
-                appendPosts(data.posts);
+            if (data.html && data.html.trim().length > 0) {
+                appendPostsHtml(data.html);
                 state.currentPage = nextPage;
                 state.hasMore = data.has_more;
             } else {
@@ -136,140 +136,22 @@
     }
 
     /**
-     * Append posts to the container
-     * @param {Array} posts - Array of post objects
+     * Append posts HTML to the container
+     * @param {string} html - Rendered HTML string
      */
-    function appendPosts(posts) {
-        posts.forEach(post => {
-            const postElement = createPostElement(post);
-            if (postElement) {
-                state.postsContainer.appendChild(postElement);
-            }
-        });
+    function appendPostsHtml(html) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Append all child elements
+        while (tempDiv.firstChild) {
+            state.postsContainer.appendChild(tempDiv.firstChild);
+        }
 
         // Reinitialize any UI components that need it
         if (window.feather) {
             feather.replace();
         }
-    }
-
-    /**
-     * Create a post element from post data
-     * @param {Object} post - Post data
-     * @returns {HTMLElement} - The created post element
-     */
-    function createPostElement(post) {
-        const template = document.createElement('div');
-        template.innerHTML = generatePostHtml(post);
-        return template.firstElementChild;
-    }
-
-    /**
-     * Generate HTML for a post
-     * @param {Object} post - Post data
-     * @returns {string} - HTML string
-     */
-    function generatePostHtml(post) {
-        const profilePic = post.profile_pic || `/static/assets/img/users/${post.author_id}.png`;
-        
-        return `
-            <div id="feed-post-${post.post_id}" class="card is-post" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease;">
-                <div class="content-wrap" id="post-${post.post_id}" style="padding: 1rem;">
-                    <div class="card-heading">
-                        <div class="user-block">
-                            <div class="image">
-                                <img src="https://via.placeholder.com/300x300" data-demo-src="${profilePic}" alt="" />
-                            </div>
-                            <div class="user-info">
-                                <a href="/profile/${post.author_id}/recent/1">${escapeHtml(post.author)}</a>
-                                <span class="time">Day ${post.day} - ${post.hour}:00</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${post.shared_from !== -1 ? `
-                        <div class="shared-post-indicator" style="margin: 1rem 0; padding: 0.5rem; background: #f5f5f5; border-radius: 8px;">
-                            <span style="color: #7a7a7a; font-size: 0.9rem;">
-                                <i data-feather="repeat"></i> Shared from <a href="/profile/${post.shared_from[0]}/recent/1">${escapeHtml(post.shared_from[1])}</a>
-                            </span>
-                        </div>
-                    ` : ''}
-                    
-                    <div class="card-body" style="padding: 0.5rem 0;">
-                        <div class="post-text">
-                            <p>${post.post}</p>
-                        </div>
-                        
-                        ${post.image && post.image.url ? `
-                            <div class="post-image" style="margin-top: 1rem;">
-                                <img src="${post.image.url}" alt="" style="max-width: 100%; border-radius: 8px;" />
-                            </div>
-                        ` : ''}
-                        
-                        ${post.article && post.article !== 0 ? `
-                            <div class="post-article" style="margin-top: 1rem; padding: 1rem; background: #f9f9f9; border-radius: 8px; border-left: 3px solid #3273dc;">
-                                <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; font-weight: 600;">
-                                    <a href="${post.article.url}" target="_blank" style="color: #3273dc; text-decoration: none;">${escapeHtml(post.article.title)}</a>
-                                </h4>
-                                <p style="margin: 0.5rem 0; color: #7a7a7a; font-size: 0.9rem;">${escapeHtml(post.article.summary)}</p>
-                                <small style="color: #999;">Source: ${escapeHtml(post.article.source)}</small>
-                            </div>
-                        ` : ''}
-                    </div>
-                    
-                    ${generatePostFooter(post)}
-                </div>
-            </div>
-        `;
-    }
-
-    /**
-     * Generate post footer HTML (likes, comments, etc.)
-     * @param {Object} post - Post data
-     * @returns {string} - HTML string
-     */
-    function generatePostFooter(post) {
-        const likeClass = post.is_liked ? '' : 'is-inactive';
-        const dislikeClass = post.is_disliked ? '' : 'is-inactive';
-        
-        return `
-            <div class="card-footer" style="padding: 0.75rem 0; border-top: 1px solid #f0f0f0; margin-top: 1rem;">
-                <div class="likers-text" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <div class="social-count">
-                        <div class="likes-count">
-                            <i data-feather="heart"></i>
-                            <span>${post.likes}</span>
-                        </div>
-                        <div class="shares-count">
-                            <i data-feather="repeat"></i>
-                            <span>${post.is_shared}</span>
-                        </div>
-                    </div>
-                    <div class="social-count">
-                        <span>${post.t_comments || 0} Comments</span>
-                    </div>
-                </div>
-                
-                <div class="social-actions" style="display: flex; gap: 1rem; padding-top: 0.5rem; border-top: 1px solid #f0f0f0;">
-                    <a class="like-button ${likeClass}" id="like" val="${post.post_id}" style="flex: 1; text-align: center; padding: 0.5rem; cursor: pointer;">
-                        <i data-feather="thumbs-up"></i>
-                        <span>Like</span>
-                    </a>
-                    <a class="dislike-button ${dislikeClass}" id="dislike" val="${post.post_id}" style="flex: 1; text-align: center; padding: 0.5rem; cursor: pointer;">
-                        <i data-feather="thumbs-down"></i>
-                        <span>Dislike</span>
-                    </a>
-                    <a href="/thread/${post.post_id}" style="flex: 1; text-align: center; padding: 0.5rem;">
-                        <i data-feather="message-circle"></i>
-                        <span>Comment</span>
-                    </a>
-                    <a class="share-button" id="share_button" val="${post.post_id}" style="flex: 1; text-align: center; padding: 0.5rem; cursor: pointer;">
-                        <i data-feather="repeat"></i>
-                        <span>Share</span>
-                    </a>
-                </div>
-            </div>
-        `;
     }
 
     /**
