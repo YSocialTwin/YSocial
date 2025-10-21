@@ -1308,7 +1308,7 @@ def get_elicited_emotions(post_id):
         post_id: ID of the post to get emotions for
 
     Returns:
-        Set of tuples containing (emotion_name, icon, emotion_id)
+        List of tuples containing (emotion_name, icon, emotion_id)
     """
     # get elicited emotions names
     emotions = (
@@ -1319,7 +1319,7 @@ def get_elicited_emotions(post_id):
         .add_columns(Emotions.id)
     ).all()
 
-    emotions = set([(e.emotion, e.icon, e.id) for e in emotions])
+    emotions = list(set([(e.emotion, e.icon, e.id) for e in emotions]))
     return emotions
 
 

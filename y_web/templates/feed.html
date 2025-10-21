@@ -266,8 +266,7 @@
                     <!-- /partials/widgets/weather-widget.html -->
                     {% if username != "" %}
                     <div
-                            class="card is-weather-card has-background-image"
-                            data-background="{{ url_for('static', filename='assets/img/illustrations/cards/weather-bg.svg') }}"
+                            class="card is-weather-card"
                             style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;"
                     >
                         <div class="card-heading">
@@ -733,7 +732,9 @@
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
-                    {% include "components/posts.html" %}
+                    <div id="posts-container">
+                        {% include "components/posts.html" %}
+                    </div>
                     <!-- POST #1 -->
 
                     <!-- Load more posts -->
@@ -812,6 +813,19 @@
 <script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for feed
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/api/feed/{{user_id}}/{{timeline}}/{{mode}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
 
 <!-- profile js -->
 

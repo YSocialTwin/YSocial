@@ -492,7 +492,9 @@
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
-                    {% include "reddit/components/posts.html" %}
+                    <div id="posts-container">
+                        {% include "reddit/components/posts.html" %}
+                    </div>
                     <!-- POST #1 -->
 
                     <!-- Load more posts -->
@@ -575,6 +577,7 @@
 
 <!-- inbox js -->
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
 <!-- settings js -->
 
 <!-- map page js -->
@@ -591,6 +594,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         // Initial state
         postBtn.disabled = !titleInput.value.trim();
+    }
+    
+    // Initialize infinite scroll for Reddit feed
+    if (window.InfiniteScroll) {
+        const feedType = '{{ feed_type }}' || 'new';
+        InfiniteScroll.init({
+            apiEndpoint: '/api/rfeed/{{user_id}}/{{timeline}}/{{mode}}?feed_type=' + feedType,
+            postsContainerId: 'posts-container',
+            initialPage: {{ page }}
+        });
     }
 });
 </script>

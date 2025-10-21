@@ -267,8 +267,7 @@
                     <!-- Weather widget -->
                     <!-- /partials/widgets/weather-widget.html -->
                     <div
-                            class="card is-weather-card has-background-image"
-                            data-background="{{ url_for('static', filename='assets/img/illustrations/cards/weather-bg.svg') }}"
+                            class="card is-weather-card"
                             style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;"
                     >
                         <div class="card-heading">
@@ -350,7 +349,7 @@
                         today...
                     </div>
 
-                    <div class="profile-timeline">
+                    <div class="profile-timeline" id="posts-container">
                         {% include "components/posts.html" %}
                     </div>
                     <!-- POST #1 -->
@@ -414,6 +413,19 @@
 <!-- profile js -->
 
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for interest posts
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/api/interest/{{interest_id}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
 
 <!-- stories js -->
 
