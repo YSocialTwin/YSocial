@@ -225,8 +225,15 @@ def clients(idexp):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=idexp).first()
-    # get all available populations from the database
-    pops = Population.query.all()
+
+    # get only populations already associated with this experiment
+    pop_exp_associations = Population_Experiment.query.filter_by(id_exp=idexp).all()
+    population_ids = [pe.id_population for pe in pop_exp_associations]
+    pops = (
+        Population.query.filter(Population.id.in_(population_ids)).all()
+        if population_ids
+        else []
+    )
 
     ollamas = ollama_status()
 
