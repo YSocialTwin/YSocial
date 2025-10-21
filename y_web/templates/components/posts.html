@@ -109,36 +109,36 @@
         <!-- /Post body -->
 
         <!-- Post footer -->
-        <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; padding: 1rem;">
+        <div class="card-footer" style="display: flex; flex-wrap: wrap; align-items: center; padding: 1rem;">
             <!-- Followers avatars -->
 
             <!-- Followers text -->
-            <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 1rem;">
                 {% if len(item['emotions']) > 0 %}
-                <p>Emotions</p>
+                <p style="margin-right: 0.5rem;">Emotions</p>
                 {% for em in item['emotions'] %}
-                <a class="mdi {{ em[1] }}" title="{{ em[0] }}" style="font-size: .8rem" href="/emotion/{{ em[2] }}/1"></a>
+                <a class="mdi {{ em[1] }}" title="{{ em[0] }}" style="font-size: .8rem; margin-right: 0.5rem;" href="/emotion/{{ em[2] }}/1"></a>
                 {% endfor %}
                 {% endif %}
             </div>
-            <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+            <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 1rem;">
                 {% if len(item['topics']) > 0 %}
-                <p>Topics</p>
+                <p style="margin-right: 0.5rem;">Topics</p>
                 {% for tp in item['topics'] %}
                     {% if tp[2] == 'positive' %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                        <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% elif tp[2] == 'negative' %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                        <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% else %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                        <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% endif %}
                 {% endfor %}
                 {% endif %}
             </div>
             <!-- Post statistics -->
-            <div class="social-count" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-left: auto; align-items: center;">
+            <div class="social-count" style="display: flex; flex-wrap: wrap; margin-left: auto; align-items: center;">
 
-                <div class="likes-count" id="share-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="share-count-{{ item['post_id'] }}" style="margin-right: 0.75rem;">
                     <div class="like-wrapper" id="share-{{ item['post_id'] }}">
                         <a class="share-button" id="s{{ item['post_id']}}" >
                         <i data-feather="repeat"></i>
@@ -146,7 +146,7 @@
                     </div>
                 </div>
 
-                <div class="likes-count" id="likes-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="likes-count-{{ item['post_id'] }}" style="margin-right: 0.75rem;">
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
                         <a class="like-button" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} style="background: #6aa3e7;"{% endif %} >
                         <i data-feather="thumbs-up" {% if not bool(item['is_liked']) %}style="stroke: #ffffff;"{% endif %}></i>
@@ -154,7 +154,7 @@
                     </div>
                 </div>
 
-                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}">
+                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}" style="margin-right: 0.75rem;">
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
                         <a class="dislike-button" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} style="background: #6aa3e7;"{% endif %} >
                         <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %} style="stroke: #ffffff;" {% endif %}></i>
@@ -202,25 +202,25 @@
                     <div class="post-text">
                         <p> {{ item["post"]|safe }}</p>
                     </div>
-                    <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 0;">
-                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(item['emotions']) > 0 %}
-                            <p>Emotions</p>
+                            <p style="margin-right: 0.5rem;">Emotions</p>
                             {% for em in item['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1"></a>
+                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
                             {% endfor %}
                             {% endif %}
                         </div>
-                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(item['topics']) > 0 %}
-                            <p>Topics</p>
+                            <p style="margin-right: 0.5rem;">Topics</p>
                             {% for tp in item['topics'] %}
                                 {% if tp[2] == 'positive' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% else %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}
@@ -272,25 +272,25 @@
                         {{ cm["post"]|safe }}
                     </p>
                     <!-- Actions -->
-                    <div class="card-footer" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; padding: 0.75rem 0;">
-                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(cm['emotions']) > 0 %}
-                            <p>Emotions</p>
+                            <p style="margin-right: 0.5rem;">Emotions</p>
                             {% for em in cm['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1"></a>
+                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
                             {% endfor %}
                             {% endif %}
                         </div>
-                        <div class="likers-text" style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(cm['topics']) > 0 %}
-                            <p>Topics</p>
+                            <p style="margin-right: 0.5rem;">Topics</p>
                             {% for tp in cm['topics'] %}
                                 {% if tp[2] == 'positive' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% else %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}
