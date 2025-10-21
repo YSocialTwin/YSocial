@@ -382,16 +382,6 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Age Range</span>
-                                        <div class="slider-timeline">
-                                        <input name="age_min" type="range" value="18" min="1" max="100" oninput="this.nextElementSibling.value = this.value">
-                                        <output>18</output>
-                                            <input name="age_max" type="range" value="60" min="1" max="100" oninput="this.nextElementSibling.value = this.value">
-                                        <output>60</output>
-                                        </div>
-                                    </div>
-
-                                    <div class="box-line">
                                         <span class="left">Nationalities</span>
 
                                             <div class="select">
@@ -413,6 +403,52 @@
                                                 {% endfor %}
                                             </select>
                                             </div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Age Classes <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
+                                                    <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="age_classes_dropdown">
+                                                    {% for age_class in age_classes %}
+                                                    <div class="multi-select-option" onclick="toggleOption('age_classes', '{{ age_class.name }}', '{{ age_class.id }}')">
+                                                        {{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="age_classes_percentages_container" style="display: none;">
+                                        <span class="left">Age Classes %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="age_classes_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="age_classes_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Gender Distribution</span>
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="male_percentage" style="margin: 0; font-size: 0.9em;">Male:</label>
+                                                <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateFemalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="female_percentage" style="margin: 0; font-size: 0.9em;">Female:</label>
+                                                <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateMalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
                                         </span>
                                     </div>
 
@@ -499,8 +535,33 @@
                                         const multiSelectData = {
                                             education_levels: {},  // Changed to object: {id: {label, percentage}}
                                             political_leanings: {},
-                                            toxicity_levels: {}
+                                            toxicity_levels: {},
+                                            age_classes: {}
                                         };
+
+                                        function updateFemalePercentage() {
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = 100 - malePercentage;
+                                            if (femalePercentage >= 0 && femalePercentage <= 100) {
+                                                document.getElementById('female_percentage').value = femalePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
+
+                                        function updateMalePercentage() {
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            const malePercentage = 100 - femalePercentage;
+                                            if (malePercentage >= 0 && malePercentage <= 100) {
+                                                document.getElementById('male_percentage').value = malePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
 
                                         function toggleDropdown(fieldName) {
                                             const dropdown = document.getElementById(fieldName + '_dropdown');
@@ -588,13 +649,18 @@
                                             
                                             containerRow.style.display = '';
                                             
-                                            // Split evenly across all items - always recalculate when items are added/removed
-                                            // This ensures consistent behavior: adding/removing items resets to even distribution
-                                            // Users can then manually adjust specific percentages as needed
-                                            const evenSplit = parseFloat((100 / items.length).toFixed(2));
-                                            items.forEach(([id, item]) => {
-                                                item.percentage = evenSplit;
-                                            });
+                                            // Check if all percentages are 0 (uninitialized)
+                                            const allZero = items.every(([id, item]) => item.percentage === 0);
+                                            
+                                            // Only split evenly if all percentages are 0 (uninitialized)
+                                            // This preserves hardcoded defaults for age_classes while maintaining
+                                            // the even split behavior for other fields
+                                            if (allZero) {
+                                                const evenSplit = parseFloat((100 / items.length).toFixed(2));
+                                                items.forEach(([id, item]) => {
+                                                    item.percentage = evenSplit;
+                                                });
+                                            }
                                             
                                             // Render percentage inputs
                                             container.innerHTML = items.map(([id, item]) => `
@@ -656,8 +722,26 @@
 
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+                                            // Validate gender percentages
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            if (malePercentage + femalePercentage !== 100) {
+                                                e.preventDefault();
+                                                alert('Gender distribution must total 100%');
+                                                return false;
+                                            }
+                                            
+                                            // Validate that age_classes is selected (mandatory field)
+                                            const ageClassesData = multiSelectData['age_classes'];
+                                            const ageClassesItems = Object.values(ageClassesData);
+                                            if (ageClassesItems.length === 0) {
+                                                e.preventDefault();
+                                                alert('Please select at least one Age Class. This field is required.');
+                                                return false;
+                                            }
+                                            
                                             // Validate percentages before submission
-                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels'];
+                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
                                             for (const fieldName of fieldsToValidate) {
                                                 const data = multiSelectData[fieldName];
                                                 const items = Object.values(data);
@@ -679,8 +763,8 @@
                                             }
                                             
                                             // Remove old hidden inputs
-                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
-                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
                                             
                                             // Add new hidden inputs for multi-select values (IDs for backward compatibility)
                                             Object.keys(multiSelectData).forEach(fieldName => {
@@ -708,6 +792,32 @@
                                                 input.value = JSON.stringify(percentageData);
                                                 this.appendChild(input);
                                             });
+                                        });
+
+                                        // Initialize age classes with default values
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            // Hardcoded default percentages for age classes
+                                            const defaultPercentages = {
+                                                'Youth': 35,
+                                                'Adults': 42,
+                                                'Middle-aged': 18,
+                                                'Elderly': 5
+                                            };
+                                            
+                                            const ageClassDefaults = {
+                                                {% for age_class in age_classes %}
+                                                '{{ age_class.id }}': {
+                                                    label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
+                                                    percentage: defaultPercentages['{{ age_class.name }}'] || 0
+                                                }{% if not loop.last %},{% endif %}
+                                                {% endfor %}
+                                            };
+                                            
+                                            // Set default age classes
+                                            multiSelectData.age_classes = ageClassDefaults;
+                                            updateDisplay('age_classes');
+                                            updateOptionStyles('age_classes');
+                                            updatePercentages('age_classes');
                                         });
                                     </script>
 

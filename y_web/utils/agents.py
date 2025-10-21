@@ -6,6 +6,7 @@ demographic profiles, personality traits, and behavioral characteristics
 based on population configuration parameters.
 """
 
+import json
 import math
 import random
 
@@ -15,8 +16,10 @@ from sqlalchemy.sql import func
 
 from y_web import db
 from y_web.models import (
+    AgeClass,
     Agent,
     Agent_Population,
+    Education,
     Population,
     PopulationActivityProfile,
     Profession,
@@ -114,6 +117,32 @@ def __sample_age(mean, std_dev, min_age, max_age):
             return int(round(age))
 
 
+def __sample_age_degree_profession(age_class, edu_classes):
+    probs = [v[0] for v in age_class.values()]
+    total = sum(probs)
+    weights = [p / total for p in probs]
+
+    # Extract the AgeClass objects
+    classes = [v[1] for v in age_class.values()]
+
+    # Sample one according to probability distribution
+    age_class = random.choices(classes, weights=weights, k=1)[0]
+
+    age = random.randint(age_class.age_start, age_class.age_end)
+
+    if age < 18:
+        profession = Profession.query.filter_by(profession="Student").first()
+    else:
+        profession = Profession.query.order_by(func.random()).first()
+
+    sampled = random.choices(
+        population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
+    )[0]
+    education_level = int(sampled)
+
+    return age, profession, education_level
+
+
 def __sample_pareto(values, alpha=2.0):
     """
     Sample a value from a discrete set using Pareto distribution.
@@ -175,7 +204,18 @@ def generate_population(population_name, percentages=None, actions_config=None):
     if not activity_profile_cdf:
         activity_profile_cdf = [(1.0, None)]
 
+    age_classes = {
+        int(k): [float(v), db.session.query(AgeClass).filter_by(id=int(k)).first()]
+        for k, v in percentages["age_classes"].items()
+    }
+
+    edu_classes = percentages["education"]
+
     for _ in range(population.size):
+
+        age, profession, education_level = __sample_age_degree_profession(
+            age_classes, edu_classes
+        )
 
         # sample attributes based on provided percentages
         sampled = {
@@ -185,7 +225,7 @@ def generate_population(population_name, percentages=None, actions_config=None):
             for attr, values in percentages.items()
         }
 
-        education_level = int(sampled["education"])
+        # education_level = int(sampled["education"])
         toxicity = int(sampled["toxicity_levels"])
         political_leaning = int(sampled["political_leanings"])
 
@@ -196,7 +236,15 @@ def generate_population(population_name, percentages=None, actions_config=None):
         except:
             nationality = "American"
 
-        gender = random.sample(["male", "female"], 1)[0]
+        # Use weighted gender sampling based on provided percentages
+        if percentages and "gender" in percentages:
+            gender_dist = percentages["gender"]
+            genders = list(gender_dist.keys())
+            weights = list(gender_dist.values())
+            gender = random.choices(genders, weights=weights, k=1)[0]
+        else:
+            # Default to equal probability if no gender distribution provided
+            gender = random.sample(["male", "female"], 1)[0]
 
         fake = faker.Faker(__locales[nationality])
 
@@ -204,14 +252,6 @@ def generate_population(population_name, percentages=None, actions_config=None):
             name = fake.name_male()
         else:
             name = fake.name_female()
-
-        # Gaussian distribution for age
-        age = __sample_age(
-            np.mean([population.age_min, population.age_max]),
-            int((population.age_max - population.age_min) / 2),
-            population.age_min,
-            population.age_max,
-        )
 
         language = fake.random_element(
             elements=(population.languages.split(","))
@@ -243,9 +283,6 @@ def generate_population(population_name, percentages=None, actions_config=None):
             round_actions = 3
 
         daily_activity_level = __sample_pareto([1, 2, 3, 4, 5])
-
-        # get random profession from db
-        profession = Profession.query.order_by(func.random()).first()
 
         # Assign activity profile based on population distribution
         rand_val = random.random()

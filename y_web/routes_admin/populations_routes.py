@@ -22,6 +22,7 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.models import (
     ActivityProfile,
+    AgeClass,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -89,7 +90,7 @@ def create_population():
     based on the configuration.
 
     Form data:
-        pop_name, pop_descr, n_agents, user_type, age_min, age_max,
+        pop_name, pop_descr, n_agents, user_type,
         education_levels, political_leanings, toxicity_levels,
         nationalities, languages, tags (interests), crecsys, frecsys,
         actions_min, actions_max, actions_distribution, poisson_lambda,
@@ -103,10 +104,16 @@ def create_population():
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
     user_type = request.form.get("user_type")
-    age_min = int(request.form.get("age_min"))
-    age_max = int(request.form.get("age_max"))
 
     llm = request.form.get("host_llm")
+
+    # Get gender distribution
+    male_percentage = int(request.form.get("male_percentage", "50"))
+    female_percentage = int(request.form.get("female_percentage", "50"))
+    gender_distribution = {
+        "male": male_percentage,
+        "female": female_percentage
+    }
 
     education_levels = request.form.getlist("education_levels")
     education_levels = ",".join(education_levels)
@@ -116,29 +123,31 @@ def create_population():
     toxicity_levels = request.form.getlist("toxicity_levels")
     toxicity_levels = ",".join(toxicity_levels)
 
-    # Retrieve percentage data for education, political leanings, and toxicity
+    # Retrieve percentage data for education, political leanings, toxicity, and age classes
     # These will be used in future implementations for weighted distribution
     education_percentages_str = request.form.get("education_levels_percentages", "{}")
     political_percentages_str = request.form.get("political_leanings_percentages", "{}")
     toxicity_percentages_str = request.form.get("toxicity_levels_percentages", "{}")
+    age_classes_percentages_str = request.form.get("age_classes_percentages", "{}")
 
     try:
         education_percentages = json.loads(education_percentages_str)
         political_percentages = json.loads(political_percentages_str)
         toxicity_percentages = json.loads(toxicity_percentages_str)
+        age_classes_percentages = json.loads(age_classes_percentages_str)
     except (json.JSONDecodeError, ValueError):
         education_percentages = {}
         political_percentages = {}
         toxicity_percentages = {}
+        age_classes_percentages = {}
 
     percentages = {
         "education": education_percentages,
         "political_leanings": political_percentages,
         "toxicity_levels": toxicity_percentages,
+        "age_classes": age_classes_percentages,
+        "gender": gender_distribution,
     }
-
-    # TODO: Store percentages in a separate table or extend Population model
-    # For now, the percentages are retrieved but not persisted, maintaining backward compatibility
 
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
@@ -180,8 +189,8 @@ def create_population():
         descr=descr,
         size=n_agents,
         llm=user_type,
-        age_min=age_min,
-        age_max=age_max,
+        age_min=None,
+        age_max=None,
         education=education_levels,
         leanings=political_leanings,
         nationalities=nationalities,
@@ -264,7 +273,7 @@ def populations_data():
             db.session.query(ActivityProfile)
             .join(
                 PopulationActivityProfile,
-                ActivityProfile.id == PopulationActivityProfile.id,
+                ActivityProfile.id == PopulationActivityProfile.activity_profile,
             )
             .filter(PopulationActivityProfile.population == pop.id)
             .all()
@@ -326,6 +335,7 @@ def populations():
     nationalities = Nationalities.query.all()
     languages = Languages.query.all()
     toxicity_levels = Toxicity_Levels.query.all()
+    age_classes = AgeClass.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
@@ -340,6 +350,7 @@ def populations():
         nationalities=nationalities,
         languages=languages,
         toxicity_levels=toxicity_levels,
+        age_classes=age_classes,
         crecsys=crecsys,
         frecsys=frecsys,
         activity_profiles=activity_profiles,
@@ -372,36 +383,48 @@ def population_details(uid):
         .all()
     )
 
+    # Fetch label mappings from database
+    leanings_map = {str(l.id): l.leaning for l in Leanings.query.all()}
+    education_map = {str(e.id): e.education_level for e in Education.query.all()}
+    toxicity_map = {str(t.id): t.toxicity_level for t in Toxicity_Levels.query.all()}
+    
     ln = {"leanings": [], "total": []}
 
     for a in agents:
-        if a[0].leaning in ln["leanings"]:
-            ln["total"][ln["leanings"].index(a[0].leaning)] += 1
+        # Convert ID to label
+        leaning_label = leanings_map.get(a[0].leaning, a[0].leaning)
+        if leaning_label in ln["leanings"]:
+            ln["total"][ln["leanings"].index(leaning_label)] += 1
         else:
-            ln["leanings"].append(a[0].leaning)
+            ln["leanings"].append(leaning_label)
             ln["total"].append(1)
 
+    # Bin ages according to AgeClass ranges
+    age_classes = AgeClass.query.order_by(AgeClass.age_start).all()
     age = {"age": [], "total": []}
-
+    
+    # Initialize bins for each age class
+    for age_class in age_classes:
+        age["age"].append(f"{age_class.name} ({age_class.age_start}-{age_class.age_end})")
+        age["total"].append(0)
+    
+    # Count agents in each age class bin
     for a in agents:
-        if a[0].age in age["age"]:
-            age["total"][age["age"].index(a[0].age)] += 1
-        else:
-            age["age"].append(a[0].age)
-            age["total"].append(1)
-
-    sorted_age = dict(sorted(zip(age["age"], age["total"])))
-
-    # Convert back to dictionary format with separate lists
-    age = {"age": list(sorted_age.keys()), "total": list(sorted_age.values())}
+        agent_age = a[0].age
+        for idx, age_class in enumerate(age_classes):
+            if age_class.age_start <= agent_age <= age_class.age_end:
+                age["total"][idx] += 1
+                break
 
     edu = {"education": [], "total": []}
 
     for a in agents:
-        if a[0].education_level in edu["education"]:
-            edu["total"][edu["education"].index(a[0].education_level)] += 1
+        # Convert ID to label
+        education_label = education_map.get(a[0].education_level, a[0].education_level)
+        if education_label in edu["education"]:
+            edu["total"][edu["education"].index(education_label)] += 1
         else:
-            edu["education"].append(a[0].education_level)
+            edu["education"].append(education_label)
             edu["total"].append(1)
 
     nat = {"nationalities": [], "total": []}
@@ -422,11 +445,13 @@ def population_details(uid):
 
     tox = {"toxicity": [], "total": []}
     for a in agents:
-        if a[0].toxicity in tox["toxicity"]:
-            tox["total"][tox["toxicity"].index(a[0].toxicity)] += 1
-        else:
-            if a[0].toxicity is not None:
-                tox["toxicity"].append(a[0].toxicity)
+        if a[0].toxicity is not None:
+            # Convert ID to label
+            toxicity_label = toxicity_map.get(a[0].toxicity, a[0].toxicity)
+            if toxicity_label in tox["toxicity"]:
+                tox["total"][tox["toxicity"].index(toxicity_label)] += 1
+            else:
+                tox["toxicity"].append(toxicity_label)
                 tox["total"].append(1)
 
     activity = {"activity": [], "total": []}
@@ -447,6 +472,43 @@ def population_details(uid):
         "activity": list(sorted_activity.keys()),
         "total": list(sorted_activity.values()),
     }
+    
+    # Gender distribution
+    gender = {"genders": [], "total": []}
+    for a in agents:
+        if a[0].gender:
+            if a[0].gender in gender["genders"]:
+                gender["total"][gender["genders"].index(a[0].gender)] += 1
+            else:
+                gender["genders"].append(a[0].gender)
+                gender["total"].append(1)
+    
+    # Professions distribution (top-k for wordcloud)
+    professions = {}
+    for a in agents:
+        if a[0].profession:
+            professions[a[0].profession] = professions.get(a[0].profession, 0) + 1
+    
+    # Sort professions by frequency and prepare for word cloud
+    sorted_professions = dict(sorted(professions.items(), key=lambda x: x[1], reverse=True))
+    prof = {
+        "professions": list(sorted_professions.keys()),
+        "total": list(sorted_professions.values())
+    }
+    
+    # Activity profiles distribution
+    activity_prof = {"profiles": [], "total": []}
+    for a in agents:
+        if a[0].activity_profile:
+            # Get activity profile name
+            profile = ActivityProfile.query.get(a[0].activity_profile)
+            if profile:
+                profile_name = profile.name
+                if profile_name in activity_prof["profiles"]:
+                    activity_prof["total"][activity_prof["profiles"].index(profile_name)] += 1
+                else:
+                    activity_prof["profiles"].append(profile_name)
+                    activity_prof["total"].append(1)
 
     dd = {
         "age": age,
@@ -456,6 +518,9 @@ def population_details(uid):
         "languages": lang,
         "toxicity": tox,
         "activity": activity,
+        "gender": gender,
+        "professions": prof,
+        "activity_profiles": activity_prof,
     }
 
     # most frequent crecsys amon agents
@@ -497,14 +562,19 @@ def population_details(uid):
     topics = [t[1].name for t in exp_topics]
 
     try:
+        # Calculate actual age min/max from agents
+        agent_ages = [a[0].age for a in agents if a[0].age is not None]
+        age_min_val = min(agent_ages) if agent_ages else None
+        age_max_val = max(agent_ages) if agent_ages else None
+        
         population_updated_details = {
             "id": population.id,
             "name": population.name,
             "descr": population.descr,
             "size": len(agents),
             "llm": max(llm, key=llm.get),
-            "age_min": min(dd["age"]["age"]),
-            "age_max": max(dd["age"]["age"]),
+            "age_min": age_min_val,
+            "age_max": age_max_val,
             "education": ", ".join(dd["education"]["education"]),
             "leanings": ", ".join(dd["leaning"]["leanings"]),
             "nationalities": ", ".join(dd["nationalities"]["nationalities"]),
