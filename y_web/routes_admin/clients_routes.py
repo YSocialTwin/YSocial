@@ -414,32 +414,36 @@ def create_client():
                 percentage_removed_agents_iteration
             ),
             "activity_profiles": profiles,
-            "hourly_activity": hourly_activity_custom if hourly_activity_custom else {
-                "10": 0.021,
-                "16": 0.032,
-                "8": 0.020,
-                "12": 0.024,
-                "15": 0.032,
-                "17": 0.032,
-                "23": 0.025,
-                "6": 0.017,
-                "18": 0.032,
-                "11": 0.022,
-                "13": 0.027,
-                "14": 0.030,
-                "20": 0.030,
-                "21": 0.029,
-                "7": 0.018,
-                "22": 0.027,
-                "9": 0.020,
-                "3": 0.020,
-                "5": 0.017,
-                "4": 0.018,
-                "1": 0.021,
-                "2": 0.020,
-                "0": 0.023,
-                "19": 0.031,
-            },
+            "hourly_activity": (
+                hourly_activity_custom
+                if hourly_activity_custom
+                else {
+                    "10": 0.021,
+                    "16": 0.032,
+                    "8": 0.020,
+                    "12": 0.024,
+                    "15": 0.032,
+                    "17": 0.032,
+                    "23": 0.025,
+                    "6": 0.017,
+                    "18": 0.032,
+                    "11": 0.022,
+                    "13": 0.027,
+                    "14": 0.030,
+                    "20": 0.030,
+                    "21": 0.029,
+                    "7": 0.018,
+                    "22": 0.027,
+                    "9": 0.020,
+                    "3": 0.020,
+                    "5": 0.017,
+                    "4": 0.018,
+                    "1": 0.021,
+                    "2": 0.020,
+                    "0": 0.023,
+                    "19": 0.031,
+                }
+            ),
             "actions_likelihood": {
                 "post": float(post),
                 "image": float(image) if image is not None else 0,
@@ -743,7 +747,8 @@ def create_client():
                             if agent_1 is not None:
                                 test = Agent_Population.query.filter(
                                     Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id == client.population_id,
+                                    Agent_Population.population_id
+                                    == client.population_id,
                                 ).all()
                                 error = len(test) == 0
                             else:
@@ -753,7 +758,8 @@ def create_client():
                                 if agent_1 is not None:
                                     test = Page_Population.query.filter(
                                         Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id == client.population_id,
+                                        Page_Population.population_id
+                                        == client.population_id,
                                     ).all()
                                     error = len(test) == 0
                                 if agent_1 is None:
@@ -765,7 +771,8 @@ def create_client():
                             if agent_2 is not None:
                                 test = Agent_Population.query.filter(
                                     Agent_Population.agent_id.in_(aids),
-                                    Agent_Population.population_id == client.population_id,
+                                    Agent_Population.population_id
+                                    == client.population_id,
                                 ).all()
                                 error2 = len(test) == 0
                             else:
@@ -775,7 +782,8 @@ def create_client():
                                 if agent_2 is not None:
                                     test = Page_Population.query.filter(
                                         Page_Population.page_id.in_(aids),
-                                        Page_Population.population_id == client.population_id,
+                                        Page_Population.population_id
+                                        == client.population_id,
                                     ).all()
                                     error2 = len(test) == 0
 
@@ -785,7 +793,10 @@ def create_client():
                             if not error and not error2:
                                 o.write(f"{l[0]},{l[1]}\n")
                             else:
-                                flash(f"Agent {l[0]} or {l[1]} not found in network file.", "warning")
+                                flash(
+                                    f"Agent {l[0]} or {l[1]} not found in network file.",
+                                    "warning",
+                                )
 
                 os.remove(temp_path)
                 client.network_type = "Custom Network"
