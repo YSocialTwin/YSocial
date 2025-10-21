@@ -138,25 +138,25 @@
             <!-- Post statistics -->
             <div class="social-count" style="display: flex; flex-wrap: wrap; gap: 0.75rem; margin-left: auto; align-items: center;">
 
-                <div class="likes-count" id="share-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
+                <div class="likes-count" id="share-count-{{ item['post_id'] }}">
                     <div class="like-wrapper" id="share-{{ item['post_id'] }}">
-                        <a class="share-button" id="s{{ item['post_id']}}" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;">
+                        <a class="share-button" id="s{{ item['post_id']}}" >
                         <i data-feather="repeat"></i>
                         <span id="span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
                     </div>
                 </div>
 
-                <div class="likes-count" id="likes-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
+                <div class="likes-count" id="likes-count-{{ item['post_id'] }}">
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
-                        <a class="like-button" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} style="background: #6aa3e7; display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% else %}style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% endif %} >
+                        <a class="like-button" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} style="background: #6aa3e7;"{% endif %} >
                         <i data-feather="thumbs-up" {% if not bool(item['is_liked']) %}style="stroke: #ffffff;"{% endif %}></i>
                         <span id="span-{{item['post_id']}}" {% if not bool(item['is_liked']) %}style="color: #ffffff;"{% endif %}>{{ item['likes'] }}</span> </a>
                     </div>
                 </div>
 
-                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}" style="flex-shrink: 0;">
+                <div class="likes-count" id="dislikes-count-{{ item['post_id'] }}">
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
-                        <a class="dislike-button" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} style="background: #6aa3e7; display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% else %}style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"{% endif %} >
+                        <a class="dislike-button" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} style="background: #6aa3e7;"{% endif %} >
                         <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %} style="stroke: #ffffff;" {% endif %}></i>
                         <span id="span-{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %}style="color: #ffffff;" {% endif %}>{{ item["dislikes"] }}</span>
                         </a>
@@ -169,8 +169,8 @@
 
                 <!--<div class="comments-count">-->
 
-                <div class="fab-wrapper is-comment" style="flex-shrink: 0;">
-                    <a href="javascript:void(0);" class="small-fab" style="display: flex; align-items: center; gap: 0.25rem; padding: 0.5rem 0.75rem; border-radius: 8px; transition: all 0.2s ease;"><i data-feather="message-circle"></i>
+                <div class="fab-wrapper is-comment">
+                    <a href="javascript:void(0);" class="small-fab"><i data-feather="message-circle"></i>
                         <span>{{  item["t_comments"]  }}</span></a>
                 </div>
 
@@ -296,17 +296,17 @@
                             {% endif %}
                         </div>
                     </div>
-                    <div class="controls" style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
-                        <div class="like-count" id="like-count-{{cm['post_id']}}" style="display: flex; align-items: center; gap: 0.25rem;">
+                    <div class="controls">
+                        <div class="like-count" id="like-count-{{cm['post_id']}}">
                             <i data-feather="thumbs-up" {% if not bool(cm["is_liked"]) %}style="stroke: #69a2e6;"{% endif %}></i>
                             <span {% if not bool(cm["is_liked"]) %}style="color: #69a2e6;"{% endif %}>{{ cm["likes"] }}</span>
                         </div>
 
-                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
+                        <div class="dislike-count" id="dislike-count-{{ cm['post_id'] }}">
                             <i data-feather="thumbs-down" {% if not bool(cm["is_disliked"]) %}style="stroke: #69a2e6;"{% endif %} ></i>
                             <span {% if not bool(cm["is_disliked"]) %} style="color: #69a2e6;"{% endif %}>{{ cm["dislikes"] }}</span>
                         </div>
-                        <div class="share-count" id="share-count-{{ cm['post_id'] }}" style="display: flex; align-items: center; gap: 0.25rem;">
+                        <div class="share-count" id="share-count-{{ cm['post_id'] }}">
                             <i data-feather="repeat"></i>
                             <span>{{ cm["is_shared"] }}</span>
                         </div>
