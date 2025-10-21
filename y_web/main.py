@@ -5,7 +5,7 @@ Handles the primary user-facing routes including the home feed, user profiles,
 hashtag pages, post details, and search functionality for the social media platform.
 """
 
-from flask import Blueprint, flash, redirect, render_template, request, jsonify
+from flask import Blueprint, flash, jsonify, redirect, render_template, request
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
@@ -1541,7 +1541,7 @@ def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
 def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in feed.
-    
+
     Returns rendered HTML for posts.
     """
     if page < 1:
@@ -1573,9 +1573,15 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
-    html = render_template("components/posts.html", items=res, enumerate=enumerate, 
-                          user_id=int(user_id) if user_id != "all" else current_user.id,
-                          str=str, bool=bool, len=len)
+    html = render_template(
+        "components/posts.html",
+        items=res,
+        enumerate=enumerate,
+        user_id=int(user_id) if user_id != "all" else current_user.id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
@@ -1584,7 +1590,7 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
 def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in Reddit-style feed.
-    
+
     Returns rendered HTML for posts.
     """
     if page < 1:
@@ -1678,9 +1684,15 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
-    html = render_template("reddit/components/posts.html", items=res, enumerate=enumerate,
-                          user_id=int(user_id) if user_id != "all" else current_user.id,
-                          str=str, bool=bool, len=len)
+    html = render_template(
+        "reddit/components/posts.html",
+        items=res,
+        enumerate=enumerate,
+        user_id=int(user_id) if user_id != "all" else current_user.id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
@@ -1689,14 +1701,21 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
 def api_hashtag_posts(hashtag_id, page=1):
     """
     API endpoint for infinite scrolling in hashtag posts.
-    
+
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_hashtags(
         hashtag_id, page, per_page=10, current_user=current_user.id
     )
-    html = render_template("components/posts.html", items=res, enumerate=enumerate,
-                          user_id=current_user.id, str=str, bool=bool, len=len)
+    html = render_template(
+        "components/posts.html",
+        items=res,
+        enumerate=enumerate,
+        user_id=current_user.id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
@@ -1705,14 +1724,21 @@ def api_hashtag_posts(hashtag_id, page=1):
 def api_interest_posts(interest_id, page=1):
     """
     API endpoint for infinite scrolling in interest posts.
-    
+
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_interest(
         interest_id, page, per_page=10, current_user=current_user.id
     )
-    html = render_template("components/posts.html", items=res, enumerate=enumerate,
-                          user_id=current_user.id, str=str, bool=bool, len=len)
+    html = render_template(
+        "components/posts.html",
+        items=res,
+        enumerate=enumerate,
+        user_id=current_user.id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
@@ -1721,14 +1747,21 @@ def api_interest_posts(interest_id, page=1):
 def api_emotion_posts(emotion_id, page=1):
     """
     API endpoint for infinite scrolling in emotion posts.
-    
+
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_emotion(
         emotion_id, page, per_page=10, current_user=current_user.id
     )
-    html = render_template("components/posts.html", items=res, enumerate=enumerate,
-                          user_id=current_user.id, str=str, bool=bool, len=len)
+    html = render_template(
+        "components/posts.html",
+        items=res,
+        enumerate=enumerate,
+        user_id=current_user.id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
@@ -1737,10 +1770,17 @@ def api_emotion_posts(emotion_id, page=1):
 def api_profile_posts(user_id, page=1, mode="recent"):
     """
     API endpoint for infinite scrolling in profile posts.
-    
+
     Returns rendered HTML for posts.
     """
     rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
-    html = render_template("components/posts.html", items=rp, enumerate=enumerate,
-                          user_id=user_id, str=str, bool=bool, len=len)
+    html = render_template(
+        "components/posts.html",
+        items=rp,
+        enumerate=enumerate,
+        user_id=user_id,
+        str=str,
+        bool=bool,
+        len=len,
+    )
     return jsonify({"html": html, "has_more": len(rp) > 0})
