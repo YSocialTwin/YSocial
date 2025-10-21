@@ -445,22 +445,38 @@
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
 
-                                    <hr>
-                                    <!-- Social Network Structure Section (Optional, Collapsed by Default) -->
+                                    <style>
+                                        .form-section-header {
+                                            font-size: 0.95em;
+                                            font-weight: 600;
+                                            color: #333;
+                                            margin: 20px 0 8px 0;
+                                            padding-bottom: 5px;
+                                            border-bottom: 1px solid #e0e0e0;
+                                        }
+                                        .form-section-description {
+                                            font-size: 0.85em;
+                                            color: #666;
+                                            margin-bottom: 15px;
+                                            line-height: 1.4;
+                                        }
+                                    </style>
+
+                                    <div class="form-section-header">Social Network Structure <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
+                                        <strong>Note:</strong> These options are mutually exclusive - selecting one will disable the other.
+                                    </div>
+
                                     <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 600; font-size: 1.1em; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
-                                            <span style="color: #374151;">Social Network Structure</span>
-                                            <span style="font-size: 0.85em; color: #6b7280; font-weight: 400; margin-left: 8px;">(Optional)</span>
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151;">
+                                            <span>▶ Click to expand/collapse network configuration</span>
                                         </summary>
-                                        <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fafafa;">
-                                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
-                                                Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
-                                                <strong>Note:</strong> These options are mutually exclusive - selecting one will disable the other.
-                                            </p>
+                                        <div style="padding: 15px 0; margin-top: 10px;">
                                             
                                             <!-- Synthetic Network Section -->
                                             <div id="synthetic_network_section" style="margin-bottom: 20px;">
-                                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Synthetic Network</h4>
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Synthetic Network</h4>
                                                 
                                                 <div class="box-line">
                                                     <span class="left">Model</span>
@@ -495,7 +511,7 @@
 
                                             <!-- Upload Custom Network Section -->
                                             <div id="upload_network_section" style="margin-top: 20px;">
-                                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload Custom Network</h4>
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Upload Custom Network</h4>
                                                 <style>
                                                     .file-upload-wrapper-network-create {
                                                         position: relative;
@@ -555,20 +571,33 @@
                                         </div>
                                     </details>
 
-                                    <hr>
-                                    <!-- Hourly Activity Rates Section (Optional, Collapsed by Default) -->
+                                    <div class="form-section-header">Hourly Activity Rates <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure hourly activity rates for the simulation. Default values are based on 
+                                        <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
+                                        Leave empty to use defaults.
+                                    </div>
+
                                     <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 600; font-size: 1.1em; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
-                                            <span style="color: #374151;">Hourly Activity Rates</span>
-                                            <span style="font-size: 0.85em; color: #6b7280; font-weight: 400; margin-left: 8px;">(Optional)</span>
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151;">
+                                            <span>▶ Click to expand/collapse activity rates configuration</span>
                                         </summary>
-                                        <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fafafa;">
-                                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
-                                                Configure hourly activity rates for the simulation. Default values are based on 
-                                                <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
-                                                Leave empty to use defaults.
-                                            </p>
+                                        <div style="padding: 15px 0; margin-top: 10px;">
                                             
+                                            <!-- Bar Chart Visualization -->
+                                            <div style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Activity Rates Visualization</h4>
+                                                <div style="height: 200px; position: relative; background: white; padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                                    <canvas id="activity_rates_create"></canvas>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Activity Rates Input Fields -->
+                                            <div style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Customize Hourly Rates</h4>
+                                                <p style="font-size: 0.8em; color: #666; margin-bottom: 12px;">Enter custom values for specific hours (leave empty to use defaults shown in placeholders)</p>
+                                            </div>
+
                                             <style>
                                                 .activity-grid-create {
                                                     display: grid;
@@ -702,6 +731,96 @@
                                                     <input type="text" name="hourly_23" placeholder="0.025" value="">
                                                 </div>
                                             </div>
+
+                                            <script>
+                                                // Initialize chart with default data
+                                                function initActivityChart() {
+                                                    const defaultData = [
+                                                        0.023, 0.021, 0.020, 0.020, 0.018, 0.017, 0.017, 0.018,
+                                                        0.020, 0.020, 0.021, 0.022, 0.024, 0.027, 0.030, 0.032,
+                                                        0.032, 0.032, 0.032, 0.031, 0.030, 0.029, 0.027, 0.025
+                                                    ];
+                                                    const labels = Array.from({length: 24}, (_, i) => i.toString());
+                                                    
+                                                    // Convert to percentages
+                                                    const activityData = defaultData.map(v => v * 100);
+                                                    const maxValue = Math.max(...activityData);
+                                                    const yAxisMax = Math.ceil(maxValue * 1.1);
+
+                                                    const ctx = document.getElementById('activity_rates_create');
+                                                    if (!ctx) return;
+
+                                                    new Chart(ctx, {
+                                                        type: 'bar',
+                                                        data: {
+                                                            labels: labels,
+                                                            datasets: [{
+                                                                label: 'Activity %',
+                                                                data: activityData,
+                                                                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                                                                borderColor: 'rgba(34, 197, 94, 1)',
+                                                                borderWidth: 1,
+                                                                borderRadius: 4
+                                                            }]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            maintainAspectRatio: false,
+                                                            plugins: {
+                                                                legend: {
+                                                                    display: false
+                                                                },
+                                                                tooltip: {
+                                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                                    padding: 8,
+                                                                    titleFont: { size: 12 },
+                                                                    bodyFont: { size: 11 },
+                                                                    callbacks: {
+                                                                        label: function(context) {
+                                                                            return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    suggestedMax: yAxisMax,
+                                                                    ticks: {
+                                                                        font: { size: 10 },
+                                                                        callback: function(value) {
+                                                                            return value + '%';
+                                                                        }
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(0, 0, 0, 0.05)'
+                                                                    }
+                                                                },
+                                                                x: {
+                                                                    ticks: {
+                                                                        font: { size: 9 }
+                                                                    },
+                                                                    grid: {
+                                                                        display: false
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                                // Initialize chart when details are expanded
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    const detailsElements = document.querySelectorAll('details');
+                                                    detailsElements.forEach(details => {
+                                                        details.addEventListener('toggle', function() {
+                                                            if (this.open && this.querySelector('#activity_rates_create')) {
+                                                                setTimeout(initActivityChart, 100);
+                                                            }
+                                                        });
+                                                    });
+                                                });
+                                            </script>
                                         </div>
                                     </details>
 
