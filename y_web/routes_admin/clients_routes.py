@@ -390,6 +390,19 @@ def create_client():
     annotations = exp.annotations.split(",")
     emotion_annotation = "emotion" in annotations
 
+    default_hourly_activity = {
+        "0": 0.023, "1": 0.021, "2": 0.020, "3": 0.020, "4": 0.018, "5": 0.017,
+        "6": 0.017, "7": 0.018, "8": 0.020, "9": 0.020, "10": 0.021, "11": 0.022,
+        "12": 0.024, "13": 0.027, "14": 0.030, "15": 0.032, "16": 0.032, "17": 0.032,
+        "18": 0.032, "19": 0.031, "20": 0.030, "21": 0.029, "22": 0.027, "23": 0.025
+    }
+
+    hourly_activity = {
+        str(h): (hourly_activity_custom.get(str(h), default_hourly_activity[str(h)])
+                 if hourly_activity_custom else default_hourly_activity[str(h)])
+        for h in range(24)
+    }
+
     config = {
         "servers": {
             "llm": llm,
@@ -414,36 +427,7 @@ def create_client():
                 percentage_removed_agents_iteration
             ),
             "activity_profiles": profiles,
-            "hourly_activity": (
-                hourly_activity_custom
-                if hourly_activity_custom
-                else {
-                    "10": 0.021,
-                    "16": 0.032,
-                    "8": 0.020,
-                    "12": 0.024,
-                    "15": 0.032,
-                    "17": 0.032,
-                    "23": 0.025,
-                    "6": 0.017,
-                    "18": 0.032,
-                    "11": 0.022,
-                    "13": 0.027,
-                    "14": 0.030,
-                    "20": 0.030,
-                    "21": 0.029,
-                    "7": 0.018,
-                    "22": 0.027,
-                    "9": 0.020,
-                    "3": 0.020,
-                    "5": 0.017,
-                    "4": 0.018,
-                    "1": 0.021,
-                    "2": 0.020,
-                    "0": 0.023,
-                    "19": 0.031,
-                }
-            ),
+            "hourly_activity": hourly_activity,
             "actions_likelihood": {
                 "post": float(post),
                 "image": float(image) if image is not None else 0,
