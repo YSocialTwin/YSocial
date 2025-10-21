@@ -85,8 +85,9 @@ class TestClientFormFields:
     def test_network_file_field_handling(self):
         """Test that network file can be extracted from form"""
         try:
-            from flask import Flask
             from io import BytesIO
+
+            from flask import Flask
             from werkzeug.datastructures import FileStorage
 
             app = Flask(__name__)
@@ -99,9 +100,7 @@ class TestClientFormFields:
                 content_type="text/csv",
             )
 
-            with app.test_request_context(
-                method="POST", data={"network_file": file}
-            ):
+            with app.test_request_context(method="POST", data={"network_file": file}):
                 from flask import request
 
                 network_file = request.files.get("network_file")
