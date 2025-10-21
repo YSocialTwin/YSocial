@@ -153,10 +153,35 @@
 
         // Reinitialize dropdowns for newly added posts
         initializeDropdowns();
+        
+        // Initialize comment forms for newly added posts
+        initializeCommentForms();
 
         // Reinitialize any UI components that need it
         if (window.feather) {
             feather.replace();
+        }
+    }
+    
+    /**
+     * Initialize comment forms for newly added content
+     * Ensures comment forms are hidden and Reply links work correctly
+     */
+    function initializeCommentForms() {
+        // Find all comment forms in the newly added posts and ensure they're hidden
+        const commentForms = state.postsContainer.querySelectorAll('.comment_form');
+        commentForms.forEach(function(form) {
+            // Explicitly set display to none (CSS class should do this, but ensure it)
+            if (!form.style.display || form.style.display === '') {
+                form.style.display = 'none';
+            }
+        });
+        
+        // Ensure editLink function is available globally for inline onClick handlers
+        // The function is defined in async_updates.js and should be accessible
+        // This is just a check to ensure it's available
+        if (typeof window.editLink === 'undefined' && typeof editLink !== 'undefined') {
+            window.editLink = editLink;
         }
     }
 
