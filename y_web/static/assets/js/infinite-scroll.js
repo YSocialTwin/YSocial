@@ -159,10 +159,31 @@
         
         // Initialize post comments toggle for newly added posts
         initializePostCommentsToggle();
+        
+        // Initialize comment action handlers for newly added posts
+        initializeCommentActions();
 
         // Reinitialize any UI components that need it
         if (window.feather) {
             feather.replace();
+        }
+    }
+    
+    /**
+     * Initialize comment action handlers (like, dislike, share, reply) for newly added content
+     * Ensures the event handlers work correctly with feather icons in dynamically loaded comments
+     */
+    function initializeCommentActions() {
+        // The handlers in async_updates.js already use event delegation with $(document).on()
+        // so they should work automatically. However, we need to ensure feather icons
+        // don't block the events. We'll add a CSS fix or re-bind if needed.
+        
+        // Add pointer-events style to ensure SVG icons don't block clicks
+        if (state.postsContainer) {
+            const commentIcons = state.postsContainer.querySelectorAll('.like-count svg, .dislike-count svg, .share-count svg');
+            commentIcons.forEach(function(icon) {
+                icon.style.pointerEvents = 'none';
+            });
         }
     }
     
