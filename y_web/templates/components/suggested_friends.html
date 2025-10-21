@@ -1,9 +1,9 @@
 <!-- Suggested friends widget -->
 <!-- /partials/widgets/suggested-friends-1-widget.html -->
 {% if len(sfollow)>0 %}
-<div class="card">
-    <div class="card-heading is-bordered">
-        <h4>Suggested Friends</h4>
+<div class="card" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
+    <div class="card-heading is-bordered" style="padding: 1rem;">
+        <h4 style="margin: 0; font-weight: 600;">Suggested Friends</h4>
         <div class="dropdown is-spaced is-right dropdown-trigger">
             <div>
                 <!--<div class="button">
@@ -49,7 +49,7 @@
 
         {% for friend in sfollow %}
 
-        <div class="add-friend-block transition-block">
+        <div class="add-friend-block transition-block" style="padding: 1rem; display: flex; align-items: center; transition: background-color 0.2s ease; border-bottom: 1px solid #f0f0f0;">
             <img
                     src="https://via.placeholder.com/300x300"
                     {% if friend['profile_pic'] != "" %}
@@ -59,12 +59,13 @@
                     {% endif %}
                     data-user-popover="9"
                     alt=""
+                    style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 0.75rem;"
             />
-            <div class="page-meta">
-                <span><a href="/profile/{{ friend['id'] }}/recent/1">{{ friend['username']|safe }}</a></span>
+            <div class="page-meta" style="flex: 1; min-width: 0; margin-right: 0.75rem;">
+                <span><a href="/profile/{{ friend['id'] }}/recent/1" style="font-weight: 500; color: #363636; text-decoration: none; transition: color 0.2s ease;">{{ friend['username']|safe }}</a></span>
             </div>
             <div class="add-friend add-transition">
-                <a href="/follow/{{ user_id }}/{{ friend['id'] }}"><i data-feather="user-plus"></i></a>
+                <a href="/follow/{{ user_id }}/{{ friend['id'] }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background-color: #3273dc; color: white; transition: background-color 0.2s ease;"><i data-feather="user-plus"></i></a>
             </div>
         </div>
         {% endfor %}

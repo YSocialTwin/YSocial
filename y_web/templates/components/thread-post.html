@@ -1,6 +1,6 @@
-<div id="feed-post-1" class="card is-post" style="margin-bottom: 0px;">
+<div id="feed-post-{{ thread['post_id'] }}" class="card is-post" style="margin-bottom: 0.75rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);">
     <div class="comments-wrap">
-        <div class="comments-body has-slimscroll">
+        <div class="comments-body has-slimscroll" style="padding: 1rem;">
 
             <div class="media is-comment">
 
@@ -26,25 +26,25 @@
                         {{ thread["post"]|safe }}
                     </p>
 
-                    <div class="card-footer" style="display: flex;">
-                        <div class="likers-text" style="display: inline">
+                    <div class="card-footer" style="display: flex; flex-wrap: wrap; align-items: center; padding: 0.75rem 0;">
+                        <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(thread['emotions']) > 0 %}
-                            <p style="font-size: .8rem">Emotions</p>
+                            <p style="font-size: .8rem; margin-right: 0.5rem;">Emotions</p>
                             {% for em in thread['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1"></a>
+                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
                             {% endfor %}
                             {% endif %}
                         </div>
-                         <div class="likers-text" style="display: inline">
+                         <div class="likers-text" style="display: flex; flex-wrap: wrap; align-items: center; margin-right: 0.75rem;">
                             {% if len(thread['topics']) > 0 %}
-                            <p style="font-size: .8rem">Topics</p>
+                            <p style="font-size: .8rem; margin-right: 0.5rem;">Topics</p>
                             {% for tp in thread['topics'] %}
                                 {% if tp[2] == 'positive' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% else %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%"> {{ tp[1] }}</a>
+                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% endif %}
                              {% endfor %}
                             {% endif %}
@@ -71,13 +71,14 @@
                 <a id='{{ thread["post_id"] }}' onClick="editLink(this.id)">Reply</a>
             </div>
             <p id="message-{{ thread['post_id'] }}"></p>
-            <form class="comment_form" id="comment_form-{{ thread['post_id'] }}">
-            <textarea rows="3" class="reply_comment" id="comment-{{ thread['post_id'] }}">@{{ thread["author"] }} </textarea>
+            <form class="comment_form" id="comment_form-{{ thread['post_id'] }}" style="margin-top: 1rem;">
+            <textarea rows="3" class="reply_comment" id="comment-{{ thread['post_id'] }}" style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; resize: vertical; margin-bottom: 0.75rem;">@{{ thread["author"] }} </textarea>
             <button
                     id="add_comment"
                     type="button"
                     class="button is-solid accent-button is-fullwidth"
                     val="{{ thread['post_id'] }}"
+                    style="border-radius: 8px; padding: 0.75rem 1.5rem; transition: all 0.2s ease;"
             >
             Comment
             </button>
