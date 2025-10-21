@@ -219,35 +219,22 @@
   });
 </script>
 
-
-
-
-
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <div class="columns">
-                <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Delete Orphaned Agents</h3>
-                        <div class="box-content">
-                            <p style="margin-bottom: 15px; color: #666;">
-                                Remove all agents that are not assigned to any population. This action cannot be undone.
-                            </p>
-                            <form action="/admin/delete_orphaned_agents" method="POST" onsubmit="return confirm('Are you sure you want to delete all agents that do not belong to any population? This action cannot be undone.');">
-                                <div class="button-wrap">
-                                    <button type="submit" class="button is-solid accent-button" style="background-color: #dc3545;">
-                                        Delete All Orphaned Agents
+                            <div style="margin-top: 20px; text-align: right;">
+                                <form action="/admin/delete_orphaned_agents" method="POST" style="display: inline-block;" onsubmit="return confirm('Are you sure you want to delete all agents that do not belong to any population? This action cannot be undone.');">
+                                    <button type="submit" class="button is-solid" style="background-color: #dc3545; color: white; padding: 8px 16px; font-size: 0.9rem;">
+                                        Delete Orphaned Agents
                                     </button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
+
+
+
+
                         </div>
                     </div>
+
                 </div>
+
             </div>
 
             <div class="columns">
