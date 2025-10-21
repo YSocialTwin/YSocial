@@ -20,9 +20,11 @@ from y_web.models import (
     Agent,
     Agent_Population,
     Education,
+    Leanings,
     Population,
     PopulationActivityProfile,
-    Profession, Leanings, Toxicity_Levels,
+    Profession,
+    Toxicity_Levels,
 )
 
 
@@ -140,7 +142,9 @@ def __sample_age_degree_profession(age_class, edu_classes):
     )[0]
     education_level = int(sampled)
     # get education level object
-    education_level = Education.query.filter_by(id=education_level).first().education_level
+    education_level = (
+        Education.query.filter_by(id=education_level).first().education_level
+    )
 
     return age, profession, education_level
 
@@ -229,11 +233,18 @@ def generate_population(population_name, percentages=None, actions_config=None):
 
         toxicity = int(sampled["toxicity_levels"])
         # get toxicity level object
-        toxicity = db.session.query(Toxicity_Levels).filter_by(id=toxicity).first().toxicity_level
+        toxicity = (
+            db.session.query(Toxicity_Levels)
+            .filter_by(id=toxicity)
+            .first()
+            .toxicity_level
+        )
 
         political_leaning = int(sampled["political_leanings"])
         # get political leaning object
-        political_leaning = db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
+        political_leaning = (
+            db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
+        )
 
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
