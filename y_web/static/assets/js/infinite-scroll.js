@@ -162,31 +162,48 @@
 
     /**
      * Initialize dropdowns for newly added content
-     * This replicates the dropdown initialization from global.js
+     * This replicates the dropdown initialization from global.js using jQuery
      */
     function initializeDropdowns() {
-        // Find all dropdown triggers in the posts container
-        const dropdownTriggers = state.postsContainer.querySelectorAll('.dropdown-trigger');
-        
-        dropdownTriggers.forEach(function(trigger) {
-            // Remove any existing click handlers to avoid duplicates
-            const newTrigger = trigger.cloneNode(true);
-            trigger.parentNode.replaceChild(newTrigger, trigger);
-            
-            // Add click handler
-            newTrigger.addEventListener('click', function(e) {
-                // Remove active class from all other dropdowns
-                document.querySelectorAll('.dropdown-trigger').forEach(function(t) {
-                    if (t !== newTrigger) {
-                        t.classList.remove('is-active');
-                    }
-                });
+        // Use jQuery if available for consistency with global.js
+        if (typeof $ !== 'undefined') {
+            // Find all dropdown triggers in the posts container and reinitialize them
+            $(state.postsContainer).find('.dropdown-trigger').each(function() {
+                const $trigger = $(this);
                 
-                // Toggle this dropdown
-                newTrigger.classList.toggle('is-active');
-                e.stopPropagation();
+                // Remove any existing handlers to avoid duplicates
+                $trigger.off('click');
+                
+                // Add click handler (matches global.js behavior)
+                $trigger.on('click', function(e) {
+                    e.stopPropagation();
+                    $('.dropdown-trigger').removeClass('is-active');
+                    $(this).addClass('is-active');
+                });
             });
-        });
+        } else {
+            // Fallback to vanilla JS if jQuery is not available
+            const dropdownTriggers = state.postsContainer.querySelectorAll('.dropdown-trigger');
+            
+            dropdownTriggers.forEach(function(trigger) {
+                // Remove any existing click handlers by cloning
+                const newTrigger = trigger.cloneNode(true);
+                trigger.parentNode.replaceChild(newTrigger, trigger);
+                
+                // Add click handler
+                newTrigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // Remove active class from all other dropdowns
+                    document.querySelectorAll('.dropdown-trigger').forEach(function(t) {
+                        t.classList.remove('is-active');
+                    });
+                    
+                    // Add active class to this dropdown
+                    newTrigger.classList.add('is-active');
+                });
+            });
+        }
     }
 
     /**
