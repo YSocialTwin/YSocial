@@ -178,9 +178,9 @@
         // so they should work automatically. However, we need to ensure feather icons
         // don't block the events. We'll add a CSS fix or re-bind if needed.
         
-        // Add pointer-events style to ensure SVG icons don't block clicks
+        // Add pointer-events style to ensure SVG icons and their children don't block clicks
         if (state.postsContainer) {
-            const commentIcons = state.postsContainer.querySelectorAll('.like-count svg, .dislike-count svg, .share-count svg');
+            const commentIcons = state.postsContainer.querySelectorAll('.like-count svg, .dislike-count svg, .share-count svg, .like-count svg *, .dislike-count svg *, .share-count svg *');
             commentIcons.forEach(function(icon) {
                 icon.style.pointerEvents = 'none';
             });
@@ -259,12 +259,38 @@
             }
         });
         
-        // Ensure editLink function is available globally for inline onClick handlers
-        // The function is defined in async_updates.js and should be accessible
-        // This is just a check to ensure it's available
-        if (typeof window.editLink === 'undefined' && typeof editLink !== 'undefined') {
-            window.editLink = editLink;
+        // Patch the editLink function to handle dynamically loaded posts safely
+        // The original editLink in async_updates.js has a bug on line 210 where it tries
+        // to access add_comment-${id} element which doesn't exist in the template
+        if (typeof window.originalEditLink === 'undefined' && typeof window.editLink === 'function') {
+            window.originalEditLink = window.editLink;
         }
+        
+        // Create a patched version that handles missing elements gracefully
+        window.editLink = function(id) {
+            var commentForm = document.getElementById(`comment_form-${id}`);
+            var messageEl = document.getElementById(`message-${id}`);
+            
+            if (!commentForm) {
+                console.warn(`Comment form not found for id: ${id}`);
+                return;
+            }
+            
+            var test = commentForm.style.display;
+            if (!test || test === "none") {
+                commentForm.style.display = "block";
+                if (messageEl) {
+                    messageEl.style.display = "none";
+                }
+                // Note: The original code tries to set add_comment-${id}.value = message
+                // but that element doesn't exist in the template, so we skip it
+            } else {
+                commentForm.style.display = "none";
+                if (messageEl) {
+                    messageEl.style.display = "block";
+                }
+            }
+        };
     }
 
     /**
