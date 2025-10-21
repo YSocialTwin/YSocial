@@ -61,8 +61,10 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <h4><b>Simulation Parameters</b></h4>
+                                    <div class="form-section-header">Simulation Parameters</div>
+                                    <div class="form-section-description">
+                                        Configure the duration and behavioral settings for the simulation run.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
                                         <span class="right" style="width: 70%;"><input type="text"
@@ -126,12 +128,12 @@
                                                                                        class="input"
                                                                                        value="36"></span>
                                     </div>
-                                    <hr>
-                                    <h4><b>Agents' Actions Relevance</b></h4>
-                                    All actions are scored from 0 to 10, where 0 means that the action is never performed. <br>
-                                    Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
-                                    and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
-                                    <br><br>
+                                    <div class="form-section-header">Agents' Actions Relevance</div>
+                                    <div class="form-section-description">
+                                        All actions are scored from 0 to 10, where 0 means that the action is never performed. 
+                                        Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
+                                        and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">Post new content</span>
                                         <span class="right" style="width: 70%;">
@@ -351,8 +353,10 @@
                                                                                        value="0"></span>
                                     </div>
                                     {% endif %}
-                                    <hr>
-                                    <h4><b>Large Language Models</b></h4>
+                                    <div class="form-section-header">Large Language Models</div>
+                                    <div class="form-section-description">
+                                        Configure the LLM server and model for agent content generation.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
                                         <span class="right" style="width: 70%;">
@@ -397,8 +401,10 @@
                                                                                        class="input"
                                                                                        value="1.5"></span>
                                     </div>
-                                    <hr>
-                                    <h4><b>Large Language Models (Image Transcription)</b></h4>
+                                    <div class="form-section-header">Large Language Models (Image Transcription)</div>
+                                    <div class="form-section-description">
+                                        Configure the vision LLM for image content analysis and transcription.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">LLM Model</span>
                                         <span class="right" style="width: 70%;">minicpm-v:latest<input  type="hidden"
@@ -460,6 +466,22 @@
                                             margin-bottom: 15px;
                                             line-height: 1.4;
                                         }
+                                        details summary {
+                                            list-style: none;
+                                        }
+                                        details summary::-webkit-details-marker {
+                                            display: none;
+                                        }
+                                        details summary::before {
+                                            content: '▶';
+                                            display: inline-block;
+                                            margin-right: 8px;
+                                            transition: transform 0.2s;
+                                            color: #374151;
+                                        }
+                                        details[open] summary::before {
+                                            transform: rotate(90deg);
+                                        }
                                     </style>
 
                                     <div class="form-section-header">Social Network Structure <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
@@ -469,8 +491,8 @@
                                     </div>
 
                                     <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151;">
-                                            <span>▶ Click to expand/collapse network configuration</span>
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151; list-style: none;">
+                                            <span>Click to expand/collapse network configuration</span>
                                         </summary>
                                         <div style="padding: 15px 0; margin-top: 10px;">
                                             
@@ -579,8 +601,8 @@
                                     </div>
 
                                     <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151;">
-                                            <span>▶ Click to expand/collapse activity rates configuration</span>
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151; list-style: none;">
+                                            <span>Click to expand/collapse activity rates configuration</span>
                                         </summary>
                                         <div style="padding: 15px 0; margin-top: 10px;">
                                             
