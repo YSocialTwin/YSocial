@@ -280,6 +280,22 @@ def create_client():
     llm_v_temperature = request.form.get("llm_v_temperature")
     user_type = request.form.get("user_type")
 
+    # Fetch optional network configuration
+    network_model = request.form.get("network_model")
+    network_p = request.form.get("network_p")
+    network_m = request.form.get("network_m")
+    network_file = request.files.get("network_file")
+
+    # Fetch optional hourly activity rates
+    hourly_activity_custom = {}
+    for hour in range(24):
+        hourly_val = request.form.get(f"hourly_{hour}")
+        if hourly_val and hourly_val.strip():
+            try:
+                hourly_activity_custom[str(hour)] = float(hourly_val)
+            except ValueError:
+                pass  # Ignore invalid values, use defaults
+
     # get experiment topics
     topics = Exp_Topic.query.filter_by(exp_id=exp_id).all()
     topics_ids = [t.topic_id for t in topics]
@@ -398,7 +414,7 @@ def create_client():
                 percentage_removed_agents_iteration
             ),
             "activity_profiles": profiles,
-            "hourly_activity": {
+            "hourly_activity": hourly_activity_custom if hourly_activity_custom else {
                 "10": 0.021,
                 "16": 0.032,
                 "8": 0.020,
@@ -683,6 +699,129 @@ def create_client():
 
     print(f"Saving agents to {filename}")
     json.dump(res, open(filename, "w"), indent=4)
+
+    # Handle optional network configuration
+    if network_model or network_file:
+        # get populations for client
+        populations = Population.query.filter_by(id=client.population_id).all()
+        # get agents for the populations
+        agents = Agent_Population.query.filter(
+            Agent_Population.population_id.in_([p.id for p in populations])
+        ).all()
+        # get agent ids for all agents in populations
+        agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
+
+        BASE = os.path.dirname(os.path.abspath(__file__))
+        dbtypte = get_db_type()
+
+        if dbtypte == "sqlite":
+            exp_folder = exp.db_name.split(os.sep)[1]
+        else:
+            exp_folder = exp.db_name.removeprefix("experiments_")
+
+        network_path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv".replace(
+            f"routes_admin{os.sep}", ""
+        )
+
+        if network_file and network_file.filename:
+            # Handle uploaded network file
+            temp_path = network_path.replace("_network.csv", "_network_temp.csv")
+            network_file.save(temp_path)
+
+            try:
+                with open(network_path, "w") as o:
+                    error, error2 = False, False
+                    with open(temp_path, "r") as f:
+                        for l in f:
+                            l = l.rstrip().split(",")
+                            if len(l) < 2:
+                                continue
+
+                            agent_1 = Agent.query.filter_by(name=l[0]).all()
+                            aids = [a.id for a in agent_1]
+
+                            if agent_1 is not None:
+                                test = Agent_Population.query.filter(
+                                    Agent_Population.agent_id.in_(aids),
+                                    Agent_Population.population_id == client.population_id,
+                                ).all()
+                                error = len(test) == 0
+                            else:
+                                agent_1 = Page.query.filter_by(name=l[0]).all()
+                                aids = [a.id for a in agent_1]
+
+                                if agent_1 is not None:
+                                    test = Page_Population.query.filter(
+                                        Page_Population.page_id.in_(aids),
+                                        Page_Population.population_id == client.population_id,
+                                    ).all()
+                                    error = len(test) == 0
+                                if agent_1 is None:
+                                    error = True
+
+                            agent_2 = Agent.query.filter_by(name=l[1]).all()
+                            aids = [a.id for a in agent_2]
+
+                            if agent_2 is not None:
+                                test = Agent_Population.query.filter(
+                                    Agent_Population.agent_id.in_(aids),
+                                    Agent_Population.population_id == client.population_id,
+                                ).all()
+                                error2 = len(test) == 0
+                            else:
+                                agent_2 = Page.query.filter_by(name=l[1]).all()
+                                aids = [a.id for a in agent_2]
+
+                                if agent_2 is not None:
+                                    test = Page_Population.query.filter(
+                                        Page_Population.page_id.in_(aids),
+                                        Page_Population.population_id == client.population_id,
+                                    ).all()
+                                    error2 = len(test) == 0
+
+                                if agent_2 is None:
+                                    error2 = True
+
+                            if not error and not error2:
+                                o.write(f"{l[0]},{l[1]}\n")
+                            else:
+                                flash(f"Agent {l[0]} or {l[1]} not found in network file.", "warning")
+
+                os.remove(temp_path)
+                client.network_type = "Custom Network"
+                db.session.commit()
+            except Exception as e:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                if os.path.exists(network_path):
+                    os.remove(network_path)
+                flash(
+                    "Network file format error: provide a csv file containing two columns with agent names. No header required.",
+                    "error",
+                )
+
+        elif network_model:
+            # Handle synthetic network generation
+            m = int(network_m) if network_m else 2
+            p = float(network_p) if network_p else 0.1
+
+            if network_model == "BA":
+                g = nx.barabasi_albert_graph(len(agent_ids), m=m)
+            elif network_model == "ER":
+                g = nx.erdos_renyi_graph(len(agent_ids), p=p)
+            else:
+                g = None
+
+            if g:
+                # since the network is undirected and Y assume directed relations we need to write the edges in both directions
+                with open(network_path, "w") as f:
+                    for n in g.edges:
+                        f.write(f"{agent_ids[n[0]]},{agent_ids[n[1]]}\n")
+                        f.write(f"{agent_ids[n[1]]},{agent_ids[n[0]]}\n")
+                    f.flush()
+
+                client.network_type = network_model
+                db.session.commit()
 
     # load experiment_details page
     from .experiments_routes import experiment_details

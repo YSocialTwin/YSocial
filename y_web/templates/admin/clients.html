@@ -445,6 +445,266 @@
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
 
+                                    <hr>
+                                    <!-- Social Network Structure Section (Optional, Collapsed by Default) -->
+                                    <details style="margin-bottom: 20px;">
+                                        <summary style="cursor: pointer; font-weight: 600; font-size: 1.1em; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+                                            <span style="color: #374151;">Social Network Structure</span>
+                                            <span style="font-size: 0.85em; color: #6b7280; font-weight: 400; margin-left: 8px;">(Optional)</span>
+                                        </summary>
+                                        <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fafafa;">
+                                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                                                Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
+                                                <strong>Note:</strong> These options are mutually exclusive - selecting one will disable the other.
+                                            </p>
+                                            
+                                            <!-- Synthetic Network Section -->
+                                            <div id="synthetic_network_section" style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Synthetic Network</h4>
+                                                
+                                                <div class="box-line">
+                                                    <span class="left">Model</span>
+                                                    <span class="right">
+                                                        <div class="select">
+                                                            <select name="network_model" id="network_model_select">
+                                                                <option value="">None</option>
+                                                                <option value="ER">Random Network</option>
+                                                                <option value="BA">Scale Free</option>
+                                                            </select>
+                                                        </div>
+                                                    </span>
+                                                </div>
+
+                                                <div class="box-line" id="er_param_field" style="display: none;">
+                                                    <span class="left">Rewiring probability</span>
+                                                    <span class="right">
+                                                        <input type="text" name="network_p" class="input" value="0.1">
+                                                    </span>
+                                                </div>
+                                                <div class="box-line" id="ba_param_field" style="display: none;">
+                                                    <span class="left">Connections per new node</span>
+                                                    <span class="right">
+                                                        <input type="text" name="network_m" class="input" value="2">
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div style="border-top: 1px solid #d1d5db; padding-top: 15px; margin-top: 15px;">
+                                                <p style="text-align: center; font-size: 0.85em; color: #666; margin: 10px 0;">OR</p>
+                                            </div>
+
+                                            <!-- Upload Custom Network Section -->
+                                            <div id="upload_network_section" style="margin-top: 20px;">
+                                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload Custom Network</h4>
+                                                <style>
+                                                    .file-upload-wrapper-network-create {
+                                                        position: relative;
+                                                        overflow: hidden;
+                                                        display: block;
+                                                        margin-bottom: 12px;
+                                                    }
+                                                    .file-upload-wrapper-network-create input[type=file] {
+                                                        position: absolute;
+                                                        left: -9999px;
+                                                    }
+                                                    .file-upload-label-network-create {
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        padding: 10px 12px;
+                                                        background: #f9fafb;
+                                                        border: 1px dashed #d1d5db;
+                                                        border-radius: 4px;
+                                                        cursor: pointer;
+                                                        transition: all 0.2s;
+                                                        font-size: 0.85em;
+                                                    }
+                                                    .file-upload-label-network-create:hover {
+                                                        background: #f3f4f6;
+                                                        border-color: #22c55e;
+                                                    }
+                                                    .file-upload-label-network-create.disabled {
+                                                        opacity: 0.5;
+                                                        cursor: not-allowed;
+                                                        pointer-events: none;
+                                                    }
+                                                    .file-upload-icon-network-create {
+                                                        margin-right: 8px;
+                                                        font-size: 1.1em;
+                                                    }
+                                                    .file-upload-text-network-create {
+                                                        color: #6b7280;
+                                                    }
+                                                    .file-name-display-network-create {
+                                                        margin-top: 6px;
+                                                        font-size: 0.8em;
+                                                        color: #22c55e;
+                                                        font-weight: 500;
+                                                        text-align: center;
+                                                    }
+                                                </style>
+                                                <div class="file-upload-wrapper-network-create">
+                                                    <input type="file" id="network_file_create" name="network_file" onchange="displayNetworkFileNameCreate(this)">
+                                                    <label for="network_file_create" class="file-upload-label-network-create">
+                                                        <span class="file-upload-icon-network-create">📊</span>
+                                                        <span class="file-upload-text-network-create">Choose edge list file (CSV)...</span>
+                                                    </label>
+                                                    <div id="network-file-name-display-create" class="file-name-display-network-create"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </details>
+
+                                    <hr>
+                                    <!-- Hourly Activity Rates Section (Optional, Collapsed by Default) -->
+                                    <details style="margin-bottom: 20px;">
+                                        <summary style="cursor: pointer; font-weight: 600; font-size: 1.1em; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+                                            <span style="color: #374151;">Hourly Activity Rates</span>
+                                            <span style="font-size: 0.85em; color: #6b7280; font-weight: 400; margin-left: 8px;">(Optional)</span>
+                                        </summary>
+                                        <div style="padding: 15px; border: 1px solid #e5e7eb; border-radius: 4px; background: #fafafa;">
+                                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                                                Configure hourly activity rates for the simulation. Default values are based on 
+                                                <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
+                                                Leave empty to use defaults.
+                                            </p>
+                                            
+                                            <style>
+                                                .activity-grid-create {
+                                                    display: grid;
+                                                    grid-template-columns: repeat(12, 1fr);
+                                                    gap: 8px;
+                                                    margin-bottom: 16px;
+                                                }
+                                                .activity-hour-create {
+                                                    display: flex;
+                                                    flex-direction: column;
+                                                    align-items: center;
+                                                }
+                                                .activity-hour-create label {
+                                                    font-size: 0.75em;
+                                                    color: #666;
+                                                    margin-bottom: 4px;
+                                                    font-weight: 500;
+                                                }
+                                                .activity-hour-create input {
+                                                    width: 100%;
+                                                    padding: 4px 6px;
+                                                    text-align: center;
+                                                    font-size: 0.85em;
+                                                    border: 1px solid #d1d5db;
+                                                    border-radius: 4px;
+                                                }
+                                                .activity-hour-create input:focus {
+                                                    outline: none;
+                                                    border-color: #22c55e;
+                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                                }
+                                            </style>
+                                            
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>0h</label>
+                                                    <input type="text" name="hourly_0" placeholder="0.023" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>1h</label>
+                                                    <input type="text" name="hourly_1" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>2h</label>
+                                                    <input type="text" name="hourly_2" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>3h</label>
+                                                    <input type="text" name="hourly_3" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>4h</label>
+                                                    <input type="text" name="hourly_4" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>5h</label>
+                                                    <input type="text" name="hourly_5" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>6h</label>
+                                                    <input type="text" name="hourly_6" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>7h</label>
+                                                    <input type="text" name="hourly_7" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>8h</label>
+                                                    <input type="text" name="hourly_8" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>9h</label>
+                                                    <input type="text" name="hourly_9" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>10h</label>
+                                                    <input type="text" name="hourly_10" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>11h</label>
+                                                    <input type="text" name="hourly_11" placeholder="0.022" value="">
+                                                </div>
+                                            </div>
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>12h</label>
+                                                    <input type="text" name="hourly_12" placeholder="0.024" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>13h</label>
+                                                    <input type="text" name="hourly_13" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>14h</label>
+                                                    <input type="text" name="hourly_14" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>15h</label>
+                                                    <input type="text" name="hourly_15" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>16h</label>
+                                                    <input type="text" name="hourly_16" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>17h</label>
+                                                    <input type="text" name="hourly_17" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>18h</label>
+                                                    <input type="text" name="hourly_18" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>19h</label>
+                                                    <input type="text" name="hourly_19" placeholder="0.031" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>20h</label>
+                                                    <input type="text" name="hourly_20" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>21h</label>
+                                                    <input type="text" name="hourly_21" placeholder="0.029" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>22h</label>
+                                                    <input type="text" name="hourly_22" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>23h</label>
+                                                    <input type="text" name="hourly_23" placeholder="0.025" value="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </details>
+
                                 </div>
                                 <div class="button-wrap">
                                     <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
@@ -664,6 +924,61 @@ function enableImageAction() {
     }
 }
 
+// Handle mutual exclusivity between synthetic network and file upload
+function updateNetworkInputStates() {
+    const networkModelSelect = document.getElementById('network_model_select');
+    const networkFileInput = document.getElementById('network_file_create');
+    const networkFileLabel = document.querySelector('.file-upload-label-network-create');
+    const erParamField = document.getElementById('er_param_field');
+    const baParamField = document.getElementById('ba_param_field');
+    
+    if (!networkModelSelect || !networkFileInput) return;
+    
+    const modelSelected = networkModelSelect.value !== '';
+    const fileSelected = networkFileInput.files && networkFileInput.files.length > 0;
+    
+    // If synthetic model is selected, disable file upload
+    if (modelSelected) {
+        networkFileInput.disabled = true;
+        if (networkFileLabel) {
+            networkFileLabel.classList.add('disabled');
+        }
+    } else {
+        networkFileInput.disabled = false;
+        if (networkFileLabel) {
+            networkFileLabel.classList.remove('disabled');
+        }
+    }
+    
+    // If file is uploaded, disable synthetic model selection
+    if (fileSelected) {
+        networkModelSelect.disabled = true;
+    } else {
+        networkModelSelect.disabled = false;
+    }
+    
+    // Show/hide parameter fields based on model selection
+    if (erParamField) erParamField.style.display = 'none';
+    if (baParamField) baParamField.style.display = 'none';
+    
+    if (networkModelSelect.value === 'ER' && erParamField) {
+        erParamField.style.display = 'block';
+    } else if (networkModelSelect.value === 'BA' && baParamField) {
+        baParamField.style.display = 'block';
+    }
+}
+
+// Display network file name when selected
+function displayNetworkFileNameCreate(input) {
+    const display = document.getElementById('network-file-name-display-create');
+    if (input.files && input.files[0]) {
+        display.textContent = '✓ ' + input.files[0].name;
+    } else {
+        display.textContent = '';
+    }
+    updateNetworkInputStates();
+}
+
 // On page load, disable image action by default and setup form validation
 document.addEventListener('DOMContentLoaded', function() {
     disableImageAction();
@@ -684,6 +999,22 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFormButtonState();
         });
     }
+    
+    // Setup network mutual exclusivity
+    const networkModelSelect = document.getElementById('network_model_select');
+    const networkFileInput = document.getElementById('network_file_create');
+    
+    if (networkModelSelect) {
+        networkModelSelect.addEventListener('change', updateNetworkInputStates);
+    }
+    if (networkFileInput) {
+        networkFileInput.addEventListener('change', function() {
+            displayNetworkFileNameCreate(this);
+        });
+    }
+    
+    // Initial state
+    updateNetworkInputStates();
 });
                                             </script>
 {% include "admin/footer.html" %}
