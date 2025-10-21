@@ -22,7 +22,7 @@ from y_web.models import (
     Education,
     Population,
     PopulationActivityProfile,
-    Profession,
+    Profession, Leanings, Toxicity_Levels,
 )
 
 
@@ -139,6 +139,8 @@ def __sample_age_degree_profession(age_class, edu_classes):
         population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
     )[0]
     education_level = int(sampled)
+    # get education level object
+    education_level = Education.query.filter_by(id=education_level).first().education_level
 
     return age, profession, education_level
 
@@ -225,9 +227,13 @@ def generate_population(population_name, percentages=None, actions_config=None):
             for attr, values in percentages.items()
         }
 
-        # education_level = int(sampled["education"])
         toxicity = int(sampled["toxicity_levels"])
+        # get toxicity level object
+        toxicity = db.session.query(Toxicity_Levels).filter_by(id=toxicity).first().toxicity_level
+
         political_leaning = int(sampled["political_leanings"])
+        # get political leaning object
+        political_leaning = db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
 
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
