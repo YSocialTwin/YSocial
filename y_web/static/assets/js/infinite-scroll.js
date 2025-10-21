@@ -151,10 +151,42 @@
         // Initialize demo images for newly added posts
         initializeDemoImages();
 
+        // Reinitialize dropdowns for newly added posts
+        initializeDropdowns();
+
         // Reinitialize any UI components that need it
         if (window.feather) {
             feather.replace();
         }
+    }
+
+    /**
+     * Initialize dropdowns for newly added content
+     * This replicates the dropdown initialization from global.js
+     */
+    function initializeDropdowns() {
+        // Find all dropdown triggers in the posts container
+        const dropdownTriggers = state.postsContainer.querySelectorAll('.dropdown-trigger');
+        
+        dropdownTriggers.forEach(function(trigger) {
+            // Remove any existing click handlers to avoid duplicates
+            const newTrigger = trigger.cloneNode(true);
+            trigger.parentNode.replaceChild(newTrigger, trigger);
+            
+            // Add click handler
+            newTrigger.addEventListener('click', function(e) {
+                // Remove active class from all other dropdowns
+                document.querySelectorAll('.dropdown-trigger').forEach(function(t) {
+                    if (t !== newTrigger) {
+                        t.classList.remove('is-active');
+                    }
+                });
+                
+                // Toggle this dropdown
+                newTrigger.classList.toggle('is-active');
+                e.stopPropagation();
+            });
+        });
     }
 
     /**
