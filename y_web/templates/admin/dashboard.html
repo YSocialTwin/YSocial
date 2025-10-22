@@ -216,32 +216,43 @@
                     </script>
                     {% endif %}
 
-                    <div class="dashboard-box">
-                        <div class="box-content">
-                            <h3 class="title is-5 is-thin">Guide</h3>
-                            <div class="box-lines">
-                                <div class="box-line">
-                                    <span class="left" style="width: 75%">
-                                        <h4 class="title is-6 is-thin">Running an Y Social Experiment requires a few steps:</h4>
-
-                                        Start the Ollama server
-                                        <hr>
-                                         Create an <a href="http://localhost:8080/admin/experiments">Experiment</a>
-                                        <hr>
-                                        Create one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a> and assign them to the experiment
-                                        <hr>
-                                        Create one or more ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a>/<a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population <small>(optional)</small>
-                                        <hr>
-                                        Create and configure one or more clients for the experiment <small>(each managing a population)</small>
-                                        <hr>
-                                        Start the experiment server and run the clients
-
-                                        </ul>
-                                    </span>
-                                    <span class="right" style="width: 25%; padding-left: 10px;">
-                                        <img src="{{ url_for('static', filename='assets/img/robots/robot_v.png') }}" style="border-radius: 10px; filter: saturate(1); opacity: 0.6;">
-                                </div>
-                            </div>
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Running a YSocial Experiment</b><br>
+                                Follow these steps to set up and run a simulation:
+                            </p>
+                            <hr>
+                            <p>
+                                <b>1. Start LLM Server</b><br>
+                                Ensure your Ollama or vLLM server is running.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>2. Create an Experiment</b><br>
+                                Set up a new <a href="http://localhost:8080/admin/experiments">Experiment</a> to define your simulation environment.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>3. Create Agent Populations</b><br>
+                                Define one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a> and assign them to the experiment.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>4. Add Custom Agents/Pages (Optional)</b><br>
+                                Create ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a> or <a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>5. Configure Clients</b><br>
+                                Create and configure one or more clients for the experiment. Each client manages a population.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>6. Run the Simulation</b><br>
+                                Start the experiment server and run the clients to begin the simulation.
+                            </p>
                         </div>
                     </div>
                 </div>

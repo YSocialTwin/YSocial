@@ -169,24 +169,24 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
                             <p>
-                                <b>A dialogue for two.</b><br>
-                                To simulate a synthetic agent actions YSocial creates a chat between two entities: <br><br>
-                                <em>The Agent</em>: which has to generate text or taking decisions leveraging its profile;<br>
-                                <em>The Handler</em>: which provides instructions to the agent and evaluate its results (e.g., identifying article topics, elicited emotions).
+                                <b>Agent-Handler Dialogue</b><br>
+                                YSocial simulates agent actions through a chat between two entities:<br><br>
+                                <em>The Agent:</em> Generates text or makes decisions leveraging its profile<br>
+                                <em>The Handler:</em> Provides instructions and evaluates results (e.g., identifying topics, emotions)
                             </p>
                             <hr>
                             <p>
-                                <b>Prompts Customization</b>
-                                Prompts can access agent profile variables and can be customized to fit the specific needs of the simulation using the synthax <code>{ variable }</code>.<br>
+                                <b>Prompts Customization</b><br>
+                                Prompts can access agent profile variables and can be customized using the syntax <code>{ variable }</code>.<br><br>
                                 Here is the list of available variables:
                             </p>
                         </div>
                         <div class="box-content">
                                 <div class="box-lines">
-                                    Agent features
+                                    <b>Agent Features</b>
                                     <div class="box-line">
                                         <span class="left"><code>{self.name}</code></span>
                                         <span class="right" style="width: 40%;">
@@ -248,7 +248,7 @@
                                         </span>
                                     </div>
                                     <br>
-                                    Big-5 Personality Traits
+                                    <b>Big-5 Personality Traits</b>
                                     <div class="box-line">
                                         <span class="left"><code>{self.oe}</code></span>
                                         <span class="right" style="width: 40%;">
@@ -281,7 +281,7 @@
                                     </div>
 
                                     <br>
-                                    News Pages
+                                    <b>News Pages</b>
                                     <div class="box-line">
                                         <span class="left"><code>{website.name}</code></span>
                                         <span class="right" style="width: 40%;">
@@ -307,7 +307,7 @@
                                         </span>
                                     </div>
                                     <br>
-                                    Contents
+                                    <b>Contents</b>
                                     <div class="box-line">
                                         <span class="left"><code>{descr}</code></span>
                                         <span class="right" style="width: 40%;">
