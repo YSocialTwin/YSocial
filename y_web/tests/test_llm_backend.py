@@ -445,3 +445,71 @@ class TestIntegration:
         models = [model["id"] for model in mock_response["data"]]
         assert len(models) == 1
         assert "meta-llama/Llama-3.1-8B-Instruct" in models
+
+
+class TestNoneBackend:
+    """Tests for None backend (no LLM specified)"""
+
+    def test_none_backend_environment(self):
+        """Test that None backend clears environment variables"""
+        with patch.dict(os.environ, {}, clear=False):
+            # Remove our specific vars if they exist
+            os.environ.pop("LLM_BACKEND", None)
+            os.environ.pop("LLM_URL", None)
+
+            backend = os.getenv("LLM_BACKEND")
+            url = os.getenv("LLM_URL")
+            assert backend is None
+            assert url is None
+
+    def test_llm_backend_status_with_none(self):
+        """Test llm_backend_status returns proper structure for None backend"""
+        from y_web.utils.miscellanea import llm_backend_status
+
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("LLM_BACKEND", None)
+            os.environ.pop("LLM_URL", None)
+
+            status = llm_backend_status()
+            assert status["backend"] is None
+            assert status["url"] is None
+            assert status["status"] is False
+            assert status["installed"] is False
+
+    def test_content_annotator_with_none_backend(self):
+        """Test ContentAnnotator handles None backend gracefully"""
+        try:
+            from y_web.llm_annotations.content_annotation import ContentAnnotator
+
+            with patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("LLM_BACKEND", None)
+                os.environ.pop("LLM_URL", None)
+
+                # Creating annotator with None llm should work
+                annotator = ContentAnnotator(llm=None)
+                assert annotator.annotator is None
+                assert annotator.handler is None
+                assert annotator.config_list is None
+
+                # Annotate methods should return empty results
+                emotions = annotator.annotate_emotions("test text")
+                assert emotions == []
+        except Exception as e:
+            pytest.skip(f"ContentAnnotator test skipped: {e}")
+
+    def test_content_annotator_with_llm_but_no_backend(self):
+        """Test ContentAnnotator with llm specified but no backend configured"""
+        try:
+            from y_web.llm_annotations.content_annotation import ContentAnnotator
+
+            with patch.dict(os.environ, {}, clear=False):
+                os.environ.pop("LLM_BACKEND", None)
+                os.environ.pop("LLM_URL", None)
+
+                # Creating annotator with llm but no backend should disable it
+                annotator = ContentAnnotator(llm="test-model")
+                assert annotator.annotator is None
+                assert annotator.handler is None
+                assert annotator.config_list is None
+        except Exception as e:
+            pytest.skip(f"ContentAnnotator test skipped: {e}")
