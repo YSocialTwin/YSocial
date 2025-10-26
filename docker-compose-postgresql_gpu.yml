@@ -23,7 +23,7 @@ services:
     environment:
       - FLASK_APP=/app/y_social.py
       - NVIDIA_VISIBLE_DEVICES=all
-      # - LLM_BACKEND=ollama  # Default: ollama. Options: ollama, vllm
+      # - LLM_BACKEND=ollama  # Default: None. Options: ollama, vllm
     networks:
       my-network:
         aliases:
@@ -38,7 +38,7 @@ services:
             - capabilities: [ gpu ]
     runtime: nvidia
 
-    command: python /app/y_social.py --host 0.0.0.0 --port 5000 --db postgresql
+    command: python /app/y_social.py --host 0.0.0.0 --port 5000 --db postgresql --llm-backend ollama
 
   db:
     image: postgres:15

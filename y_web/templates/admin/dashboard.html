@@ -22,7 +22,7 @@
                     {% endfor %}
 
                     <!--Dashboard box-->
-                    {% if len(experiments) > 0 and (llm_backend["status"] and llm_backend["installed"]) %}
+                    {% if len(experiments) > 0 %}
                     <div class="dashboard-box">
                          <h3 class="title is-5 is-thin">Experiment Dashboard</h3>
                          <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -188,7 +188,7 @@
                     </div>
                     {% endif %}
 
-                    {% if len(experiments) > 0 and (llm_backend["status"] and llm_backend["installed"]) %}
+                    {% if len(experiments) > 0 %}
                     <script>
                         function startJupyterSession(expId) {
                             fetch(`/admin/lab_start/${expId}`)
@@ -225,32 +225,27 @@
                             </p>
                             <hr>
                             <p>
-                                <b>1. Start LLM Server</b><br>
-                                Ensure your Ollama or vLLM server is running.
+                                <b>1. Create one or more Agent Populations</b><br>
+                                Define one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a>.
                             </p>
                             <hr>
                             <p>
-                                <b>2. Create an Experiment</b><br>
-                                Set up a new <a href="http://localhost:8080/admin/experiments">Experiment</a> to define your simulation environment.
-                            </p>
-                            <hr>
-                            <p>
-                                <b>3. Create Agent Populations</b><br>
-                                Define one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a> and assign them to the experiment.
-                            </p>
-                            <hr>
-                            <p>
-                                <b>4. Add Custom Agents/Pages (Optional)</b><br>
+                                <b>2. Add Custom Agents/Pages (Optional) to an existing population</b><br>
                                 Create ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a> or <a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population.
                             </p>
                             <hr>
                             <p>
-                                <b>5. Configure Clients</b><br>
+                                <b>3. Create an Experiment</b><br>
+                                Set up a new <a href="http://localhost:8080/admin/experiments">Experiment</a> to define your simulation environment.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>4. Configure one or more Clients</b><br>
                                 Create and configure one or more clients for the experiment. Each client manages a population.
                             </p>
                             <hr>
                             <p>
-                                <b>6. Run the Simulation</b><br>
+                                <b>5. Run the Simulation</b><br>
                                 Start the experiment server and run the clients to begin the simulation.
                             </p>
                         </div>

@@ -73,8 +73,17 @@ def llm_backend_status():
 
     import requests
 
-    backend = os.getenv("LLM_BACKEND", "ollama")
+    backend = os.getenv("LLM_BACKEND")
     llm_url = os.getenv("LLM_URL")
+
+    # No backend specified
+    if backend is None:
+        return {
+            "backend": None,
+            "url": None,
+            "status": False,
+            "installed": False,
+        }
 
     # Check if it's a custom URL
     if ":" in backend and backend not in ["ollama", "vllm"]:

@@ -38,11 +38,16 @@ class Annotator(object):
             base_url = os.getenv("LLM_URL")
             if not base_url:
                 # Fallback to determining URL based on LLM backend for backward compatibility
-                llm_backend = os.getenv("LLM_BACKEND", "ollama")
+                llm_backend = os.getenv("LLM_BACKEND")
                 if llm_backend == "vllm":
                     base_url = "http://127.0.0.1:8000/v1"
-                else:  # ollama
+                elif llm_backend == "ollama":
                     base_url = "http://127.0.0.1:11434/v1"
+                else:
+                    # No backend specified - raise error or use a default
+                    raise ValueError(
+                        "No LLM backend configured. Please specify LLM_URL or set LLM_BACKEND environment variable."
+                    )
 
         self.config_list = [
             {

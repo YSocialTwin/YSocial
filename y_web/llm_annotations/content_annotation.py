@@ -34,15 +34,22 @@ class ContentAnnotator(object):
         if llm is not None:
             if llm_url is not None:
                 base_url = llm_url
+            else:
                 # Get base URL from environment variable (set by y_social.py)
                 base_url = os.getenv("LLM_URL")
                 if not base_url:
                     # Fallback to determining URL based on LLM backend for backward compatibility
-                    llm_backend = os.getenv("LLM_BACKEND", "ollama")
+                    llm_backend = os.getenv("LLM_BACKEND")
                     if llm_backend == "vllm":
                         base_url = "http://127.0.0.1:8000/v1"
-                    else:  # ollama
+                    elif llm_backend == "ollama":
                         base_url = "http://127.0.0.1:11434/v1"
+                    else:
+                        # No backend specified, cannot initialize
+                        self.annotator = None
+                        self.handler = None
+                        self.config_list = None
+                        return
 
             self.config_list = [
                 {
