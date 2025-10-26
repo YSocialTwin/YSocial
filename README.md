@@ -163,7 +163,7 @@ YSocial supports multiple LLM backends for content annotation and agent interact
 # No LLM server (assuming remote OpenAI-compatible server available)
 python y_social.py --host localhost --port 8080
 
-# Use Ollama (default)
+# Use Ollama (suggested)
 python y_social.py --host localhost --port 8080 --llm-backend ollama
 
 # Use vLLM
