@@ -5,7 +5,12 @@ from y_web import create_app, db
 
 
 def start_app(
-    db_type="sqlite", debug=False, host="localhost", port=8080, llm_backend="ollama"
+    db_type="sqlite",
+    debug=False,
+    host="localhost",
+    port=8080,
+    llm_backend=None,
+    notebook=False,
 ):
     import sys
 
@@ -16,7 +21,10 @@ def start_app(
 
     # Parse and validate LLM backend
     llm_url = None
-    if llm_backend == "ollama":
+    if llm_backend is None:
+        # No LLM backend specified - skip LLM configuration
+        print("No LLM backend specified. LLM features will be disabled.")
+    elif llm_backend == "ollama":
         llm_url = "http://127.0.0.1:11434/v1"
     elif llm_backend == "vllm":
         llm_url = "http://127.0.0.1:8000/v1"
@@ -33,31 +41,37 @@ def start_app(
         print("Valid options: 'ollama', 'vllm', or custom URL (host:port)")
         sys.exit(1)
 
-    # Check if LLM server is reachable
-    try:
-        # Try to reach the models endpoint
-        models_url = (
-            llm_url.replace("/v1", "/v1/models")
-            if "/v1" in llm_url
-            else f"{llm_url}/models"
-        )
-        response = requests.get(models_url, timeout=5)
-        if response.status_code not in [
-            200,
-            404,
-        ]:  # 404 is ok, means endpoint exists but no route
-            print(
-                f"Warning: LLM server at {llm_url} responded with status {response.status_code}"
+    # Check if LLM server is reachable (only if backend is specified)
+    if llm_backend is not None:
+        try:
+            # Try to reach the models endpoint
+            models_url = (
+                llm_url.replace("/v1", "/v1/models")
+                if "/v1" in llm_url
+                else f"{llm_url}/models"
             )
-    except requests.exceptions.RequestException as e:
-        print(f"Error: Cannot reach LLM server at {llm_url}")
-        print(f"Details: {e}")
-        print("\nMake sure the LLM server is running before starting YSocial.")
-        sys.exit(1)
+            response = requests.get(models_url, timeout=5)
+            if response.status_code not in [
+                200,
+                404,
+            ]:  # 404 is ok, means endpoint exists but no route
+                print(
+                    f"Warning: LLM server at {llm_url} responded with status {response.status_code}"
+                )
+        except requests.exceptions.RequestException as e:
+            print(f"Error: Cannot reach LLM server at {llm_url}")
+            print(f"Details: {e}")
+            print("\nMake sure the LLM server is running before starting YSocial.")
+            sys.exit(1)
 
     # Set the LLM backend and URL as environment variables for the app to use
-    os.environ["LLM_BACKEND"] = llm_backend
-    os.environ["LLM_URL"] = llm_url
+    if llm_backend is not None:
+        os.environ["LLM_BACKEND"] = llm_backend
+        os.environ["LLM_URL"] = llm_url
+    else:
+        # Clear any existing LLM environment variables
+        os.environ.pop("LLM_BACKEND", None)
+        os.environ.pop("LLM_URL", None)
 
     app = create_app(db_type=db_type)
 
@@ -68,6 +82,8 @@ def start_app(
         for exp in exps:
             exp.status = 0
         db.session.commit()
+
+    app.config["ENABLE_NOTEBOOK"] = notebook
 
     app.run(debug=debug, host=host, port=port)
 
@@ -92,8 +108,14 @@ if __name__ == "__main__":
     parser.add_argument(
         "-l",
         "--llm-backend",
-        default="ollama",
-        help="LLM backend to use: 'ollama' (default), 'vllm', or custom URL (host:port)",
+        default=None,
+        help="LLM backend to use: 'ollama', 'vllm', or custom URL (host:port). If not specified, LLM features will be disabled.",
+    )
+    parser.add_argument(
+        "-n",
+        "--no_notebook",
+        action="store_false",
+        help="Enable Jupyter Notebook server launch for experiments",
     )
 
     args = parser.parse_args()
@@ -104,4 +126,5 @@ if __name__ == "__main__":
         host=args.host,
         port=args.port,
         llm_backend=args.llm_backend,
+        notebook=args.no_notebook,
     )

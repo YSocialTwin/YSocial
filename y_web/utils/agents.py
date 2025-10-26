@@ -6,6 +6,8 @@ demographic profiles, personality traits, and behavioral characteristics
 based on population configuration parameters.
 """
 
+import json
+import math
 import random
 
 import faker
@@ -14,12 +16,85 @@ from sqlalchemy.sql import func
 
 from y_web import db
 from y_web.models import (
+    AgeClass,
     Agent,
     Agent_Population,
+    Education,
+    Leanings,
     Population,
     PopulationActivityProfile,
     Profession,
+    Toxicity_Levels,
 )
+
+
+def __sample_round_actions(
+    min_v: int,
+    max_v: int,
+    param: float,
+    dist: str = "uniform",
+) -> int:
+    """
+    Sample actions-per-active-slot (round_actions) using the configured distribution
+    truncated to the integer support [min, max]. Falls back to uniform if invalid.
+    """
+
+    min_v = int(min_v)
+    max_v = int(max_v)
+
+    if min_v >= max_v:
+        return max(min_v, 1)
+
+    support = list(range(min_v, max_v + 1))
+    R = len(support)
+
+    # Map support to k in [1..R] for simpler formulas
+    def to_value(k: int) -> int:
+        return support[0] + (k - 1)
+
+    # Uniform
+    if dist == "uniform" or dist is None:
+        return random.randint(min_v, max_v)
+
+    if param is not None:
+        param = float(param)
+
+    # Build weights for k=1..R then sample
+    weights = []
+    if dist == "poisson":
+        lam = float(param) if (param is not None) else 0.88
+        if lam <= 0:
+            return random.randint(min_v, max_v)
+        # Unnormalized Poisson pmf over k=1..R (exclude zero)
+        for k in range(1, R + 1):
+            # compute poisson at k
+            w = math.exp(-lam) * (lam**k) / math.factorial(k)
+            weights.append(w)
+
+    elif dist == "geometric":
+        p = float(param) if (param is not None) else (2.0 / 3.0)
+        if not (0 < p <= 1):
+            return random.randint(min_v, max_v)
+        for k in range(1, R + 1):
+            w = p * ((1 - p) ** (k - 1))
+            weights.append(w)
+    elif dist == "zipf":
+        s = float(param) if (param is not None) else 2.5
+        if s <= 1:
+            return random.randint(min_v, max_v)
+        for k in range(1, R + 1):
+            w = k ** (-s)
+            weights.append(w)
+    else:
+        return random.randint(min_v, max_v)
+
+    total = sum(weights)
+    if total <= 0 or any(math.isnan(w) or math.isinf(w) for w in weights):
+        return random.randint(min_v, max_v)
+
+    # Sample k in [1..R] then map to support
+    k = random.choices(range(1, R + 1), weights=weights, k=1)[0]
+    return to_value(k)
 
 
 def __sample_age(mean, std_dev, min_age, max_age):
@@ -44,6 +119,36 @@ def __sample_age(mean, std_dev, min_age, max_age):
             return int(round(age))
 
 
+def __sample_age_degree_profession(age_class, edu_classes):
+    probs = [v[0] for v in age_class.values()]
+    total = sum(probs)
+    weights = [p / total for p in probs]
+
+    # Extract the AgeClass objects
+    classes = [v[1] for v in age_class.values()]
+
+    # Sample one according to probability distribution
+    age_class = random.choices(classes, weights=weights, k=1)[0]
+
+    age = random.randint(age_class.age_start, age_class.age_end)
+
+    if age < 18:
+        profession = Profession.query.filter_by(profession="Student").first()
+    else:
+        profession = Profession.query.order_by(func.random()).first()
+
+    sampled = random.choices(
+        population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
+    )[0]
+    education_level = int(sampled)
+    # get education level object
+    education_level = (
+        Education.query.filter_by(id=education_level).first().education_level
+    )
+
+    return age, profession, education_level
+
+
 def __sample_pareto(values, alpha=2.0):
     """
     Sample a value from a discrete set using Pareto distribution.
@@ -65,7 +170,7 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
-def generate_population(population_name):
+def generate_population(population_name, percentages=None, actions_config=None):
     """
     Generate a population of AI agents with realistic profiles.
 
@@ -77,6 +182,10 @@ def generate_population(population_name):
 
     Args:
         population_name: Name of the population configuration to use
+        percentages: Optional dict specifying percentage distributions for
+                     certain attributes
+        actions_config : Optional dict specifying configuration for round_actions
+                         sampling (min, max, distribution type, parameter)
 
     Side effects:
         Creates and persists Agent and Agent_Population records in database
@@ -101,7 +210,42 @@ def generate_population(population_name):
     if not activity_profile_cdf:
         activity_profile_cdf = [(1.0, None)]
 
+    age_classes = {
+        int(k): [float(v), db.session.query(AgeClass).filter_by(id=int(k)).first()]
+        for k, v in percentages["age_classes"].items()
+    }
+
+    edu_classes = percentages["education"]
+
     for _ in range(population.size):
+
+        age, profession, education_level = __sample_age_degree_profession(
+            age_classes, edu_classes
+        )
+
+        # sample attributes based on provided percentages
+        sampled = {
+            attr: random.choices(
+                population=list(values.keys()), weights=list(values.values()), k=1
+            )[0]
+            for attr, values in percentages.items()
+        }
+
+        toxicity = int(sampled["toxicity_levels"])
+        # get toxicity level object
+        toxicity = (
+            db.session.query(Toxicity_Levels)
+            .filter_by(id=toxicity)
+            .first()
+            .toxicity_level
+        )
+
+        political_leaning = int(sampled["political_leanings"])
+        # get political leaning object
+        political_leaning = (
+            db.session.query(Leanings).filter_by(id=political_leaning).first().leaning
+        )
+
         try:
             nationality = random.sample(population.nationalities.split(","), 1)[
                 0
@@ -109,7 +253,15 @@ def generate_population(population_name):
         except:
             nationality = "American"
 
-        gender = random.sample(["male", "female"], 1)[0]
+        # Use weighted gender sampling based on provided percentages
+        if percentages and "gender" in percentages:
+            gender_dist = percentages["gender"]
+            genders = list(gender_dist.keys())
+            weights = list(gender_dist.values())
+            gender = random.choices(genders, weights=weights, k=1)[0]
+        else:
+            # Default to equal probability if no gender distribution provided
+            gender = random.sample(["male", "female"], 1)[0]
 
         fake = faker.Faker(__locales[nationality])
 
@@ -118,21 +270,6 @@ def generate_population(population_name):
         else:
             name = fake.name_female()
 
-        political_leaning = fake.random_element(
-            elements=(population.leanings.split(","))
-        ).strip()
-
-        # Gaussian distribution for age
-        age = __sample_age(
-            np.mean([population.age_min, population.age_max]),
-            int((population.age_max - population.age_min) / 2),
-            population.age_min,
-            population.age_max,
-        )
-
-        toxicity = fake.random_element(
-            elements=(population.toxicity.split(","))
-        ).strip()
         language = fake.random_element(
             elements=(population.languages.split(","))
         ).strip()
@@ -148,22 +285,21 @@ def generate_population(population_name):
         )
         ne = fake.random_element(elements=("sensitive/nervous", "resilient/confident"))
 
-        education_level = fake.random_element(
-            elements=(population.education.split(","))
-        )
-
         try:
-            round_actions = fake.random_int(
-                min=1,
-                max=4,
+            round_actions = __sample_round_actions(
+                actions_config["min"],
+                actions_config["max"],
+                (
+                    actions_config[actions_config["distribution"]]
+                    if actions_config["distribution"] in actions_config
+                    else None
+                ),
+                actions_config["distribution"],
             )
         except:
             round_actions = 3
 
         daily_activity_level = __sample_pareto([1, 2, 3, 4, 5])
-
-        # get random profession from db
-        profession = Profession.query.order_by(func.random()).first()
 
         # Assign activity profile based on population distribution
         rand_val = random.random()

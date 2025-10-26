@@ -1,5 +1,61 @@
 {% include "admin/head.html" %}
 
+<style>
+    .sidebar-box {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+    .sidebar-box h3 {
+        font-size: 1em;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 12px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .sidebar-box .help-block {
+        font-size: 0.85em;
+        line-height: 1.5;
+        color: #6b7280;
+    }
+    .sidebar-box .help-block p {
+        margin: 0 0 10px 0;
+    }
+    .sidebar-box .help-block p:last-child {
+        margin-bottom: 0;
+    }
+    .sidebar-box .help-block b {
+        color: #374151;
+        font-weight: 600;
+    }
+    .sidebar-box .input {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 0.9em;
+        transition: border-color 0.2s;
+    }
+    .sidebar-box .input:focus {
+        outline: none;
+        border-color: #22c55e;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+    }
+    .sidebar-box .button-wrap {
+        margin-top: 12px;
+    }
+    .sidebar-box .button {
+        width: 100%;
+        padding: 8px 16px;
+        font-size: 0.9em;
+        font-weight: 500;
+    }
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -57,11 +113,73 @@
         columns: [
             { id: 'idexp', hidden: true },
             { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
-            { id: 'exp_descr', name: 'Description', sort: false },
             { id: 'owner', name: 'Owner', sort: false },
             { id: 'platform_type', name: 'Platform Type', sort: true },
-            { id: 'web', name: 'Web Interface', sort: true },
-            { id: 'running', name: 'YServer Status', sort: true },
+            {
+                id: 'annotations',
+                name: 'Annotations',
+                sort: false,
+                formatter: (cell) => {
+                    if (!cell || cell === '') {
+                        return gridjs.html('<div style="text-align: center;">-</div>');
+                    }
+                    const annotations = cell.split(',').filter(a => a.trim());
+                    const tags = annotations.map(annotation => {
+                        const colors = {
+                            'toxicity': '#dc3545',
+                            'sentiment': '#28a745',
+                            'emotion': '#17a2b8'
+                        };
+                        const color = colors[annotation.trim()] || '#6c757d';
+                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 2px 8px; margin: 2px; border-radius: 12px; font-size: 0.75rem;">${annotation.trim()}</span>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
+                }
+            },
+            { 
+                id: 'running', 
+                name: 'Simulation', 
+                sort: true,
+                formatter: (cell) => {
+                    const isRunning = cell === 'Running';
+                    const color = isRunning ? '#28a745' : '#dc3545';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            { 
+                id: 'web', 
+                name: 'Web', 
+                sort: true,
+                formatter: (cell) => {
+                    const isLoaded = cell === 'Loaded';
+                    const color = isLoaded ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            {% if enable_notebook %}
+            { 
+                id: 'jupyter_status', 
+                name: 'Notebook', 
+                sort: true,
+                formatter: (cell) => {
+                    const isActive = cell === 'Active';
+                    const color = isActive ? '#28a745' : '#6c757d';
+                    return gridjs.html(`
+                        <div style="display: flex; justify-content: center; align-items: center;">
+                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        </div>
+                    `);
+                }
+            },
+            {% endif %}
             {
                 id: 'details',
                 name: 'Actions',
@@ -78,10 +196,6 @@
                                style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
                                 Delete
                             </a>
-                         <!--   <button class="delete-button" data-id="${id}"
-                                style="background-color: #dc3545; color: white; padding: 6px 12px; border: none; border-radius: 4px; font-size: 0.85rem; cursor: pointer;">
-                                Delete
-                            </button> -->
                         </div>
                     `);
                 }
@@ -195,41 +309,6 @@
                 <div class="column is-8">
                     <!--Dashboard box-->
 
-                    {%if dbtype=="sqlite" %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Upload Experiment</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Experiment zip</span>
-                                        <span class="right"><input type="file" id="experiment" name="experiment"
-                                                                   class="input_file"></span>
-                                    </div>
-<!--
-                                    <div class="box-line">
-                                        <span class="left">SQlite file path</span>
-                                        <span class="right"><input type="file" id="sqlite" name="sqlite_filename"
-                                                                   class="input_file"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">YServer configuration file</span>
-                                        <span class="right"><input type="file" id="yserver_conf" name="yserver_filename"
-                                                                   class="input_file"></span>
-                                    </div>
-                                    -->
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Load Experiment
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                    {% endif %}
-
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">New Experiment</h3>
                         <div class="box-content">
@@ -340,7 +419,36 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Perspective API<br> <small>(Toxicity annotation - optional)</small></span>
+                                        <span class="left">Generated Content Annotation</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Toxicity</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Sentiment</span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <label class="switch-small">
+                                                        <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
+                                                        <span class="slider-small round"></span>
+                                                    </label>
+                                                    <span style="font-size: 0.9rem;">Emotion</span>
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line" id="perspective_api_field" style="display: none;">
+                                        <span class="left">Perspective API Key<br> <small>(Required for toxicity)</small></span>
                                         <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
@@ -354,6 +462,137 @@
                             </form>
                         </div>
                     </div>
+
+                    <style>
+                        /* Toggle Switch Styles */
+                        .switch {
+                            position: relative;
+                            display: inline-block;
+                            width: 60px;
+                            height: 34px;
+                        }
+
+                        .switch input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider:before {
+                            position: absolute;
+                            content: "";
+                            height: 26px;
+                            width: 26px;
+                            left: 4px;
+                            bottom: 4px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider:before {
+                            transform: translateX(26px);
+                        }
+
+                        .slider.round {
+                            border-radius: 34px;
+                        }
+
+                        .slider.round:before {
+                            border-radius: 50%;
+                        }
+
+                        /* Small Toggle Switch Styles */
+                        .switch-small {
+                            position: relative;
+                            display: inline-block;
+                            width: 40px;
+                            height: 22px;
+                        }
+
+                        .switch-small input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+
+                        .slider-small {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: #ccc;
+                            transition: .4s;
+                        }
+
+                        .slider-small:before {
+                            position: absolute;
+                            content: "";
+                            height: 16px;
+                            width: 16px;
+                            left: 3px;
+                            bottom: 3px;
+                            background-color: white;
+                            transition: .4s;
+                        }
+
+                        input:checked + .slider-small {
+                            background-color: #5596e6;
+                        }
+
+                        input:focus + .slider-small {
+                            box-shadow: 0 0 1px #5596e6;
+                        }
+
+                        input:checked + .slider-small:before {
+                            transform: translateX(18px);
+                        }
+
+                        .slider-small.round {
+                            border-radius: 22px;
+                        }
+
+                        .slider-small.round:before {
+                            border-radius: 50%;
+                        }
+                    </style>
+
+                    <script>
+                        // Show/hide Perspective API field based on toxicity annotation toggle
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
+                            const perspectiveApiField = document.getElementById('perspective_api_field');
+
+                            toxicityToggle.addEventListener('change', function() {
+                                if (this.checked) {
+                                    perspectiveApiField.style.display = 'flex';
+                                } else {
+                                    perspectiveApiField.style.display = 'none';
+                                }
+                            });
+                        });
+                    </script>
+
                     <!--Dashboard box-->
                     <!-- <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Available Experiments</h3>
@@ -408,8 +647,8 @@
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                    <div class="sidebar-box">
+                        <h3>Guide</h3>
                         <div class="help-block">
 
                             <p>
@@ -436,6 +675,79 @@
                             </p>
                         </div>
                     </div>
+
+                    {%if dbtype=="sqlite" %}
+                    <div class="sidebar-box">
+                        <h3>Upload Experiment</h3>
+                        <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
+                            <style>
+                                .file-upload-wrapper-exp {
+                                    position: relative;
+                                    overflow: hidden;
+                                    display: block;
+                                    margin-bottom: 12px;
+                                }
+                                .file-upload-wrapper-exp input[type=file] {
+                                    position: absolute;
+                                    left: -9999px;
+                                }
+                                .file-upload-label-exp {
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    padding: 10px 12px;
+                                    background: #f9fafb;
+                                    border: 1px dashed #d1d5db;
+                                    border-radius: 4px;
+                                    cursor: pointer;
+                                    transition: all 0.2s;
+                                    font-size: 0.85em;
+                                }
+                                .file-upload-label-exp:hover {
+                                    background: #f3f4f6;
+                                    border-color: #22c55e;
+                                }
+                                .file-upload-icon-exp {
+                                    margin-right: 8px;
+                                    font-size: 1.1em;
+                                }
+                                .file-upload-text-exp {
+                                    color: #6b7280;
+                                }
+                                .file-name-display-exp {
+                                    margin-top: 6px;
+                                    font-size: 0.8em;
+                                    color: #22c55e;
+                                    font-weight: 500;
+                                    text-align: center;
+                                }
+                            </style>
+                            <div class="file-upload-wrapper-exp">
+                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)">
+                                <label for="experiment" class="file-upload-label-exp">
+                                    <span class="file-upload-icon-exp">📦</span>
+                                    <span class="file-upload-text-exp">Choose ZIP file...</span>
+                                </label>
+                                <div id="experiment-file-name-display" class="file-name-display-exp"></div>
+                            </div>
+                            <div class="button-wrap">
+                                <button class="button is-solid primary-button is-fullwidth">
+                                    Upload Experiment
+                                </button>
+                            </div>
+                        </form>
+                        <script>
+                            function displayExperimentFileName(input) {
+                                const display = document.getElementById('experiment-file-name-display');
+                                if (input.files && input.files[0]) {
+                                    display.textContent = '✓ ' + input.files[0].name;
+                                } else {
+                                    display.textContent = '';
+                                }
+                            }
+                        </script>
+                    </div>
+                    {% endif %}
 
 
                 </div>

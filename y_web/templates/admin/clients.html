@@ -61,8 +61,10 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <hr>
-                                    <h4><b>Simulation Parameters</b></h4>
+                                    <div class="form-section-header">Simulation Parameters</div>
+                                    <div class="form-section-description">
+                                        Configure the duration and behavioral settings for the simulation run.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
                                         <span class="right" style="width: 70%;"><input type="text"
@@ -126,12 +128,12 @@
                                                                                        class="input"
                                                                                        value="36"></span>
                                     </div>
-                                    <hr>
-                                    <h4><b>Agents' Actions Relevance</b></h4>
-                                    All actions are scored from 0 to 10, where 0 means that the action is never performed. <br>
-                                    Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
-                                    and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
-                                    <br><br>
+                                    <div class="form-section-header">Agents' Actions Relevance</div>
+                                    <div class="form-section-description">
+                                        All actions are scored from 0 to 10, where 0 means that the action is never performed. 
+                                        Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
+                                        and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">Post new content</span>
                                         <span class="right" style="width: 70%;">
@@ -351,8 +353,10 @@
                                                                                        value="0"></span>
                                     </div>
                                     {% endif %}
-                                    <hr>
-                                    <h4><b>Large Language Models</b></h4>
+                                    <div class="form-section-header">Large Language Models</div>
+                                    <div class="form-section-description">
+                                        Configure the LLM server and model for agent content generation.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
                                         <span class="right" style="width: 70%;">
@@ -397,8 +401,10 @@
                                                                                        class="input"
                                                                                        value="1.5"></span>
                                     </div>
-                                    <hr>
-                                    <h4><b>Large Language Models (Image Transcription)</b></h4>
+                                    <div class="form-section-header">Large Language Models (Image Transcription)</div>
+                                    <div class="form-section-description">
+                                        Configure the vision LLM for image content analysis and transcription.
+                                    </div>
                                     <div class="box-line">
                                         <span class="left">LLM Model</span>
                                         <span class="right" style="width: 70%;">minicpm-v:latest<input  type="hidden"
@@ -445,6 +451,401 @@
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
 
+                                    <style>
+                                        .form-section-header {
+                                            font-size: 0.95em;
+                                            font-weight: 600;
+                                            color: #333;
+                                            margin: 20px 0 8px 0;
+                                            padding-bottom: 5px;
+                                            border-bottom: 1px solid #e0e0e0;
+                                        }
+                                        .form-section-description {
+                                            font-size: 0.85em;
+                                            color: #666;
+                                            margin-bottom: 15px;
+                                            line-height: 1.4;
+                                        }
+                                        details summary {
+                                            list-style: none;
+                                        }
+                                        details summary::-webkit-details-marker {
+                                            display: none;
+                                        }
+                                        details summary::before {
+                                            content: '▶';
+                                            display: inline-block;
+                                            margin-right: 8px;
+                                            transition: transform 0.2s;
+                                            color: #374151;
+                                        }
+                                        details[open] summary::before {
+                                            transform: rotate(90deg);
+                                        }
+                                    </style>
+
+                                    <div class="form-section-header">Social Network Structure <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
+                                        <strong>Note:</strong> These options are mutually exclusive - selecting one will disable the other.
+                                    </div>
+
+                                    <details style="margin-bottom: 20px;">
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151; list-style: none;">
+                                            <span>Click to expand/collapse network configuration</span>
+                                        </summary>
+                                        <div style="padding: 15px 0; margin-top: 10px;">
+                                            
+                                            <!-- Synthetic Network Section -->
+                                            <div id="synthetic_network_section" style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Synthetic Network</h4>
+                                                
+                                                <div class="box-line">
+                                                    <span class="left">Model</span>
+                                                    <span class="right">
+                                                        <div class="select">
+                                                            <select name="network_model" id="network_model_select">
+                                                                <option value="">None</option>
+                                                                <option value="ER">Random Network</option>
+                                                                <option value="BA">Scale Free</option>
+                                                            </select>
+                                                        </div>
+                                                    </span>
+                                                </div>
+
+                                                <div class="box-line" id="er_param_field" style="display: none;">
+                                                    <span class="left">Rewiring probability</span>
+                                                    <span class="right">
+                                                        <input type="text" name="network_p" class="input" value="0.1">
+                                                    </span>
+                                                </div>
+                                                <div class="box-line" id="ba_param_field" style="display: none;">
+                                                    <span class="left">Connections per new node</span>
+                                                    <span class="right">
+                                                        <input type="text" name="network_m" class="input" value="2">
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div style="border-top: 1px solid #d1d5db; padding-top: 15px; margin-top: 15px;">
+                                                <p style="text-align: center; font-size: 0.85em; color: #666; margin: 10px 0;">OR</p>
+                                            </div>
+
+                                            <!-- Upload Custom Network Section -->
+                                            <div id="upload_network_section" style="margin-top: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Upload Custom Network</h4>
+                                                <style>
+                                                    .file-upload-wrapper-network-create {
+                                                        position: relative;
+                                                        overflow: hidden;
+                                                        display: block;
+                                                        margin-bottom: 12px;
+                                                    }
+                                                    .file-upload-wrapper-network-create input[type=file] {
+                                                        position: absolute;
+                                                        left: -9999px;
+                                                    }
+                                                    .file-upload-label-network-create {
+                                                        display: flex;
+                                                        align-items: center;
+                                                        justify-content: center;
+                                                        padding: 10px 12px;
+                                                        background: #f9fafb;
+                                                        border: 1px dashed #d1d5db;
+                                                        border-radius: 4px;
+                                                        cursor: pointer;
+                                                        transition: all 0.2s;
+                                                        font-size: 0.85em;
+                                                    }
+                                                    .file-upload-label-network-create:hover {
+                                                        background: #f3f4f6;
+                                                        border-color: #22c55e;
+                                                    }
+                                                    .file-upload-label-network-create.disabled {
+                                                        opacity: 0.5;
+                                                        cursor: not-allowed;
+                                                        pointer-events: none;
+                                                    }
+                                                    .file-upload-icon-network-create {
+                                                        margin-right: 8px;
+                                                        font-size: 1.1em;
+                                                    }
+                                                    .file-upload-text-network-create {
+                                                        color: #6b7280;
+                                                    }
+                                                    .file-name-display-network-create {
+                                                        margin-top: 6px;
+                                                        font-size: 0.8em;
+                                                        color: #22c55e;
+                                                        font-weight: 500;
+                                                        text-align: center;
+                                                    }
+                                                </style>
+                                                <div class="file-upload-wrapper-network-create">
+                                                    <input type="file" id="network_file_create" name="network_file" onchange="displayNetworkFileNameCreate(this)">
+                                                    <label for="network_file_create" class="file-upload-label-network-create">
+                                                        <span class="file-upload-icon-network-create">📊</span>
+                                                        <span class="file-upload-text-network-create">Choose edge list file (CSV)...</span>
+                                                    </label>
+                                                    <div id="network-file-name-display-create" class="file-name-display-network-create"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </details>
+
+                                    <div class="form-section-header">Hourly Activity Rates <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure hourly activity rates for the simulation. Default values are based on 
+                                        <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
+                                        Leave empty to use defaults.
+                                    </div>
+
+                                    <details style="margin-bottom: 20px;">
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151; list-style: none;">
+                                            <span>Click to expand/collapse activity rates configuration</span>
+                                        </summary>
+                                        <div style="padding: 15px 0; margin-top: 10px;">
+                                            
+                                            <!-- Bar Chart Visualization -->
+                                            <div style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Activity Rates Visualization</h4>
+                                                <div style="height: 200px; position: relative; background: white; padding: 10px; border: 1px solid #e5e7eb; border-radius: 4px;">
+                                                    <canvas id="activity_rates_create"></canvas>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Activity Rates Input Fields -->
+                                            <div style="margin-bottom: 20px;">
+                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Customize Hourly Rates</h4>
+                                                <p style="font-size: 0.8em; color: #666; margin-bottom: 12px;">Enter custom values for specific hours (leave empty to use defaults shown in placeholders)</p>
+                                            </div>
+
+                                            <style>
+                                                .activity-grid-create {
+                                                    display: grid;
+                                                    grid-template-columns: repeat(12, 1fr);
+                                                    gap: 8px;
+                                                    margin-bottom: 16px;
+                                                }
+                                                .activity-hour-create {
+                                                    display: flex;
+                                                    flex-direction: column;
+                                                    align-items: center;
+                                                }
+                                                .activity-hour-create label {
+                                                    font-size: 0.75em;
+                                                    color: #666;
+                                                    margin-bottom: 4px;
+                                                    font-weight: 500;
+                                                }
+                                                .activity-hour-create input {
+                                                    width: 100%;
+                                                    padding: 4px 6px;
+                                                    text-align: center;
+                                                    font-size: 0.85em;
+                                                    border: 1px solid #d1d5db;
+                                                    border-radius: 4px;
+                                                }
+                                                .activity-hour-create input:focus {
+                                                    outline: none;
+                                                    border-color: #22c55e;
+                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                                }
+                                            </style>
+                                            
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>0h</label>
+                                                    <input type="text" name="hourly_0" placeholder="0.023" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>1h</label>
+                                                    <input type="text" name="hourly_1" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>2h</label>
+                                                    <input type="text" name="hourly_2" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>3h</label>
+                                                    <input type="text" name="hourly_3" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>4h</label>
+                                                    <input type="text" name="hourly_4" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>5h</label>
+                                                    <input type="text" name="hourly_5" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>6h</label>
+                                                    <input type="text" name="hourly_6" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>7h</label>
+                                                    <input type="text" name="hourly_7" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>8h</label>
+                                                    <input type="text" name="hourly_8" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>9h</label>
+                                                    <input type="text" name="hourly_9" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>10h</label>
+                                                    <input type="text" name="hourly_10" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>11h</label>
+                                                    <input type="text" name="hourly_11" placeholder="0.022" value="">
+                                                </div>
+                                            </div>
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>12h</label>
+                                                    <input type="text" name="hourly_12" placeholder="0.024" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>13h</label>
+                                                    <input type="text" name="hourly_13" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>14h</label>
+                                                    <input type="text" name="hourly_14" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>15h</label>
+                                                    <input type="text" name="hourly_15" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>16h</label>
+                                                    <input type="text" name="hourly_16" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>17h</label>
+                                                    <input type="text" name="hourly_17" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>18h</label>
+                                                    <input type="text" name="hourly_18" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>19h</label>
+                                                    <input type="text" name="hourly_19" placeholder="0.031" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>20h</label>
+                                                    <input type="text" name="hourly_20" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>21h</label>
+                                                    <input type="text" name="hourly_21" placeholder="0.029" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>22h</label>
+                                                    <input type="text" name="hourly_22" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>23h</label>
+                                                    <input type="text" name="hourly_23" placeholder="0.025" value="">
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                // Initialize chart with default data
+                                                function initActivityChart() {
+                                                    const defaultData = [
+                                                        0.023, 0.021, 0.020, 0.020, 0.018, 0.017, 0.017, 0.018,
+                                                        0.020, 0.020, 0.021, 0.022, 0.024, 0.027, 0.030, 0.032,
+                                                        0.032, 0.032, 0.032, 0.031, 0.030, 0.029, 0.027, 0.025
+                                                    ];
+                                                    const labels = Array.from({length: 24}, (_, i) => i.toString());
+                                                    
+                                                    // Convert to percentages
+                                                    const activityData = defaultData.map(v => v * 100);
+                                                    const maxValue = Math.max(...activityData);
+                                                    const yAxisMax = Math.ceil(maxValue * 1.1);
+
+                                                    const ctx = document.getElementById('activity_rates_create');
+                                                    if (!ctx) return;
+
+                                                    new Chart(ctx, {
+                                                        type: 'bar',
+                                                        data: {
+                                                            labels: labels,
+                                                            datasets: [{
+                                                                label: 'Activity %',
+                                                                data: activityData,
+                                                                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                                                                borderColor: 'rgba(34, 197, 94, 1)',
+                                                                borderWidth: 1,
+                                                                borderRadius: 4
+                                                            }]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            maintainAspectRatio: false,
+                                                            plugins: {
+                                                                legend: {
+                                                                    display: false
+                                                                },
+                                                                tooltip: {
+                                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                                    padding: 8,
+                                                                    titleFont: { size: 12 },
+                                                                    bodyFont: { size: 11 },
+                                                                    callbacks: {
+                                                                        label: function(context) {
+                                                                            return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    suggestedMax: yAxisMax,
+                                                                    ticks: {
+                                                                        font: { size: 10 },
+                                                                        callback: function(value) {
+                                                                            return value + '%';
+                                                                        }
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(0, 0, 0, 0.05)'
+                                                                    }
+                                                                },
+                                                                x: {
+                                                                    ticks: {
+                                                                        font: { size: 9 }
+                                                                    },
+                                                                    grid: {
+                                                                        display: false
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                                // Initialize chart when details are expanded
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    const detailsElements = document.querySelectorAll('details');
+                                                    detailsElements.forEach(details => {
+                                                        details.addEventListener('toggle', function() {
+                                                            if (this.open && this.querySelector('#activity_rates_create')) {
+                                                                setTimeout(initActivityChart, 100);
+                                                            }
+                                                        });
+                                                    });
+                                                });
+                                            </script>
+                                        </div>
+                                    </details>
+
                                 </div>
                                 <div class="button-wrap">
                                     <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
@@ -461,26 +862,67 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
-                            <h4>What is an Experiment?</h4>
-                            <p>
-                                An experiment is the (active or consolidated) instance of a simulation.
-                                It composes of two elements: an SQlite database and the YServer
-                                configuration file.
-                            </p>
-                            <br>
 
-                            <h4>Adding an Experiment</h4>
                             <p>
-                                You can either load an existing experiment or create a new one.
+                                <b>What is a Client?</b><br>
+                                A client manages a population of agents that interact within the simulation. Each client runs independently with its own configuration and LLM settings.
                             </p>
-                            <br>
-                            <h4>Joining an Experiment</h4>
+                            <hr>
                             <p>
-                                Only an active experiments can be joined. A single experiment can be
-                                active at a time.
+                                <b>Basic Fields</b><br>
+                                <em>Name:</em> Unique identifier for this client<br>
+                                <em>Description:</em> Brief explanation of the client's purpose<br>
+                                <em>Population:</em> Select the agent population to use
                             </p>
+                            <hr>
+                            <p>
+                                <b>Simulation Parameters</b><br>
+                                Configure duration, agent behavior, and network dynamics.<br><br>
+                                <em>Simulation Length:</em> Number of days to run<br>
+                                <em>New Agents/Churn:</em> Daily agent creation and removal rates<br>
+                                <em>Thread Context:</em> How much conversation history agents see<br>
+                                <em>Timeline Ratio:</em> Balance between follower and general content<br>
+                                <em>Probability Daily Follow:</em> Probability that, during a given simulation day, an active agent is asked if he wants to connect with a peer<br>
+                                <em>Probability Secondary Follow:</em> Probability that an agent is asked if he would like to follow the author of content he interacted with<br>
+                                <em>Agents' Memory (hours):</em> For how long an agent maintain his interest in a topic<br>
+                                <em>Content Visibility (hours)</em> For how long a content can be proposed by recommender systems
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Agents' Actions Relevance</b><br>
+                                Set relative probabilities (0-10) for each action type. Higher values mean more frequent actions. Use 0 to disable an action.<br><br>
+                                Actions include posting, commenting, reading, searching, and platform-specific features.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Large Language Models</b><br>
+                                Configure the LLM server and model for agent content generation.<br><br>
+                                <i class="mdi mdi-information-outline" style="font-size: 16px;"></i> Click "Fetch Models" to load available models from your LLM server<br>
+                                <i class="mdi mdi-check-circle" style="font-size: 16px;"></i> Select a model to enable the Create button
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Image Transcription (Optional)</b><br>
+                                Configure vision LLM for image content analysis.<br><br>
+                                Click "Validate Model" to verify minicpm-v:latest is available. This enables image-related actions.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Social Network Structure (Optional)</b><br>
+                                Define initial connections between agents:<br><br>
+                                <em>Synthetic Network:</em> Generate using Random or Scale-Free models<br>
+                                <em>Custom Network:</em> Upload a CSV edge list file<br><br>
+                                <em>Note:</em> These options are mutually exclusive.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Hourly Activity Rates (Optional)</b><br>
+                                Customize agent activity patterns by hour.<br><br>
+                                Default values are based on real-world Bluesky data. Leave empty to use defaults.
+                            </p>
+
                         </div>
                     </div>
 
@@ -664,6 +1106,61 @@ function enableImageAction() {
     }
 }
 
+// Handle mutual exclusivity between synthetic network and file upload
+function updateNetworkInputStates() {
+    const networkModelSelect = document.getElementById('network_model_select');
+    const networkFileInput = document.getElementById('network_file_create');
+    const networkFileLabel = document.querySelector('.file-upload-label-network-create');
+    const erParamField = document.getElementById('er_param_field');
+    const baParamField = document.getElementById('ba_param_field');
+    
+    if (!networkModelSelect || !networkFileInput) return;
+    
+    const modelSelected = networkModelSelect.value !== '';
+    const fileSelected = networkFileInput.files && networkFileInput.files.length > 0;
+    
+    // If synthetic model is selected, disable file upload
+    if (modelSelected) {
+        networkFileInput.disabled = true;
+        if (networkFileLabel) {
+            networkFileLabel.classList.add('disabled');
+        }
+    } else {
+        networkFileInput.disabled = false;
+        if (networkFileLabel) {
+            networkFileLabel.classList.remove('disabled');
+        }
+    }
+    
+    // If file is uploaded, disable synthetic model selection
+    if (fileSelected) {
+        networkModelSelect.disabled = true;
+    } else {
+        networkModelSelect.disabled = false;
+    }
+    
+    // Show/hide parameter fields based on model selection
+    if (erParamField) erParamField.style.display = 'none';
+    if (baParamField) baParamField.style.display = 'none';
+    
+    if (networkModelSelect.value === 'ER' && erParamField) {
+        erParamField.style.display = 'block';
+    } else if (networkModelSelect.value === 'BA' && baParamField) {
+        baParamField.style.display = 'block';
+    }
+}
+
+// Display network file name when selected
+function displayNetworkFileNameCreate(input) {
+    const display = document.getElementById('network-file-name-display-create');
+    if (input.files && input.files[0]) {
+        display.textContent = '✓ ' + input.files[0].name;
+    } else {
+        display.textContent = '';
+    }
+    updateNetworkInputStates();
+}
+
 // On page load, disable image action by default and setup form validation
 document.addEventListener('DOMContentLoaded', function() {
     disableImageAction();
@@ -684,6 +1181,22 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFormButtonState();
         });
     }
+    
+    // Setup network mutual exclusivity
+    const networkModelSelect = document.getElementById('network_model_select');
+    const networkFileInput = document.getElementById('network_file_create');
+    
+    if (networkModelSelect) {
+        networkModelSelect.addEventListener('change', updateNetworkInputStates);
+    }
+    if (networkFileInput) {
+        networkFileInput.addEventListener('change', function() {
+            displayNetworkFileNameCreate(this);
+        });
+    }
+    
+    // Initial state
+    updateNetworkInputStates();
 });
                                             </script>
 {% include "admin/footer.html" %}

@@ -1,0 +1,55 @@
+/*! admin-layout.css | YSocial Admin Layout Improvements */
+
+/* 
+ * Expand dashboard container to use more available screen space
+ * while maintaining balanced spacing on widescreen monitors.
+ * Uses !important to override the core.css max-width: 1200px constraint.
+ */
+.view-wrapper.is-dashboard .dashboard-container {
+    max-width: none !important;
+    width: calc(100% - 4rem) !important;
+    margin: 0 2rem !important;
+    padding: 0 1rem !important;
+}
+
+/* 
+ * For extra-wide screens, add reasonable max-width to maintain readability
+ * but much wider than the original 1200px constraint
+ */
+@media only screen and (min-width: 2560px) {
+    .view-wrapper.is-dashboard .dashboard-container {
+        max-width: 2400px !important;
+        margin: 0 auto !important;
+    }
+}
+
+/* 
+ * Ensure Jupyter container uses full available width
+ * More specific selector to avoid !important
+ */
+.view-wrapper.is-dashboard .dashboard-container .jupyter-container {
+    width: 100%;
+    max-width: none;
+}
+
+/*
+ * Maintain tablet responsiveness
+ */
+@media only screen and (min-width: 768px) and (max-width: 1024px) {
+    .view-wrapper.is-dashboard .dashboard-container {
+        width: calc(100% - 2rem) !important;
+        margin: 0 1rem !important;
+        padding: 0 0.75rem !important;
+    }
+}
+
+/*
+ * Maintain mobile responsiveness
+ */
+@media only screen and (max-width: 767px) {
+    .view-wrapper.is-dashboard .dashboard-container {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 0.5rem !important;
+    }
+}

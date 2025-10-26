@@ -22,129 +22,160 @@
                     {% endfor %}
 
                     <!--Dashboard box-->
-                    {% if len(experiments) > 0 and (llm_backend["status"] and llm_backend["installed"]) %}
+                    {% if len(experiments) > 0 %}
                     <div class="dashboard-box">
                          <h3 class="title is-5 is-thin">Experiment Dashboard</h3>
-                        <div class="box-content">
-                            <hr style="margin-bottom: 0px;">
-                            {% for exp in experiments %}
-                            <div class="box-line">
-                                <span class="left" style="width: 22%;"><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}">{{ experiments[exp]['experiment'].exp_name }}</a></span>
-                                <span class="right" style="width: 60%;"></span>
-                                <span class="right" style="width: 20%;">
-                                    <a class="link-tooltip" {% if experiments[exp]['experiment'].running == 0 %} href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Run">
-                                        <i class="mdi mdi-play-box-outline {% if experiments[exp]['experiment'].running %}active{% endif %}" style="font-size: 24px;"></i>
-                                    </a>
+                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Active experiments and their running clients with real-time progress monitoring.
+                        </p>
+                        
+                        {% for exp in experiments %}
+                        <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                            <div class="box-lines">
+                                <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
+                                    <span class="left" style="display: flex; align-items: center; gap: 10px;">
+                                        Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
+                                            <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
+                                        </a>
 
-                                     <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop">
-                                        <i class="mdi mdi-stop {% if experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                    </a>
-
-                                    <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load">
-                                        <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
-                                    </a>
-                                    <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 1 %} href="/admin/join_simulation" {% endif %} title="Join" >
-                                        <i class="mdi mdi-plus-box {% if experiments[exp]['experiment'].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                    </a>
-                                    <a class="link-tooltip" {% if experiments[exp]['experiment'].status== 0 %} href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" {% endif %} title="Delete" >
-                                        <i class="mdi mdi-delete {% if experiments[exp]['experiment'].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                    </a>
-
-
-
-                                </span>
-                            </div>
-                            <!-- clients -->
-                            <div style="margin-left: 2%;">
+                                    </span>
+                                    <span class="right" style="display: flex; gap: 8px; align-items: center;">
+                                        <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
+                                            {% if experiments[exp]['experiment'].running == 0 %}
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Run Experiment">
+                                                <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if experiments[exp]['experiment'].running == 1 %}
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop Experiment">
+                                                <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load Experiment">
+                                                <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% if experiments[exp]['experiment'].status == 1 %}
+                                            <a class="link-tooltip" href="/admin/join_simulation" title="Join Simulation">
+                                                <i class="mdi mdi-plus-box" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if experiments[exp]['experiment'].status == 0 %}
+                                            <a class="link-tooltip" href="/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}" title="Delete Experiment">
+                                                <i class="mdi mdi-delete" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
+                                            {% if notebook %}
+                                            <div style="display: flex; gap: 3px;">
+                                                {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
+                                                <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
+                                                    <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
+                                                </a>
+                                                <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" target="_blank" title="Open JupyterLab">
+                                                    <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
+                                                </a>
+                                                {% else %}
+                                                <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
+                                                    <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                {% if len(experiments[exp]["clients"]) > 0 %}
+                                <hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">
                                 {% for client in experiments[exp]["clients"] %}
-
-                                <div class="box-line" style="height: 40px;">
-                                    <span class="left" style="width: 20%;"><a href="/admin/client_details/{{client[0].id}}">{{ client[0].name }}</a></span>
-
-                                    <span class="right" style="width: 60%;">
-                                        <div class="progress" style="height: 22px; width: 90%;" >
-                                            <div id="progress-bar-{{client[0].id}}" class="progress-bar progress-bar-striped progress_exp" role="progressbar"
-                                                 aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                                                0%
+                                <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;  ">
+                                    <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">Client:
+                                        <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
+                                        <em style="color: #0d95e8">{{ client[0].name }}</em><a href="/admin/client_details/{{client[0].id}}" class="link-tooltip" title="View Client Details">
+                                            <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
+                                        </a>
+                                    </span>
+                                    <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
+                                        <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
+                                            <div id="progress-bar-{{client[0].id}}" class="sleek-progress-bar" 
+                                                 style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out, background 0.3s ease; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
+                                                <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">0%</span>
                                             </div>
                                         </div>
+                                        <div style="display: flex; gap: 3px;">
+                                            {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 %}
+                                                {% if client[1] != -1 %}
+                                                    {% if client[1].elapsed_time == 0 %}
+                                                    <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                                                        <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                    </a>
+                                                    {% elif client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %}
+                                                    <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
+                                                        <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                    </a>
+                                                    {% endif %}
+                                                {% else %}
+                                                <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
+                                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                                </a>
+                                                {% endif %}
+                                            {% endif %}
+                                            {% if client[0].status == 1 %}
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Pause Client">
+                                                <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if client[0].status == 0 %}
+                                            <a class="link-tooltip" href="/admin/delete_client/{{ client[0].id }}" title="Delete Client">
+                                                <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
                                     </span>
-
-                                    <script>
-
-                                        $(document).ready(function () {
-                                                    // Start the background progress as soon as the page loads
-                                                    $.ajax({
-                                                        url: `/admin/progress/{{client[0].id}}`,
-                                                        method: 'GET'
-                                                    });
-
-                                                    // Poll progress updates
-                                                    function pollProgress() {
-                                                        $.ajax({
-                                                            url: '/admin/progress/{{client[0].id}}',
-                                                            method: 'GET',
-                                                            dataType: 'json',
-                                                            success: function (data) {
-                                                                const percentage = data.progress;
-                                                                const progressBar = $('#progress-bar-{{client[0].id}}');
-
-                                                                // Update the progress bar width and text
-                                                                progressBar.css('width', percentage + '%');
-                                                                progressBar.text(percentage + '%');
-
-                                                                // If progress is less than 100, keep polling
-                                                                if (percentage < 100) {
-                                                                    setTimeout(pollProgress, 500);
-                                                                }
-                                                            }
-                                                        });
-                                                    }
-
-                                                    // Start polling immediately
-                                                    pollProgress();
-                                                });
-
-                                    </script>
-
-                                    <span class="right" style="width: 20%;">
-                                        {% if client[1] != -1 %}
-                                        <a class="link-tooltip"
-                                           {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time == 0 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 and client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %} href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        {% else %}
-                                        <a class="link-tooltip"
-                                           {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client[0].status == 1  %}active {% elif experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        {% endif %}
-
-                                        <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Pause">
-                                            <i class="mdi mdi-pause {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-
-                                       <!-- <a class="link-tooltip" {% if  client[0].status == 1 %} href="/admin/stop_client/{{ client[0].id }}/{{ client[0].id_exp }}" {% endif %} title="Stop">
-                                            <i class="mdi mdi-stop {% if  client[0].status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a> -->
-
-                                        <!--<a class="link-tooltip" {% if  client[0].status == 0 and experiments[exp]['experiment'].running == 1 %} href="/admin/reset_client/{{ client[0].id }}" {% endif %} title="Reset">
-                                            <i class="mdi mdi-backup-restore {% if  experiments[exp]['experiment'].running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>-->
-
-                                        <a class="link-tooltip" {% if client[0].status == 0 %} href="/admin/delete_client/{{ client[0].id }}" {% endif %} title="Delete" >
-                                        <i class="mdi mdi-delete {% if client[0].status == 1 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                    </a>
-                                    </span>
-
                                 </div>
+                                
+                                <script>
+                                    $(document).ready(function () {
+                                        $.ajax({
+                                            url: `/admin/progress/{{client[0].id}}`,
+                                            method: 'GET'
+                                        });
+
+                                        function pollProgress() {
+                                            $.ajax({
+                                                url: '/admin/progress/{{client[0].id}}',
+                                                method: 'GET',
+                                                dataType: 'json',
+                                                success: function (data) {
+                                                    const percentage = data.progress;
+                                                    const progressBar = $('#progress-bar-{{client[0].id}}');
+                                                    progressBar.css('width', percentage + '%');
+                                                    progressBar.find('span').text(percentage + '%');
+                                                    
+                                                    // Update gradient based on progress - aligned with template colors
+                                                    if (percentage >= 75) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+                                                    } else if (percentage >= 50) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+                                                    }
+                                                    
+                                                    if (percentage < 100) {
+                                                        setTimeout(pollProgress, 500);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        pollProgress();
+                                    });
+                                </script>
                                 {% endfor %}
-
+                                {% endif %}
                             </div>
-                            <hr style="margin-bottom: 0px; margin-top: 0px;">
-                            {% endfor %}
-
                         </div>
+                        {% endfor %}
 
                     </div>
                      {% else %}
@@ -157,32 +188,66 @@
                     </div>
                     {% endif %}
 
-                    <div class="dashboard-box">
-                        <div class="box-content">
-                            <h3 class="title is-5 is-thin">Guide</h3>
-                            <div class="box-lines">
-                                <div class="box-line">
-                                    <span class="left" style="width: 75%">
-                                        <h4 class="title is-6 is-thin">Running an Y Social Experiment requires a few steps:</h4>
+                    {% if len(experiments) > 0 %}
+                    <script>
+                        function startJupyterSession(expId) {
+                            fetch(`/admin/lab_start/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    location.reload();
+                                })
+                                .catch(error => {
+                                    console.error('Error starting JupyterLab:', error);
+                                    location.reload();
+                                });
+                        }
 
-                                        Start the Ollama server
-                                        <hr>
-                                         Create an <a href="http://localhost:8080/admin/experiments">Experiment</a>
-                                        <hr>
-                                        Create one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a> and assign them to the experiment
-                                        <hr>
-                                        Create one or more ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a>/<a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population <small>(optional)</small>
-                                        <hr>
-                                        Create and configure one or more clients for the experiment <small>(each managing a population)</small>
-                                        <hr>
-                                        Start the experiment server and run the clients
+                        function stopJupyterSession(expId) {
+                            fetch(`/admin/lab_stop/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    location.reload();
+                                })
+                                .catch(error => {
+                                    console.error('Error stopping JupyterLab:', error);
+                                    location.reload();
+                                });
+                        }
+                    </script>
+                    {% endif %}
 
-                                        </ul>
-                                    </span>
-                                    <span class="right" style="width: 25%; padding-left: 10px;">
-                                        <img src="{{ url_for('static', filename='assets/img/robots/robot_v.png') }}" style="border-radius: 10px; filter: saturate(1); opacity: 0.6;">
-                                </div>
-                            </div>
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Running a YSocial Experiment</b><br>
+                                Follow these steps to set up and run a simulation:
+                            </p>
+                            <hr>
+                            <p>
+                                <b>1. Create one or more Agent Populations</b><br>
+                                Define one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a>.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>2. Add Custom Agents/Pages (Optional) to an existing population</b><br>
+                                Create ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a> or <a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>3. Create an Experiment</b><br>
+                                Set up a new <a href="http://localhost:8080/admin/experiments">Experiment</a> to define your simulation environment.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>4. Configure one or more Clients</b><br>
+                                Create and configure one or more clients for the experiment. Each client manages a population.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>5. Run the Simulation</b><br>
+                                Start the experiment server and run the clients to begin the simulation.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -255,20 +320,85 @@
                         <h3 class="title is-5 is-thin">Available LLMs</h3>
 
                         <div class="box-content">
-                            <div class="box-lines">
-                                {% for model in models %}
-                                <div class="box-line">
-                                    <span class="left">{{ model }}</span>
-                                    {% if llm_backend['backend'] == 'ollama' %}
-                                    <span class="right"><a class="link-tooltip" href="/admin/delete_model/{{ model }}" title="Delete">
-                                        <i class="mdi mdi-delete" style="font-size: 24px;"></i>
-                                </a></span>
-                                    {% endif %}
-                                </div>
-                                {% endfor %}
-                            </div>
+                            <div id="models-table"></div>
 
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
+                            <style>
+                              #models-table td {
+                                vertical-align: middle !important;
+                              }
+                            </style>
+
+                            <script>
+                                const modelsTableDiv = document.getElementById('models-table');
+
+                                const updateUrl = (prev, query) => {
+                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+                                };
+
+                                new gridjs.Grid({
+                                    columns: [
+                                        { id: 'model_name', name: 'Model Name', sort: true },
+                                        {
+                                            id: 'actions',
+                                            name: 'Actions',
+                                            sort: false,
+                                            formatter: (cell, row) => {
+                                                const modelName = row.cells[0].data;
+                                                const backend = '{{ llm_backend["backend"] }}';
+                                                
+                                                // Only show delete button for Ollama backend
+                                                if (backend === 'ollama') {
+                                                    return gridjs.html(`
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
+                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Delete
+                                                            </a>
+                                                        </div>
+                                                    `);
+                                                } else {
+                                                    return gridjs.html(`<div style="text-align: center;">-</div>`);
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    server: {
+                                        url: '/admin/models_data',
+                                        then: results => results.data,
+                                        total: results => results.total,
+                                    },
+                                    search: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, search) => {
+                                                return updateUrl(prev, { search });
+                                            },
+                                        },
+                                    },
+                                    sort: {
+                                        enabled: true,
+                                        multiColumn: false,
+                                        server: {
+                                            url: (prev, columns) => {
+                                                const columnIds = ['model_name'];
+                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                                                return updateUrl(prev, { sort });
+                                            },
+                                        },
+                                    },
+                                    pagination: {
+                                        enabled: true,
+                                        limit: 4,
+                                        server: {
+                                            url: (prev, page, limit) => {
+                                                return updateUrl(prev, { start: page * limit, length: limit });
+                                            },
+                                        },
+                                    },
+                                }).render(modelsTableDiv);
+                            </script>
                         </div>
                     </div>
                     {% endif %}

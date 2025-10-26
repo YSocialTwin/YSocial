@@ -1,0 +1,35 @@
+name: Package Full Release
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout including submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Update submodules
+        run: git submodule update --init --recursive
+
+      - name: Create release archive
+        run: |
+          zip -r "YSocial-full.zip" . \
+            -x ".git/*" ".github/*" "*.gitignore" \
+            -x "*/.git/*"
+
+      - name: Upload release ZIP
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./YSocial-full.zip
+          asset_name: YSocial-full.zip
+          asset_content_type: application/zip

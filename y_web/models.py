@@ -385,6 +385,7 @@ class Exps(db.Model):
     running = db.Column(db.Integer, nullable=False, default=0)
     port = db.Column(db.Integer, nullable=False)
     server = db.Column(db.String(50), nullable=False, default="127.0.0.1")
+    annotations = db.Column(db.String(500), nullable=False, default="")
 
 
 class Exp_stats(db.Model):
@@ -514,6 +515,9 @@ class Page(db.Model):
     logo = db.Column(db.String(300))
     pg_type = db.Column(db.String(100))
     leaning = db.Column(db.String(50), default="")
+    activity_profile = db.Column(
+        db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True
+    )
 
 
 class Population_Experiment(db.Model):
@@ -687,6 +691,17 @@ class Toxicity_Levels(db.Model):
     toxicity_level = db.Column(db.String(50), nullable=False)
 
 
+class AgeClass(db.Model):
+    """Available age class options for agent profiles with age ranges."""
+
+    __bind__ = "db_admin"
+    __tablename__ = "age_classes"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    age_start = db.Column(db.Integer, nullable=False)
+    age_end = db.Column(db.Integer, nullable=False)
+
+
 class Content_Recsys(db.Model):
     """Content recommendation system configuration options."""
 
@@ -776,3 +791,21 @@ class PopulationActivityProfile(db.Model):
         nullable=False,
     )
     percentage = db.Column(db.Float, nullable=False)
+
+
+class Jupyter_instances(db.Model):
+    """
+    Jupyter Lab instance tracking.
+
+    Stores information about running Jupyter Lab instances including
+    instance ID, notebook directory, port, and start time.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "jupyter_instances"
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    port = db.Column(db.Integer, nullable=False)
+    notebook_dir = db.Column(db.String(300), nullable=False)
+    process = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(10), nullable=False, default="stopped")

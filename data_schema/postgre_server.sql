@@ -46,7 +46,8 @@ CREATE TABLE user_mgmt (
     is_page INTEGER NOT NULL DEFAULT 0,
     left_on INTEGER,
     daily_activity_level INTEGER DEFAULT 1,
-    profession TEXT
+    profession TEXT,
+    activity_profile TEXT
 );
 
 CREATE TABLE follow (

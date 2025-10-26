@@ -22,11 +22,13 @@ from flask import (
     send_file,
 )
 from flask_login import current_user, login_required
+from traitlets import Instance
 
 from y_web import db  # , app
 from y_web.models import (
     ActivityProfile,
     Admin_users,
+    AgeClass,
     Agent,
     Agent_Population,
     Agent_Profile,
@@ -36,6 +38,7 @@ from y_web.models import (
     Exp_stats,
     Exp_Topic,
     Exps,
+    Jupyter_instances,
     Languages,
     Leanings,
     Nationalities,
@@ -51,6 +54,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.utils import start_server, terminate_process_on_port
+from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 
 experiments = Blueprint("experiments", __name__)
@@ -88,6 +92,7 @@ def settings():
         users=users,
         ollamas=ollamas,
         dbtype=dbtype,
+        enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
     )
 
 
@@ -500,7 +505,15 @@ def create_experiment():
     platform_type = request.form.get("platform_type")
     host = request.form.get("host")
     port = int(request.form.get("port"))
-    perspective_api = request.form.get("perspective_api")
+
+    # Get annotation settings
+    toxicity_annotation = request.form.get("toxicity_annotation") == "true"
+    perspective_api = (
+        request.form.get("perspective_api") if toxicity_annotation else None
+    )
+    sentiment_annotation = request.form.get("sentiment_annotation") == "true"
+    emotion_annotation = request.form.get("emotion_annotation") == "true"
+
     topics = request.form.get("tags").split(",")
 
     # identify db type
@@ -515,9 +528,7 @@ def create_experiment():
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
-
         if db_type == "sqlite":
-
             shutil.copyfile(
                 f"data_schema{os.sep}database_clean_server.db",
                 f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
@@ -624,7 +635,11 @@ def create_experiment():
         "debug": "False",
         "reset_db": "False",
         "modules": ["news", "voting", "image"],
-        "perspective_api": perspective_api if len(perspective_api) > 0 else None,
+        "perspective_api": (
+            perspective_api if perspective_api and len(perspective_api) > 0 else None
+        ),
+        "sentiment_annotation": sentiment_annotation,
+        "emotion_annotation": emotion_annotation,
     }
 
     with open(
@@ -633,6 +648,16 @@ def create_experiment():
         json.dump(config, f, indent=4)
 
     # add the experiment to the database
+
+    annotations = ""
+    if toxicity_annotation:
+        annotations += "toxicity,"
+    if sentiment_annotation:
+        annotations += "sentiment,"
+    if emotion_annotation:
+        annotations += "emotion,"
+    # remove trailing comma
+    annotations = annotations.rstrip(",")
 
     exp = Exps(
         exp_name=exp_name,
@@ -647,6 +672,7 @@ def create_experiment():
         status=0,
         port=int(port),
         server=host,
+        annotations=annotations,
     )
 
     db.session.add(exp)
@@ -680,6 +706,12 @@ def create_experiment():
             db.session.add(exp_topic)
             db.session.commit()
 
+    jn_instance = Jupyter_instances(
+        port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"
+    )
+    db.session.add(jn_instance)
+    db.session.commit()
+
     return settings()
 
 
@@ -693,7 +725,6 @@ def delete_simulation(exp_id):
         # remove the experiment folder
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
-
             shutil.rmtree(
                 f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
                 ignore_errors=True,
@@ -751,6 +782,15 @@ def delete_simulation(exp_id):
         db.session.query(Exp_Topic).filter_by(exp_id=exp_id).delete()
         db.session.commit()
 
+        # delete jupyter instances
+        instances = db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).all()
+        try:
+            stop_process(instances.process, instances.exp_id)
+        except Exception:
+            pass
+        db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+
     return settings()
 
 
@@ -775,15 +815,26 @@ def experiments_data():
     sort = request.args.get("sort")
     if sort:
         order = []
+        # Map column IDs to actual database field names
+        column_mapping = {
+            "exp_name": "exp_name",
+            "owner": "owner",
+            "platform_type": "platform_type",
+            "exp_descr": "exp_descr",
+            "annotations": "annotations",
+            "running": "running",
+            "web": "status",  # web interface status
+        }
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["exp_name", "exp_descr", "owner"]:
-                name = "name"
-            col = getattr(Exps, name)
-            if direction == "-":
-                col = col.desc()
-            order.append(col)
+            # Only sort by columns that have database fields
+            if name in column_mapping:
+                db_field = column_mapping[name]
+                col = getattr(Exps, db_field)
+                if direction == "-":
+                    col = col.desc()
+                order.append(col)
         if order:
             query = query.order_by(*order)
 
@@ -796,16 +847,35 @@ def experiments_data():
     # response
     res = query.all()
 
+    # Get JupyterLab status for each experiment
+    import psutil
+
+    jupyter_status = {}
+    jupyter_instances = Jupyter_instances.query.all()
+    for jupyter in jupyter_instances:
+        is_running = False
+        if jupyter.process is not None:
+            try:
+                proc = psutil.Process(int(jupyter.process))
+                if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
+                    is_running = True
+            except (psutil.NoSuchProcess, ValueError, TypeError):
+                pass
+        jupyter_status[jupyter.exp_id] = is_running
+
     return {
         "data": [
             {
                 "idexp": exp.idexp,
                 "exp_name": exp.exp_name,
-                "exp_descr": exp.exp_descr,
                 "platform_type": exp.platform_type,
                 "owner": exp.owner,
                 "web": "Loaded" if exp.status == 1 else "Not loaded",
                 "running": "Running" if exp.running == 1 else "Stopped",
+                "jupyter_status": (
+                    "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
+                ),
+                "annotations": exp.annotations if exp.annotations else "",
             }
             for exp in res
         ],
@@ -849,6 +919,10 @@ def experiment_details(uid):
     elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
         dbtype = "postgresql"
 
+    # get jupyter instance for this experiment if exists
+
+    jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
+
     return render_template(
         "admin/experiment_details.html",
         experiment=experiment,
@@ -857,6 +931,8 @@ def experiment_details(uid):
         len=len,
         ollamas=ollamas,
         dbtype=dbtype,
+        jupyter_instance=jupyter_instance,
+        notebooks=current_app.config["ENABLE_NOTEBOOK"],
     )
 
 
@@ -1576,6 +1652,118 @@ def delete_toxicity_level(toxicity_level_id):
         flash("Toxicity level not found.")
         return miscellanea()
     db.session.delete(toxicity_level)
+    db.session.commit()
+    return miscellanea()
+
+
+@experiments.route("/admin/age_classes_data", methods=["GET", "POST"])
+@login_required
+def age_classes_data():
+    """Display age classes data page and handle inline edits."""
+    if request.method == "POST":
+        # Handle inline edit
+        data = request.get_json()
+        age_class_id = data.get("id")
+        age_class = AgeClass.query.filter_by(id=age_class_id).first()
+        if age_class:
+            try:
+                if "name" in data:
+                    age_class.name = data["name"]
+                if "age_start" in data:
+                    age_class.age_start = int(data["age_start"])
+                if "age_end" in data:
+                    age_class.age_end = int(data["age_end"])
+                db.session.commit()
+            except (ValueError, TypeError):
+                return {"success": False, "error": "Invalid value provided"}, 400
+        return {"success": True}
+
+    # GET request - return data for grid
+    query = AgeClass.query
+
+    # search filter
+    search = request.args.get("search")
+    if search:
+        query = query.filter(db.or_(AgeClass.name.like(f"%{search}%")))
+    total = query.count()
+
+    # sorting
+    sort = request.args.get("sort")
+    if sort:
+        order = []
+        for s in sort.split(","):
+            direction = s[0]
+            name = s[1:]
+            if name not in ["name", "age_start", "age_end"]:
+                name = "name"
+            col = getattr(AgeClass, name)
+            if direction == "-":
+                col = col.desc()
+            order.append(col)
+        if order:
+            query = query.order_by(*order)
+
+    # pagination
+    start = request.args.get("start", type=int, default=-1)
+    length = request.args.get("length", type=int, default=-1)
+    if start != -1 and length != -1:
+        query = query.offset(start).limit(length)
+
+    # response
+    res = query.all()
+
+    res = {
+        "data": [
+            {
+                "id": ac.id,
+                "name": ac.name,
+                "age_start": ac.age_start,
+                "age_end": ac.age_end,
+            }
+            for ac in res
+        ],
+        "total": total,
+    }
+
+    return res
+
+
+@experiments.route("/admin/create_age_class", methods=["POST"])
+@login_required
+def create_age_class():
+    """Create age class."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    try:
+        age_start = int(request.form.get("age_start", 0))
+        age_end = int(request.form.get("age_end", 100))
+    except (ValueError, TypeError):
+        flash("Invalid age value provided.")
+        return miscellanea()
+
+    age_class = AgeClass(
+        name=name,
+        age_start=age_start,
+        age_end=age_end,
+    )
+    db.session.add(age_class)
+    db.session.commit()
+
+    return miscellanea()
+
+
+@experiments.route("/admin/delete_age_class/<int:age_class_id>", methods=["DELETE"])
+@login_required
+def delete_age_class(age_class_id):
+    """Delete age class."""
+    check_privileges(current_user.username)
+
+    age_class = AgeClass.query.filter_by(id=age_class_id).first()
+    if not age_class:
+        flash("Age class not found.")
+        return miscellanea()
+    db.session.delete(age_class)
     db.session.commit()
     return miscellanea()
 

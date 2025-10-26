@@ -338,3 +338,34 @@ def delete_agent(uid):
         db.session.commit()
 
     return agent_data()
+
+
+@agents.route("/admin/delete_orphaned_agents", methods=["POST"])
+@login_required
+def delete_orphaned_agents():
+    """Delete all agents that do not belong to any population."""
+    check_privileges(current_user.username)
+
+    # Find all agents that don't have any population assignment
+    # Using a subquery to find agents not in Agent_Population
+    orphaned_agents = (
+        Agent.query.outerjoin(Agent_Population, Agent.id == Agent_Population.agent_id)
+        .filter(Agent_Population.id == None)
+        .all()
+    )
+
+    deleted_count = 0
+    for agent in orphaned_agents:
+        # Delete associated agent profiles first
+        agent_profiles = Agent_Profile.query.filter_by(agent_id=agent.id).all()
+        for profile in agent_profiles:
+            db.session.delete(profile)
+
+        # Delete the agent
+        db.session.delete(agent)
+        deleted_count += 1
+
+    db.session.commit()
+
+    flash(f"Successfully deleted {deleted_count} orphaned agent(s).")
+    return agent_data()

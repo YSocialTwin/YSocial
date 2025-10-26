@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 class="title">
-    Y Social
-</h1>
-<h2 class="subtitle">
-    Where the digital world comes to life.
-</h2>
+<div style="text-align: center; padding: 3rem 1.5rem; max-width: 800px; margin: 0 auto;">
+    <h1 class="title" style="font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 700; margin-bottom: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+        Y Social
+    </h1>
+    <h2 class="subtitle" style="font-size: clamp(1.1rem, 3vw, 1.5rem); color: #4a4a4a; font-weight: 400; line-height: 1.6; margin-bottom: 2rem;">
+        Where the digital world comes to life.
+    </h2>
+    <div style="margin-top: 2.5rem;">
+        <a href="/login" style="display: inline-block; padding: 1rem 2.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); transition: all 0.3s ease; margin: 0.5rem;">Get Started</a>
+        <a href="/register" style="display: inline-block; padding: 1rem 2.5rem; background: white; color: #667eea; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 1.1rem; border: 2px solid #667eea; transition: all 0.3s ease; margin: 0.5rem;">Sign Up</a>
+    </div>
+</div>
 {% endblock %}

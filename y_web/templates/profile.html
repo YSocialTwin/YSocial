@@ -344,7 +344,7 @@
                         </div>
                     </div>
 
-                    <div class="profile-timeline">
+                    <div class="profile-timeline" id="posts-container">
                         <!-- Timeline post 1 -->
                         <!-- html/partials/pages/profile/posts/timeline-post1.html -->
                         <!-- Timeline POST #1 -->
@@ -409,6 +409,19 @@
 
 <!-- map page js -->
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for profile posts
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/api/profile/{{user_id}}/{{mode}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
 
 <!-- elements page js -->
 

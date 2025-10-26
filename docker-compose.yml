@@ -20,7 +20,7 @@ services:
             - ./:/app/
         environment:
             - FLASK_APP=/app/y_social.py
-            # - LLM_BACKEND=ollama  # Default: ollama. Options: ollama, vllm
+            # - LLM_BACKEND=ollama  # Default: None. Options: ollama, vllm
         networks:
             my-network:
                 aliases:
@@ -28,7 +28,7 @@ services:
         ports:
             - 5001:5000  # Host port 5001 -> Container port 5000
 
-        command: python /app/y_social.py --host 0.0.0.0 --port 5000
+        command: python /app/y_social.py --host 0.0.0.0 --port 5000 --llm-backend ollama
 
 networks:
     my-network:

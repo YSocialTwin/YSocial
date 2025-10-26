@@ -1,0 +1,75 @@
+{% include "admin/head.html" %}
+
+<style>
+    .jupyter-container {
+        padding: 0;
+        margin: 0;
+        height: calc(100vh - 120px); /* Subtract header and footer height */
+    }
+
+    .jupyter-frame {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .main-content {
+        padding: 0;
+    }
+</style>
+
+<div class="view-wrapper is-dashboard">
+    <!--Dashboard container-->
+    <div id="creator-dashboard" class="dashboard-container">
+        <!--Toolbar-->
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{experiment.idexp}}">{{ experiment.exp_name }}</a> > Jupyter Lab
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+
+                <div class="column is-12 ">
+                    <h3 class="title is-5 is-thin">Analytical Environment</h3>
+                    <p> To analyze your simulation data use <strong><a href="https://ysocialtwin.github.io/ysights/">ySights</a></strong>, A Python library to streamline the analysis of YSocial generated data</p>
+
+                    <div class="dashboard-box jupyter-container">
+                    <iframe
+                        src="{{ jupyter_url }}"
+                        class="jupyter-frame"
+                        id="jupyter-frame"
+                        allow="clipboard-read; clipboard-write; cross-origin-isolated"
+                        sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock">
+                    </iframe>
+                    </div>
+                </div>
+
+                </div>
+
+
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Auto-reload if Jupyter is not responding
+setTimeout(() => {
+    const frame = document.getElementById('jupyter-frame');
+    frame.addEventListener('error', () => {
+        alert('Jupyter Lab appears to be offline. Redirecting to home...');
+        window.location.href = '{{ url_for("experiments.experiment_details", uid=experiment.idexp) }}';
+    });
+}, 5000);
+</script>
+{% endblock %}
+
+
+{% include "admin/footer.html" %}

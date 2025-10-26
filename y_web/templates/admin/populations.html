@@ -49,8 +49,63 @@
     columns: [
       { id: 'id', hidden: true },
       { id: 'name', name: 'Name', attributes: editableCellAttributes },
-      { id: 'descr', name: 'Description' },
-        {id: "size", name: 'Number of Agents'},
+      { id: "size", name: 'Agents' },
+      { 
+        id: 'education', 
+        name: 'Education',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'leanings', 
+        name: 'Political Leaning',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'toxicity', 
+        name: 'Toxicity',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(item => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
+      { 
+        id: 'activity_profiles', 
+        name: 'Activity Profiles',
+        sort: false,
+        formatter: (cell) => {
+          if (!cell || cell.length === 0) {
+            return '';
+          }
+          const tags = cell.map(profile => 
+            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${profile}</span>`
+          ).join(' ');
+          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
+        }
+      },
       {
         id: 'actions',
         name: 'Actions',
@@ -62,7 +117,6 @@
               <a href="/admin/population_details/${id}"
                  style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
                 Details
-              </a>
               </a>
                <a href="/admin/delete_population/${id}"
                  style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
@@ -91,7 +145,7 @@
       multiColumn: true,
       server: {
         url: (prev, columns) => {
-          const columnIds = ['id', 'name', 'descr', 'size'];
+          const columnIds = ['id', 'name', 'size', 'education', 'leanings', 'toxicity', 'activity_profiles'];
           const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
           return updateUrl(prev, { sort });
         },
@@ -185,52 +239,6 @@
                         {% endfor %}
 
                         <!--Dashboard box-->
-                        <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Load Population from file</h3>
-                        <div class="box-content">
-                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">File (json)</span>
-                                        <span class="right"><input type="file" id="population_file" name="population_file"
-                                                                   class="input_file"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Upload
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
-
-                        <div class="dashboard-box">
-                            <h3 class="title is-5 is-thin">Create Empty Population</h3>
-                            <div class="box-content">
-                                <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-
-                                    <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_name"  class="input"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="empty_population_descr" class="input"></span>
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Create
-                                    </button>
-                                </div>
-                                </form>
-                            </div>
-                        </div>
-
                         <div class="dashboard-box">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
@@ -328,17 +336,17 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Population Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_name"  class="input"></span>
+                                        <span class="left">Population Name <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
                                         <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Size</span>
+                                        <span class="left">Population Size <span style="color: red;">*</span></span>
                                         <div class="slider-timeline">
-                                            <input name="n_agents" type="text" value="100" class="input">
+                                            <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
                                         </div>
                                     </div>
 
@@ -374,16 +382,6 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Age Range</span>
-                                        <div class="slider-timeline">
-                                        <input name="age_min" type="range" value="18" min="1" max="100" oninput="this.nextElementSibling.value = this.value">
-                                        <output>18</output>
-                                            <input name="age_max" type="range" value="60" min="1" max="100" oninput="this.nextElementSibling.value = this.value">
-                                        <output>60</output>
-                                        </div>
-                                    </div>
-
-                                    <div class="box-line">
                                         <span class="left">Nationalities</span>
 
                                             <div class="select">
@@ -408,21 +406,67 @@
                                         </span>
                                     </div>
 
+                                    <div class="box-line">
+                                        <span class="left">Age Classes <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="multi-select-wrapper">
+                                                <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
+                                                    <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
+                                                </div>
+                                                <div class="multi-select-dropdown" id="age_classes_dropdown">
+                                                    {% for age_class in age_classes %}
+                                                    <div class="multi-select-option" onclick="toggleOption('age_classes', '{{ age_class.name }}', '{{ age_class.id }}')">
+                                                        {{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" id="age_classes_percentages_container" style="display: none;">
+                                        <span class="left">Age Classes %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="age_classes_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="age_classes_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Gender Distribution</span>
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="male_percentage" style="margin: 0; font-size: 0.9em;">Male:</label>
+                                                <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateFemalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <div style="display: flex; align-items: center; gap: 5px;">
+                                                <label for="female_percentage" style="margin: 0; font-size: 0.9em;">Female:</label>
+                                                <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
+                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+                                                       oninput="updateMalePercentage()">
+                                                <span style="font-size: 0.9em;">%</span>
+                                            </div>
+                                            <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
+                                        </span>
+                                    </div>
+
                                     <div class="form-section-header">Social Attributes</div>
                                     <div class="form-section-description">
                                         Select diverse values for education, political leanings, and toxicity levels to create a varied and realistic population. Click to select multiple options.
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Education Levels</span>
+                                        <span class="left">Education Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('education_levels')">
+                                                <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
                                                     <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="education_levels_dropdown">
                                                     {% for education_level in education_levels %}
-                                                    <div class="multi-select-option" onclick="toggleOption('education_levels', '{{ education_level.education_level }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('education_levels', '{{ education_level.education_level }}', '{{ education_level.id }}')">
                                                         {{ education_level.education_level }}
                                                     </div>
                                                     {% endfor %}
@@ -430,16 +474,23 @@
                                             </div>
                                         </span>
                                     </div>
+                                    <div class="box-line" id="education_levels_percentages_container" style="display: none;">
+                                        <span class="left">Education %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="education_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="education_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
                                     <div class="box-line">
-                                        <span class="left">Political Leanings</span>
+                                        <span class="left">Political Leanings <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('political_leanings')">
+                                                <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
                                                     <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="political_leanings_dropdown">
                                                     {% for political_leaning in leanings %}
-                                                    <div class="multi-select-option" onclick="toggleOption('political_leanings', '{{ political_leaning.leaning }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('political_leanings', '{{ political_leaning.leaning }}', '{{ political_leaning.id }}')">
                                                         {{ political_leaning.leaning }}
                                                     </div>
                                                     {% endfor %}
@@ -447,16 +498,23 @@
                                             </div>
                                         </span>
                                     </div>
+                                    <div class="box-line" id="political_leanings_percentages_container" style="display: none;">
+                                        <span class="left">Political %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="political_leanings_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="political_leanings_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
                                     <div class="box-line">
-                                        <span class="left">Toxicity Levels</span>
+                                        <span class="left">Toxicity Levels <span style="color: red;">*</span></span>
                                         <span class="right" style="width: 70%;">
                                             <div class="multi-select-wrapper">
-                                                <div class="multi-select-display" onclick="toggleDropdown('toxicity_levels')">
+                                                <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
                                                     <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
                                                 </div>
                                                 <div class="multi-select-dropdown" id="toxicity_levels_dropdown">
                                                     {% for toxicity_level in toxicity_levels %}
-                                                    <div class="multi-select-option" onclick="toggleOption('toxicity_levels', '{{ toxicity_level.toxicity_level }}')">
+                                                    <div class="multi-select-option" onclick="toggleOption('toxicity_levels', '{{ toxicity_level.toxicity_level }}', '{{ toxicity_level.id }}')">
                                                         {{ toxicity_level.toxicity_level }}
                                                     </div>
                                                     {% endfor %}
@@ -464,14 +522,46 @@
                                             </div>
                                         </span>
                                     </div>
+                                    <div class="box-line" id="toxicity_levels_percentages_container" style="display: none;">
+                                        <span class="left">Toxicity %</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div id="toxicity_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                                            <div id="toxicity_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+                                        </span>
+                                    </div>
 
                                     <script>
-                                        // Multi-select functionality
+                                        // Multi-select functionality with percentages
                                         const multiSelectData = {
-                                            education_levels: [],
-                                            political_leanings: [],
-                                            toxicity_levels: []
+                                            education_levels: {},  // Changed to object: {id: {label, percentage}}
+                                            political_leanings: {},
+                                            toxicity_levels: {},
+                                            age_classes: {}
                                         };
+
+                                        function updateFemalePercentage() {
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = 100 - malePercentage;
+                                            if (femalePercentage >= 0 && femalePercentage <= 100) {
+                                                document.getElementById('female_percentage').value = femalePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
+
+                                        function updateMalePercentage() {
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            const malePercentage = 100 - femalePercentage;
+                                            if (malePercentage >= 0 && malePercentage <= 100) {
+                                                document.getElementById('male_percentage').value = malePercentage;
+                                                document.getElementById('gender_validation').style.display = 'none';
+                                            } else {
+                                                document.getElementById('gender_validation').style.display = 'inline';
+                                                document.getElementById('gender_validation').style.color = '#e74c3c';
+                                            }
+                                        }
 
                                         function toggleDropdown(fieldName) {
                                             const dropdown = document.getElementById(fieldName + '_dropdown');
@@ -485,43 +575,49 @@
                                             });
                                         }
 
-                                        function toggleOption(fieldName, value) {
+                                        function toggleOption(fieldName, label, id) {
                                             const data = multiSelectData[fieldName];
-                                            const index = data.indexOf(value);
                                             
-                                            if (index > -1) {
-                                                data.splice(index, 1);
+                                            if (data[id]) {
+                                                delete data[id];
                                             } else {
-                                                data.push(value);
+                                                data[id] = {label: label, percentage: 0};
                                             }
                                             
                                             updateDisplay(fieldName);
                                             updateOptionStyles(fieldName);
+                                            updatePercentages(fieldName);
                                         }
 
-                                        function removeTag(fieldName, value) {
+                                        function removeTag(fieldName, id) {
                                             const data = multiSelectData[fieldName];
-                                            const index = data.indexOf(value);
-                                            if (index > -1) {
-                                                data.splice(index, 1);
+                                            if (data[id]) {
+                                                delete data[id];
                                             }
                                             updateDisplay(fieldName);
                                             updateOptionStyles(fieldName);
+                                            updatePercentages(fieldName);
                                         }
 
                                         function updateDisplay(fieldName) {
                                             const display = document.getElementById(fieldName + '_display');
                                             const data = multiSelectData[fieldName];
+                                            const items = Object.entries(data);
                                             
-                                            if (data.length === 0) {
+                                            if (items.length === 0) {
                                                 display.innerHTML = '<span class="multi-select-placeholder">Click to select...</span>';
                                             } else {
-                                                display.innerHTML = data.map(value => 
+                                                display.innerHTML = items.map(([id, item]) => 
                                                     `<span class="multi-select-tag">
-                                                        ${value}
-                                                        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${value}')">×</span>
+                                                        ${item.label}
+                                                        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${id}')">×</span>
                                                     </span>`
                                                 ).join('');
+                                            }
+                                            
+                                            // Trigger validation check when display updates
+                                            if (typeof validateFormFields === 'function') {
+                                                validateFormFields();
                                             }
                                         }
 
@@ -530,13 +626,89 @@
                                             const data = multiSelectData[fieldName];
                                             
                                             dropdown.querySelectorAll('.multi-select-option').forEach(option => {
-                                                const value = option.textContent.trim();
-                                                if (data.includes(value)) {
+                                                const label = option.textContent.trim();
+                                                const isSelected = Object.values(data).some(item => item.label === label);
+                                                if (isSelected) {
                                                     option.classList.add('selected');
                                                 } else {
                                                     option.classList.remove('selected');
                                                 }
                                             });
+                                        }
+
+                                        function updatePercentages(fieldName) {
+                                            const data = multiSelectData[fieldName];
+                                            const items = Object.entries(data);
+                                            const container = document.getElementById(fieldName + '_percentages');
+                                            const containerRow = document.getElementById(fieldName + '_percentages_container');
+                                            
+                                            if (items.length === 0) {
+                                                containerRow.style.display = 'none';
+                                                return;
+                                            }
+                                            
+                                            containerRow.style.display = '';
+                                            
+                                            // Check if all percentages are 0 (uninitialized)
+                                            const allZero = items.every(([id, item]) => item.percentage === 0);
+                                            
+                                            // Only split evenly if all percentages are 0 (uninitialized)
+                                            // This preserves hardcoded defaults for age_classes while maintaining
+                                            // the even split behavior for other fields
+                                            if (allZero) {
+                                                const evenSplit = parseFloat((100 / items.length).toFixed(2));
+                                                items.forEach(([id, item]) => {
+                                                    item.percentage = evenSplit;
+                                                });
+                                            }
+                                            
+                                            // Render percentage inputs
+                                            container.innerHTML = items.map(([id, item]) => `
+                                                <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px;">
+                                                    <span style="flex: 1; font-size: 0.9em; font-weight: 500;">${item.label}</span>
+                                                    <input type="number" 
+                                                           class="percentage-input-compact" 
+                                                           min="0" 
+                                                           max="100" 
+                                                           step="0.01"
+                                                           value="${item.percentage}"
+                                                           onchange="updatePercentageValue('${fieldName}', '${id}', this.value)"
+                                                           style="width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 3px; text-align: center;">
+                                                    <span style="font-size: 0.85em; color: #666;">%</span>
+                                                </div>
+                                            `).join('');
+                                            
+                                            validatePercentageTotal(fieldName);
+                                        }
+
+                                        function updatePercentageValue(fieldName, id, value) {
+                                            const data = multiSelectData[fieldName];
+                                            if (data[id]) {
+                                                data[id].percentage = parseFloat(value) || 0;
+                                            }
+                                            validatePercentageTotal(fieldName);
+                                        }
+
+                                        function validatePercentageTotal(fieldName) {
+                                            const data = multiSelectData[fieldName];
+                                            const items = Object.values(data);
+                                            const validation = document.getElementById(fieldName + '_validation');
+                                            
+                                            if (items.length === 0) {
+                                                validation.style.display = 'none';
+                                                return;
+                                            }
+                                            
+                                            const total = items.reduce((sum, item) => sum + item.percentage, 0);
+                                            validation.style.display = 'block';
+                                            
+                                            if (Math.abs(total - 100) < 0.01) {
+                                                validation.className = 'percentage-validation-compact success';
+                                                validation.textContent = `✓ Total: ${total.toFixed(2)}%`;
+                                            } else {
+                                                validation.className = 'percentage-validation-compact error';
+                                                validation.textContent = `⚠ Total: ${total.toFixed(2)}% (must equal 100%)`;
+                                            }
                                         }
 
                                         // Close dropdowns when clicking outside
@@ -550,27 +722,110 @@
 
                                         // Add hidden inputs before form submission
                                         document.getElementById('popcreate_form').addEventListener('submit', function(e) {
-                                            // Remove old hidden inputs
-                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"]').forEach(input => input.remove());
+                                            // Validate gender percentages
+                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
+                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
+                                            if (malePercentage + femalePercentage !== 100) {
+                                                e.preventDefault();
+                                                alert('Gender distribution must total 100%');
+                                                return false;
+                                            }
                                             
-                                            // Add new hidden inputs for multi-select values
+                                            // Validate that age_classes is selected (mandatory field)
+                                            const ageClassesData = multiSelectData['age_classes'];
+                                            const ageClassesItems = Object.values(ageClassesData);
+                                            if (ageClassesItems.length === 0) {
+                                                e.preventDefault();
+                                                alert('Please select at least one Age Class. This field is required.');
+                                                return false;
+                                            }
+                                            
+                                            // Validate percentages before submission
+                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
+                                            for (const fieldName of fieldsToValidate) {
+                                                const data = multiSelectData[fieldName];
+                                                const items = Object.values(data);
+                                                if (items.length > 0) {
+                                                    const total = items.reduce((sum, item) => sum + item.percentage, 0);
+                                                    if (Math.abs(total - 100) > 0.01) {
+                                                        e.preventDefault();
+                                                        alert(`Please ensure ${fieldName.replace(/_/g, ' ')} percentages sum to 100%`);
+                                                        return false;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // Validate activity profiles percentages
+                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
+                                                e.preventDefault();
+                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
+                                                return false;
+                                            }
+                                            
+                                            // Remove old hidden inputs
+                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
+                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
+                                            
+                                            // Add new hidden inputs for multi-select values (IDs for backward compatibility)
                                             Object.keys(multiSelectData).forEach(fieldName => {
-                                                multiSelectData[fieldName].forEach(value => {
+                                                const data = multiSelectData[fieldName];
+                                                Object.entries(data).forEach(([id, item]) => {
                                                     const input = document.createElement('input');
                                                     input.type = 'hidden';
                                                     input.name = fieldName;
-                                                    input.value = value;
+                                                    input.value = id;
                                                     this.appendChild(input);
                                                 });
                                             });
+                                            
+                                            // Add hidden inputs for percentages (JSON format for easy parsing)
+                                            Object.keys(multiSelectData).forEach(fieldName => {
+                                                const data = multiSelectData[fieldName];
+                                                const percentageData = {};
+                                                Object.entries(data).forEach(([id, item]) => {
+                                                    percentageData[id] = item.percentage;
+                                                });
+                                                
+                                                const input = document.createElement('input');
+                                                input.type = 'hidden';
+                                                input.name = fieldName + '_percentages';
+                                                input.value = JSON.stringify(percentageData);
+                                                this.appendChild(input);
+                                            });
+                                        });
+
+                                        // Initialize age classes with default values
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            // Hardcoded default percentages for age classes
+                                            const defaultPercentages = {
+                                                'Youth': 35,
+                                                'Adults': 42,
+                                                'Middle-aged': 18,
+                                                'Elderly': 5
+                                            };
+                                            
+                                            const ageClassDefaults = {
+                                                {% for age_class in age_classes %}
+                                                '{{ age_class.id }}': {
+                                                    label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
+                                                    percentage: defaultPercentages['{{ age_class.name }}'] || 0
+                                                }{% if not loop.last %},{% endif %}
+                                                {% endfor %}
+                                            };
+                                            
+                                            // Set default age classes
+                                            multiSelectData.age_classes = ageClassDefaults;
+                                            updateDisplay('age_classes');
+                                            updateOptionStyles('age_classes');
+                                            updatePercentages('age_classes');
                                         });
                                     </script>
 
                                     <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleActivityProfiles()">
-                                        <span id="activity-profiles-toggle">▼</span> Activity Profiles <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+                                        <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
-                                        Assign activity profiles to define when agents are active during the day. Drag profiles from the available list to assign them, then specify the percentage of agents for each profile. Total must equal 100%.
+                                        Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
                                     </div>
 
                                     <style>
@@ -605,14 +860,16 @@
                                             background: white;
                                             border: 1px solid #ddd;
                                             border-radius: 4px;
-                                            padding: 6px 10px;
-                                            margin-bottom: 6px;
+                                            padding: 6px 8px;
+                                            margin-bottom: 0;
                                             cursor: move;
                                             transition: all 0.2s ease;
                                             display: flex;
-                                            gap: 10px;
-                                            align-items: center;
-                                            font-size: 0.85em;
+                                            flex-direction: column;
+                                            gap: 4px;
+                                            align-items: stretch;
+                                            font-size: 0.8em;
+                                            width: 100%;
                                         }
                                         .profile-item-compact:hover {
                                             border-color: #22c55e;
@@ -623,21 +880,30 @@
                                         }
                                         .profile-name-compact {
                                             font-weight: 500;
-                                            flex: 1;
+                                            white-space: nowrap;
+                                            overflow: hidden;
+                                            text-overflow: ellipsis;
+                                            font-size: 0.9em;
                                         }
                                         .profile-heatmap-compact {
                                             display: flex;
                                             gap: 1px;
-                                            height: 12px;
+                                            height: 10px;
+                                            width: 100%;
                                         }
                                         .heatmap-hour {
-                                            width: 3px;
+                                            flex: 1;
                                             height: 100%;
                                             background: #e5e7eb;
                                             border-radius: 1px;
                                         }
                                         .heatmap-hour.active {
                                             background: #22c55e;
+                                        }
+                                        #available-profiles {
+                                            display: grid;
+                                            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                                            gap: 8px;
                                         }
                                         .assigned-profiles-grid {
                                             display: flex;
@@ -699,6 +965,19 @@
                                             border: 1px solid #cfc;
                                             color: #0a0;
                                         }
+                                        .percentage-input-compact {
+                                            width: 80px;
+                                            padding: 6px;
+                                            border: 1px solid #ddd;
+                                            border-radius: 3px;
+                                            text-align: center;
+                                            font-size: 0.9em;
+                                        }
+                                        .percentage-input-compact:focus {
+                                            outline: none;
+                                            border-color: #22c55e;
+                                            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                        }
                                         .empty-state-compact {
                                             text-align: center;
                                             color: #999;
@@ -715,14 +994,13 @@
                                                     {% if activity_profiles %}
                                                         {% for profile in activity_profiles %}
                                                         <div class="profile-item-compact" draggable="true" data-profile-id="{{ profile.id }}" data-profile-name="{{ profile.name }}" data-profile-hours="{{ profile.hours }}">
-                                                            <div class="profile-name-compact">{{ profile.name }}</div>
+                                                            <div class="profile-name-compact" title="{{ profile.name }}">{{ profile.name }}</div>
                                                             <div class="profile-heatmap-compact">
                                                                 {% set hours_list = profile.hours.split(',') %}
                                                                 {% for hour in range(24) %}
-                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}"></div>
+                                                                    <div class="heatmap-hour {% if hour|string in hours_list %}active{% endif %}" title="Hour {{ hour }}"></div>
                                                                 {% endfor %}
                                                             </div>
-                                                            <span style="color: #999; font-size: 0.9em;">⋮⋮</span>
                                                         </div>
                                                         {% endfor %}
                                                     {% else %}
@@ -737,6 +1015,98 @@
                                                     <div class="empty-state-compact">Drag profiles here to assign them</div>
                                                 </div>
                                                 <div id="percentage-validation" class="percentage-validation-compact" style="display: none;"></div>
+                                            </div>
+
+                                            <div class="profiles-section">
+                                                <div class="profiles-section-title">Actions Per User Once Active</div>
+                                                <div style="display: flex; flex-direction: column; gap: 12px;">
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Min:</label>
+                                                        <input type="number" 
+                                                               id="actions_min" 
+                                                               name="actions_min" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="1"
+                                                               placeholder="Minimum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Max:</label>
+                                                        <input type="number" 
+                                                               id="actions_max" 
+                                                               name="actions_max" 
+                                                               class="input" 
+                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                               min="1" 
+                                                               value="10"
+                                                               placeholder="Maximum actions">
+                                                    </div>
+                                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Distribution:</label>
+                                                        <select id="actions_distribution" 
+                                                                name="actions_distribution" 
+                                                                class="input" 
+                                                                style="flex: 1; padding: 6px; font-size: 0.9em;"
+                                                                onchange="updateDistributionParams()">
+                                                            <option value="Uniform" selected>Uniform</option>
+                                                            <option value="Poisson">Poisson</option>
+                                                            <option value="Geometric">Geometric</option>
+                                                            <option value="Zipf">Zipf</option>
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <!-- Distribution-specific parameter fields -->
+                                                    <div id="poisson-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Lambda (λ):</label>
+                                                            <input type="number" 
+                                                                   id="poisson_lambda" 
+                                                                   name="poisson_lambda" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   value="0.88"
+                                                                   placeholder="Lambda parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="geometric-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">p:</label>
+                                                            <input type="number" 
+                                                                   id="geometric_p" 
+                                                                   name="geometric_p" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.01" 
+                                                                   min="0" 
+                                                                   max="1" 
+                                                                   value="0.6667"
+                                                                   placeholder="Probability parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div id="zipf-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center;">
+                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
+                                                            <input type="number" 
+                                                                   id="zipf_s" 
+                                                                   name="zipf_s" 
+                                                                   class="input" 
+                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+                                                                   step="0.1" 
+                                                                   value="2.5"
+                                                                   placeholder="Exponent parameter"
+                                                                   disabled>
+                                                            <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -914,19 +1284,89 @@
                                             {% endif %}
                                         });
 
-                                        // Form validation before submit
-                                        document.getElementById('popcreate_form').addEventListener('submit', function(e) {
-                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
-                                                e.preventDefault();
-                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
-                                                return false;
+                                        // Function to show/hide distribution-specific parameters
+                                        function updateDistributionParams() {
+                                            const distribution = document.getElementById('actions_distribution').value;
+                                            
+                                            // Hide all parameter sections and disable their inputs
+                                            const poissonParams = document.getElementById('poisson-params');
+                                            const geometricParams = document.getElementById('geometric-params');
+                                            const zipfParams = document.getElementById('zipf-params');
+                                            
+                                            poissonParams.style.display = 'none';
+                                            geometricParams.style.display = 'none';
+                                            zipfParams.style.display = 'none';
+                                            
+                                            document.getElementById('poisson_lambda').disabled = true;
+                                            document.getElementById('geometric_p').disabled = true;
+                                            document.getElementById('zipf_s').disabled = true;
+                                            
+                                            // Show the relevant parameter section and enable its input
+                                            switch(distribution) {
+                                                case 'Poisson':
+                                                    poissonParams.style.display = 'block';
+                                                    document.getElementById('poisson_lambda').disabled = false;
+                                                    break;
+                                                case 'Geometric':
+                                                    geometricParams.style.display = 'block';
+                                                    document.getElementById('geometric_p').disabled = false;
+                                                    break;
+                                                case 'Zipf':
+                                                    zipfParams.style.display = 'block';
+                                                    document.getElementById('zipf_s').disabled = false;
+                                                    break;
+                                                // Uniform doesn't need extra parameters
                                             }
+                                        }
+
+                                        // Form validation to enable/disable submit button
+                                        function validateFormFields() {
+                                            const popName = document.getElementById('pop_name').value.trim();
+                                            const nAgents = document.getElementById('n_agents').value;
+                                            const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
+                                            const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
+                                            const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
+                                            
+                                            const submitBtn = document.getElementById('create_population_btn');
+                                            const isValid = popName && nAgents && hasEducation && hasPolitical && hasToxicity;
+                                            
+                                            submitBtn.disabled = !isValid;
+                                            
+                                            // Visual feedback for required fields
+                                            if (!hasEducation) {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasPolitical) {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            if (!hasToxicity) {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#fcc';
+                                            } else {
+                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#ddd';
+                                            }
+                                            
+                                            return isValid;
+                                        }
+
+                                        // Add event listeners to all fields that affect validation
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            document.getElementById('pop_name').addEventListener('input', validateFormFields);
+                                            document.getElementById('n_agents').addEventListener('input', validateFormFields);
+                                            
+                                            // Initial validation
+                                            validateFormFields();
                                         });
                                     </script>
 
                                 </div>
                                 <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
+                                    <button id="create_population_btn" class="button is-solid primary-button is-fullwidth" disabled>
                                         Create
                                     </button>
                                 </div>
@@ -943,45 +1383,195 @@
                     <!--Dashboard column-->
                     <div class="column is-4">
                         <!--Box-->
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Guide</h3>
+                        <style>
+                            .sidebar-box {
+                                background: #fff;
+                                border: 1px solid #e5e7eb;
+                                border-radius: 6px;
+                                padding: 16px;
+                                margin-bottom: 16px;
+                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                            }
+                            .sidebar-box h3 {
+                                font-size: 1em;
+                                font-weight: 600;
+                                color: #1f2937;
+                                margin: 0 0 12px 0;
+                                padding-bottom: 8px;
+                                border-bottom: 1px solid #e5e7eb;
+                            }
+                            .sidebar-box .help-block {
+                                font-size: 0.85em;
+                                line-height: 1.5;
+                                color: #6b7280;
+                            }
+                            .sidebar-box .help-block p {
+                                margin: 0 0 10px 0;
+                            }
+                            .sidebar-box .help-block p:last-child {
+                                margin-bottom: 0;
+                            }
+                            .sidebar-box .help-block b {
+                                color: #374151;
+                                font-weight: 600;
+                            }
+                            .sidebar-box .box-line {
+                                margin-bottom: 10px;
+                                display: flex;
+                                flex-direction: column;
+                            }
+                            .sidebar-box .box-line .left {
+                                font-size: 0.85em;
+                                font-weight: 500;
+                                color: #374151;
+                                margin-bottom: 4px;
+                            }
+                            .sidebar-box .box-line .right {
+                                width: 100%;
+                            }
+                            .sidebar-box .input {
+                                width: 100%;
+                                padding: 8px 10px;
+                                border: 1px solid #d1d5db;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                transition: border-color 0.2s;
+                            }
+                            .sidebar-box .input:focus {
+                                outline: none;
+                                border-color: #22c55e;
+                                box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+                            }
+                            .sidebar-box .button-wrap {
+                                margin-top: 12px;
+                            }
+                            .sidebar-box .button {
+                                width: 100%;
+                                padding: 8px 16px;
+                                font-size: 0.9em;
+                                font-weight: 500;
+                            }
+                        </style>
+                        
+                        <div class="sidebar-box">
+                            <h3>Guide</h3>
                             <div class="help-block">
-
                                 <p>
-                                    <b>What is a Population?</b>
+                                    <b>What is a Population?</b><br>
                                     A population is a group of agents/pages that are used in a simulation.
-                                    Each simulation can have multiple populations.
                                 </p>
-                                <br>
-                                    <p>
-                                        <b>Empty Populations</b>
-                                         are used to create populations from scratch.
-                                        Once created, you can add agents to the them.
-                                </p>
-                                <br>
                                 <p>
-                                    <b>Synthetic Populations</b>
-                                     are created using a predefined set of parameters.
-                                    Leveraging the parameters provided as input, agents are generated and added to the population.
+                                    <b>Empty Populations</b><br>
+                                    Create populations from scratch. Once created, you can add agents to them.
+                                </p>
+                                <p>
+                                    <b>Synthetic Populations</b><br>
+                                    Created using predefined parameters. Agents are automatically generated.
                                 </p>
                             </div>
                         </div>
 
-                        <div class="dashboard-box is-compact">
-                            <h3 class="title is-5 is-thin">Merge Populations</h3>
-                            <div class="box-content">
-                                <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
-                                    <div class="box-lines">
-                                        <div class="box-line">
-                                            <span class="left" style="width: 100%; font-size: 0.9em; color: #666; margin-bottom: 10px;">
-                                                Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
-                                            </span>
-                                        </div>
-                                        
-                                        <div class="box-line">
-                                            <span class="left">New Population Name</span>
-                                            <span class="right" style="width: 100%;"><input type="text" name="merged_population_name" class="input" required></span>
-                                        </div>
+                        <div class="sidebar-box">
+                            <h3>Load Population from file</h3>
+                            <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
+                                <style>
+                                    .file-upload-wrapper {
+                                        position: relative;
+                                        overflow: hidden;
+                                        display: block;
+                                        margin-bottom: 12px;
+                                    }
+                                    .file-upload-wrapper input[type=file] {
+                                        position: absolute;
+                                        left: -9999px;
+                                    }
+                                    .file-upload-label {
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        padding: 10px 12px;
+                                        background: #f9fafb;
+                                        border: 1px dashed #d1d5db;
+                                        border-radius: 4px;
+                                        cursor: pointer;
+                                        transition: all 0.2s;
+                                        font-size: 0.85em;
+                                    }
+                                    .file-upload-label:hover {
+                                        background: #f3f4f6;
+                                        border-color: #22c55e;
+                                    }
+                                    .file-upload-icon {
+                                        margin-right: 8px;
+                                        font-size: 1.1em;
+                                    }
+                                    .file-upload-text {
+                                        color: #6b7280;
+                                    }
+                                    .file-name-display {
+                                        margin-top: 6px;
+                                        font-size: 0.8em;
+                                        color: #22c55e;
+                                        font-weight: 500;
+                                        text-align: center;
+                                    }
+                                </style>
+                                <div class="file-upload-wrapper">
+                                    <input type="file" id="population_file" name="population_file" accept=".json" onchange="displayFileName(this)">
+                                    <label for="population_file" class="file-upload-label">
+                                        <span class="file-upload-icon">📁</span>
+                                        <span class="file-upload-text">Choose JSON file...</span>
+                                    </label>
+                                    <div id="file-name-display" class="file-name-display"></div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Upload
+                                    </button>
+                                </div>
+                            </form>
+                            <script>
+                                function displayFileName(input) {
+                                    const display = document.getElementById('file-name-display');
+                                    if (input.files && input.files[0]) {
+                                        display.textContent = '✓ ' + input.files[0].name;
+                                    } else {
+                                        display.textContent = '';
+                                    }
+                                }
+                            </script>
+                        </div>
+
+                        <div class="sidebar-box">
+                            <h3>Create Empty Population</h3>
+                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
+                                <div class="box-line">
+                                    <span class="left">Population Name</span>
+                                    <span class="right"><input type="text" name="empty_population_name" class="input" placeholder="Enter name"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="Enter description"></span>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="sidebar-box">
+                            <h3>Merge Populations</h3>
+                            <form action="/admin/merge_populations" method="POST" id="merge_populations_form">
+                                <p style="font-size: 0.85em; color: #6b7280; margin-bottom: 12px; line-height: 1.4;">
+                                    Create a new population by merging multiple existing populations. Agents and pages will be combined without duplicates.
+                                </p>
+                                
+                                <div class="box-line">
+                                    <span class="left">New Population Name</span>
+                                    <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="Enter name" required></span>
+                                </div>
 
                                         <style>
                                             .merge-populations-container {
@@ -1080,15 +1670,13 @@
                                         </div>
 
                                         <input type="hidden" name="selected_population_ids" id="selected_population_ids" value="">
-                                    </div>
 
-                                    <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth" type="submit">
-                                            Merge Populations
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Merge Populations
+                                    </button>
+                                </div>
+                            </form>
                         </div>
 
                         <script>

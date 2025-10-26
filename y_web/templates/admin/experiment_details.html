@@ -128,118 +128,214 @@
                     <!--Box-->
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">YServer Status</h3>
+                        <h3 class="title is-5 is-thin">Server & Analysis Controls</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Simulation server status and control panel.
+                            Control panel for simulation server, web interface, and data analysis environment.
                         </p>
-                        <div class="box-content">
-                            <div class="box-line">
-                                <span class="left">Web Interface</span>
-                                <span class="right">
-                                         <a class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}"
-                                            title="Load"><i
-                                                 class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}"
-                                                 style="font-size: 24px;"></i></a>
-                                         <a class="link-tooltip" {% if experiment.status== 1 %} href="/admin/join_simulation" {%
-                                            endif %} title="Join"><i
-                                                 class="mdi mdi-plus-box {% if experiment.status == 0 %} disabled {% endif %}"
-                                                 style="font-size: 24px;"></i></a>
-
+                        
+                        <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                            <div class="box-lines">
+                                <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
+                                    <span class="left" style="display: flex; align-items: center;">
+                                        Server Controls
                                     </span>
-                            </div>
-
-                            <div class="box-line">
-                                <span class="left">Server</span>
-                                <span class="right">
-                                     <a class="link-tooltip" {% if experiment.running == 0 %} href="/admin/start_experiment/{{ experiment.idexp }}" {% endif %}title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if experiment.running %}active{% endif %}"
-                                               style="font-size: 24px;"></i>
-                                        </a>
-
-                                     <a class="link-tooltip" {% if experiment.running == 1 %} href="/admin/stop_experiment/{{ experiment.idexp }}" {% endif %}
-                                        title="Stop">
-
-                                    <i class="mdi mdi-stop {% if experiment.running == 0 %} disabled {% endif %}"
-                                       style="font-size: 24px;"></i>
-                                    </a>
-
+                                    <span class="right" style="display: flex; gap: 8px; align-items: center;">
+                                        <div style="display: flex; gap: 3px;">
+                                            {% if experiment.running == 0 %}
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" title="Run Experiment">
+                                                <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if experiment.running == 1 %}
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" title="Stop Experiment">
+                                                <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" title="Load Experiment">
+                                                <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% if experiment.status == 1 %}
+                                            <a class="link-tooltip" href="/admin/join_simulation" title="Join Simulation">
+                                                <i class="mdi mdi-plus-box" style="font-size: 24px;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% if notebooks %}
+                                        <div style="display: flex; gap: 3px; padding-left: 8px; border-left: 1px solid #ddd;">
+                                            {% if jupyter_instance.status!='stopped' %}
+                                            <a class="link-tooltip" href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;" title="Stop JupyterLab">
+                                                <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
+                                            </a>
+                                            <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" target="_blank" title="Open JupyterLab">
+                                                <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
+                                            </a>
+                                            {% else %}
+                                            <a class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
+                                                <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
                                     </span>
+                                </div>
                             </div>
                         </div>
-
                     </div>
 
+                    {% if notebooks %}
+                    <script>
+                        function startJupyter(expId) {
+                            fetch(`/admin/lab_start/${expId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    location.reload();
+                                })
+                                .catch(error => {
+                                    console.error('Error starting JupyterLab:', error);
+                                    location.reload();
+                                });
+                        }
+
+                        function stopJupyter(instanceId) {
+                            fetch(`/admin/lab_stop/${instanceId}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    location.reload();
+                                })
+                                .catch(error => {
+                                    console.error('Error stopping JupyterLab:', error);
+                                    location.reload();
+                                });
+                        }
+                    </script>
+                    {% endif %}
 
                     <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Simulation Clients</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Manage clients running agent populations for this experiment.
+                        </p>
                         <div class="box-content">
-                            <h3 class="title is-5 is-thin">YClients</h3>
-                            <hr style="margin-bottom: 5px; margin-top: 5px;">
                             {% if len(clients) == 0 %}
                             <div class="box-line">
                                 <span class="left">No clients registered</span>
                             </div>
-                            {% endif %}
+                            {% else %}
                             {% for client in clients %}
-                            <div class="box-line" style="height: 40px;">
-                                <span class="left"><a href="/admin/client_details/{{client.id}}">{{ client.name }}</a></span>
-
-                                <span class="right">
-                                        <a class="link-tooltip" {% if  client.status == 0  and experiment.running == 1 %} href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Run">
-                                            <i class="mdi mdi-play-box-outline {% if  client.status == 1  %}active {% elif experiment.running == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <a class="link-tooltip" {% if  client.status == 1 %} href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Pause">
-                                            <i class="mdi mdi-pause {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>
-                                        <!--<a class="link-tooltip" {% if  client.status == 1 %} href="/admin/stop_client/{{ client.id }}/{{ experiment.idexp }}" {% endif %} title="Stop">
-                                            <i class="mdi mdi-stop {% if  client.status == 0 %} disabled {% endif %}" style="font-size: 24px;"></i>
-                                        </a>-->
-                                        <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete">
-                                            <i class="mdi mdi-delete" style="font-size: 24px;"></i>
+                            <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+                                <div class="box-line" style="padding-left: 0px; padding-top: 8px; padding-bottom: 8px;">
+                                    <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
+                                        <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
+                                        {{ client.name }}
+                                        <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
+                                            <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
                                         </a>
                                     </span>
+                                    <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
+                                        <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar" 
+                                                 style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out, background 0.3s ease; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
+                                                <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">0%</span>
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 3px;">
+                                            {% if client.status == 0 and experiment.running == 1 %}
+                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client">
+                                                <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if client.status == 1 %}
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client">
+                                                <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% if client.status == 0 %}
+                                            <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete Client">
+                                                <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </span>
+                                </div>
+                                
+                                <script>
+                                    $(document).ready(function () {
+                                        $.ajax({
+                                            url: `/admin/progress/{{client.id}}`,
+                                            method: 'GET'
+                                        });
+
+                                        function pollProgress() {
+                                            $.ajax({
+                                                url: '/admin/progress/{{client.id}}',
+                                                method: 'GET',
+                                                dataType: 'json',
+                                                success: function (data) {
+                                                    const percentage = data.progress;
+                                                    const progressBar = $('#progress-bar-{{client.id}}');
+                                                    progressBar.css('width', percentage + '%');
+                                                    progressBar.find('span').text(percentage + '%');
+                                                    
+                                                    // Update gradient based on progress
+                                                    if (percentage >= 75) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+                                                    } else if (percentage >= 50) {
+                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+                                                    }
+                                                    
+                                                    if (percentage < 100) {
+                                                        setTimeout(pollProgress, 500);
+                                                    }
+                                                }
+                                            });
+                                        }
+                                        pollProgress();
+                                    });
+                                </script>
                             </div>
                             {% endfor %}
+                            {% endif %}
 
-                            <div style="text-align: center">
+                            <div style="text-align: center; margin-top: 10px;">
                                  <hr style="margin-bottom: 5px; margin-top: 5px;">
-                                <a class="link-tooltip" href="/admin/clients/{{ experiment.idexp }}" title="Add">
+                                <a class="link-tooltip" href="/admin/clients/{{ experiment.idexp }}" title="Add Client">
                                     <i class="mdi mdi-plus-circle-outline" style="font-size: 24px;"></i>
                                 </a>
                             </div>
-
                         </div>
                     </div>
-
                 </div>
 
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Guide</h3>
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
 
                             <p>
-                                <b>Web Interface</b> allows to interact with the experiment through an online social platform-like interface.<br><br>
-                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> activates the experiment's web interface.<br>
-                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> access the web interface.
+                                <b>Server & Analysis Controls</b><br>
+                                Unified control panel for managing the simulation server, web interface, and data analysis tools.<br><br>
+                                <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i> Start the experiment server<br>
+                                <i class="mdi mdi-stop" style="font-size: 16px;"></i> Stop the experiment server<br>
+                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
+                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
+                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
                                 <br><br>
-                                <em>Note: Only one web interface can be active at a time, even for non-running experiments.</em>
+                                <em>Note: Only one web interface can be active at a time.</em>
                             </p>
                             <hr>
                             <p>
-                                <b>YServer</b>
-                                 is the main component of the experiment. It is responsible for
-                                the execution of the experiment.
-                            </p>
-                            <p>
-                                <b>YClients.</b>
-                                Each client simulates a population of agents. Clients can be started and stopped while the server is running.<br>
+                                <b>Simulation Clients</b><br>
+                                Each client manages a population of agents that interact in the simulation. Clients can be started and paused independently while the server is running.<br><br>
+                                Progress bars show real-time completion status for each client.
                             </p>
                             <hr>
                             <p>
-                                <b>Prompts</b> specify the instruction that the LLM agents will be required to follow during the experiment.<br><br>
-
-                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> allows to edit the prompts to tune them to the simulation needs.
+                                <b>LLM Prompts</b><br>
+                                Define the instructions that LLM agents follow during the experiment.<br><br>
+                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> Edit prompts to customize agent behavior
                             </p>
 
                         </div>
@@ -255,5 +351,4 @@
     </div>
 </div>
 
-
-{% include "admin/footer.html" %}
+{% include "admin/footer.html" %}    

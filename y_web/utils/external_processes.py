@@ -31,10 +31,26 @@ from sklearn.utils import deprecated
 from y_web import client_processes, db
 from y_web.models import (
     ActivityProfile,
+    Client,
     Client_Execution,
+    Exps,
     Ollama_Pull,
     PopulationActivityProfile,
 )
+
+
+def stop_all_exps():
+    """Stop all clients"""
+    # set to 0 all Exps.running
+    exps = db.session.query(Exps).all()
+    for exp in exps:
+        exp.running = 0
+        db.session.commit()
+    # terminate all clients
+    clis = db.session.query(Client).all()
+    for cli in clis:
+        cli.status = 0
+        db.session.commit()
 
 
 @deprecated
@@ -743,6 +759,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
     page_agents = [p for p in cl.agents.agents if p.is_page]
 
+    hour_to_page = get_users_per_hour(population, page_agents)
+
     for d1 in range(total_days):
         common_agents = [p for p in cl.agents.agents if not p.is_page]
         hour_to_users = get_users_per_hour(population, common_agents)
@@ -761,11 +779,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
             # take the minimum between expected active over the whole population and available users at time h
             expected_active_users = min(expected_active_users, len(hour_to_users[h]))
 
+            # get active pages at this hour
+            active_pages = hour_to_page[h]
+
             if platform_type == "microblogging":
-                # pages post at least a news each slot of the day (7-22), more if they were selected randomly
-                for page in page_agents:
-                    if h < 7 or h > 22:
-                        continue
+                # pages post all the time their activity profile is active
+                for page in active_pages:
                     page.select_action(
                         tid=tid,
                         actions=[],
@@ -777,7 +796,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 break
 
             # get the daily activities of each agent
-            sagents = sample_agents(hour_to_users[h], expected_active_users)
+            try:
+                sagents = sample_agents(hour_to_users[h], expected_active_users)
+            except Exception as e:
+                # case of no active agents at this hour
+                sagents = []
 
             # shuffle agents
             random.shuffle(sagents)
