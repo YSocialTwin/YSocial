@@ -127,7 +127,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    ```bash
    pip install -r requirements.txt
    ```
-4. **Install [Ollama](https://ollama.com/):** (and pull some LLM models)
+4. **(Optional) Install [Ollama](https://ollama.com/):** (and pull some LLM models)
    ```bash
    curl -fsSL https://ollama.com/install.sh | sh
    ollama pull minicpm-v # Pull the MiniCPM-v model (needed for image captioning)
@@ -135,7 +135,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    ```
 5. **Start YSocial:**  
    ```bash
-   python y_social.py --host localhost --port 8080
+   python y_social.py --host localhost --port 8080 --llm-backend ollama
    ```
 
 💡 **YSocial** web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
@@ -160,8 +160,11 @@ YSocial supports multiple LLM backends for content annotation and agent interact
 
 **Command Line:**
 ```bash
-# Use Ollama (default)
+# No LLM server (assuming remote OpenAI-compatible server available)
 python y_social.py --host localhost --port 8080
+
+# Use Ollama (default)
+python y_social.py --host localhost --port 8080 --llm-backend ollama
 
 # Use vLLM
 python y_social.py --host localhost --port 8080 --llm-backend vllm
@@ -186,7 +189,7 @@ Each user can also configure their own LLM backend and model through the admin p
 1. Install vLLM: `pip install vllm`
 2. Start the vLLM server with your model before starting YSocial:
    ```bash
-   vllm serve <model_name> --host 0.0.0.0 --port 8000
+   python3 -m vllm.entrypoints.openai.api_server <model_name> --host 0.0.0.0 --port 8000
    ```
 
 ---
