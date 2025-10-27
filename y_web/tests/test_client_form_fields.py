@@ -178,4 +178,3 @@ class TestClientFormFields:
 
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
-

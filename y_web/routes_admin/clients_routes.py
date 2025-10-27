@@ -243,8 +243,12 @@ def clients(idexp):
     frecsys = Follow_Recsys.query.all()
 
     return render_template(
-        "admin/clients.html", experiment=exp, populations=pops, ollamas=ollamas,
-        crecsys=crecsys, frecsys=frecsys
+        "admin/clients.html",
+        experiment=exp,
+        populations=pops,
+        ollamas=ollamas,
+        crecsys=crecsys,
+        frecsys=frecsys,
     )
 
 
