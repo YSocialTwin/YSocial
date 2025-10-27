@@ -150,9 +150,6 @@ def create_population():
     languages = request.form.get("languages")
     interests = request.form.get("tags")
 
-    frecsys = request.form.get("frecsys_type")
-    crecsys = request.form.get("recsys_type")
-
     # Get activity profiles data from the hidden field
     activity_profiles_data = request.form.get("activity_profiles_data", "[]")
     try:
@@ -194,8 +191,6 @@ def create_population():
         languages=languages,
         interests=interests,
         toxicity=toxicity_levels,
-        frecsys=frecsys,
-        crecsys=crecsys,
         llm_url=llm,
     )
 
@@ -333,8 +328,6 @@ def populations():
     languages = Languages.query.all()
     toxicity_levels = Toxicity_Levels.query.all()
     age_classes = AgeClass.query.all()
-    crecsys = Content_Recsys.query.all()
-    frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
 
     return render_template(
@@ -348,8 +341,6 @@ def populations():
         languages=languages,
         toxicity_levels=toxicity_levels,
         age_classes=age_classes,
-        crecsys=crecsys,
-        frecsys=frecsys,
         activity_profiles=activity_profiles,
     )
 

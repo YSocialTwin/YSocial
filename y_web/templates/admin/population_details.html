@@ -46,15 +46,6 @@
                                     <span class="left">Description</span>
                                     <span class="right">{{ population.descr }}</span>
                                 </div>
-
-                                <div class="box-line">
-                                    <span class="left">Prevalent Content Recsys</span>
-                                    <span class="right">{{ population.crecsys }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Prevalent Friendship Recsys</span>
-                                    <span class="right">{{ population.frecsys }}</span>
-                                </div>
                                 <div class="box-line">
                                     <span class="left">Initial Size<small>(initial agents)</small></span>
                                     <span class="right">{{ population.size }}</span>
@@ -119,89 +110,7 @@
 
             </div>
 
-             <div class="columns">
 
-                <div class="column is-12">
-                    <hr style="margin: 2em 0;">
-                <h3 class="title is-5 is-thin" style="text-align: center">Recommender Systems Configuration</h3>
-                <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
-                    Update recommendation algorithms for content and friendship suggestions across all agents in this population.
-                </p>
-                </div>
-            </div>
-
-            <div class="columns">
-
-                <div class="column is-6">
-                    <div class="dashboard-box">
-                        <h3 class="title is-6 is-thin">Update Recommender Systems</h3>
-                        <div class="box-content">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">
-                                            <small style="color: #666;">
-                                            ℹ️ Updates apply to all agents in this population.<br>
-                                            Changes take effect in future simulation runs only (not active experiments).
-                                            </small>
-                                        </span>
-                                    </div>
-                                     <div class="box-line">
-                                    <span class="left"><b>Current Configuration</b></span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Content RecSys</span>
-                                    <span class="right">{{ population.crecsys }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Friendship RecSys</span>
-                                    <span class="right">{{ population.frecsys }}</span>
-                                </div>
-                                    <hr>
-                                <form action="/admin/update_population_recsys/{{ population.id }}" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">Content Recommender</span>
-                                        <span class="right">
-                                            <div class="select">
-                                            <select name="recsys_type">
-                                                {% for recsys in crecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        </span>
-                                    </div>
-
-                                     <div class="box-line">
-                                        <span class="left">Follow Recommender</span>
-                                        <span class="right">
-                                            <div class="select">
-                                                 <div class="select">
-                                            <select name="frecsys_type">
-                                                {% for recsys in frecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                            </div>
-                                        </span>
-                                    </div>
-
-                                </div>
-                                <div class="button-wrap">
-                                        <button class="button is-solid primary-button is-fullwidth">
-                                            Save
-                                        </button>
-                                    </div>
-                            </form>
-                        </div>
-                    </div>
-                    </div>
-
-                </div>
-
-
-            </div>
 
             <div class="columns">
 
