@@ -9,8 +9,14 @@ This change moves the recommender system (recsys) configuration from the populat
 ### Database Schema
 
 **Client Model** (`y_web/models.py`)
-- Added `crecsys` field (VARCHAR(50)) - Content recommendation system
-- Added `frecsys` field (VARCHAR(50)) - Follow recommendation system
+- Added `crecsys` field (VARCHAR(50), nullable) - Content recommendation system
+  - Examples: 'default', 'random', 'popularity-based', 'collaborative-filtering'
+  - Values are defined in the `content_recsys` database table
+- Added `frecsys` field (VARCHAR(50), nullable) - Follow recommendation system
+  - Examples: 'default', 'random', 'similarity-based', 'social-graph'
+  - Values are defined in the `follow_recsys` database table
+
+Note: While these fields are nullable in the database schema, the UI requires selection when creating a client.
 
 ### Backend Routes
 
@@ -42,7 +48,7 @@ This change moves the recommender system (recsys) configuration from the populat
 
 **population_details.html**
 - Removed recsys update form
-- Changed recsys display to show "Not set (configured per client)" when empty
+- Changed recsys display to show "Not set (configured per client)" when the value is NULL or empty string
 
 **client_details.html**
 - Updated to display client's recsys instead of population's recsys
@@ -79,14 +85,14 @@ psql -d your_database_name -f migrations/add_recsys_to_client.sql
 - Population and Agent models retain their recsys fields for backward compatibility with existing data
 - Existing populations with recsys set will display them as read-only in population_details
 - New populations and agents will not have recsys set
-- All new client configurations must specify recsys settings
+- New client configurations should specify recsys settings via the UI dropdowns (fields are nullable in database but UI provides default selection)
 
 ## Usage Flow
 
 1. Create or select a population (no recsys configuration needed)
 2. Create a client for an experiment
 3. Select the population for the client
-4. **Select Content RecSys and Friendship RecSys for the client**
+4. **Select Content RecSys and Friendship RecSys for the client** (required via UI, first option selected by default)
 5. When the client is instantiated, all agents in the population JSON file will use the client's recsys settings
 
 ## Benefits
