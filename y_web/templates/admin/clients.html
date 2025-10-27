@@ -451,6 +451,32 @@
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
 
+                                    <div class="form-section-header">Recommendation Systems</div>
+                                    <div class="form-section-description">
+                                        Select the recommendation algorithms for content and friendship suggestions that will influence agent interactions.
+                                    </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Content RecSys</span>
+                                        <div class="select">
+                                            <select name="recsys_type">
+                                                {% for recsys in crecsys %}
+                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Friendship RecSys</span>
+                                        <div class="select">
+                                            <select name="frecsys_type">
+                                                {% for recsys in frecsys %}
+                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <style>
                                         .form-section-header {
                                             font-size: 0.95em;

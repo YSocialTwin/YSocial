@@ -259,8 +259,8 @@
                                 <hr>
                                 <div class="box-line">
                                     <span class="left">Current Recommender</span>
-                                    <span class="right">Follow: {{ population.frecsys }}</span>
-                                    <span class="right">Content: {{ population.crecsys }}</span>
+                                    <span class="right">Follow: {{ client.frecsys if client.frecsys else 'Not set' }}</span>
+                                    <span class="right">Content: {{ client.crecsys if client.crecsys else 'Not set' }}</span>
                                 </div>
                             </div>
                             <hr>

@@ -190,7 +190,9 @@ CREATE TABLE client (
     population_id                       INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE,
     network_type                        TEXT,
     probability_of_secondary_follow     REAL DEFAULT 0,
-    share_link                          REAL DEFAULT 0
+    share_link                          REAL DEFAULT 0,
+    crecsys                             TEXT,
+    frecsys                             TEXT
 );
 
 CREATE TABLE client_execution (

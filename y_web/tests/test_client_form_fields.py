@@ -150,3 +150,31 @@ class TestClientFormFields:
 
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
+
+    def test_recsys_field_handling(self):
+        """Test that recsys fields can be extracted from form"""
+        try:
+            from flask import Flask
+
+            app = Flask(__name__)
+
+            # Test with recsys fields
+            form_data = {
+                "name": "test_client",
+                "descr": "Test description",
+                "recsys_type": "default",
+                "frecsys_type": "random",
+            }
+
+            with app.test_request_context(method="POST", data=form_data):
+                from flask import request
+
+                recsys_type = request.form.get("recsys_type")
+                frecsys_type = request.form.get("frecsys_type")
+
+                # Both should have the specified values
+                assert recsys_type == "default"
+                assert frecsys_type == "random"
+
+        except ImportError as e:
+            pytest.skip(f"Could not import Flask: {e}")
