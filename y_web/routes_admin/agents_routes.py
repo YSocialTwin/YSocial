@@ -172,8 +172,6 @@ def create_agent():
     check_privileges(current_user.username)
 
     user_type = request.form.get("user_type")
-    recsys_type = request.form.get("recsys_type")
-    frecsys_type = request.form.get("frecsys_type")
     population = request.form.get("population")
     name = request.form.get("name")
     age = request.form.get("age")
@@ -209,8 +207,6 @@ def create_agent():
         toxicity=toxicity,
         nationality=nationality,
         gender=gender,
-        crecsys=recsys_type,
-        frecsys=frecsys_type,
         profile_pic=profile_pic,
         daily_activity_level=int(daily_activity_level),
         profession=profession,

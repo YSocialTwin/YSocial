@@ -239,8 +239,12 @@ def clients(idexp):
 
     ollamas = ollama_status()
 
+    crecsys = Content_Recsys.query.all()
+    frecsys = Follow_Recsys.query.all()
+
     return render_template(
-        "admin/clients.html", experiment=exp, populations=pops, ollamas=ollamas
+        "admin/clients.html", experiment=exp, populations=pops, ollamas=ollamas,
+        crecsys=crecsys, frecsys=frecsys
     )
 
 
@@ -288,6 +292,8 @@ def create_client():
     llm_v_max_tokens = request.form.get("llm_v_max_tokens")
     llm_v_temperature = request.form.get("llm_v_temperature")
     user_type = request.form.get("user_type")
+    crecsys = request.form.get("recsys_type")
+    frecsys = request.form.get("frecsys_type")
 
     # Fetch optional network configuration
     network_model = request.form.get("network_model")
@@ -369,6 +375,8 @@ def create_client():
         llm_v_max_tokens=llm_v_max_tokens,
         llm_v_temperature=llm_v_temperature,
         probability_of_secondary_follow=probability_of_secondary_follow,
+        crecsys=crecsys,
+        frecsys=frecsys,
         status=0,
     )
 
@@ -650,8 +658,8 @@ def create_client():
                 "ex": a.ex,
                 "ag": a.ag,
                 "ne": a.ne,
-                "rec_sys": a.crecsys,
-                "frec_sys": a.frecsys,
+                "rec_sys": crecsys,
+                "frec_sys": frecsys,
                 "language": a.language,
                 "owner": exp.owner,
                 "education_level": a.education_level,

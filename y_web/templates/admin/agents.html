@@ -249,27 +249,6 @@
                                     <b>Simulation Configuration</b>
 
                                     <div class="box-line">
-                                        <span class="left">Content RecSys</span>
-                                        <div class="select">
-                                            <select name="recsys_type">
-                                               {% for recsys in crecsys %}
-                                                <option value="{{recsys.name}}">{{recsys.value}}</option>
-                                                {% endfor %}
-                                                 </select>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Friendship RecSys</span>
-                                        <div class="select">
-                                            <select name="frecsys_type">
-                                                {% for recsys in frecsys %}
-                                                <option value="{{recsys.name}}">{{recsys.value}}</option>
-                                                {% endfor %}
-                                                 </select>
-                                        </div>
-                                    </div>
-                                    <div class="box-line">
                                         <span class="left">Target Population</span>
                                         <div class="select">
                                             <select name="population">

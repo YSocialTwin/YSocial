@@ -350,32 +350,6 @@
                                         </div>
                                     </div>
 
-                                    <div class="form-section-header">Recommendation Systems</div>
-                                    <div class="form-section-description">
-                                        Select the recommendation algorithms for content and friendship suggestions that will influence agent interactions.
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Content RecSys</span>
-                                        <div class="select">
-                                            <select name="recsys_type">
-                                                {% for recsys in crecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Friendship RecSys</span>
-                                        <div class="select">
-                                            <select name="frecsys_type">
-                                                {% for recsys in frecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
-
                                     <div class="form-section-header">Demographics</div>
                                     <div class="form-section-description">
                                         Configure demographic attributes including age range, nationality, and language to define the population's basic characteristics.

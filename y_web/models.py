@@ -560,7 +560,8 @@ class Client(db.Model):
 
     Defines simulation parameters including agent behavior probabilities
     (posting, sharing, commenting, reading), attention window, LLM settings
-    for content generation, and network topology configuration.
+    for content generation, network topology configuration, and recommendation
+    system settings for both content and follow recommendations.
     """
 
     __bind_key__ = "db_admin"
@@ -601,6 +602,8 @@ class Client(db.Model):
         db.Integer, db.ForeignKey("population.id"), nullable=False
     )
     network_type = db.Column(db.String(50), default="")
+    crecsys = db.Column(db.String(50))
+    frecsys = db.Column(db.String(50))
 
 
 class Client_Execution(db.Model):
