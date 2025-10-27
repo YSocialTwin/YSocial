@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify, render_template
+from flask import Blueprint, current_app, jsonify, render_template, request
 from flask_login import login_required
 
 from y_web import db
@@ -54,7 +54,7 @@ def api_start_jupyter(experiment_id):
     path = exp.db_name.split(os.sep)
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
-    success, message, instance_id = start_jupyter(exp_id, notebook_dir)
+    success, message, instance_id = start_jupyter(exp_id, notebook_dir, current_host=request.host.split(":")[0], current_port=request.host.split(":")[1])
     return jsonify({"success": success, "message": message, "instance_id": instance_id})
 
 
@@ -149,10 +149,12 @@ def jupyter_page(exp_id):
     except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
         return experiment_details(exp_id)
 
-    jupyter_url = f"http://localhost:{inst['port']}/lab?token=embed-jupyter-token"
+    current_host = request.host.split(":")[0]
+    jupyter_url = f"http://{current_host}:{inst['port']}/lab?token=embed-jupyter-token"
 
     ollamas = ollama_status()
     experiment = Exps.query.filter_by(idexp=exp_id).first()
+
 
     return render_template(
         "admin/jupyter.html",
@@ -163,4 +165,5 @@ def jupyter_page(exp_id):
         notebook_dir=str(inst["notebook_dir"]),
         ollamas=ollamas,
         experiment=experiment,
+        current_host=current_host,
     )

@@ -39,15 +39,17 @@
                 <div class="column is-12 ">
                     <h3 class="title is-5 is-thin">Analytical Environment</h3>
                     <p> To analyze your simulation data use <strong><a href="https://ysocialtwin.github.io/ysights/">ySights</a></strong>, A Python library to streamline the analysis of YSocial generated data</p>
-
+                    <!-- src="{{ jupyter_url }}" -->
                     <div class="dashboard-box jupyter-container">
+
                     <iframe
-                        src="{{ jupyter_url }}"
+                        src="http://{{ current_host }}:{{ jupyter_port }}/jupyter/{{ expid }}/lab?token=embed-jupyter-token"
                         class="jupyter-frame"
                         id="jupyter-frame"
                         allow="clipboard-read; clipboard-write; cross-origin-isolated"
                         sandbox="allow-same-origin allow-scripts allow-forms allow-modals allow-popups allow-downloads allow-pointer-lock">
                     </iframe>
+
                     </div>
                 </div>
 

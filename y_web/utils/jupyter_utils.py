@@ -188,23 +188,29 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         return False
 
 
-def start_jupyter(expid, notebook_dir=None):
-    """Start Jupyter Lab server
+def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000):
+    """Start Jupyter Lab server.
 
     Args:
+        expid: Experiment ID
         notebook_dir: Path to notebook directory. If None, uses default.
-                     If provided as a string, it will be created under experiments/ folder.
+        current_host: Flask app host
+        current_port: Flask app port
 
     Returns:
         tuple: (success, message, instance_id)
     """
+    from pathlib import Path
+    import subprocess, os, sys, time
+    import psutil
 
     # Ensure kernel is installed
     ensure_kernel_installed()
 
     notebook_dir = Path(notebook_dir)
-    notebook_dir.mkdir(exist_ok=True, parents=True)
+    notebook_dir.mkdir(parents=True, exist_ok=True)
 
+    # Existing instances
     instances = db.session.query(Jupyter_instances).all()
     JUPYTER_INSTANCES = {
         inst.exp_id: {
@@ -215,7 +221,6 @@ def start_jupyter(expid, notebook_dir=None):
         for inst in instances
     }
 
-    # Check if an instance with this notebook dir is already running
     existing_instance_id = find_instance_by_notebook_dir(notebook_dir)
     if existing_instance_id:
         inst = JUPYTER_INSTANCES[existing_instance_id]
@@ -225,12 +230,10 @@ def start_jupyter(expid, notebook_dir=None):
             existing_instance_id,
         )
 
-    # Find a free port
     port = find_free_port()
     if port is None:
         return False, "No free ports available", None
 
-    # get experiment db
     exp = db.session.query(Exps).filter_by(idexp=expid).first()
 
     if "database_server.db" in exp.db_name:
@@ -238,80 +241,99 @@ def start_jupyter(expid, notebook_dir=None):
     else:
         db_name = f"postgresql://postgresql:password@localhost:5432/{exp.db_name}"  # PostgreSQL connection string
 
-    # inject environment variables
+    # Prepare environment
     env = os.environ.copy()
-    env["DB"] = str(os.path.abspath(db_name))
+
+    env.update({
+        "HOME": str(Path.home()),
+        "JUPYTER_CONFIG_DIR": str(Path.home() / ".jupyter"),
+        "XDG_RUNTIME_DIR": "/tmp",
+        "PATH": os.environ.get("PATH", ""),
+        "DB": str(os.path.abspath(db_name))
+    })
+
+    cmd = [
+        sys.executable,
+        "-m", "jupyter",
+        "lab",
+        f"--port={port}",
+        "--ServerApp.token=embed-jupyter-token",
+        "--ServerApp.password=",
+        f"--ServerApp.ip={current_host or '0.0.0.0'}",
+        "--no-browser",
+        f"--ServerApp.root_dir={notebook_dir.resolve()}",
+        f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+        "--ServerApp.allow_origin_pat=.*",
+        "--ServerApp.disable_check_xsrf=True",
+        "--IdentityProvider.token=",
+        "--ServerApp.allow_remote_access=True",
+        "--ServerApp.allow_host=*",
+        f"--ServerApp.base_url=/jupyter/{expid}/",
+        "--ServerApp.trust_xheaders=True",
+        # tornado_settings singolo per iframe embedding
+        f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+    ]
 
     try:
-        # Start Jupyter Lab with proper configuration for embedding
-        cmd = [
-            sys.executable,
-            "-m",
-            "jupyter",
-            "lab",
-            f"--port={port}",
-            f"--ServerApp.token=embed-jupyter-token",
-            "--ServerApp.password=",
-            "--no-browser",
-            f"--notebook-dir={notebook_dir.absolute()}",
-            "--ServerApp.allow_origin=*",
-            "--ServerApp.disable_check_xsrf=True",
-            # Allow frame ancestors for embedding
-            '--ServerApp.tornado_settings={"headers":{"Content-Security-Policy":"frame-ancestors *"}}',
-            # Disable authentication redirect which can cause issues in iframes
-            "--IdentityProvider.token=",
-            # Allow remote access
-            "--ServerApp.allow_remote_access=True",
-            # WebSocket configuration
-            "--ServerApp.allow_origin_pat=.*",
-        ]
-
         process = subprocess.Popen(
             cmd,
             env=env,
+            cwd=str(notebook_dir.parent),  # critical for Ubuntu
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             preexec_fn=os.setsid if os.name != "nt" else None,
+            text=True,
         )
 
         # Store instance info
-        # update the process to store the pid
         instance = db.session.query(Jupyter_instances).filter_by(exp_id=expid).first()
         instance.port = port
         instance.process = process.pid
         instance.notebook_dir = str(notebook_dir)
         instance.status = "running"
         db.session.commit()
-
-        # Optionally get the new ID
         instance_id = instance.exp_id
 
-        # Wait a bit for Jupyter to start
-        time.sleep(3)
+        startup_timeout = 10  # seconds
+        start = time.time()
 
-        # Check if process is still running
-        if process.poll() is None:
-            create_notebook_with_template(notebook_dir=str(notebook_dir))
+        stderr_output = []
 
-            return True, f"Jupyter Lab started on port {port}", None
-        else:
-            stderr = process.stderr.read().decode() if process.stderr else ""
-            ysession = (
-                db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
-            )
-            ysession.status = "stopped"
-            ysession.process = None
-            ysession.port = -1
-            db.session.commit()
-            del JUPYTER_INSTANCES[instance_id]
-            return False, f"Failed to start Jupyter Lab: {stderr}", None
+        while time.time() - start < startup_timeout:
+            # Check if the process has terminated
+            if process.poll() is not None:
+                # Process ended early which usually means an error
+                err = "".join(stderr_output) + (process.stderr.read() or "")
+                print(f"Process exited early: {err}")
+
+            # Read non-blocking from stderr (just a small chunk)
+            line = process.stderr.readline()
+            if line:
+                stderr_output.append(line)
+
+                # Detect known Jupyter 'certificate of life'
+                if "http" in line or "Jupyter" in line:
+                    break
+
+            time.sleep(0.5)
+
+        # Final check after wait loop
+        if process.poll() is not None:
+            err = "".join(stderr_output) + (process.stderr.read() or "")
+            print(f"Process exited early: {err}")
+
+        create_notebook_with_template(notebook_dir=str(notebook_dir))
+        print(f"Created template notebook")
+        return True, f"Jupyter Lab started on port {port}", instance_id
 
     except Exception as e:
-        ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
-        ysession.status = "stopped"
-        ysession.process = None
-        ysession.port = -1
-        db.session.commit()
+        print(f"Error starting Jupyter Lab: {e}")
+        instance = db.session.query(Jupyter_instances).filter_by(exp_id=expid).first()
+        if instance:
+            instance.status = "stopped"
+            instance.process = None
+            instance.port = -1
+            db.session.commit()
         return False, f"Error starting Jupyter Lab: {str(e)}", None
 
 
