@@ -54,7 +54,12 @@ def api_start_jupyter(experiment_id):
     path = exp.db_name.split(os.sep)
     notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
 
-    success, message, instance_id = start_jupyter(exp_id, notebook_dir, current_host=request.host.split(":")[0], current_port=request.host.split(":")[1])
+    success, message, instance_id = start_jupyter(
+        exp_id,
+        notebook_dir,
+        current_host=request.host.split(":")[0],
+        current_port=request.host.split(":")[1],
+    )
     return jsonify({"success": success, "message": message, "instance_id": instance_id})
 
 
@@ -154,7 +159,6 @@ def jupyter_page(exp_id):
 
     ollamas = ollama_status()
     experiment = Exps.query.filter_by(idexp=exp_id).first()
-
 
     return render_template(
         "admin/jupyter.html",

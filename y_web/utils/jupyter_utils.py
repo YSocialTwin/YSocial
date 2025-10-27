@@ -200,8 +200,12 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
     Returns:
         tuple: (success, message, instance_id)
     """
+    import os
+    import subprocess
+    import sys
+    import time
     from pathlib import Path
-    import subprocess, os, sys, time
+
     import psutil
 
     # Ensure kernel is installed
@@ -244,17 +248,20 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
     # Prepare environment
     env = os.environ.copy()
 
-    env.update({
-        "HOME": str(Path.home()),
-        "JUPYTER_CONFIG_DIR": str(Path.home() / ".jupyter"),
-        "XDG_RUNTIME_DIR": "/tmp",
-        "PATH": os.environ.get("PATH", ""),
-        "DB": str(os.path.abspath(db_name))
-    })
+    env.update(
+        {
+            "HOME": str(Path.home()),
+            "JUPYTER_CONFIG_DIR": str(Path.home() / ".jupyter"),
+            "XDG_RUNTIME_DIR": "/tmp",
+            "PATH": os.environ.get("PATH", ""),
+            "DB": str(os.path.abspath(db_name)),
+        }
+    )
 
     cmd = [
         sys.executable,
-        "-m", "jupyter",
+        "-m",
+        "jupyter",
         "lab",
         f"--port={port}",
         "--ServerApp.token=embed-jupyter-token",
