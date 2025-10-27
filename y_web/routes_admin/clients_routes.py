@@ -1333,6 +1333,10 @@ def update_recsys(uid):
 
     client = Client.query.filter_by(id=uid).first()
 
+    # Update client's recsys settings
+    client.crecsys = recsys_type
+    client.frecsys = frecsys_type
+
     # get populations for client uid
     population = Population.query.filter_by(id=client.population_id).first()
     # get agents for the populations
@@ -1349,9 +1353,6 @@ def update_recsys(uid):
         except:
             flash("The experiment needs to be activated first.", "error")
             return redirect(request.referrer)
-
-    population.crecsys = recsys_type
-    population.frecsys = frecsys_type
 
     db.session.commit()
     return redirect(request.referrer)

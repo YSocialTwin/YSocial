@@ -58,8 +58,6 @@ def agent_data():
     leanings = Leanings.query.all()
     languages = Languages.query.all()
     toxicity_levels = Toxicity_Levels.query.all()
-    crecsys = Content_Recsys.query.all()
-    frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
 
     return render_template(
@@ -74,8 +72,6 @@ def agent_data():
         leanings=leanings,
         languages=languages,
         toxicity_levels=toxicity_levels,
-        crecsys=crecsys,
-        frecsys=frecsys,
         activity_profiles=activity_profiles,
     )
 

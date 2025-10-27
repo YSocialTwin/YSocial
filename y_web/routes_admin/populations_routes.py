@@ -328,8 +328,6 @@ def populations():
     languages = Languages.query.all()
     toxicity_levels = Toxicity_Levels.query.all()
     age_classes = AgeClass.query.all()
-    crecsys = Content_Recsys.query.all()
-    frecsys = Follow_Recsys.query.all()
     activity_profiles = ActivityProfile.query.all()
 
     return render_template(
@@ -343,8 +341,6 @@ def populations():
         languages=languages,
         toxicity_levels=toxicity_levels,
         age_classes=age_classes,
-        crecsys=crecsys,
-        frecsys=frecsys,
         activity_profiles=activity_profiles,
     )
 
