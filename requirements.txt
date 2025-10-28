@@ -24,7 +24,7 @@ openai==1.66.3
 perspective
 pillow
 pyOpenSSL==22.0.0
-pyautogen==0.8.1
+ag2==0.8.1
 pycparser==2.21
 pygments
 requests
