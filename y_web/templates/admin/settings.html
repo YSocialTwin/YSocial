@@ -357,9 +357,17 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Port</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="port"
-                                                                                       class="input"
-                                                                                       value="5010"></span>
+                                        <span class="right" style="width: 70%;">
+                                            <input type="number" 
+                                                   name="port"
+                                                   id="port-input"
+                                                   class="input"
+                                                   min="5000"
+                                                   max="6000"
+                                                   value="{{ suggested_port }}"
+                                                   required>
+                                            <p class="help">Port must be in range 5000-6000 and not already assigned</p>
+                                        </span>
                                     </div>
 
                                        <div class="box-line">

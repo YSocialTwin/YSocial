@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import shutil
+import socket
 import uuid
 
 from flask import (
@@ -64,6 +65,81 @@ from y_web.utils.miscellanea import check_privileges, ollama_status, reload_curr
 experiments = Blueprint("experiments", __name__)
 
 
+def get_suggested_port():
+    """
+    Find the first available port in the range 5000-6000.
+
+    A port is considered available if:
+    1. It is not assigned to any existing experiment (regardless of running status)
+    2. It is currently free (not in use by any process)
+
+    Returns:
+        int: The first available port, or 5000 if none found
+    """
+    # Get all ports assigned to existing experiments
+    assigned_ports = set()
+    experiments = Exps.query.all()
+    for exp in experiments:
+        if exp.port:
+            assigned_ports.add(exp.port)
+
+    # Check each port in the range
+    for port in range(5000, 6001):
+        # Skip if already assigned to an experiment
+        if port in assigned_ports:
+            continue
+
+        # Check if port is currently free
+        if is_port_free(port):
+            return port
+
+    # Fallback to 5000 if no port is available
+    return 5000
+
+
+def is_port_free(port):
+    """
+    Check if a port is currently free.
+
+    Args:
+        port: Port number to check
+
+    Returns:
+        bool: True if port is free, False otherwise
+    """
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+            return True
+    except OSError:
+        return False
+
+
+def is_port_valid(port):
+    """
+    Validate that a port is in the allowed range and not already assigned.
+
+    Args:
+        port: Port number to validate
+
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    # Check range
+    if port < 5000 or port > 6000:
+        return False, "Port must be in the range 5000-6000"
+
+    # Check if already assigned to an experiment
+    existing_exp = Exps.query.filter_by(port=port).first()
+    if existing_exp:
+        return (
+            False,
+            f"Port {port} is already assigned to experiment '{existing_exp.exp_name}'",
+        )
+
+    return True, None
+
+
 @experiments.route("/admin/experiments")
 @login_required
 def settings():
@@ -90,12 +166,16 @@ def settings():
 
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 
+    # Get suggested port for new experiment
+    suggested_port = get_suggested_port()
+
     return render_template(
         "admin/settings.html",
         experiments=experiments,
         users=users,
         ollamas=ollamas,
         dbtype=dbtype,
+        suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
     )
 
@@ -509,6 +589,12 @@ def create_experiment():
     platform_type = request.form.get("platform_type")
     host = request.form.get("host")
     port = int(request.form.get("port"))
+
+    # Validate port
+    is_valid, error_msg = is_port_valid(port)
+    if not is_valid:
+        flash(error_msg)
+        return redirect(request.referrer)
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
