@@ -22,6 +22,7 @@ This directory contains SQL migration scripts for updating existing databases.
 
 ## Migration History
 
+- **add_server_pid_to_exps.sql** (2025-10-29): Adds `server_pid` column to the `exps` table to track server process IDs for graceful termination during application shutdown. This enables proper cleanup of server processes started with subprocess.Popen.
 - **add_recsys_to_client.sql** (2025-10-27): Adds `crecsys` and `frecsys` columns to the `client` table to support recommendation system configuration at the client level instead of population/agent level.
 
 ## Notes

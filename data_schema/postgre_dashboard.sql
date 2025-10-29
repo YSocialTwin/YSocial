@@ -63,8 +63,9 @@ CREATE TABLE exps (
     running       INTEGER DEFAULT 0 NOT NULL,
     port          INTEGER NOT NULL,
     server        TEXT DEFAULT '127.0.0.1',
-    platform_type TEXT DEFAULT 'microblogging'
-    annotations   TEXT NOT NULL DEFAULT ''
+    platform_type TEXT DEFAULT 'microblogging',
+    annotations   TEXT NOT NULL DEFAULT '',
+    server_pid    INTEGER DEFAULT NULL
 );
 
 CREATE TABLE exp_stats (

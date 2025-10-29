@@ -17,6 +17,7 @@ import atexit
 import os
 import shutil
 import signal
+import subprocess
 
 from flask import Flask
 from flask_login import LoginManager
@@ -192,13 +193,33 @@ def create_postgresql_db(app):
 def cleanup_subprocesses_only():
     """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
     print("Cleaning up subprocesses (OS-level only)...")
+
+    # Cleanup client processes
     for name, proc in client_processes.items():
         try:
-            print(f"Terminating {name} pid={getattr(proc, 'pid', None)}")
+            print(f"Terminating client {name} pid={getattr(proc, 'pid', None)}")
             proc.terminate()
             proc.join(timeout=5)
         except Exception as e:
-            print("Error terminating subprocess:", e)
+            print("Error terminating client subprocess:", e)
+
+    # Cleanup server processes
+    from y_web.utils.external_processes import server_processes
+
+    for exp_id, proc in list(server_processes.items()):
+        try:
+            print(
+                f"Terminating server for experiment {exp_id} pid={getattr(proc, 'pid', None)}"
+            )
+            if proc.poll() is None:  # Process is still running
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+        except Exception as e:
+            print(f"Error terminating server subprocess: {e}")
 
 
 def cleanup_db_jupyter_with_new_app():

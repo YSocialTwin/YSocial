@@ -13,6 +13,7 @@ import os
 import random
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -42,12 +43,56 @@ from y_web.models import (
 server_processes = {}
 
 
+def cleanup_server_processes_from_db():
+    """
+    Cleanup server processes based on PIDs stored in the database.
+
+    This function is useful when the application restarts and there are
+    still running server processes from previous sessions. It reads PIDs
+    from the database and attempts to terminate them.
+    """
+    try:
+        exps = db.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()
+        for exp in exps:
+            try:
+                print(
+                    f"Attempting to terminate server process PID {exp.server_pid} for experiment {exp.idexp}"
+                )
+                os.kill(exp.server_pid, signal.SIGTERM)
+                time.sleep(1)
+                # Check if process is still running
+                try:
+                    os.kill(exp.server_pid, 0)  # Check if process exists
+                    # If we get here, process is still running, force kill
+                    print(f"Process {exp.server_pid} still running, sending SIGKILL")
+                    os.kill(exp.server_pid, signal.SIGKILL)
+                except OSError:
+                    # Process doesn't exist anymore
+                    pass
+                # Clear the PID from database
+                exp.server_pid = None
+                db.session.commit()
+            except OSError as e:
+                # Process doesn't exist
+                print(f"Process {exp.server_pid} no longer exists: {e}")
+                exp.server_pid = None
+                db.session.commit()
+            except Exception as e:
+                print(f"Error terminating server process {exp.server_pid}: {e}")
+    except Exception as e:
+        print(f"Error during server process cleanup: {e}")
+
+
 def stop_all_exps():
-    """Stop all clients"""
+    """Stop all experiments and terminate server processes"""
+    # Terminate all running server processes
+    cleanup_server_processes_from_db()
+
     # set to 0 all Exps.running
     exps = db.session.query(Exps).all()
     for exp in exps:
         exp.running = 0
+        exp.server_pid = None
         db.session.commit()
     # terminate all clients
     clis = db.session.query(Client).all()
@@ -252,6 +297,7 @@ def terminate_server_process(exp_id):
 
     This function terminates a server process that was started using the
     start_server() function and is tracked in the server_processes dictionary.
+    It also clears the PID from the database.
 
     Args:
         exp_id: the experiment ID whose server process should be terminated
@@ -292,6 +338,16 @@ def terminate_server_process(exp_id):
 
         # Remove from tracking dictionary
         del server_processes[exp_id]
+
+        # Clear PID from database
+        try:
+            exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+            if exp:
+                exp.server_pid = None
+                db.session.commit()
+        except Exception as e:
+            print(f"Error clearing server PID from database: {e}")
+
         return True
 
     except Exception as e:
@@ -395,6 +451,10 @@ def start_server(exp):
     server_processes[exp.idexp] = process
 
     print(f"Server process started with PID: {process.pid}")
+
+    # Save the PID to the database for persistent tracking
+    exp.server_pid = process.pid
+    db.session.commit()
 
     # identify the db to be set
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
