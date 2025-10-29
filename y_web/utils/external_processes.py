@@ -269,22 +269,26 @@ def terminate_server_process(exp_id):
         # Check if process is still running
         if process.poll() is None:
             print(f"Terminating server process with PID {process.pid}...")
-            
+
             # Try graceful termination first
             process.terminate()
-            
+
             # Wait up to 5 seconds for graceful shutdown
             try:
                 process.wait(timeout=5)
                 print(f"Server process {process.pid} terminated gracefully.")
             except subprocess.TimeoutExpired:
                 # If still running, force kill
-                print(f"Server process {process.pid} did not terminate gracefully, forcing kill...")
+                print(
+                    f"Server process {process.pid} did not terminate gracefully, forcing kill..."
+                )
                 process.kill()
                 process.wait()
                 print(f"Server process {process.pid} killed.")
         else:
-            print(f"Server process {process.pid} already terminated with exit code {process.returncode}.")
+            print(
+                f"Server process {process.pid} already terminated with exit code {process.returncode}."
+            )
 
         # Remove from tracking dictionary
         del server_processes[exp_id]
@@ -353,7 +357,9 @@ def start_server(exp):
     if exp.platform_type == "microblogging":
         script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
     elif exp.platform_type == "forum":
-        script_path = f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+        script_path = (
+            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+        )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
@@ -361,7 +367,11 @@ def start_server(exp):
     python_cmd = detect_env_handler()
 
     # Build the command as a list for subprocess.Popen
-    if isinstance(python_cmd, str) and " " in python_cmd and not python_cmd.startswith("/"):
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not python_cmd.startswith("/")
+    ):
         # Handle commands like "pipenv run python"
         cmd_parts = python_cmd.split()
         cmd = cmd_parts + [script_path, "-c", config]
