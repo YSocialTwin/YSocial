@@ -585,16 +585,16 @@ def create_experiment():
 
     exp_name = request.form.get("exp_name")
     exp_descr = request.form.get("exp_descr")
-    owner = request.form.get("owner")
     platform_type = request.form.get("platform_type")
-    host = request.form.get("host")
-    port = int(request.form.get("port"))
 
-    # Validate port
-    is_valid, error_msg = is_port_valid(port)
-    if not is_valid:
-        flash(error_msg)
-        return redirect(request.referrer)
+    # Use fixed host value
+    host = "127.0.0.1"
+
+    # Use suggested port (first available in range 5000-6000)
+    port = get_suggested_port()
+
+    # Use current logged-in user as owner
+    owner = current_user.username
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
@@ -757,7 +757,7 @@ def create_experiment():
             if db_type == "sqlite"
             else f"experiments_{uid}"
         ),
-        owner=db.session.query(Admin_users).filter_by(id=owner).first().username,
+        owner=owner,
         exp_descr=exp_descr,
         status=0,
         port=int(port),

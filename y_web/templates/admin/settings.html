@@ -338,39 +338,6 @@
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Owner</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div class="select">
-                                                <select name="owner">
-                                                    {% for user in users %}
-                                                    <option value="{{ user.id }}">{{ user.username }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Host</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="host"
-                                                                                       class="input"
-                                                                                       value="127.0.0.1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Port</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" 
-                                                   name="port"
-                                                   id="port-input"
-                                                   class="input"
-                                                   min="5000"
-                                                   max="6000"
-                                                   value="{{ suggested_port }}"
-                                                   required>
-                                            <p class="help">Port must be in range 5000-6000 and not already assigned</p>
-                                        </span>
-                                    </div>
-
-                                       <div class="box-line">
                                         <span class="left">Simulation Topics</span>
                                         <span class="right" style="width: 70%;">
 
