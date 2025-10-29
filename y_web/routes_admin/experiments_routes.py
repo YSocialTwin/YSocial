@@ -53,7 +53,7 @@ from y_web.models import (
     User_Experiment,
     User_mgmt,
 )
-from y_web.utils import start_server, terminate_process_on_port
+from y_web.utils import start_server, terminate_process_on_port, terminate_server_process
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 
@@ -972,8 +972,12 @@ def stop_experiment(uid):
     if exp.running == 0:
         return experiment_details(uid)
 
-    # stop the yserver
-    terminate_process_on_port(exp.port)
+    # stop the yserver - try the new subprocess-based termination first
+    # If that fails or no process is tracked, fall back to port-based termination
+    terminated = terminate_server_process(uid)
+    if not terminated:
+        # Fallback to port-based termination for backward compatibility
+        terminate_process_on_port(exp.port)
 
     # the clients are killed as soon as the server stops
     # update client statuses

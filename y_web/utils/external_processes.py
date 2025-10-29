@@ -38,6 +38,9 @@ from y_web.models import (
     PopulationActivityProfile,
 )
 
+# Dictionary to track server processes started with subprocess.Popen
+server_processes = {}
+
 
 def stop_all_exps():
     """Stop all clients"""
@@ -216,10 +219,16 @@ def build_screen_command(script_path, config_path, screen_name=None):
 
 
 def terminate_process_on_port(port):
-    """Terminate the process using the specified port
+    """
+    Terminate the process using the specified port.
+
+    This function is deprecated in favor of terminate_server_process() for
+    processes managed via subprocess.Popen, but is kept for compatibility
+    with legacy screen-based processes.
 
     Args:
-        port: the port number"""
+        port: the port number
+    """
     try:
         result = subprocess.run(
             ["lsof", "-t", "-i", f":{port}"], capture_output=True, text=True, check=True
@@ -237,11 +246,182 @@ def terminate_process_on_port(port):
         pass
 
 
-def start_server(exp):
-    """Start the y_server in a detached screen
+def terminate_server_process(exp_id):
+    """
+    Terminate a server process started with subprocess.Popen.
+
+    This function terminates a server process that was started using the
+    start_server() function and is tracked in the server_processes dictionary.
 
     Args:
-        exp: the experiment object"""
+        exp_id: the experiment ID whose server process should be terminated
+
+    Returns:
+        bool: True if process was found and terminated, False otherwise
+    """
+    if exp_id not in server_processes:
+        print(f"No tracked server process found for experiment {exp_id}")
+        return False
+
+    process = server_processes[exp_id]
+
+    try:
+        # Check if process is still running
+        if process.poll() is None:
+            print(f"Terminating server process with PID {process.pid}...")
+            
+            # Try graceful termination first
+            process.terminate()
+            
+            # Wait up to 5 seconds for graceful shutdown
+            try:
+                process.wait(timeout=5)
+                print(f"Server process {process.pid} terminated gracefully.")
+            except subprocess.TimeoutExpired:
+                # If still running, force kill
+                print(f"Server process {process.pid} did not terminate gracefully, forcing kill...")
+                process.kill()
+                process.wait()
+                print(f"Server process {process.pid} killed.")
+        else:
+            print(f"Server process {process.pid} already terminated with exit code {process.returncode}.")
+
+        # Remove from tracking dictionary
+        del server_processes[exp_id]
+        return True
+
+    except Exception as e:
+        print(f"Error terminating server process: {e}")
+        # Still remove from tracking even if there was an error
+        if exp_id in server_processes:
+            del server_processes[exp_id]
+        return False
+
+
+def get_server_process_status(exp_id):
+    """
+    Get the status of a server process.
+
+    Args:
+        exp_id: the experiment ID
+
+    Returns:
+        dict: Dictionary with status information including 'running', 'pid', and 'returncode'
+    """
+    if exp_id not in server_processes:
+        return {"running": False, "pid": None, "returncode": None}
+
+    process = server_processes[exp_id]
+    poll_result = process.poll()
+
+    return {
+        "running": poll_result is None,
+        "pid": process.pid,
+        "returncode": poll_result,
+    }
+
+
+def start_server(exp):
+    """
+    Start the y_server using subprocess.Popen.
+
+    This function launches a server process for an experiment using subprocess.Popen
+    instead of screen sessions. The process is tracked in the server_processes
+    dictionary for later management.
+
+    Args:
+        exp: the experiment object
+
+    Returns:
+        subprocess.Popen: The started process object
+    """
+    yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+
+    if "database_server.db" in exp.db_name:
+        config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
+        exp_uid = exp.db_name.split(os.sep)[1]
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        exp_uid = f"{uid}{os.sep}"
+        config = (
+            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
+        )
+
+    # Determine the script path based on platform type
+    if exp.platform_type == "microblogging":
+        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
+    elif exp.platform_type == "forum":
+        script_path = f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+    else:
+        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+
+    # Get the Python executable to use
+    python_cmd = detect_env_handler()
+
+    # Build the command as a list for subprocess.Popen
+    if isinstance(python_cmd, str) and " " in python_cmd and not python_cmd.startswith("/"):
+        # Handle commands like "pipenv run python"
+        cmd_parts = python_cmd.split()
+        cmd = cmd_parts + [script_path, "-c", config]
+    else:
+        # Simple python executable path
+        cmd = [python_cmd, script_path, "-c", config]
+
+    print(f"Starting server for experiment {exp_uid} ...")
+    print(f"Command: {' '.join(cmd)}")
+
+    # Start the process with Popen
+    process = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+        start_new_session=True,  # Detach from parent process group
+    )
+
+    # Store the process in the global dictionary for tracking
+    server_processes[exp.idexp] = process
+
+    print(f"Server process started with PID: {process.pid}")
+
+    # identify the db to be set
+    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
+
+    db_type = "sqlite"
+    if db_uri_main.startswith("postgresql"):
+        db_type = "postgresql"
+
+    if db_type == "sqlite":
+        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+    elif db_type == "postgresql":
+        old_db_name = db_uri_main.split("/")[-1]
+        db_uri = db_uri_main.replace(old_db_name, exp.db_name)
+
+    print(f"Database URI: {db_uri}")
+
+    # Wait for the server to start
+    time.sleep(20)
+    data = {"path": f"{db_uri}"}
+    headers = {"Content-Type": "application/json"}
+    ns = f"http://{exp.server}:{exp.port}/change_db"
+    post(f"{ns}", headers=headers, data=json.dumps(data))
+
+    return process
+
+
+@deprecated
+def start_server_screen(exp):
+    """
+    Start the y_server in a detached screen (DEPRECATED).
+
+    This function is deprecated in favor of start_server() which uses subprocess.Popen.
+    It is kept for backward compatibility but should not be used in new code.
+
+    Args:
+        exp: the experiment object
+    """
     yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
