@@ -206,8 +206,8 @@ def cleanup_subprocesses_only():
 
     # Cleanup server processes using PIDs from database
     try:
-        from y_web.models import Exps
         from y_web import db as db_module
+        from y_web.models import Exps
 
         # Query experiments with server PIDs
         exps = db_module.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()

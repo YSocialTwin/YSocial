@@ -180,6 +180,7 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 
 ##############
 
+
 def detect_env_handler():
     """
     Detect the active Python environment and return executable path.
