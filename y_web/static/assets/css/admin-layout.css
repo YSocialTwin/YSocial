@@ -59,7 +59,7 @@
  * Improved look and feel to match admin panel aesthetics
  */
 .dashboard-toolbar .dropdown.is-hoverable .dropdown-menu {
-    min-width: 250px;
+    min-width: 200px;
     padding-top: 0.25rem;
 }
 
@@ -72,30 +72,18 @@
 }
 
 .dashboard-toolbar .dropdown.is-hoverable .dropdown-item {
-    padding: 0.5rem 0.875rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 4px;
     margin: 0.125rem 0.375rem;
     transition: all 0.2s ease;
     line-height: 1.3;
+    font-size: 0.875rem;
+    color: #2c3e50;
 }
 
 .dashboard-toolbar .dropdown.is-hoverable .dropdown-item:hover {
     background-color: #f0f7ff;
     transform: translateX(2px);
-}
-
-.dashboard-toolbar .dropdown.is-hoverable .dropdown-item strong {
-    color: #2c3e50;
-    font-weight: 600;
-    font-size: 0.875rem;
-    display: block;
-    margin-bottom: 0.125rem;
-}
-
-.dashboard-toolbar .dropdown.is-hoverable .dropdown-item small {
-    color: #7a8699;
-    font-size: 0.75rem;
-    line-height: 1.2;
 }
 
 /* Active/Selected state for dropdown items */
@@ -104,16 +92,8 @@
     color: #ffffff;
 }
 
-.dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active strong {
-    color: #ffffff;
-}
-
-.dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active small {
-    color: rgba(255, 255, 255, 0.85);
-}
-
-/* Enhance the dropdown trigger button - match admin panel colors */
-.dashboard-toolbar .dropdown.is-hoverable .button.live-button {
+/* Enhance all live-button instances - match admin panel colors */
+.dashboard-toolbar .button.live-button {
     border-radius: 6px;
     font-weight: 500;
     padding: 0.5rem 1rem;
@@ -122,7 +102,7 @@
     border-color: #3d70b2 !important;
 }
 
-.dashboard-toolbar .dropdown.is-hoverable .button.live-button:hover {
+.dashboard-toolbar .button.live-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(61, 112, 178, 0.2);
     background-color: #f0f7ff;
@@ -143,31 +123,18 @@ body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item:hover {
     background-color: #2a3447;
 }
 
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item strong {
-    color: #fafafa;
-}
-
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item small {
-    color: #7a8699;
-}
-
 body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active {
     background-color: #5596e6;
     color: #ffffff;
 }
 
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active strong,
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active small {
-    color: #ffffff;
-}
-
-/* Dark mode button styling */
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .button.live-button {
+/* Dark mode button styling - applies to all live-button instances */
+body.is-dark .dashboard-toolbar .button.live-button {
     color: #5596e6 !important;
     border-color: #5596e6 !important;
 }
 
-body.is-dark .dashboard-toolbar .dropdown.is-hoverable .button.live-button:hover {
+body.is-dark .dashboard-toolbar .button.live-button:hover {
     background-color: #2a3447;
     box-shadow: 0 4px 12px rgba(85, 150, 230, 0.2);
 }

@@ -34,12 +34,7 @@
                             <div class="dropdown-content">
                                 {% for exp in active_experiments %}
                                 <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
-                                    <strong>{{ exp.exp_name }}</strong>
-                                    <br>
-                                    <small>
-                                        {{ exp.platform_type|capitalize }} 
-                                        {% if exp.owner %} • by {{ exp.owner }}{% endif %}
-                                    </small>
+                                    {{ exp.exp_name }}
                                 </a>
                                 {% endfor %}
                             </div>
