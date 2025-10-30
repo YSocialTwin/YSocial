@@ -310,7 +310,7 @@ def create_app(db_type="sqlite"):
         try:
             active_exps = Exps.query.filter_by(status=1).all()
             return dict(active_experiments=active_exps)
-        except:
+        except Exception:
             return dict(active_experiments=[])
 
     # Initialize database bindings for all active experiments
