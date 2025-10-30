@@ -280,12 +280,17 @@ def create_app(db_type="sqlite"):
         return User.query.get(int(user_id))
 
     # Setup experiment context handler
-    from .experiment_context import setup_experiment_context, initialize_active_experiment_databases
+    from .experiment_context import setup_experiment_context, initialize_active_experiment_databases, get_current_experiment_id
 
     @app.before_request
     def before_request_handler():
         """Setup experiment context for each request."""
         setup_experiment_context()
+
+    @app.context_processor
+    def inject_exp_id():
+        """Inject exp_id into all templates."""
+        return dict(exp_id=get_current_experiment_id())
 
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)

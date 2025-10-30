@@ -382,7 +382,7 @@
                             {% for ht in trending_ht %}
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span><a href="/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
+                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
                                     <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
                                 </div>
                             </div>
@@ -741,11 +741,11 @@
                     <div class="load-more-wrap narrow-top has-text-centered">
                         {% if page-1>0 %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
+                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
                             Page</a>
                         {% endif %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
+                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
                             Page</a>
                     </div>
                     <!-- /Load more posts -->
@@ -775,6 +775,13 @@
 
 </div>
 
+
+<!-- Experiment context -->
+<script>
+    // Make exp_id available globally for AJAX requests
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
