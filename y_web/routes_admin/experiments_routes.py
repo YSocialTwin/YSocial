@@ -1123,8 +1123,14 @@ def start_experiment(uid):
 def stop_experiment(uid):
     """Handle stop experiment operation.
     
-    Stops the experiment server and terminates all running client processes
-    attached to this experiment.
+    Stops the experiment by first terminating all client processes, then stopping
+    the server. This order prevents clients from trying to communicate with a dead server.
+    
+    Shutdown sequence:
+    1. Terminate all client processes
+    2. Update client execution status in database
+    3. Stop the server process
+    4. Update server execution status in database
     """
     check_privileges(current_user.username)
 
@@ -1135,15 +1141,8 @@ def stop_experiment(uid):
     if exp.running == 0:
         return experiment_details(uid)
 
-    # stop the yserver - try the new subprocess-based termination first
-    # If that fails or no process is tracked, fall back to port-based termination
-    terminated = terminate_server_process(uid)
-    if not terminated:
-        # Fallback to port-based termination for backward compatibility
-        terminate_process_on_port(exp.port)
-
-    # Stop all running clients attached to this experiment
-    # Get all clients for the experiment
+    # Step 1 & 2: Stop all running clients attached to this experiment first
+    # This prevents clients from trying to communicate with a dead server
     clients = Client.query.filter_by(id_exp=uid).all()
     for client in clients:
         # Only terminate clients that are marked as running (status=1)
@@ -1157,7 +1156,15 @@ def stop_experiment(uid):
             client.status = 0
             db.session.commit()
 
-    # update the experiment status
+    # Step 3: Now stop the yserver after all clients are terminated
+    # Try the new subprocess-based termination first
+    # If that fails or no process is tracked, fall back to port-based termination
+    terminated = terminate_server_process(uid)
+    if not terminated:
+        # Fallback to port-based termination for backward compatibility
+        terminate_process_on_port(exp.port)
+
+    # Step 4: Update the experiment status in database
     db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 0})
     db.session.commit()
 
