@@ -8,7 +8,7 @@ creating new users, and updating user permissions and settings.
 import os
 import re
 
-from flask import Blueprint, abort, current_app, flash, render_template, request
+from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
@@ -18,6 +18,10 @@ from y_web.utils.external_processes import get_llm_models
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 users = Blueprint("users", __name__)
+
+# Validation pattern constants for consistency between server and client
+PASSWORD_SPECIAL_CHARS_PATTERN = r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\\/;'`~]"
+EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 
 @users.route("/admin/users")
@@ -347,7 +351,7 @@ def validate_password(password):
     if not re.search(r"\d", password):
         return False, "Password must contain at least one number"
     
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\\/;'`~]", password):
+    if not re.search(PASSWORD_SPECIAL_CHARS_PATTERN, password):
         return False, "Password must contain at least one special symbol"
     
     return True, None
@@ -363,13 +367,10 @@ def validate_email(email):
     Returns:
         Tuple of (is_valid: bool, error_message: str or None)
     """
-    # Basic email validation pattern
-    email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    
     if not email or not email.strip():
         return False, "Email cannot be empty"
     
-    if not re.match(email_pattern, email):
+    if not re.match(EMAIL_PATTERN, email):
         return False, "Invalid email format"
     
     return True, None
@@ -411,7 +412,7 @@ def update_user_password():
     user = Admin_users.query.filter_by(id=user_id).first()
     if not user:
         flash("User not found", "error")
-        return user_details(user_id)
+        return redirect(url_for("users.user_data"))
     
     user.password = generate_password_hash(new_password)
     db.session.commit()
@@ -450,7 +451,7 @@ def update_user_email():
     user = Admin_users.query.filter_by(id=user_id).first()
     if not user:
         flash("User not found", "error")
-        return user_details(user_id)
+        return redirect(url_for("users.user_data"))
     
     user.email = new_email
     db.session.commit()
