@@ -110,7 +110,7 @@
                                 {% for mention in mentions %}
                                 <span style="width: 90%; display: inline; float: left;"
                                       id="left-{{ mention[0].post_id }}">
-        <a class="account-item" href="/thread/{{ mention[0].post_id }}">
+        <a class="account-item" href="/{{exp_id}}/thread/{{ mention[0].post_id }}">
           <div class="media">
             <div class="icon-wrap">
               <img
@@ -200,7 +200,7 @@
                                         </div>
                                     </div>
                                 </a>
-                                <a href="/edit_profile/{{ logged_id }}" class="account-item">
+                                <a href="/{{exp_id}}/edit_profile/{{ logged_id }}" class="account-item">
                                     <div class="media">
                                         <div class="icon-wrap">
                                             <i data-feather="edit"></i>

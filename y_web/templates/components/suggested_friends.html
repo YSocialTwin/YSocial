@@ -62,10 +62,10 @@
                     style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; margin-right: 0.75rem;"
             />
             <div class="page-meta" style="flex: 1; min-width: 0; margin-right: 0.75rem;">
-                <span><a href="/profile/{{ friend['id'] }}/recent/1" style="font-weight: 500; color: #363636; text-decoration: none; transition: color 0.2s ease;">{{ friend['username']|safe }}</a></span>
+                <span><a href="/{{exp_id}}/profile/{{ friend['id'] }}/recent/1" style="font-weight: 500; color: #363636; text-decoration: none; transition: color 0.2s ease;">{{ friend['username']|safe }}</a></span>
             </div>
             <div class="add-friend add-transition">
-                <a href="/follow/{{ user_id }}/{{ friend['id'] }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background-color: #3273dc; color: white; transition: background-color 0.2s ease;"><i data-feather="user-plus"></i></a>
+                <a href="/{{exp_id}}/follow/{{ user_id }}/{{ friend['id'] }}" style="display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background-color: #3273dc; color: white; transition: background-color 0.2s ease;"><i data-feather="user-plus"></i></a>
             </div>
         </div>
         {% endfor %}
