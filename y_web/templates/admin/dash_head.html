@@ -1,7 +1,7 @@
 <div class="dashboard-toolbar">
     <h1 class="title is-4"></h1>
     <div class="actions">
-        <label class="theme-toggle">
+        <!-- <label class="theme-toggle" {# title="Toggle night mode" #}>
             <input type="checkbox"/>
             <span class="toggler">
           <span class="dark">
@@ -11,7 +11,7 @@
             <i data-feather="sun"></i>
           </span>
                         </span>
-        </label>
+        </label> -->
         <div class="buttons">
             {% if active_experiments %}
                 {% if active_experiments|length == 1 %}
@@ -30,16 +30,11 @@
                                 <i data-feather="chevron-down" style="margin-left: 0.5rem; width: 16px; height: 16px;"></i>
                             </button>
                         </div>
-                        <div class="dropdown-menu" id="join-simulation-menu" role="menu" style="min-width: 250px;">
+                        <div class="dropdown-menu" id="join-simulation-menu" role="menu">
                             <div class="dropdown-content">
                                 {% for exp in active_experiments %}
                                 <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
-                                    <strong>{{ exp.exp_name }}</strong>
-                                    <br>
-                                    <small style="color: #7a7a7a;">
-                                        {{ exp.platform_type|capitalize }} 
-                                        {% if exp.owner %} • by {{ exp.owner }}{% endif %}
-                                    </small>
+                                    {{ exp.exp_name }}
                                 </a>
                                 {% endfor %}
                             </div>
@@ -47,11 +42,11 @@
                     </div>
                 {% endif %}
             {% else %}
-                {# No active experiments #}
-                <a class="button is-solid live-button has-icon" href="/admin/experiments" title="No active experiments. Go to experiments page to activate one.">
+                {# No active experiments - disabled button #}
+                <button class="button is-solid live-button has-icon is-disabled" disabled title="No active experiments available">
                     <i data-feather="alert-circle"></i>
                     <span>No Active Experiments</span>
-                </a>
+                </button>
             {% endif %}
         </div>
     </div>
