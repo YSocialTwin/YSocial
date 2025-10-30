@@ -291,6 +291,16 @@ def create_app(db_type="sqlite"):
     def inject_exp_id():
         """Inject exp_id into all templates."""
         return dict(exp_id=get_current_experiment_id())
+    
+    @app.context_processor
+    def inject_active_experiments():
+        """Inject active experiments into all admin templates."""
+        from .models import Exps
+        try:
+            active_exps = Exps.query.filter_by(status=1).all()
+            return dict(active_experiments=active_exps)
+        except:
+            return dict(active_experiments=[])
 
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)

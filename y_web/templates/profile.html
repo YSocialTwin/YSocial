@@ -319,24 +319,24 @@
 
 
                             <button type="button" class="button {% if mode == 'recent' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/recent/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1';">
                                 Posts
                             </button>
                             {% if is_page != 1 %}
                             <button type="button" class="button {% if mode == 'comments' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/comments/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1';">
                                 Comments
                             </button>
                             <button type="button" class="button {% if mode == 'shares' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/shares/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/shares/1';">
                                 Shares
                             </button>
                             <button type="button" class="button {% if mode == 'liked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/liked/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/liked/1';">
                                 Likes
                             </button>
                             <button type="button" class="button {% if mode == 'disliked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/disliked/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1';">
                                 Dilikes
                             </button>
                             {% endif %}
