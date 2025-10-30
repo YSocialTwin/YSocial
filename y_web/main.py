@@ -109,10 +109,10 @@ def profile():
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
-    
+
     if len(exps) > 1:
         return redirect("/admin/join_simulation")
-    
+
     exp = exps[0]
     user_id = current_user.id
     return redirect(f"/{exp.idexp}/profile/{user_id}/rf/1")
@@ -335,16 +335,18 @@ def feeed_logged():
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
-    
+
     if len(exps) > 1:
         return redirect("/admin/join_simulation")
-    
+
     exp = exps[0]
     user_id = current_user.id
     return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
 def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed operation."""
@@ -1389,16 +1391,18 @@ def feeed_logged_reddit():
     if not exps:
         flash("No active experiment. Please activate an experiment first.")
         return redirect("/admin/experiments")
-    
+
     if len(exps) > 1:
         return redirect("/admin/join_simulation")
-    
+
     exp = exps[0]
     user_id = "all"  # Show all posts including user's own posts
     return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
 def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed reddit operation."""
@@ -1573,7 +1577,9 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 # API Endpoints for Infinite Scrolling
 
 
-@main.get("/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
 def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
@@ -1622,7 +1628,9 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
 def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
