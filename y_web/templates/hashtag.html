@@ -428,7 +428,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/hashtag_posts/{{hashtag_id}}',
+                apiEndpoint: '/{{exp_id}}/api/hashtag_posts/{{hashtag_id}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });

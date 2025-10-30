@@ -425,7 +425,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/interest/{{interest_id}}',
+                apiEndpoint: '/{{exp_id}}/api/interest/{{interest_id}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });

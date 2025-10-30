@@ -429,7 +429,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/emotion/{{emotion_id}}',
+                apiEndpoint: '/{{exp_id}}/api/emotion/{{emotion_id}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });

@@ -826,7 +826,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/feed/{{user_id}}/{{timeline}}/{{mode}}',
+                apiEndpoint: '/{{exp_id}}/api/feed/{{user_id}}/{{timeline}}/{{mode}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });
