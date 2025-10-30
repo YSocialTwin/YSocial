@@ -180,8 +180,6 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 
 ##############
 
-
-@deprecated
 def detect_env_handler():
     """
     Detect the active Python environment and return executable path.
@@ -440,16 +438,29 @@ def start_server(exp):
     print(f"Starting server for experiment {exp_uid} ...")
     print(f"Command: {' '.join(cmd)}")
 
-    # Start the process with Popen
-    process = subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,  # Detach from parent process group
-    )
+    try:
+        # Start the process with Popen
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,  # Detach from parent process group
+        )
 
-    print(f"Server process started with PID: {process.pid}")
+        print(f"Server process started with PID: {process.pid}")
+
+    except Exception as e:
+        # env not correctly identify, try to use the current one implicitly
+        print(f"Error starting server process: {e}")
+        cmd = [sys.executable, script_path, "-c", config]
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,  # Detach from parent process group
+        )
 
     # Save the PID to the database for persistent tracking
     exp.server_pid = process.pid
