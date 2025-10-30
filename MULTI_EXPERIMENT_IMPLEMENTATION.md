@@ -131,14 +131,14 @@ SQLALCHEMY_BINDS = {
 ```
 SQLALCHEMY_BINDS = {
     "db_admin": "sqlite:///dashboard.db",
-    "db_exp": "sqlite:///dummy.db",      # Legacy fallback
+    "db_exp": "sqlite:///dummy.db",      # Points to current request context experiment
     "db_exp_5": "sqlite:///exp_5.db",    # Experiment 5
     "db_exp_7": "sqlite:///exp_7.db",    # Experiment 7
     ...
 }
 ```
 
-The `db_exp` bind is still updated for backward compatibility, but each experiment also has its unique bind.
+**Important:** The `db_exp` bind is dynamically updated during request processing to point to the current experiment's database (based on exp_id in URL). This maintains backward compatibility with code that queries using the `db_exp` bind. However, for explicit experiment access, use the `db_exp_{exp_id}` binds directly.
 
 ## Request Flow
 
@@ -164,15 +164,17 @@ If only one experiment is active, users are redirected directly without showing 
 
 ## Testing
 
-Basic tests verify:
+Basic unit tests can be created to verify:
 1. Bind key generation for different experiment IDs
 2. Context management functions
 3. Import integrity
+4. Database registration logic
 
-To run tests:
-```bash
-python3 /tmp/test_multi_exp2.py
-```
+The existing test suite in `y_web/tests/` should be extended to cover multi-experiment scenarios. Key test cases:
+- Activating multiple experiments simultaneously
+- Switching between experiments
+- Database context isolation
+- URL generation with exp_id prefix
 
 ## Future Enhancements
 
