@@ -38,7 +38,9 @@ from .utils.text_utils import toxicity, vader_sentiment
 user = Blueprint("user_actions", __name__)
 
 
-@user.route("/<int:exp_id>/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"])
+@user.route(
+    "/<int:exp_id>/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"]
+)
 @login_required
 def follow(exp_id, user_id, follower_id):
     """
