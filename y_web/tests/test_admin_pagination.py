@@ -212,7 +212,7 @@ def app():
         models = []
         try:
             models = get_llm_models()
-        except:
+        except Exception:
             pass
 
         # Get all ollama pulls
