@@ -193,7 +193,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             profile_pic = admin.profile_pic if admin else ""
 
     # Other functions as before
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
     mutual_friends = get_mutual_friends(user_id, current_user.id)
     hashtags_top = get_top_user_hashtags(user_id, 5)
     interests = get_user_recent_interests(user_id, 5)
@@ -372,9 +372,9 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -464,11 +464,11 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
         Rendered template with hashtag posts
     """
     res = get_posts_associated_to_hashtags(
-        hashtag_id, page, per_page=10, current_user=current_user.id
+        hashtag_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/hashtag_posts/{hashtag_id}/{page - 1}")
+        return redirect(f"/{exp_id}/hashtag_posts/{hashtag_id}/{page - 1}")
 
     # get hashtag name
     hashtag = Hashtags.query.filter_by(id=hashtag_id).first().hashtag
@@ -529,11 +529,11 @@ def get_post_interest(exp_id, interest_id, page=1):
         Rendered template with interest-related posts
     """
     res = get_posts_associated_to_interest(
-        interest_id, page, per_page=10, current_user=current_user.id
+        interest_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/interest/{interest_id}/{page - 1}")
+        return redirect(f"/{exp_id}/interest/{interest_id}/{page - 1}")
 
     # get topic name
     interest = Interests.query.filter_by(iid=interest_id).first().interest
@@ -594,11 +594,11 @@ def get_post_emotion(exp_id, emotion_id, page=1):
         Rendered template with emotion-tagged posts
     """
     res = get_posts_associated_to_emotion(
-        emotion_id, page, per_page=10, current_user=current_user.id
+        emotion_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/emotion/{emotion_id}/{page - 1}")
+        return redirect(f"/{exp_id}/emotion/{emotion_id}/{page - 1}")
 
     # get emotion name
     emotion = Emotions.query.filter_by(id=emotion_id).first()
@@ -776,7 +776,7 @@ def get_thread(exp_id, post_id):
             profile_pic = ""
 
     discussion_tree = {
-        "post": augment_text(posts[0].tweet),
+        "post": augment_text(posts[0].tweet, exp_id),
         "profile_pic": profile_pic,
         "image": image,
         "shared_from": (
@@ -851,7 +851,7 @@ def get_thread(exp_id, post_id):
                 profile_pic = ""
 
         data = {
-            "post": augment_text(post.tweet),
+            "post": augment_text(post.tweet, exp_id),
             "post_id": post.id,
             "author": user.username,
             "author_id": post.user_id,
@@ -948,7 +948,7 @@ def recursive_visit(data):
             return recursive_visit(c)
 
 
-def __get_discussions(posts, username, page):
+def __get_discussions(posts, username, page, exp_id):
     """Handle   get discussions operation."""
     res = []
 
@@ -1019,7 +1019,7 @@ def __get_discussions(posts, username, page):
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(text),
+                    "post": augment_text(text, exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -1113,7 +1113,7 @@ def __get_discussions(posts, username, page):
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
@@ -1188,7 +1188,7 @@ def get_thread_reddit(exp_id, post_id):
 
     # Process post content for Reddit-style display
     title, content = process_reddit_post(posts[0].tweet)
-    processed_content = augment_text(content) if content else ""
+    processed_content = augment_text(content, exp_id) if content else ""
 
     # Get article for main post
     article = Articles.query.filter_by(id=posts[0].news_id).first()
@@ -1281,7 +1281,7 @@ def get_thread_reddit(exp_id, post_id):
 
         # Process comment content for Reddit-style display
         comment_title, comment_content = process_reddit_post(post.tweet)
-        processed_comment = augment_text(comment_content) if comment_content else ""
+        processed_comment = augment_text(comment_content, exp_id) if comment_content else ""
 
         # Get article for comment (if any)
         article = Articles.query.filter_by(id=post.news_id).first()
@@ -1415,8 +1415,6 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 
     feed_type = request.args.get("feed_type", "new")
 
-    print("HERE", feed_type)
-
     if user_id == "all":
         if feed_type == "top":
             # Top: all time, by upvotes - downvotes
@@ -1495,9 +1493,9 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1607,9 +1605,9 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1722,7 +1720,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
     if posts is not None:
         res = __get_discussions(posts, username, page)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1750,7 +1748,7 @@ def api_hashtag_posts(exp_id, hashtag_id, page=1):
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_hashtags(
-        hashtag_id, page, per_page=10, current_user=current_user.id
+        hashtag_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
         "components/posts.html",
@@ -1773,7 +1771,7 @@ def api_interest_posts(exp_id, interest_id, page=1):
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_interest(
-        interest_id, page, per_page=10, current_user=current_user.id
+        interest_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
         "components/posts.html",
@@ -1796,7 +1794,7 @@ def api_emotion_posts(exp_id, emotion_id, page=1):
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_emotion(
-        emotion_id, page, per_page=10, current_user=current_user.id
+        emotion_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id,
     )
     html = render_template(
         "components/posts.html",
@@ -1818,7 +1816,7 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
 
     Returns rendered HTML for posts.
     """
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
     html = render_template(
         "components/posts.html",
         items=rp,

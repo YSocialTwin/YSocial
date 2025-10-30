@@ -75,7 +75,7 @@ def get_safe_profile_pic(username, is_page=0):
     return ""
 
 
-def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=None):
+def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=None, exp_id=None):
     """
     Retrieve paginated posts for a specific user based on filter mode.
 
@@ -203,7 +203,7 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(text),
+                    "post": augment_text(text, exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -292,7 +292,7 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
                 "profile_pic": profile_pic,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
@@ -323,7 +323,7 @@ def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=No
     return res
 
 
-def augment_text(text):
+def augment_text(text, exp_id):
     """Augment the text by adding links to the mentions and hashtags.
 
     Args:
@@ -357,10 +357,10 @@ def augment_text(text):
 
     # Replace the mentions and hashtags with the links
     for m, uid in mentioned_users.items():
-        text = text.replace(m, f'<a href="/profile/{uid}/recent/1"> {m} </a>')
+        text = text.replace(m, f'<a href="/{exp_id}/profile/{uid}/recent/1"> {m} </a>')
 
     for h, hid in used_hastag.items():
-        text = text.replace(h, f'<a href="/hashtag_posts/{hid}/1"> {h} </a>')
+        text = text.replace(h, f'<a href="/{exp_id}/hashtag_posts/{hid}/1"> {h} </a>')
 
     # remove first character it is a space
     if len(text) > 0:
@@ -681,7 +681,7 @@ def get_trending_topics(limit=10, window=120):
     return [{"id": t[0], "topic": t[1], "count": t[2]} for t in tp]
 
 
-def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user=None):
+def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user=None, exp_id=None):
     """Get the posts associated to the given hashtag.
 
     Args:
@@ -758,7 +758,7 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(c.tweet.split(":")[-1]),
+                    "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -847,7 +847,7 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
@@ -878,7 +878,7 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
     return res
 
 
-def get_posts_associated_to_interest(interest_id, page, per_page=10, current_user=None):
+def get_posts_associated_to_interest(interest_id, page, per_page=10, current_user=None, exp_id=None):
     """Get the posts associated to the given interest.
 
     Args:
@@ -954,7 +954,7 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(c.tweet.split(":")[-1]),
+                    "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -1039,7 +1039,7 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
@@ -1070,7 +1070,7 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
     return res
 
 
-def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=None):
+def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=None, exp_id=None):
     """Get the posts associated to the given emotion.
 
     Args:
@@ -1147,7 +1147,7 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(c.tweet.split(":")[-1]),
+                    "post": augment_text(c.tweet.split(":")[-1], exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -1232,7 +1232,7 @@ def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=
                 "profile_pic": profile_pic,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
