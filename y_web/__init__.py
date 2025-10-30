@@ -190,64 +190,17 @@ def create_postgresql_db(app):
 
 
 def cleanup_subprocesses_only():
-    """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
+    """
+    OS-level cleanup only: terminate PIDs/Processes. No DB operations.
+
+    This function is called via atexit, where there is no Flask app context.
+    Database-based cleanup is handled by cleanup_db_jupyter_with_new_app() which
+    creates its own app context and calls stop_all_exps().
+    """
     print("Cleaning up subprocesses (OS-level only)...")
-
-    # Cleanup client processes using PIDs from database
-    try:
-        from y_web import db as db_module
-        from y_web.models import Client
-
-        # Query clients with PIDs
-        clients = db_module.session.query(Client).filter(Client.pid.isnot(None)).all()
-        for client in clients:
-            try:
-                pid = client.pid
-                print(f"Terminating client {client.name} pid={pid}")
-                # Try to terminate the process
-                os.kill(pid, signal.SIGTERM)
-                time.sleep(0.5)
-                # Check if still running
-                try:
-                    os.kill(pid, 0)
-                    # Still running, force kill
-                    os.kill(pid, signal.SIGKILL)
-                except OSError:
-                    pass  # Process already terminated
-            except OSError as e:
-                print(f"Client process {pid} no longer exists: {e}")
-            except Exception as e:
-                print(f"Error terminating client subprocess: {e}")
-    except Exception as e:
-        print(f"Error during client cleanup: {e}")
-
-    # Cleanup server processes using PIDs from database
-    try:
-        from y_web import db as db_module
-        from y_web.models import Exps
-
-        # Query experiments with server PIDs
-        exps = db_module.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()
-        for exp in exps:
-            try:
-                pid = exp.server_pid
-                print(f"Terminating server for experiment {exp.idexp} pid={pid}")
-                # Try to terminate the process
-                os.kill(pid, signal.SIGTERM)
-                time.sleep(0.5)
-                # Check if still running
-                try:
-                    os.kill(pid, 0)
-                    # Still running, force kill
-                    os.kill(pid, signal.SIGKILL)
-                except OSError:
-                    pass  # Process already terminated
-            except OSError as e:
-                print(f"Server process {pid} no longer exists: {e}")
-            except Exception as e:
-                print(f"Error terminating server subprocess: {e}")
-    except Exception as e:
-        print(f"Error during server cleanup: {e}")
+    print(
+        "Note: Process cleanup via database is handled by cleanup_db_jupyter_with_new_app()"
+    )
 
 
 def cleanup_db_jupyter_with_new_app():

@@ -83,10 +83,53 @@ def cleanup_server_processes_from_db():
         print(f"Error during server process cleanup: {e}")
 
 
+def cleanup_client_processes_from_db():
+    """
+    Cleanup client processes based on PIDs stored in the database.
+
+    This function is useful when the application restarts and there are
+    still running client processes from previous sessions. It reads PIDs
+    from the database and attempts to terminate them.
+    """
+    try:
+        clients = db.session.query(Client).filter(Client.pid.isnot(None)).all()
+        for client in clients:
+            try:
+                print(
+                    f"Attempting to terminate client process PID {client.pid} for client {client.id}"
+                )
+                os.kill(client.pid, signal.SIGTERM)
+                time.sleep(1)
+                # Check if process is still running
+                try:
+                    os.kill(client.pid, 0)  # Check if process exists
+                    # If we get here, process is still running, force kill
+                    print(f"Process {client.pid} still running, sending SIGKILL")
+                    os.kill(client.pid, signal.SIGKILL)
+                except OSError:
+                    # Process doesn't exist anymore
+                    pass
+                # Clear the PID from database
+                client.pid = None
+            except OSError as e:
+                # Process doesn't exist
+                print(f"Process {client.pid} no longer exists: {e}")
+                client.pid = None
+            except Exception as e:
+                print(f"Error terminating client process {client.pid}: {e}")
+        # Commit all changes at once
+        db.session.commit()
+    except Exception as e:
+        print(f"Error during client process cleanup: {e}")
+
+
 def stop_all_exps():
-    """Stop all experiments and terminate server processes"""
+    """Stop all experiments and terminate server and client processes"""
     # Terminate all running server processes
     cleanup_server_processes_from_db()
+
+    # Terminate all running client processes
+    cleanup_client_processes_from_db()
 
     # set to 0 all Exps.running
     exps = db.session.query(Exps).all()
@@ -94,10 +137,11 @@ def stop_all_exps():
         exp.running = 0
         exp.server_pid = None
 
-    # terminate all clients
+    # set to 0 all Client.status
     clis = db.session.query(Client).all()
     for cli in clis:
         cli.status = 0
+        cli.pid = None
 
     # Commit all changes at once
     db.session.commit()
