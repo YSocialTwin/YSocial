@@ -16,10 +16,6 @@ Key components:
 import atexit
 import os
 import shutil
-import signal
-import subprocess
-import time
-
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -189,20 +185,6 @@ def create_postgresql_db(app):
     admin_engine.dispose()
 
 
-def cleanup_subprocesses_only():
-    """
-    OS-level cleanup only: terminate PIDs/Processes. No DB operations.
-
-    This function is called via atexit, where there is no Flask app context.
-    Database-based cleanup is handled by cleanup_db_jupyter_with_new_app() which
-    creates its own app context and calls stop_all_exps().
-    """
-    print("Cleaning up subprocesses (OS-level only)...")
-    print(
-        "Note: Process cleanup via database is handled by cleanup_db_jupyter_with_new_app()"
-    )
-
-
 def cleanup_db_jupyter_with_new_app():
     """
     Create a fresh app instance to get a valid app context, then run DB cleanup.
@@ -227,7 +209,6 @@ def cleanup_db_jupyter_with_new_app():
         print("Error during DB cleanup with fresh app:", e)
 
 
-atexit.register(cleanup_subprocesses_only)
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 
