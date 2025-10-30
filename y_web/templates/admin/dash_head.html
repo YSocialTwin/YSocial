@@ -13,10 +13,46 @@
                         </span>
         </label>
         <div class="buttons">
-            <a class="button is-solid live-button has-icon" href="/admin/join_simulation">
-                <i data-feather="video"></i>
-                <span>Join Active Simulation</span>
-            </a>
+            {% if active_experiments %}
+                {% if active_experiments|length == 1 %}
+                    {# Single experiment - direct link #}
+                    <a class="button is-solid live-button has-icon" href="/admin/join_experiment/{{ active_experiments[0].idexp }}">
+                        <i data-feather="video"></i>
+                        <span>Join {{ active_experiments[0].exp_name }}</span>
+                    </a>
+                {% else %}
+                    {# Multiple experiments - dropdown menu #}
+                    <div class="dropdown is-hoverable">
+                        <div class="dropdown-trigger">
+                            <button class="button is-solid live-button has-icon" aria-haspopup="true" aria-controls="join-simulation-menu">
+                                <i data-feather="video"></i>
+                                <span>Join Simulation</span>
+                                <i data-feather="chevron-down" style="margin-left: 0.5rem; width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="join-simulation-menu" role="menu" style="min-width: 250px;">
+                            <div class="dropdown-content">
+                                {% for exp in active_experiments %}
+                                <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
+                                    <strong>{{ exp.exp_name }}</strong>
+                                    <br>
+                                    <small style="color: #7a7a7a;">
+                                        {{ exp.platform_type|capitalize }} 
+                                        {% if exp.owner %} • by {{ exp.owner }}{% endif %}
+                                    </small>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                {# No active experiments #}
+                <a class="button is-solid live-button has-icon" href="/admin/experiments" title="No active experiments. Go to experiments page to activate one.">
+                    <i data-feather="alert-circle"></i>
+                    <span>No Active Experiments</span>
+                </a>
+            {% endif %}
         </div>
     </div>
 </div>

@@ -279,6 +279,43 @@ def create_app(db_type="sqlite"):
         """
         return User.query.get(int(user_id))
 
+    # Setup experiment context handler
+    from .experiment_context import (
+        get_current_experiment_id,
+        initialize_active_experiment_databases,
+        setup_experiment_context,
+        teardown_experiment_context,
+    )
+
+    @app.before_request
+    def before_request_handler():
+        """Setup experiment context for each request."""
+        setup_experiment_context()
+
+    @app.teardown_request
+    def teardown_request_handler(exception=None):
+        """Restore experiment context after each request."""
+        teardown_experiment_context(exception)
+
+    @app.context_processor
+    def inject_exp_id():
+        """Inject exp_id into all templates."""
+        return dict(exp_id=get_current_experiment_id())
+
+    @app.context_processor
+    def inject_active_experiments():
+        """Inject active experiments into all admin templates."""
+        from .models import Exps
+
+        try:
+            active_exps = Exps.query.filter_by(status=1).all()
+            return dict(active_experiments=active_exps)
+        except:
+            return dict(active_experiments=[])
+
+    # Initialize database bindings for all active experiments
+    initialize_active_experiment_databases(app)
+
     # Register your blueprints here as before
     from .auth import auth as auth_blueprint
 

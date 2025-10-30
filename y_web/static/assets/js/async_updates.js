@@ -3,7 +3,7 @@ $(document).on('click','#follow',function(e)
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/follow/'+  document.getElementById("follow").getAttribute("res"),
+        url:(window.EXP_PREFIX || '') + '/follow/'+  document.getElementById("follow").getAttribute("res"),
         //data:{
         //  todo:$("#follow").val()
         //},
@@ -24,7 +24,7 @@ $(document).on('click','#publish-button',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/publish',
+        url:(window.EXP_PREFIX || '') + '/publish',
         data:{
           post: document.getElementById("publish").value,
             url: document.getElementById("link_post").value,
@@ -41,7 +41,7 @@ $(document).on('click','.dropdown-item',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/delete_post',
+        url:(window.EXP_PREFIX || '') + '/delete_post',
         data:{
           post_id: post_id,
         },
@@ -74,7 +74,7 @@ $(document).on('click','#add_comment',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/publish_comment',
+        url:(window.EXP_PREFIX || '') + '/publish_comment',
         data: {
             post: content.value,
             parent: elem_id,
@@ -105,7 +105,7 @@ $(document).on('click','.share-button',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/share_content',
+        url:(window.EXP_PREFIX || '') + '/share_content',
         data: {
             post_id: elem_id,
         },
@@ -148,7 +148,7 @@ $(document).on('click','.like-button',function(e)
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/react_to_content',
+        url:(window.EXP_PREFIX || '') + '/react_to_content',
         data: {
             post_id: elem_id,
             action: "like",
@@ -191,7 +191,7 @@ $(document).on('click','.dislike-button',function(e)
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/react_to_content',
+        url:(window.EXP_PREFIX || '') + '/react_to_content',
         data: {
             post_id: elem_id,
             action: "dislike",
@@ -254,7 +254,7 @@ $(document).on('click','.like-count',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/react_to_content',
+        url:(window.EXP_PREFIX || '') + '/react_to_content',
         data: {
             post_id: elem_id,
             action: "like",
@@ -299,7 +299,7 @@ $(document).on('click','.dislike-count',function(e) {
     e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/react_to_content',
+        url:(window.EXP_PREFIX || '') + '/react_to_content',
         data: {
             post_id: elem_id,
             action: "dislike",
@@ -334,7 +334,7 @@ $(document).on('click','.share-count',function(e) {
     e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/share_content',
+        url:(window.EXP_PREFIX || '') + '/share_content',
         data: {
             post_id: elem_id,
         },
@@ -359,7 +359,7 @@ $(document).on('click','.cancel-notification',function(e) {
       e.preventDefault();
       $.ajax({
         type:'GET',
-        url:'/cancel_notification',
+        url:(window.EXP_PREFIX || '') + '/cancel_notification',
         data:{
           post_id: post_id,
         },

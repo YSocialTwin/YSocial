@@ -12,7 +12,7 @@
                     </div>
                     <div class="settings-form-wrapper">
                         <div class="settings-form">
-                          <form action="/update_profile_data/{{ user.id }}" enctype="multipart/form-data" method="POST">
+                          <form action="/{{exp_id}}/update_profile_data/{{ user.id }}" enctype="multipart/form-data" method="POST">
                             <div class="columns is-multiline">
                                 <div class="column is-6">
                                     <!--Field-->
@@ -245,7 +245,7 @@
                     <div class="title-wrap">
                         <h2 style="font-family: 'Montserrat', sans-serif; font-size: 1.2rem; font-weight: 500; color: #999;">Security</h2>
                     </div>
-                    <form action="/update_password/{{ user.id }}" enctype="multipart/form-data" method="POST">
+                    <form action="/{{exp_id}}/update_password/{{ user.id }}" enctype="multipart/form-data" method="POST">
 
                       {% for message in get_flashed_messages() %}
                     <div class="alert alert-warning" style="color: #856404; background-color: #fff3cd; border-color: #ffeeba;">
@@ -315,6 +315,12 @@
     </div>
 
 
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>

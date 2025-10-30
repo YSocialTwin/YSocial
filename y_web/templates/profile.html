@@ -106,13 +106,13 @@
 
                     <div class="profile-menu is-hidden-mobile">
                         <div class="menu-start">
-                            <a href="{{ url_for('main.feeed_logged')}}/{{ user['user_data']['id'] }}/feeds/rf/1"
+                            <a href="/{{exp_id}}/{{ url_for('main.feeed_logged')}}/{{ user['user_data']['id'] }}/feeds/rf/1"
                                class="button has-min-width">Feeds</a>
                         </div>
                         <div class="menu-end">
                             <a
                                     id="profile-friends-link"
-                                    href="/friends/{{ user_id }}/1"
+                                    href="/{{exp_id}}/friends/{{ user_id }}/1"
                                     class="button has-min-width"
                             >Contacts</a
                             >
@@ -206,7 +206,7 @@
                                 <div>
                                     <span>Interested in</span>
                                     {% for interest in interests %}
-                                    <a href="/interest/{{ interest[1] }}/1" class="is-muted"> {{ interest[0] }} ({{
+                                    <a href="/{{exp_id}}/interest/{{ interest[1] }}/1" class="is-muted"> {{ interest[0] }} ({{
                                         interest[2] }}) </a>
                                     {% endfor %}
                                 </div>
@@ -257,7 +257,7 @@
                                         data-user-popover="1"
                                 />
                                 <div class="text-content">
-                                    <a href="/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
+                                    <a href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -301,7 +301,7 @@
                                 {% for ht in hashtags %}
                                 <div class="story-block">
                                     <div class="story-meta">
-                                        <span><a href="/hashtag_posts/{{ ht['id'] }}/1">{{ ht['hashtag'] }}</a></span>
+                                        <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1">{{ ht['hashtag'] }}</a></span>
                                         <span>({{ ht['count'] }})</span>
                                     </div>
                                 </div>
@@ -319,24 +319,24 @@
 
 
                             <button type="button" class="button {% if mode == 'recent' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/recent/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1';">
                                 Posts
                             </button>
                             {% if is_page != 1 %}
                             <button type="button" class="button {% if mode == 'comments' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/comments/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1';">
                                 Comments
                             </button>
                             <button type="button" class="button {% if mode == 'shares' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/shares/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/shares/1';">
                                 Shares
                             </button>
                             <button type="button" class="button {% if mode == 'liked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/liked/1';">
+                                    onclick="window.location.href = '/{{ exp_id }}/profile/{{ user['user_data']['id'] }}/liked/1';">
                                 Likes
                             </button>
                             <button type="button" class="button {% if mode == 'disliked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/profile/{{ user['user_data']['id'] }}/disliked/1';">
+                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1';">
                                 Dilikes
                             </button>
                             {% endif %}
@@ -358,6 +358,12 @@
     </div>
     <!-- /Container -->
 </div>
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
@@ -415,7 +421,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/profile/{{user_id}}/{{mode}}',
+                apiEndpoint: '/{{exp_id}}/api/profile/{{user_id}}/{{mode}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });

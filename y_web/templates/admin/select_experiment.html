@@ -1,0 +1,123 @@
+{% include "admin/head.html" %}
+
+<style>
+    .experiment-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+    }
+    .experiment-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-color: #22c55e;
+    }
+    .experiment-card h3 {
+        font-size: 1.25em;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 8px 0;
+    }
+    .experiment-card .experiment-info {
+        font-size: 0.9em;
+        color: #6b7280;
+        margin-bottom: 12px;
+    }
+    .experiment-card .experiment-info span {
+        margin-right: 16px;
+        display: inline-block;
+    }
+    .experiment-card .experiment-info .mdi {
+        margin-right: 4px;
+    }
+    .experiment-card .join-button {
+        width: 100%;
+        margin-top: 8px;
+    }
+    .page-header {
+        margin-bottom: 24px;
+    }
+    .page-header h2 {
+        font-size: 1.75em;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0 0 8px 0;
+    }
+    .page-header p {
+        font-size: 0.95em;
+        color: #6b7280;
+        margin: 0;
+    }
+</style>
+
+<body class="is-theme-core">
+    <div class="pageloader"></div>
+    <div class="infraloader is-active"></div>
+    <div class="app-overlay"></div>
+
+    {% include "admin/dash_head.html" %}
+
+    <div id="main-sidebar" class="sidebar-panel is-bordered">
+        <div class="subpanel-header">
+            <h3 class="no-mb">Select Experiment</h3>
+        </div>
+
+        <div class="inner" data-simplebar>
+            <ul>
+                <li>
+                    <a href="/admin/experiments">
+                        <i data-feather="grid"></i>
+                        <span>Back to Experiments</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="main-section" class="main-section is-bordered">
+        <div class="container">
+            <div class="page-header">
+                <h2>Select an Experiment to Join</h2>
+                <p>Choose one of the active experiments below to enter the simulation.</p>
+            </div>
+
+            <div class="experiments-grid">
+                {% for exp in experiments %}
+                <div class="experiment-card">
+                    <h3>{{ exp.exp_name }}</h3>
+                    <div class="experiment-info">
+                        <span>
+                            <i class="mdi mdi-account"></i>
+                            Owner: {{ exp.owner }}
+                        </span>
+                        <span>
+                            <i class="mdi mdi-application"></i>
+                            Platform: {{ exp.platform_type }}
+                        </span>
+                        {% if exp.port %}
+                        <span>
+                            <i class="mdi mdi-server"></i>
+                            Port: {{ exp.port }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% if exp.exp_descr %}
+                    <p style="font-size: 0.9em; color: #374151; margin-bottom: 12px;">
+                        {{ exp.exp_descr }}
+                    </p>
+                    {% endif %}
+                    <a href="/admin/join_experiment/{{ exp.idexp }}" 
+                       class="button is-solid primary-button join-button">
+                        <span class="mdi mdi-login"></span>
+                        <span>Join {{ exp.exp_name }}</span>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    {% include "admin/footer.html" %}
+</body>

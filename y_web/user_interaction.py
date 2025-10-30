@@ -38,9 +38,11 @@ from .utils.text_utils import toxicity, vader_sentiment
 user = Blueprint("user_actions", __name__)
 
 
-@user.route("/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"])
+@user.route(
+    "/<int:exp_id>/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"]
+)
 @login_required
-def follow(user_id, follower_id):
+def follow(exp_id, user_id, follower_id):
     """
     Handle follow/unfollow action between users.
 
@@ -88,9 +90,9 @@ def follow(user_id, follower_id):
     return redirect(request.referrer)
 
 
-@user.route("/share_content")
+@user.route("/<int:exp_id>/share_content")
 @login_required
-def share_content():
+def share_content(exp_id):
     """
     Share/retweet an existing post.
 
@@ -133,9 +135,9 @@ def share_content():
     return redirect(request.referrer)
 
 
-@user.route("/react_to_content")
+@user.route("/<int:exp_id>/react_to_content")
 @login_required
-def react():
+def react(exp_id):
     """Handle react operation."""
     post_id = request.args.get("post_id")
     action = request.args.get("action")
@@ -174,9 +176,9 @@ def react():
     return {"message": "Reaction added successfully", "status": 200}
 
 
-@user.route("/publish")
+@user.route("/<int:exp_id>/publish")
 @login_required
-def publish_post():
+def publish_post(exp_id):
     """
     Publish a new post from form submission.
 
@@ -309,9 +311,9 @@ def publish_post():
     return {"message": "Published successfully", "status": 200}
 
 
-@user.route("/publish_reddit")
+@user.route("/<int:exp_id>/publish_reddit")
 @login_required
-def publish_post_reddit():
+def publish_post_reddit(exp_id):
     """
     Publish a new Reddit-style post with title and content.
 
@@ -508,9 +510,9 @@ def publish_post_reddit():
     return {"message": "Published successfully", "status": 200}
 
 
-@user.route("/publish_comment")
+@user.route("/<int:exp_id>/publish_comment")
 @login_required
-def publish_comment():
+def publish_comment(exp_id):
     """
     Publish a comment on a post from form submission.
 
@@ -642,9 +644,9 @@ def publish_comment():
     return {"message": "Published successfully", "status": 200}
 
 
-@user.route("/delete_post")
+@user.route("/<int:exp_id>/delete_post")
 @login_required
-def delete_post():
+def delete_post(exp_id):
     """Delete post."""
     post_id = request.args.get("post_id")
 
@@ -655,9 +657,9 @@ def delete_post():
     return {"message": "Reaction added successfully", "status": 200}
 
 
-@user.route("/cancel_notification")
+@user.route("/<int:exp_id>/cancel_notification")
 @login_required
-def cancel_notification():
+def cancel_notification(exp_id):
     """Handle cancel notification operation."""
     pid = request.args.get("post_id")
 

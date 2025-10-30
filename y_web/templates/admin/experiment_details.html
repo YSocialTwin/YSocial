@@ -155,8 +155,8 @@
                                                 <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
-                                            <a class="link-tooltip" href="/admin/join_simulation" title="Join Simulation">
-                                                <i class="mdi mdi-plus-box" style="font-size: 24px;"></i>
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" title="Join This Experiment">
+                                                <i class="mdi mdi-login" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
                                         </div>
