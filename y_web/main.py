@@ -1720,7 +1720,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
         res_additional = __get_discussions(additional, username, page, exp_id)
 
