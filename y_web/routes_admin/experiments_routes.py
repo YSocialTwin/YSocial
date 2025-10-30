@@ -94,8 +94,8 @@ def get_suggested_port():
         if is_port_free(port):
             return port
 
-    # Fallback to 5000 if no port is available
-    return 5000
+    # Return None if no port is available
+    return None
 
 
 def is_port_free(port):
