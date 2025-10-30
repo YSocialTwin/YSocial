@@ -181,7 +181,7 @@ def build_screen_command_old(script_path, config_path, screen_name=None):
 
 ##############
 
-
+@deprecated
 def detect_env_handler():
     """
     Detect the active Python environment and return executable path.
@@ -229,6 +229,7 @@ def detect_env_handler():
     return str(python_exe)
 
 
+@deprecated
 def build_screen_command(script_path, config_path, screen_name=None):
     """
     Build a screen command to run Python script in detected environment.
@@ -262,7 +263,7 @@ def build_screen_command(script_path, config_path, screen_name=None):
 
 #############
 
-
+@deprecated
 def terminate_process_on_port(port):
     """
     Terminate the process using the specified port.
