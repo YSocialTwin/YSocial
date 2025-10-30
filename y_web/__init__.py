@@ -16,6 +16,7 @@ Key components:
 import atexit
 import os
 import shutil
+
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
