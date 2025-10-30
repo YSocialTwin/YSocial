@@ -386,6 +386,7 @@ class Exps(db.Model):
     port = db.Column(db.Integer, nullable=False)
     server = db.Column(db.String(50), nullable=False, default="127.0.0.1")
     annotations = db.Column(db.String(500), nullable=False, default="")
+    server_pid = db.Column(db.Integer, nullable=True, default=None)
 
 
 class Exp_stats(db.Model):
@@ -604,6 +605,7 @@ class Client(db.Model):
     network_type = db.Column(db.String(50), default="")
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
+    pid = db.Column(db.Integer, nullable=True, default=None)
 
 
 class Client_Execution(db.Model):

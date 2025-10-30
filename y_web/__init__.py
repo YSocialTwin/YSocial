@@ -16,15 +16,12 @@ Key components:
 import atexit
 import os
 import shutil
-import signal
 
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-client_processes = {}
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -189,18 +186,6 @@ def create_postgresql_db(app):
     admin_engine.dispose()
 
 
-def cleanup_subprocesses_only():
-    """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
-    print("Cleaning up subprocesses (OS-level only)...")
-    for name, proc in client_processes.items():
-        try:
-            print(f"Terminating {name} pid={getattr(proc, 'pid', None)}")
-            proc.terminate()
-            proc.join(timeout=5)
-        except Exception as e:
-            print("Error terminating subprocess:", e)
-
-
 def cleanup_db_jupyter_with_new_app():
     """
     Create a fresh app instance to get a valid app context, then run DB cleanup.
@@ -225,7 +210,6 @@ def cleanup_db_jupyter_with_new_app():
         print("Error during DB cleanup with fresh app:", e)
 
 
-atexit.register(cleanup_subprocesses_only)
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 

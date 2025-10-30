@@ -67,66 +67,98 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="days"
                                                                                        class="input"
-                                                                                       value="30"></span>
+                                                                                       min="1"
+                                                                                       step="1"
+                                                                                       value="30"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% New Agents (daily)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="percentage_new_agents_iteration"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       min="0"
+                                                                                       max="1"
+                                                                                       step="0.01"
+                                                                                       value="0"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% Daily Churn</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="percentage_removed_agents_iteration"
                                                                                        class="input"
-                                                                                       value="0"></span>
+                                                                                       min="0"
+                                                                                       max="1"
+                                                                                       step="0.01"
+                                                                                       value="0"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Thread Context Length</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="max_length_thread_reading"
                                                                                        class="input"
-                                                                                       value="5"></span>
+                                                                                       min="1"
+                                                                                       step="1"
+                                                                                       value="5"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Timeline Follower Ratio</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="reading_from_follower_ratio"
                                                                                        class="input"
-                                                                                       value="0.6"></span>
+                                                                                       min="0"
+                                                                                       max="1"
+                                                                                       step="0.01"
+                                                                                       value="0.6"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Daily Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="probability_of_daily_follow"
                                                                                        class="input"
-                                                                                       value="0.1"></span>
+                                                                                       min="0"
+                                                                                       max="1"
+                                                                                       step="0.01"
+                                                                                       value="0.1"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Secondary Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="probability_of_secondary_follow"
                                                                                        class="input"
-                                                                                       value="0.0"></span>
+                                                                                       min="0"
+                                                                                       max="1"
+                                                                                       step="0.01"
+                                                                                       value="0.0"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Agents' Memory (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="attention_window"
                                                                                        class="input"
-                                                                                       value="336"></span>
+                                                                                       min="1"
+                                                                                       step="1"
+                                                                                       value="336"
+                                                                                       required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Content Visibility (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+                                        <span class="right" style="width: 70%;"><input type="number"
                                                                                        name="visibility_rounds"
                                                                                        class="input"
-                                                                                       value="36"></span>
+                                                                                       min="1"
+                                                                                       step="1"
+                                                                                       value="36"
+                                                                                       required></span>
                                     </div>
                                     <div class="form-section-header">Agents' Actions Relevance</div>
                                     <div class="form-section-description">

@@ -144,7 +144,7 @@ def run_client(uid, idexp):
 
     # get population of the experiment
     population = Population.query.filter_by(id=client.population_id).first()
-    start_client(exp, client, population)
+    start_client(exp, client, population, resume=True)
 
     # set the population_experiment running_status
     db.session.query(Client).filter_by(id=uid).update({Client.status: 1})
@@ -298,6 +298,39 @@ def create_client():
     user_type = request.form.get("user_type")
     crecsys = request.form.get("recsys_type")
     frecsys = request.form.get("frecsys_type")
+
+    # Validate simulation parameters
+    try:
+        # Validate numeric fields
+        days = int(days)
+        max_length_thread_reading = int(max_length_thread_reading)
+        attention_window = int(attention_window)
+        visibility_rounds = int(visibility_rounds)
+
+        # Validate probability fields (must be float in [0, 1])
+        percentage_new_agents_iteration = float(percentage_new_agents_iteration)
+        percentage_removed_agents_iteration = float(percentage_removed_agents_iteration)
+        reading_from_follower_ratio = float(reading_from_follower_ratio)
+        probability_of_daily_follow = float(probability_of_daily_follow)
+        probability_of_secondary_follow = float(probability_of_secondary_follow)
+
+        # Check probability ranges
+        probabilities = {
+            "% New Agents (daily)": percentage_new_agents_iteration,
+            "% Daily Churn": percentage_removed_agents_iteration,
+            "Timeline Follower Ratio": reading_from_follower_ratio,
+            "Probability Daily Follow": probability_of_daily_follow,
+            "Probability Secondary Follow": probability_of_secondary_follow,
+        }
+
+        for field_name, value in probabilities.items():
+            if not (0 <= value <= 1):
+                flash(f"{field_name} must be between 0 and 1")
+                return redirect(request.referrer)
+
+    except (ValueError, TypeError) as e:
+        flash("All simulation parameters must be valid numeric values")
+        return redirect(request.referrer)
 
     # Fetch optional network configuration
     network_model = request.form.get("network_model")

@@ -13,6 +13,7 @@ import os
 import random
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -28,7 +29,7 @@ from ollama import Client as oclient
 from requests import post
 from sklearn.utils import deprecated
 
-from y_web import client_processes, db
+from y_web import db
 from y_web.models import (
     ActivityProfile,
     Client,
@@ -38,19 +39,112 @@ from y_web.models import (
     PopulationActivityProfile,
 )
 
+# Dictionary to track Ollama model download processes
+ollama_processes = {}
+
+
+def cleanup_server_processes_from_db():
+    """
+    Cleanup server processes based on PIDs stored in the database.
+
+    This function is useful when the application restarts and there are
+    still running server processes from previous sessions. It reads PIDs
+    from the database and attempts to terminate them.
+    """
+    try:
+        exps = db.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()
+        for exp in exps:
+            try:
+                print(
+                    f"Attempting to terminate server process PID {exp.server_pid} for experiment {exp.idexp}"
+                )
+                os.kill(exp.server_pid, signal.SIGTERM)
+                time.sleep(1)
+                # Check if process is still running
+                try:
+                    os.kill(exp.server_pid, 0)  # Check if process exists
+                    # If we get here, process is still running, force kill
+                    print(f"Process {exp.server_pid} still running, sending SIGKILL")
+                    os.kill(exp.server_pid, signal.SIGKILL)
+                except OSError:
+                    # Process doesn't exist anymore
+                    pass
+                # Clear the PID from database
+                exp.server_pid = None
+            except OSError as e:
+                # Process doesn't exist
+                print(f"Process {exp.server_pid} no longer exists: {e}")
+                exp.server_pid = None
+            except Exception as e:
+                print(f"Error terminating server process {exp.server_pid}: {e}")
+        # Commit all changes at once
+        db.session.commit()
+    except Exception as e:
+        print(f"Error during server process cleanup: {e}")
+
+
+def cleanup_client_processes_from_db():
+    """
+    Cleanup client processes based on PIDs stored in the database.
+
+    This function is useful when the application restarts and there are
+    still running client processes from previous sessions. It reads PIDs
+    from the database and attempts to terminate them.
+    """
+    try:
+        clients = db.session.query(Client).filter(Client.pid.isnot(None)).all()
+        for client in clients:
+            try:
+                print(
+                    f"Attempting to terminate client process PID {client.pid} for client {client.id}"
+                )
+                os.kill(client.pid, signal.SIGTERM)
+                time.sleep(1)
+                # Check if process is still running
+                try:
+                    os.kill(client.pid, 0)  # Check if process exists
+                    # If we get here, process is still running, force kill
+                    print(f"Process {client.pid} still running, sending SIGKILL")
+                    os.kill(client.pid, signal.SIGKILL)
+                except OSError:
+                    # Process doesn't exist anymore
+                    pass
+                # Clear the PID from database
+                client.pid = None
+            except OSError as e:
+                # Process doesn't exist
+                print(f"Process {client.pid} no longer exists: {e}")
+                client.pid = None
+            except Exception as e:
+                print(f"Error terminating client process {client.pid}: {e}")
+        # Commit all changes at once
+        db.session.commit()
+    except Exception as e:
+        print(f"Error during client process cleanup: {e}")
+
 
 def stop_all_exps():
-    """Stop all clients"""
+    """Stop all experiments and terminate server and client processes"""
+    # Terminate all running server processes
+    cleanup_server_processes_from_db()
+
+    # Terminate all running client processes
+    cleanup_client_processes_from_db()
+
     # set to 0 all Exps.running
     exps = db.session.query(Exps).all()
     for exp in exps:
         exp.running = 0
-        db.session.commit()
-    # terminate all clients
+        exp.server_pid = None
+
+    # set to 0 all Client.status
     clis = db.session.query(Client).all()
     for cli in clis:
         cli.status = 0
-        db.session.commit()
+        cli.pid = None
+
+    # Commit all changes at once
+    db.session.commit()
 
 
 @deprecated
@@ -181,6 +275,7 @@ def detect_env_handler():
     return str(python_exe)
 
 
+@deprecated
 def build_screen_command(script_path, config_path, screen_name=None):
     """
     Build a screen command to run Python script in detected environment.
@@ -215,11 +310,18 @@ def build_screen_command(script_path, config_path, screen_name=None):
 #############
 
 
+@deprecated
 def terminate_process_on_port(port):
-    """Terminate the process using the specified port
+    """
+    Terminate the process using the specified port.
+
+    This function is deprecated in favor of terminate_server_process() for
+    processes managed via subprocess.Popen, but is kept for compatibility
+    with legacy screen-based processes.
 
     Args:
-        port: the port number"""
+        port: the port number
+    """
     try:
         result = subprocess.run(
             ["lsof", "-t", "-i", f":{port}"], capture_output=True, text=True, check=True
@@ -237,11 +339,217 @@ def terminate_process_on_port(port):
         pass
 
 
-def start_server(exp):
-    """Start the y_server in a detached screen
+def terminate_server_process(exp_id):
+    """
+    Terminate a server process using the PID stored in the database.
+
+    This function terminates a server process that was started using the
+    start_server() function and has its PID stored in the database.
+    It clears the PID from the database after termination.
 
     Args:
-        exp: the experiment object"""
+        exp_id: the experiment ID whose server process should be terminated
+
+    Returns:
+        bool: True if process was found and terminated, False otherwise
+    """
+    try:
+        # Get experiment from database
+        exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+        if not exp or not exp.server_pid:
+            print(f"No tracked server process found for experiment {exp_id}")
+            return False
+
+        pid = exp.server_pid
+        print(f"Terminating server process with PID {pid}...")
+
+        try:
+            # Try graceful termination first
+            os.kill(pid, signal.SIGTERM)
+
+            # Wait up to 5 seconds for graceful shutdown
+            for _ in range(50):  # 50 * 0.1s = 5 seconds
+                try:
+                    os.kill(pid, 0)  # Check if process still exists
+                    time.sleep(0.1)
+                except OSError:
+                    # Process no longer exists
+                    print(f"Server process {pid} terminated gracefully.")
+                    break
+            else:
+                # If we get here, process is still running after timeout
+                print(
+                    f"Server process {pid} did not terminate gracefully, forcing kill..."
+                )
+                os.kill(pid, signal.SIGKILL)
+                time.sleep(0.5)
+                print(f"Server process {pid} killed.")
+
+        except OSError as e:
+            # Process doesn't exist
+            print(f"Server process {pid} no longer exists: {e}")
+
+        # Clear PID from database
+        exp.server_pid = None
+        db.session.commit()
+        return True
+
+    except Exception as e:
+        print(f"Error terminating server process: {e}")
+        return False
+
+
+def get_server_process_status(exp_id):
+    """
+    Get the status of a server process using the PID from the database.
+
+    Args:
+        exp_id: the experiment ID
+
+    Returns:
+        dict: Dictionary with status information including 'running', 'pid', and 'returncode'
+    """
+    try:
+        exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+        if not exp or not exp.server_pid:
+            return {"running": False, "pid": None, "returncode": None}
+
+        pid = exp.server_pid
+
+        # Check if process is running
+        try:
+            os.kill(pid, 0)  # Signal 0 doesn't kill, just checks if process exists
+            return {"running": True, "pid": pid, "returncode": None}
+        except OSError:
+            # Process doesn't exist
+            return {"running": False, "pid": pid, "returncode": None}
+
+    except Exception as e:
+        print(f"Error getting server process status: {e}")
+        return {"running": False, "pid": None, "returncode": None}
+
+
+def start_server(exp):
+    """
+    Start the y_server using subprocess.Popen.
+
+    This function launches a server process for an experiment using subprocess.Popen
+    instead of screen sessions. The process PID is stored in the database for
+    later management and graceful termination.
+
+    Args:
+        exp: the experiment object
+
+    Returns:
+        subprocess.Popen: The started process object
+    """
+    yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+
+    if "database_server.db" in exp.db_name:
+        config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
+        exp_uid = exp.db_name.split(os.sep)[1]
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        exp_uid = f"{uid}{os.sep}"
+        config = (
+            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
+        )
+
+    # Determine the script path based on platform type
+    if exp.platform_type == "microblogging":
+        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
+    elif exp.platform_type == "forum":
+        script_path = (
+            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+        )
+    else:
+        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+
+    # Get the Python executable to use
+    python_cmd = detect_env_handler()
+
+    # Build the command as a list for subprocess.Popen
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not python_cmd.startswith("/")
+    ):
+        # Handle commands like "pipenv run python"
+        cmd_parts = python_cmd.split()
+        cmd = cmd_parts + [script_path, "-c", config]
+    else:
+        # Simple python executable path
+        cmd = [python_cmd, script_path, "-c", config]
+
+    print(f"Starting server for experiment {exp_uid} ...")
+    print(f"Command: {' '.join(cmd)}")
+
+    try:
+        # Start the process with Popen
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,  # Detach from parent process group
+        )
+
+        print(f"Server process started with PID: {process.pid}")
+
+    except Exception as e:
+        # env not correctly identify, try to use the current one implicitly
+        print(f"Error starting server process: {e}")
+        cmd = [sys.executable, script_path, "-c", config]
+        process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,  # Detach from parent process group
+        )
+
+    # Save the PID to the database for persistent tracking
+    exp.server_pid = process.pid
+    db.session.commit()
+
+    # identify the db to be set
+    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
+
+    db_type = "sqlite"
+    if db_uri_main.startswith("postgresql"):
+        db_type = "postgresql"
+
+    if db_type == "sqlite":
+        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+    elif db_type == "postgresql":
+        old_db_name = db_uri_main.split("/")[-1]
+        db_uri = db_uri_main.replace(old_db_name, exp.db_name)
+
+    print(f"Database URI: {db_uri}")
+
+    # Wait for the server to start
+    time.sleep(20)
+    data = {"path": f"{db_uri}"}
+    headers = {"Content-Type": "application/json"}
+    ns = f"http://{exp.server}:{exp.port}/change_db"
+    post(f"{ns}", headers=headers, data=json.dumps(data))
+
+    return process
+
+
+@deprecated
+def start_server_screen(exp):
+    """
+    Start the y_server in a detached screen (DEPRECATED).
+
+    This function is deprecated in favor of start_server() which uses subprocess.Popen.
+    It is kept for backward compatibility but should not be used in new code.
+
+    Args:
+        exp: the experiment object
+    """
     yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
@@ -360,7 +668,7 @@ def pull_ollama_model(model_name):
     if is_ollama_running():
         process = Process(target=start_ollama_pull, args=(model_name,))
         process.start()
-        client_processes[model_name] = process
+        ollama_processes[model_name] = process
 
 
 def start_ollama_pull(model_name):
@@ -434,8 +742,8 @@ def delete_model_pull(model_name):
     Args:
         model_name: Name of model to cancel download for
     """
-    if model_name in client_processes:
-        process = client_processes[model_name]
+    if model_name in ollama_processes:
+        process = ollama_processes[model_name]
         process.terminate()
         process.join()
 
@@ -580,13 +888,47 @@ def get_llm_models(llm_url=None):
 
 
 def terminate_client(cli, pause=False):
-    """Stop the y_client
+    """Stop the y_client using PID from database
 
     Args:
-        cli: the client object"""
-    process = client_processes[cli.name]
-    process.terminate()
-    process.join()
+        cli: the client object
+    """
+    if not cli.pid:
+        print(f"No PID found for client {cli.name}")
+        return
+
+    try:
+        pid = cli.pid
+        print(f"Terminating client process with PID {pid}...")
+
+        # Try graceful termination first
+        os.kill(pid, signal.SIGTERM)
+
+        # Wait up to 5 seconds for graceful shutdown
+        for _ in range(50):  # 50 * 0.1s = 5 seconds
+            try:
+                os.kill(pid, 0)  # Check if process still exists
+                time.sleep(0.1)
+            except OSError:
+                # Process no longer exists
+                print(f"Client process {pid} terminated gracefully.")
+                break
+        else:
+            # If we get here, process is still running after timeout
+            print(f"Client process {pid} did not terminate gracefully, forcing kill...")
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(0.5)
+            print(f"Client process {pid} killed.")
+
+    except OSError as e:
+        # Process doesn't exist
+        print(f"Client process {pid} no longer exists: {e}")
+    except Exception as e:
+        print(f"Error terminating client process: {e}")
+
+    # Clear PID from database
+    cli.pid = None
+    db.session.commit()
 
     # update client execution object
     # if not pause:
@@ -596,7 +938,7 @@ def terminate_client(cli, pause=False):
     #    db.session.commit()
 
 
-def start_client(exp, cli, population, resume=False):
+def start_client(exp, cli, population, resume=True):
     """Handle start client operation."""
     process = Process(
         target=start_client_process,
@@ -608,10 +950,14 @@ def start_client(exp, cli, population, resume=False):
         ),
     )
     process.start()
-    client_processes[cli.name] = process
+
+    # Store PID in database
+    cli.pid = process.pid
+    db.session.commit()
+    print(f"Client process started with PID: {process.pid}")
 
 
-def start_client_process(exp, cli, population, resume=False):
+def start_client_process(exp, cli, population, resume=True):
     """
     Initialize and start client simulation process.
 
@@ -665,9 +1011,9 @@ def start_client_process(exp, cli, population, resume=False):
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
         if ce:
-            if not resume:
-                ce.elapsed_time = 0
-                ce.expected_duration_rounds = cli.days * 24
+            # if not resume:
+            #    ce.elapsed_time = 0
+            #    ce.expected_duration_rounds = cli.days * 24
             first_run = False
         else:
             first_run = True

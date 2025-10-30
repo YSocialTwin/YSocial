@@ -99,7 +99,7 @@ The **Y Social** supports a wide range of simulation configurations and automate
 ## 🏁 Getting Started
 
 **Y Social** has been tested on **GNU/Linux** and **MacOS**. 
-Windows users are advised to use **Docker**.
+In case of malfunctioning/installation issues Windows users are advised to use **Docker**.
 
 For detailed usage examples and configuration options, please refer to the [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) file.
 
@@ -143,8 +143,6 @@ To access the **admin panel**, use the default credentials:
 
 - **Email:** `admin@ysocial.com`
 - **Password:** `test`
-
-🔴 **Note 1:** Ensure the `screen` command is installed on your system. 
 
 🔴 **Note 2:** Ensure to run the application in a dedicated conda/miniconda/pipenv environment to avoid dependency conflicts. Homebrew installations of Python may lead to execution issues.
 

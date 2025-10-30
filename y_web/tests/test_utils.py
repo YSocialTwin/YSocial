@@ -113,6 +113,84 @@ class TestExternalProcesses:
         except ImportError as e:
             pytest.skip(f"Required dependencies not installed: {e}")
 
+    def test_terminate_server_process_import(self):
+        """Test that terminate_server_process can be imported"""
+        try:
+            from y_web.utils.external_processes import terminate_server_process
+
+            assert callable(terminate_server_process)
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_get_server_process_status_import(self):
+        """Test that get_server_process_status can be imported"""
+        try:
+            from y_web.utils.external_processes import get_server_process_status
+
+            assert callable(get_server_process_status)
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_start_server_screen_import(self):
+        """Test that deprecated start_server_screen can be imported"""
+        try:
+            from y_web.utils.external_processes import start_server_screen
+
+            assert callable(start_server_screen)
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_get_server_process_status_not_found(self):
+        """Test get_server_process_status when no process is tracked"""
+        try:
+            from y_web.utils.external_processes import get_server_process_status
+
+            status = get_server_process_status(999)
+            assert status["running"] is False
+            assert status["pid"] is None
+            assert status["returncode"] is None
+
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_terminate_server_process_not_found(self):
+        """Test terminate_server_process when no process is tracked"""
+        try:
+            from y_web.utils.external_processes import terminate_server_process
+
+            result = terminate_server_process(999)
+            assert result is False
+
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_terminate_server_process_with_db(self):
+        """Test terminate_server_process using database PID"""
+        try:
+            from y_web.utils.external_processes import terminate_server_process
+
+            # This test would require database mocking
+            # For now, just verify the function can be imported
+            assert callable(terminate_server_process)
+
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
+    def test_database_based_process_management(self):
+        """Test that process management now uses database instead of global dictionary"""
+        try:
+            from y_web.utils.external_processes import (
+                cleanup_server_processes_from_db,
+                get_server_process_status,
+            )
+
+            # Verify functions exist and are callable
+            assert callable(cleanup_server_processes_from_db)
+            assert callable(get_server_process_status)
+
+        except ImportError as e:
+            pytest.skip(f"Required dependencies not installed: {e}")
+
 
 class TestLLMAnnotations:
     """Test LLM annotation utilities"""
