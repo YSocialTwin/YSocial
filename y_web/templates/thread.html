@@ -368,6 +368,12 @@
 </div>
 
 
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
+
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script src="https://js.stripe.com/v3/"></script>

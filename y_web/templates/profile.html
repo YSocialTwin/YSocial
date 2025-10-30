@@ -112,7 +112,7 @@
                         <div class="menu-end">
                             <a
                                     id="profile-friends-link"
-                                    href="/friends/{{ user_id }}/1"
+                                    href="/{{exp_id}}/friends/{{ user_id }}/1"
                                     class="button has-min-width"
                             >Contacts</a
                             >
@@ -206,7 +206,7 @@
                                 <div>
                                     <span>Interested in</span>
                                     {% for interest in interests %}
-                                    <a href="/interest/{{ interest[1] }}/1" class="is-muted"> {{ interest[0] }} ({{
+                                    <a href="/{{exp_id}}/interest/{{ interest[1] }}/1" class="is-muted"> {{ interest[0] }} ({{
                                         interest[2] }}) </a>
                                     {% endfor %}
                                 </div>
@@ -257,7 +257,7 @@
                                         data-user-popover="1"
                                 />
                                 <div class="text-content">
-                                    <a href="/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
+                                    <a href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
                                 </div>
                             </div>
                             {% endfor %}
@@ -358,6 +358,12 @@
     </div>
     <!-- /Container -->
 </div>
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
