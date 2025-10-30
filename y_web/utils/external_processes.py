@@ -39,9 +39,6 @@ from y_web.models import (
     PopulationActivityProfile,
 )
 
-# Dictionary to track server processes started with subprocess.Popen
-server_processes = {}
-
 
 def cleanup_server_processes_from_db():
     """
@@ -71,14 +68,14 @@ def cleanup_server_processes_from_db():
                     pass
                 # Clear the PID from database
                 exp.server_pid = None
-                db.session.commit()
             except OSError as e:
                 # Process doesn't exist
                 print(f"Process {exp.server_pid} no longer exists: {e}")
                 exp.server_pid = None
-                db.session.commit()
             except Exception as e:
                 print(f"Error terminating server process {exp.server_pid}: {e}")
+        # Commit all changes at once
+        db.session.commit()
     except Exception as e:
         print(f"Error during server process cleanup: {e}")
 
@@ -93,12 +90,14 @@ def stop_all_exps():
     for exp in exps:
         exp.running = 0
         exp.server_pid = None
-        db.session.commit()
+
     # terminate all clients
     clis = db.session.query(Client).all()
     for cli in clis:
         cli.status = 0
-        db.session.commit()
+
+    # Commit all changes at once
+    db.session.commit()
 
 
 @deprecated
@@ -296,11 +295,11 @@ def terminate_process_on_port(port):
 
 def terminate_server_process(exp_id):
     """
-    Terminate a server process started with subprocess.Popen.
+    Terminate a server process using the PID stored in the database.
 
     This function terminates a server process that was started using the
-    start_server() function and is tracked in the server_processes dictionary.
-    It also clears the PID from the database.
+    start_server() function and has its PID stored in the database.
+    It clears the PID from the database after termination.
 
     Args:
         exp_id: the experiment ID whose server process should be terminated
@@ -308,62 +307,55 @@ def terminate_server_process(exp_id):
     Returns:
         bool: True if process was found and terminated, False otherwise
     """
-    if exp_id not in server_processes:
-        print(f"No tracked server process found for experiment {exp_id}")
-        return False
-
-    process = server_processes[exp_id]
-
     try:
-        # Check if process is still running
-        if process.poll() is None:
-            print(f"Terminating server process with PID {process.pid}...")
+        # Get experiment from database
+        exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+        if not exp or not exp.server_pid:
+            print(f"No tracked server process found for experiment {exp_id}")
+            return False
 
+        pid = exp.server_pid
+        print(f"Terminating server process with PID {pid}...")
+
+        try:
             # Try graceful termination first
-            process.terminate()
+            os.kill(pid, signal.SIGTERM)
 
             # Wait up to 5 seconds for graceful shutdown
-            try:
-                process.wait(timeout=5)
-                print(f"Server process {process.pid} terminated gracefully.")
-            except subprocess.TimeoutExpired:
-                # If still running, force kill
+            for _ in range(50):  # 50 * 0.1s = 5 seconds
+                try:
+                    os.kill(pid, 0)  # Check if process still exists
+                    time.sleep(0.1)
+                except OSError:
+                    # Process no longer exists
+                    print(f"Server process {pid} terminated gracefully.")
+                    break
+            else:
+                # If we get here, process is still running after timeout
                 print(
-                    f"Server process {process.pid} did not terminate gracefully, forcing kill..."
+                    f"Server process {pid} did not terminate gracefully, forcing kill..."
                 )
-                process.kill()
-                process.wait()
-                print(f"Server process {process.pid} killed.")
-        else:
-            print(
-                f"Server process {process.pid} already terminated with exit code {process.returncode}."
-            )
+                os.kill(pid, signal.SIGKILL)
+                time.sleep(0.5)
+                print(f"Server process {pid} killed.")
 
-        # Remove from tracking dictionary
-        del server_processes[exp_id]
+        except OSError as e:
+            # Process doesn't exist
+            print(f"Server process {pid} no longer exists: {e}")
 
         # Clear PID from database
-        try:
-            exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
-            if exp:
-                exp.server_pid = None
-                db.session.commit()
-        except Exception as e:
-            print(f"Error clearing server PID from database: {e}")
-
+        exp.server_pid = None
+        db.session.commit()
         return True
 
     except Exception as e:
         print(f"Error terminating server process: {e}")
-        # Still remove from tracking even if there was an error
-        if exp_id in server_processes:
-            del server_processes[exp_id]
         return False
 
 
 def get_server_process_status(exp_id):
     """
-    Get the status of a server process.
+    Get the status of a server process using the PID from the database.
 
     Args:
         exp_id: the experiment ID
@@ -371,17 +363,24 @@ def get_server_process_status(exp_id):
     Returns:
         dict: Dictionary with status information including 'running', 'pid', and 'returncode'
     """
-    if exp_id not in server_processes:
+    try:
+        exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+        if not exp or not exp.server_pid:
+            return {"running": False, "pid": None, "returncode": None}
+
+        pid = exp.server_pid
+
+        # Check if process is running
+        try:
+            os.kill(pid, 0)  # Signal 0 doesn't kill, just checks if process exists
+            return {"running": True, "pid": pid, "returncode": None}
+        except OSError:
+            # Process doesn't exist
+            return {"running": False, "pid": pid, "returncode": None}
+
+    except Exception as e:
+        print(f"Error getting server process status: {e}")
         return {"running": False, "pid": None, "returncode": None}
-
-    process = server_processes[exp_id]
-    poll_result = process.poll()
-
-    return {
-        "running": poll_result is None,
-        "pid": process.pid,
-        "returncode": poll_result,
-    }
 
 
 def start_server(exp):
@@ -389,8 +388,8 @@ def start_server(exp):
     Start the y_server using subprocess.Popen.
 
     This function launches a server process for an experiment using subprocess.Popen
-    instead of screen sessions. The process is tracked in the server_processes
-    dictionary for later management.
+    instead of screen sessions. The process PID is stored in the database for
+    later management and graceful termination.
 
     Args:
         exp: the experiment object
@@ -449,9 +448,6 @@ def start_server(exp):
         stdin=subprocess.DEVNULL,
         start_new_session=True,  # Detach from parent process group
     )
-
-    # Store the process in the global dictionary for tracking
-    server_processes[exp.idexp] = process
 
     print(f"Server process started with PID: {process.pid}")
 

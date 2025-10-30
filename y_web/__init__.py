@@ -18,6 +18,7 @@ import os
 import shutil
 import signal
 import subprocess
+import time
 
 from flask import Flask
 from flask_login import LoginManager
@@ -203,23 +204,33 @@ def cleanup_subprocesses_only():
         except Exception as e:
             print("Error terminating client subprocess:", e)
 
-    # Cleanup server processes
-    from y_web.utils.external_processes import server_processes
+    # Cleanup server processes using PIDs from database
+    try:
+        from y_web.models import Exps
+        from y_web import db as db_module
 
-    for exp_id, proc in list(server_processes.items()):
-        try:
-            print(
-                f"Terminating server for experiment {exp_id} pid={getattr(proc, 'pid', None)}"
-            )
-            if proc.poll() is None:  # Process is still running
-                proc.terminate()
+        # Query experiments with server PIDs
+        exps = db_module.session.query(Exps).filter(Exps.server_pid.isnot(None)).all()
+        for exp in exps:
+            try:
+                pid = exp.server_pid
+                print(f"Terminating server for experiment {exp.idexp} pid={pid}")
+                # Try to terminate the process
+                os.kill(pid, signal.SIGTERM)
+                time.sleep(0.5)
+                # Check if still running
                 try:
-                    proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    proc.wait()
-        except Exception as e:
-            print(f"Error terminating server subprocess: {e}")
+                    os.kill(pid, 0)
+                    # Still running, force kill
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass  # Process already terminated
+            except OSError as e:
+                print(f"Server process {pid} no longer exists: {e}")
+            except Exception as e:
+                print(f"Error terminating server subprocess: {e}")
+    except Exception as e:
+        print(f"Error during server cleanup: {e}")
 
 
 def cleanup_db_jupyter_with_new_app():
