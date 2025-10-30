@@ -195,8 +195,8 @@ def cleanup_subprocesses_only():
 
     # Cleanup client processes using PIDs from database
     try:
-        from y_web.models import Client
         from y_web import db as db_module
+        from y_web.models import Client
 
         # Query clients with PIDs
         clients = db_module.session.query(Client).filter(Client.pid.isnot(None)).all()
