@@ -56,6 +56,7 @@ from y_web.models import (
 )
 from y_web.utils import (
     start_server,
+    terminate_client,
     terminate_process_on_port,
     terminate_server_process,
 )
@@ -1120,7 +1121,11 @@ def start_experiment(uid):
 @experiments.route("/admin/stop_experiment/<int:uid>")
 @login_required
 def stop_experiment(uid):
-    """Handle stop experiment operation."""
+    """Handle stop experiment operation.
+    
+    Stops the experiment server and terminates all running client processes
+    attached to this experiment.
+    """
     check_privileges(current_user.username)
 
     # get experiment
@@ -1137,15 +1142,20 @@ def stop_experiment(uid):
         # Fallback to port-based termination for backward compatibility
         terminate_process_on_port(exp.port)
 
-    # the clients are killed as soon as the server stops
-    # update client statuses
-    # get all populations for the experiment and update the client_running status
-    populations = Client.query.filter_by(id_exp=uid).all()
-    for pop in populations:
-        db.session.query(Client).filter_by(id=pop.population_id).update(
-            {Client.status: 0}
-        )
-        db.session.commit()
+    # Stop all running clients attached to this experiment
+    # Get all clients for the experiment
+    clients = Client.query.filter_by(id_exp=uid).all()
+    for client in clients:
+        # Only terminate clients that are marked as running (status=1)
+        if client.status == 1:
+            # Terminate the client process if it has a PID
+            if client.pid:
+                print(f"Stopping client {client.name} (ID: {client.id}, PID: {client.pid}) for experiment {uid}")
+                terminate_client(client, pause=False)
+            
+            # Update client status in database
+            client.status = 0
+            db.session.commit()
 
     # update the experiment status
     db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 0})
