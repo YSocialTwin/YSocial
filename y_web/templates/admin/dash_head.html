@@ -42,11 +42,11 @@
                     </div>
                 {% endif %}
             {% else %}
-                {# No active experiments #}
-                <a class="button is-solid live-button has-icon" href="/admin/experiments" title="No active experiments. Go to experiments page to activate one.">
+                {# No active experiments - disabled button #}
+                <button class="button is-solid live-button has-icon is-disabled" disabled title="No active experiments available">
                     <i data-feather="alert-circle"></i>
                     <span>No Active Experiments</span>
-                </a>
+                </button>
             {% endif %}
         </div>
     </div>
