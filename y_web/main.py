@@ -85,27 +85,42 @@ def index():
         Redirect to appropriate page based on authentication status
     """
     if current_user.is_authenticated:
-        # get active experiment if exists
-        exp = Exps.query.filter(Exps.status != 0).first()
-        if exp is not None:
+        # get active experiments
+        exps = Exps.query.filter(Exps.status != 0).all()
+        if exps:
+            # If multiple experiments, redirect to join menu
+            if len(exps) > 1:
+                return redirect("/admin/join_simulation")
+            # If single experiment, redirect directly to feed
+            exp = exps[0]
             if exp.platform_type == "microblogging":
-                return redirect(f"/feed/{current_user.id}/feed/rf/1")
+                return redirect(f"/{exp.idexp}/feed/{current_user.id}/feed/rf/1")
             elif exp.platform_type == "forum":
-                return redirect(f"/rfeed/{current_user.id}/rfeed/rf/1")
+                return redirect(f"/{exp.idexp}/rfeed/{current_user.id}/rfeed/rf/1")
     return render_template("login.html")
 
 
 @main.get("/profile")
 @login_required
 def profile():
-    """Handle profile operation."""
+    """Handle profile operation - legacy route."""
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+    
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+    
+    exp = exps[0]
     user_id = current_user.id
-    return redirect(f"/profile/{user_id}/rf/1")
+    return redirect(f"/{exp.idexp}/profile/{user_id}/rf/1")
 
 
-@main.get("/profile/<int:user_id>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
-def profile_logged(user_id, page=1, mode="recent"):
+def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
     user_id = int(user_id)
     user = User_mgmt.query.get(user_id)
@@ -220,9 +235,9 @@ def profile_logged(user_id, page=1, mode="recent"):
     )
 
 
-@main.get("/edit_profile/<int:user_id>")
+@main.get("/<int:exp_id>/edit_profile/<int:user_id>")
 @login_required
-def edit_profile(user_id):
+def edit_profile(exp_id, user_id):
     """Handle edit profile operation."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -258,9 +273,9 @@ def edit_profile(user_id):
     )
 
 
-@main.route("/update_profile_data/<int:user_id>", methods=["POST"])
+@main.route("/<int:exp_id>/update_profile_data/<int:user_id>", methods=["POST"])
 @login_required
-def update_profile_data(user_id):
+def update_profile_data(exp_id, user_id):
     """Update profile data."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -284,9 +299,9 @@ def update_profile_data(user_id):
     return redirect(request.referrer)
 
 
-@main.route("/update_password/<int:user_id>", methods=["POST"])
+@main.route("/<int:exp_id>/update_password/<int:user_id>", methods=["POST"])
 @login_required
-def update_password(user_id):
+def update_password(exp_id, user_id):
     """Update password."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -310,17 +325,28 @@ def update_password(user_id):
 def feeed_logged():
     """
     Display main feed for logged-in users (microblogging platform).
+    Legacy route - redirects to experiment selection or first active experiment.
 
     Returns:
-        Redirect to feed with user ID and default parameters
+        Redirect to feed with experiment ID and user ID
     """
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+    
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+    
+    exp = exps[0]
     user_id = current_user.id
-    return redirect(f"/feed/{user_id}/feed/rf/1")
+    return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
-def feed(user_id="all", timeline="timeline", mode="rf", page=1):
+def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed operation."""
     if page < 1:
         page = 1
@@ -422,9 +448,9 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
     )
 
 
-@main.get("/hashtag_posts/<int:hashtag_id>/<int:page>")
+@main.get("/<int:exp_id>/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
-def get_post_hashtags(hashtag_id, page=1):
+def get_post_hashtags(exp_id, hashtag_id, page=1):
     """
     Display posts containing a specific hashtag.
 
@@ -487,9 +513,9 @@ def get_post_hashtags(hashtag_id, page=1):
     )
 
 
-@main.get("/interest/<int:interest_id>/<int:page>")
+@main.get("/<int:exp_id>/interest/<int:interest_id>/<int:page>")
 @login_required
-def get_post_interest(interest_id, page=1):
+def get_post_interest(exp_id, interest_id, page=1):
     """
     Display posts associated with a specific interest/topic.
 
@@ -552,9 +578,9 @@ def get_post_interest(interest_id, page=1):
     )
 
 
-@main.get("/emotion/<int:emotion_id>/<int:page>")
+@main.get("/<int:exp_id>/emotion/<int:emotion_id>/<int:page>")
 @login_required
-def get_post_emotion(emotion_id, page=1):
+def get_post_emotion(exp_id, emotion_id, page=1):
     """
     Display posts that elicit a specific emotion.
 
@@ -618,9 +644,9 @@ def get_post_emotion(emotion_id, page=1):
     )
 
 
-@main.get("/friends/<int:user_id>/<int:page>")
+@main.get("/<int:exp_id>/friends/<int:user_id>/<int:page>")
 @login_required
-def get_friends(user_id, page=1):
+def get_friends(exp_id, user_id, page=1):
     """
     Display user's followers and followees (friends).
 
@@ -706,9 +732,9 @@ def get_friends(user_id, page=1):
     )
 
 
-@main.get("/thread/<int:post_id>")
+@main.get("/<int:exp_id>/thread/<int:post_id>")
 @login_required
-def get_thread(post_id):
+def get_thread(exp_id, post_id):
     # get thread_id for post_id
     """Get thread."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
@@ -1117,9 +1143,9 @@ def __get_discussions(posts, username, page):
 #### Thread
 
 
-@main.get("/rthread/<int:post_id>")
+@main.get("/<int:exp_id>/rthread/<int:post_id>")
 @login_required
-def get_thread_reddit(post_id):
+def get_thread_reddit(exp_id, post_id):
     # get thread_id for post_id
     """Get thread reddit."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
@@ -1353,17 +1379,28 @@ def get_thread_reddit(post_id):
 def feeed_logged_reddit():
     """
     Display Reddit-style feed for logged-in users.
+    Legacy route - redirects to experiment selection or first active experiment.
 
     Returns:
-        Redirect to Reddit feed with default parameters
+        Redirect to Reddit feed with experiment ID
     """
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+    
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+    
+    exp = exps[0]
     user_id = "all"  # Show all posts including user's own posts
-    return redirect(f"/feed/{user_id}/feed/rf/1")
+    return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
-def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed reddit operation."""
     if page < 1:
         page = 1
@@ -1536,9 +1573,9 @@ def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
 # API Endpoints for Infinite Scrolling
 
 
-@main.get("/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
-def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
+def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in feed.
 
@@ -1585,9 +1622,9 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
 @login_required
-def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in Reddit-style feed.
 
@@ -1696,9 +1733,9 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/hashtag_posts/<int:hashtag_id>/<int:page>")
+@main.get("/<int:exp_id>/api/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
-def api_hashtag_posts(hashtag_id, page=1):
+def api_hashtag_posts(exp_id, hashtag_id, page=1):
     """
     API endpoint for infinite scrolling in hashtag posts.
 
@@ -1719,9 +1756,9 @@ def api_hashtag_posts(hashtag_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/interest/<int:interest_id>/<int:page>")
+@main.get("/<int:exp_id>/api/interest/<int:interest_id>/<int:page>")
 @login_required
-def api_interest_posts(interest_id, page=1):
+def api_interest_posts(exp_id, interest_id, page=1):
     """
     API endpoint for infinite scrolling in interest posts.
 
@@ -1742,9 +1779,9 @@ def api_interest_posts(interest_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/emotion/<int:emotion_id>/<int:page>")
+@main.get("/<int:exp_id>/api/emotion/<int:emotion_id>/<int:page>")
 @login_required
-def api_emotion_posts(emotion_id, page=1):
+def api_emotion_posts(exp_id, emotion_id, page=1):
     """
     API endpoint for infinite scrolling in emotion posts.
 
@@ -1765,9 +1802,9 @@ def api_emotion_posts(emotion_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/profile/<int:user_id>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/api/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
-def api_profile_posts(user_id, page=1, mode="recent"):
+def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
     """
     API endpoint for infinite scrolling in profile posts.
 

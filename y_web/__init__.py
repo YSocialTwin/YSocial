@@ -279,6 +279,17 @@ def create_app(db_type="sqlite"):
         """
         return User.query.get(int(user_id))
 
+    # Setup experiment context handler
+    from .experiment_context import setup_experiment_context, initialize_active_experiment_databases
+
+    @app.before_request
+    def before_request_handler():
+        """Setup experiment context for each request."""
+        setup_experiment_context()
+
+    # Initialize database bindings for all active experiments
+    initialize_active_experiment_databases(app)
+
     # Register your blueprints here as before
     from .auth import auth as auth_blueprint
 

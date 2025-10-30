@@ -183,38 +183,93 @@ def settings():
 @experiments.route("/admin/join_simulation")
 @login_required
 def join_simulation():
-    # get user id for the current user logged in
-    """Handle join simulation operation."""
-    user_id = (
-        db.session.query(User_mgmt).filter_by(username=current_user.username).first().id
+    """
+    Display menu of active experiments for user to join.
+    
+    If only one experiment is active, redirect directly.
+    If multiple experiments are active, show selection menu.
+    """
+    # Get all active experiments
+    active_exps = Exps.query.filter_by(status=1).all()
+    
+    if not active_exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect(request.referrer)
+    
+    # If only one active experiment, redirect directly
+    if len(active_exps) == 1:
+        exp = active_exps[0]
+        return redirect(f"/admin/join_experiment/{exp.idexp}")
+    
+    # Multiple active experiments - show selection menu
+    check_privileges(current_user.username)
+    ollamas = ollama_status()
+    
+    return render_template(
+        "admin/select_experiment.html",
+        experiments=active_exps,
+        ollamas=ollamas,
     )
 
-    # check which experiment is active
-    exp = Exps.query.filter_by(status=1).first()
+
+@experiments.route("/admin/join_experiment/<int:exp_id>")
+@login_required
+def join_experiment(exp_id):
+    """
+    Join a specific active experiment.
+    
+    Args:
+        exp_id: ID of experiment to join
+    
+    Returns:
+        Redirect to experiment feed
+    """
+    exp = Exps.query.filter_by(idexp=exp_id, status=1).first()
     if exp is None:
-        flash("No active experiment. Please load an experiment.")
-        return redirect(request.referrer)
+        flash("Experiment not found or not active.")
+        return redirect("/admin/experiments")
+    
+    # Get user id - need to check in the experiment database
+    from y_web.experiment_context import register_experiment_database
+    bind_key = f"db_exp_{exp_id}"
+    
+    # Ensure the experiment database is registered
+    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+        register_experiment_database(current_app, exp_id, exp.db_name)
+    
+    # Temporarily switch to experiment database to get user
+    old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
+    current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
+    
+    try:
+        user = db.session.query(User_mgmt).filter_by(username=current_user.username).first()
+        if not user:
+            flash("User not found in experiment database.")
+            return redirect("/admin/experiments")
+        user_id = user.id
+    finally:
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
 
-    # route the simulation home for the user
+    # Route to the appropriate feed based on platform type
     if exp.platform_type == "microblogging":
-        return redirect(f"/feed/{user_id}/feed/rf/1")
-
+        return redirect(f"/{exp_id}/feed/{user_id}/feed/rf/1")
     elif exp.platform_type == "forum":
-        return redirect(f"/rfeed/{user_id}/feed/rf/1")
-
+        return redirect(f"/{exp_id}/rfeed/{user_id}/feed/rf/1")
     else:
-        flash("Wrong Platform Type. Please load an experiment.")
-        return redirect(request.referrer)
+        flash("Unknown platform type for this experiment.")
+        return redirect("/admin/experiments")
 
 
 @experiments.route("/admin/select_experiment/<int:exp_id>")
 @login_required
 def change_active_experiment(exp_id):
     """
-    Change the currently active experiment.
+    Activate or deactivate an experiment.
+    
+    Now supports multiple active experiments simultaneously.
 
     Args:
-        exp_id: ID of experiment to activate
+        exp_id: ID of experiment to toggle activation
 
     Returns:
         Redirect to settings page
@@ -223,46 +278,61 @@ def change_active_experiment(exp_id):
     uname = current_user.username
 
     exp = Exps.query.filter_by(idexp=exp_id).first()
-
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
-    # check the database type in the URI
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        new_db = "/".join(
-            current_app.config["SQLALCHEMY_DATABASE_URI"].rsplit("/", 1)[:-1]
-            + [exp.db_name]
-        )
-        # if postgresql, set the bind to the postgresql database
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = new_db
-    elif current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
-        current_app.config["SQLALCHEMY_BINDS"][
-            "db_exp"
-        ] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
-
-    else:
-        flash("Unsupported database type. Please use SQLite or PostgreSQL.")
+    
+    if not exp:
+        flash("Experiment not found.")
         return redirect(request.referrer)
 
-    # check if the user is present in the User_mgmt table
-    user = db.session.query(User_mgmt).filter_by(username=current_user.username).first()
-
-    if user is None:
-        new_user = User_mgmt(
-            email=current_user.email,
-            username=current_user.username,
-            password=current_user.password,
-            user_type="user",
-            leaning="neutral",
-            age=0,
-            recsys_type="default",
-            language="en",
-            frecsys_type="default",
-            round_actions=1,
-            toxicity="no",
-        )
-        db.session.add(new_user)
+    # Toggle experiment status
+    if exp.status == 1:
+        # Deactivate the experiment
+        exp.status = 0
         db.session.commit()
+        flash(f"Experiment '{exp.exp_name}' deactivated.")
+    else:
+        # Activate the experiment
+        exp.status = 1
+        db.session.commit()
+        
+        # Register the experiment database dynamically
+        from y_web.experiment_context import register_experiment_database
+        register_experiment_database(current_app, exp_id, exp.db_name)
+        
+        # Ensure user exists in the experiment database
+        # We need to switch to the correct bind temporarily
+        bind_key = f"db_exp_{exp_id}"
+        
+        # Check if user exists in this experiment's database
+        # Note: User_mgmt uses db_exp bind, so we need to query with bind
+        with db.session.no_autoflush:
+            # Temporarily set db_exp to this experiment
+            old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
+            current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
+            
+            try:
+                user = db.session.query(User_mgmt).filter_by(username=current_user.username).first()
 
-        # ad to experiment if not present
+                if user is None:
+                    new_user = User_mgmt(
+                        email=current_user.email,
+                        username=current_user.username,
+                        password=current_user.password,
+                        user_type="user",
+                        leaning="neutral",
+                        age=0,
+                        recsys_type="default",
+                        language="en",
+                        frecsys_type="default",
+                        round_actions=1,
+                        toxicity="no",
+                    )
+                    db.session.add(new_user)
+                    db.session.commit()
+            finally:
+                # Restore old bind
+                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+
+        # Add user to experiment if not present
         user_exp = (
             db.session.query(User_Experiment)
             .filter_by(user_id=current_user.id, exp_id=exp_id)
@@ -272,10 +342,8 @@ def change_active_experiment(exp_id):
             user_exp = User_Experiment(user_id=current_user.id, exp_id=exp_id)
             db.session.add(user_exp)
             db.session.commit()
-
-    db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
-    db.session.query(Exps).filter_by(db_name=exp.db_name).update({Exps.status: 1})
-    db.session.commit()
+        
+        flash(f"Experiment '{exp.exp_name}' activated.")
 
     reload_current_user(uname)
 
