@@ -75,7 +75,9 @@ def get_safe_profile_pic(username, is_page=0):
     return ""
 
 
-def get_user_recent_posts(user_id, page, per_page=10, mode="rf", current_user=None, exp_id=None):
+def get_user_recent_posts(
+    user_id, page, per_page=10, mode="rf", current_user=None, exp_id=None
+):
     """
     Retrieve paginated posts for a specific user based on filter mode.
 
@@ -681,7 +683,9 @@ def get_trending_topics(limit=10, window=120):
     return [{"id": t[0], "topic": t[1], "count": t[2]} for t in tp]
 
 
-def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user=None, exp_id=None):
+def get_posts_associated_to_hashtags(
+    hashtag_id, page, per_page=10, current_user=None, exp_id=None
+):
     """Get the posts associated to the given hashtag.
 
     Args:
@@ -878,7 +882,9 @@ def get_posts_associated_to_hashtags(hashtag_id, page, per_page=10, current_user
     return res
 
 
-def get_posts_associated_to_interest(interest_id, page, per_page=10, current_user=None, exp_id=None):
+def get_posts_associated_to_interest(
+    interest_id, page, per_page=10, current_user=None, exp_id=None
+):
     """Get the posts associated to the given interest.
 
     Args:
@@ -1070,7 +1076,9 @@ def get_posts_associated_to_interest(interest_id, page, per_page=10, current_use
     return res
 
 
-def get_posts_associated_to_emotion(emotion_id, page, per_page=10, current_user=None, exp_id=None):
+def get_posts_associated_to_emotion(
+    emotion_id, page, per_page=10, current_user=None, exp_id=None
+):
     """Get the posts associated to the given emotion.
 
     Args:

@@ -1281,7 +1281,9 @@ def get_thread_reddit(exp_id, post_id):
 
         # Process comment content for Reddit-style display
         comment_title, comment_content = process_reddit_post(post.tweet)
-        processed_comment = augment_text(comment_content, exp_id) if comment_content else ""
+        processed_comment = (
+            augment_text(comment_content, exp_id) if comment_content else ""
+        )
 
         # Get article for comment (if any)
         article = Articles.query.filter_by(id=post.news_id).first()
@@ -1794,7 +1796,11 @@ def api_emotion_posts(exp_id, emotion_id, page=1):
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_emotion(
-        emotion_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id,
+        emotion_id,
+        page,
+        per_page=10,
+        current_user=current_user.id,
+        exp_id=exp_id,
     )
     html = render_template(
         "components/posts.html",
