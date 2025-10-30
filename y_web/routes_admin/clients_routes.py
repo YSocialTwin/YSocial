@@ -144,7 +144,7 @@ def run_client(uid, idexp):
 
     # get population of the experiment
     population = Population.query.filter_by(id=client.population_id).first()
-    start_client(exp, client, population)
+    start_client(exp, client, population, resume=True)
 
     # set the population_experiment running_status
     db.session.query(Client).filter_by(id=uid).update({Client.status: 1})

@@ -894,7 +894,7 @@ def terminate_client(cli, pause=False):
     #    db.session.commit()
 
 
-def start_client(exp, cli, population, resume=False):
+def start_client(exp, cli, population, resume=True):
     """Handle start client operation."""
     process = Process(
         target=start_client_process,
@@ -913,7 +913,7 @@ def start_client(exp, cli, population, resume=False):
     print(f"Client process started with PID: {process.pid}")
 
 
-def start_client_process(exp, cli, population, resume=False):
+def start_client_process(exp, cli, population, resume=True):
     """
     Initialize and start client simulation process.
 
@@ -967,9 +967,9 @@ def start_client_process(exp, cli, population, resume=False):
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
         if ce:
-            if not resume:
-                ce.elapsed_time = 0
-                ce.expected_duration_rounds = cli.days * 24
+            # if not resume:
+            #    ce.elapsed_time = 0
+            #    ce.expected_duration_rounds = cli.days * 24
             first_run = False
         else:
             first_run = True
