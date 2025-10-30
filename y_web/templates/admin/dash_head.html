@@ -1,7 +1,7 @@
 <div class="dashboard-toolbar">
     <h1 class="title is-4"></h1>
     <div class="actions">
-        <label class="theme-toggle">
+        <label class="theme-toggle" {# title="Toggle night mode" #}>
             <input type="checkbox"/>
             <span class="toggler">
           <span class="dark">
@@ -30,13 +30,13 @@
                                 <i data-feather="chevron-down" style="margin-left: 0.5rem; width: 16px; height: 16px;"></i>
                             </button>
                         </div>
-                        <div class="dropdown-menu" id="join-simulation-menu" role="menu" style="min-width: 250px;">
+                        <div class="dropdown-menu" id="join-simulation-menu" role="menu">
                             <div class="dropdown-content">
                                 {% for exp in active_experiments %}
                                 <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
                                     <strong>{{ exp.exp_name }}</strong>
                                     <br>
-                                    <small style="color: #7a7a7a;">
+                                    <small>
                                         {{ exp.platform_type|capitalize }} 
                                         {% if exp.owner %} • by {{ exp.owner }}{% endif %}
                                     </small>

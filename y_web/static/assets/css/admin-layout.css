@@ -53,3 +53,107 @@
         padding: 0 0.5rem !important;
     }
 }
+
+/*
+ * Join Simulation Dropdown Menu - Enhanced Styling
+ * Improved look and feel to match admin panel aesthetics
+ */
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-menu {
+    min-width: 280px;
+    padding-top: 0.5rem;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-content {
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 0.5rem 0;
+    border: 1px solid #e8e8e8;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item {
+    padding: 0.875rem 1.25rem;
+    border-radius: 6px;
+    margin: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+    line-height: 1.4;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item:hover {
+    background-color: #f0f7ff;
+    transform: translateX(2px);
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item strong {
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item small {
+    color: #7a8699 !important;
+    font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+/* Active/Selected state for dropdown items */
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active {
+    background-color: #3d70b2;
+    color: #ffffff;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active strong {
+    color: #ffffff;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active small {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+/* Enhance the dropdown trigger button */
+.dashboard-toolbar .dropdown.is-hoverable .button.live-button {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.dashboard-toolbar .dropdown.is-hoverable .button.live-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(247, 20, 22, 0.15);
+}
+
+/* Dark mode support for the dropdown */
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-content {
+    background-color: #202836;
+    border-color: #334056;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item {
+    color: #a2a5b9;
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item:hover {
+    background-color: #2a3447;
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item strong {
+    color: #fafafa;
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item small {
+    color: #7a8699 !important;
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active {
+    background-color: #5596e6;
+    color: #ffffff;
+}
+
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active strong,
+body.is-dark .dashboard-toolbar .dropdown.is-hoverable .dropdown-item.is-active small {
+    color: #ffffff !important;
+}
