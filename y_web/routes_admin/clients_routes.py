@@ -300,36 +300,67 @@ def create_client():
     frecsys = request.form.get("frecsys_type")
 
     # Validate simulation parameters
+    errors = []
+    # Validate numeric fields
     try:
-        # Validate numeric fields
         days = int(days)
+    except (ValueError, TypeError):
+        errors.append("Days must be a valid integer")
+    try:
         max_length_thread_reading = int(max_length_thread_reading)
+    except (ValueError, TypeError):
+        errors.append("Max Length Thread Reading must be a valid integer")
+    try:
         attention_window = int(attention_window)
+    except (ValueError, TypeError):
+        errors.append("Attention Window must be a valid integer")
+    try:
         visibility_rounds = int(visibility_rounds)
+    except (ValueError, TypeError):
+        errors.append("Visibility Rounds must be a valid integer")
 
-        # Validate probability fields (must be float in [0, 1])
+    # Validate probability fields (must be float in [0, 1])
+    try:
         percentage_new_agents_iteration = float(percentage_new_agents_iteration)
+    except (ValueError, TypeError):
+        errors.append("% New Agents (daily) must be a valid number")
+        percentage_new_agents_iteration = None
+    try:
         percentage_removed_agents_iteration = float(percentage_removed_agents_iteration)
+    except (ValueError, TypeError):
+        errors.append("% Daily Churn must be a valid number")
+        percentage_removed_agents_iteration = None
+    try:
         reading_from_follower_ratio = float(reading_from_follower_ratio)
+    except (ValueError, TypeError):
+        errors.append("Timeline Follower Ratio must be a valid number")
+        reading_from_follower_ratio = None
+    try:
         probability_of_daily_follow = float(probability_of_daily_follow)
+    except (ValueError, TypeError):
+        errors.append("Probability Daily Follow must be a valid number")
+        probability_of_daily_follow = None
+    try:
         probability_of_secondary_follow = float(probability_of_secondary_follow)
+    except (ValueError, TypeError):
+        errors.append("Probability Secondary Follow must be a valid number")
+        probability_of_secondary_follow = None
 
-        # Check probability ranges
-        probabilities = {
-            "% New Agents (daily)": percentage_new_agents_iteration,
-            "% Daily Churn": percentage_removed_agents_iteration,
-            "Timeline Follower Ratio": reading_from_follower_ratio,
-            "Probability Daily Follow": probability_of_daily_follow,
-            "Probability Secondary Follow": probability_of_secondary_follow,
-        }
+    # Check probability ranges
+    probabilities = {
+        "% New Agents (daily)": percentage_new_agents_iteration,
+        "% Daily Churn": percentage_removed_agents_iteration,
+        "Timeline Follower Ratio": reading_from_follower_ratio,
+        "Probability Daily Follow": probability_of_daily_follow,
+        "Probability Secondary Follow": probability_of_secondary_follow,
+    }
+    for field_name, value in probabilities.items():
+        if value is not None and not (0 <= value <= 1):
+            errors.append(f"{field_name} must be between 0 and 1")
 
-        for field_name, value in probabilities.items():
-            if not (0 <= value <= 1):
-                flash(f"{field_name} must be between 0 and 1")
-                return redirect(request.referrer)
-
-    except (ValueError, TypeError) as e:
-        flash("All simulation parameters must be valid numeric values")
+    if errors:
+        for error in errors:
+            flash(error)
         return redirect(request.referrer)
 
     # Fetch optional network configuration
