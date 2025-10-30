@@ -26,8 +26,6 @@ from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-client_processes = {}
-
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
@@ -195,14 +193,33 @@ def cleanup_subprocesses_only():
     """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
     print("Cleaning up subprocesses (OS-level only)...")
 
-    # Cleanup client processes
-    for name, proc in client_processes.items():
-        try:
-            print(f"Terminating client {name} pid={getattr(proc, 'pid', None)}")
-            proc.terminate()
-            proc.join(timeout=5)
-        except Exception as e:
-            print("Error terminating client subprocess:", e)
+    # Cleanup client processes using PIDs from database
+    try:
+        from y_web.models import Client
+        from y_web import db as db_module
+
+        # Query clients with PIDs
+        clients = db_module.session.query(Client).filter(Client.pid.isnot(None)).all()
+        for client in clients:
+            try:
+                pid = client.pid
+                print(f"Terminating client {client.name} pid={pid}")
+                # Try to terminate the process
+                os.kill(pid, signal.SIGTERM)
+                time.sleep(0.5)
+                # Check if still running
+                try:
+                    os.kill(pid, 0)
+                    # Still running, force kill
+                    os.kill(pid, signal.SIGKILL)
+                except OSError:
+                    pass  # Process already terminated
+            except OSError as e:
+                print(f"Client process {pid} no longer exists: {e}")
+            except Exception as e:
+                print(f"Error terminating client subprocess: {e}")
+    except Exception as e:
+        print(f"Error during client cleanup: {e}")
 
     # Cleanup server processes using PIDs from database
     try:

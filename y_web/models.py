@@ -605,6 +605,7 @@ class Client(db.Model):
     network_type = db.Column(db.String(50), default="")
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
+    pid = db.Column(db.Integer, nullable=True, default=None)
 
 
 class Client_Execution(db.Model):

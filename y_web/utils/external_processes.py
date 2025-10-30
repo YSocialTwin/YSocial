@@ -29,7 +29,7 @@ from ollama import Client as oclient
 from requests import post
 from sklearn.utils import deprecated
 
-from y_web import client_processes, db
+from y_web import db
 from y_web.models import (
     ActivityProfile,
     Client,
@@ -38,6 +38,9 @@ from y_web.models import (
     Ollama_Pull,
     PopulationActivityProfile,
 )
+
+# Dictionary to track Ollama model download processes
+ollama_processes = {}
 
 
 def cleanup_server_processes_from_db():
@@ -621,7 +624,7 @@ def pull_ollama_model(model_name):
     if is_ollama_running():
         process = Process(target=start_ollama_pull, args=(model_name,))
         process.start()
-        client_processes[model_name] = process
+        ollama_processes[model_name] = process
 
 
 def start_ollama_pull(model_name):
@@ -695,8 +698,8 @@ def delete_model_pull(model_name):
     Args:
         model_name: Name of model to cancel download for
     """
-    if model_name in client_processes:
-        process = client_processes[model_name]
+    if model_name in ollama_processes:
+        process = ollama_processes[model_name]
         process.terminate()
         process.join()
 
@@ -841,13 +844,47 @@ def get_llm_models(llm_url=None):
 
 
 def terminate_client(cli, pause=False):
-    """Stop the y_client
+    """Stop the y_client using PID from database
 
     Args:
-        cli: the client object"""
-    process = client_processes[cli.name]
-    process.terminate()
-    process.join()
+        cli: the client object
+    """
+    if not cli.pid:
+        print(f"No PID found for client {cli.name}")
+        return
+
+    try:
+        pid = cli.pid
+        print(f"Terminating client process with PID {pid}...")
+
+        # Try graceful termination first
+        os.kill(pid, signal.SIGTERM)
+
+        # Wait up to 5 seconds for graceful shutdown
+        for _ in range(50):  # 50 * 0.1s = 5 seconds
+            try:
+                os.kill(pid, 0)  # Check if process still exists
+                time.sleep(0.1)
+            except OSError:
+                # Process no longer exists
+                print(f"Client process {pid} terminated gracefully.")
+                break
+        else:
+            # If we get here, process is still running after timeout
+            print(f"Client process {pid} did not terminate gracefully, forcing kill...")
+            os.kill(pid, signal.SIGKILL)
+            time.sleep(0.5)
+            print(f"Client process {pid} killed.")
+
+    except OSError as e:
+        # Process doesn't exist
+        print(f"Client process {pid} no longer exists: {e}")
+    except Exception as e:
+        print(f"Error terminating client process: {e}")
+
+    # Clear PID from database
+    cli.pid = None
+    db.session.commit()
 
     # update client execution object
     # if not pause:
@@ -869,7 +906,11 @@ def start_client(exp, cli, population, resume=False):
         ),
     )
     process.start()
-    client_processes[cli.name] = process
+
+    # Store PID in database
+    cli.pid = process.pid
+    db.session.commit()
+    print(f"Client process started with PID: {process.pid}")
 
 
 def start_client_process(exp, cli, population, resume=False):
