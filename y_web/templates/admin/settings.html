@@ -590,13 +590,21 @@
 
                                     {% if exp.status==0 %}
                                     <a class="button is-solid primary-button_small green-button"
-                                       href='/admin/select_experiment/{{ exp.idexp }}'>
+                                       href='/admin/select_experiment/{{ exp.idexp }}'
+                                       title="Activate experiment">
                                         <div class="mdi mdi-play"></div>
                                     </a>
                                     {% endif %}
                                     {% if exp.status==1 %}
-                                    <a class="button is-solid primary-button_small" href="/admin/join_simulation">
-                                        <div class="mdi mdi-plus"></div>
+                                    <a class="button is-solid primary-button_small orange-button"
+                                       href='/admin/select_experiment/{{ exp.idexp }}'
+                                       title="Deactivate experiment">
+                                        <div class="mdi mdi-stop"></div>
+                                    </a>
+                                    <a class="button is-solid primary-button_small" 
+                                       href="/admin/join_experiment/{{ exp.idexp }}"
+                                       title="Join this experiment">
+                                        <div class="mdi mdi-login"></div>
                                     </a>
                                     {% endif %}
                                     <a class="button is-solid primary-button_small red-button"
