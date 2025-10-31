@@ -55,20 +55,9 @@ def login_post():
         return redirect(url_for("auth.login"))
 
     # Handle different roles
-    if user.role == "admin" or user.role == "researcher":
-        # Admin and researcher go to admin panel
-        try:
-            _ = User_mgmt.query.first()
-        except:
-            flash("Server not ready. Please try again later.")
-            return redirect(url_for("auth.login"))
-
-        user_agent = User_mgmt.query.filter_by(username=user.username).first()
-        login_user(user_agent, remember=remember)
-        return redirect(url_for("admin.dashboard"))
-    
-    elif user.role == "user":
+    if user.role == "user":
         # Regular users: need to select experiment
+        # Do NOT log them in yet - just show experiment selection
         # Get experiments this user is assigned to
         user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
         
@@ -95,6 +84,22 @@ def login_post():
         
         # Return to login page with experiment selection
         return render_template("login.html", show_exp_selection=True, experiments=active_exps, auth_token=auth_token)
+    
+    elif user.role == "admin" or user.role == "researcher":
+        # Admin and researcher go to admin panel
+        try:
+            _ = User_mgmt.query.first()
+        except:
+            flash("Server not ready. Please try again later.")
+            return redirect(url_for("auth.login"))
+
+        user_agent = User_mgmt.query.filter_by(username=user.username).first()
+        if not user_agent:
+            flash("User account not found in experiment database. Please contact an administrator.")
+            return redirect(url_for("auth.login"))
+        
+        login_user(user_agent, remember=remember)
+        return redirect(url_for("admin.dashboard"))
     
     else:
         flash("Invalid user role. Please contact an administrator.")
