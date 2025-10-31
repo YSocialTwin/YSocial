@@ -160,10 +160,13 @@ def settings():
         # Non-admin users see only experiments they created or joined
         user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
         exp_ids = [ue.exp_id for ue in user_experiments]
-        # Also include experiments owned by the user
-        experiments = Exps.query.filter(
-            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
-        ).limit(5).all() if exp_ids else Exps.query.filter_by(owner=user.username).limit(5).all()
+        # Include experiments owned by the user OR joined by the user
+        if exp_ids:
+            experiments = Exps.query.filter(
+                (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+            ).limit(5).all()
+        else:
+            experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
     
     users = Admin_users.query.all()
 
@@ -998,10 +1001,13 @@ def experiments_data():
         # Non-admin users see only experiments they created or joined
         user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
         exp_ids = [ue.exp_id for ue in user_experiments]
-        # Also include experiments owned by the user
-        query = Exps.query.filter(
-            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
-        ) if exp_ids else Exps.query.filter_by(owner=user.username)
+        # Include experiments owned by the user OR joined by the user
+        if exp_ids:
+            query = Exps.query.filter(
+                (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+            )
+        else:
+            query = Exps.query.filter_by(owner=user.username)
 
     # search filter
     search = request.args.get("search")

@@ -120,10 +120,13 @@ def dashboard():
         # Non-admin users see only experiments they created or joined
         user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
         exp_ids = [ue.exp_id for ue in user_experiments]
-        # Also include experiments owned by the user
-        experiments = Exps.query.filter(
-            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
-        ).all() if exp_ids else Exps.query.filter_by(owner=user.username).all()
+        # Include experiments owned by the user OR joined by the user
+        if exp_ids:
+            experiments = Exps.query.filter(
+                (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+            ).all()
+        else:
+            experiments = Exps.query.filter_by(owner=user.username).all()
     
     total_experiments = len(experiments)
 
