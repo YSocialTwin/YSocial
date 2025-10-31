@@ -187,6 +187,12 @@ def create_agent():
     daily_activity_level = request.form.get("daily_user_activity")
     profession = request.form.get("profession")
 
+    # Validate that agent name is unique
+    existing_agent = Agent.query.filter_by(name=name).first()
+    if existing_agent:
+        flash(f"Agent name '{name}' already exists. Please choose a different name.")
+        return agent_data()
+
     agent = Agent(
         name=name,
         age=age,
