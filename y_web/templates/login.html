@@ -120,6 +120,51 @@
                         </div>
                         <!--Form-->
 
+                        {% if show_exp_selection %}
+                        <!-- Experiment Selection Form (shown after credentials validated) -->
+                        <form method="POST" action="/select_experiment" style="width: 100%; max-width: 400px;">
+                            <input type="hidden" name="auth_token" value="{{ auth_token }}">
+                            <div class="login-form">
+                                <h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600;">
+                                    Select an Experiment
+                                </h3>
+
+                                {% with messages = get_flashed_messages() %}
+                                {% if messages %}
+                                <div class="notification is-danger">
+                                    {{ messages[0] }}
+                                </div>
+                                {% endif %}
+                                {% endwith %}
+
+                                <div class="field" style="margin-bottom: 1.5rem;">
+                                    <label class="label" style="margin-bottom: 0.5rem;">Available Experiments</label>
+                                    <div class="control">
+                                        <div class="select is-fullwidth">
+                                            <select name="experiment_id" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem;">
+                                                <option value="">-- Select an experiment --</option>
+                                                {% for exp in experiments %}
+                                                <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="field" style="margin-top: 2rem;">
+                                    <div class="control">
+                                        <button
+                                                class="button is-solid primary-button raised is-rounded is-fullwidth"
+                                                style="padding: 0.875rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(50, 115, 220, 0.3);"
+                                        >
+                                            Join Experiment
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        {% else %}
+                        <!-- Normal Login Form -->
                         <form method="POST" action="/login" style="width: 100%; max-width: 400px;">
                             <div class="login-form">
 
@@ -178,6 +223,7 @@
                                 </div>
                             </div>
                         </form>
+                        {% endif %}
                     </div>
                 </div>
             </div>

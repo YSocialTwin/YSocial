@@ -68,7 +68,7 @@ def login_post():
         return redirect(url_for("admin.dashboard"))
     
     elif user.role == "user":
-        # Regular users: show experiment selection or direct to feed
+        # Regular users: need to select experiment
         # Get experiments this user is assigned to
         user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
         
@@ -84,36 +84,17 @@ def login_post():
             flash("No active experiments available. Please contact an administrator.")
             return redirect(url_for("auth.login"))
         
-        if len(active_exps) == 1:
-            # Single active experiment - redirect directly
-            exp = active_exps[0]
-            try:
-                user_agent = User_mgmt.query.filter_by(username=user.username).first()
-                if not user_agent:
-                    flash("User not found in experiment database.")
-                    return redirect(url_for("auth.login"))
-                login_user(user_agent, remember=remember)
-                
-                # Redirect to appropriate feed based on platform type
-                if exp.platform_type == "microblogging":
-                    return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
-                elif exp.platform_type == "forum":
-                    return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
-                else:
-                    return redirect(url_for("auth.login"))
-            except Exception as e:
-                flash(f"Error accessing experiment: {str(e)}")
-                return redirect(url_for("auth.login"))
-        else:
-            # Multiple active experiments - show selection page
-            # Store temporary auth token in session for experiment selection
-            from flask import session
-            import secrets
-            auth_token = secrets.token_urlsafe(32)
-            session['exp_select_token'] = auth_token
-            session['exp_select_user_id'] = user.id
-            session['exp_select_remember'] = remember
-            return render_template("select_experiment.html", experiments=active_exps, user=user, auth_token=auth_token)
+        # Store credentials in session for experiment selection
+        from flask import session
+        import secrets
+        auth_token = secrets.token_urlsafe(32)
+        session['exp_select_token'] = auth_token
+        session['exp_select_user_id'] = user.id
+        session['exp_select_remember'] = remember
+        session['exp_select_experiments'] = [{"idexp": exp.idexp, "exp_name": exp.exp_name, "platform_type": exp.platform_type} for exp in active_exps]
+        
+        # Return to login page with experiment selection
+        return render_template("login.html", show_exp_selection=True, experiments=active_exps, auth_token=auth_token)
     
     else:
         flash("Invalid user role. Please contact an administrator.")

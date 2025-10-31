@@ -696,65 +696,83 @@ def bulk_assign_users():
             flash("Experiment not found.", "error")
             return redirect(url_for("users.user_data"))
         
+        # Use the proper experiment context registration
+        from y_web.experiment_context import register_experiment_database, get_db_bind_key_for_exp
+        
+        # Register the experiment database if not already registered
+        bind_key = get_db_bind_key_for_exp(exp_id)
+        if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+            register_experiment_database(current_app, exp_id, exp.db_name)
+        
+        # Temporarily switch to experiment database
+        old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
+        
         assigned = 0
         errors = []
         
-        for user_id_str in user_ids:
-            try:
-                user_id = int(user_id_str)
-                user = Admin_users.query.filter_by(id=user_id).first()
+        try:
+            for user_id_str in user_ids:
+                try:
+                    user_id = int(user_id_str)
+                    user = Admin_users.query.filter_by(id=user_id).first()
+                    
+                    if not user:
+                        errors.append(f"User ID {user_id} not found")
+                        continue
+                    
+                    # Check if already assigned
+                    existing = User_Experiment.query.filter_by(
+                        user_id=user_id, exp_id=exp_id
+                    ).first()
+                    
+                    if existing:
+                        errors.append(f"User '{user.username}' already assigned to this experiment")
+                        continue
+                    
+                    # Ensure user exists in experiment database (User_mgmt)
+                    user_agent = User_mgmt.query.filter_by(username=user.username).first()
+                    if not user_agent:
+                        new_user_mgmt = User_mgmt(
+                            email=user.email,
+                            username=user.username,
+                            password=user.password,  # Already hashed
+                            user_type="user",
+                            leaning="neutral",
+                            age=0,
+                            recsys_type="default",
+                            language="en",
+                            frecsys_type="default",
+                            round_actions=1,
+                            toxicity="no",
+                            joined_on=0,
+                        )
+                        db.session.add(new_user_mgmt)
+                        db.session.commit()
+                    
+                    # Create User_Experiment record
+                    user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
+                    db.session.add(user_exp)
+                    db.session.commit()
+                    
+                    assigned += 1
+                except ValueError:
+                    errors.append(f"Invalid user ID: {user_id_str}")
+                except Exception as e:
+                    db.session.rollback()
+                    errors.append(f"Error assigning user {user_id_str}: {str(e)}")
+            
+            if assigned > 0:
+                flash(f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.", "success")
+            if errors:
+                flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
                 
-                if not user:
-                    errors.append(f"User ID {user_id} not found")
-                    continue
-                
-                # Check if already assigned
-                existing = User_Experiment.query.filter_by(
-                    user_id=user_id, exp_id=exp_id
-                ).first()
-                
-                if existing:
-                    errors.append(f"User '{user.username}' already assigned to this experiment")
-                    continue
-                
-                # Create User_Experiment record
-                user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
-                db.session.add(user_exp)
-                
-                # Ensure user exists in experiment database (User_mgmt)
-                user_agent = User_mgmt.query.filter_by(username=user.username).first()
-                if not user_agent:
-                    new_user_mgmt = User_mgmt(
-                        email=user.email,
-                        username=user.username,
-                        password=user.password,  # Already hashed
-                        user_type="user",
-                        leaning="neutral",
-                        age=0,
-                        recsys_type="default",
-                        language="en",
-                        frecsys_type="default",
-                        round_actions=1,
-                        toxicity="no",
-                        joined_on=0,
-                    )
-                    db.session.add(new_user_mgmt)
-                
-                assigned += 1
-            except ValueError:
-                errors.append(f"Invalid user ID: {user_id_str}")
-            except Exception as e:
-                errors.append(f"Error assigning user {user_id_str}: {str(e)}")
-        
-        db.session.commit()
-        
-        if assigned > 0:
-            flash(f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.", "success")
-        if errors:
-            flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
+        finally:
+            # Restore original db_exp binding
+            if old_bind:
+                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
             
     except Exception as e:
-        db.session.rollback()
         flash(f"Error during bulk assignment: {str(e)}", "error")
     
     return redirect(url_for("users.user_data"))
