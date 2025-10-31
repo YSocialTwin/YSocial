@@ -170,7 +170,7 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
-def __generate_unique_name(fake, gender, used_names, max_attempts=100):
+def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     """
     Generate a unique name that hasn't been used yet.
     
@@ -315,7 +315,7 @@ def generate_population(population_name, percentages=None, actions_config=None):
         fake = faker.Faker(__locales[nationality])
 
         # Generate a unique name
-        name = __generate_unique_name(fake, gender, used_names)
+        name = _generate_unique_name(fake, gender, used_names)
         # Add the name to used_names to prevent duplicates within this population
         used_names.add(name)
 
