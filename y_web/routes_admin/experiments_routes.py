@@ -22,7 +22,7 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
+    send_file, url_for,
 )
 from flask_login import current_user, login_required
 from traitlets import Instance
@@ -1162,7 +1162,7 @@ def experiment_logs(exp_id):
         return jsonify({"error": "Invalid experiment path format"}), 400
     
     log_file = os.path.join(exp_folder, "_server.log")
-    
+
     # Check if log file exists
     if not os.path.exists(log_file):
         return jsonify({
@@ -1174,7 +1174,7 @@ def experiment_logs(exp_id):
     # Parse the log file
     path_counts = defaultdict(int)
     path_durations = defaultdict(list)
-    
+
     try:
         with open(log_file, 'r') as f:
             for line in f:
@@ -1182,12 +1182,14 @@ def experiment_logs(exp_id):
                 if not line:
                     continue
                 try:
+                    line = line.replace("'", '"')
                     log_entry = json.loads(line)
                     path = log_entry.get('path', 'unknown')
                     duration = log_entry.get('duration', 0)
                     
                     path_counts[path] += 1
                     path_durations[path].append(float(duration))
+
                 except json.JSONDecodeError:
                     # Skip invalid JSON lines
                     continue
