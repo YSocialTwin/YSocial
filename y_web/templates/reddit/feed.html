@@ -501,11 +501,11 @@
                     <div class="load-more-wrap narrow-top has-text-centered">
                         {% if page-1>0 %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
+                           onclick="window.location.href = '/{{exp_id}}/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
                             Page</a>
                         {% endif %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
+                           onclick="window.location.href = '/{{exp_id}}/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
                             Page</a>
                     </div>
                     <!-- /Load more posts -->
@@ -520,6 +520,13 @@
 
 </div>
 
+
+<!-- Experiment context -->
+<script>
+    // Make exp_id available globally for AJAX requests
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
@@ -600,7 +607,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (window.InfiniteScroll) {
         const feedType = '{{ feed_type }}' || 'new';
         InfiniteScroll.init({
-            apiEndpoint: '/api/rfeed/{{user_id}}/{{timeline}}/{{mode}}?feed_type=' + feedType,
+            apiEndpoint: '/{{exp_id}}/api/rfeed/{{user_id}}/{{timeline}}/{{mode}}?feed_type=' + feedType,
             postsContainerId: 'posts-container',
             initialPage: {{ page }}
         });

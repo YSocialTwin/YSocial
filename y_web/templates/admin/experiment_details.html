@@ -87,7 +87,9 @@
                             {% endif %}
                             <div class="box-line">
                                     <span class="left">Delete Experiment</span>
-                                    <span class="right"> <a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" title="Delete"><i
+                                    <span class="right"> <a class="link-tooltip" href="javascript:void(0);" 
+                                                            onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiment.idexp }}'; }" 
+                                                            title="Delete"><i
                                      class="mdi mdi-delete" style="font-size: 24px;"></i></a></span>
                                 </div>
 
@@ -155,8 +157,8 @@
                                                 <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
-                                            <a class="link-tooltip" href="/admin/join_simulation" title="Join Simulation">
-                                                <i class="mdi mdi-plus-box" style="font-size: 24px;"></i>
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" title="Join This Experiment">
+                                                <i class="mdi mdi-login" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
                                         </div>
@@ -250,7 +252,9 @@
                                             </a>
                                             {% endif %}
                                             {% if client.status == 0 %}
-                                            <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete Client">
+                                            <a class="link-tooltip" href="javascript:void(0);" 
+                                               onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { window.location.href='/admin/delete_client/{{ client.id }}'; }" 
+                                               title="Delete Client">
                                                 <i class="mdi mdi-delete" style="font-size: 20px;"></i>
                                             </a>
                                             {% endif %}

@@ -108,7 +108,7 @@
                                 {% for mention in mentions %}
                                 <span style="width: 90%; display: inline; float: left;"
                                       id="left-{{ mention[0].post_id }}">
-        <a class="account-item" href="/thread/{{ mention[0].post_id }}">
+        <a class="account-item" href="/{{exp_id}}/thread/{{ mention[0].post_id }}">
           <div class="media">
             <div class="icon-wrap">
               <img
@@ -175,7 +175,7 @@
                                 </label>
                             </div>
                             <div class="nav-drop-body account-items">
-                                <a id="profile-link" href="{{ url_for('main.profile') }}" class="account-item">
+                                <a id="profile-link" href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="account-item">
                                     <div class="media">
                                         <div class="media-left">
                                             <div class="image">
@@ -198,7 +198,7 @@
                                         </div>
                                     </div>
                                 </a>
-                                <a href="/edit_profile/{{ logged_id }}" class="account-item">
+                                <a href="/{{exp_id}}/edit_profile/{{ logged_id }}" class="account-item">
                                     <div class="media">
                                         <div class="icon-wrap">
                                             <i data-feather="edit"></i>
@@ -282,7 +282,7 @@
     <div class="navbar-menu">
         <!-- Account -->
         <div class="navbar-item has-dropdown is-active">
-            <a href="{{ url_for('main.profile') }}" class="navbar-link">
+            <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="navbar-link">
                 <img
                         src="https://via.placeholder.com/150x150"
                          {% if profile_pic =="" %}
@@ -312,7 +312,7 @@
                 </a>
                 {% endif %}
                 <a
-                        href="{{ url_for('main.profile') }}"
+                        href="/{{exp_id}}/profile/{{ logged_id }}/recent/1"
                         class="navbar-item is-flex is-mobile-icon"
                 >
                     <span><i data-feather="user"></i>Profile</span>

@@ -85,27 +85,42 @@ def index():
         Redirect to appropriate page based on authentication status
     """
     if current_user.is_authenticated:
-        # get active experiment if exists
-        exp = Exps.query.filter(Exps.status != 0).first()
-        if exp is not None:
+        # get active experiments
+        exps = Exps.query.filter(Exps.status != 0).all()
+        if exps:
+            # If multiple experiments, redirect to join menu
+            if len(exps) > 1:
+                return redirect("/admin/join_simulation")
+            # If single experiment, redirect directly to feed
+            exp = exps[0]
             if exp.platform_type == "microblogging":
-                return redirect(f"/feed/{current_user.id}/feed/rf/1")
+                return redirect(f"/{exp.idexp}/feed/{current_user.id}/feed/rf/1")
             elif exp.platform_type == "forum":
-                return redirect(f"/rfeed/{current_user.id}/rfeed/rf/1")
+                return redirect(f"/{exp.idexp}/rfeed/{current_user.id}/rfeed/rf/1")
     return render_template("login.html")
 
 
 @main.get("/profile")
 @login_required
 def profile():
-    """Handle profile operation."""
+    """Handle profile operation - legacy route."""
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+
+    exp = exps[0]
     user_id = current_user.id
-    return redirect(f"/profile/{user_id}/rf/1")
+    return redirect(f"/{exp.idexp}/profile/{user_id}/rf/1")
 
 
-@main.get("/profile/<int:user_id>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
-def profile_logged(user_id, page=1, mode="recent"):
+def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
     user_id = int(user_id)
     user = User_mgmt.query.get(user_id)
@@ -178,7 +193,7 @@ def profile_logged(user_id, page=1, mode="recent"):
             profile_pic = admin.profile_pic if admin else ""
 
     # Other functions as before
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
     mutual_friends = get_mutual_friends(user_id, current_user.id)
     hashtags_top = get_top_user_hashtags(user_id, 5)
     interests = get_user_recent_interests(user_id, 5)
@@ -220,9 +235,9 @@ def profile_logged(user_id, page=1, mode="recent"):
     )
 
 
-@main.get("/edit_profile/<int:user_id>")
+@main.get("/<int:exp_id>/edit_profile/<int:user_id>")
 @login_required
-def edit_profile(user_id):
+def edit_profile(exp_id, user_id):
     """Handle edit profile operation."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -258,9 +273,9 @@ def edit_profile(user_id):
     )
 
 
-@main.route("/update_profile_data/<int:user_id>", methods=["POST"])
+@main.route("/<int:exp_id>/update_profile_data/<int:user_id>", methods=["POST"])
 @login_required
-def update_profile_data(user_id):
+def update_profile_data(exp_id, user_id):
     """Update profile data."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -284,9 +299,9 @@ def update_profile_data(user_id):
     return redirect(request.referrer)
 
 
-@main.route("/update_password/<int:user_id>", methods=["POST"])
+@main.route("/<int:exp_id>/update_password/<int:user_id>", methods=["POST"])
 @login_required
-def update_password(user_id):
+def update_password(exp_id, user_id):
     """Update password."""
     user = User_mgmt.query.filter_by(id=user_id).first()
 
@@ -310,17 +325,30 @@ def update_password(user_id):
 def feeed_logged():
     """
     Display main feed for logged-in users (microblogging platform).
+    Legacy route - redirects to experiment selection or first active experiment.
 
     Returns:
-        Redirect to feed with user ID and default parameters
+        Redirect to feed with experiment ID and user ID
     """
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+
+    exp = exps[0]
     user_id = current_user.id
-    return redirect(f"/feed/{user_id}/feed/rf/1")
+    return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
-def feed(user_id="all", timeline="timeline", mode="rf", page=1):
+def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed operation."""
     if page < 1:
         page = 1
@@ -344,9 +372,9 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -422,9 +450,9 @@ def feed(user_id="all", timeline="timeline", mode="rf", page=1):
     )
 
 
-@main.get("/hashtag_posts/<int:hashtag_id>/<int:page>")
+@main.get("/<int:exp_id>/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
-def get_post_hashtags(hashtag_id, page=1):
+def get_post_hashtags(exp_id, hashtag_id, page=1):
     """
     Display posts containing a specific hashtag.
 
@@ -436,11 +464,11 @@ def get_post_hashtags(hashtag_id, page=1):
         Rendered template with hashtag posts
     """
     res = get_posts_associated_to_hashtags(
-        hashtag_id, page, per_page=10, current_user=current_user.id
+        hashtag_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/hashtag_posts/{hashtag_id}/{page - 1}")
+        return redirect(f"/{exp_id}/hashtag_posts/{hashtag_id}/{page - 1}")
 
     # get hashtag name
     hashtag = Hashtags.query.filter_by(id=hashtag_id).first().hashtag
@@ -487,9 +515,9 @@ def get_post_hashtags(hashtag_id, page=1):
     )
 
 
-@main.get("/interest/<int:interest_id>/<int:page>")
+@main.get("/<int:exp_id>/interest/<int:interest_id>/<int:page>")
 @login_required
-def get_post_interest(interest_id, page=1):
+def get_post_interest(exp_id, interest_id, page=1):
     """
     Display posts associated with a specific interest/topic.
 
@@ -501,11 +529,11 @@ def get_post_interest(interest_id, page=1):
         Rendered template with interest-related posts
     """
     res = get_posts_associated_to_interest(
-        interest_id, page, per_page=10, current_user=current_user.id
+        interest_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/interest/{interest_id}/{page - 1}")
+        return redirect(f"/{exp_id}/interest/{interest_id}/{page - 1}")
 
     # get topic name
     interest = Interests.query.filter_by(iid=interest_id).first().interest
@@ -552,9 +580,9 @@ def get_post_interest(interest_id, page=1):
     )
 
 
-@main.get("/emotion/<int:emotion_id>/<int:page>")
+@main.get("/<int:exp_id>/emotion/<int:emotion_id>/<int:page>")
 @login_required
-def get_post_emotion(emotion_id, page=1):
+def get_post_emotion(exp_id, emotion_id, page=1):
     """
     Display posts that elicit a specific emotion.
 
@@ -566,11 +594,11 @@ def get_post_emotion(emotion_id, page=1):
         Rendered template with emotion-tagged posts
     """
     res = get_posts_associated_to_emotion(
-        emotion_id, page, per_page=10, current_user=current_user.id
+        emotion_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
 
     if len(res) == 0:
-        return redirect(f"/emotion/{emotion_id}/{page - 1}")
+        return redirect(f"/{exp_id}/emotion/{emotion_id}/{page - 1}")
 
     # get emotion name
     emotion = Emotions.query.filter_by(id=emotion_id).first()
@@ -618,9 +646,9 @@ def get_post_emotion(emotion_id, page=1):
     )
 
 
-@main.get("/friends/<int:user_id>/<int:page>")
+@main.get("/<int:exp_id>/friends/<int:user_id>/<int:page>")
 @login_required
-def get_friends(user_id, page=1):
+def get_friends(exp_id, user_id, page=1):
     """
     Display user's followers and followees (friends).
 
@@ -706,9 +734,9 @@ def get_friends(user_id, page=1):
     )
 
 
-@main.get("/thread/<int:post_id>")
+@main.get("/<int:exp_id>/thread/<int:post_id>")
 @login_required
-def get_thread(post_id):
+def get_thread(exp_id, post_id):
     # get thread_id for post_id
     """Get thread."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
@@ -748,7 +776,7 @@ def get_thread(post_id):
             profile_pic = ""
 
     discussion_tree = {
-        "post": augment_text(posts[0].tweet),
+        "post": augment_text(posts[0].tweet, exp_id),
         "profile_pic": profile_pic,
         "image": image,
         "shared_from": (
@@ -823,7 +851,7 @@ def get_thread(post_id):
                 profile_pic = ""
 
         data = {
-            "post": augment_text(post.tweet),
+            "post": augment_text(post.tweet, exp_id),
             "post_id": post.id,
             "author": user.username,
             "author_id": post.user_id,
@@ -920,7 +948,7 @@ def recursive_visit(data):
             return recursive_visit(c)
 
 
-def __get_discussions(posts, username, page):
+def __get_discussions(posts, username, page, exp_id):
     """Handle   get discussions operation."""
     res = []
 
@@ -991,7 +1019,7 @@ def __get_discussions(posts, username, page):
                         )
                     ),
                     "author_id": int(c.user_id),
-                    "post": augment_text(text),
+                    "post": augment_text(text, exp_id),
                     "round": c.round,
                     "day": Rounds.query.filter_by(id=c.round).first().day,
                     "hour": Rounds.query.filter_by(id=c.round).first().hour,
@@ -1085,7 +1113,7 @@ def __get_discussions(posts, username, page):
                 "post_id": post.id,
                 "author": User_mgmt.query.filter_by(id=post.user_id).first().username,
                 "author_id": int(post.user_id),
-                "post": augment_text(post.tweet.split(":")[-1]),
+                "post": augment_text(post.tweet.split(":")[-1], exp_id),
                 "round": post.round,
                 "day": day,
                 "hour": hour,
@@ -1117,9 +1145,9 @@ def __get_discussions(posts, username, page):
 #### Thread
 
 
-@main.get("/rthread/<int:post_id>")
+@main.get("/<int:exp_id>/rthread/<int:post_id>")
 @login_required
-def get_thread_reddit(post_id):
+def get_thread_reddit(exp_id, post_id):
     # get thread_id for post_id
     """Get thread reddit."""
     thread_id = Post.query.filter_by(id=post_id).first().thread_id
@@ -1160,7 +1188,7 @@ def get_thread_reddit(post_id):
 
     # Process post content for Reddit-style display
     title, content = process_reddit_post(posts[0].tweet)
-    processed_content = augment_text(content) if content else ""
+    processed_content = augment_text(content, exp_id) if content else ""
 
     # Get article for main post
     article = Articles.query.filter_by(id=posts[0].news_id).first()
@@ -1253,7 +1281,9 @@ def get_thread_reddit(post_id):
 
         # Process comment content for Reddit-style display
         comment_title, comment_content = process_reddit_post(post.tweet)
-        processed_comment = augment_text(comment_content) if comment_content else ""
+        processed_comment = (
+            augment_text(comment_content, exp_id) if comment_content else ""
+        )
 
         # Get article for comment (if any)
         article = Articles.query.filter_by(id=post.news_id).first()
@@ -1353,17 +1383,30 @@ def get_thread_reddit(post_id):
 def feeed_logged_reddit():
     """
     Display Reddit-style feed for logged-in users.
+    Legacy route - redirects to experiment selection or first active experiment.
 
     Returns:
-        Redirect to Reddit feed with default parameters
+        Redirect to Reddit feed with experiment ID
     """
+    # Get active experiments
+    exps = Exps.query.filter(Exps.status != 0).all()
+    if not exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect("/admin/experiments")
+
+    if len(exps) > 1:
+        return redirect("/admin/join_simulation")
+
+    exp = exps[0]
     user_id = "all"  # Show all posts including user's own posts
-    return redirect(f"/feed/{user_id}/feed/rf/1")
+    return redirect(f"/{exp.idexp}/feed/{user_id}/feed/rf/1")
 
 
-@main.get("/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
-def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """Handle feed reddit operation."""
     if page < 1:
         page = 1
@@ -1373,8 +1416,6 @@ def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     posts, additional = None, None
 
     feed_type = request.args.get("feed_type", "new")
-
-    print("HERE", feed_type)
 
     if user_id == "all":
         if feed_type == "top":
@@ -1454,9 +1495,9 @@ def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1536,9 +1577,11 @@ def feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
 # API Endpoints for Infinite Scrolling
 
 
-@main.get("/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/api/feed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
-def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
+def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in feed.
 
@@ -1564,9 +1607,9 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1585,9 +1628,11 @@ def api_feed(user_id="all", timeline="timeline", mode="rf", page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>")
+@main.get(
+    "/<int:exp_id>/api/rfeed/<string:user_id>/<string:timeline>/<string:mode>/<int:page>"
+)
 @login_required
-def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
+def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     """
     API endpoint for infinite scrolling in Reddit-style feed.
 
@@ -1675,9 +1720,9 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     res, res_additional = [], []
 
     if posts is not None:
-        res = __get_discussions(posts, username, page)
+        res = __get_discussions(posts, username, page, exp_id)
     if additional is not None:
-        res_additional = __get_discussions(additional, username, page)
+        res_additional = __get_discussions(additional, username, page, exp_id)
 
     # combine the posts and additional posts
     if len(res_additional) > 0:
@@ -1696,16 +1741,16 @@ def api_feed_reddit(user_id="all", timeline="timeline", mode="rf", page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/hashtag_posts/<int:hashtag_id>/<int:page>")
+@main.get("/<int:exp_id>/api/hashtag_posts/<int:hashtag_id>/<int:page>")
 @login_required
-def api_hashtag_posts(hashtag_id, page=1):
+def api_hashtag_posts(exp_id, hashtag_id, page=1):
     """
     API endpoint for infinite scrolling in hashtag posts.
 
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_hashtags(
-        hashtag_id, page, per_page=10, current_user=current_user.id
+        hashtag_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
         "components/posts.html",
@@ -1719,16 +1764,16 @@ def api_hashtag_posts(hashtag_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/interest/<int:interest_id>/<int:page>")
+@main.get("/<int:exp_id>/api/interest/<int:interest_id>/<int:page>")
 @login_required
-def api_interest_posts(interest_id, page=1):
+def api_interest_posts(exp_id, interest_id, page=1):
     """
     API endpoint for infinite scrolling in interest posts.
 
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_interest(
-        interest_id, page, per_page=10, current_user=current_user.id
+        interest_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
         "components/posts.html",
@@ -1742,16 +1787,20 @@ def api_interest_posts(interest_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/emotion/<int:emotion_id>/<int:page>")
+@main.get("/<int:exp_id>/api/emotion/<int:emotion_id>/<int:page>")
 @login_required
-def api_emotion_posts(emotion_id, page=1):
+def api_emotion_posts(exp_id, emotion_id, page=1):
     """
     API endpoint for infinite scrolling in emotion posts.
 
     Returns rendered HTML for posts.
     """
     res = get_posts_associated_to_emotion(
-        emotion_id, page, per_page=10, current_user=current_user.id
+        emotion_id,
+        page,
+        per_page=10,
+        current_user=current_user.id,
+        exp_id=exp_id,
     )
     html = render_template(
         "components/posts.html",
@@ -1765,15 +1814,15 @@ def api_emotion_posts(emotion_id, page=1):
     return jsonify({"html": html, "has_more": len(res) > 0})
 
 
-@main.get("/api/profile/<int:user_id>/<string:mode>/<int:page>")
+@main.get("/<int:exp_id>/api/profile/<int:user_id>/<string:mode>/<int:page>")
 @login_required
-def api_profile_posts(user_id, page=1, mode="recent"):
+def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
     """
     API endpoint for infinite scrolling in profile posts.
 
     Returns rendered HTML for posts.
     """
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
     html = render_template(
         "components/posts.html",
         items=rp,

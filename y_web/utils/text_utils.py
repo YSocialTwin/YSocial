@@ -111,7 +111,7 @@ def toxicity(text, username, post_id, db):
                 return
 
 
-def augment_text(text):
+def augment_text(text, exp_id):
     """
     Augment text by converting mentions and hashtags to clickable links.
 
@@ -120,6 +120,7 @@ def augment_text(text):
 
     Args:
         text: Raw text with mentions and hashtags
+        exp_id: ID of the experiment
 
     Returns:
         HTML string with hyperlinked mentions and hashtags
@@ -150,10 +151,10 @@ def augment_text(text):
 
     # Replace the mentions and hashtags with the links
     for m, uid in mentioned_users.items():
-        text = text.replace(m, f'<a href="/user_profile/{uid}"> {m} </a>')
+        text = text.replace(m, f'<a href="/{exp_id}/user_profile/{uid}"> {m} </a>')
 
     for h, hid in used_hastag.items():
-        text = text.replace(h, f'<a href="/hashtag_posts/{hid}/1"> {h} </a>')
+        text = text.replace(h, f'<a href="/{exp_id}/hashtag_posts/{hid}/1"> {h} </a>')
 
     # remove first character it is a space
     if text[0] == " ":

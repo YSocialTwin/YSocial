@@ -20,7 +20,7 @@
 
                 </div>
                 <div class="user-info">
-                    <a href="/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
                     <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
                 </div>
             </div>
@@ -34,7 +34,7 @@
                 </div>
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-content">
-                        <a href="/thread/{{ item['post_id'] }}" class="dropdown-item">
+                        <a href="/{{exp_id}}/thread/{{ item['post_id'] }}" class="dropdown-item">
                             <div class="media">
                                 <i data-feather="bookmark"></i>
                                 <div class="media-content">
@@ -77,7 +77,7 @@
             <div class="post-text">
                 {% if item["shared_from"] != -1 %}
                 <div style="text-align: right; border-bottom: 2px solid #f4f4f4; margin-bottom: 5px;">
-                    <p><small>Shared from: <a href="/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
+                    <p><small>Shared from: <a href="/{{exp_id}}/thread/{{ item['shared_from'][0] }}">{{ item['shared_from'][1] }}</a></small></p>
                 </div>
                 {% endif %}
                 <p>
@@ -117,7 +117,7 @@
                 {% if len(item['emotions']) > 0 %}
                 <p style="margin-right: 0.5rem;">Emotions</p>
                 {% for em in item['emotions'] %}
-                <a class="mdi {{ em[1] }}" title="{{ em[0] }}" style="font-size: .8rem; margin-right: 0.5rem;" href="/emotion/{{ em[2] }}/1"></a>
+                <a class="mdi {{ em[1] }}" title="{{ em[0] }}" style="font-size: .8rem; margin-right: 0.5rem;" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
                 {% endfor %}
                 {% endif %}
             </div>
@@ -126,11 +126,11 @@
                 <p style="margin-right: 0.5rem;">Topics</p>
                 {% for tp in item['topics'] %}
                     {% if tp[2] == 'positive' %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                        <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% elif tp[2] == 'negative' %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                        <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% else %}
-                        <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                        <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                     {% endif %}
                 {% endfor %}
                 {% endif %}
@@ -197,7 +197,7 @@
             <!-- Comment -->
             <div class="original-post">
                 <div class="media-content">
-                    <a href="/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
                     <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
                     <div class="post-text">
                         <p> {{ item["post"]|safe }}</p>
@@ -207,7 +207,7 @@
                             {% if len(item['emotions']) > 0 %}
                             <p style="margin-right: 0.5rem;">Emotions</p>
                             {% for em in item['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
+                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
                             {% endfor %}
                             {% endif %}
                         </div>
@@ -216,11 +216,11 @@
                             <p style="margin-right: 0.5rem;">Topics</p>
                             {% for tp in item['topics'] %}
                                 {% if tp[2] == 'positive' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% else %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}
@@ -266,7 +266,7 @@
                 </div>
                 <!-- Content -->
                 <div class="media-content">
-                    <a href="/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
+                    <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
                     <span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>
                     <p>
                         {{ cm["post"]|safe }}
@@ -277,7 +277,7 @@
                             {% if len(cm['emotions']) > 0 %}
                             <p style="margin-right: 0.5rem;">Emotions</p>
                             {% for em in cm['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
+                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1" style="margin-right: 0.5rem;"></a>
                             {% endfor %}
                             {% endif %}
                         </div>
@@ -286,11 +286,11 @@
                             <p style="margin-right: 0.5rem;">Topics</p>
                             {% for tp in cm['topics'] %}
                                 {% if tp[2] == 'positive' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: .8rem; border: #0bc350 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: .8rem; border: #e60000 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% else %}
-                                    <a  href="/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
+                                    <a  href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: .8rem; border: #00b2ff 1px solid; padding: 2px; border-radius: 10%; margin-right: 0.5rem;"> {{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}

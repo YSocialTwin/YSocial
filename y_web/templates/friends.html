@@ -8,7 +8,7 @@
             <div class="nav-inner is-friends">
 
                 <div class="option-tabs is-friends">
-                    <a class="option-tab is-active" href="{{ url_for('main.profile')}}/{{ user_id }}/recent/1"><span>Profile</span></a>
+                    <a class="option-tab is-active" href="/{{exp_id}}/profile/{{ user_id }}/recent/1"><span>Profile</span></a>
 
 
                     <a class="option-tab is-active" data-tab="all-friends">
@@ -60,7 +60,7 @@
 
                         </div>
                         <div class="friend-info">
-                            <h3><a href="/profile/{{ follower['id'] }}/recent/1">{{ follower['username'] }}</a></h3>
+                            <h3><a href="/{{exp_id}}/profile/{{ follower['id'] }}/recent/1">{{ follower['username'] }}</a></h3>
                         </div>
                         <div class="friend-stats">
                             <div class="stat-block">
@@ -114,7 +114,7 @@
 
                         </div>
                         <div class="friend-info">
-                            <h3><a href="/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
+                            <h3><a href="/{{exp_id}}/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
                         </div>
                         <div class="friend-stats">
                             <div class="stat-block">
@@ -169,7 +169,7 @@
 
                         </div>
                         <div class="friend-info">
-                            <h3><a href="/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
+                            <h3><a href="/{{exp_id}}/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
                         </div>
                         <div class="friend-stats">
                             <div class="stat-block">
@@ -206,6 +206,12 @@
     </div>
 
 </div>
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
+
 <!-- Concatenated js plugins and jQuery -->
 
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>

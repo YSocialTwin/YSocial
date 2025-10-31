@@ -91,18 +91,54 @@ def dashboard():
     Shows experiments, clients, execution status, Ollama models,
     and database connection information. Requires admin privileges.
 
+    Query params:
+        page: Page number (default=1)
+        per_page: Number of experiments per page (default=5)
+
     Returns:
         Rendered dashboard template with system status information
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
-    # get all experiments
-    experiments = Exps.query.all()
+    # Get pagination parameters
+    page = request.args.get("page", 1, type=int)
+    per_page = request.args.get("per_page", 5, type=int)
+
+    # Ensure valid values
+    page = max(1, page)
+    per_page = max(1, min(per_page, 100))  # Cap at 100
+
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments
+        experiments = Exps.query.all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        experiments = Exps.query.filter_by(owner=user.username).all()
+    else:
+        # Regular users should not access this page
+        # They are redirected to their experiment feed
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
+
+    total_experiments = len(experiments)
+
+    # Calculate pagination
+    total_pages = max(1, (total_experiments + per_page - 1) // per_page)
+    page = min(page, total_pages)  # Ensure page doesn't exceed total pages
+    start_idx = (page - 1) * per_page
+    end_idx = start_idx + per_page
+
+    # Paginate experiments
+    paginated_experiments = experiments[start_idx:end_idx]
+
     # get all clients for each experiment
     exps = {}
-    for e in experiments:
+    for e in paginated_experiments:
         exps[e.idexp] = {
             "experiment": e,
             "clients": Client.query.filter_by(id_exp=e.idexp).all(),
@@ -174,6 +210,11 @@ def dashboard():
         has_jupyter_sessions=has_jupyter_sessions,
         jupyter_by_exp=jupyter_by_exp,
         notebook=current_app.config["ENABLE_NOTEBOOK"],
+        # Pagination parameters
+        page=page,
+        per_page=per_page,
+        total_experiments=total_experiments,
+        total_pages=total_pages,
     )
 
 

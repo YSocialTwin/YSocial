@@ -16,15 +16,12 @@ Key components:
 import atexit
 import os
 import shutil
-import signal
 
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-client_processes = {}
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -189,18 +186,6 @@ def create_postgresql_db(app):
     admin_engine.dispose()
 
 
-def cleanup_subprocesses_only():
-    """OS-level cleanup only: terminate PIDs/Processes. No DB operations."""
-    print("Cleaning up subprocesses (OS-level only)...")
-    for name, proc in client_processes.items():
-        try:
-            print(f"Terminating {name} pid={getattr(proc, 'pid', None)}")
-            proc.terminate()
-            proc.join(timeout=5)
-        except Exception as e:
-            print("Error terminating subprocess:", e)
-
-
 def cleanup_db_jupyter_with_new_app():
     """
     Create a fresh app instance to get a valid app context, then run DB cleanup.
@@ -225,7 +210,6 @@ def cleanup_db_jupyter_with_new_app():
         print("Error during DB cleanup with fresh app:", e)
 
 
-atexit.register(cleanup_subprocesses_only)
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 
@@ -294,6 +278,63 @@ def create_app(db_type="sqlite"):
             User_mgmt object if found, None otherwise
         """
         return User.query.get(int(user_id))
+
+    # Setup experiment context handler
+    from .experiment_context import (
+        get_current_experiment_id,
+        initialize_active_experiment_databases,
+        setup_experiment_context,
+        teardown_experiment_context,
+    )
+
+    @app.before_request
+    def before_request_handler():
+        """Setup experiment context for each request."""
+        setup_experiment_context()
+
+    @app.teardown_request
+    def teardown_request_handler(exception=None):
+        """Restore experiment context after each request."""
+        teardown_experiment_context(exception)
+
+    @app.context_processor
+    def inject_exp_id():
+        """Inject exp_id into all templates."""
+        return dict(exp_id=get_current_experiment_id())
+
+    @app.context_processor
+    def inject_active_experiments():
+        """Inject active experiments into all admin templates."""
+        from .models import Exps
+
+        try:
+            active_exps = Exps.query.filter_by(status=1).all()
+            return dict(active_experiments=active_exps)
+        except Exception:
+            return dict(active_experiments=[])
+
+    @app.context_processor
+    def inject_user_info():
+        """Inject current user role information into templates."""
+        from flask_login import current_user
+
+        from .models import Admin_users
+
+        if current_user.is_authenticated:
+            try:
+                admin_user = Admin_users.query.filter_by(
+                    username=current_user.username
+                ).first()
+                if admin_user:
+                    return dict(
+                        current_user_role=admin_user.role, current_user_id=admin_user.id
+                    )
+            except Exception:
+                pass
+        return dict(current_user_role=None, current_user_id=None)
+
+    # Initialize database bindings for all active experiments
+    initialize_active_experiment_databases(app)
 
     # Register your blueprints here as before
     from .auth import auth as auth_blueprint

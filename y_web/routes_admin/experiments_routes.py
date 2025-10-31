@@ -10,6 +10,7 @@ import json
 import os
 import pathlib
 import shutil
+import socket
 import uuid
 
 from flask import (
@@ -53,11 +54,91 @@ from y_web.models import (
     User_Experiment,
     User_mgmt,
 )
-from y_web.utils import start_server, terminate_process_on_port
+from y_web.utils import (
+    start_server,
+    terminate_client,
+    terminate_process_on_port,
+    terminate_server_process,
+)
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 
 experiments = Blueprint("experiments", __name__)
+
+
+def get_suggested_port():
+    """
+    Find the first available port in the range 5000-6000.
+
+    A port is considered available if:
+    1. It is not assigned to any existing experiment (regardless of running status)
+    2. It is currently free (not in use by any process)
+
+    Returns:
+        int: The first available port, or 5000 if none found
+    """
+    # Get all ports assigned to existing experiments
+    assigned_ports = set()
+    experiments = Exps.query.all()
+    for exp in experiments:
+        if exp.port:
+            assigned_ports.add(exp.port)
+
+    # Check each port in the range
+    for port in range(5000, 6001):
+        # Skip if already assigned to an experiment
+        if port in assigned_ports:
+            continue
+
+        # Check if port is currently free
+        if is_port_free(port):
+            return port
+
+    # Return None if no port is available
+    return None
+
+
+def is_port_free(port):
+    """
+    Check if a port is currently free.
+
+    Args:
+        port: Port number to check
+
+    Returns:
+        bool: True if port is free, False otherwise
+    """
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", port))
+            return True
+    except OSError:
+        return False
+
+
+def is_port_valid(port):
+    """
+    Validate that a port is in the allowed range and not already assigned.
+
+    Args:
+        port: Port number to validate
+
+    Returns:
+        tuple: (is_valid, error_message)
+    """
+    # Check range
+    if port < 5000 or port > 6000:
+        return False, "Port must be in the range 5000-6000"
+
+    # Check if already assigned to an experiment
+    existing_exp = Exps.query.filter_by(port=port).first()
+    if existing_exp:
+        return (
+            False,
+            f"Port {port} is already assigned to experiment '{existing_exp.exp_name}'",
+        )
+
+    return True, None
 
 
 @experiments.route("/admin/experiments")
@@ -68,10 +149,21 @@ def settings():
 
     Shows list of experiments, users, and database configuration.
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # load all experiments
-    experiments = Exps.query.limit(5).all()
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments (limit 5 for initial display)
+        experiments = Exps.query.limit(5).all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own (limit 5 for initial display)
+        experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
+    else:
+        # Regular users should not access this page
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
+
     users = Admin_users.query.all()
 
     # check if current db is the same of the active experiment
@@ -86,12 +178,16 @@ def settings():
 
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 
+    # Get suggested port for new experiment
+    suggested_port = get_suggested_port()
+
     return render_template(
         "admin/settings.html",
         experiments=experiments,
         users=users,
         ollamas=ollamas,
         dbtype=dbtype,
+        suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
     )
 
@@ -99,38 +195,100 @@ def settings():
 @experiments.route("/admin/join_simulation")
 @login_required
 def join_simulation():
-    # get user id for the current user logged in
-    """Handle join simulation operation."""
-    user_id = (
-        db.session.query(User_mgmt).filter_by(username=current_user.username).first().id
+    """
+    Display menu of active experiments for user to join.
+
+    If only one experiment is active, redirect directly.
+    If multiple experiments are active, show selection menu.
+    """
+    # Get all active experiments
+    active_exps = Exps.query.filter_by(status=1).all()
+
+    if not active_exps:
+        flash("No active experiment. Please activate an experiment first.")
+        return redirect(request.referrer)
+
+    # If only one active experiment, redirect directly
+    if len(active_exps) == 1:
+        exp = active_exps[0]
+        return redirect(f"/admin/join_experiment/{exp.idexp}")
+
+    # Multiple active experiments - show selection menu
+    check_privileges(current_user.username)
+    ollamas = ollama_status()
+
+    return render_template(
+        "admin/select_experiment.html",
+        experiments=active_exps,
+        ollamas=ollamas,
     )
 
-    # check which experiment is active
-    exp = Exps.query.filter_by(status=1).first()
+
+@experiments.route("/admin/join_experiment/<int:exp_id>")
+@login_required
+def join_experiment(exp_id):
+    """
+    Join a specific active experiment.
+
+    Args:
+        exp_id: ID of experiment to join
+
+    Returns:
+        Redirect to experiment feed
+    """
+    exp = Exps.query.filter_by(idexp=exp_id, status=1).first()
     if exp is None:
-        flash("No active experiment. Please load an experiment.")
-        return redirect(request.referrer)
+        flash("Experiment not found or not active.")
+        return redirect("/admin/experiments")
 
-    # route the simulation home for the user
+    # Get user id - need to check in the experiment database
+    from y_web.experiment_context import register_experiment_database
+
+    bind_key = f"db_exp_{exp_id}"
+
+    # Ensure the experiment database is registered
+    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+        register_experiment_database(current_app, exp_id, exp.db_name)
+
+    # Temporarily switch to experiment database to get user
+    old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
+    current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
+        "SQLALCHEMY_BINDS"
+    ][bind_key]
+
+    try:
+        user = (
+            db.session.query(User_mgmt)
+            .filter_by(username=current_user.username)
+            .first()
+        )
+        if not user:
+            flash("User not found in experiment database.")
+            return redirect("/admin/experiments")
+        user_id = user.id
+    finally:
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+
+    # Route to the appropriate feed based on platform type
     if exp.platform_type == "microblogging":
-        return redirect(f"/feed/{user_id}/feed/rf/1")
-
+        return redirect(f"/{exp_id}/feed/{user_id}/feed/rf/1")
     elif exp.platform_type == "forum":
-        return redirect(f"/rfeed/{user_id}/feed/rf/1")
-
+        return redirect(f"/{exp_id}/rfeed/{user_id}/feed/rf/1")
     else:
-        flash("Wrong Platform Type. Please load an experiment.")
-        return redirect(request.referrer)
+        flash("Unknown platform type for this experiment.")
+        return redirect("/admin/experiments")
 
 
 @experiments.route("/admin/select_experiment/<int:exp_id>")
 @login_required
 def change_active_experiment(exp_id):
     """
-    Change the currently active experiment.
+    Activate or deactivate an experiment.
+
+    Now supports multiple active experiments simultaneously.
 
     Args:
-        exp_id: ID of experiment to activate
+        exp_id: ID of experiment to toggle activation
 
     Returns:
         Redirect to settings page
@@ -140,45 +298,67 @@ def change_active_experiment(exp_id):
 
     exp = Exps.query.filter_by(idexp=exp_id).first()
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
-    # check the database type in the URI
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        new_db = "/".join(
-            current_app.config["SQLALCHEMY_DATABASE_URI"].rsplit("/", 1)[:-1]
-            + [exp.db_name]
-        )
-        # if postgresql, set the bind to the postgresql database
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = new_db
-    elif current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
-        current_app.config["SQLALCHEMY_BINDS"][
-            "db_exp"
-        ] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
-
-    else:
-        flash("Unsupported database type. Please use SQLite or PostgreSQL.")
+    if not exp:
+        flash("Experiment not found.")
         return redirect(request.referrer)
 
-    # check if the user is present in the User_mgmt table
-    user = db.session.query(User_mgmt).filter_by(username=current_user.username).first()
-
-    if user is None:
-        new_user = User_mgmt(
-            email=current_user.email,
-            username=current_user.username,
-            password=current_user.password,
-            user_type="user",
-            leaning="neutral",
-            age=0,
-            recsys_type="default",
-            language="en",
-            frecsys_type="default",
-            round_actions=1,
-            toxicity="no",
-        )
-        db.session.add(new_user)
+    # Toggle experiment status
+    if exp.status == 1:
+        # Deactivate the experiment
+        exp.status = 0
+        db.session.commit()
+        flash(f"Experiment '{exp.exp_name}' deactivated.")
+    else:
+        # Activate the experiment
+        exp.status = 1
         db.session.commit()
 
-        # ad to experiment if not present
+        # Register the experiment database dynamically
+        from y_web.experiment_context import register_experiment_database
+
+        register_experiment_database(current_app, exp_id, exp.db_name)
+
+        # Ensure user exists in the experiment database
+        # We need to switch to the correct bind temporarily
+        bind_key = f"db_exp_{exp_id}"
+
+        # Check if user exists in this experiment's database
+        # Note: User_mgmt uses db_exp bind, so we need to query with bind
+        with db.session.no_autoflush:
+            # Temporarily set db_exp to this experiment
+            old_bind = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
+            current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
+                "SQLALCHEMY_BINDS"
+            ][bind_key]
+
+            try:
+                user = (
+                    db.session.query(User_mgmt)
+                    .filter_by(username=current_user.username)
+                    .first()
+                )
+
+                if user is None:
+                    new_user = User_mgmt(
+                        email=current_user.email,
+                        username=current_user.username,
+                        password=current_user.password,
+                        user_type="user",
+                        leaning="neutral",
+                        age=0,
+                        recsys_type="default",
+                        language="en",
+                        frecsys_type="default",
+                        round_actions=1,
+                        toxicity="no",
+                    )
+                    db.session.add(new_user)
+                    db.session.commit()
+            finally:
+                # Restore old bind
+                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+
+        # Add user to experiment if not present
         user_exp = (
             db.session.query(User_Experiment)
             .filter_by(user_id=current_user.id, exp_id=exp_id)
@@ -189,9 +369,7 @@ def change_active_experiment(exp_id):
             db.session.add(user_exp)
             db.session.commit()
 
-    db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
-    db.session.query(Exps).filter_by(db_name=exp.db_name).update({Exps.status: 1})
-    db.session.commit()
+        flash(f"Experiment '{exp.exp_name}' activated.")
 
     reload_current_user(uname)
 
@@ -501,10 +679,16 @@ def create_experiment():
 
     exp_name = request.form.get("exp_name")
     exp_descr = request.form.get("exp_descr")
-    owner = request.form.get("owner")
     platform_type = request.form.get("platform_type")
-    host = request.form.get("host")
-    port = int(request.form.get("port"))
+
+    # Use fixed host value
+    host = "127.0.0.1"
+
+    # Use suggested port (first available in range 5000-6000)
+    port = get_suggested_port()
+
+    # Use current logged-in user as owner
+    owner = current_user.username
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
@@ -667,7 +851,7 @@ def create_experiment():
             if db_type == "sqlite"
             else f"experiments_{uid}"
         ),
-        owner=db.session.query(Admin_users).filter_by(id=owner).first().username,
+        owner=owner,
         exp_descr=exp_descr,
         status=0,
         port=int(port),
@@ -803,7 +987,18 @@ def experiments_data():
     Returns:
         Rendered experiments list template
     """
-    query = Exps.query
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Filter experiments based on user role
+    if user.role == "admin":
+        query = Exps.query
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        query = Exps.query.filter_by(owner=user.username)
+    else:
+        # Regular users should not access this endpoint
+        return {"data": [], "total": 0}
 
     # search filter
     search = request.args.get("search")
@@ -962,7 +1157,17 @@ def start_experiment(uid):
 @experiments.route("/admin/stop_experiment/<int:uid>")
 @login_required
 def stop_experiment(uid):
-    """Handle stop experiment operation."""
+    """Handle stop experiment operation.
+
+    Stops the experiment by first terminating all client processes, then stopping
+    the server. This order prevents clients from trying to communicate with a dead server.
+
+    Shutdown sequence:
+    1. Terminate all client processes
+    2. Update client execution status in database
+    3. Stop the server process
+    4. Update server execution status in database
+    """
     check_privileges(current_user.username)
 
     # get experiment
@@ -972,20 +1177,32 @@ def stop_experiment(uid):
     if exp.running == 0:
         return experiment_details(uid)
 
-    # stop the yserver
-    terminate_process_on_port(exp.port)
+    # Step 1 & 2: Stop all running clients attached to this experiment first
+    # This prevents clients from trying to communicate with a dead server
+    clients = Client.query.filter_by(id_exp=uid).all()
+    for client in clients:
+        # Only terminate clients that are marked as running (status=1)
+        if client.status == 1:
+            # Terminate the client process if it has a PID
+            if client.pid:
+                print(
+                    f"Stopping client {client.name} (ID: {client.id}, PID: {client.pid}) for experiment {uid}"
+                )
+                terminate_client(client, pause=False)
 
-    # the clients are killed as soon as the server stops
-    # update client statuses
-    # get all populations for the experiment and update the client_running status
-    populations = Client.query.filter_by(id_exp=uid).all()
-    for pop in populations:
-        db.session.query(Client).filter_by(id=pop.population_id).update(
-            {Client.status: 0}
-        )
-        db.session.commit()
+            # Update client status in database
+            client.status = 0
+            db.session.commit()
 
-    # update the experiment status
+    # Step 3: Now stop the yserver after all clients are terminated
+    # Try the new subprocess-based termination first
+    # If that fails or no process is tracked, fall back to port-based termination
+    terminated = terminate_server_process(uid)
+    if not terminated:
+        # Fallback to port-based termination for backward compatibility
+        terminate_process_on_port(exp.port)
+
+    # Step 4: Update the experiment status in database
     db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 0})
     db.session.commit()
 
@@ -1065,11 +1282,17 @@ def download_experiment_file(eid):
 @login_required
 def miscellanea():
     """
-    Display miscellaneous settings page (languages, leanings, etc.).
+    Display miscellaneous settings page (admin only).
 
     Returns:
         Rendered miscellaneous settings template
     """
+    # Check if user is admin (researchers should not access this page)
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        flash("Access denied. This page is only accessible to administrators.", "error")
+        return redirect(url_for("admin.dashboard"))
+
     check_privileges(current_user.username)
 
     ollamas = ollama_status()

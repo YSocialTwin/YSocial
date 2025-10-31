@@ -279,7 +279,7 @@
                             </div>
                             <div style="text-align: center">
 
-                                    <a href="{{ url_for('main.profile')}}/{{ user_id }}/recent/1">
+                                    <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
                                      <div class="avatar">
                                         <img
                                                 id="user-avatar"
@@ -332,7 +332,7 @@
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
-                                    <span><a href="/emotion/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['emotion'] }}</a></span>
+                                    <span><a href="/{{exp_id}}/emotion/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['emotion'] }}</a></span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -363,10 +363,10 @@
                     <div class="load-more-wrap narrow-top has-text-centered">
                         {% if page-1>0 %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/emotion/{{emotion_id}}/{{ page-1 }}';">Previous Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/emotion/{{emotion_id}}/{{ page-1 }}';">Previous Page</a>
                         {% endif %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/emotion/{{emotion_id}}/{{ page+1 }}';">Next Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/emotion/{{emotion_id}}/{{ page+1 }}';">Next Page</a>
                     </div>
                     <!-- /Load more posts  -->
                 </div>
@@ -376,6 +376,12 @@
     </div>
 </div>
 
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
@@ -423,7 +429,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/api/emotion/{{emotion_id}}',
+                apiEndpoint: '/{{exp_id}}/api/emotion/{{emotion_id}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });

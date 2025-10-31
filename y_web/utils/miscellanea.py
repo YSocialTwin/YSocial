@@ -23,17 +23,17 @@ from y_web.utils import (
 
 def check_privileges(username):
     """
-    Verify if a user has admin privileges.
+    Verify if a user has admin or researcher privileges.
 
     Args:
         username: Username to check privileges for
 
     Returns:
-        Redirect to main.index if not admin, None if admin
+        Redirect to main.index if not admin/researcher, None if authorized
     """
     user = Admin_users.query.filter_by(username=username).first()
 
-    if user.role != "admin":
+    if user.role not in ["admin", "researcher"]:
         return redirect(url_for("main.index"))
     return
 

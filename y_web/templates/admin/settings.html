@@ -338,31 +338,6 @@
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Owner</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div class="select">
-                                                <select name="owner">
-                                                    {% for user in users %}
-                                                    <option value="{{ user.id }}">{{ user.username }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Host</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="host"
-                                                                                       class="input"
-                                                                                       value="127.0.0.1"></span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Port</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="port"
-                                                                                       class="input"
-                                                                                       value="5010"></span>
-                                    </div>
-
-                                       <div class="box-line">
                                         <span class="left">Simulation Topics</span>
                                         <span class="right" style="width: 70%;">
 
@@ -615,13 +590,21 @@
 
                                     {% if exp.status==0 %}
                                     <a class="button is-solid primary-button_small green-button"
-                                       href='/admin/select_experiment/{{ exp.idexp }}'>
+                                       href='/admin/select_experiment/{{ exp.idexp }}'
+                                       title="Activate experiment">
                                         <div class="mdi mdi-play"></div>
                                     </a>
                                     {% endif %}
                                     {% if exp.status==1 %}
-                                    <a class="button is-solid primary-button_small" href="/admin/join_simulation">
-                                        <div class="mdi mdi-plus"></div>
+                                    <a class="button is-solid primary-button_small orange-button"
+                                       href='/admin/select_experiment/{{ exp.idexp }}'
+                                       title="Deactivate experiment">
+                                        <div class="mdi mdi-stop"></div>
+                                    </a>
+                                    <a class="button is-solid primary-button_small" 
+                                       href="/admin/join_experiment/{{ exp.idexp }}"
+                                       title="Join experiment">
+                                        <div class="mdi mdi-login"></div>
                                     </a>
                                     {% endif %}
                                     <a class="button is-solid primary-button_small red-button"

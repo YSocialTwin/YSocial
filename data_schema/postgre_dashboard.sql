@@ -63,8 +63,9 @@ CREATE TABLE exps (
     running       INTEGER DEFAULT 0 NOT NULL,
     port          INTEGER NOT NULL,
     server        TEXT DEFAULT '127.0.0.1',
-    platform_type TEXT DEFAULT 'microblogging'
-    annotations   TEXT NOT NULL DEFAULT ''
+    platform_type TEXT DEFAULT 'microblogging',
+    annotations   TEXT NOT NULL DEFAULT '',
+    server_pid    INTEGER DEFAULT NULL
 );
 
 CREATE TABLE exp_stats (
@@ -192,7 +193,8 @@ CREATE TABLE client (
     probability_of_secondary_follow     REAL DEFAULT 0,
     share_link                          REAL DEFAULT 0,
     crecsys                             TEXT,
-    frecsys                             TEXT
+    frecsys                             TEXT,
+    pid                                 INTEGER DEFAULT NULL
 );
 
 CREATE TABLE client_execution (

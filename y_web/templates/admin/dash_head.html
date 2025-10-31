@@ -1,7 +1,7 @@
 <div class="dashboard-toolbar">
     <h1 class="title is-4"></h1>
     <div class="actions">
-        <label class="theme-toggle">
+        <!-- <label class="theme-toggle" {# title="Toggle night mode" #}>
             <input type="checkbox"/>
             <span class="toggler">
           <span class="dark">
@@ -11,11 +11,46 @@
             <i data-feather="sun"></i>
           </span>
                         </span>
-        </label>
+        </label> -->
         <div class="buttons">
-            <a class="button is-solid live-button has-icon" href="/admin/join_simulation">
-                <i data-feather="video"></i>
-                <span>Join Active Simulation</span>
+            {% if active_experiments %}
+                {% if active_experiments|length == 1 %}
+                    {# Single experiment - direct link #}
+                    <a class="button is-solid live-button has-icon" href="/admin/join_experiment/{{ active_experiments[0].idexp }}">
+                        <i data-feather="video"></i>
+                        <span>Join {{ active_experiments[0].exp_name }}</span>
+                    </a>
+                {% else %}
+                    {# Multiple experiments - dropdown menu #}
+                    <div class="dropdown is-hoverable">
+                        <div class="dropdown-trigger">
+                            <button class="button is-solid live-button has-icon" aria-haspopup="true" aria-controls="join-simulation-menu">
+                                <i data-feather="video"></i>
+                                <span>Join Simulation</span>
+                                <i data-feather="chevron-down" style="margin-left: 0.5rem; width: 16px; height: 16px;"></i>
+                            </button>
+                        </div>
+                        <div class="dropdown-menu" id="join-simulation-menu" role="menu">
+                            <div class="dropdown-content">
+                                {% for exp in active_experiments %}
+                                <a href="/admin/join_experiment/{{ exp.idexp }}" class="dropdown-item">
+                                    {{ exp.exp_name }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                {# No active experiments - disabled button #}
+                <button class="button is-solid live-button has-icon is-disabled" disabled title="No active experiments available">
+                    <i data-feather="alert-circle"></i>
+                    <span>No Active Experiments</span>
+                </button>
+            {% endif %}
+            <a class="button is-solid has-icon" href="/logout" style="margin-left: 0.5rem;">
+                <i data-feather="log-out"></i>
+                <span>Log Out</span>
             </a>
         </div>
     </div>

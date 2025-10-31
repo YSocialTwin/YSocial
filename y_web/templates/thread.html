@@ -278,7 +278,7 @@
                                 <span>{{ username }}</span>
                             </div>
                             <div style="text-align: center">
-                                <a href="{{ url_for('main.profile')}}/{{ logged_id }}/recent/1">
+                                <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1">
                                      <div class="avatar">
                                         <img
                                                 id="user-avatar"
@@ -326,7 +326,7 @@
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
-                                    <span><a href="/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
+                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -367,6 +367,12 @@
     <!-- /Feed page main wrapper -->
 </div>
 
+
+<!-- Experiment context -->
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+</script>
 
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
