@@ -142,7 +142,13 @@ def update():
 @login_required
 def user_details(uid):
     """Handle user details operation."""
-    check_privileges(current_user.username)
+    # Get current user
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Allow access if user is admin OR if user is viewing their own profile
+    if current_admin_user.role != "admin" and current_admin_user.id != uid:
+        flash("You do not have permission to view this page.", "error")
+        return redirect(url_for("admin.dashboard"))
 
     # get user details
     user = Admin_users.query.filter_by(id=uid).first()
@@ -300,9 +306,15 @@ def update_user_llm():
     Returns:
         Redirect to user details
     """
-    check_privileges(current_user.username)
-
     user_id = request.form.get("user_id")
+    
+    # Get current user
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Allow access if user is admin OR if user is updating their own LLM settings
+    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+        flash("You do not have permission to perform this action.", "error")
+        return redirect(url_for("admin.dashboard"))
     llm = request.form.get("llm")
     llm_url = request.form.get("custom_llm_url", "").strip()
 
@@ -323,9 +335,15 @@ def set_perspective_api_user():
     Returns:
         Redirect to user details
     """
-    check_privileges(current_user.username)
-
     user_id = request.form.get("user_id")
+    
+    # Get current user
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Allow access if user is admin OR if user is updating their own API key
+    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+        flash("You do not have permission to perform this action.", "error")
+        return redirect(url_for("admin.dashboard"))
     perspective_api = request.form.get("perspective_api")
 
     user = Admin_users.query.filter_by(id=user_id).first()
@@ -400,9 +418,15 @@ def update_user_password():
     Returns:
         Redirect to user details
     """
-    check_privileges(current_user.username)
-
     user_id = request.form.get("user_id")
+    
+    # Get current user
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Allow access if user is admin OR if user is updating their own password
+    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+        flash("You do not have permission to perform this action.", "error")
+        return redirect(url_for("admin.dashboard"))
     new_password = request.form.get("new_password")
     confirm_password = request.form.get("confirm_password")
 
@@ -439,9 +463,15 @@ def update_user_email():
     Returns:
         Redirect to user details
     """
-    check_privileges(current_user.username)
-
     user_id = request.form.get("user_id")
+    
+    # Get current user
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Allow access if user is admin OR if user is updating their own email
+    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+        flash("You do not have permission to perform this action.", "error")
+        return redirect(url_for("admin.dashboard"))
     new_email = request.form.get("new_email")
 
     # Validate email format
