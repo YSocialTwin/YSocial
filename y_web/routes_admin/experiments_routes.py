@@ -22,7 +22,8 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file, url_for,
+    send_file,
+    url_for,
 )
 from flask_login import current_user, login_required
 from traitlets import Instance
@@ -1138,12 +1139,12 @@ def experiment_details(uid):
 def experiment_logs(exp_id):
     """Get experiment server logs analysis."""
     check_privileges(current_user.username)
-    
+
     # Get experiment details
     experiment = Exps.query.filter_by(idexp=exp_id).first()
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
-    
+
     # Construct path to _server.log
     # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
     db_name = experiment.db_name
@@ -1160,23 +1161,21 @@ def experiment_logs(exp_id):
         exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
-    
+
     log_file = os.path.join(exp_folder, "_server.log")
 
     # Check if log file exists
     if not os.path.exists(log_file):
-        return jsonify({
-            "call_volume": {},
-            "mean_duration": {},
-            "error": "Log file not found"
-        })
-    
+        return jsonify(
+            {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
+        )
+
     # Parse the log file
     path_counts = defaultdict(int)
     path_durations = defaultdict(list)
 
     try:
-        with open(log_file, 'r') as f:
+        with open(log_file, "r") as f:
             for line in f:
                 line = line.strip()
                 if not line:
@@ -1184,9 +1183,9 @@ def experiment_logs(exp_id):
                 try:
                     line = line.replace("'", '"')
                     log_entry = json.loads(line)
-                    path = log_entry.get('path', 'unknown')
-                    duration = log_entry.get('duration', 0)
-                    
+                    path = log_entry.get("path", "unknown")
+                    duration = log_entry.get("duration", 0)
+
                     path_counts[path] += 1
                     path_durations[path].append(float(duration))
 
@@ -1195,7 +1194,7 @@ def experiment_logs(exp_id):
                     continue
     except Exception as e:
         return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
-    
+
     # Calculate mean durations
     mean_durations = {}
     for path, durations in path_durations.items():
@@ -1203,11 +1202,8 @@ def experiment_logs(exp_id):
             mean_durations[path] = sum(durations) / len(durations)
         else:
             mean_durations[path] = 0
-    
-    return jsonify({
-        "call_volume": dict(path_counts),
-        "mean_duration": mean_durations
-    })
+
+    return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")
