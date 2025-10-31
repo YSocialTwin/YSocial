@@ -145,8 +145,8 @@ def user_details(uid):
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
-    # Allow access if user is admin OR if user is viewing their own profile
-    if current_admin_user.role != "admin" and current_admin_user.id != uid:
+    # Allow access if user is admin/researcher OR if user is viewing their own profile
+    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != uid:
         flash("You do not have permission to view this page.", "error")
         return redirect(url_for("admin.dashboard"))
 
@@ -225,10 +225,29 @@ def delete_user(uid):
     check_privileges(current_user.username)
 
     user = Admin_users.query.filter_by(id=uid).first()
-    db.session.delete(user)
-    db.session.commit()
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("users.user_data"))
+    
+    # Check if user can be deleted (not self-delete)
+    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    if current_admin_user.id == uid:
+        flash("You cannot delete your own account.", "error")
+        return redirect(url_for("users.user_data"))
+    
+    try:
+        # Delete associated User_Experiment records first
+        User_Experiment.query.filter_by(user_id=uid).delete()
+        
+        # Delete the user
+        db.session.delete(user)
+        db.session.commit()
+        flash("User deleted successfully.", "success")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error deleting user: {str(e)}", "error")
 
-    return user_data()
+    return redirect(url_for("users.user_data"))
 
 
 @users.route("/admin/add_user_to_experiment", methods=["POST"])
@@ -318,8 +337,8 @@ def update_user_llm():
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
-    # Allow access if user is admin OR if user is updating their own LLM settings
-    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
+    # Allow access if user is admin/researcher OR if user is updating their own LLM settings
+    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     llm = request.form.get("llm")
@@ -354,8 +373,8 @@ def set_perspective_api_user():
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
-    # Allow access if user is admin OR if user is updating their own API key
-    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
+    # Allow access if user is admin/researcher OR if user is updating their own API key
+    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     perspective_api = request.form.get("perspective_api")
@@ -444,8 +463,8 @@ def update_user_password():
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
-    # Allow access if user is admin OR if user is updating their own password
-    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
+    # Allow access if user is admin/researcher OR if user is updating their own password
+    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_password = request.form.get("new_password")
@@ -496,8 +515,8 @@ def update_user_email():
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
-    # Allow access if user is admin OR if user is updating their own email
-    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
+    # Allow access if user is admin/researcher OR if user is updating their own email
+    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_email = request.form.get("new_email")
@@ -525,3 +544,174 @@ def update_user_email():
 
     flash("Email updated successfully", "success")
     return user_details(user_id_int)
+
+
+@users.route("/admin/bulk_create_users", methods=["POST"])
+@login_required
+def bulk_create_users():
+    """
+    Bulk create multiple users from a list.
+    
+    Expected format: username,email,role per line (password will be auto-generated)
+    or with password: username,email,role,password
+    
+    Returns:
+        Redirect to users page with status message
+    """
+    check_privileges(current_user.username)
+    
+    users_data = request.form.get("users_data", "").strip()
+    role_filter = request.form.get("role", "user")  # Default role for bulk creation
+    
+    if not users_data:
+        flash("No user data provided.", "error")
+        return redirect(url_for("users.user_data"))
+    
+    lines = users_data.split("\n")
+    created = 0
+    errors = []
+    
+    for i, line in enumerate(lines, 1):
+        line = line.strip()
+        if not line:
+            continue
+            
+        parts = [p.strip() for p in line.split(",")]
+        
+        if len(parts) < 3:
+            errors.append(f"Line {i}: Invalid format (expected: username,email,role or username,email,role,password)")
+            continue
+        
+        username = parts[0]
+        email = parts[1]
+        role = parts[2] if len(parts) > 2 else role_filter
+        password = parts[3] if len(parts) > 3 else f"{username}123!"  # Auto-generate password
+        
+        # Validate role
+        if role not in ["admin", "researcher", "user"]:
+            errors.append(f"Line {i}: Invalid role '{role}' (must be admin, researcher, or user)")
+            continue
+        
+        # Check if user already exists
+        existing = Admin_users.query.filter(
+            (Admin_users.username == username) | (Admin_users.email == email)
+        ).first()
+        
+        if existing:
+            errors.append(f"Line {i}: User '{username}' or email '{email}' already exists")
+            continue
+        
+        try:
+            # Create user
+            new_user = Admin_users(
+                username=username,
+                email=email,
+                password=generate_password_hash(password),
+                role=role,
+                last_seen="",
+            )
+            db.session.add(new_user)
+            created += 1
+        except Exception as e:
+            errors.append(f"Line {i}: Error creating user '{username}': {str(e)}")
+    
+    try:
+        db.session.commit()
+        if created > 0:
+            flash(f"Successfully created {created} user(s).", "success")
+        if errors:
+            flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Database error: {str(e)}", "error")
+    
+    return redirect(url_for("users.user_data"))
+
+
+@users.route("/admin/bulk_assign_users", methods=["POST"])
+@login_required
+def bulk_assign_users():
+    """
+    Bulk assign users to an experiment.
+    
+    Returns:
+        Redirect to users page with status message
+    """
+    check_privileges(current_user.username)
+    
+    user_ids = request.form.getlist("user_ids")
+    exp_id = request.form.get("experiment_id")
+    
+    if not user_ids or not exp_id:
+        flash("No users or experiment selected.", "error")
+        return redirect(url_for("users.user_data"))
+    
+    try:
+        exp_id = int(exp_id)
+        exp = Exps.query.filter_by(idexp=exp_id).first()
+        if not exp:
+            flash("Experiment not found.", "error")
+            return redirect(url_for("users.user_data"))
+        
+        assigned = 0
+        errors = []
+        
+        for user_id_str in user_ids:
+            try:
+                user_id = int(user_id_str)
+                user = Admin_users.query.filter_by(id=user_id).first()
+                
+                if not user:
+                    errors.append(f"User ID {user_id} not found")
+                    continue
+                
+                # Check if already assigned
+                existing = User_Experiment.query.filter_by(
+                    user_id=user_id, exp_id=exp_id
+                ).first()
+                
+                if existing:
+                    errors.append(f"User '{user.username}' already assigned to this experiment")
+                    continue
+                
+                # Create User_Experiment record
+                user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
+                db.session.add(user_exp)
+                
+                # Ensure user exists in experiment database (User_mgmt)
+                user_agent = User_mgmt.query.filter_by(username=user.username).first()
+                if not user_agent:
+                    new_user_mgmt = User_mgmt(
+                        email=user.email,
+                        username=user.username,
+                        password=user.password,  # Already hashed
+                        user_type="user",
+                        leaning="neutral",
+                        age=0,
+                        recsys_type="default",
+                        language="en",
+                        frecsys_type="default",
+                        round_actions=1,
+                        toxicity="no",
+                        joined_on=0,
+                    )
+                    db.session.add(new_user_mgmt)
+                
+                assigned += 1
+            except ValueError:
+                errors.append(f"Invalid user ID: {user_id_str}")
+            except Exception as e:
+                errors.append(f"Error assigning user {user_id_str}: {str(e)}")
+        
+        db.session.commit()
+        
+        if assigned > 0:
+            flash(f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.", "success")
+        if errors:
+            flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
+            
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error during bulk assignment: {str(e)}", "error")
+    
+    return redirect(url_for("users.user_data"))

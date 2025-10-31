@@ -87,7 +87,7 @@
             </div>
         </a>
 
-        {% if current_user_role == "admin" %}
+        {% if current_user_role == "admin" or current_user_role == "researcher" %}
         <a href="/admin/users" class="dashboard-aside-link">
             <div>
                 <i data-feather="users"></i>

@@ -153,20 +153,13 @@ def settings():
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
     # Filter experiments based on user role
-    if user.role == "admin":
-        # Admin sees all experiments (limit 5 for initial display)
+    if user.role == "admin" or user.role == "researcher":
+        # Admin and researcher see all experiments (limit 5 for initial display)
         experiments = Exps.query.limit(5).all()
     else:
-        # Non-admin users see only experiments they created or joined
-        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
-        exp_ids = [ue.exp_id for ue in user_experiments]
-        # Include experiments owned by the user OR joined by the user
-        if exp_ids:
-            experiments = Exps.query.filter(
-                (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
-            ).limit(5).all()
-        else:
-            experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
+        # Regular users should not access this page
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
     
     users = Admin_users.query.all()
 
@@ -995,19 +988,11 @@ def experiments_data():
     user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Filter experiments based on user role
-    if user.role == "admin":
+    if user.role == "admin" or user.role == "researcher":
         query = Exps.query
     else:
-        # Non-admin users see only experiments they created or joined
-        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
-        exp_ids = [ue.exp_id for ue in user_experiments]
-        # Include experiments owned by the user OR joined by the user
-        if exp_ids:
-            query = Exps.query.filter(
-                (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
-            )
-        else:
-            query = Exps.query.filter_by(owner=user.username)
+        # Regular users should not access this endpoint
+        return {"data": [], "total": 0}
 
     # search filter
     search = request.args.get("search")
