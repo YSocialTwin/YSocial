@@ -75,6 +75,12 @@ def create_page():
     leaning = request.form.get("leaning")
     activity_profile_id = request.form.get("activity_profile")
 
+    # Validate that page name is unique
+    existing_page = Page.query.filter_by(name=name).first()
+    if existing_page:
+        flash(f"Page name '{name}' already exists. Please choose a different name.")
+        return page_data()
+
     page = Page(
         name=name,
         descr=descr,
