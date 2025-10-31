@@ -385,17 +385,63 @@
 
                         <!-- Path Filter Controls -->
                         <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em;">
                                 <h4 class="subtitle is-6" style="margin: 0;">Filter Paths</h4>
                                 <div>
                                     <button id="selectAllPaths" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
                                     <button id="deselectAllPaths" class="button is-small is-light">Deselect All</button>
                                 </div>
                             </div>
-                            <div id="pathFilters" style="display: flex; flex-wrap: wrap; gap: 0.5em;">
+                            <div id="pathFilters" style="display: flex; flex-wrap: wrap; gap: 0.4em;">
                                 <!-- Checkboxes will be dynamically generated here -->
                             </div>
                         </div>
+
+                        <style>
+                            /* Modern checkbox styling */
+                            #pathFilters label {
+                                display: inline-flex;
+                                align-items: center;
+                                padding: 0.35em 0.65em;
+                                background: white;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.8em;
+                                transition: all 0.2s ease;
+                                user-select: none;
+                            }
+
+                            #pathFilters label:hover {
+                                background: #f5f9ff;
+                                border-color: #039be5;
+                                box-shadow: 0 1px 3px rgba(3, 155, 229, 0.1);
+                            }
+
+                            #pathFilters input[type="checkbox"] {
+                                margin: 0;
+                                margin-right: 0.4em;
+                                width: 14px;
+                                height: 14px;
+                                cursor: pointer;
+                                accent-color: #039be5;
+                            }
+
+                            #pathFilters label span {
+                                color: #555;
+                                font-weight: 500;
+                                white-space: nowrap;
+                            }
+
+                            #pathFilters label:has(input:checked) {
+                                background: #e3f2fd;
+                                border-color: #039be5;
+                            }
+
+                            #pathFilters label:has(input:checked) span {
+                                color: #0277bd;
+                            }
+                        </style>
                     </div>
                 </div>
             </div>
@@ -450,13 +496,11 @@
                     
                     paths.forEach(path => {
                         const label = document.createElement('label');
-                        label.style.cssText = 'display: flex; align-items: center; padding: 0.4em 0.6em; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.85em;';
                         
                         const checkbox = document.createElement('input');
                         checkbox.type = 'checkbox';
                         checkbox.value = path;
                         checkbox.checked = true;
-                        checkbox.style.marginRight = '0.4em';
                         checkbox.addEventListener('change', updateCharts);
                         
                         const span = document.createElement('span');
