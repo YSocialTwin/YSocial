@@ -350,6 +350,156 @@
 
             </div>
 
+            <!-- Server Logs Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Real-time analysis of server API calls from _server.log file.
+                        </p>
+
+                        <div id="logs-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
+                            <i class="mdi mdi-alert" style="color: #856404;"></i>
+                            <span id="logs-error-text" style="color: #856404;"></span>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Call Volume by Path</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="callVolumeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Mean Duration by Path (seconds)</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="meanDurationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Fetch and display server logs data
+                fetch('/admin/experiment_logs/{{ experiment.idexp }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            document.getElementById('logs-error-message').style.display = 'block';
+                            document.getElementById('logs-error-text').textContent = data.error;
+                        }
+
+                        const callVolume = data.call_volume || {};
+                        const meanDuration = data.mean_duration || {};
+
+                        // Prepare data for charts
+                        const paths = Object.keys(callVolume).sort();
+                        const volumeData = paths.map(path => callVolume[path]);
+                        const durationData = paths.map(path => meanDuration[path]);
+
+                        // Call Volume Chart
+                        new Chart("callVolumeChart", {
+                            type: 'bar',
+                            data: {
+                                labels: paths,
+                                datasets: [{
+                                    label: 'Number of Calls',
+                                    data: volumeData,
+                                    backgroundColor: 'rgba(3, 155, 229, 0.6)',
+                                    borderColor: 'rgba(3, 155, 229, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        padding: 8,
+                                        titleFont: { size: 12 },
+                                        bodyFont: { size: 11 },
+                                        callbacks: {
+                                            label: function(context) {
+                                                return 'Calls: ' + context.parsed.y;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            precision: 0
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Mean Duration Chart
+                        new Chart("meanDurationChart", {
+                            type: 'bar',
+                            data: {
+                                labels: paths,
+                                datasets: [{
+                                    label: 'Mean Duration (s)',
+                                    data: durationData,
+                                    backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                                    borderColor: 'rgba(76, 175, 80, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        padding: 8,
+                                        titleFont: { size: 12 },
+                                        bodyFont: { size: 11 },
+                                        callbacks: {
+                                            label: function(context) {
+                                                return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return value.toFixed(4);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching logs:', error);
+                        document.getElementById('logs-error-message').style.display = 'block';
+                        document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+                    });
+            </script>
 
         </div>
     </div>

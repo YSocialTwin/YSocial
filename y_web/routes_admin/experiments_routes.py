@@ -1131,6 +1131,84 @@ def experiment_details(uid):
     )
 
 
+@experiments.route("/admin/experiment_logs/<int:exp_id>")
+@login_required
+def experiment_logs(exp_id):
+    """Get experiment server logs analysis."""
+    check_privileges(current_user.username)
+    
+    from collections import defaultdict
+    from flask import jsonify
+    
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        return jsonify({"error": "Experiment not found"}), 404
+    
+    # Construct path to _server.log
+    # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
+    db_name = experiment.db_name
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        # Extract the UUID folder
+        parts = db_name.split(os.sep)
+        if len(parts) >= 2:
+            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+        else:
+            return jsonify({"error": "Invalid experiment path"}), 400
+    elif db_name.startswith("experiments_"):
+        # PostgreSQL format - UUID is after the underscore
+        uid = db_name.replace("experiments_", "")
+        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+    else:
+        return jsonify({"error": "Invalid experiment path format"}), 400
+    
+    log_file = os.path.join(exp_folder, "_server.log")
+    
+    # Check if log file exists
+    if not os.path.exists(log_file):
+        return jsonify({
+            "call_volume": {},
+            "mean_duration": {},
+            "error": "Log file not found"
+        })
+    
+    # Parse the log file
+    path_counts = defaultdict(int)
+    path_durations = defaultdict(list)
+    
+    try:
+        with open(log_file, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    log_entry = json.loads(line)
+                    path = log_entry.get('path', 'unknown')
+                    duration = log_entry.get('duration', 0)
+                    
+                    path_counts[path] += 1
+                    path_durations[path].append(float(duration))
+                except json.JSONDecodeError:
+                    # Skip invalid JSON lines
+                    continue
+    except Exception as e:
+        return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
+    
+    # Calculate mean durations
+    mean_durations = {}
+    for path, durations in path_durations.items():
+        if durations:
+            mean_durations[path] = sum(durations) / len(durations)
+        else:
+            mean_durations[path] = 0
+    
+    return jsonify({
+        "call_volume": dict(path_counts),
+        "mean_duration": mean_durations
+    })
+
+
 @experiments.route("/admin/start_experiment/<int:uid>")
 @login_required
 def start_experiment(uid):
