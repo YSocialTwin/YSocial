@@ -37,11 +37,17 @@ EMAIL_PATTERN = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 @login_required
 def user_data():
     """
-    Display user management page.
+    Display user management page (admin only).
 
     Returns:
         Rendered user data template with available models and ollama status
     """
+    # Check if user is admin (researchers should not access this page)
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        flash("Access denied. This page is only accessible to administrators.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     check_privileges(current_user.username)
     llm_backend = llm_backend_status()
     models = (

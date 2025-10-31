@@ -1282,11 +1282,17 @@ def download_experiment_file(eid):
 @login_required
 def miscellanea():
     """
-    Display miscellaneous settings page (languages, leanings, etc.).
+    Display miscellaneous settings page (admin only).
 
     Returns:
         Rendered miscellaneous settings template
     """
+    # Check if user is admin (researchers should not access this page)
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        flash("Access denied. This page is only accessible to administrators.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     check_privileges(current_user.username)
 
     ollamas = ollama_status()

@@ -14,7 +14,12 @@
 
                 <div class="column is-12">
                     <div class="dashboard-box">
+                        {% if current_user_role == "admin" %}
                         <a href="/admin/users">Users</a> > Details: {{ user.username }}
+                        {% else %}
+                        <!-- Researcher view: no breadcrumb link back to users -->
+                        Details: {{ user.username }}
+                        {% endif %}
                     </div>
                 </div>
             </div>

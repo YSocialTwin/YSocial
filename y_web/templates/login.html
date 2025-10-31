@@ -122,42 +122,77 @@
 
                         {% if show_exp_selection %}
                         <!-- Experiment Selection Form (shown after credentials validated) -->
-                        <form method="POST" action="/select_experiment" style="width: 100%; max-width: 400px;">
+                        <form method="POST" action="/select_experiment" style="width: 100%; max-width: 450px;">
                             <input type="hidden" name="auth_token" value="{{ auth_token }}">
                             <div class="login-form">
-                                <h3 style="text-align: center; margin-bottom: 1.5rem; font-size: 1.25rem; font-weight: 600;">
-                                    Select an Experiment
+                                <h3 style="text-align: center; margin-bottom: 2rem; font-size: 1.5rem; font-weight: 700; color: #2c3e50;">
+                                    Choose Your Experiment
                                 </h3>
 
                                 {% with messages = get_flashed_messages() %}
                                 {% if messages %}
-                                <div class="notification is-danger">
+                                <div class="notification is-danger" style="margin-bottom: 1.5rem;">
                                     {{ messages[0] }}
                                 </div>
                                 {% endif %}
                                 {% endwith %}
 
-                                <div class="field" style="margin-bottom: 1.5rem;">
-                                    <label class="label" style="margin-bottom: 0.5rem;">Available Experiments</label>
+                                <div class="field" style="margin-bottom: 2rem;">
+                                    <label class="label" style="font-size: 0.9rem; color: #7f8c8d; margin-bottom: 0.75rem; font-weight: 500;">Select an active experiment to continue</label>
                                     <div class="control">
-                                        <div class="select is-fullwidth">
-                                            <select name="experiment_id" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid #e0e0e0; font-size: 1rem;">
-                                                <option value="">-- Select an experiment --</option>
+                                        <div style="position: relative;">
+                                            <select name="experiment_id" required 
+                                                    style="width: 100%; 
+                                                           padding: 1rem 1.25rem; 
+                                                           border-radius: 12px; 
+                                                           border: 2px solid #e8e8e8; 
+                                                           font-size: 1.05rem; 
+                                                           font-weight: 500;
+                                                           color: #2c3e50;
+                                                           background: #ffffff;
+                                                           transition: all 0.3s ease;
+                                                           cursor: pointer;
+                                                           appearance: none;
+                                                           -webkit-appearance: none;
+                                                           -moz-appearance: none;
+                                                           background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%206l5%205%205-5%202%201-7%207-7-7%202-1z%22%20fill%3D%22%233273dc%22%2F%3E%3C%2Fsvg%3E');
+                                                           background-repeat: no-repeat;
+                                                           background-position: right 1rem center;
+                                                           padding-right: 3rem;"
+                                                    onmouseover="this.style.borderColor='#3273dc'; this.style.boxShadow='0 4px 12px rgba(50, 115, 220, 0.15)';"
+                                                    onmouseout="this.style.borderColor='#e8e8e8'; this.style.boxShadow='none';"
+                                                    onfocus="this.style.borderColor='#3273dc'; this.style.boxShadow='0 0 0 3px rgba(50, 115, 220, 0.1)';"
+                                                    onblur="this.style.borderColor='#e8e8e8'; this.style.boxShadow='none';">
+                                                <option value="" style="color: #95a5a6;">Choose an experiment...</option>
                                                 {% for exp in experiments %}
-                                                <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                <option value="{{ exp.idexp }}" style="padding: 1rem;">{{ exp.exp_name }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>
                                     </div>
+                                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: #95a5a6;">
+                                        <i data-feather="info" style="width: 14px; height: 14px; vertical-align: middle;"></i>
+                                        You have access to {{ experiments|length }} active experiment{{ 's' if experiments|length > 1 else '' }}
+                                    </p>
                                 </div>
 
-                                <div class="field" style="margin-top: 2rem;">
+                                <div class="field" style="margin-top: 2.5rem;">
                                     <div class="control">
                                         <button
                                                 class="button is-solid primary-button raised is-rounded is-fullwidth"
-                                                style="padding: 0.875rem 1.5rem; border-radius: 8px; font-size: 1rem; font-weight: 600; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(50, 115, 220, 0.3);"
+                                                style="padding: 1rem 1.5rem; 
+                                                       border-radius: 12px; 
+                                                       font-size: 1.05rem; 
+                                                       font-weight: 600; 
+                                                       transition: all 0.3s ease; 
+                                                       box-shadow: 0 6px 16px rgba(50, 115, 220, 0.3);
+                                                       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                                       border: none;"
+                                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(50, 115, 220, 0.4)';"
+                                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(50, 115, 220, 0.3)';"
                                         >
-                                            Join Experiment
+                                            <i data-feather="arrow-right" style="width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;"></i>
+                                            Continue to Experiment
                                         </button>
                                     </div>
                                 </div>
