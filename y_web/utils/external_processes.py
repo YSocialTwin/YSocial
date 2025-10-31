@@ -25,10 +25,10 @@ from pathlib import Path
 import numpy as np
 import requests
 from flask import current_app
+from ollama import Client as oclient
 from requests import post
 from sklearn.utils import deprecated
 
-from ollama import Client as oclient
 from y_web import db
 from y_web.models import (
     ActivityProfile,
