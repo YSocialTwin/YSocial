@@ -382,11 +382,108 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Path Filter Controls -->
+                        <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                                <h4 class="subtitle is-6" style="margin: 0;">Filter Paths</h4>
+                                <div>
+                                    <button id="selectAllPaths" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
+                                    <button id="deselectAllPaths" class="button is-small is-light">Deselect All</button>
+                                </div>
+                            </div>
+                            <div id="pathFilters" style="display: flex; flex-wrap: wrap; gap: 0.5em;">
+                                <!-- Checkboxes will be dynamically generated here -->
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <script>
+                // Global variables to store charts and data
+                let callVolumeChartInstance = null;
+                let meanDurationChartInstance = null;
+                let allPathsData = {
+                    paths: [],
+                    callVolume: {},
+                    meanDuration: {}
+                };
+
+                // Function to update charts based on selected paths
+                function updateCharts() {
+                    const checkboxes = document.querySelectorAll('#pathFilters input[type="checkbox"]');
+                    const selectedPaths = [];
+                    
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            selectedPaths.push(checkbox.value);
+                        }
+                    });
+
+                    // If no paths selected, show all
+                    const pathsToShow = selectedPaths.length > 0 ? selectedPaths : allPathsData.paths;
+                    
+                    // Prepare filtered data
+                    const volumeData = pathsToShow.map(path => allPathsData.callVolume[path] || 0);
+                    const durationData = pathsToShow.map(path => allPathsData.meanDuration[path] || 0);
+
+                    // Update Call Volume Chart
+                    if (callVolumeChartInstance) {
+                        callVolumeChartInstance.data.labels = pathsToShow;
+                        callVolumeChartInstance.data.datasets[0].data = volumeData;
+                        callVolumeChartInstance.update();
+                    }
+
+                    // Update Mean Duration Chart
+                    if (meanDurationChartInstance) {
+                        meanDurationChartInstance.data.labels = pathsToShow;
+                        meanDurationChartInstance.data.datasets[0].data = durationData;
+                        meanDurationChartInstance.update();
+                    }
+                }
+
+                // Function to create filter checkboxes
+                function createPathFilters(paths) {
+                    const filterContainer = document.getElementById('pathFilters');
+                    filterContainer.innerHTML = '';
+                    
+                    paths.forEach(path => {
+                        const label = document.createElement('label');
+                        label.style.cssText = 'display: flex; align-items: center; padding: 0.4em 0.6em; background: white; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 0.85em;';
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = path;
+                        checkbox.checked = true;
+                        checkbox.style.marginRight = '0.4em';
+                        checkbox.addEventListener('change', updateCharts);
+                        
+                        const span = document.createElement('span');
+                        span.textContent = path;
+                        
+                        label.appendChild(checkbox);
+                        label.appendChild(span);
+                        filterContainer.appendChild(label);
+                    });
+                }
+
+                // Select All button handler
+                document.getElementById('selectAllPaths').addEventListener('click', function() {
+                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    updateCharts();
+                });
+
+                // Deselect All button handler
+                document.getElementById('deselectAllPaths').addEventListener('click', function() {
+                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateCharts();
+                });
+
                 // Fetch and display server logs data
                 fetch('/admin/experiment_logs/{{ experiment.idexp }}')
                     .then(response => response.json())
@@ -399,16 +496,23 @@
                         const callVolume = data.call_volume || {};
                         const meanDuration = data.mean_duration || {};
 
+                        // Store data globally
+                        allPathsData.paths = Object.keys(callVolume).sort();
+                        allPathsData.callVolume = callVolume;
+                        allPathsData.meanDuration = meanDuration;
+
+                        // Create filter checkboxes
+                        createPathFilters(allPathsData.paths);
+
                         // Prepare data for charts
-                        const paths = Object.keys(callVolume).sort();
-                        const volumeData = paths.map(path => callVolume[path]);
-                        const durationData = paths.map(path => meanDuration[path]);
+                        const volumeData = allPathsData.paths.map(path => callVolume[path]);
+                        const durationData = allPathsData.paths.map(path => meanDuration[path]);
 
                         // Call Volume Chart
-                        new Chart("callVolumeChart", {
+                        callVolumeChartInstance = new Chart("callVolumeChart", {
                             type: 'bar',
                             data: {
-                                labels: paths,
+                                labels: allPathsData.paths,
                                 datasets: [{
                                     label: 'Number of Calls',
                                     data: volumeData,
@@ -449,10 +553,10 @@
                         });
 
                         // Mean Duration Chart
-                        new Chart("meanDurationChart", {
+                        meanDurationChartInstance = new Chart("meanDurationChart", {
                             type: 'bar',
                             data: {
-                                labels: paths,
+                                labels: allPathsData.paths,
                                 datasets: [{
                                     label: 'Mean Duration (s)',
                                     data: durationData,
