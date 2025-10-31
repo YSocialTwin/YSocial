@@ -149,10 +149,21 @@ def settings():
 
     Shows list of experiments, users, and database configuration.
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # load all experiments
-    experiments = Exps.query.limit(5).all()
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments (limit 5 for initial display)
+        experiments = Exps.query.limit(5).all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own (limit 5 for initial display)
+        experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
+    else:
+        # Regular users should not access this page
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
+
     users = Admin_users.query.all()
 
     # check if current db is the same of the active experiment
@@ -976,7 +987,18 @@ def experiments_data():
     Returns:
         Rendered experiments list template
     """
-    query = Exps.query
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Filter experiments based on user role
+    if user.role == "admin":
+        query = Exps.query
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        query = Exps.query.filter_by(owner=user.username)
+    else:
+        # Regular users should not access this endpoint
+        return {"data": [], "total": 0}
 
     # search filter
     search = request.args.get("search")
@@ -1260,11 +1282,17 @@ def download_experiment_file(eid):
 @login_required
 def miscellanea():
     """
-    Display miscellaneous settings page (languages, leanings, etc.).
+    Display miscellaneous settings page (admin only).
 
     Returns:
         Rendered miscellaneous settings template
     """
+    # Check if user is admin (researchers should not access this page)
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        flash("Access denied. This page is only accessible to administrators.", "error")
+        return redirect(url_for("admin.dashboard"))
+
     check_privileges(current_user.username)
 
     ollamas = ollama_status()

@@ -87,12 +87,21 @@
             </div>
         </a>
 
+        {% if current_user_role == "admin" %}
         <a href="/admin/users" class="dashboard-aside-link">
             <div>
                 <i data-feather="users"></i>
                 <span>Users</span>
             </div>
         </a>
+        {% else %}
+        <a href="/admin/user_details/{{ current_user_id }}" class="dashboard-aside-link">
+            <div>
+                <i data-feather="user"></i>
+                <span>My Profile</span>
+            </div>
+        </a>
+        {% endif %}
         <hr>
            {% if ollamas["status"] and  ollamas["installed"] %}
         <a href="/admin/experiments" class="dashboard-aside-link">
@@ -125,12 +134,14 @@
         {% endif %}
     </div>
     <div class="dashboard-aside-end">
+        {% if current_user_role == "admin" %}
         <a href="/admin/miscellanea" class="dashboard-aside-link">
             <div>
                 <i data-feather="more-horizontal"></i>
                 <span>Miscellanea</span>
             </div>
         </a>
+        {% endif %}
         <a href="/admin/about" class="dashboard-aside-link">
             <div>
                 <i data-feather="compass"></i>

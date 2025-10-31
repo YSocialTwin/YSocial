@@ -98,7 +98,9 @@ def dashboard():
     Returns:
         Rendered dashboard template with system status information
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
@@ -110,8 +112,19 @@ def dashboard():
     page = max(1, page)
     per_page = max(1, min(per_page, 100))  # Cap at 100
 
-    # get all experiments
-    experiments = Exps.query.all()
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments
+        experiments = Exps.query.all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        experiments = Exps.query.filter_by(owner=user.username).all()
+    else:
+        # Regular users should not access this page
+        # They are redirected to their experiment feed
+        flash("Access denied. Please use the experiment feed.")
+        return redirect(url_for("auth.login"))
+
     total_experiments = len(experiments)
 
     # Calculate pagination

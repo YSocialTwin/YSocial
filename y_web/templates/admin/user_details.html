@@ -14,7 +14,12 @@
 
                 <div class="column is-12">
                     <div class="dashboard-box">
+                        {% if current_user_role == "admin" %}
                         <a href="/admin/users">Users</a> > Details: {{ user.username }}
+                        {% else %}
+                        <!-- Researcher view: no breadcrumb link back to users -->
+                        Details: {{ user.username }}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -319,6 +324,8 @@
                     </div>
                 </div>
 
+                {% if current_user_role == "admin" %}
+                <!-- Add to Experiment section (admin only) -->
                 <div class="column is-6" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
@@ -349,6 +356,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
 
             </div>
 
