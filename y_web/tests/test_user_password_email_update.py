@@ -84,9 +84,10 @@ def app():
         return User_mgmt.query.get(int(user_id))
 
     # Create users blueprint with password and email update functionality
+    import re
+
     from flask import Blueprint, flash, redirect, render_template_string, request
     from flask_login import current_user, login_required
-    import re
 
     users = Blueprint("users", __name__)
 
@@ -100,28 +101,28 @@ def app():
         """Validate password complexity requirements."""
         if len(password) < 8:
             return False, "Password must be at least 8 characters long"
-        
+
         if not re.search(r"[A-Z]", password):
             return False, "Password must contain at least one uppercase letter"
-        
+
         if not re.search(r"\d", password):
             return False, "Password must contain at least one number"
-        
+
         if not re.search(r"[!@#$%^&*(),.?\":{}|<>_\-+=\[\]\\\/;'`~]", password):
             return False, "Password must contain at least one special symbol"
-        
+
         return True, None
 
     def validate_email(email):
         """Validate email format."""
         email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-        
+
         if not email or not email.strip():
             return False, "Email cannot be empty"
-        
+
         if not re.match(email_pattern, email):
             return False, "Invalid email format"
-        
+
         return True, None
 
     @users.route("/admin/user_details/<int:uid>")
@@ -140,6 +141,7 @@ def app():
         messages = []
         with app.app_context():
             from flask import get_flashed_messages
+
             messages = get_flashed_messages(with_categories=True)
 
         return render_template_string(

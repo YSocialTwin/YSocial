@@ -8,7 +8,16 @@ creating new users, and updating user permissions and settings.
 import os
 import re
 
-from flask import Blueprint, abort, current_app, flash, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
@@ -329,50 +338,50 @@ def set_perspective_api_user():
 def validate_password(password):
     """
     Validate password complexity requirements.
-    
+
     Requirements:
     - Minimum 8 characters
     - At least one uppercase letter
     - At least one number
     - At least one special symbol
-    
+
     Args:
         password: Password string to validate
-        
+
     Returns:
         Tuple of (is_valid: bool, error_message: str or None)
     """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
-    
+
     if not re.search(r"[A-Z]", password):
         return False, "Password must contain at least one uppercase letter"
-    
+
     if not re.search(r"\d", password):
         return False, "Password must contain at least one number"
-    
+
     if not re.search(PASSWORD_SPECIAL_CHARS_PATTERN, password):
         return False, "Password must contain at least one special symbol"
-    
+
     return True, None
 
 
 def validate_email(email):
     """
     Validate email format.
-    
+
     Args:
         email: Email string to validate
-        
+
     Returns:
         Tuple of (is_valid: bool, error_message: str or None)
     """
     if not email or not email.strip():
         return False, "Email cannot be empty"
-    
+
     if not re.match(EMAIL_PATTERN, email):
         return False, "Invalid email format"
-    
+
     return True, None
 
 
@@ -381,42 +390,42 @@ def validate_email(email):
 def update_user_password():
     """
     Update user password with validation.
-    
+
     Password requirements:
     - Minimum 8 characters
     - At least one uppercase letter
     - At least one number
     - At least one special symbol
-    
+
     Returns:
         Redirect to user details
     """
     check_privileges(current_user.username)
-    
+
     user_id = request.form.get("user_id")
     new_password = request.form.get("new_password")
     confirm_password = request.form.get("confirm_password")
-    
+
     # Check if passwords match
     if new_password != confirm_password:
         flash("Passwords do not match", "error")
         return user_details(user_id)
-    
+
     # Validate password complexity
     is_valid, error_message = validate_password(new_password)
     if not is_valid:
         flash(error_message, "error")
         return user_details(user_id)
-    
+
     # Update password
     user = Admin_users.query.filter_by(id=user_id).first()
     if not user:
         flash("User not found", "error")
         return redirect(url_for("users.user_data"))
-    
+
     user.password = generate_password_hash(new_password)
     db.session.commit()
-    
+
     flash("Password updated successfully", "success")
     return user_details(user_id)
 
@@ -426,35 +435,35 @@ def update_user_password():
 def update_user_email():
     """
     Update user email with validation.
-    
+
     Returns:
         Redirect to user details
     """
     check_privileges(current_user.username)
-    
+
     user_id = request.form.get("user_id")
     new_email = request.form.get("new_email")
-    
+
     # Validate email format
     is_valid, error_message = validate_email(new_email)
     if not is_valid:
         flash(error_message, "error")
         return user_details(user_id)
-    
+
     # Check if email is already taken by another user
     existing_user = Admin_users.query.filter_by(email=new_email).first()
     if existing_user and existing_user.id != int(user_id):
         flash("Email is already in use by another user", "error")
         return user_details(user_id)
-    
+
     # Update email
     user = Admin_users.query.filter_by(id=user_id).first()
     if not user:
         flash("User not found", "error")
         return redirect(url_for("users.user_data"))
-    
+
     user.email = new_email
     db.session.commit()
-    
+
     flash("Email updated successfully", "success")
     return user_details(user_id)

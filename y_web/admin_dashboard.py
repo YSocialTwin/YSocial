@@ -105,7 +105,7 @@ def dashboard():
     # Get pagination parameters
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 5, type=int)
-    
+
     # Ensure valid values
     page = max(1, page)
     per_page = max(1, min(per_page, 100))  # Cap at 100
@@ -113,16 +113,16 @@ def dashboard():
     # get all experiments
     experiments = Exps.query.all()
     total_experiments = len(experiments)
-    
+
     # Calculate pagination
     total_pages = max(1, (total_experiments + per_page - 1) // per_page)
     page = min(page, total_pages)  # Ensure page doesn't exceed total pages
     start_idx = (page - 1) * per_page
     end_idx = start_idx + per_page
-    
+
     # Paginate experiments
     paginated_experiments = experiments[start_idx:end_idx]
-    
+
     # get all clients for each experiment
     exps = {}
     for e in paginated_experiments:

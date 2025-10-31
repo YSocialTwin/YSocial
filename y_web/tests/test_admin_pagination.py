@@ -396,7 +396,9 @@ class TestDashboardPagination:
         response = client.get("/admin/dashboard?page=3&per_page=5")
         assert response.status_code == 200
         assert b"Current Page: 3" in response.data
-        assert b"Showing Experiments: 2" in response.data  # Only 2 experiments on last page
+        assert (
+            b"Showing Experiments: 2" in response.data
+        )  # Only 2 experiments on last page
         assert b"Test Experiment 11" in response.data
 
     def test_pagination_invalid_page_number(self, client):
