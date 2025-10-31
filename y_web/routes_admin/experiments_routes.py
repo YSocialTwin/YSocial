@@ -153,9 +153,12 @@ def settings():
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
     # Filter experiments based on user role
-    if user.role == "admin" or user.role == "researcher":
-        # Admin and researcher see all experiments (limit 5 for initial display)
+    if user.role == "admin":
+        # Admin sees all experiments (limit 5 for initial display)
         experiments = Exps.query.limit(5).all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own (limit 5 for initial display)
+        experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
@@ -988,8 +991,11 @@ def experiments_data():
     user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Filter experiments based on user role
-    if user.role == "admin" or user.role == "researcher":
+    if user.role == "admin":
         query = Exps.query
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        query = Exps.query.filter_by(owner=user.username)
     else:
         # Regular users should not access this endpoint
         return {"data": [], "total": 0}

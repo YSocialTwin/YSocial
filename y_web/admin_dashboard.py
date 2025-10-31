@@ -113,9 +113,12 @@ def dashboard():
     per_page = max(1, min(per_page, 100))  # Cap at 100
 
     # Filter experiments based on user role
-    if user.role == "admin" or user.role == "researcher":
-        # Admin and researcher see all experiments
+    if user.role == "admin":
+        # Admin sees all experiments
         experiments = Exps.query.all()
+    elif user.role == "researcher":
+        # Researcher sees only experiments they own
+        experiments = Exps.query.filter_by(owner=user.username).all()
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
