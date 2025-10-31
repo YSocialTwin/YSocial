@@ -12,11 +12,13 @@ import pathlib
 import shutil
 import socket
 import uuid
+from collections import defaultdict
 
 from flask import (
     Blueprint,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -1136,9 +1138,6 @@ def experiment_details(uid):
 def experiment_logs(exp_id):
     """Get experiment server logs analysis."""
     check_privileges(current_user.username)
-    
-    from collections import defaultdict
-    from flask import jsonify
     
     # Get experiment details
     experiment = Exps.query.filter_by(idexp=exp_id).first()
