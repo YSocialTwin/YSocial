@@ -275,55 +275,86 @@ def add_user_to_experiment():
 
     user_id = request.form.get("user_id")
     experiment_id = request.form.get("experiment_id")
+    
+    if not user_id or not experiment_id:
+        flash("User ID and Experiment ID are required.", "error")
+        return redirect(url_for("users.user_data"))
+
+    try:
+        user_id = int(user_id)
+        experiment_id = int(experiment_id)
+    except ValueError:
+        flash("Invalid User ID or Experiment ID.", "error")
+        return redirect(url_for("users.user_data"))
 
     # get username
     user = Admin_users.query.filter_by(id=user_id).first()
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("users.user_data"))
+    
     # get experiment
     exp = Exps.query.filter_by(idexp=experiment_id).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return user_details(user_id)
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Use the proper experiment context registration
+    from y_web.experiment_context import register_experiment_database, get_db_bind_key_for_exp
+    
+    # Register the experiment database if not already registered
+    bind_key = get_db_bind_key_for_exp(experiment_id)
+    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+        register_experiment_database(current_app, experiment_id, exp.db_name)
+    
+    # Temporarily switch to experiment database to create user
+    old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
+    try:
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
+        
+        # check if the user is present in the User_mgmt table
+        user_exp = db.session.query(User_mgmt).filter_by(username=user.username).first()
 
-    # app.config["SQLALCHEMY_BINDS"]["db_exp"] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
+        if user_exp is None:
+            new_user = User_mgmt(
+                email=user.email,
+                username=user.username,
+                password=user.password,
+                user_type="user",
+                leaning="neutral",
+                age=0,
+                recsys_type="default",
+                language="en",
+                frecsys_type="default",
+                round_actions=1,
+                toxicity="no",
+                joined_on=0,
+            )
+            db.session.add(new_user)
+            db.session.commit()
 
-    current_app.config["SQLALCHEMY_BINDS"][
-        "db_exp"
-    ] = f"sqlite:///{BASE_DIR}/{exp.db_name}"
-
-    # check if the user is present in the User_mgmt table
-    user_exp = db.session.query(User_mgmt).filter_by(username=user.username).first()
-
-    if user_exp is None:
-        new_user = User_mgmt(
-            email=user.email,
-            username=user.username,
-            password=user.password,
-            user_type="user",
-            leaning="neutral",
-            age=0,
-            recsys_type="default",
-            language="en",
-            frecsys_type="default",
-            round_actions=1,
-            toxicity="no",
-        )
-        db.session.add(new_user)
-        db.session.commit()
-
-        # ad to experiment if not present
-        user_exp = (
+        # Add to User_Experiment if not present
+        user_exp_record = (
             db.session.query(User_Experiment)
             .filter_by(user_id=user_id, exp_id=experiment_id)
             .first()
         )
 
-        if user_exp is None:
-            user_exp = User_Experiment(user_id=user_id, exp_id=experiment_id)
-            db.session.add(user_exp)
+        if user_exp_record is None:
+            user_exp_record = User_Experiment(user_id=user_id, exp_id=experiment_id)
+            db.session.add(user_exp_record)
             db.session.commit()
+            flash(f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.", "success")
+        else:
+            flash(f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.", "info")
 
-    db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
-    db.session.query(Exps).filter_by(db_name=exp.db_name).update({Exps.status: 1})
-    db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error adding user to experiment: {str(e)}", "error")
+    finally:
+        # Restore original db_exp binding
+        if old_bind:
+            current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
 
     return user_details(user_id)
 
