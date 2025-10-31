@@ -200,7 +200,7 @@ def add_user():
     user = Admin_users(
         username=username,
         email=email,
-        password=password,
+        password=generate_password_hash(password),
         role=role,
         llm=llm,
         profile_pic=profile_pic,

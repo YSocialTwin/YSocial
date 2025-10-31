@@ -98,7 +98,9 @@ def dashboard():
     Returns:
         Rendered dashboard template with system status information
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
@@ -110,8 +112,19 @@ def dashboard():
     page = max(1, page)
     per_page = max(1, min(per_page, 100))  # Cap at 100
 
-    # get all experiments
-    experiments = Exps.query.all()
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments
+        experiments = Exps.query.all()
+    else:
+        # Non-admin users see only experiments they created or joined
+        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
+        exp_ids = [ue.exp_id for ue in user_experiments]
+        # Also include experiments owned by the user
+        experiments = Exps.query.filter(
+            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+        ).all() if exp_ids else Exps.query.filter_by(owner=user.username).all()
+    
     total_experiments = len(experiments)
 
     # Calculate pagination

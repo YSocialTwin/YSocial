@@ -149,10 +149,22 @@ def settings():
 
     Shows list of experiments, users, and database configuration.
     """
-    check_privileges(current_user.username)
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # load all experiments
-    experiments = Exps.query.limit(5).all()
+    # Filter experiments based on user role
+    if user.role == "admin":
+        # Admin sees all experiments (limit 5 for initial display)
+        experiments = Exps.query.limit(5).all()
+    else:
+        # Non-admin users see only experiments they created or joined
+        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
+        exp_ids = [ue.exp_id for ue in user_experiments]
+        # Also include experiments owned by the user
+        experiments = Exps.query.filter(
+            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+        ).limit(5).all() if exp_ids else Exps.query.filter_by(owner=user.username).limit(5).all()
+    
     users = Admin_users.query.all()
 
     # check if current db is the same of the active experiment
@@ -976,7 +988,20 @@ def experiments_data():
     Returns:
         Rendered experiments list template
     """
-    query = Exps.query
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Filter experiments based on user role
+    if user.role == "admin":
+        query = Exps.query
+    else:
+        # Non-admin users see only experiments they created or joined
+        user_experiments = User_Experiment.query.filter_by(user_id=user.id).all()
+        exp_ids = [ue.exp_id for ue in user_experiments]
+        # Also include experiments owned by the user
+        query = Exps.query.filter(
+            (Exps.idexp.in_(exp_ids)) | (Exps.owner == user.username)
+        ) if exp_ids else Exps.query.filter_by(owner=user.username)
 
     # search filter
     search = request.args.get("search")

@@ -312,6 +312,21 @@ def create_app(db_type="sqlite"):
             return dict(active_experiments=active_exps)
         except Exception:
             return dict(active_experiments=[])
+    
+    @app.context_processor
+    def inject_user_info():
+        """Inject current user role information into templates."""
+        from flask_login import current_user
+        from .models import Admin_users
+        
+        if current_user.is_authenticated:
+            try:
+                admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+                if admin_user:
+                    return dict(current_user_role=admin_user.role, current_user_id=admin_user.id)
+            except Exception:
+                pass
+        return dict(current_user_role=None, current_user_id=None)
 
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)
