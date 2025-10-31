@@ -173,20 +173,21 @@ def __sample_pareto(values, alpha=2.0):
 def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     """
     Generate a unique name that hasn't been used yet (module-level private function).
-    
+
     Attempts to generate a unique name using the faker library. If after max_attempts
     the name is still not unique, appends a progressive number to make it unique.
-    
+
     Args:
         fake (faker.Faker): Faker instance configured with appropriate locale
         gender (str): Gender to generate name for ("male" or "female")
         used_names (set): Set of names already used (both in current population and database)
         max_attempts (int): Maximum number of attempts to generate a unique name before
                            falling back to appending a number (default: 100)
-    
+
     Returns:
         str: A unique name (without spaces) that is not in used_names
     """
+
     def generate_name(gender_type):
         """Helper to generate a name based on gender and remove spaces."""
         if gender_type == "male":
@@ -197,7 +198,7 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
             # Fallback to male names for unexpected gender values
             raw_name = fake.name_male()
         return raw_name.replace(" ", "")
-    
+
     # Try to generate a unique name naturally
     last_name = None
     for _ in range(max_attempts):
@@ -205,17 +206,17 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
         last_name = name  # Store the last generated name
         if name not in used_names:
             return name
-    
+
     # If we couldn't generate a unique name naturally, append a number
     # Use the last generated name to avoid an extra call to generate_name
     base_name = last_name if last_name else generate_name(gender)
     counter = 1
     unique_name = f"{base_name}{counter}"
-    
+
     while unique_name in used_names:
         counter += 1
         unique_name = f"{base_name}{counter}"
-    
+
     return unique_name
 
 
@@ -265,7 +266,7 @@ def generate_population(population_name, percentages=None, actions_config=None):
     }
 
     edu_classes = percentages["education"]
-    
+
     # Get all existing agent names from the database to avoid duplicates
     existing_agents = db.session.query(Agent.name).all()
     used_names = {agent.name for agent in existing_agents}
