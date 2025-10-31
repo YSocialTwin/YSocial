@@ -172,7 +172,7 @@ def __sample_pareto(values, alpha=2.0):
 
 def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     """
-    Generate a unique name that hasn't been used yet.
+    Generate a unique name that hasn't been used yet (module-level private function).
     
     Attempts to generate a unique name using the faker library. If after max_attempts
     the name is still not unique, appends a progressive number to make it unique.
@@ -191,18 +191,24 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
         """Helper to generate a name based on gender and remove spaces."""
         if gender_type == "male":
             raw_name = fake.name_male()
-        else:
+        elif gender_type == "female":
             raw_name = fake.name_female()
+        else:
+            # Fallback to male names for unexpected gender values
+            raw_name = fake.name_male()
         return raw_name.replace(" ", "")
     
     # Try to generate a unique name naturally
+    last_name = None
     for _ in range(max_attempts):
         name = generate_name(gender)
+        last_name = name  # Store the last generated name
         if name not in used_names:
             return name
     
     # If we couldn't generate a unique name naturally, append a number
-    base_name = generate_name(gender)
+    # Use the last generated name to avoid an extra call to generate_name
+    base_name = last_name if last_name else generate_name(gender)
     counter = 1
     unique_name = f"{base_name}{counter}"
     
