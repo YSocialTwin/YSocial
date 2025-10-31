@@ -50,8 +50,20 @@ def user_data():
         else []
     )
     ollamas = ollama_status()
+    
+    # Get all experiments for bulk assignment
+    experiments = Exps.query.all()
+    
+    # Get all users for bulk assignment
+    all_users = Admin_users.query.order_by(Admin_users.username).all()
+    
     return render_template(
-        "admin/users.html", m=models, ollamas=ollamas, llm_backend=llm_backend
+        "admin/users.html", 
+        m=models, 
+        ollamas=ollamas, 
+        llm_backend=llm_backend,
+        experiments=experiments,
+        all_users=all_users
     )
 
 

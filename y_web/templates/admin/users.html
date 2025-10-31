@@ -172,17 +172,8 @@
     if (target.classList.contains('delete-button')) {
       const id = target.getAttribute('data-id');
       if (confirm('Are you sure you want to delete this user?')) {
-        fetch(`/admin/delete_user/${id}`, {
-          method: 'DELETE',
-        })
-          .then(response => {
-            if (!response.ok) throw new Error('Failed to delete user');
-            location.reload(); // Refresh the table
-          })
-          .catch(err => {
-            alert('Error deleting user.');
-            console.error(err);
-          });
+        // Use GET method by redirecting
+        window.location.href = `/admin/delete_user/${id}`;
       }
     }
   });
@@ -218,8 +209,9 @@
                                         <span class="left">Role</span>
                                         <div class="select">
                                             <select name="role">
-                                                <option value="admin">admin</option>
-                                                <option value="user">user</option>
+                                                <option value="admin">Admin</option>
+                                                <option value="researcher" selected>Researcher</option>
+                                                <option value="user">User</option>
                                             </select>
                                         </div>
                                     </div>
@@ -258,6 +250,74 @@
                     </div>
                     <!--Dashboard box-->
 
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Bulk Create Users</h3>
+                        <div class="box-content">
+                            <form action="/admin/bulk_create_users" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line" style="display: block;">
+                                        <label style="display: block; margin-bottom: 10px;">
+                                            <b>Users Data</b><br>
+                                            <small>Format: username,email,role,password (one per line)<br>
+                                            Role can be: admin, researcher, or user<br>
+                                            Password is optional (will be auto-generated as username123!)</small>
+                                        </label>
+                                        <textarea name="users_data" class="textarea" rows="8" 
+                                                  placeholder="john_doe,john@example.com,researcher,SecurePass1!&#10;jane_smith,jane@example.com,user&#10;admin_user,admin@example.com,admin,AdminPass1!" 
+                                                  style="width: 100%; font-family: monospace; font-size: 0.9em;"></textarea>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Bulk Create Users
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Bulk Assign Users to Experiment</h3>
+                        <div class="box-content">
+                            <form action="/admin/bulk_assign_users" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Select Experiment</span>
+                                        <div class="select" style="width: 70%;">
+                                            <select name="experiment_id" required style="width: 100%;">
+                                                <option value="">-- Select Experiment --</option>
+                                                {% if experiments %}
+                                                    {% for exp in experiments %}
+                                                    <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="box-line" style="display: block; margin-top: 15px;">
+                                        <label style="display: block; margin-bottom: 10px;">
+                                            <b>Select Users</b><br>
+                                            <small>Hold Ctrl (Cmd on Mac) to select multiple users</small>
+                                        </label>
+                                        <select name="user_ids" multiple size="10" required 
+                                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                            {% if all_users %}
+                                                {% for user in all_users %}
+                                                <option value="{{ user.id }}">{{ user.username }} ({{ user.email }}) - {{ user.role }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth" type="submit">
+                                        Assign Users to Experiment
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                 </div>
 
 
@@ -270,17 +330,22 @@
 
                             <p>
                                 <b>User Types</b><br>
-                                YSocial supports two types of users with different access levels:
+                                YSocial supports three types of users with different access levels:
                             </p>
                             <hr>
                             <p>
-                                <b>Admins</b><br>
-                                Full access to the system. Can create, edit, and delete users, experiments, and populations.
+                                <b>Admin</b><br>
+                                Full system access. Can create, edit, and delete users, experiments, and populations.
                             </p>
                             <hr>
                             <p>
-                                <b>Users</b><br>
-                                Can view the system and take part in hybrid simulations.
+                                <b>Researcher</b><br>
+                                Full admin panel access. Can manage experiments and participate in simulations.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>User</b><br>
+                                Limited access to assigned experiments only. Cannot access admin panel.
                             </p>
 
                         </div>
