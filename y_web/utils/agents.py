@@ -178,33 +178,31 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     the name is still not unique, appends a progressive number to make it unique.
     
     Args:
-        fake: Faker instance configured with appropriate locale
-        gender: Gender to generate name for ("male" or "female")
-        used_names: Set of names already used (both in current population and database)
-        max_attempts: Maximum number of attempts to generate a unique name before
-                      falling back to appending a number
+        fake (faker.Faker): Faker instance configured with appropriate locale
+        gender (str): Gender to generate name for ("male" or "female")
+        used_names (set): Set of names already used (both in current population and database)
+        max_attempts (int): Maximum number of attempts to generate a unique name before
+                           falling back to appending a number (default: 100)
     
     Returns:
-        A unique name (without spaces) that is not in used_names
+        str: A unique name (without spaces) that is not in used_names
     """
+    def generate_name(gender_type):
+        """Helper to generate a name based on gender and remove spaces."""
+        if gender_type == "male":
+            raw_name = fake.name_male()
+        else:
+            raw_name = fake.name_female()
+        return raw_name.replace(" ", "")
+    
     # Try to generate a unique name naturally
     for _ in range(max_attempts):
-        if gender == "male":
-            name = fake.name_male()
-        else:
-            name = fake.name_female()
-        
-        name = name.replace(" ", "")
+        name = generate_name(gender)
         if name not in used_names:
             return name
     
     # If we couldn't generate a unique name naturally, append a number
-    if gender == "male":
-        base_name = fake.name_male()
-    else:
-        base_name = fake.name_female()
-    
-    base_name = base_name.replace(" ", "")
+    base_name = generate_name(gender)
     counter = 1
     unique_name = f"{base_name}{counter}"
     
