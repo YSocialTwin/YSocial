@@ -350,6 +350,304 @@
 
             </div>
 
+            <!-- Server Logs Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Real-time analysis of server API calls from _server.log file.
+                        </p>
+
+                        <div id="logs-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
+                            <i class="mdi mdi-alert" style="color: #856404;"></i>
+                            <span id="logs-error-text" style="color: #856404;"></span>
+                        </div>
+
+                        <div class="columns">
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Call Volume by Path</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="callVolumeChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Mean Duration by Path (seconds)</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="meanDurationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Path Filter Controls -->
+                        <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em;">
+                                <h4 class="subtitle is-6" style="margin: 0;">Filter Paths</h4>
+                                <div>
+                                    <button id="selectAllPaths" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
+                                    <button id="deselectAllPaths" class="button is-small is-light">Deselect All</button>
+                                </div>
+                            </div>
+                            <div id="pathFilters" style="display: flex; flex-wrap: wrap; gap: 0.4em;">
+                                <!-- Checkboxes will be dynamically generated here -->
+                            </div>
+                        </div>
+
+                        <style>
+                            /* Modern checkbox styling */
+                            #pathFilters label {
+                                display: inline-flex;
+                                align-items: center;
+                                padding: 0.35em 0.65em;
+                                background: white;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.8em;
+                                transition: all 0.2s ease;
+                                user-select: none;
+                            }
+
+                            #pathFilters label:hover {
+                                background: #f5f9ff;
+                                border-color: #039be5;
+                                box-shadow: 0 1px 3px rgba(3, 155, 229, 0.1);
+                            }
+
+                            #pathFilters input[type="checkbox"] {
+                                margin: 0;
+                                margin-right: 0.4em;
+                                width: 14px;
+                                height: 14px;
+                                cursor: pointer;
+                                accent-color: #039be5;
+                            }
+
+                            #pathFilters label span {
+                                color: #555;
+                                font-weight: 500;
+                                white-space: nowrap;
+                            }
+
+                            #pathFilters label:has(input:checked) {
+                                background: #e3f2fd;
+                                border-color: #039be5;
+                            }
+
+                            #pathFilters label:has(input:checked) span {
+                                color: #0277bd;
+                            }
+                        </style>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Global variables to store charts and data
+                let callVolumeChartInstance = null;
+                let meanDurationChartInstance = null;
+                let allPathsData = {
+                    paths: [],
+                    callVolume: {},
+                    meanDuration: {}
+                };
+
+                // Function to update charts based on selected paths
+                function updateCharts() {
+                    const checkboxes = document.querySelectorAll('#pathFilters input[type="checkbox"]');
+                    const selectedPaths = [];
+                    
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            selectedPaths.push(checkbox.value);
+                        }
+                    });
+
+                    // If no paths selected, show all
+                    const pathsToShow = selectedPaths.length > 0 ? selectedPaths : allPathsData.paths;
+                    
+                    // Prepare filtered data
+                    const volumeData = pathsToShow.map(path => allPathsData.callVolume[path] || 0);
+                    const durationData = pathsToShow.map(path => allPathsData.meanDuration[path] || 0);
+
+                    // Update Call Volume Chart
+                    if (callVolumeChartInstance) {
+                        callVolumeChartInstance.data.labels = pathsToShow;
+                        callVolumeChartInstance.data.datasets[0].data = volumeData;
+                        callVolumeChartInstance.update();
+                    }
+
+                    // Update Mean Duration Chart
+                    if (meanDurationChartInstance) {
+                        meanDurationChartInstance.data.labels = pathsToShow;
+                        meanDurationChartInstance.data.datasets[0].data = durationData;
+                        meanDurationChartInstance.update();
+                    }
+                }
+
+                // Function to create filter checkboxes
+                function createPathFilters(paths) {
+                    const filterContainer = document.getElementById('pathFilters');
+                    filterContainer.innerHTML = '';
+                    
+                    paths.forEach(path => {
+                        const label = document.createElement('label');
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = path;
+                        checkbox.checked = true;
+                        checkbox.addEventListener('change', updateCharts);
+                        
+                        const span = document.createElement('span');
+                        span.textContent = path;
+                        
+                        label.appendChild(checkbox);
+                        label.appendChild(span);
+                        filterContainer.appendChild(label);
+                    });
+                }
+
+                // Select All button handler
+                document.getElementById('selectAllPaths').addEventListener('click', function() {
+                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    updateCharts();
+                });
+
+                // Deselect All button handler
+                document.getElementById('deselectAllPaths').addEventListener('click', function() {
+                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateCharts();
+                });
+
+                // Fetch and display server logs data
+                fetch('/admin/experiment_logs/{{ experiment.idexp }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            document.getElementById('logs-error-message').style.display = 'block';
+                            document.getElementById('logs-error-text').textContent = data.error;
+                        }
+
+                        const callVolume = data.call_volume || {};
+                        const meanDuration = data.mean_duration || {};
+
+                        // Store data globally
+                        allPathsData.paths = Object.keys(callVolume).sort();
+                        allPathsData.callVolume = callVolume;
+                        allPathsData.meanDuration = meanDuration;
+
+                        // Create filter checkboxes
+                        createPathFilters(allPathsData.paths);
+
+                        // Prepare data for charts
+                        const volumeData = allPathsData.paths.map(path => callVolume[path]);
+                        const durationData = allPathsData.paths.map(path => meanDuration[path]);
+
+                        // Call Volume Chart
+                        callVolumeChartInstance = new Chart("callVolumeChart", {
+                            type: 'bar',
+                            data: {
+                                labels: allPathsData.paths,
+                                datasets: [{
+                                    label: 'Number of Calls',
+                                    data: volumeData,
+                                    backgroundColor: 'rgba(3, 155, 229, 0.6)',
+                                    borderColor: 'rgba(3, 155, 229, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        padding: 8,
+                                        titleFont: { size: 12 },
+                                        bodyFont: { size: 11 },
+                                        callbacks: {
+                                            label: function(context) {
+                                                return 'Calls: ' + context.parsed.y;
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            precision: 0
+                                        }
+                                    }
+                                }
+                            }
+                        });
+
+                        // Mean Duration Chart
+                        meanDurationChartInstance = new Chart("meanDurationChart", {
+                            type: 'bar',
+                            data: {
+                                labels: allPathsData.paths,
+                                datasets: [{
+                                    label: 'Mean Duration (s)',
+                                    data: durationData,
+                                    backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                                    borderColor: 'rgba(76, 175, 80, 1)',
+                                    borderWidth: 1,
+                                    borderRadius: 4
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    },
+                                    tooltip: {
+                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                        padding: 8,
+                                        titleFont: { size: 12 },
+                                        bodyFont: { size: 11 },
+                                        callbacks: {
+                                            label: function(context) {
+                                                return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
+                                            }
+                                        }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            callback: function(value) {
+                                                return value.toFixed(4);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching logs:', error);
+                        document.getElementById('logs-error-message').style.display = 'block';
+                        document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+                    });
+            </script>
 
         </div>
     </div>
