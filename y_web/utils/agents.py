@@ -170,6 +170,51 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
+def __generate_unique_name(fake, gender, used_names, max_attempts=100):
+    """
+    Generate a unique name that hasn't been used yet.
+    
+    Attempts to generate a unique name using the faker library. If after max_attempts
+    the name is still not unique, appends a progressive number to make it unique.
+    
+    Args:
+        fake: Faker instance configured with appropriate locale
+        gender: Gender to generate name for ("male" or "female")
+        used_names: Set of names already used (both in current population and database)
+        max_attempts: Maximum number of attempts to generate a unique name before
+                      falling back to appending a number
+    
+    Returns:
+        A unique name (without spaces) that is not in used_names
+    """
+    # Try to generate a unique name naturally
+    for _ in range(max_attempts):
+        if gender == "male":
+            name = fake.name_male()
+        else:
+            name = fake.name_female()
+        
+        name = name.replace(" ", "")
+        if name not in used_names:
+            return name
+    
+    # If we couldn't generate a unique name naturally, append a number
+    if gender == "male":
+        base_name = fake.name_male()
+    else:
+        base_name = fake.name_female()
+    
+    base_name = base_name.replace(" ", "")
+    counter = 1
+    unique_name = f"{base_name}{counter}"
+    
+    while unique_name in used_names:
+        counter += 1
+        unique_name = f"{base_name}{counter}"
+    
+    return unique_name
+
+
 def generate_population(population_name, percentages=None, actions_config=None):
     """
     Generate a population of AI agents with realistic profiles.
@@ -216,6 +261,10 @@ def generate_population(population_name, percentages=None, actions_config=None):
     }
 
     edu_classes = percentages["education"]
+    
+    # Get all existing agent names from the database to avoid duplicates
+    existing_agents = db.session.query(Agent.name).all()
+    used_names = {agent.name for agent in existing_agents}
 
     for _ in range(population.size):
 
@@ -265,10 +314,10 @@ def generate_population(population_name, percentages=None, actions_config=None):
 
         fake = faker.Faker(__locales[nationality])
 
-        if gender == "male":
-            name = fake.name_male()
-        else:
-            name = fake.name_female()
+        # Generate a unique name
+        name = __generate_unique_name(fake, gender, used_names)
+        # Add the name to used_names to prevent duplicates within this population
+        used_names.add(name)
 
         language = fake.random_element(
             elements=(population.languages.split(","))
@@ -310,7 +359,7 @@ def generate_population(population_name, percentages=None, actions_config=None):
                 break
 
         agent = Agent(
-            name=name.replace(" ", ""),
+            name=name,
             age=age,
             ag_type=ag_type,
             leaning=political_leaning,
