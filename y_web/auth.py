@@ -150,20 +150,40 @@ def select_experiment():
         return redirect(url_for("auth.login"))
     
     try:
-        user_agent = User_mgmt.query.filter_by(username=user.username).first()
-        if not user_agent:
-            flash("User not found in experiment database.")
-            return redirect(url_for("auth.login"))
-        login_user(user_agent, remember=remember)
+        # Use the proper experiment context registration
+        from y_web.experiment_context import register_experiment_database, get_db_bind_key_for_exp
+        from flask import current_app
         
-        # Redirect to appropriate feed
-        if exp.platform_type == "microblogging":
-            return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
-        elif exp.platform_type == "forum":
-            return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
-        else:
-            flash("Unknown platform type.")
-            return redirect(url_for("auth.login"))
+        # Register the experiment database if not already registered
+        bind_key = get_db_bind_key_for_exp(int(exp_id))
+        if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
+            register_experiment_database(current_app, int(exp_id), exp.db_name)
+        
+        # Temporarily switch to experiment database to get user
+        old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
+        
+        try:
+            user_agent = User_mgmt.query.filter_by(username=user.username).first()
+            if not user_agent:
+                flash("User not found in experiment database.")
+                return redirect(url_for("auth.login"))
+            
+            login_user(user_agent, remember=remember)
+            
+            # Redirect to appropriate feed
+            if exp.platform_type == "microblogging":
+                return redirect(f"/{exp.idexp}/feed/{user_agent.id}/feed/rf/1")
+            elif exp.platform_type == "forum":
+                return redirect(f"/{exp.idexp}/rfeed/{user_agent.id}/rfeed/rf/1")
+            else:
+                flash("Unknown platform type.")
+                return redirect(url_for("auth.login"))
+        finally:
+            # Restore original db_exp binding
+            if old_bind:
+                current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
+                
     except Exception as e:
         flash(f"Error accessing experiment: {str(e)}")
         return redirect(url_for("auth.login"))
