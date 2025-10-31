@@ -43,7 +43,7 @@
             </div> -->
 
             <!-- Row 1: User box (1 column), Experiments (1 column), Add to Experiments (1 column) -->
-            <div class="columns">
+            <div class="columns" style="align-items: stretch;">
                 {% for message in get_flashed_messages() %}
                 <div class="alert alert-warning">
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -52,8 +52,8 @@
                 {% endfor %}
 
                 <!--Dashboard column-->
-                <div class="column is-4">
-                    <div class="dashboard-box">
+                <div class="column is-4" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">User Profile</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Account information and API configurations for this user.
@@ -106,9 +106,9 @@
                     </div>
                 </div>
 
-                 <div class="column is-8">
+                 <div class="column is-8" style="display: flex;">
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Configure the LLM server URL and select a model for text generation tasks.
@@ -155,10 +155,91 @@
                 </div>
             </div>
 
-            <!-- Row 2: Add Perspective API (1 column), Update LLM Configuration (2 columns) -->
-            <div class="columns">
-                <div class="column is-4">
-                    <div class="dashboard-box">
+            <!-- Row 2: Update Password, Update Email, Add Perspective API (3 columns) -->
+            <div class="columns" style="align-items: stretch;">
+                <div class="column is-4" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">Update Password</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Change the user's password with secure validation.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_password" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+                                            <small style="color: #666;">
+                                            ℹ️ Password must be at least 8 characters long and include:
+                                            <ul style="margin-top: 0.5em; margin-left: 1em;">
+                                                <li>At least one uppercase letter</li>
+                                                <li>At least one number</li>
+                                                <li>At least one special symbol</li>
+                                            </ul>
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">New Password</label>
+                                        <input type="password" name="new_password" class="input" required 
+                                               pattern="^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?&quot;:{}|&lt;&gt;_\-+=\[\]\\\/;'`~]).{8,}$"
+                                               title="Password must be at least 8 characters with one uppercase, one number, and one special symbol">
+                                    </div>
+                                    <div class="box-line">
+                                        <label class="label">Confirm Password</label>
+                                        <input type="password" name="confirm_password" class="input" required>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update Password
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">Update Email</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Change the user's email address.
+                        </p>
+                        <div class="box-content">
+                            <form action="/admin/update_user_email" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">
+                                            <small style="color: #666;">
+                                            ℹ️ Enter a valid email address. Email must be unique across all users.
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <label class="label">Current Email</label>
+                                        <input type="email" value="{{ user.email }}" class="input" disabled>
+                                    </div>
+                                    <div class="box-line">
+                                        <label class="label">New Email</label>
+                                        <input type="email" name="new_email" class="input" required 
+                                               pattern="[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$"
+                                               title="Please enter a valid email address">
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Update Email
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Configure Google's Perspective API for text toxicity analysis.
@@ -188,44 +269,49 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="column is-4">
+            <!-- Row 3: Experiment Participation and Add to Experiment (2 columns) -->
+            <div class="columns" style="align-items: stretch;">
+                <div class="column is-6" style="display: flex;">
                     <!--Box-->
-                     <div class="dashboard-box">
+                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Experiments this user owns or participates in.
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
-                                <b>Owned Experiments</b>
-                                <div class="box-line">
-                                    <span class="right">
+                                <div style="margin-bottom: 15px;">
+                                    <b style="display: block; margin-bottom: 8px;">Owned Experiments</b>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                         {% if user_experiments %}
-                                        <ul>
                                         {% for exp in user_experiments %}
-                                            <li><a href="/admin/experiment_details/{{ exp.idexp }}">{{ exp.exp_name }}</a></li>
+                                            <a href="/admin/experiment_details/{{ exp.idexp }}" 
+                                               style="display: inline-block; padding: 6px 12px; background: #039be5; color: white; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;">
+                                                {{ exp.exp_name }}
+                                            </a>
                                         {% endfor %}
-                                        </ul>
                                         {% else %}
-                                        Not owning any experiments
+                                        <span style="color: #999; font-size: 0.9em; font-style: italic;">Not owning any experiments</span>
                                         {% endif %}
-                                    </span>
+                                    </div>
                                 </div>
-                                <hr>
-                                <b>Joined Experiments</b>
-                                 <div class="box-line">
-                                    <span class="right">
+                                <hr style="margin: 15px 0;">
+                                <div>
+                                    <b style="display: block; margin-bottom: 8px;">Joined Experiments</b>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                                         {% if user_experiments_joined %}
-                                        <ul>
                                         {% for exp in user_experiments_joined %}
-                                            <li><a href="/admin/experiment_details/{{ exp[0] }}">{{ exp[1] }}</a></li>
+                                            <a href="/admin/experiment_details/{{ exp[0] }}" 
+                                               style="display: inline-block; padding: 6px 12px; background: #00d1b2; color: white; border-radius: 4px; text-decoration: none; font-size: 0.85em; transition: background 0.2s;">
+                                                {{ exp[1] }}
+                                            </a>
                                         {% endfor %}
-                                        </ul>
                                         {% else %}
-                                        Not participating in any experiments
+                                        <span style="color: #999; font-size: 0.9em; font-style: italic;">Not participating in any experiments</span>
                                         {% endif %}
-                                    </span>
+                                    </div>
                                 </div>
                             </div>
 
@@ -233,8 +319,8 @@
                     </div>
                 </div>
 
-                <div class="column is-4">
-                    <div class="dashboard-box">
+                <div class="column is-6" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Grant this user access to participate in an experiment.
@@ -263,7 +349,6 @@
                         </div>
                     </div>
                 </div>
-                <!--Dashboard column - Update LLM Configuration (spans 2 columns)-->
 
             </div>
 
