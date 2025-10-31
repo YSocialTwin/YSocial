@@ -47,7 +47,7 @@ def user_data():
     if user.role != "admin":
         flash("Access denied. This page is only accessible to administrators.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     check_privileges(current_user.username)
     llm_backend = llm_backend_status()
     models = (
@@ -56,20 +56,20 @@ def user_data():
         else []
     )
     ollamas = ollama_status()
-    
+
     # Get all experiments for bulk assignment
     experiments = Exps.query.all()
-    
+
     # Get all users for bulk assignment
     all_users = Admin_users.query.order_by(Admin_users.username).all()
-    
+
     return render_template(
-        "admin/users.html", 
-        m=models, 
-        ollamas=ollamas, 
+        "admin/users.html",
+        m=models,
+        ollamas=ollamas,
         llm_backend=llm_backend,
         experiments=experiments,
-        all_users=all_users
+        all_users=all_users,
     )
 
 
@@ -161,10 +161,15 @@ def update():
 def user_details(uid):
     """Handle user details operation."""
     # Get current user
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
     # Allow access if user is admin/researcher OR if user is viewing their own profile
-    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != uid:
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != uid
+    ):
         flash("You do not have permission to view this page.", "error")
         return redirect(url_for("admin.dashboard"))
 
@@ -246,17 +251,19 @@ def delete_user(uid):
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("users.user_data"))
-    
+
     # Check if user can be deleted (not self-delete)
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
     if current_admin_user.id == uid:
         flash("You cannot delete your own account.", "error")
         return redirect(url_for("users.user_data"))
-    
+
     try:
         # Delete associated User_Experiment records first
         User_Experiment.query.filter_by(user_id=uid).delete()
-        
+
         # Delete the user
         db.session.delete(user)
         db.session.commit()
@@ -281,7 +288,7 @@ def add_user_to_experiment():
 
     user_id = request.form.get("user_id")
     experiment_id = request.form.get("experiment_id")
-    
+
     if not user_id or not experiment_id:
         flash("User ID and Experiment ID are required.", "error")
         return redirect(url_for("users.user_data"))
@@ -298,7 +305,7 @@ def add_user_to_experiment():
     if not user:
         flash("User not found.", "error")
         return redirect(url_for("users.user_data"))
-    
+
     # get experiment
     exp = Exps.query.filter_by(idexp=experiment_id).first()
     if not exp:
@@ -306,18 +313,23 @@ def add_user_to_experiment():
         return user_details(user_id)
 
     # Use the proper experiment context registration
-    from y_web.experiment_context import register_experiment_database, get_db_bind_key_for_exp
-    
+    from y_web.experiment_context import (
+        get_db_bind_key_for_exp,
+        register_experiment_database,
+    )
+
     # Register the experiment database if not already registered
     bind_key = get_db_bind_key_for_exp(experiment_id)
     if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
         register_experiment_database(current_app, experiment_id, exp.db_name)
-    
+
     # Temporarily switch to experiment database to create user
     old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
     try:
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
-        
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
+            "SQLALCHEMY_BINDS"
+        ][bind_key]
+
         # check if the user is present in the User_mgmt table
         user_exp = db.session.query(User_mgmt).filter_by(username=user.username).first()
 
@@ -350,9 +362,15 @@ def add_user_to_experiment():
             user_exp_record = User_Experiment(user_id=user_id, exp_id=experiment_id)
             db.session.add(user_exp_record)
             db.session.commit()
-            flash(f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.", "success")
+            flash(
+                f"User '{user.username}' successfully added to experiment '{exp.exp_name}'.",
+                "success",
+            )
         else:
-            flash(f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.", "info")
+            flash(
+                f"User '{user.username}' is already assigned to experiment '{exp.exp_name}'.",
+                "info",
+            )
 
     except Exception as e:
         db.session.rollback()
@@ -375,19 +393,24 @@ def update_user_llm():
         Redirect to user details
     """
     user_id = request.form.get("user_id")
-    
+
     # Validate user_id
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
         flash("Invalid user ID.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     # Get current user
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
     # Allow access if user is admin/researcher OR if user is updating their own LLM settings
-    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != user_id_int
+    ):
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     llm = request.form.get("llm")
@@ -411,19 +434,24 @@ def set_perspective_api_user():
         Redirect to user details
     """
     user_id = request.form.get("user_id")
-    
+
     # Validate user_id
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
         flash("Invalid user ID.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     # Get current user
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
     # Allow access if user is admin/researcher OR if user is updating their own API key
-    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != user_id_int
+    ):
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     perspective_api = request.form.get("perspective_api")
@@ -501,19 +529,24 @@ def update_user_password():
         Redirect to user details
     """
     user_id = request.form.get("user_id")
-    
+
     # Validate user_id
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
         flash("Invalid user ID.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     # Get current user
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
     # Allow access if user is admin/researcher OR if user is updating their own password
-    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != user_id_int
+    ):
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_password = request.form.get("new_password")
@@ -553,19 +586,24 @@ def update_user_email():
         Redirect to user details
     """
     user_id = request.form.get("user_id")
-    
+
     # Validate user_id
     try:
         user_id_int = int(user_id)
     except (ValueError, TypeError):
         flash("Invalid user ID.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     # Get current user
-    current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
     # Allow access if user is admin/researcher OR if user is updating their own email
-    if current_admin_user.role not in ["admin", "researcher"] and current_admin_user.id != user_id_int:
+    if (
+        current_admin_user.role not in ["admin", "researcher"]
+        and current_admin_user.id != user_id_int
+    ):
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_email = request.form.get("new_email")
@@ -600,56 +638,64 @@ def update_user_email():
 def bulk_create_users():
     """
     Bulk create multiple users from a list.
-    
+
     Expected format: username,email,role per line (password will be auto-generated)
     or with password: username,email,role,password
-    
+
     Returns:
         Redirect to users page with status message
     """
     check_privileges(current_user.username)
-    
+
     users_data = request.form.get("users_data", "").strip()
     role_filter = request.form.get("role", "user")  # Default role for bulk creation
-    
+
     if not users_data:
         flash("No user data provided.", "error")
         return redirect(url_for("users.user_data"))
-    
+
     lines = users_data.split("\n")
     created = 0
     errors = []
-    
+
     for i, line in enumerate(lines, 1):
         line = line.strip()
         if not line:
             continue
-            
+
         parts = [p.strip() for p in line.split(",")]
-        
+
         if len(parts) < 3:
-            errors.append(f"Line {i}: Invalid format (expected: username,email,role or username,email,role,password)")
+            errors.append(
+                f"Line {i}: Invalid format (expected: username,email,role or username,email,role,password)"
+            )
             continue
-        
+
         username = parts[0]
         email = parts[1]
         role = parts[2] if len(parts) > 2 else role_filter
-        password = parts[3] if len(parts) > 3 else f"{username}123!"  # Auto-generate password
-        
+        password = (
+            parts[3] if len(parts) > 3 else f"{username}123!"
+        )  # Auto-generate password
+
         # Validate role
         if role not in ["admin", "researcher", "user"]:
-            errors.append(f"Line {i}: Invalid role '{role}' (must be admin, researcher, or user)")
+            errors.append(
+                f"Line {i}: Invalid role '{role}' (must be admin, researcher, or user)"
+            )
             continue
-        
+
         # Check if user already exists
         existing = Admin_users.query.filter(
             (Admin_users.username == username) | (Admin_users.email == email)
         ).first()
-        
+
         if existing:
-            errors.append(f"Line {i}: User '{username}' or email '{email}' already exists")
+            errors.append(
+                f"Line {i}: User '{username}' or email '{email}' already exists"
+            )
             continue
-        
+
         try:
             # Create user
             new_user = Admin_users(
@@ -663,17 +709,21 @@ def bulk_create_users():
             created += 1
         except Exception as e:
             errors.append(f"Line {i}: Error creating user '{username}': {str(e)}")
-    
+
     try:
         db.session.commit()
         if created > 0:
             flash(f"Successfully created {created} user(s).", "success")
         if errors:
-            flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
+            flash(
+                f"Errors: {'; '.join(errors[:5])}"
+                + (" ..." if len(errors) > 5 else ""),
+                "warning",
+            )
     except Exception as e:
         db.session.rollback()
         flash(f"Database error: {str(e)}", "error")
-    
+
     return redirect(url_for("users.user_data"))
 
 
@@ -682,62 +732,71 @@ def bulk_create_users():
 def bulk_assign_users():
     """
     Bulk assign users to an experiment.
-    
+
     Returns:
         Redirect to users page with status message
     """
     check_privileges(current_user.username)
-    
+
     user_ids = request.form.getlist("user_ids")
     exp_id = request.form.get("experiment_id")
-    
+
     if not user_ids or not exp_id:
         flash("No users or experiment selected.", "error")
         return redirect(url_for("users.user_data"))
-    
+
     try:
         exp_id = int(exp_id)
         exp = Exps.query.filter_by(idexp=exp_id).first()
         if not exp:
             flash("Experiment not found.", "error")
             return redirect(url_for("users.user_data"))
-        
+
         # Use the proper experiment context registration
-        from y_web.experiment_context import register_experiment_database, get_db_bind_key_for_exp
-        
+        from y_web.experiment_context import (
+            get_db_bind_key_for_exp,
+            register_experiment_database,
+        )
+
         # Register the experiment database if not already registered
         bind_key = get_db_bind_key_for_exp(exp_id)
         if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
             register_experiment_database(current_app, exp_id, exp.db_name)
-        
+
         # Temporarily switch to experiment database
         old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
-        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config["SQLALCHEMY_BINDS"][bind_key]
-        
+        current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = current_app.config[
+            "SQLALCHEMY_BINDS"
+        ][bind_key]
+
         assigned = 0
         errors = []
-        
+
         try:
             for user_id_str in user_ids:
                 try:
                     user_id = int(user_id_str)
                     user = Admin_users.query.filter_by(id=user_id).first()
-                    
+
                     if not user:
                         errors.append(f"User ID {user_id} not found")
                         continue
-                    
+
                     # Check if already assigned
                     existing = User_Experiment.query.filter_by(
                         user_id=user_id, exp_id=exp_id
                     ).first()
-                    
+
                     if existing:
-                        errors.append(f"User '{user.username}' already assigned to this experiment")
+                        errors.append(
+                            f"User '{user.username}' already assigned to this experiment"
+                        )
                         continue
-                    
+
                     # Ensure user exists in experiment database (User_mgmt)
-                    user_agent = User_mgmt.query.filter_by(username=user.username).first()
+                    user_agent = User_mgmt.query.filter_by(
+                        username=user.username
+                    ).first()
                     if not user_agent:
                         new_user_mgmt = User_mgmt(
                             email=user.email,
@@ -755,30 +814,37 @@ def bulk_assign_users():
                         )
                         db.session.add(new_user_mgmt)
                         db.session.commit()
-                    
+
                     # Create User_Experiment record
                     user_exp = User_Experiment(user_id=user_id, exp_id=exp_id)
                     db.session.add(user_exp)
                     db.session.commit()
-                    
+
                     assigned += 1
                 except ValueError:
                     errors.append(f"Invalid user ID: {user_id_str}")
                 except Exception as e:
                     db.session.rollback()
                     errors.append(f"Error assigning user {user_id_str}: {str(e)}")
-            
+
             if assigned > 0:
-                flash(f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.", "success")
+                flash(
+                    f"Successfully assigned {assigned} user(s) to experiment '{exp.exp_name}'.",
+                    "success",
+                )
             if errors:
-                flash(f"Errors: {'; '.join(errors[:5])}" + (" ..." if len(errors) > 5 else ""), "warning")
-                
+                flash(
+                    f"Errors: {'; '.join(errors[:5])}"
+                    + (" ..." if len(errors) > 5 else ""),
+                    "warning",
+                )
+
         finally:
             # Restore original db_exp binding
             if old_bind:
                 current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
-            
+
     except Exception as e:
         flash(f"Error during bulk assignment: {str(e)}", "error")
-    
+
     return redirect(url_for("users.user_data"))

@@ -163,7 +163,7 @@ def settings():
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
         return redirect(url_for("auth.login"))
-    
+
     users = Admin_users.query.all()
 
     # check if current db is the same of the active experiment
@@ -989,7 +989,7 @@ def experiments_data():
     """
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+
     # Filter experiments based on user role
     if user.role == "admin":
         query = Exps.query
@@ -1292,7 +1292,7 @@ def miscellanea():
     if user.role != "admin":
         flash("Access denied. This page is only accessible to administrators.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     check_privileges(current_user.username)
 
     ollamas = ollama_status()

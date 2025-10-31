@@ -100,7 +100,7 @@ def dashboard():
     """
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
-    
+
     ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
@@ -124,7 +124,7 @@ def dashboard():
         # They are redirected to their experiment feed
         flash("Access denied. Please use the experiment feed.")
         return redirect(url_for("auth.login"))
-    
+
     total_experiments = len(experiments)
 
     # Calculate pagination
