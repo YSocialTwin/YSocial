@@ -308,22 +308,29 @@ def update_user_llm():
     """
     user_id = request.form.get("user_id")
     
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Allow access if user is admin OR if user is updating their own LLM settings
-    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     llm = request.form.get("llm")
     llm_url = request.form.get("custom_llm_url", "").strip()
 
-    user = Admin_users.query.filter_by(id=user_id).first()
+    user = Admin_users.query.filter_by(id=user_id_int).first()
     user.llm = llm
     user.llm_url = llm_url
     db.session.commit()
 
-    return user_details(user_id)
+    return user_details(user_id_int)
 
 
 @users.route("/admin/set_perspective_api_user", methods=["POST"])
@@ -337,20 +344,27 @@ def set_perspective_api_user():
     """
     user_id = request.form.get("user_id")
     
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Allow access if user is admin OR if user is updating their own API key
-    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     perspective_api = request.form.get("perspective_api")
 
-    user = Admin_users.query.filter_by(id=user_id).first()
+    user = Admin_users.query.filter_by(id=user_id_int).first()
     user.perspective_api = perspective_api
     db.session.commit()
 
-    return user_details(user_id)
+    return user_details(user_id_int)
 
 
 def validate_password(password):
@@ -420,11 +434,18 @@ def update_user_password():
     """
     user_id = request.form.get("user_id")
     
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Allow access if user is admin OR if user is updating their own password
-    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_password = request.form.get("new_password")
@@ -439,10 +460,10 @@ def update_user_password():
     is_valid, error_message = validate_password(new_password)
     if not is_valid:
         flash(error_message, "error")
-        return user_details(user_id)
+        return user_details(user_id_int)
 
     # Update password
-    user = Admin_users.query.filter_by(id=user_id).first()
+    user = Admin_users.query.filter_by(id=user_id_int).first()
     if not user:
         flash("User not found", "error")
         return redirect(url_for("users.user_data"))
@@ -451,7 +472,7 @@ def update_user_password():
     db.session.commit()
 
     flash("Password updated successfully", "success")
-    return user_details(user_id)
+    return user_details(user_id_int)
 
 
 @users.route("/admin/update_user_email", methods=["POST"])
@@ -465,11 +486,18 @@ def update_user_email():
     """
     user_id = request.form.get("user_id")
     
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+    
     # Get current user
     current_admin_user = Admin_users.query.filter_by(username=current_user.username).first()
     
     # Allow access if user is admin OR if user is updating their own email
-    if current_admin_user.role != "admin" and current_admin_user.id != int(user_id):
+    if current_admin_user.role != "admin" and current_admin_user.id != user_id_int:
         flash("You do not have permission to perform this action.", "error")
         return redirect(url_for("admin.dashboard"))
     new_email = request.form.get("new_email")
@@ -478,16 +506,16 @@ def update_user_email():
     is_valid, error_message = validate_email(new_email)
     if not is_valid:
         flash(error_message, "error")
-        return user_details(user_id)
+        return user_details(user_id_int)
 
     # Check if email is already taken by another user
     existing_user = Admin_users.query.filter_by(email=new_email).first()
-    if existing_user and existing_user.id != int(user_id):
+    if existing_user and existing_user.id != user_id_int:
         flash("Email is already in use by another user", "error")
-        return user_details(user_id)
+        return user_details(user_id_int)
 
     # Update email
-    user = Admin_users.query.filter_by(id=user_id).first()
+    user = Admin_users.query.filter_by(id=user_id_int).first()
     if not user:
         flash("User not found", "error")
         return redirect(url_for("users.user_data"))
@@ -496,4 +524,4 @@ def update_user_email():
     db.session.commit()
 
     flash("Email updated successfully", "success")
-    return user_details(user_id)
+    return user_details(user_id_int)
