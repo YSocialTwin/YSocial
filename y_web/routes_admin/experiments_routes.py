@@ -1316,7 +1316,7 @@ def experiment_trends(exp_id):
     max_expected_rounds = 0
     max_remaining_rounds = 0
     client_progress = {}
-    
+
     if client_ids:
         client_executions = Client_Execution.query.filter(
             Client_Execution.client_id.in_(client_ids)
@@ -1325,7 +1325,7 @@ def experiment_trends(exp_id):
             max_expected_rounds = max(
                 ce.expected_duration_rounds for ce in client_executions
             )
-            
+
             # Calculate remaining rounds for each client
             # Clients may start at different times, so we track individual progress
             for ce in client_executions:
@@ -1333,9 +1333,9 @@ def experiment_trends(exp_id):
                 current_round = ce.last_active_day * 24 + ce.last_active_hour
                 remaining = ce.expected_duration_rounds - current_round
                 client_progress[ce.client_id] = {
-                    'expected_rounds': ce.expected_duration_rounds,
-                    'current_round': current_round,
-                    'remaining_rounds': max(0, remaining)
+                    "expected_rounds": ce.expected_duration_rounds,
+                    "current_round": current_round,
+                    "remaining_rounds": max(0, remaining),
                 }
                 # Track the maximum remaining rounds across all clients
                 max_remaining_rounds = max(max_remaining_rounds, remaining)
