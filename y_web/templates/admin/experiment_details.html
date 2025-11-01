@@ -1019,19 +1019,19 @@
                                 }
                             }
                         });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching logs:', error);
-                            document.getElementById('logs-error-message').style.display = 'block';
-                            document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
-                        })
-                        .finally(() => {
-                            // Re-enable refresh button
-                            if (refreshBtn) {
-                                refreshBtn.disabled = false;
-                                refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
-                            }
-                        });
+                    })
+                    .catch(error => {
+                        console.error('Error fetching logs:', error);
+                        document.getElementById('logs-error-message').style.display = 'block';
+                        document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+                    })
+                    .finally(() => {
+                        // Re-enable refresh button
+                        if (refreshBtn) {
+                            refreshBtn.disabled = false;
+                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                        }
+                    });
                 }
 
                 // Load server logs data on page load
