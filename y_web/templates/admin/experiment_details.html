@@ -47,16 +47,6 @@
                                     <span class="left">Owner</span>
                                     <span class="right">{{ experiment.owner }}</span>
                                 </div>
-
-                                {% if experiment.running == 1 %}
-                                <hr>
-                                <b>Connection Details</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Server endpoint for active experiment.</p>
-                                <div class="box-line">
-                                    <span class="left">Endpoint</span>
-                                    <span class="right" style="word-break: break-all;">http://{{ experiment.server }}:{{ experiment.port }}</span>
-                                </div>
-                                {% endif %}
                                 <hr>
                                 <b>Actions</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Manage experiment data and configuration.</p>
@@ -340,7 +330,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Trends Analysis</h3>
+                            <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Trend analysis of server compute time and simulation time progression.
                         </p>
@@ -418,6 +413,46 @@
                                 client_hourly_compute: {}
                             };
 
+                            // Function to detect and remove outliers from simulation time data
+                            function removeOutliers(data) {
+                                if (data.length < 3) {
+                                    return data; // Not enough data to detect outliers
+                                }
+                                
+                                // Calculate median and MAD (Median Absolute Deviation)
+                                const sorted = [...data].filter(v => v > 0).sort((a, b) => a - b);
+                                if (sorted.length === 0) {
+                                    return data;
+                                }
+                                
+                                const median = sorted[Math.floor(sorted.length / 2)];
+                                const deviations = sorted.map(val => Math.abs(val - median));
+                                const mad = deviations.sort((a, b) => a - b)[Math.floor(deviations.length / 2)];
+                                
+                                // Use modified Z-score with MAD
+                                // Outliers are values more than 3.5 MAD from the median
+                                const threshold = 3.5;
+                                const cleanData = [];
+                                const validValues = data.filter(v => {
+                                    if (v === 0) return true; // Keep zeros
+                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
+                                    return modifiedZScore <= threshold;
+                                });
+                                
+                                // Calculate mean of valid values for replacement
+                                const validNonZero = validValues.filter(v => v > 0);
+                                const meanValid = validNonZero.length > 0 
+                                    ? validNonZero.reduce((a, b) => a + b, 0) / validNonZero.length 
+                                    : median;
+                                
+                                // Replace outliers with mean of valid values
+                                return data.map(v => {
+                                    if (v === 0) return v; // Keep zeros
+                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
+                                    return modifiedZScore > threshold ? meanValid : v;
+                                });
+                            }
+
                             // Function to update trend charts
                             function updateTrendCharts() {
                                 const aggregation = document.querySelector('input[name="aggregation"]:checked').value;
@@ -427,7 +462,8 @@
                                     const days = Object.keys(trendsData.daily_compute).sort((a, b) => parseInt(a) - parseInt(b));
                                     labels = days.map(d => `Day ${d}`);
                                     computeData = days.map(d => trendsData.daily_compute[d]);
-                                    simulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                    const rawSimulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                    simulationData = removeOutliers(rawSimulationData);
                                 } else {
                                     const hours = Object.keys(trendsData.hourly_compute).sort((a, b) => {
                                         const [dayA, hourA] = a.split('-').map(Number);
@@ -439,15 +475,17 @@
                                         return `D${day}H${hour}`;
                                     });
                                     computeData = hours.map(h => trendsData.hourly_compute[h]);
-                                    simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                    const rawSimulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                    simulationData = removeOutliers(rawSimulationData);
                                 }
 
-                                // Update server compute time chart
+                                // Destroy existing server compute time chart before recreating
                                 if (serverComputeTimeTrendChart) {
-                                    serverComputeTimeTrendChart.data.labels = labels;
-                                    serverComputeTimeTrendChart.data.datasets[0].data = computeData;
-                                    serverComputeTimeTrendChart.update();
-                                } else if (labels.length > 0) {
+                                    serverComputeTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate server compute time chart
+                                if (labels.length > 0) {
                                     serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -518,12 +556,13 @@
                                     });
                                 }
 
-                                // Update client compute time chart
+                                // Destroy existing client compute time chart before recreating
                                 if (clientComputeTimeTrendChart) {
-                                    clientComputeTimeTrendChart.data.labels = labels;
-                                    clientComputeTimeTrendChart.data.datasets = clientComputeDatasets;
-                                    clientComputeTimeTrendChart.update();
-                                } else if (labels.length > 0 && clientComputeDatasets.length > 0) {
+                                    clientComputeTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate client compute time chart
+                                if (labels.length > 0 && clientComputeDatasets.length > 0) {
                                     clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -543,12 +582,13 @@
                                     });
                                 }
 
-                                // Update simulation time chart
+                                // Destroy existing simulation time chart before recreating
                                 if (simulationTimeTrendChart) {
-                                    simulationTimeTrendChart.data.labels = labels;
-                                    simulationTimeTrendChart.data.datasets[0].data = simulationData;
-                                    simulationTimeTrendChart.update();
-                                } else if (labels.length > 0) {
+                                    simulationTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate simulation time chart
+                                if (labels.length > 0) {
                                     simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -583,7 +623,7 @@
                             // Function to update forecast
                             function updateForecast(aggregation) {
                                 const computeData = aggregation === 'daily' ? trendsData.daily_compute : trendsData.hourly_compute;
-                                const simulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
+                                const rawSimulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
                                 
                                 const keys = Object.keys(computeData).sort((a, b) => {
                                     if (aggregation === 'daily') return parseInt(a) - parseInt(b);
@@ -600,27 +640,36 @@
                                     return;
                                 }
 
-                                // Calculate total simulation time
-                                const totalSimulationTime = keys.reduce((sum, k) => sum + (simulationData[k] || 0), 0);
+                                // Apply outlier removal to simulation data for more accurate forecasting
+                                const rawValues = keys.map(k => rawSimulationData[k] || 0);
+                                const cleanedValues = removeOutliers(rawValues);
+                                
+                                // Calculate total simulation time using cleaned data
+                                const totalSimulationTime = cleanedValues.reduce((sum, val) => sum + val, 0);
                                 const completedSlots = keys.length;
                                 const avgTimePerSlot = totalSimulationTime / completedSlots;
 
-                                // Use actual expected duration from client_execution table
-                                // total_expected_days comes from max(expected_duration_rounds) / 24
-                                // total_expected_rounds is the actual max(expected_duration_rounds)
+                                // Use actual expected duration and remaining time from client_execution table
+                                // Accounts for clients starting at different times by using max remaining rounds
+                                // max_remaining_rounds: maximum rounds remaining across all clients (accounts for late starts)
+                                // total_expected_rounds: maximum expected duration among all clients
                                 const totalExpectedDays = trendsData.total_expected_days || 0;
                                 const totalExpectedRounds = trendsData.total_expected_rounds || 0;
+                                const maxRemainingRounds = trendsData.max_remaining_rounds || 0;
+                                const maxRemainingDays = trendsData.max_remaining_days || 0;
                                 
                                 let totalSlots, remainingSlots;
                                 
                                 if (aggregation === 'daily') {
-                                    // For daily aggregation, use total expected days
+                                    // Use actual remaining days from the client that has the most work left
+                                    // This accounts for clients starting at different times
                                     totalSlots = Math.ceil(totalExpectedDays);
-                                    remainingSlots = totalSlots - completedSlots;
+                                    remainingSlots = Math.max(0, Math.ceil(maxRemainingDays));
                                 } else {
-                                    // For hourly aggregation, use total expected rounds (hours)
+                                    // Use actual remaining rounds from the client that has the most work left
+                                    // This accounts for clients starting at different times
                                     totalSlots = totalExpectedRounds;
-                                    remainingSlots = totalSlots - completedSlots;
+                                    remainingSlots = Math.max(0, maxRemainingRounds);
                                 }
 
                                 // If we don't have expected duration from DB, fall back to estimation
@@ -653,24 +702,49 @@
                                 document.getElementById('forecast-remaining-time').textContent = formatTime(estimatedRemainingTime);
                             }
 
-                            // Load trends data
-                            fetch('/admin/experiment_trends/{{ experiment.idexp }}')
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.error) {
-                                        document.getElementById('trends-error-message').style.display = 'block';
-                                        document.getElementById('trends-error-text').textContent = data.error;
-                                        return;
-                                    }
+                            // Function to load trends data
+                            function loadTrendsData() {
+                                // Hide error message
+                                document.getElementById('trends-error-message').style.display = 'none';
+                                
+                                // Disable refresh button while loading
+                                const refreshBtn = document.getElementById('refreshTrendsBtn');
+                                if (refreshBtn) {
+                                    refreshBtn.disabled = true;
+                                    refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                                }
 
-                                    trendsData = data;
-                                    updateTrendCharts();
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching trends:', error);
-                                    document.getElementById('trends-error-message').style.display = 'block';
-                                    document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
-                                });
+                                fetch('/admin/experiment_trends/{{ experiment.idexp }}')
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.error) {
+                                            document.getElementById('trends-error-message').style.display = 'block';
+                                            document.getElementById('trends-error-text').textContent = data.error;
+                                            return;
+                                        }
+
+                                        trendsData = data;
+                                        updateTrendCharts();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching trends:', error);
+                                        document.getElementById('trends-error-message').style.display = 'block';
+                                        document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+                                    })
+                                    .finally(() => {
+                                        // Re-enable refresh button
+                                        if (refreshBtn) {
+                                            refreshBtn.disabled = false;
+                                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                                        }
+                                    });
+                            }
+
+                            // Load trends data on page load
+                            loadTrendsData();
+
+                            // Refresh button click handler
+                            document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
 
                             // Handle aggregation change
                             document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
@@ -685,7 +759,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Logs Analysis</h3>
+                            <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Real-time analysis of server API calls from _server.log file.
                         </p>
@@ -859,76 +938,96 @@
                     updateCharts();
                 });
 
-                // Fetch and display server logs data
-                fetch('/admin/experiment_logs/{{ experiment.idexp }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            document.getElementById('logs-error-message').style.display = 'block';
-                            document.getElementById('logs-error-text').textContent = data.error;
-                        }
+                // Function to fetch and display server logs data
+                function loadServerLogsData() {
+                    // Hide error message
+                    document.getElementById('logs-error-message').style.display = 'none';
+                    
+                    // Disable refresh button while loading
+                    const refreshBtn = document.getElementById('refreshLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                    }
 
-                        const callVolume = data.call_volume || {};
-                        const meanDuration = data.mean_duration || {};
+                    fetch('/admin/experiment_logs/{{ experiment.idexp }}')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                document.getElementById('logs-error-message').style.display = 'block';
+                                document.getElementById('logs-error-text').textContent = data.error;
+                                return;
+                            }
 
-                        // Store data globally
-                        allPathsData.paths = Object.keys(callVolume).sort();
-                        allPathsData.callVolume = callVolume;
-                        allPathsData.meanDuration = meanDuration;
+                            const callVolume = data.call_volume || {};
+                            const meanDuration = data.mean_duration || {};
 
-                        // Create filter checkboxes
-                        createPathFilters(allPathsData.paths);
+                            // Store data globally
+                            allPathsData.paths = Object.keys(callVolume).sort();
+                            allPathsData.callVolume = callVolume;
+                            allPathsData.meanDuration = meanDuration;
 
-                        // Prepare data for charts
-                        const volumeData = allPathsData.paths.map(path => callVolume[path]);
-                        const durationData = allPathsData.paths.map(path => meanDuration[path]);
+                            // Create filter checkboxes
+                            createPathFilters(allPathsData.paths);
 
-                        // Call Volume Chart
-                        callVolumeChartInstance = new Chart("callVolumeChart", {
-                            type: 'bar',
-                            data: {
-                                labels: allPathsData.paths,
-                                datasets: [{
-                                    label: 'Number of Calls',
-                                    data: volumeData,
-                                    backgroundColor: 'rgba(3, 155, 229, 0.6)',
-                                    borderColor: 'rgba(3, 155, 229, 1)',
-                                    borderWidth: 1,
-                                    borderRadius: 4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: false
+                            // Prepare data for charts
+                            const volumeData = allPathsData.paths.map(path => callVolume[path]);
+                            const durationData = allPathsData.paths.map(path => meanDuration[path]);
+
+                            // Destroy existing charts before creating new ones
+                            if (callVolumeChartInstance) {
+                                callVolumeChartInstance.destroy();
+                            }
+                            if (meanDurationChartInstance) {
+                                meanDurationChartInstance.destroy();
+                            }
+
+                            // Call Volume Chart
+                            callVolumeChartInstance = new Chart("callVolumeChart", {
+                                type: 'bar',
+                                data: {
+                                    labels: allPathsData.paths,
+                                    datasets: [{
+                                        label: 'Number of Calls',
+                                        data: volumeData,
+                                        backgroundColor: 'rgba(3, 155, 229, 0.6)',
+                                        borderColor: 'rgba(3, 155, 229, 1)',
+                                        borderWidth: 1,
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                            padding: 8,
+                                            titleFont: { size: 12 },
+                                            bodyFont: { size: 11 },
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return 'Calls: ' + context.parsed.y;
+                                                }
+                                            }
+                                        }
                                     },
-                                    tooltip: {
-                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                        padding: 8,
-                                        titleFont: { size: 12 },
-                                        bodyFont: { size: 11 },
-                                        callbacks: {
-                                            label: function(context) {
-                                                return 'Calls: ' + context.parsed.y;
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                precision: 0
                                             }
                                         }
                                     }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            precision: 0
-                                        }
-                                    }
                                 }
-                            }
-                        });
+                            });
 
-                        // Mean Duration Chart
-                        meanDurationChartInstance = new Chart("meanDurationChart", {
+                            // Mean Duration Chart
+                            meanDurationChartInstance = new Chart("meanDurationChart", {
                             type: 'bar',
                             data: {
                                 labels: allPathsData.paths,
@@ -977,7 +1076,21 @@
                         console.error('Error fetching logs:', error);
                         document.getElementById('logs-error-message').style.display = 'block';
                         document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+                    })
+                    .finally(() => {
+                        // Re-enable refresh button
+                        if (refreshBtn) {
+                            refreshBtn.disabled = false;
+                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                        }
                     });
+                }
+
+                // Load server logs data on page load
+                loadServerLogsData();
+
+                // Refresh button click handler
+                document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
             </script>
 
             <!-- Client Logs Visualization Section -->
@@ -985,7 +1098,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Client Logs Analysis</h3>
+                            <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Analysis of client method execution from {client_name}_client.log files.
                         </p>
@@ -1178,6 +1296,13 @@
                         return;
                     }
 
+                    // Disable refresh button while loading
+                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                    }
+
                     // Fetch and display client logs data
                     fetch(`/admin/client_logs/${clientId}`)
                         .then(response => response.json())
@@ -1307,13 +1432,50 @@
                             console.error('Error fetching client logs:', error);
                             document.getElementById('client-logs-error-message').style.display = 'block';
                             document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
+                        })
+                        .finally(() => {
+                            // Re-enable refresh button
+                            const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                            if (refreshBtn) {
+                                refreshBtn.disabled = false;
+                                refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                            }
                         });
+                }
+
+                // Function to update refresh button state based on client selection
+                function updateClientRefreshButtonState() {
+                    const clientId = document.getElementById('clientSelector').value;
+                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = !clientId;
+                    }
                 }
 
                 // Client selector change handler
                 document.getElementById('clientSelector').addEventListener('change', function() {
                     loadClientLogs(this.value);
+                    updateClientRefreshButtonState();
                 });
+
+                // Refresh button click handler for client logs
+                const ERROR_MESSAGE_AUTO_HIDE_DELAY = 3000; // milliseconds
+                document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
+                    const clientId = document.getElementById('clientSelector').value;
+                    if (clientId) {
+                        loadClientLogs(clientId);
+                    } else {
+                        // Show brief feedback that a client must be selected
+                        document.getElementById('client-logs-error-message').style.display = 'block';
+                        document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
+                        setTimeout(() => {
+                            document.getElementById('client-logs-error-message').style.display = 'none';
+                        }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
+                    }
+                });
+
+                // Initialize button state on page load
+                updateClientRefreshButtonState();
 
                 // Select All button handler for methods
                 document.getElementById('selectAllMethods').addEventListener('click', function() {

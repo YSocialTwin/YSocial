@@ -1314,6 +1314,9 @@ def experiment_trends(exp_id):
     client_ids = [c.id for c in clients]
 
     max_expected_rounds = 0
+    max_remaining_rounds = 0
+    client_progress = {}
+    
     if client_ids:
         client_executions = Client_Execution.query.filter(
             Client_Execution.client_id.in_(client_ids)
@@ -1322,9 +1325,24 @@ def experiment_trends(exp_id):
             max_expected_rounds = max(
                 ce.expected_duration_rounds for ce in client_executions
             )
+            
+            # Calculate remaining rounds for each client
+            # Clients may start at different times, so we track individual progress
+            for ce in client_executions:
+                # Current position is last_active_day * 24 + last_active_hour
+                current_round = ce.last_active_day * 24 + ce.last_active_hour
+                remaining = ce.expected_duration_rounds - current_round
+                client_progress[ce.client_id] = {
+                    'expected_rounds': ce.expected_duration_rounds,
+                    'current_round': current_round,
+                    'remaining_rounds': max(0, remaining)
+                }
+                # Track the maximum remaining rounds across all clients
+                max_remaining_rounds = max(max_remaining_rounds, remaining)
 
     # Convert rounds to days (each round is 1 hour, so 24 rounds = 1 day)
     total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
+    max_remaining_days = max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
 
     # Parse client log files and aggregate execution times per client
     client_daily_compute = {}
@@ -1378,8 +1396,11 @@ def experiment_trends(exp_id):
             "hourly_simulation": hourly_simulation,
             "total_expected_days": total_days,
             "total_expected_rounds": max_expected_rounds,
+            "max_remaining_rounds": max(0, max_remaining_rounds),
+            "max_remaining_days": max_remaining_days,
             "client_daily_compute": client_daily_compute,
             "client_hourly_compute": client_hourly_compute,
+            "client_progress": client_progress,
         }
     )
 
