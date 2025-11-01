@@ -413,6 +413,46 @@
                                 client_hourly_compute: {}
                             };
 
+                            // Function to detect and remove outliers from simulation time data
+                            function removeOutliers(data) {
+                                if (data.length < 3) {
+                                    return data; // Not enough data to detect outliers
+                                }
+                                
+                                // Calculate median and MAD (Median Absolute Deviation)
+                                const sorted = [...data].filter(v => v > 0).sort((a, b) => a - b);
+                                if (sorted.length === 0) {
+                                    return data;
+                                }
+                                
+                                const median = sorted[Math.floor(sorted.length / 2)];
+                                const deviations = sorted.map(val => Math.abs(val - median));
+                                const mad = deviations.sort((a, b) => a - b)[Math.floor(deviations.length / 2)];
+                                
+                                // Use modified Z-score with MAD
+                                // Outliers are values more than 3.5 MAD from the median
+                                const threshold = 3.5;
+                                const cleanData = [];
+                                const validValues = data.filter(v => {
+                                    if (v === 0) return true; // Keep zeros
+                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
+                                    return modifiedZScore <= threshold;
+                                });
+                                
+                                // Calculate mean of valid values for replacement
+                                const validNonZero = validValues.filter(v => v > 0);
+                                const meanValid = validNonZero.length > 0 
+                                    ? validNonZero.reduce((a, b) => a + b, 0) / validNonZero.length 
+                                    : median;
+                                
+                                // Replace outliers with mean of valid values
+                                return data.map(v => {
+                                    if (v === 0) return v; // Keep zeros
+                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
+                                    return modifiedZScore > threshold ? meanValid : v;
+                                });
+                            }
+
                             // Function to update trend charts
                             function updateTrendCharts() {
                                 const aggregation = document.querySelector('input[name="aggregation"]:checked').value;
@@ -422,7 +462,8 @@
                                     const days = Object.keys(trendsData.daily_compute).sort((a, b) => parseInt(a) - parseInt(b));
                                     labels = days.map(d => `Day ${d}`);
                                     computeData = days.map(d => trendsData.daily_compute[d]);
-                                    simulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                    const rawSimulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                    simulationData = removeOutliers(rawSimulationData);
                                 } else {
                                     const hours = Object.keys(trendsData.hourly_compute).sort((a, b) => {
                                         const [dayA, hourA] = a.split('-').map(Number);
@@ -434,7 +475,8 @@
                                         return `D${day}H${hour}`;
                                     });
                                     computeData = hours.map(h => trendsData.hourly_compute[h]);
-                                    simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                    const rawSimulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                    simulationData = removeOutliers(rawSimulationData);
                                 }
 
                                 // Destroy existing server compute time chart before recreating
@@ -581,7 +623,7 @@
                             // Function to update forecast
                             function updateForecast(aggregation) {
                                 const computeData = aggregation === 'daily' ? trendsData.daily_compute : trendsData.hourly_compute;
-                                const simulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
+                                const rawSimulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
                                 
                                 const keys = Object.keys(computeData).sort((a, b) => {
                                     if (aggregation === 'daily') return parseInt(a) - parseInt(b);
@@ -598,27 +640,32 @@
                                     return;
                                 }
 
-                                // Calculate total simulation time
-                                const totalSimulationTime = keys.reduce((sum, k) => sum + (simulationData[k] || 0), 0);
+                                // Apply outlier removal to simulation data for more accurate forecasting
+                                const rawValues = keys.map(k => rawSimulationData[k] || 0);
+                                const cleanedValues = removeOutliers(rawValues);
+                                
+                                // Calculate total simulation time using cleaned data
+                                const totalSimulationTime = cleanedValues.reduce((sum, val) => sum + val, 0);
                                 const completedSlots = keys.length;
                                 const avgTimePerSlot = totalSimulationTime / completedSlots;
 
                                 // Use actual expected duration from client_execution table
+                                // total_expected_rounds is the MAX expected_duration_rounds among ALL clients
+                                // This ensures remaining slots accounts for the slowest/longest-running client
                                 // total_expected_days comes from max(expected_duration_rounds) / 24
-                                // total_expected_rounds is the actual max(expected_duration_rounds)
                                 const totalExpectedDays = trendsData.total_expected_days || 0;
                                 const totalExpectedRounds = trendsData.total_expected_rounds || 0;
                                 
                                 let totalSlots, remainingSlots;
                                 
                                 if (aggregation === 'daily') {
-                                    // For daily aggregation, use total expected days
+                                    // For daily aggregation, use total expected days (max among all clients)
                                     totalSlots = Math.ceil(totalExpectedDays);
-                                    remainingSlots = totalSlots - completedSlots;
+                                    remainingSlots = Math.max(0, totalSlots - completedSlots);
                                 } else {
-                                    // For hourly aggregation, use total expected rounds (hours)
+                                    // For hourly aggregation, use total expected rounds (max among all clients)
                                     totalSlots = totalExpectedRounds;
-                                    remainingSlots = totalSlots - completedSlots;
+                                    remainingSlots = Math.max(0, totalSlots - completedSlots);
                                 }
 
                                 // If we don't have expected duration from DB, fall back to estimation
