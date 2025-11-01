@@ -649,23 +649,27 @@
                                 const completedSlots = keys.length;
                                 const avgTimePerSlot = totalSimulationTime / completedSlots;
 
-                                // Use actual expected duration from client_execution table
-                                // total_expected_rounds is the MAX expected_duration_rounds among ALL clients
-                                // This ensures remaining slots accounts for the slowest/longest-running client
-                                // total_expected_days comes from max(expected_duration_rounds) / 24
+                                // Use actual expected duration and remaining time from client_execution table
+                                // Accounts for clients starting at different times by using max remaining rounds
+                                // max_remaining_rounds: maximum rounds remaining across all clients (accounts for late starts)
+                                // total_expected_rounds: maximum expected duration among all clients
                                 const totalExpectedDays = trendsData.total_expected_days || 0;
                                 const totalExpectedRounds = trendsData.total_expected_rounds || 0;
+                                const maxRemainingRounds = trendsData.max_remaining_rounds || 0;
+                                const maxRemainingDays = trendsData.max_remaining_days || 0;
                                 
                                 let totalSlots, remainingSlots;
                                 
                                 if (aggregation === 'daily') {
-                                    // For daily aggregation, use total expected days (max among all clients)
+                                    // Use actual remaining days from the client that has the most work left
+                                    // This accounts for clients starting at different times
                                     totalSlots = Math.ceil(totalExpectedDays);
-                                    remainingSlots = Math.max(0, totalSlots - completedSlots);
+                                    remainingSlots = Math.max(0, Math.ceil(maxRemainingDays));
                                 } else {
-                                    // For hourly aggregation, use total expected rounds (max among all clients)
+                                    // Use actual remaining rounds from the client that has the most work left
+                                    // This accounts for clients starting at different times
                                     totalSlots = totalExpectedRounds;
-                                    remainingSlots = Math.max(0, totalSlots - completedSlots);
+                                    remainingSlots = Math.max(0, maxRemainingRounds);
                                 }
 
                                 // If we don't have expected duration from DB, fall back to estimation
