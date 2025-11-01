@@ -16,9 +16,9 @@
                 </div>
             </div>
 
-            <div class="columns">
+            <div class="columns" style="display: flex; align-items: stretch;">
                 <!--Dashboard column-->
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
 
                     {% for message in get_flashed_messages() %}
                     <div class="alert alert-warning">
@@ -28,10 +28,10 @@
                     {% endfor %}
 
                     <!--Dashboard box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
 
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <div class="box-lines">
                                 <b>Basic Information</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
@@ -119,7 +119,7 @@
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
                     <!--Box-->
 
                     <div class="dashboard-box">
@@ -205,12 +205,12 @@
                     </script>
                     {% endif %}
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Simulation Clients</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Manage clients running agent populations for this experiment.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             {% if len(clients) == 0 %}
                             <div class="box-line">
                                 <span class="left">No clients registered</span>
@@ -305,11 +305,11 @@
                     </div>
                 </div>
 
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
+                    <div class="dashboard-box is-compact" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
-                        <div class="help-block">
+                        <div class="help-block" style="flex: 1;">
 
                             <p>
                                 <b>Server & Analysis Controls</b><br>
