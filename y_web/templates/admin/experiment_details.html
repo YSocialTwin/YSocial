@@ -47,16 +47,6 @@
                                     <span class="left">Owner</span>
                                     <span class="right">{{ experiment.owner }}</span>
                                 </div>
-
-                                {% if experiment.running == 1 %}
-                                <hr>
-                                <b>Connection Details</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Server endpoint for active experiment.</p>
-                                <div class="box-line">
-                                    <span class="left">Endpoint</span>
-                                    <span class="right" style="word-break: break-all;">http://{{ experiment.server }}:{{ experiment.port }}</span>
-                                </div>
-                                {% endif %}
                                 <hr>
                                 <b>Actions</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Manage experiment data and configuration.</p>
