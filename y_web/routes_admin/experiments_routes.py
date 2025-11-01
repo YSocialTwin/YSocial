@@ -1206,6 +1206,91 @@ def experiment_logs(exp_id):
     return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
 
 
+@experiments.route("/admin/client_logs/<int:client_id>")
+@login_required
+def client_logs(client_id):
+    """Get client logs analysis for a specific client."""
+    check_privileges(current_user.username)
+
+    # Get client details
+    client = Client.query.filter_by(id=client_id).first()
+    if not client:
+        return jsonify({"error": "Client not found"}), 404
+
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not experiment:
+        return jsonify({"error": "Experiment not found"}), 404
+
+    # Construct path to client log file
+    db_name = experiment.db_name
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        # Extract the UUID folder
+        parts = db_name.split(os.sep)
+        if len(parts) >= 2:
+            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+        else:
+            return jsonify({"error": "Invalid experiment path"}), 400
+    elif db_name.startswith("experiments_"):
+        # PostgreSQL format - UUID is after the underscore
+        uid = db_name.replace("experiments_", "")
+        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+    else:
+        return jsonify({"error": "Invalid experiment path format"}), 400
+
+    # Client log file name format: {client_name}_client.log
+    log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+    # Check if log file exists
+    if not os.path.exists(log_file):
+        return jsonify(
+            {
+                "call_volume": {},
+                "mean_execution_time": {},
+                "error": "Log file not found",
+            }
+        )
+
+    # Parse the log file
+    method_counts = defaultdict(int)
+    method_durations = defaultdict(list)
+
+    try:
+        with open(log_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    log_entry = json.loads(line)
+                    method_name = log_entry.get("method_name", "unknown")
+                    execution_time = log_entry.get("execution_time_seconds", 0)
+
+                    method_counts[method_name] += 1
+                    method_durations[method_name].append(float(execution_time))
+
+                except json.JSONDecodeError:
+                    # Skip invalid JSON lines
+                    continue
+    except Exception as e:
+        return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
+
+    # Calculate mean execution times
+    mean_execution_times = {}
+    for method, durations in method_durations.items():
+        if durations:
+            mean_execution_times[method] = sum(durations) / len(durations)
+        else:
+            mean_execution_times[method] = 0
+
+    return jsonify(
+        {
+            "call_volume": dict(method_counts),
+            "mean_execution_time": mean_execution_times,
+        }
+    )
+
+
 @experiments.route("/admin/start_experiment/<int:uid>")
 @login_required
 def start_experiment(uid):
