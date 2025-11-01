@@ -1391,9 +1391,19 @@
                         });
                 }
 
+                // Function to update refresh button state based on client selection
+                function updateClientRefreshButtonState() {
+                    const clientId = document.getElementById('clientSelector').value;
+                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = !clientId;
+                    }
+                }
+
                 // Client selector change handler
                 document.getElementById('clientSelector').addEventListener('change', function() {
                     loadClientLogs(this.value);
+                    updateClientRefreshButtonState();
                 });
 
                 // Refresh button click handler for client logs
@@ -1401,8 +1411,18 @@
                     const clientId = document.getElementById('clientSelector').value;
                     if (clientId) {
                         loadClientLogs(clientId);
+                    } else {
+                        // Show brief feedback that a client must be selected
+                        document.getElementById('client-logs-error-message').style.display = 'block';
+                        document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
+                        setTimeout(() => {
+                            document.getElementById('client-logs-error-message').style.display = 'none';
+                        }, 3000);
                     }
                 });
+
+                // Initialize button state on page load
+                updateClientRefreshButtonState();
 
                 // Select All button handler for methods
                 document.getElementById('selectAllMethods').addEventListener('click', function() {
