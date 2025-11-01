@@ -1326,6 +1326,50 @@ def experiment_trends(exp_id):
     # Convert rounds to days (each round is 1 hour, so 24 rounds = 1 day)
     total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
 
+    # Parse client log files and aggregate execution times per client
+    client_daily_compute = {}
+    client_hourly_compute = {}
+
+    for client in clients:
+        client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+        if os.path.exists(client_log_file):
+            client_daily = defaultdict(float)
+            client_hourly = defaultdict(float)
+
+            try:
+                with open(client_log_file, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            log_entry = json.loads(line)
+                            day = log_entry.get("day")
+                            hour = log_entry.get("hour")
+                            execution_time = log_entry.get("execution_time_seconds", 0)
+
+                            if day is not None:
+                                # Aggregate by day
+                                client_daily[day] += float(execution_time)
+
+                            if day is not None and hour is not None:
+                                # Aggregate by day-hour combination
+                                key = f"{day}-{hour}"
+                                client_hourly[key] += float(execution_time)
+
+                        except json.JSONDecodeError:
+                            continue
+            except Exception:
+                # If there's an error reading a client log, skip it
+                continue
+
+            # Store client aggregates if they have data
+            if client_daily:
+                client_daily_compute[client.name] = dict(client_daily)
+            if client_hourly:
+                client_hourly_compute[client.name] = dict(client_hourly)
+
     return jsonify(
         {
             "daily_compute": dict(daily_durations),
@@ -1334,6 +1378,8 @@ def experiment_trends(exp_id):
             "hourly_simulation": hourly_simulation,
             "total_expected_days": total_days,
             "total_expected_rounds": max_expected_rounds,
+            "client_daily_compute": client_daily_compute,
+            "client_hourly_compute": client_hourly_compute,
         }
     )
 

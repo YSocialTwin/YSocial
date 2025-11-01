@@ -418,7 +418,9 @@
                                 daily_compute: {},
                                 daily_simulation: {},
                                 hourly_compute: {},
-                                hourly_simulation: {}
+                                hourly_simulation: {},
+                                client_daily_compute: {},
+                                client_hourly_compute: {}
                             };
 
                             // Function to update trend charts
@@ -445,25 +447,70 @@
                                     simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
                                 }
 
+                                // Prepare datasets for compute time chart
+                                const computeDatasets = [{
+                                    label: 'Server Compute Time (s)',
+                                    data: computeData,
+                                    borderColor: 'rgba(33, 150, 243, 1)',
+                                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                    borderWidth: 2,
+                                    tension: 0.3,
+                                    fill: true
+                                }];
+
+                                // Add client compute time datasets
+                                const clientComputeData = aggregation === 'daily' ? trendsData.client_daily_compute : trendsData.client_hourly_compute;
+                                if (clientComputeData) {
+                                    const colors = [
+                                        'rgba(255, 99, 132, 1)',
+                                        'rgba(255, 159, 64, 1)',
+                                        'rgba(255, 205, 86, 1)',
+                                        'rgba(75, 192, 192, 1)',
+                                        'rgba(153, 102, 255, 1)',
+                                        'rgba(201, 203, 207, 1)'
+                                    ];
+                                    let colorIndex = 0;
+
+                                    Object.keys(clientComputeData).forEach(clientName => {
+                                        const clientData = labels.map(label => {
+                                            // Extract day or day-hour from label
+                                            let key;
+                                            if (aggregation === 'daily') {
+                                                key = parseInt(label.replace('Day ', ''));
+                                            } else {
+                                                const match = label.match(/D(\d+)H(\d+)/);
+                                                if (match) {
+                                                    key = `${match[1]}-${match[2]}`;
+                                                }
+                                            }
+                                            return clientComputeData[clientName][key] || 0;
+                                        });
+
+                                        const color = colors[colorIndex % colors.length];
+                                        computeDatasets.push({
+                                            label: `${clientName} (s)`,
+                                            data: clientData,
+                                            borderColor: color,
+                                            backgroundColor: color.replace('1)', '0.1)'),
+                                            borderWidth: 2,
+                                            tension: 0.3,
+                                            fill: false
+                                        });
+                                        colorIndex++;
+                                    });
+                                }
+
                                 // Update compute time chart
                                 if (computeTimeTrendChart) {
                                     computeTimeTrendChart.data.labels = labels;
-                                    computeTimeTrendChart.data.datasets[0].data = computeData;
+                                    computeTimeTrendChart.data.datasets = computeDatasets;
                                     computeTimeTrendChart.update();
                                 } else if (labels.length > 0) {
                                     computeTimeTrendChart = new Chart('computeTimeTrendChart', {
                                         type: 'line',
                                         data: {
                                             labels: labels,
-                                            datasets: [{
-                                                label: 'Compute Time (s)',
-                                                data: computeData,
-                                                borderColor: 'rgba(33, 150, 243, 1)',
-                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                                borderWidth: 2,
-                                                tension: 0.3,
-                                                fill: true
-                                            }]
+                                            datasets: computeDatasets
                                         },
                                         options: {
                                             responsive: true,
