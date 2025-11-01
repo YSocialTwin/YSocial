@@ -437,12 +437,13 @@
                                     simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
                                 }
 
-                                // Update server compute time chart
+                                // Destroy existing server compute time chart before recreating
                                 if (serverComputeTimeTrendChart) {
-                                    serverComputeTimeTrendChart.data.labels = labels;
-                                    serverComputeTimeTrendChart.data.datasets[0].data = computeData;
-                                    serverComputeTimeTrendChart.update();
-                                } else if (labels.length > 0) {
+                                    serverComputeTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate server compute time chart
+                                if (labels.length > 0) {
                                     serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -513,12 +514,13 @@
                                     });
                                 }
 
-                                // Update client compute time chart
+                                // Destroy existing client compute time chart before recreating
                                 if (clientComputeTimeTrendChart) {
-                                    clientComputeTimeTrendChart.data.labels = labels;
-                                    clientComputeTimeTrendChart.data.datasets = clientComputeDatasets;
-                                    clientComputeTimeTrendChart.update();
-                                } else if (labels.length > 0 && clientComputeDatasets.length > 0) {
+                                    clientComputeTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate client compute time chart
+                                if (labels.length > 0 && clientComputeDatasets.length > 0) {
                                     clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -538,12 +540,13 @@
                                     });
                                 }
 
-                                // Update simulation time chart
+                                // Destroy existing simulation time chart before recreating
                                 if (simulationTimeTrendChart) {
-                                    simulationTimeTrendChart.data.labels = labels;
-                                    simulationTimeTrendChart.data.datasets[0].data = simulationData;
-                                    simulationTimeTrendChart.update();
-                                } else if (labels.length > 0) {
+                                    simulationTimeTrendChart.destroy();
+                                }
+                                
+                                // Create/recreate simulation time chart
+                                if (labels.length > 0) {
                                     simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
                                         type: 'line',
                                         data: {
@@ -920,52 +923,60 @@
                             const volumeData = allPathsData.paths.map(path => callVolume[path]);
                             const durationData = allPathsData.paths.map(path => meanDuration[path]);
 
-                        // Call Volume Chart
-                        callVolumeChartInstance = new Chart("callVolumeChart", {
-                            type: 'bar',
-                            data: {
-                                labels: allPathsData.paths,
-                                datasets: [{
-                                    label: 'Number of Calls',
-                                    data: volumeData,
-                                    backgroundColor: 'rgba(3, 155, 229, 0.6)',
-                                    borderColor: 'rgba(3, 155, 229, 1)',
-                                    borderWidth: 1,
-                                    borderRadius: 4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: false
+                            // Destroy existing charts before creating new ones
+                            if (callVolumeChartInstance) {
+                                callVolumeChartInstance.destroy();
+                            }
+                            if (meanDurationChartInstance) {
+                                meanDurationChartInstance.destroy();
+                            }
+
+                            // Call Volume Chart
+                            callVolumeChartInstance = new Chart("callVolumeChart", {
+                                type: 'bar',
+                                data: {
+                                    labels: allPathsData.paths,
+                                    datasets: [{
+                                        label: 'Number of Calls',
+                                        data: volumeData,
+                                        backgroundColor: 'rgba(3, 155, 229, 0.6)',
+                                        borderColor: 'rgba(3, 155, 229, 1)',
+                                        borderWidth: 1,
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                            padding: 8,
+                                            titleFont: { size: 12 },
+                                            bodyFont: { size: 11 },
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return 'Calls: ' + context.parsed.y;
+                                                }
+                                            }
+                                        }
                                     },
-                                    tooltip: {
-                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                        padding: 8,
-                                        titleFont: { size: 12 },
-                                        bodyFont: { size: 11 },
-                                        callbacks: {
-                                            label: function(context) {
-                                                return 'Calls: ' + context.parsed.y;
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                precision: 0
                                             }
                                         }
                                     }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            precision: 0
-                                        }
-                                    }
                                 }
-                            }
-                        });
+                            });
 
-                        // Mean Duration Chart
-                        meanDurationChartInstance = new Chart("meanDurationChart", {
+                            // Mean Duration Chart
+                            meanDurationChartInstance = new Chart("meanDurationChart", {
                             type: 'bar',
                             data: {
                                 labels: allPathsData.paths,
