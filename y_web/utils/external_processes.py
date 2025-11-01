@@ -1008,7 +1008,6 @@ def start_client_process(exp, cli, population, resume=True):
             open(f"{data_base_path}client_{cli.name}-{population.name}.json")
         )
 
-
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
         if ce:
@@ -1033,10 +1032,16 @@ def start_client_process(exp, cli, population, resume=True):
             path = f"{cli.name}_network.csv"
 
             cl = YClientWeb(
-                config_file, data_base_path, first_run=first_run, network=path, log_file=log_file
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                network=path,
+                log_file=log_file,
             )
         else:
-            cl = YClientWeb(config_file, data_base_path, first_run=first_run, log_file=log_file)
+            cl = YClientWeb(
+                config_file, data_base_path, first_run=first_run, log_file=log_file
+            )
 
         if resume:
             cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
