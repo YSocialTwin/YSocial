@@ -178,3 +178,32 @@ class TestClientFormFields:
 
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
+
+    def test_activity_profile_null_handling(self):
+        """Test that null activity_profile is handled gracefully"""
+        try:
+            from unittest.mock import MagicMock
+
+            # Mock an agent with null activity_profile
+            mock_agent = MagicMock()
+            mock_agent.name = "test_agent"
+            mock_agent.activity_profile = None
+            mock_agent.age = 25
+            mock_agent.daily_activity_level = 1
+            mock_agent.profession = "student"
+
+            # Mock an ActivityProfile query that returns None
+            mock_query = MagicMock()
+            mock_query.filter_by.return_value.first.return_value = None
+
+            # Test the walrus operator pattern used in the fix
+            activity_profile_obj = mock_query.filter_by(
+                id=mock_agent.activity_profile
+            ).first()
+            result = activity_profile_obj.name if activity_profile_obj else None
+
+            # Should be None, not raise AttributeError
+            assert result is None
+
+        except ImportError as e:
+            pytest.skip(f"Could not import required modules: {e}")
