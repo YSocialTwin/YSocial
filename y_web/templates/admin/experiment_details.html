@@ -350,6 +350,259 @@
 
             </div>
 
+            <!-- Server Trends Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Trend analysis of server compute time and simulation time progression.
+                        </p>
+
+                        <div id="trends-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
+                            <i class="mdi mdi-alert" style="color: #856404;"></i>
+                            <span id="trends-error-text" style="color: #856404;"></span>
+                        </div>
+
+                        <!-- Aggregation selector -->
+                        <div style="margin-bottom: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                            <label for="aggregationSelector" style="font-weight: 600; margin-right: 1em;">Aggregation:</label>
+                            <div style="display: inline-block;">
+                                <label style="margin-right: 1em; cursor: pointer;">
+                                    <input type="radio" name="aggregation" value="daily" checked> Daily
+                                </label>
+                                <label style="cursor: pointer;">
+                                    <input type="radio" name="aggregation" value="hourly"> Hourly
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Trends Charts -->
+                        <div class="columns">
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Server Compute Time Trend</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="computeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Simulation Time Trend</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="simulationTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Forecast Section -->
+                        <div id="forecast-section" style="margin-top: 1em; padding: 1em; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #039be5;">
+                            <h4 class="subtitle is-6" style="margin-bottom: 0.5em; color: #0277bd;">
+                                <i class="mdi mdi-clock-outline"></i> Remaining Time Forecast
+                            </h4>
+                            <div id="forecast-content" style="font-size: 0.9em; color: #555;">
+                                <p style="margin: 0.25em 0;"><strong>Total simulation time so far:</strong> <span id="forecast-elapsed">-</span></p>
+                                <p style="margin: 0.25em 0;"><strong>Average time per slot:</strong> <span id="forecast-avg-slot">-</span></p>
+                                <p style="margin: 0.25em 0;"><strong>Remaining slots:</strong> <span id="forecast-remaining-slots">-</span></p>
+                                <p style="margin: 0.25em 0; font-size: 1.1em; color: #0277bd;"><strong>Estimated remaining time:</strong> <span id="forecast-remaining-time">-</span></p>
+                            </div>
+                        </div>
+
+                        <script>
+                            // Global variables for trend charts
+                            let computeTimeTrendChart = null;
+                            let simulationTimeTrendChart = null;
+                            let trendsData = {
+                                daily_compute: {},
+                                daily_simulation: {},
+                                hourly_compute: {},
+                                hourly_simulation: {}
+                            };
+
+                            // Function to update trend charts
+                            function updateTrendCharts() {
+                                const aggregation = document.querySelector('input[name="aggregation"]:checked').value;
+                                
+                                let computeData, simulationData, labels;
+                                if (aggregation === 'daily') {
+                                    const days = Object.keys(trendsData.daily_compute).sort((a, b) => parseInt(a) - parseInt(b));
+                                    labels = days.map(d => `Day ${d}`);
+                                    computeData = days.map(d => trendsData.daily_compute[d]);
+                                    simulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                } else {
+                                    const hours = Object.keys(trendsData.hourly_compute).sort((a, b) => {
+                                        const [dayA, hourA] = a.split('-').map(Number);
+                                        const [dayB, hourB] = b.split('-').map(Number);
+                                        return dayA !== dayB ? dayA - dayB : hourA - hourB;
+                                    });
+                                    labels = hours.map(h => {
+                                        const [day, hour] = h.split('-');
+                                        return `D${day}H${hour}`;
+                                    });
+                                    computeData = hours.map(h => trendsData.hourly_compute[h]);
+                                    simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                }
+
+                                // Update compute time chart
+                                if (computeTimeTrendChart) {
+                                    computeTimeTrendChart.data.labels = labels;
+                                    computeTimeTrendChart.data.datasets[0].data = computeData;
+                                    computeTimeTrendChart.update();
+                                } else if (labels.length > 0) {
+                                    computeTimeTrendChart = new Chart('computeTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: [{
+                                                label: 'Compute Time (s)',
+                                                data: computeData,
+                                                borderColor: 'rgba(33, 150, 243, 1)',
+                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                borderWidth: 2,
+                                                tension: 0.3,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Update simulation time chart
+                                if (simulationTimeTrendChart) {
+                                    simulationTimeTrendChart.data.labels = labels;
+                                    simulationTimeTrendChart.data.datasets[0].data = simulationData;
+                                    simulationTimeTrendChart.update();
+                                } else if (labels.length > 0) {
+                                    simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: [{
+                                                label: 'Simulation Time (s)',
+                                                data: simulationData,
+                                                borderColor: 'rgba(76, 175, 80, 1)',
+                                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                                borderWidth: 2,
+                                                tension: 0.3,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Update forecast
+                                updateForecast(aggregation);
+                            }
+
+                            // Function to update forecast
+                            function updateForecast(aggregation) {
+                                const computeData = aggregation === 'daily' ? trendsData.daily_compute : trendsData.hourly_compute;
+                                const simulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
+                                
+                                const keys = Object.keys(computeData).sort((a, b) => {
+                                    if (aggregation === 'daily') return parseInt(a) - parseInt(b);
+                                    const [dayA, hourA] = a.split('-').map(Number);
+                                    const [dayB, hourB] = b.split('-').map(Number);
+                                    return dayA !== dayB ? dayA - dayB : hourA - hourB;
+                                });
+
+                                if (keys.length === 0) {
+                                    document.getElementById('forecast-elapsed').textContent = 'No data';
+                                    document.getElementById('forecast-avg-slot').textContent = 'No data';
+                                    document.getElementById('forecast-remaining-slots').textContent = 'No data';
+                                    document.getElementById('forecast-remaining-time').textContent = 'No data';
+                                    return;
+                                }
+
+                                // Calculate total simulation time
+                                const totalSimulationTime = keys.reduce((sum, k) => sum + (simulationData[k] || 0), 0);
+                                const completedSlots = keys.length;
+                                const avgTimePerSlot = totalSimulationTime / completedSlots;
+
+                                // Estimate remaining slots (assuming experiment configuration)
+                                // For daily: if max day is N, we can estimate total days
+                                const maxKey = keys[keys.length - 1];
+                                let totalSlots, remainingSlots;
+                                
+                                if (aggregation === 'daily') {
+                                    // Assume experiment has a set number of days (you could get this from experiment config)
+                                    // For now, we'll estimate based on the pattern
+                                    totalSlots = parseInt(maxKey) + 5; // Estimate 5 more days
+                                    remainingSlots = totalSlots - completedSlots;
+                                } else {
+                                    // For hourly, estimate based on 24 hours per day
+                                    const [maxDay, maxHour] = maxKey.split('-').map(Number);
+                                    totalSlots = (maxDay + 2) * 24; // Estimate 2 more days
+                                    remainingSlots = totalSlots - completedSlots;
+                                }
+
+                                const estimatedRemainingTime = avgTimePerSlot * remainingSlots;
+
+                                // Format time display
+                                function formatTime(seconds) {
+                                    const hours = Math.floor(seconds / 3600);
+                                    const minutes = Math.floor((seconds % 3600) / 60);
+                                    const secs = Math.floor(seconds % 60);
+                                    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+                                    if (minutes > 0) return `${minutes}m ${secs}s`;
+                                    return `${secs}s`;
+                                }
+
+                                document.getElementById('forecast-elapsed').textContent = formatTime(totalSimulationTime);
+                                document.getElementById('forecast-avg-slot').textContent = formatTime(avgTimePerSlot);
+                                document.getElementById('forecast-remaining-slots').textContent = remainingSlots;
+                                document.getElementById('forecast-remaining-time').textContent = formatTime(estimatedRemainingTime);
+                            }
+
+                            // Load trends data
+                            fetch('/admin/experiment_trends/{{ experiment.idexp }}')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.error) {
+                                        document.getElementById('trends-error-message').style.display = 'block';
+                                        document.getElementById('trends-error-text').textContent = data.error;
+                                        return;
+                                    }
+
+                                    trendsData = data;
+                                    updateTrendCharts();
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching trends:', error);
+                                    document.getElementById('trends-error-message').style.display = 'block';
+                                    document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+                                });
+
+                            // Handle aggregation change
+                            document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
+                                radio.addEventListener('change', updateTrendCharts);
+                            });
+                        </script>
+                    </div>
+                </div>
+            </div>
+
             <!-- Server Logs Visualization Section -->
             <div class="columns">
                 <div class="column is-12">

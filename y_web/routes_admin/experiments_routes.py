@@ -1206,6 +1206,118 @@ def experiment_logs(exp_id):
     return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
 
 
+@experiments.route("/admin/experiment_trends/<int:exp_id>")
+@login_required
+def experiment_trends(exp_id):
+    """Get experiment server trends analysis (daily/hourly aggregates)."""
+    check_privileges(current_user.username)
+
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        return jsonify({"error": "Experiment not found"}), 404
+
+    # Construct path to _server.log
+    db_name = experiment.db_name
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        parts = db_name.split(os.sep)
+        if len(parts) >= 2:
+            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+        else:
+            return jsonify({"error": "Invalid experiment path"}), 400
+    elif db_name.startswith("experiments_"):
+        uid = db_name.replace("experiments_", "")
+        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+    else:
+        return jsonify({"error": "Invalid experiment path format"}), 400
+
+    log_file = os.path.join(exp_folder, "_server.log")
+
+    # Check if log file exists
+    if not os.path.exists(log_file):
+        return jsonify(
+            {
+                "daily_compute": {},
+                "daily_simulation": {},
+                "hourly_compute": {},
+                "hourly_simulation": {},
+                "error": "Log file not found",
+            }
+        )
+
+    # Parse the log file and aggregate by day and hour
+    from datetime import datetime
+
+    daily_durations = defaultdict(float)
+    daily_times = defaultdict(list)
+    hourly_durations = defaultdict(float)
+    hourly_times = defaultdict(list)
+
+    try:
+        with open(log_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    line = line.replace("'", '"')
+                    log_entry = json.loads(line)
+                    day = log_entry.get("day")
+                    hour = log_entry.get("hour")
+                    duration = log_entry.get("duration", 0)
+                    time_str = log_entry.get("time", "")
+
+                    if day is not None:
+                        # Aggregate by day
+                        daily_durations[day] += float(duration)
+                        if time_str:
+                            try:
+                                time_obj = datetime.strptime(
+                                    time_str, "%Y-%m-%d %H:%M:%S"
+                                )
+                                daily_times[day].append(time_obj)
+                            except ValueError:
+                                pass
+
+                    if day is not None and hour is not None:
+                        # Aggregate by day-hour combination
+                        key = f"{day}-{hour}"
+                        hourly_durations[key] += float(duration)
+                        if time_str:
+                            try:
+                                time_obj = datetime.strptime(
+                                    time_str, "%Y-%m-%d %H:%M:%S"
+                                )
+                                hourly_times[key].append(time_obj)
+                            except ValueError:
+                                pass
+
+                except json.JSONDecodeError:
+                    continue
+    except Exception:
+        return jsonify({"error": "Error reading log file"}), 500
+
+    # Calculate simulation time (delta of time field)
+    daily_simulation = {}
+    for day, times in daily_times.items():
+        if times:
+            daily_simulation[day] = (max(times) - min(times)).total_seconds()
+
+    hourly_simulation = {}
+    for key, times in hourly_times.items():
+        if times:
+            hourly_simulation[key] = (max(times) - min(times)).total_seconds()
+
+    return jsonify(
+        {
+            "daily_compute": dict(daily_durations),
+            "daily_simulation": daily_simulation,
+            "hourly_compute": dict(hourly_durations),
+            "hourly_simulation": hourly_simulation,
+        }
+    )
+
+
 @experiments.route("/admin/client_logs/<int:client_id>")
 @login_required
 def client_logs(client_id):
