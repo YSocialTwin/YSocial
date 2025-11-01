@@ -940,6 +940,7 @@ def delete_client(uid):
 
     client = Client.query.filter_by(id=uid).first()
     exp_id = client.id_exp
+    pop_id = client.population_id
 
     # delete association of population and experiment if no other client is using it
     pop_exp = Population_Experiment.query.filter_by(
@@ -965,6 +966,11 @@ def delete_client(uid):
         os.remove(path)
     else:
         print(f"File {path} does not exist.")
+
+    # remove agent population
+    Population_Experiment.query.filter_by(id_population=pop_id).delete()
+    db.session.commit()
+
 
     from .experiments_routes import experiment_details
 
