@@ -1272,8 +1272,8 @@ def client_logs(client_id):
                 except json.JSONDecodeError:
                     # Skip invalid JSON lines
                     continue
-    except Exception as e:
-        return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
+    except Exception:
+        return jsonify({"error": "Error reading log file"}), 500
 
     # Calculate mean execution times
     mean_execution_times = {}

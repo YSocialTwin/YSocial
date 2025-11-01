@@ -5,6 +5,7 @@ Tests for client logs endpoint
 import json
 import os
 import tempfile
+from collections import defaultdict
 
 import pytest
 from flask import Flask
@@ -122,8 +123,6 @@ def app():
         except PermissionError:
             return jsonify({"error": "Access denied"}), 403
 
-        from collections import defaultdict
-
         # Get client details
         client = Client.query.filter_by(id=client_id).first()
         if not client:
@@ -184,8 +183,8 @@ def app():
                     except json.JSONDecodeError:
                         # Skip invalid JSON lines
                         continue
-        except Exception as e:
-            return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
+        except Exception:
+            return jsonify({"error": "Error reading log file"}), 500
 
         # Calculate mean execution times
         mean_execution_times = {}
