@@ -1407,6 +1407,7 @@
                 });
 
                 // Refresh button click handler for client logs
+                const ERROR_MESSAGE_AUTO_HIDE_DELAY = 3000; // milliseconds
                 document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
                     const clientId = document.getElementById('clientSelector').value;
                     if (clientId) {
@@ -1417,7 +1418,7 @@
                         document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
                         setTimeout(() => {
                             document.getElementById('client-logs-error-message').style.display = 'none';
-                        }, 3000);
+                        }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
                     }
                 });
 
