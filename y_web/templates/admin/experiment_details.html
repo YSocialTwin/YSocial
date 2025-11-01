@@ -380,10 +380,18 @@
                         <!-- Trends Charts -->
                         <div class="columns">
                             <div class="column is-6">
+                                <!-- Server Compute Time (stacked) -->
+                                <div class="box-content" style="margin-bottom: 1em;">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Server Compute Time</h4>
+                                    <div style="position: relative; height: 135px;">
+                                        <canvas id="serverComputeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                                <!-- Client Compute Time (stacked) -->
                                 <div class="box-content">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Server Compute Time Trend</h4>
-                                    <div style="position: relative; height: 300px;">
-                                        <canvas id="computeTimeTrendChart"></canvas>
+                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Client Compute Time</h4>
+                                    <div style="position: relative; height: 135px;">
+                                        <canvas id="clientComputeTimeTrendChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -412,7 +420,8 @@
 
                         <script>
                             // Global variables for trend charts
-                            let computeTimeTrendChart = null;
+                            let serverComputeTimeTrendChart = null;
+                            let clientComputeTimeTrendChart = null;
                             let simulationTimeTrendChart = null;
                             let trendsData = {
                                 daily_compute: {},
@@ -447,18 +456,41 @@
                                     simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
                                 }
 
-                                // Prepare datasets for compute time chart
-                                const computeDatasets = [{
-                                    label: 'Server Compute Time (s)',
-                                    data: computeData,
-                                    borderColor: 'rgba(33, 150, 243, 1)',
-                                    backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                    borderWidth: 2,
-                                    tension: 0.3,
-                                    fill: true
-                                }];
+                                // Update server compute time chart
+                                if (serverComputeTimeTrendChart) {
+                                    serverComputeTimeTrendChart.data.labels = labels;
+                                    serverComputeTimeTrendChart.data.datasets[0].data = computeData;
+                                    serverComputeTimeTrendChart.update();
+                                } else if (labels.length > 0) {
+                                    serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: [{
+                                                label: 'Server (s)',
+                                                data: computeData,
+                                                borderColor: 'rgba(33, 150, 243, 1)',
+                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                borderWidth: 2,
+                                                tension: 0.3,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true, position: 'top' }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
 
-                                // Add client compute time datasets
+                                // Prepare client compute time datasets
+                                const clientComputeDatasets = [];
                                 const clientComputeData = aggregation === 'daily' ? trendsData.client_daily_compute : trendsData.client_hourly_compute;
                                 if (clientComputeData) {
                                     const colors = [
@@ -487,7 +519,7 @@
                                         });
 
                                         const color = colors[colorIndex % colors.length];
-                                        computeDatasets.push({
+                                        clientComputeDatasets.push({
                                             label: `${clientName} (s)`,
                                             data: clientData,
                                             borderColor: color,
@@ -500,23 +532,23 @@
                                     });
                                 }
 
-                                // Update compute time chart
-                                if (computeTimeTrendChart) {
-                                    computeTimeTrendChart.data.labels = labels;
-                                    computeTimeTrendChart.data.datasets = computeDatasets;
-                                    computeTimeTrendChart.update();
-                                } else if (labels.length > 0) {
-                                    computeTimeTrendChart = new Chart('computeTimeTrendChart', {
+                                // Update client compute time chart
+                                if (clientComputeTimeTrendChart) {
+                                    clientComputeTimeTrendChart.data.labels = labels;
+                                    clientComputeTimeTrendChart.data.datasets = clientComputeDatasets;
+                                    clientComputeTimeTrendChart.update();
+                                } else if (labels.length > 0 && clientComputeDatasets.length > 0) {
+                                    clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
                                         type: 'line',
                                         data: {
                                             labels: labels,
-                                            datasets: computeDatasets
+                                            datasets: clientComputeDatasets
                                         },
                                         options: {
                                             responsive: true,
                                             maintainAspectRatio: false,
                                             plugins: {
-                                                legend: { display: true }
+                                                legend: { display: true, position: 'top' }
                                             },
                                             scales: {
                                                 y: { beginAtZero: true }
