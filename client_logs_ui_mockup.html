@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Logs Analysis - UI Mockup</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            margin: 0;
+        }
+        .dashboard-box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .subtitle {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+        .select-wrapper {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .columns {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .column {
+            flex: 1;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .filter-section {
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .button {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .button:hover {
+            background: #f0f0f0;
+        }
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4em;
+        }
+        .filter-label {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.35em 0.65em;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .filter-label:hover {
+            background: #ffe3e3;
+            border-color: #ff6b6b;
+        }
+        .filter-label input {
+            margin-right: 0.4em;
+            accent-color: #ff6b6b;
+        }
+        .error-message {
+            padding: 1em;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 4px;
+            margin-bottom: 1em;
+            color: #856404;
+        }
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5em;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-box">
+        <h3 class="title">Client Logs Analysis</h3>
+        <p class="subtitle">Analysis of client method execution from {client_name}_client.log files.</p>
+
+        <div class="select-wrapper">
+            <label for="clientSelector">Select Client:</label>
+            <select id="clientSelector">
+                <option value="">-- Select a client --</option>
+                <option value="1">TestClient</option>
+                <option value="2">ProductionClient</option>
+                <option value="3">DemoClient</option>
+            </select>
+        </div>
+
+        <div id="error-message" class="error-message" style="display: none;">
+            ⚠️ <span id="error-text"></span>
+        </div>
+
+        <div id="charts-content" style="display: none;">
+            <div class="columns">
+                <div class="column">
+                    <h4 class="subtitle" style="margin-bottom: 1em;">Call Volume by Method</h4>
+                    <div class="chart-container">
+                        <canvas id="callVolumeChart"></canvas>
+                    </div>
+                </div>
+                <div class="column">
+                    <h4 class="subtitle" style="margin-bottom: 1em;">Mean Execution Time by Method (seconds)</h4>
+                    <div class="chart-container">
+                        <canvas id="executionTimeChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <div class="filter-header">
+                    <h4 class="subtitle" style="margin: 0;">Filter Methods</h4>
+                    <div>
+                        <button id="selectAll" class="button">Select All</button>
+                        <button id="deselectAll" class="button">Deselect All</button>
+                    </div>
+                </div>
+                <div id="filters" class="filters">
+                    <label class="filter-label">
+                        <input type="checkbox" checked> <span>comment</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" checked> <span>post</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" checked> <span>read</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" checked> <span>share</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Sample data
+        const sampleData = {
+            methods: ['comment', 'post', 'read', 'share'],
+            callVolume: {
+                comment: 5,
+                post: 4,
+                read: 4,
+                share: 2
+            },
+            meanExecutionTime: {
+                comment: 1.6226,
+                post: 0.8571,
+                read: 0.3599,
+                share: 1.1111
+            }
+        };
+
+        let callVolumeChart = null;
+        let executionTimeChart = null;
+
+        document.getElementById('clientSelector').addEventListener('change', function() {
+            if (this.value) {
+                loadCharts();
+            }
+        });
+
+        document.getElementById('selectAll').addEventListener('click', function() {
+            document.querySelectorAll('.filter-label input').forEach(cb => cb.checked = true);
+            updateCharts();
+        });
+
+        document.getElementById('deselectAll').addEventListener('click', function() {
+            document.querySelectorAll('.filter-label input').forEach(cb => cb.checked = false);
+            updateCharts();
+        });
+
+        document.querySelectorAll('.filter-label input').forEach(cb => {
+            cb.addEventListener('change', updateCharts);
+        });
+
+        function loadCharts() {
+            document.getElementById('charts-content').style.display = 'block';
+            document.getElementById('error-message').style.display = 'none';
+
+            const volumeData = sampleData.methods.map(m => sampleData.callVolume[m]);
+            const timeData = sampleData.methods.map(m => sampleData.meanExecutionTime[m]);
+
+            if (callVolumeChart) callVolumeChart.destroy();
+            if (executionTimeChart) executionTimeChart.destroy();
+
+            callVolumeChart = new Chart('callVolumeChart', {
+                type: 'bar',
+                data: {
+                    labels: sampleData.methods,
+                    datasets: [{
+                        label: 'Number of Calls',
+                        data: volumeData,
+                        backgroundColor: 'rgba(255, 107, 107, 0.6)',
+                        borderColor: 'rgba(255, 107, 107, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+
+            executionTimeChart = new Chart('executionTimeChart', {
+                type: 'bar',
+                data: {
+                    labels: sampleData.methods,
+                    datasets: [{
+                        label: 'Mean Execution Time (s)',
+                        data: timeData,
+                        backgroundColor: 'rgba(255, 140, 0, 0.6)',
+                        borderColor: 'rgba(255, 140, 0, 1)',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            const selectedMethods = [];
+            document.querySelectorAll('.filter-label input').forEach((cb, i) => {
+                if (cb.checked) selectedMethods.push(sampleData.methods[i]);
+            });
+
+            const methods = selectedMethods.length > 0 ? selectedMethods : sampleData.methods;
+            const volumeData = methods.map(m => sampleData.callVolume[m]);
+            const timeData = methods.map(m => sampleData.meanExecutionTime[m]);
+
+            if (callVolumeChart) {
+                callVolumeChart.data.labels = methods;
+                callVolumeChart.data.datasets[0].data = volumeData;
+                callVolumeChart.update();
+            }
+
+            if (executionTimeChart) {
+                executionTimeChart.data.labels = methods;
+                executionTimeChart.data.datasets[0].data = timeData;
+                executionTimeChart.update();
+            }
+        }
+    </script>
+</body>
+</html>

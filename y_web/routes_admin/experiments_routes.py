@@ -1206,6 +1206,269 @@ def experiment_logs(exp_id):
     return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
 
 
+@experiments.route("/admin/experiment_trends/<int:exp_id>")
+@login_required
+def experiment_trends(exp_id):
+    """Get experiment server trends analysis (daily/hourly aggregates)."""
+    check_privileges(current_user.username)
+
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        return jsonify({"error": "Experiment not found"}), 404
+
+    # Construct path to _server.log
+    db_name = experiment.db_name
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        parts = db_name.split(os.sep)
+        if len(parts) >= 2:
+            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+        else:
+            return jsonify({"error": "Invalid experiment path"}), 400
+    elif db_name.startswith("experiments_"):
+        uid = db_name.replace("experiments_", "")
+        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+    else:
+        return jsonify({"error": "Invalid experiment path format"}), 400
+
+    log_file = os.path.join(exp_folder, "_server.log")
+
+    # Check if log file exists
+    if not os.path.exists(log_file):
+        return jsonify(
+            {
+                "daily_compute": {},
+                "daily_simulation": {},
+                "hourly_compute": {},
+                "hourly_simulation": {},
+                "error": "Log file not found",
+            }
+        )
+
+    # Parse the log file and aggregate by day and hour
+    from datetime import datetime
+
+    daily_durations = defaultdict(float)
+    daily_times = defaultdict(list)
+    hourly_durations = defaultdict(float)
+    hourly_times = defaultdict(list)
+
+    try:
+        with open(log_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    line = line.replace("'", '"')
+                    log_entry = json.loads(line)
+                    day = log_entry.get("day")
+                    hour = log_entry.get("hour")
+                    duration = log_entry.get("duration", 0)
+                    time_str = log_entry.get("time", "")
+
+                    if day is not None:
+                        # Aggregate by day
+                        daily_durations[day] += float(duration)
+                        if time_str:
+                            try:
+                                time_obj = datetime.strptime(
+                                    time_str, "%Y-%m-%d %H:%M:%S"
+                                )
+                                daily_times[day].append(time_obj)
+                            except ValueError:
+                                pass
+
+                    if day is not None and hour is not None:
+                        # Aggregate by day-hour combination
+                        key = f"{day}-{hour}"
+                        hourly_durations[key] += float(duration)
+                        if time_str:
+                            try:
+                                time_obj = datetime.strptime(
+                                    time_str, "%Y-%m-%d %H:%M:%S"
+                                )
+                                hourly_times[key].append(time_obj)
+                            except ValueError:
+                                pass
+
+                except json.JSONDecodeError:
+                    continue
+    except Exception:
+        return jsonify({"error": "Error reading log file"}), 500
+
+    # Calculate simulation time (delta of time field)
+    daily_simulation = {}
+    for day, times in daily_times.items():
+        if times:
+            daily_simulation[day] = (max(times) - min(times)).total_seconds()
+
+    hourly_simulation = {}
+    for key, times in hourly_times.items():
+        if times:
+            hourly_simulation[key] = (max(times) - min(times)).total_seconds()
+
+    # Get total expected duration from client_execution table
+    # Find all clients for this experiment and get max expected_duration_rounds
+    clients = Client.query.filter_by(id_exp=exp_id).all()
+    client_ids = [c.id for c in clients]
+
+    max_expected_rounds = 0
+    if client_ids:
+        client_executions = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
+        if client_executions:
+            max_expected_rounds = max(
+                ce.expected_duration_rounds for ce in client_executions
+            )
+
+    # Convert rounds to days (each round is 1 hour, so 24 rounds = 1 day)
+    total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
+
+    # Parse client log files and aggregate execution times per client
+    client_daily_compute = {}
+    client_hourly_compute = {}
+
+    for client in clients:
+        client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+        if os.path.exists(client_log_file):
+            client_daily = defaultdict(float)
+            client_hourly = defaultdict(float)
+
+            try:
+                with open(client_log_file, "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
+                        try:
+                            log_entry = json.loads(line)
+                            day = log_entry.get("day")
+                            hour = log_entry.get("hour")
+                            execution_time = log_entry.get("execution_time_seconds", 0)
+
+                            if day is not None:
+                                # Aggregate by day
+                                client_daily[day] += float(execution_time)
+
+                            if day is not None and hour is not None:
+                                # Aggregate by day-hour combination
+                                key = f"{day}-{hour}"
+                                client_hourly[key] += float(execution_time)
+
+                        except json.JSONDecodeError:
+                            continue
+            except Exception:
+                # If there's an error reading a client log, skip it
+                continue
+
+            # Store client aggregates if they have data
+            if client_daily:
+                client_daily_compute[client.name] = dict(client_daily)
+            if client_hourly:
+                client_hourly_compute[client.name] = dict(client_hourly)
+
+    return jsonify(
+        {
+            "daily_compute": dict(daily_durations),
+            "daily_simulation": daily_simulation,
+            "hourly_compute": dict(hourly_durations),
+            "hourly_simulation": hourly_simulation,
+            "total_expected_days": total_days,
+            "total_expected_rounds": max_expected_rounds,
+            "client_daily_compute": client_daily_compute,
+            "client_hourly_compute": client_hourly_compute,
+        }
+    )
+
+
+@experiments.route("/admin/client_logs/<int:client_id>")
+@login_required
+def client_logs(client_id):
+    """Get client logs analysis for a specific client."""
+    check_privileges(current_user.username)
+
+    # Get client details
+    client = Client.query.filter_by(id=client_id).first()
+    if not client:
+        return jsonify({"error": "Client not found"}), 404
+
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not experiment:
+        return jsonify({"error": "Experiment not found"}), 404
+
+    # Construct path to client log file
+    db_name = experiment.db_name
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        # Extract the UUID folder
+        parts = db_name.split(os.sep)
+        if len(parts) >= 2:
+            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+        else:
+            return jsonify({"error": "Invalid experiment path"}), 400
+    elif db_name.startswith("experiments_"):
+        # PostgreSQL format - UUID is after the underscore
+        uid = db_name.replace("experiments_", "")
+        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+    else:
+        return jsonify({"error": "Invalid experiment path format"}), 400
+
+    # Client log file name format: {client_name}_client.log
+    log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+    # Check if log file exists
+    if not os.path.exists(log_file):
+        return jsonify(
+            {
+                "call_volume": {},
+                "mean_execution_time": {},
+                "error": "Log file not found",
+            }
+        )
+
+    # Parse the log file
+    method_counts = defaultdict(int)
+    method_durations = defaultdict(list)
+
+    try:
+        with open(log_file, "r") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    log_entry = json.loads(line)
+                    method_name = log_entry.get("method_name", "unknown")
+                    execution_time = log_entry.get("execution_time_seconds", 0)
+
+                    method_counts[method_name] += 1
+                    method_durations[method_name].append(float(execution_time))
+
+                except json.JSONDecodeError:
+                    # Skip invalid JSON lines
+                    continue
+    except Exception:
+        return jsonify({"error": "Error reading log file"}), 500
+
+    # Calculate mean execution times
+    mean_execution_times = {}
+    for method, durations in method_durations.items():
+        if durations:
+            mean_execution_times[method] = sum(durations) / len(durations)
+        else:
+            mean_execution_times[method] = 0
+
+    return jsonify(
+        {
+            "call_volume": dict(method_counts),
+            "mean_execution_time": mean_execution_times,
+        }
+    )
+
+
 @experiments.route("/admin/start_experiment/<int:uid>")
 @login_required
 def start_experiment(uid):

@@ -16,9 +16,9 @@
                 </div>
             </div>
 
-            <div class="columns">
+            <div class="columns" style="display: flex; align-items: stretch;">
                 <!--Dashboard column-->
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
 
                     {% for message in get_flashed_messages() %}
                     <div class="alert alert-warning">
@@ -28,23 +28,16 @@
                     {% endfor %}
 
                     <!--Dashboard box-->
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Core information about this simulation experiment, including configuration and access details.
-                        </p>
 
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <div class="box-lines">
                                 <b>Basic Information</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ experiment.exp_name }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Description</span>
-                                    <span class="right">{{ experiment.exp_descr }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Platform Type</span>
@@ -126,7 +119,7 @@
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
                     <!--Box-->
 
                     <div class="dashboard-box">
@@ -212,12 +205,12 @@
                     </script>
                     {% endif %}
 
-                    <div class="dashboard-box">
+                    <div class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Simulation Clients</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Manage clients running agent populations for this experiment.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             {% if len(clients) == 0 %}
                             <div class="box-line">
                                 <span class="left">No clients registered</span>
@@ -312,11 +305,11 @@
                     </div>
                 </div>
 
-                <div class="column is-4">
+                <div class="column is-4" style="display: flex; flex-direction: column;">
                     <!--Box-->
-                    <div class="dashboard-box is-compact">
+                    <div class="dashboard-box is-compact" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
-                        <div class="help-block">
+                        <div class="help-block" style="flex: 1;">
 
                             <p>
                                 <b>Server & Analysis Controls</b><br>
@@ -326,14 +319,7 @@
                                 <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
                                 <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
                                 <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
-                                <br><br>
-                                <em>Note: Only one web interface can be active at a time.</em>
-                            </p>
-                            <hr>
-                            <p>
-                                <b>Simulation Clients</b><br>
-                                Each client manages a population of agents that interact in the simulation. Clients can be started and paused independently while the server is running.<br><br>
-                                Progress bars show real-time completion status for each client.
+                                <br>
                             </p>
                             <hr>
                             <p>
@@ -348,6 +334,351 @@
 
                 </div>
 
+            </div>
+
+            <!-- Server Trends Visualization Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Trend analysis of server compute time and simulation time progression.
+                        </p>
+
+                        <div id="trends-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
+                            <i class="mdi mdi-alert" style="color: #856404;"></i>
+                            <span id="trends-error-text" style="color: #856404;"></span>
+                        </div>
+
+                        <!-- Aggregation selector -->
+                        <div style="margin-bottom: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                            <label for="aggregationSelector" style="font-weight: 600; margin-right: 1em;">Aggregation:</label>
+                            <div style="display: inline-block;">
+                                <label style="margin-right: 1em; cursor: pointer;">
+                                    <input type="radio" name="aggregation" value="daily" checked> Daily
+                                </label>
+                                <label style="cursor: pointer;">
+                                    <input type="radio" name="aggregation" value="hourly"> Hourly
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Trends Charts -->
+                        <div class="columns">
+                            <div class="column is-6">
+                                <!-- Server Compute Time (stacked) -->
+                                <div class="box-content" style="margin-bottom: 1em;">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Server Compute Time</h4>
+                                    <div style="position: relative; height: 135px;">
+                                        <canvas id="serverComputeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                                <!-- Client Compute Time (stacked) -->
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Client Compute Time</h4>
+                                    <div style="position: relative; height: 135px;">
+                                        <canvas id="clientComputeTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="column is-6">
+                                <div class="box-content">
+                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Simulation Time Trend</h4>
+                                    <div style="position: relative; height: 300px;">
+                                        <canvas id="simulationTimeTrendChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Forecast Section -->
+                        <div id="forecast-section" style="margin-top: 1em; padding: 1em; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #039be5;">
+                            <h4 class="subtitle is-6" style="margin-bottom: 0.5em; color: #0277bd;">
+                                <i class="mdi mdi-clock-outline"></i> Remaining Time Forecast
+                            </h4>
+                            <div id="forecast-content" style="font-size: 0.9em; color: #555;">
+                                <p style="margin: 0.25em 0;"><strong>Total simulation time so far:</strong> <span id="forecast-elapsed">-</span></p>
+                                <p style="margin: 0.25em 0;"><strong>Average time per slot:</strong> <span id="forecast-avg-slot">-</span></p>
+                                <p style="margin: 0.25em 0;"><strong>Remaining slots:</strong> <span id="forecast-remaining-slots">-</span></p>
+                                <p style="margin: 0.25em 0; font-size: 1.1em; color: #0277bd;"><strong>Estimated remaining time:</strong> <span id="forecast-remaining-time">-</span></p>
+                            </div>
+                        </div>
+
+                        <script>
+                            // Global variables for trend charts
+                            let serverComputeTimeTrendChart = null;
+                            let clientComputeTimeTrendChart = null;
+                            let simulationTimeTrendChart = null;
+                            let trendsData = {
+                                daily_compute: {},
+                                daily_simulation: {},
+                                hourly_compute: {},
+                                hourly_simulation: {},
+                                client_daily_compute: {},
+                                client_hourly_compute: {}
+                            };
+
+                            // Function to update trend charts
+                            function updateTrendCharts() {
+                                const aggregation = document.querySelector('input[name="aggregation"]:checked').value;
+                                
+                                let computeData, simulationData, labels;
+                                if (aggregation === 'daily') {
+                                    const days = Object.keys(trendsData.daily_compute).sort((a, b) => parseInt(a) - parseInt(b));
+                                    labels = days.map(d => `Day ${d}`);
+                                    computeData = days.map(d => trendsData.daily_compute[d]);
+                                    simulationData = days.map(d => trendsData.daily_simulation[d] || 0);
+                                } else {
+                                    const hours = Object.keys(trendsData.hourly_compute).sort((a, b) => {
+                                        const [dayA, hourA] = a.split('-').map(Number);
+                                        const [dayB, hourB] = b.split('-').map(Number);
+                                        return dayA !== dayB ? dayA - dayB : hourA - hourB;
+                                    });
+                                    labels = hours.map(h => {
+                                        const [day, hour] = h.split('-');
+                                        return `D${day}H${hour}`;
+                                    });
+                                    computeData = hours.map(h => trendsData.hourly_compute[h]);
+                                    simulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
+                                }
+
+                                // Update server compute time chart
+                                if (serverComputeTimeTrendChart) {
+                                    serverComputeTimeTrendChart.data.labels = labels;
+                                    serverComputeTimeTrendChart.data.datasets[0].data = computeData;
+                                    serverComputeTimeTrendChart.update();
+                                } else if (labels.length > 0) {
+                                    serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: [{
+                                                label: 'Server (s)',
+                                                data: computeData,
+                                                borderColor: 'rgba(33, 150, 243, 1)',
+                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                                                borderWidth: 2,
+                                                tension: 0.3,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true, position: 'top' }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Prepare client compute time datasets
+                                const clientComputeDatasets = [];
+                                const clientComputeData = aggregation === 'daily' ? trendsData.client_daily_compute : trendsData.client_hourly_compute;
+                                if (clientComputeData) {
+                                    const colors = [
+                                        'rgba(255, 99, 132, 1)',
+                                        'rgba(255, 159, 64, 1)',
+                                        'rgba(255, 205, 86, 1)',
+                                        'rgba(75, 192, 192, 1)',
+                                        'rgba(153, 102, 255, 1)',
+                                        'rgba(201, 203, 207, 1)'
+                                    ];
+                                    let colorIndex = 0;
+
+                                    Object.keys(clientComputeData).forEach(clientName => {
+                                        const clientData = labels.map(label => {
+                                            // Extract day or day-hour from label
+                                            let key;
+                                            if (aggregation === 'daily') {
+                                                key = parseInt(label.replace('Day ', ''));
+                                            } else {
+                                                const match = label.match(/D(\d+)H(\d+)/);
+                                                if (match) {
+                                                    key = `${match[1]}-${match[2]}`;
+                                                }
+                                            }
+                                            return clientComputeData[clientName][key] || 0;
+                                        });
+
+                                        const color = colors[colorIndex % colors.length];
+                                        clientComputeDatasets.push({
+                                            label: `${clientName} (s)`,
+                                            data: clientData,
+                                            borderColor: color,
+                                            backgroundColor: color.replace('1)', '0.1)'),
+                                            borderWidth: 2,
+                                            tension: 0.3,
+                                            fill: false
+                                        });
+                                        colorIndex++;
+                                    });
+                                }
+
+                                // Update client compute time chart
+                                if (clientComputeTimeTrendChart) {
+                                    clientComputeTimeTrendChart.data.labels = labels;
+                                    clientComputeTimeTrendChart.data.datasets = clientComputeDatasets;
+                                    clientComputeTimeTrendChart.update();
+                                } else if (labels.length > 0 && clientComputeDatasets.length > 0) {
+                                    clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: clientComputeDatasets
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true, position: 'top' }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Update simulation time chart
+                                if (simulationTimeTrendChart) {
+                                    simulationTimeTrendChart.data.labels = labels;
+                                    simulationTimeTrendChart.data.datasets[0].data = simulationData;
+                                    simulationTimeTrendChart.update();
+                                } else if (labels.length > 0) {
+                                    simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
+                                        type: 'line',
+                                        data: {
+                                            labels: labels,
+                                            datasets: [{
+                                                label: 'Simulation Time (s)',
+                                                data: simulationData,
+                                                borderColor: 'rgba(76, 175, 80, 1)',
+                                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                                                borderWidth: 2,
+                                                tension: 0.3,
+                                                fill: true
+                                            }]
+                                        },
+                                        options: {
+                                            responsive: true,
+                                            maintainAspectRatio: false,
+                                            plugins: {
+                                                legend: { display: true }
+                                            },
+                                            scales: {
+                                                y: { beginAtZero: true }
+                                            }
+                                        }
+                                    });
+                                }
+
+                                // Update forecast
+                                updateForecast(aggregation);
+                            }
+
+                            // Function to update forecast
+                            function updateForecast(aggregation) {
+                                const computeData = aggregation === 'daily' ? trendsData.daily_compute : trendsData.hourly_compute;
+                                const simulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
+                                
+                                const keys = Object.keys(computeData).sort((a, b) => {
+                                    if (aggregation === 'daily') return parseInt(a) - parseInt(b);
+                                    const [dayA, hourA] = a.split('-').map(Number);
+                                    const [dayB, hourB] = b.split('-').map(Number);
+                                    return dayA !== dayB ? dayA - dayB : hourA - hourB;
+                                });
+
+                                if (keys.length === 0) {
+                                    document.getElementById('forecast-elapsed').textContent = 'No data';
+                                    document.getElementById('forecast-avg-slot').textContent = 'No data';
+                                    document.getElementById('forecast-remaining-slots').textContent = 'No data';
+                                    document.getElementById('forecast-remaining-time').textContent = 'No data';
+                                    return;
+                                }
+
+                                // Calculate total simulation time
+                                const totalSimulationTime = keys.reduce((sum, k) => sum + (simulationData[k] || 0), 0);
+                                const completedSlots = keys.length;
+                                const avgTimePerSlot = totalSimulationTime / completedSlots;
+
+                                // Use actual expected duration from client_execution table
+                                // total_expected_days comes from max(expected_duration_rounds) / 24
+                                // total_expected_rounds is the actual max(expected_duration_rounds)
+                                const totalExpectedDays = trendsData.total_expected_days || 0;
+                                const totalExpectedRounds = trendsData.total_expected_rounds || 0;
+                                
+                                let totalSlots, remainingSlots;
+                                
+                                if (aggregation === 'daily') {
+                                    // For daily aggregation, use total expected days
+                                    totalSlots = Math.ceil(totalExpectedDays);
+                                    remainingSlots = totalSlots - completedSlots;
+                                } else {
+                                    // For hourly aggregation, use total expected rounds (hours)
+                                    totalSlots = totalExpectedRounds;
+                                    remainingSlots = totalSlots - completedSlots;
+                                }
+
+                                // If we don't have expected duration from DB, fall back to estimation
+                                if (totalSlots === 0) {
+                                    const maxKey = keys[keys.length - 1];
+                                    if (aggregation === 'daily') {
+                                        totalSlots = parseInt(maxKey) + 5;
+                                    } else {
+                                        const [maxDay, maxHour] = maxKey.split('-').map(Number);
+                                        totalSlots = (maxDay + 2) * 24;
+                                    }
+                                    remainingSlots = totalSlots - completedSlots;
+                                }
+
+                                const estimatedRemainingTime = avgTimePerSlot * remainingSlots;
+
+                                // Format time display
+                                function formatTime(seconds) {
+                                    const hours = Math.floor(seconds / 3600);
+                                    const minutes = Math.floor((seconds % 3600) / 60);
+                                    const secs = Math.floor(seconds % 60);
+                                    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+                                    if (minutes > 0) return `${minutes}m ${secs}s`;
+                                    return `${secs}s`;
+                                }
+
+                                document.getElementById('forecast-elapsed').textContent = formatTime(totalSimulationTime);
+                                document.getElementById('forecast-avg-slot').textContent = formatTime(avgTimePerSlot);
+                                document.getElementById('forecast-remaining-slots').textContent = remainingSlots;
+                                document.getElementById('forecast-remaining-time').textContent = formatTime(estimatedRemainingTime);
+                            }
+
+                            // Load trends data
+                            fetch('/admin/experiment_trends/{{ experiment.idexp }}')
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.error) {
+                                        document.getElementById('trends-error-message').style.display = 'block';
+                                        document.getElementById('trends-error-text').textContent = data.error;
+                                        return;
+                                    }
+
+                                    trendsData = data;
+                                    updateTrendCharts();
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching trends:', error);
+                                    document.getElementById('trends-error-message').style.display = 'block';
+                                    document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+                                });
+
+                            // Handle aggregation change
+                            document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
+                                radio.addEventListener('change', updateTrendCharts);
+                            });
+                        </script>
+                    </div>
+                </div>
             </div>
 
             <!-- Server Logs Visualization Section -->
@@ -648,6 +979,359 @@
                         document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
                     });
             </script>
+
+            <!-- Client Logs Visualization Section -->
+            {% if len(clients) > 0 %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Analysis of client method execution from {client_name}_client.log files.
+                        </p>
+
+                        <!-- Client selector -->
+                        <div class="box-content" style="margin-bottom: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                            <label for="clientSelector" style="font-weight: 600; margin-bottom: 0.5em; display: block;">Select Client:</label>
+                            <div class="select is-fullwidth">
+                                <select id="clientSelector" style="width: 100%;">
+                                    <option value="">-- Select a client --</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="client-logs-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
+                            <i class="mdi mdi-alert" style="color: #856404;"></i>
+                            <span id="client-logs-error-text" style="color: #856404;"></span>
+                        </div>
+
+                        <div id="client-logs-content" style="display: none;">
+                            <div class="columns">
+                                <div class="column is-6">
+                                    <div class="box-content">
+                                        <h4 class="subtitle is-6" style="margin-bottom: 1em;">Call Volume by Method</h4>
+                                        <div style="position: relative; height: 300px;">
+                                            <canvas id="clientCallVolumeChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="column is-6">
+                                    <div class="box-content">
+                                        <h4 class="subtitle is-6" style="margin-bottom: 1em;">Mean Execution Time by Method (seconds)</h4>
+                                        <div style="position: relative; height: 300px;">
+                                            <canvas id="clientMeanExecutionTimeChart"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Method Filter Controls -->
+                            <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em;">
+                                    <h4 class="subtitle is-6" style="margin: 0;">Filter Methods</h4>
+                                    <div>
+                                        <button id="selectAllMethods" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
+                                        <button id="deselectAllMethods" class="button is-small is-light">Deselect All</button>
+                                    </div>
+                                </div>
+                                <div id="methodFilters" style="display: flex; flex-wrap: wrap; gap: 0.4em;">
+                                    <!-- Checkboxes will be dynamically generated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <style>
+                            /* Modern checkbox styling for methods */
+                            #methodFilters label {
+                                display: inline-flex;
+                                align-items: center;
+                                padding: 0.35em 0.65em;
+                                background: white;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                font-size: 0.8em;
+                                transition: all 0.2s ease;
+                                user-select: none;
+                            }
+
+                            #methodFilters label:hover {
+                                background: #f5f9ff;
+                                border-color: #ff6b6b;
+                                box-shadow: 0 1px 3px rgba(255, 107, 107, 0.1);
+                            }
+
+                            #methodFilters input[type="checkbox"] {
+                                margin: 0;
+                                margin-right: 0.4em;
+                                width: 14px;
+                                height: 14px;
+                                cursor: pointer;
+                                accent-color: #ff6b6b;
+                            }
+
+                            #methodFilters label span {
+                                color: #555;
+                                font-weight: 500;
+                                white-space: nowrap;
+                            }
+
+                            #methodFilters label:has(input:checked) {
+                                background: #ffe3e3;
+                                border-color: #ff6b6b;
+                            }
+
+                            #methodFilters label:has(input:checked) span {
+                                color: #c92a2a;
+                            }
+                        </style>
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                // Global variables to store client charts and data
+                let clientCallVolumeChartInstance = null;
+                let clientMeanExecutionTimeChartInstance = null;
+                let allClientMethodsData = {
+                    methods: [],
+                    callVolume: {},
+                    meanExecutionTime: {}
+                };
+
+                // Function to update client charts based on selected methods
+                function updateClientCharts() {
+                    const checkboxes = document.querySelectorAll('#methodFilters input[type="checkbox"]');
+                    const selectedMethods = [];
+                    
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            selectedMethods.push(checkbox.value);
+                        }
+                    });
+
+                    // If no methods selected, show all
+                    const methodsToShow = selectedMethods.length > 0 ? selectedMethods : allClientMethodsData.methods;
+                    
+                    // Prepare filtered data
+                    const volumeData = methodsToShow.map(method => allClientMethodsData.callVolume[method] || 0);
+                    const executionTimeData = methodsToShow.map(method => allClientMethodsData.meanExecutionTime[method] || 0);
+
+                    // Update Call Volume Chart
+                    if (clientCallVolumeChartInstance) {
+                        clientCallVolumeChartInstance.data.labels = methodsToShow;
+                        clientCallVolumeChartInstance.data.datasets[0].data = volumeData;
+                        clientCallVolumeChartInstance.update();
+                    }
+
+                    // Update Mean Execution Time Chart
+                    if (clientMeanExecutionTimeChartInstance) {
+                        clientMeanExecutionTimeChartInstance.data.labels = methodsToShow;
+                        clientMeanExecutionTimeChartInstance.data.datasets[0].data = executionTimeData;
+                        clientMeanExecutionTimeChartInstance.update();
+                    }
+                }
+
+                // Function to create method filter checkboxes
+                function createMethodFilters(methods) {
+                    const filterContainer = document.getElementById('methodFilters');
+                    filterContainer.innerHTML = '';
+                    
+                    methods.forEach(method => {
+                        const label = document.createElement('label');
+                        
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.value = method;
+                        checkbox.checked = true;
+                        checkbox.addEventListener('change', updateClientCharts);
+                        
+                        const span = document.createElement('span');
+                        span.textContent = method;
+                        
+                        label.appendChild(checkbox);
+                        label.appendChild(span);
+                        filterContainer.appendChild(label);
+                    });
+                }
+
+                // Function to load client logs
+                function loadClientLogs(clientId) {
+                    // Clear previous data
+                    if (clientCallVolumeChartInstance) {
+                        clientCallVolumeChartInstance.destroy();
+                        clientCallVolumeChartInstance = null;
+                    }
+                    if (clientMeanExecutionTimeChartInstance) {
+                        clientMeanExecutionTimeChartInstance.destroy();
+                        clientMeanExecutionTimeChartInstance = null;
+                    }
+
+                    // Hide content and error initially
+                    document.getElementById('client-logs-content').style.display = 'none';
+                    document.getElementById('client-logs-error-message').style.display = 'none';
+
+                    if (!clientId) {
+                        return;
+                    }
+
+                    // Fetch and display client logs data
+                    fetch(`/admin/client_logs/${clientId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                document.getElementById('client-logs-error-message').style.display = 'block';
+                                document.getElementById('client-logs-error-text').textContent = data.error;
+                                return;
+                            }
+
+                            const callVolume = data.call_volume || {};
+                            const meanExecutionTime = data.mean_execution_time || {};
+
+                            // Check if there's any data
+                            if (Object.keys(callVolume).length === 0) {
+                                document.getElementById('client-logs-error-message').style.display = 'block';
+                                document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
+                                return;
+                            }
+
+                            // Show content
+                            document.getElementById('client-logs-content').style.display = 'block';
+
+                            // Store data globally
+                            allClientMethodsData.methods = Object.keys(callVolume).sort();
+                            allClientMethodsData.callVolume = callVolume;
+                            allClientMethodsData.meanExecutionTime = meanExecutionTime;
+
+                            // Create filter checkboxes
+                            createMethodFilters(allClientMethodsData.methods);
+
+                            // Prepare data for charts
+                            const volumeData = allClientMethodsData.methods.map(method => callVolume[method]);
+                            const executionTimeData = allClientMethodsData.methods.map(method => meanExecutionTime[method]);
+
+                            // Call Volume Chart
+                            clientCallVolumeChartInstance = new Chart("clientCallVolumeChart", {
+                                type: 'bar',
+                                data: {
+                                    labels: allClientMethodsData.methods,
+                                    datasets: [{
+                                        label: 'Number of Calls',
+                                        data: volumeData,
+                                        backgroundColor: 'rgba(255, 107, 107, 0.6)',
+                                        borderColor: 'rgba(255, 107, 107, 1)',
+                                        borderWidth: 1,
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                            padding: 8,
+                                            titleFont: { size: 12 },
+                                            bodyFont: { size: 11 },
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return 'Calls: ' + context.parsed.y;
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                precision: 0
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+
+                            // Mean Execution Time Chart
+                            clientMeanExecutionTimeChartInstance = new Chart("clientMeanExecutionTimeChart", {
+                                type: 'bar',
+                                data: {
+                                    labels: allClientMethodsData.methods,
+                                    datasets: [{
+                                        label: 'Mean Execution Time (s)',
+                                        data: executionTimeData,
+                                        backgroundColor: 'rgba(255, 140, 0, 0.6)',
+                                        borderColor: 'rgba(255, 140, 0, 1)',
+                                        borderWidth: 1,
+                                        borderRadius: 4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: {
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                            padding: 8,
+                                            titleFont: { size: 12 },
+                                            bodyFont: { size: 11 },
+                                            callbacks: {
+                                                label: function(context) {
+                                                    return 'Time: ' + context.parsed.y.toFixed(4) + 's';
+                                                }
+                                            }
+                                        }
+                                    },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            ticks: {
+                                                callback: function(value) {
+                                                    return value.toFixed(4);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching client logs:', error);
+                            document.getElementById('client-logs-error-message').style.display = 'block';
+                            document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
+                        });
+                }
+
+                // Client selector change handler
+                document.getElementById('clientSelector').addEventListener('change', function() {
+                    loadClientLogs(this.value);
+                });
+
+                // Select All button handler for methods
+                document.getElementById('selectAllMethods').addEventListener('click', function() {
+                    document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = true;
+                    });
+                    updateClientCharts();
+                });
+
+                // Deselect All button handler for methods
+                document.getElementById('deselectAllMethods').addEventListener('click', function() {
+                    document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
+                        checkbox.checked = false;
+                    });
+                    updateClientCharts();
+                });
+            </script>
+            {% endif %}
 
         </div>
     </div>
