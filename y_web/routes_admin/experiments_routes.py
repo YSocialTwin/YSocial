@@ -1308,12 +1308,32 @@ def experiment_trends(exp_id):
         if times:
             hourly_simulation[key] = (max(times) - min(times)).total_seconds()
 
+    # Get total expected duration from client_execution table
+    # Find all clients for this experiment and get max expected_duration_rounds
+    clients = Client.query.filter_by(id_exp=exp_id).all()
+    client_ids = [c.id for c in clients]
+
+    max_expected_rounds = 0
+    if client_ids:
+        client_executions = Client_Execution.query.filter(
+            Client_Execution.client_id.in_(client_ids)
+        ).all()
+        if client_executions:
+            max_expected_rounds = max(
+                ce.expected_duration_rounds for ce in client_executions
+            )
+
+    # Convert rounds to days (each round is 1 hour, so 24 rounds = 1 day)
+    total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
+
     return jsonify(
         {
             "daily_compute": dict(daily_durations),
             "daily_simulation": daily_simulation,
             "hourly_compute": dict(hourly_durations),
             "hourly_simulation": hourly_simulation,
+            "total_expected_days": total_days,
+            "total_expected_rounds": max_expected_rounds,
         }
     )
 

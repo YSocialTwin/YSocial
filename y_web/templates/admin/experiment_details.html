@@ -540,20 +540,33 @@
                                 const completedSlots = keys.length;
                                 const avgTimePerSlot = totalSimulationTime / completedSlots;
 
-                                // Estimate remaining slots (assuming experiment configuration)
-                                // For daily: if max day is N, we can estimate total days
-                                const maxKey = keys[keys.length - 1];
+                                // Use actual expected duration from client_execution table
+                                // total_expected_days comes from max(expected_duration_rounds) / 24
+                                // total_expected_rounds is the actual max(expected_duration_rounds)
+                                const totalExpectedDays = trendsData.total_expected_days || 0;
+                                const totalExpectedRounds = trendsData.total_expected_rounds || 0;
+                                
                                 let totalSlots, remainingSlots;
                                 
                                 if (aggregation === 'daily') {
-                                    // Assume experiment has a set number of days (you could get this from experiment config)
-                                    // For now, we'll estimate based on the pattern
-                                    totalSlots = parseInt(maxKey) + 5; // Estimate 5 more days
+                                    // For daily aggregation, use total expected days
+                                    totalSlots = Math.ceil(totalExpectedDays);
                                     remainingSlots = totalSlots - completedSlots;
                                 } else {
-                                    // For hourly, estimate based on 24 hours per day
-                                    const [maxDay, maxHour] = maxKey.split('-').map(Number);
-                                    totalSlots = (maxDay + 2) * 24; // Estimate 2 more days
+                                    // For hourly aggregation, use total expected rounds (hours)
+                                    totalSlots = totalExpectedRounds;
+                                    remainingSlots = totalSlots - completedSlots;
+                                }
+
+                                // If we don't have expected duration from DB, fall back to estimation
+                                if (totalSlots === 0) {
+                                    const maxKey = keys[keys.length - 1];
+                                    if (aggregation === 'daily') {
+                                        totalSlots = parseInt(maxKey) + 5;
+                                    } else {
+                                        const [maxDay, maxHour] = maxKey.split('-').map(Number);
+                                        totalSlots = (maxDay + 2) * 24;
+                                    }
                                     remainingSlots = totalSlots - completedSlots;
                                 }
 
