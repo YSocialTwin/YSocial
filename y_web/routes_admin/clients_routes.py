@@ -971,7 +971,6 @@ def delete_client(uid):
     Population_Experiment.query.filter_by(id_population=pop_id).delete()
     db.session.commit()
 
-
     from .experiments_routes import experiment_details
 
     return experiment_details(exp_id)
