@@ -30,9 +30,6 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Core information about this simulation experiment, including configuration and access details.
-                        </p>
 
                         <div class="box-content">
                             <div class="box-lines">
@@ -41,10 +38,6 @@
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ experiment.exp_name }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Description</span>
-                                    <span class="right">{{ experiment.exp_descr }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Platform Type</span>
@@ -326,14 +319,7 @@
                                 <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
                                 <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
                                 <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
-                                <br><br>
-                                <em>Note: Only one web interface can be active at a time.</em>
-                            </p>
-                            <hr>
-                            <p>
-                                <b>Simulation Clients</b><br>
-                                Each client manages a population of agents that interact in the simulation. Clients can be started and paused independently while the server is running.<br><br>
-                                Progress bars show real-time completion status for each client.
+                                <br>
                             </p>
                             <hr>
                             <p>
