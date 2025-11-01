@@ -340,7 +340,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Trends Analysis</h3>
+                            <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Trend analysis of server compute time and simulation time progression.
                         </p>
@@ -653,24 +658,49 @@
                                 document.getElementById('forecast-remaining-time').textContent = formatTime(estimatedRemainingTime);
                             }
 
-                            // Load trends data
-                            fetch('/admin/experiment_trends/{{ experiment.idexp }}')
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.error) {
-                                        document.getElementById('trends-error-message').style.display = 'block';
-                                        document.getElementById('trends-error-text').textContent = data.error;
-                                        return;
-                                    }
+                            // Function to load trends data
+                            function loadTrendsData() {
+                                // Hide error message
+                                document.getElementById('trends-error-message').style.display = 'none';
+                                
+                                // Disable refresh button while loading
+                                const refreshBtn = document.getElementById('refreshTrendsBtn');
+                                if (refreshBtn) {
+                                    refreshBtn.disabled = true;
+                                    refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                                }
 
-                                    trendsData = data;
-                                    updateTrendCharts();
-                                })
-                                .catch(error => {
-                                    console.error('Error fetching trends:', error);
-                                    document.getElementById('trends-error-message').style.display = 'block';
-                                    document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
-                                });
+                                fetch('/admin/experiment_trends/{{ experiment.idexp }}')
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.error) {
+                                            document.getElementById('trends-error-message').style.display = 'block';
+                                            document.getElementById('trends-error-text').textContent = data.error;
+                                            return;
+                                        }
+
+                                        trendsData = data;
+                                        updateTrendCharts();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error fetching trends:', error);
+                                        document.getElementById('trends-error-message').style.display = 'block';
+                                        document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
+                                    })
+                                    .finally(() => {
+                                        // Re-enable refresh button
+                                        if (refreshBtn) {
+                                            refreshBtn.disabled = false;
+                                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                                        }
+                                    });
+                            }
+
+                            // Load trends data on page load
+                            loadTrendsData();
+
+                            // Refresh button click handler
+                            document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
 
                             // Handle aggregation change
                             document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
@@ -685,7 +715,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Logs Analysis</h3>
+                            <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Real-time analysis of server API calls from _server.log file.
                         </p>
@@ -859,29 +894,41 @@
                     updateCharts();
                 });
 
-                // Fetch and display server logs data
-                fetch('/admin/experiment_logs/{{ experiment.idexp }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            document.getElementById('logs-error-message').style.display = 'block';
-                            document.getElementById('logs-error-text').textContent = data.error;
-                        }
+                // Function to fetch and display server logs data
+                function loadServerLogsData() {
+                    // Hide error message
+                    document.getElementById('logs-error-message').style.display = 'none';
+                    
+                    // Disable refresh button while loading
+                    const refreshBtn = document.getElementById('refreshLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                    }
 
-                        const callVolume = data.call_volume || {};
-                        const meanDuration = data.mean_duration || {};
+                    fetch('/admin/experiment_logs/{{ experiment.idexp }}')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) {
+                                document.getElementById('logs-error-message').style.display = 'block';
+                                document.getElementById('logs-error-text').textContent = data.error;
+                                return;
+                            }
 
-                        // Store data globally
-                        allPathsData.paths = Object.keys(callVolume).sort();
-                        allPathsData.callVolume = callVolume;
-                        allPathsData.meanDuration = meanDuration;
+                            const callVolume = data.call_volume || {};
+                            const meanDuration = data.mean_duration || {};
 
-                        // Create filter checkboxes
-                        createPathFilters(allPathsData.paths);
+                            // Store data globally
+                            allPathsData.paths = Object.keys(callVolume).sort();
+                            allPathsData.callVolume = callVolume;
+                            allPathsData.meanDuration = meanDuration;
 
-                        // Prepare data for charts
-                        const volumeData = allPathsData.paths.map(path => callVolume[path]);
-                        const durationData = allPathsData.paths.map(path => meanDuration[path]);
+                            // Create filter checkboxes
+                            createPathFilters(allPathsData.paths);
+
+                            // Prepare data for charts
+                            const volumeData = allPathsData.paths.map(path => callVolume[path]);
+                            const durationData = allPathsData.paths.map(path => meanDuration[path]);
 
                         // Call Volume Chart
                         callVolumeChartInstance = new Chart("callVolumeChart", {
@@ -972,12 +1019,26 @@
                                 }
                             }
                         });
-                    })
-                    .catch(error => {
-                        console.error('Error fetching logs:', error);
-                        document.getElementById('logs-error-message').style.display = 'block';
-                        document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
-                    });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching logs:', error);
+                            document.getElementById('logs-error-message').style.display = 'block';
+                            document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
+                        })
+                        .finally(() => {
+                            // Re-enable refresh button
+                            if (refreshBtn) {
+                                refreshBtn.disabled = false;
+                                refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                            }
+                        });
+                }
+
+                // Load server logs data on page load
+                loadServerLogsData();
+
+                // Refresh button click handler
+                document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
             </script>
 
             <!-- Client Logs Visualization Section -->
@@ -985,7 +1046,12 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
+                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Client Logs Analysis</h3>
+                            <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                <i class="mdi mdi-refresh"></i> Refresh Data
+                            </button>
+                        </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Analysis of client method execution from {client_name}_client.log files.
                         </p>
@@ -1178,6 +1244,13 @@
                         return;
                     }
 
+                    // Disable refresh button while loading
+                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                    if (refreshBtn) {
+                        refreshBtn.disabled = true;
+                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
+                    }
+
                     // Fetch and display client logs data
                     fetch(`/admin/client_logs/${clientId}`)
                         .then(response => response.json())
@@ -1307,12 +1380,28 @@
                             console.error('Error fetching client logs:', error);
                             document.getElementById('client-logs-error-message').style.display = 'block';
                             document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
+                        })
+                        .finally(() => {
+                            // Re-enable refresh button
+                            const refreshBtn = document.getElementById('refreshClientLogsBtn');
+                            if (refreshBtn) {
+                                refreshBtn.disabled = false;
+                                refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
+                            }
                         });
                 }
 
                 // Client selector change handler
                 document.getElementById('clientSelector').addEventListener('change', function() {
                     loadClientLogs(this.value);
+                });
+
+                // Refresh button click handler for client logs
+                document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
+                    const clientId = document.getElementById('clientSelector').value;
+                    if (clientId) {
+                        loadClientLogs(clientId);
+                    }
                 });
 
                 // Select All button handler for methods
