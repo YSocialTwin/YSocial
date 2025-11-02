@@ -616,8 +616,8 @@
                                     });
                                 }
 
-                                // Update forecast
-                                updateForecast(aggregation);
+                                // Update forecast - always locked to daily view
+                                updateForecast('daily');
                             }
 
                             // Function to update forecast
