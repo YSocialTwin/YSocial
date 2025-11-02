@@ -39,6 +39,7 @@ from y_web.models import (
     Population,
     Population_Experiment,
     PopulationActivityProfile,
+    Profession,
     Topic_List,
     Toxicity_Levels,
 )
@@ -149,6 +150,11 @@ def create_population():
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
     interests = request.form.get("tags")
+    
+    # Get selected profession backgrounds (for future use)
+    profession_backgrounds = request.form.getlist("profession_backgrounds")
+    # Store as a list for future implementation
+    selected_profession_backgrounds = profession_backgrounds
 
     # Get activity profiles data from the hidden field
     activity_profiles_data = request.form.get("activity_profiles_data", "[]")
@@ -329,6 +335,15 @@ def populations():
     toxicity_levels = Toxicity_Levels.query.all()
     age_classes = AgeClass.query.all()
     activity_profiles = ActivityProfile.query.all()
+    
+    # Get unique profession backgrounds
+    profession_backgrounds = (
+        db.session.query(Profession.background)
+        .distinct()
+        .order_by(Profession.background)
+        .all()
+    )
+    profession_backgrounds = [bg[0] for bg in profession_backgrounds]
 
     return render_template(
         "admin/populations.html",
@@ -342,6 +357,7 @@ def populations():
         toxicity_levels=toxicity_levels,
         age_classes=age_classes,
         activity_profiles=activity_profiles,
+        profession_backgrounds=profession_backgrounds,
     )
 
 
