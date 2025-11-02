@@ -150,16 +150,12 @@ def create_population():
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
     interests = request.form.get("tags")
-    
+
     # Get selected profession backgrounds
     profession_backgrounds = request.form.getlist("profession_backgrounds")
     # If no profession backgrounds selected, use all available
     if not profession_backgrounds:
-        all_backgrounds = (
-            db.session.query(Profession.background)
-            .distinct()
-            .all()
-        )
+        all_backgrounds = db.session.query(Profession.background).distinct().all()
         profession_backgrounds = [bg[0] for bg in all_backgrounds]
 
     # Get activity profiles data from the hidden field
@@ -341,7 +337,7 @@ def populations():
     toxicity_levels = Toxicity_Levels.query.all()
     age_classes = AgeClass.query.all()
     activity_profiles = ActivityProfile.query.all()
-    
+
     # Get unique profession backgrounds
     profession_backgrounds = (
         db.session.query(Profession.background)

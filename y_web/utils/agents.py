@@ -138,7 +138,9 @@ def __sample_age_degree_profession(age_class, edu_classes, profession_category=N
         # If a profession category is provided, sample from professions in that category
         if profession_category:
             # Get professions matching the category (background column)
-            category_professions = Profession.query.filter_by(background=profession_category).all()
+            category_professions = Profession.query.filter_by(
+                background=profession_category
+            ).all()
             if category_professions:
                 profession = random.choice(category_professions)
             else:
@@ -230,7 +232,9 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     return unique_name
 
 
-def generate_population(population_name, percentages=None, actions_config=None, profession_backgrounds=None):
+def generate_population(
+    population_name, percentages=None, actions_config=None, profession_backgrounds=None
+):
     """
     Generate a population of AI agents with realistic profiles.
 
