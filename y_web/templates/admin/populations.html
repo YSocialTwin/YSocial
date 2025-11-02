@@ -574,11 +574,7 @@
                                     <script>
                                         // Profession backgrounds selection (all active by default)
                                         let selectedProfessionBackgrounds = new Set(
-                                            {% if profession_backgrounds %}
-                                            [{% for background in profession_backgrounds %}'{{ background }}'{% if not loop.last %}, {% endif %}{% endfor %}]
-                                            {% else %}
-                                            []
-                                            {% endif %}
+                                            {{ profession_backgrounds | tojson | safe }}
                                         );
 
                                         function toggleProfessionBackgrounds() {
