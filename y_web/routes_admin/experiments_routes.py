@@ -1679,8 +1679,8 @@ def languages_data():
             direction = s[0]
             name = s[1:]
             if name not in ["language"]:
-                name = "name"
-            col = getattr(Exps, name)
+                name = "language"
+            col = getattr(Languages, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -1730,8 +1730,8 @@ def leanings_data():
             direction = s[0]
             name = s[1:]
             if name not in ["leaning"]:
-                name = "name"
-            col = getattr(Exps, name)
+                name = "leaning"
+            col = getattr(Leanings, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -1773,11 +1773,6 @@ def nationalities_data():
         query = query.filter(db.or_(Nationalities.nationality.like(f"%{search}%")))
     total = query.count()
 
-    search = request.args.get("search")
-    if search:
-        query = query.filter(db.or_(Leanings.leaning.like(f"%{search}%")))
-    total = query.count()
-
     # sorting
     sort = request.args.get("sort")
     if sort:
@@ -1785,9 +1780,9 @@ def nationalities_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["leaning"]:
-                name = "name"
-            col = getattr(Exps, name)
+            if name not in ["nationality"]:
+                name = "nationality"
+            col = getattr(Nationalities, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -1836,8 +1831,8 @@ def professions_data():
             direction = s[0]
             name = s[1:]
             if name not in ["profession", "background"]:
-                name = "name"
-            col = getattr(Exps, name)
+                name = "profession"
+            col = getattr(Profession, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -1887,8 +1882,8 @@ def educations_data():
             direction = s[0]
             name = s[1:]
             if name not in ["education_level"]:
-                name = "name"
-            col = getattr(Exps, name)
+                name = "education_level"
+            col = getattr(Education, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
@@ -2175,8 +2170,8 @@ def toxicity_levels_data():
             direction = s[0]
             name = s[1:]
             if name not in ["toxicity_level"]:
-                name = "name"
-            col = getattr(Exps, name)
+                name = "toxicity_level"
+            col = getattr(Toxicity_Levels, name)
             if direction == "-":
                 col = col.desc()
             order.append(col)
