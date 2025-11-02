@@ -504,6 +504,138 @@
                                         </span>
                                     </div>
 
+                                    <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleProfessionBackgrounds()">
+                                        <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+                                    </div>
+                                    <div class="form-section-description">
+                                        Select profession categories to be used during agent generation. By default, all categories are available.
+                                    </div>
+
+                                    <style>
+                                        .profession-backgrounds-section {
+                                            max-height: 0;
+                                            overflow: hidden;
+                                            transition: max-height 0.3s ease-out;
+                                        }
+                                        .profession-backgrounds-section.expanded {
+                                            max-height: 400px;
+                                            transition: max-height 0.5s ease-in;
+                                        }
+                                        .profession-tag {
+                                            display: inline-block;
+                                            background-color: #22c55e;
+                                            color: white;
+                                            padding: 6px 12px;
+                                            margin: 4px;
+                                            border-radius: 4px;
+                                            font-size: 0.85em;
+                                            cursor: pointer;
+                                            transition: all 0.2s;
+                                            border: 2px solid #22c55e;
+                                        }
+                                        .profession-tag.inactive {
+                                            background-color: #e5e7eb;
+                                            color: #6b7280;
+                                            border-color: #d1d5db;
+                                        }
+                                        .profession-tag:hover {
+                                            transform: scale(1.05);
+                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                                        }
+                                        .profession-tags-container {
+                                            display: flex;
+                                            flex-wrap: wrap;
+                                            gap: 4px;
+                                            padding: 15px;
+                                            background: #f9fafb;
+                                            border-radius: 6px;
+                                            border: 1px solid #e5e7eb;
+                                        }
+                                    </style>
+
+                                    <div class="profession-backgrounds-section" id="profession-backgrounds-section">
+                                        <div class="box-line">
+                                            <span class="left">Available Categories</span>
+                                            <span class="right" style="width: 70%;">
+                                                <div class="profession-tags-container" id="profession-tags-container">
+                                                    {% for background in profession_backgrounds %}
+                                                    <span class="profession-tag" data-background="{{ background }}" onclick="toggleProfessionTag(this)">
+                                                        {{ background }}
+                                                    </span>
+                                                    {% endfor %}
+                                                </div>
+                                                <small style="color: #6b7280; font-size: 0.8em; margin-top: 8px; display: block;">
+                                                    Click to activate/deactivate categories. Active categories are highlighted in green.
+                                                </small>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <script>
+                                        // Profession backgrounds selection (all active by default)
+                                        let selectedProfessionBackgrounds = new Set(
+                                            {{ profession_backgrounds | tojson | safe }}
+                                        );
+
+                                        function toggleProfessionBackgrounds() {
+                                            const section = document.getElementById('profession-backgrounds-section');
+                                            const toggle = document.getElementById('profession-backgrounds-toggle');
+                                            section.classList.toggle('expanded');
+                                            toggle.textContent = section.classList.contains('expanded') ? '▼' : '▶';
+                                        }
+
+                                        function toggleProfessionTag(tagElement) {
+                                            const background = tagElement.dataset.background;
+                                            
+                                            if (selectedProfessionBackgrounds.has(background)) {
+                                                selectedProfessionBackgrounds.delete(background);
+                                                tagElement.classList.add('inactive');
+                                            } else {
+                                                selectedProfessionBackgrounds.add(background);
+                                                tagElement.classList.remove('inactive');
+                                            }
+                                            
+                                            // Update validation state
+                                            updateProfessionValidation();
+                                        }
+                                        
+                                        function updateProfessionValidation() {
+                                            // Provide visual feedback if no categories selected
+                                            const container = document.getElementById('profession-tags-container');
+                                            if (selectedProfessionBackgrounds.size === 0) {
+                                                container.style.borderColor = '#fcc';
+                                            } else {
+                                                container.style.borderColor = '#e5e7eb';
+                                            }
+                                        }
+
+                                        // Add hidden inputs for profession backgrounds before form submission
+                                        document.addEventListener('DOMContentLoaded', function() {
+                                            const form = document.getElementById('popcreate_form');
+                                            form.addEventListener('submit', function(e) {
+                                                // Validate that at least one profession category is selected
+                                                if (selectedProfessionBackgrounds.size === 0) {
+                                                    e.preventDefault();
+                                                    alert('Please select at least one Profession Category. This field is required.');
+                                                    return false;
+                                                }
+                                                
+                                                // Remove old hidden inputs for profession backgrounds
+                                                const oldInputs = form.querySelectorAll('input[name="profession_backgrounds"]');
+                                                oldInputs.forEach(input => input.remove());
+                                                
+                                                // Add new hidden inputs for selected profession backgrounds
+                                                selectedProfessionBackgrounds.forEach(background => {
+                                                    const input = document.createElement('input');
+                                                    input.type = 'hidden';
+                                                    input.name = 'profession_backgrounds';
+                                                    input.value = background;
+                                                    form.appendChild(input);
+                                                });
+                                            }, true); // Use capture phase to run before other handlers
+                                        });
+                                    </script>
+
                                     <script>
                                         // Multi-select functionality with percentages
                                         const multiSelectData = {
