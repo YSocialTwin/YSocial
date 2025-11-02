@@ -598,12 +598,32 @@
                                                 selectedProfessionBackgrounds.add(background);
                                                 tagElement.classList.remove('inactive');
                                             }
+                                            
+                                            // Update validation state
+                                            updateProfessionValidation();
+                                        }
+                                        
+                                        function updateProfessionValidation() {
+                                            // Provide visual feedback if no categories selected
+                                            const container = document.getElementById('profession-tags-container');
+                                            if (selectedProfessionBackgrounds.size === 0) {
+                                                container.style.borderColor = '#fcc';
+                                            } else {
+                                                container.style.borderColor = '#e5e7eb';
+                                            }
                                         }
 
                                         // Add hidden inputs for profession backgrounds before form submission
                                         document.addEventListener('DOMContentLoaded', function() {
                                             const form = document.getElementById('popcreate_form');
                                             form.addEventListener('submit', function(e) {
+                                                // Validate that at least one profession category is selected
+                                                if (selectedProfessionBackgrounds.size === 0) {
+                                                    e.preventDefault();
+                                                    alert('Please select at least one Profession Category. This field is required.');
+                                                    return false;
+                                                }
+                                                
                                                 // Remove old hidden inputs for profession backgrounds
                                                 const oldInputs = form.querySelectorAll('input[name="profession_backgrounds"]');
                                                 oldInputs.forEach(input => input.remove());
