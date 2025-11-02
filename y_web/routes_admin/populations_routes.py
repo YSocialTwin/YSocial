@@ -151,10 +151,16 @@ def create_population():
     languages = request.form.get("languages")
     interests = request.form.get("tags")
     
-    # Get selected profession backgrounds (for future use)
+    # Get selected profession backgrounds
     profession_backgrounds = request.form.getlist("profession_backgrounds")
-    # Store as a list for future implementation
-    selected_profession_backgrounds = profession_backgrounds
+    # If no profession backgrounds selected, use all available
+    if not profession_backgrounds:
+        all_backgrounds = (
+            db.session.query(Profession.background)
+            .distinct()
+            .all()
+        )
+        profession_backgrounds = [bg[0] for bg in all_backgrounds]
 
     # Get activity profiles data from the hidden field
     activity_profiles_data = request.form.get("activity_profiles_data", "[]")
@@ -213,7 +219,7 @@ def create_population():
         db.session.add(profile_assoc)
     db.session.commit()
 
-    generate_population(name, percentages, actions_config)
+    generate_population(name, percentages, actions_config, profession_backgrounds)
 
     return populations()
 

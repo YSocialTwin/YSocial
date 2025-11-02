@@ -119,7 +119,7 @@ def __sample_age(mean, std_dev, min_age, max_age):
             return int(round(age))
 
 
-def __sample_age_degree_profession(age_class, edu_classes):
+def __sample_age_degree_profession(age_class, edu_classes, profession_category=None):
     probs = [v[0] for v in age_class.values()]
     total = sum(probs)
     weights = [p / total for p in probs]
@@ -135,7 +135,17 @@ def __sample_age_degree_profession(age_class, edu_classes):
     if age < 18:
         profession = Profession.query.filter_by(profession="Student").first()
     else:
-        profession = Profession.query.order_by(func.random()).first()
+        # If a profession category is provided, sample from professions in that category
+        if profession_category:
+            # Get professions matching the category (background column)
+            category_professions = Profession.query.filter_by(background=profession_category).all()
+            if category_professions:
+                profession = random.choice(category_professions)
+            else:
+                # Fallback to random if no professions found for category
+                profession = Profession.query.order_by(func.random()).first()
+        else:
+            profession = Profession.query.order_by(func.random()).first()
 
     sampled = random.choices(
         population=list(edu_classes.keys()), weights=list(edu_classes.values()), k=1
@@ -220,7 +230,7 @@ def _generate_unique_name(fake, gender, used_names, max_attempts=100):
     return unique_name
 
 
-def generate_population(population_name, percentages=None, actions_config=None):
+def generate_population(population_name, percentages=None, actions_config=None, profession_backgrounds=None):
     """
     Generate a population of AI agents with realistic profiles.
 
@@ -236,6 +246,8 @@ def generate_population(population_name, percentages=None, actions_config=None):
                      certain attributes
         actions_config : Optional dict specifying configuration for round_actions
                          sampling (min, max, distribution type, parameter)
+        profession_backgrounds: Optional list of profession background categories
+                                to sample from when assigning professions
 
     Side effects:
         Creates and persists Agent and Agent_Population records in database
@@ -272,9 +284,13 @@ def generate_population(population_name, percentages=None, actions_config=None):
     used_names = {agent.name for agent in existing_agents}
 
     for _ in range(population.size):
+        # Sample a profession category if provided
+        profession_category = None
+        if profession_backgrounds and len(profession_backgrounds) > 0:
+            profession_category = random.choice(profession_backgrounds)
 
         age, profession, education_level = __sample_age_degree_profession(
-            age_classes, edu_classes
+            age_classes, edu_classes, profession_category
         )
 
         # sample attributes based on provided percentages
