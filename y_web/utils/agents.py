@@ -286,7 +286,7 @@ def generate_population(population_name, percentages=None, actions_config=None, 
     for _ in range(population.size):
         # Sample a profession category if provided
         profession_category = None
-        if profession_backgrounds and len(profession_backgrounds) > 0:
+        if profession_backgrounds:
             profession_category = random.choice(profession_backgrounds)
 
         age, profession, education_level = __sample_age_degree_profession(
