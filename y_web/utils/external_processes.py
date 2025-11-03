@@ -1040,7 +1040,11 @@ def start_client_process(exp, cli, population, resume=True):
             )
         else:
             cl = YClientWeb(
-                config_file, data_base_path, first_run=first_run, log_file=log_file, llm=exp.llm_agents_enabled,
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                log_file=log_file,
+                llm=exp.llm_agents_enabled,
             )
 
         if resume:
