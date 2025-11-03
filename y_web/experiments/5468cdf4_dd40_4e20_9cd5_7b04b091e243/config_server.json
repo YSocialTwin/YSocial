@@ -1,0 +1,16 @@
+{
+    "platform_type": "microblogging",
+    "name": "Test Experiment No LLM",
+    "host": "127.0.0.1",
+    "port": 5000,
+    "debug": "False",
+    "reset_db": "False",
+    "modules": [
+        "news",
+        "voting",
+        "image"
+    ],
+    "perspective_api": null,
+    "sentiment_annotation": false,
+    "emotion_annotation": false
+}
