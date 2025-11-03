@@ -1,3 +1,10 @@
+-- ================================================
+-- PostgreSQL Schema for YSocial Platform
+-- ================================================
+
+-- -----------------------------
+-- Admin users
+-- -----------------------------
 CREATE TABLE admin_users (
     id              SERIAL PRIMARY KEY,
     username        TEXT,
@@ -11,6 +18,18 @@ CREATE TABLE admin_users (
     perspective_api TEXT DEFAULT NULL
 );
 
+-- -----------------------------
+-- Activity profiles (created early for foreign keys)
+-- -----------------------------
+CREATE TABLE activity_profiles (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    hours VARCHAR(100) NOT NULL
+);
+
+-- -----------------------------
+-- Agents
+-- -----------------------------
 CREATE TABLE agents (
     id                   SERIAL PRIMARY KEY,
     name                 TEXT NOT NULL,
@@ -33,26 +52,77 @@ CREATE TABLE agents (
     profile_pic          TEXT DEFAULT '',
     daily_activity_level INTEGER DEFAULT 1,
     profession           TEXT,
-    activity_profile INTEGER REFERENCES activity_profiles(id)
+    activity_profile     INTEGER REFERENCES activity_profiles(id)
 );
 
+-- -----------------------------
+-- Agent profile
+-- -----------------------------
 CREATE TABLE agent_profile (
     id       SERIAL PRIMARY KEY,
     agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
     profile  TEXT
 );
 
+-- -----------------------------
+-- Recommendation systems
+-- -----------------------------
 CREATE TABLE content_recsys (
     id    SERIAL PRIMARY KEY,
     name  TEXT NOT NULL,
     value TEXT NOT NULL
 );
 
+CREATE TABLE follow_recsys (
+    id    SERIAL PRIMARY KEY,
+    name  TEXT NOT NULL,
+    value TEXT NOT NULL
+);
+
+-- -----------------------------
+-- Auxiliary tables
+-- -----------------------------
 CREATE TABLE education (
     id              SERIAL PRIMARY KEY,
     education_level TEXT NOT NULL
 );
 
+CREATE TABLE leanings (
+    id      SERIAL PRIMARY KEY,
+    leaning TEXT NOT NULL
+);
+
+CREATE TABLE languages (
+    id       SERIAL PRIMARY KEY,
+    language TEXT NOT NULL
+);
+
+CREATE TABLE nationalities (
+    id          SERIAL PRIMARY KEY,
+    nationality TEXT NOT NULL
+);
+
+CREATE TABLE toxicity_levels (
+    id             SERIAL PRIMARY KEY,
+    toxicity_level TEXT NOT NULL
+);
+
+CREATE TABLE age_classes (
+    id        SERIAL PRIMARY KEY,
+    name      TEXT NOT NULL,
+    age_start INTEGER NOT NULL,
+    age_end   INTEGER NOT NULL
+);
+
+CREATE TABLE professions (
+    id         SERIAL PRIMARY KEY,
+    profession TEXT NOT NULL,
+    background TEXT NOT NULL
+);
+
+-- -----------------------------
+-- Experiments
+-- -----------------------------
 CREATE TABLE exps (
     idexp              SERIAL PRIMARY KEY,
     exp_name           TEXT,
@@ -79,60 +149,9 @@ CREATE TABLE exp_stats (
     mentions  INTEGER DEFAULT 0 NOT NULL
 );
 
-CREATE TABLE follow_recsys (
-    id    SERIAL PRIMARY KEY,
-    name  TEXT NOT NULL,
-    value TEXT NOT NULL
-);
-
-CREATE TABLE languages (
-    id       SERIAL PRIMARY KEY,
-    language TEXT NOT NULL
-);
-
-CREATE TABLE leanings (
-    id      SERIAL PRIMARY KEY,
-    leaning TEXT NOT NULL
-);
-
-CREATE TABLE nationalities (
-    id          SERIAL PRIMARY KEY,
-    nationality TEXT NOT NULL
-);
-
-CREATE TABLE toxicity_levels (
-    id             SERIAL PRIMARY KEY,
-    toxicity_level TEXT NOT NULL
-);
-
-CREATE TABLE age_classes (
-    id        SERIAL PRIMARY KEY,
-    name      TEXT NOT NULL,
-    age_start INTEGER NOT NULL,
-    age_end   INTEGER NOT NULL
-);
-
-CREATE TABLE ollama_pull (
-    id         SERIAL PRIMARY KEY,
-    model_name TEXT NOT NULL,
-    status     REAL DEFAULT 0 NOT NULL
-);
-
-CREATE TABLE pages (
-    id        SERIAL PRIMARY KEY,
-    name      TEXT NOT NULL,
-    descr     TEXT,
-    page_type TEXT NOT NULL,
-    feed      TEXT,
-    keywords  TEXT,
-    logo      TEXT,
-    pg_type   TEXT,
-    leaning   TEXT DEFAULT '',
-    activity_profile INTEGER NOT NULL
-        REFERENCES activity_profiles(id)
-        ON DELETE CASCADE,
-);
-
+-- -----------------------------
+-- Populations
+-- -----------------------------
 CREATE TABLE population (
     id            SERIAL PRIMARY KEY,
     name          TEXT NOT NULL,
@@ -158,6 +177,25 @@ CREATE TABLE agent_population (
     population_id INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE
 );
 
+-- -----------------------------
+-- Pages
+-- -----------------------------
+CREATE TABLE pages (
+    id                SERIAL PRIMARY KEY,
+    name              TEXT NOT NULL,
+    descr             TEXT,
+    page_type         TEXT NOT NULL,
+    feed              TEXT,
+    keywords          TEXT,
+    logo              TEXT,
+    pg_type           TEXT,
+    leaning           TEXT DEFAULT '',
+    activity_profile  INTEGER NOT NULL REFERENCES activity_profiles(id) ON DELETE CASCADE
+);
+
+-- -----------------------------
+-- Clients
+-- -----------------------------
 CREATE TABLE client (
     id                                  SERIAL PRIMARY KEY,
     name                                TEXT NOT NULL,
@@ -207,6 +245,9 @@ CREATE TABLE client_execution (
     last_active_day          INTEGER NOT NULL
 );
 
+-- -----------------------------
+-- Relations
+-- -----------------------------
 CREATE TABLE page_population (
     id            SERIAL PRIMARY KEY,
     page_id       INTEGER NOT NULL REFERENCES pages(id) ON DELETE CASCADE,
@@ -219,12 +260,16 @@ CREATE TABLE population_experiment (
     id_population INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE
 );
 
-CREATE TABLE professions (
-    id         SERIAL PRIMARY KEY,
-    profession TEXT NOT NULL,
-    background TEXT NOT NULL
+CREATE TABLE population_activity_profile (
+    id SERIAL PRIMARY KEY,
+    population INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE,
+    activity_profile INTEGER NOT NULL REFERENCES activity_profiles(id) ON DELETE CASCADE,
+    percentage REAL NOT NULL
 );
 
+-- -----------------------------
+-- Topics and experiments
+-- -----------------------------
 CREATE TABLE topic_list (
     id   SERIAL PRIMARY KEY,
     name TEXT
@@ -248,21 +293,13 @@ CREATE TABLE user_experiment (
     exp_id  INTEGER REFERENCES exps(idexp) ON DELETE CASCADE
 );
 
-CREATE TABLE activity_profiles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(120) NOT NULL UNIQUE,
-    hours VARCHAR(100) NOT NULL
-);
-
-CREATE TABLE population_activity_profile (
-    id SERIAL PRIMARY KEY,
-    population INTEGER NOT NULL
-        REFERENCES population(id)
-        ON DELETE CASCADE,
-    activity_profile INTEGER NOT NULL
-        REFERENCES activity_profiles(id)
-        ON DELETE CASCADE,
-    percentage REAL NOT NULL
+-- -----------------------------
+-- Ollama Pull and Jupyter
+-- -----------------------------
+CREATE TABLE ollama_pull (
+    id         SERIAL PRIMARY KEY,
+    model_name TEXT NOT NULL,
+    status     REAL DEFAULT 0 NOT NULL
 );
 
 CREATE TABLE jupyter_instances (
@@ -273,6 +310,10 @@ CREATE TABLE jupyter_instances (
     process INTEGER,
     status VARCHAR(10) NOT NULL DEFAULT 'active'
 );
+
+-- ================================================
+-- DATA INSERTIONS
+-- ================================================
 
 INSERT INTO content_recsys (name, value) VALUES
   ('ContentRecSys', 'Random'),
@@ -558,4 +599,4 @@ INSERT INTO activity_profiles (name, hours) VALUES
 ('Minimalist User', '12,18'),
 ('Community Builder', '8,9,10,11,18,19,20,21'),
 ('Storyteller', '10,11,12,13,19,20,21'),
-('Casual Poster', '8,13,19'),
+('Casual Poster', '8,13,19');
