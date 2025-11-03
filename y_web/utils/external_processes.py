@@ -469,13 +469,15 @@ def start_server(exp):
     # Create a gunicorn-compatible wrapper script that loads the config
     # This is necessary because y_server needs config to be set before the app starts
     wrapper_script = f"{server_dir}{os.sep}_gunicorn_wrapper.py"
+    # Properly escape the config path for Python string literal
+    config_escaped = config.replace("\\", "\\\\").replace("'", "\\'")
     wrapper_content = f'''#!/usr/bin/env python
 """Gunicorn wrapper for YServer that loads config before starting the app."""
 import json
 import os
 
 # Load config file
-config_file = os.environ.get('YSERVER_CONFIG', '{config}')
+config_file = os.environ.get('YSERVER_CONFIG', '{config_escaped}')
 with open(config_file, 'r') as f:
     config = json.load(f)
 
@@ -491,18 +493,35 @@ app.config['emotion_annotation'] = config.get('emotion_annotation', False)
 application = app
 '''
 
+    wrapper_created = False
     try:
         with open(wrapper_script, "w") as f:
             f.write(wrapper_content)
-        os.chmod(wrapper_script, 0o755)
+        os.chmod(wrapper_script, 0o600)  # Restrict permissions to owner only
+        wrapper_created = True
     except Exception as e:
         print(f"Warning: Could not create wrapper script: {e}")
 
-    # Use the wrapper module for gunicorn
-    module_name = "_gunicorn_wrapper:application"
+    # Use the wrapper module for gunicorn if created, otherwise fall back to y_server:app
+    if wrapper_created:
+        module_name = "_gunicorn_wrapper:application"
+    else:
+        print("Warning: Using y_server:app directly without config initialization")
+        module_name = "y_server:app"
 
     # Get the Python executable to use
     python_cmd = detect_env_handler()
+
+    # Gunicorn command arguments (shared across all command constructions)
+    gunicorn_args = [
+        module_name,
+        "--bind",
+        f"{exp.server}:{exp.port}",
+        "--workers",
+        "1",
+        "--timeout",
+        "120",
+    ]
 
     # Build the gunicorn command
     if (
@@ -515,28 +534,20 @@ application = app
         # Replace 'python' with 'gunicorn' in pipenv run scenarios
         if cmd_parts[-1] == "python":
             cmd_parts[-1] = "gunicorn"
-        cmd = cmd_parts + [
-            module_name,
-            "--bind",
-            f"{exp.server}:{exp.port}",
-            "--workers",
-            "1",
-            "--timeout",
-            "120",
-        ]
+        cmd = cmd_parts + gunicorn_args
     else:
-        # Use gunicorn directly from the same environment
-        gunicorn_path = str(Path(python_cmd).parent / "gunicorn")
-        cmd = [
-            gunicorn_path,
-            module_name,
-            "--bind",
-            f"{exp.server}:{exp.port}",
-            "--workers",
-            "1",
-            "--timeout",
-            "120",
-        ]
+        # Try to find gunicorn in the same directory as python
+        gunicorn_path = Path(python_cmd).parent / "gunicorn"
+        if gunicorn_path.exists():
+            cmd = [str(gunicorn_path)] + gunicorn_args
+        else:
+            # Fallback to system gunicorn
+            gunicorn_which = shutil.which("gunicorn")
+            if gunicorn_which:
+                cmd = [gunicorn_which] + gunicorn_args
+            else:
+                # Last resort: try 'gunicorn' and let subprocess fail if not found
+                cmd = ["gunicorn"] + gunicorn_args
 
     print(f"Starting server for experiment {exp_uid} with gunicorn...")
     print(f"Command: {' '.join(cmd)}")
@@ -564,18 +575,10 @@ application = app
     except Exception as e:
         # Fallback: try to use gunicorn from system path
         print(f"Error starting server process: {e}")
-        cmd = [
-            "gunicorn",
-            module_name,
-            "--bind",
-            f"{exp.server}:{exp.port}",
-            "--workers",
-            "1",
-            "--timeout",
-            "120",
-        ]
+        gunicorn_which = shutil.which("gunicorn")
+        fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
         process = subprocess.Popen(
-            cmd,
+            fallback_cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
