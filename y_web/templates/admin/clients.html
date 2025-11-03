@@ -385,6 +385,7 @@
                                                                                        value="0"></span>
                                     </div>
                                     {% endif %}
+                                    {% if llm_agents_enabled %}
                                     <div class="form-section-header">Large Language Models</div>
                                     <div class="form-section-description">
                                         Configure the LLM server and model for agent content generation.
@@ -482,6 +483,7 @@
                                     <div id="image_action_warning" style="padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
+                                    {% endif %}
 
                                     <div class="form-section-header">Recommendation Systems</div>
                                     <div class="form-section-description">
@@ -1015,7 +1017,12 @@ let llmModelSelected = false;
 function updateFormButtonState() {
     const submitButton = document.getElementById('create_client_button');
     if (submitButton) {
+        {% if llm_agents_enabled %}
         submitButton.disabled = !(llmModelsFetched && llmModelSelected);
+        {% else %}
+        // When LLM agents are disabled, form can be submitted without LLM validation
+        submitButton.disabled = false;
+        {% endif %}
     }
 }
 
@@ -1221,7 +1228,12 @@ function displayNetworkFileNameCreate(input) {
 
 // On page load, disable image action by default and setup form validation
 document.addEventListener('DOMContentLoaded', function() {
+    {% if llm_agents_enabled %}
     disableImageAction();
+    {% else %}
+    // When LLM agents are disabled, enable image action automatically
+    enableImageAction();
+    {% endif %}
     
     // Setup form button state management
     const modelsSelect = document.getElementById('models_select_client');
@@ -1229,9 +1241,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Ensure button is disabled initially
     if (submitButton) {
+        {% if llm_agents_enabled %}
         submitButton.disabled = true;
+        {% else %}
+        // When LLM agents are disabled, form can be submitted immediately
+        submitButton.disabled = false;
+        {% endif %}
     }
     
+    {% if llm_agents_enabled %}
     if (modelsSelect) {
         // Monitor model selection
         modelsSelect.addEventListener('change', function() {
@@ -1239,6 +1257,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFormButtonState();
         });
     }
+    {% endif %}
     
     // Setup network mutual exclusivity
     const networkModelSelect = document.getElementById('network_model_select');

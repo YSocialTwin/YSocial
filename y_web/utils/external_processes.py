@@ -310,7 +310,6 @@ def build_screen_command(script_path, config_path, screen_name=None):
 #############
 
 
-@deprecated
 def terminate_process_on_port(port):
     """
     Terminate the process using the specified port.
@@ -1037,10 +1036,15 @@ def start_client_process(exp, cli, population, resume=True):
                 first_run=first_run,
                 network=path,
                 log_file=log_file,
+                llm=exp.llm_agents_enabled,
             )
         else:
             cl = YClientWeb(
-                config_file, data_base_path, first_run=first_run, log_file=log_file
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                log_file=log_file,
+                llm=exp.llm_agents_enabled,
             )
 
         if resume:

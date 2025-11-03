@@ -387,6 +387,7 @@ class Exps(db.Model):
     server = db.Column(db.String(50), nullable=False, default="127.0.0.1")
     annotations = db.Column(db.String(500), nullable=False, default="")
     server_pid = db.Column(db.Integer, nullable=True, default=None)
+    llm_agents_enabled = db.Column(db.Boolean, nullable=False, default=True)
 
 
 class Exp_stats(db.Model):
