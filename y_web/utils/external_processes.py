@@ -469,17 +469,30 @@ def start_server(exp):
     # Create a gunicorn-compatible wrapper script that loads the config
     # This is necessary because y_server needs config to be set before the app starts
     wrapper_script = f"{server_dir}{os.sep}_gunicorn_wrapper.py"
-    # Properly escape the config path for Python string literal
-    config_escaped = config.replace("\\", "\\\\").replace("'", "\\'")
-    wrapper_content = f'''#!/usr/bin/env python
+    # Use static wrapper content without embedded paths for security
+    # Config path is passed via YSERVER_CONFIG environment variable only
+    wrapper_content = '''#!/usr/bin/env python
 """Gunicorn wrapper for YServer that loads config before starting the app."""
 import json
 import os
+import sys
 
-# Load config file
-config_file = os.environ.get('YSERVER_CONFIG', '{config_escaped}')
-with open(config_file, 'r') as f:
-    config = json.load(f)
+# Load config file from environment variable
+config_file = os.environ.get('YSERVER_CONFIG')
+if not config_file:
+    print("Error: YSERVER_CONFIG environment variable not set", file=sys.stderr)
+    sys.exit(1)
+
+if not os.path.isfile(config_file):
+    print(f"Error: Config file not found: {config_file}", file=sys.stderr)
+    sys.exit(1)
+
+try:
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+except Exception as e:
+    print(f"Error loading config file: {e}", file=sys.stderr)
+    sys.exit(1)
 
 # Import the app
 from y_server import app
@@ -500,7 +513,9 @@ application = app
         os.chmod(wrapper_script, 0o600)  # Restrict permissions to owner only
         wrapper_created = True
     except Exception as e:
-        print(f"Warning: Could not create wrapper script: {e}")
+        print(
+            f"Error: Could not create gunicorn wrapper script at {wrapper_script}: {e}"
+        )
 
     # Use the wrapper module for gunicorn if created, otherwise fall back to y_server:app
     if wrapper_created:
