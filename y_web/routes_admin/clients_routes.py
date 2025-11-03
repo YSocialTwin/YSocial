@@ -243,7 +243,9 @@ def clients(idexp):
     frecsys = Follow_Recsys.query.all()
 
     # Check if LLM agents are enabled for this experiment
-    llm_agents_enabled = exp.llm_agents_enabled if hasattr(exp, 'llm_agents_enabled') else True
+    llm_agents_enabled = (
+        exp.llm_agents_enabled if hasattr(exp, "llm_agents_enabled") else True
+    )
 
     return render_template(
         "admin/clients.html",
@@ -290,11 +292,13 @@ def create_client():
     search = request.form.get("search")
     vote = request.form.get("vote")
     share_link = request.form.get("share_link")
-    
+
     # Check if LLM agents are enabled for this experiment
     exp = Exps.query.filter_by(idexp=exp_id).first()
-    llm_agents_enabled = exp.llm_agents_enabled if (exp and hasattr(exp, 'llm_agents_enabled')) else True
-    
+    llm_agents_enabled = (
+        exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
+    )
+
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
         llm = request.form.get("llm")
@@ -319,7 +323,7 @@ def create_client():
         llm_v_max_tokens = "300"
         llm_v_temperature = "0.5"
         user_type = ""
-    
+
     crecsys = request.form.get("recsys_type")
     frecsys = request.form.get("frecsys_type")
 
