@@ -461,18 +461,50 @@ def start_server(exp):
     # Determine the module path based on platform type
     if exp.platform_type == "microblogging":
         server_dir = f"{yserver_path}external{os.sep}YServer"
-        module_name = "y_server_run:app"
     elif exp.platform_type == "forum":
         server_dir = f"{yserver_path}external{os.sep}YServerReddit"
-        module_name = "y_server_run:app"
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+
+    # Create a gunicorn-compatible wrapper script that loads the config
+    # This is necessary because y_server needs config to be set before the app starts
+    wrapper_script = f"{server_dir}{os.sep}_gunicorn_wrapper.py"
+    wrapper_content = f'''#!/usr/bin/env python
+"""Gunicorn wrapper for YServer that loads config before starting the app."""
+import json
+import os
+
+# Load config file
+config_file = os.environ.get('YSERVER_CONFIG', '{config}')
+with open(config_file, 'r') as f:
+    config = json.load(f)
+
+# Import the app
+from y_server import app
+
+# Configure the app with settings from config file
+app.config['perspective_api'] = config.get('perspective_api', False)
+app.config['sentiment_annotation'] = config.get('sentiment_annotation', False)
+app.config['emotion_annotation'] = config.get('emotion_annotation', False)
+
+# Export app for gunicorn
+application = app
+'''
+
+    try:
+        with open(wrapper_script, "w") as f:
+            f.write(wrapper_content)
+        os.chmod(wrapper_script, 0o755)
+    except Exception as e:
+        print(f"Warning: Could not create wrapper script: {e}")
+
+    # Use the wrapper module for gunicorn
+    module_name = "_gunicorn_wrapper:application"
 
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
     # Build the gunicorn command
-    # gunicorn runs from the server directory with the config passed as env var
     if (
         isinstance(python_cmd, str)
         and " " in python_cmd
