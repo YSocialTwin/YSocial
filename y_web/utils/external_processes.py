@@ -478,7 +478,7 @@ def start_server(exp):
         "--bind",
         f"{exp.server}:{exp.port}",
         "wsgi:app",
-        "--capture-output"
+        "--capture-output",
     ]
 
     # Build the gunicorn command
