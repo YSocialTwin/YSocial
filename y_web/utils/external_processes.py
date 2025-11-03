@@ -344,7 +344,9 @@ def terminate_server_process(exp_id):
 
     This function terminates a server process that was started using the
     start_server() function and has its PID stored in the database.
-    It clears the PID from the database after termination.
+    It handles graceful shutdown of gunicorn-based servers using SIGTERM,
+    followed by SIGKILL if needed. It clears the PID from the database
+    after termination.
 
     Args:
         exp_id: the experiment ID whose server process should be terminated
@@ -430,11 +432,11 @@ def get_server_process_status(exp_id):
 
 def start_server(exp):
     """
-    Start the y_server using subprocess.Popen.
+    Start the y_server using gunicorn via subprocess.Popen.
 
-    This function launches a server process for an experiment using subprocess.Popen
-    instead of screen sessions. The process PID is stored in the database for
-    later management and graceful termination.
+    This function launches a server process for an experiment using gunicorn
+    WSGI server instead of running the Flask app directly. The process PID
+    is stored in the database for later management and graceful termination.
 
     Args:
         exp: the experiment object
@@ -456,20 +458,21 @@ def start_server(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    # Determine the script path based on platform type
+    # Determine the module path based on platform type
     if exp.platform_type == "microblogging":
-        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
+        server_dir = f"{yserver_path}external{os.sep}YServer"
+        module_name = "y_server_run:app"
     elif exp.platform_type == "forum":
-        script_path = (
-            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
-        )
+        server_dir = f"{yserver_path}external{os.sep}YServerReddit"
+        module_name = "y_server_run:app"
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
-    # Build the command as a list for subprocess.Popen
+    # Build the gunicorn command
+    # gunicorn runs from the server directory with the config passed as env var
     if (
         isinstance(python_cmd, str)
         and " " in python_cmd
@@ -477,13 +480,40 @@ def start_server(exp):
     ):
         # Handle commands like "pipenv run python"
         cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [script_path, "-c", config]
+        # Replace 'python' with 'gunicorn' in pipenv run scenarios
+        if cmd_parts[-1] == "python":
+            cmd_parts[-1] = "gunicorn"
+        cmd = cmd_parts + [
+            module_name,
+            "--bind",
+            f"{exp.server}:{exp.port}",
+            "--workers",
+            "1",
+            "--timeout",
+            "120",
+        ]
     else:
-        # Simple python executable path
-        cmd = [python_cmd, script_path, "-c", config]
+        # Use gunicorn directly from the same environment
+        gunicorn_path = str(Path(python_cmd).parent / "gunicorn")
+        cmd = [
+            gunicorn_path,
+            module_name,
+            "--bind",
+            f"{exp.server}:{exp.port}",
+            "--workers",
+            "1",
+            "--timeout",
+            "120",
+        ]
 
-    print(f"Starting server for experiment {exp_uid} ...")
+    print(f"Starting server for experiment {exp_uid} with gunicorn...")
     print(f"Command: {' '.join(cmd)}")
+    print(f"Working directory: {server_dir}")
+    print(f"Config file: {config}")
+
+    # Set environment variable for config file path
+    env = os.environ.copy()
+    env["YSERVER_CONFIG"] = config
 
     try:
         # Start the process with Popen
@@ -493,20 +523,33 @@ def start_server(exp):
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
             start_new_session=True,  # Detach from parent process group
+            cwd=server_dir,  # Run from server directory
+            env=env,  # Pass environment with config path
         )
 
         print(f"Server process started with PID: {process.pid}")
 
     except Exception as e:
-        # env not correctly identify, try to use the current one implicitly
+        # Fallback: try to use gunicorn from system path
         print(f"Error starting server process: {e}")
-        cmd = [sys.executable, script_path, "-c", config]
+        cmd = [
+            "gunicorn",
+            module_name,
+            "--bind",
+            f"{exp.server}:{exp.port}",
+            "--workers",
+            "1",
+            "--timeout",
+            "120",
+        ]
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
             start_new_session=True,  # Detach from parent process group
+            cwd=server_dir,
+            env=env,
         )
 
     # Save the PID to the database for persistent tracking
