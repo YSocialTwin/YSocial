@@ -290,16 +290,36 @@ def create_client():
     search = request.form.get("search")
     vote = request.form.get("vote")
     share_link = request.form.get("share_link")
-    llm = request.form.get("llm")
-    llm_api_key = request.form.get("llm_api_key")
-    llm_max_tokens = request.form.get("llm_max_tokens")
-    llm_temperature = request.form.get("llm_temperature")
-    llm_v_agent = request.form.get("llm_v_agent")
-    llm_v = request.form.get("llm_v")
-    llm_v_api_key = request.form.get("llm_v_api_key")
-    llm_v_max_tokens = request.form.get("llm_v_max_tokens")
-    llm_v_temperature = request.form.get("llm_v_temperature")
-    user_type = request.form.get("user_type")
+    
+    # Check if LLM agents are enabled for this experiment
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+    llm_agents_enabled = exp.llm_agents_enabled if (exp and hasattr(exp, 'llm_agents_enabled')) else True
+    
+    # Get LLM parameters from form, or use defaults if LLM agents are disabled
+    if llm_agents_enabled:
+        llm = request.form.get("llm")
+        llm_api_key = request.form.get("llm_api_key")
+        llm_max_tokens = request.form.get("llm_max_tokens")
+        llm_temperature = request.form.get("llm_temperature")
+        llm_v_agent = request.form.get("llm_v_agent")
+        llm_v = request.form.get("llm_v")
+        llm_v_api_key = request.form.get("llm_v_api_key")
+        llm_v_max_tokens = request.form.get("llm_v_max_tokens")
+        llm_v_temperature = request.form.get("llm_v_temperature")
+        user_type = request.form.get("user_type")
+    else:
+        # Use default values when LLM agents are disabled
+        llm = "http://127.0.0.1:11434/v1"
+        llm_api_key = "NULL"
+        llm_max_tokens = "-1"
+        llm_temperature = "1.5"
+        llm_v_agent = "minicpm-v"
+        llm_v = "http://127.0.0.1:11434/v1"
+        llm_v_api_key = "NULL"
+        llm_v_max_tokens = "300"
+        llm_v_temperature = "0.5"
+        user_type = ""
+    
     crecsys = request.form.get("recsys_type")
     frecsys = request.form.get("frecsys_type")
 
