@@ -242,6 +242,9 @@ def clients(idexp):
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
 
+    # Check if LLM agents are enabled for this experiment
+    llm_agents_enabled = exp.llm_agents_enabled if hasattr(exp, 'llm_agents_enabled') else True
+
     return render_template(
         "admin/clients.html",
         experiment=exp,
@@ -249,6 +252,7 @@ def clients(idexp):
         ollamas=ollamas,
         crecsys=crecsys,
         frecsys=frecsys,
+        llm_agents_enabled=llm_agents_enabled,
     )
 
 
