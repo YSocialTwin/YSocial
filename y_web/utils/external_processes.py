@@ -435,7 +435,7 @@ def start_server(exp):
     Start the y_server using gunicorn via subprocess.Popen.
 
     This function launches a server process for an experiment using gunicorn
-    WSGI server instead of running the Flask app directly. The process PID
+    WSGI server with the gunicorn_config.py configuration file. The process PID
     is stored in the database for later management and graceful termination.
 
     Args:
@@ -458,7 +458,7 @@ def start_server(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    # Determine the module path based on platform type
+    # Determine the server directory based on platform type
     if exp.platform_type == "microblogging":
         server_dir = f"{yserver_path}external{os.sep}YServer"
     elif exp.platform_type == "forum":
@@ -466,76 +466,15 @@ def start_server(exp):
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-    # Create a gunicorn-compatible wrapper script that loads the config
-    # This is necessary because y_server needs config to be set before the app starts
-    wrapper_script = f"{server_dir}{os.sep}_gunicorn_wrapper.py"
-    # Use static wrapper content without embedded paths for security
-    # Config path is passed via YSERVER_CONFIG environment variable only
-    wrapper_content = '''#!/usr/bin/env python
-"""Gunicorn wrapper for YServer that loads config before starting the app."""
-import json
-import os
-import sys
-
-# Load config file from environment variable
-config_file = os.environ.get('YSERVER_CONFIG')
-if not config_file:
-    print("Error: YSERVER_CONFIG environment variable not set", file=sys.stderr)
-    sys.exit(1)
-
-if not os.path.isfile(config_file):
-    print(f"Error: Config file not found: {config_file}", file=sys.stderr)
-    sys.exit(1)
-
-try:
-    with open(config_file, 'r') as f:
-        config = json.load(f)
-except Exception as e:
-    print(f"Error loading config file: {e}", file=sys.stderr)
-    sys.exit(1)
-
-# Import the app
-from y_server import app
-
-# Configure the app with settings from config file
-app.config['perspective_api'] = config.get('perspective_api', False)
-app.config['sentiment_annotation'] = config.get('sentiment_annotation', False)
-app.config['emotion_annotation'] = config.get('emotion_annotation', False)
-
-# Export app for gunicorn
-application = app
-'''
-
-    wrapper_created = False
-    try:
-        with open(wrapper_script, "w") as f:
-            f.write(wrapper_content)
-        os.chmod(wrapper_script, 0o600)  # Restrict permissions to owner only
-        wrapper_created = True
-    except Exception as e:
-        print(
-            f"Error: Could not create gunicorn wrapper script at {wrapper_script}: {e}"
-        )
-
-    # Use the wrapper module for gunicorn if created, otherwise fall back to y_server:app
-    if wrapper_created:
-        module_name = "_gunicorn_wrapper:application"
-    else:
-        print("Warning: Using y_server:app directly without config initialization")
-        module_name = "y_server:app"
-
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
-    # Gunicorn command arguments (shared across all command constructions)
+    # Build the gunicorn command: gunicorn -c gunicorn_config.py wsgi:app
+    # The gunicorn_config.py file reads configuration from the config file
     gunicorn_args = [
-        module_name,
-        "--bind",
-        f"{exp.server}:{exp.port}",
-        "--workers",
-        "1",
-        "--timeout",
-        "120",
+        "-c",
+        "gunicorn_config.py",
+        "wsgi:app",
     ]
 
     # Build the gunicorn command
@@ -570,6 +509,7 @@ application = app
     print(f"Config file: {config}")
 
     # Set environment variable for config file path
+    # The gunicorn_config.py reads this to configure the server
     env = os.environ.copy()
     env["YSERVER_CONFIG"] = config
 
