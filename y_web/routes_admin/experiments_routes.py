@@ -26,7 +26,6 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from traitlets import Instance
 
 from y_web import db  # , app
 from y_web.models import (

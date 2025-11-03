@@ -213,6 +213,62 @@ def cleanup_db_jupyter_with_new_app():
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 
+def run_migrations(db_type):
+    """
+    Run database schema migrations.
+
+    Adds missing columns to existing databases to match the current schema.
+    This function is called during application startup to ensure the database
+    is up-to-date with the latest schema changes.
+
+    Args:
+        db_type: Database type ("sqlite" or "postgresql")
+    """
+    from sqlalchemy import create_engine, inspect, text
+
+    if db_type == "sqlite":
+        # Check and add llm_agents_enabled column if missing
+        db_path = f"{BASE_DIR}/db/dashboard.db"
+        engine = create_engine(f"sqlite:///{db_path}")
+        inspector = inspect(engine)
+
+        # Check if exps table has llm_agents_enabled column
+        columns = [col["name"] for col in inspector.get_columns("exps")]
+        if "llm_agents_enabled" not in columns:
+            with engine.connect() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE exps ADD COLUMN llm_agents_enabled INTEGER DEFAULT 1 NOT NULL"
+                    )
+                )
+                conn.commit()
+                print("Added llm_agents_enabled column to exps table (SQLite)")
+
+    elif db_type == "postgresql":
+        # Get PostgreSQL connection details from environment
+        user = os.getenv("PG_USER", "postgres")
+        password = os.getenv("PG_PASSWORD", "password")
+        host = os.getenv("PG_HOST", "localhost")
+        port = os.getenv("PG_PORT", "5432")
+        dbname = os.getenv("PG_DBNAME", "dashboard")
+
+        db_uri = f"postgresql://{user}:{password}@{host}:{port}/{dbname}"
+        engine = create_engine(db_uri)
+        inspector = inspect(engine)
+
+        # Check if exps table has llm_agents_enabled column
+        columns = [col["name"] for col in inspector.get_columns("exps")]
+        if "llm_agents_enabled" not in columns:
+            with engine.connect() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE exps ADD COLUMN llm_agents_enabled BOOLEAN DEFAULT TRUE NOT NULL"
+                    )
+                )
+                conn.commit()
+                print("Added llm_agents_enabled column to exps table (PostgreSQL)")
+
+
 def create_app(db_type="sqlite"):
     """
     Create and configure the Flask application (factory pattern).
@@ -332,6 +388,10 @@ def create_app(db_type="sqlite"):
             except Exception:
                 pass
         return dict(current_user_role=None, current_user_id=None)
+
+    # Run database migrations
+    with app.app_context():
+        run_migrations(db_type)
 
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)
