@@ -471,9 +471,12 @@ def start_server(exp):
 
     # Build the gunicorn command: gunicorn -c gunicorn_config.py wsgi:app
     # The gunicorn_config.py file reads configuration from the config file
+    # We also pass bind address explicitly to ensure proper binding
     gunicorn_args = [
         "-c",
         "gunicorn_config.py",
+        "--bind",
+        f"{exp.server}:{exp.port}",
         "wsgi:app",
     ]
 
