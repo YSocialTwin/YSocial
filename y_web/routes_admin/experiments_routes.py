@@ -693,6 +693,9 @@ def create_experiment():
     # Use current logged-in user as owner
     owner = current_user.username
 
+    # Get LLM agents setting
+    llm_agents_enabled = request.form.get("llm_agents_enabled") == "true"
+
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
     perspective_api = (
@@ -860,6 +863,7 @@ def create_experiment():
         port=int(port),
         server=host,
         annotations=annotations,
+        llm_agents_enabled=llm_agents_enabled,
     )
 
     db.session.add(exp)

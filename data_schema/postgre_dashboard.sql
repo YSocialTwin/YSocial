@@ -54,18 +54,19 @@ CREATE TABLE education (
 );
 
 CREATE TABLE exps (
-    idexp         SERIAL PRIMARY KEY,
-    exp_name      TEXT,
-    db_name       TEXT,
-    owner         TEXT,
-    exp_descr     TEXT,
-    status        INTEGER DEFAULT 0,
-    running       INTEGER DEFAULT 0 NOT NULL,
-    port          INTEGER NOT NULL,
-    server        TEXT DEFAULT '127.0.0.1',
-    platform_type TEXT DEFAULT 'microblogging',
-    annotations   TEXT NOT NULL DEFAULT '',
-    server_pid    INTEGER DEFAULT NULL
+    idexp              SERIAL PRIMARY KEY,
+    exp_name           TEXT,
+    db_name            TEXT,
+    owner              TEXT,
+    exp_descr          TEXT,
+    status             INTEGER DEFAULT 0,
+    running            INTEGER DEFAULT 0 NOT NULL,
+    port               INTEGER NOT NULL,
+    server             TEXT DEFAULT '127.0.0.1',
+    platform_type      TEXT DEFAULT 'microblogging',
+    annotations        TEXT NOT NULL DEFAULT '',
+    server_pid         INTEGER DEFAULT NULL,
+    llm_agents_enabled BOOLEAN DEFAULT TRUE NOT NULL
 );
 
 CREATE TABLE exp_stats (
