@@ -432,11 +432,12 @@ def get_server_process_status(exp_id):
 
 def start_server(exp):
     """
-    Start the y_server using gunicorn via subprocess.Popen.
+    Start the y_server using subprocess.Popen.
 
-    This function launches a server process for an experiment using gunicorn
-    WSGI server. The process PID is stored in the database for later management
-    and graceful termination.
+    This function launches a server process for an experiment. For PostgreSQL databases,
+    it uses gunicorn WSGI server. For SQLite databases, it uses the standard Python
+    execution. The process PID is stored in the database for later management and
+    graceful termination.
 
     Args:
         exp: the experiment object
@@ -458,154 +459,213 @@ def start_server(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    # Determine the server directory based on platform type
+    # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
         server_dir = f"{yserver_path}external{os.sep}YServer"
+        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
     elif exp.platform_type == "forum":
         server_dir = f"{yserver_path}external{os.sep}YServerReddit"
+        script_path = (
+            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+        )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+
+    # Check database type to decide whether to use gunicorn or direct Python
+    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
+    use_gunicorn = db_uri_main.startswith("postgresql")
 
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
-    # Build the gunicorn command with explicit parameters
-    # Use absolute path to gunicorn_config.py to avoid path issues
-    gunicorn_config_path = f"{server_dir}{os.sep}gunicorn_config.py"
+    if use_gunicorn:
+        # Use gunicorn for PostgreSQL
+        print(f"Starting server for experiment {exp_uid} with gunicorn (PostgreSQL)...")
 
-    gunicorn_args = [
-        "-c",
-        gunicorn_config_path,
-        "--bind",
-        f"{exp.server}:{exp.port}",
-        "--chdir",
-        server_dir,  # Set working directory for the app
-        "wsgi:app",
-    ]
+        # Build the gunicorn command with explicit parameters
+        gunicorn_config_path = f"{server_dir}{os.sep}gunicorn_config.py"
 
-    # Build the gunicorn command
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not python_cmd.startswith("/")
-    ):
-        # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        # Replace 'python' with 'gunicorn' in pipenv run scenarios
-        if cmd_parts[-1] == "python":
-            cmd_parts[-1] = "gunicorn"
-        cmd = cmd_parts + gunicorn_args
-    else:
-        # Try to find gunicorn in the same directory as python
-        gunicorn_path = Path(python_cmd).parent / "gunicorn"
-        if gunicorn_path.exists():
-            cmd = [str(gunicorn_path)] + gunicorn_args
+        gunicorn_args = [
+            "-c",
+            gunicorn_config_path,
+            "--bind",
+            f"{exp.server}:{exp.port}",
+            "--chdir",
+            server_dir,  # Set working directory for the app
+            "wsgi:app",
+        ]
+
+        # Build the gunicorn command
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not python_cmd.startswith("/")
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            # Replace 'python' with 'gunicorn' in pipenv run scenarios
+            if cmd_parts[-1] == "python":
+                cmd_parts[-1] = "gunicorn"
+            cmd = cmd_parts + gunicorn_args
         else:
-            # Fallback to system gunicorn
-            gunicorn_which = shutil.which("gunicorn")
-            if gunicorn_which:
-                cmd = [gunicorn_which] + gunicorn_args
+            # Try to find gunicorn in the same directory as python
+            gunicorn_path = Path(python_cmd).parent / "gunicorn"
+            if gunicorn_path.exists():
+                cmd = [str(gunicorn_path)] + gunicorn_args
             else:
-                # Last resort: try 'gunicorn' and let subprocess fail if not found
-                cmd = ["gunicorn"] + gunicorn_args
+                # Fallback to system gunicorn
+                gunicorn_which = shutil.which("gunicorn")
+                if gunicorn_which:
+                    cmd = [gunicorn_which] + gunicorn_args
+                else:
+                    # Last resort: try 'gunicorn' and let subprocess fail if not found
+                    cmd = ["gunicorn"] + gunicorn_args
 
-    print(f"Starting server for experiment {exp_uid} with gunicorn...")
+        # Set environment variable for config file path
+        env = os.environ.copy()
+        env["YSERVER_CONFIG"] = config
+
+        try:
+            # Start the process with Popen
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+                env=env,  # Pass environment with config path
+            )
+            print(f"Server process started with PID: {process.pid}")
+        except Exception as e:
+            # Fallback: try to use gunicorn from system path
+            print(f"Error starting server process: {e}")
+            gunicorn_which = shutil.which("gunicorn")
+            fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
+            process = subprocess.Popen(
+                fallback_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+                env=env,
+            )
+    else:
+        # Use standard Python execution for SQLite
+        print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
+
+        # Build the command as a list for subprocess.Popen
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not python_cmd.startswith("/")
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            cmd = cmd_parts + [script_path, "-c", config]
+        else:
+            # Simple python executable path
+            cmd = [python_cmd, script_path, "-c", config]
+
+        try:
+            # Start the process with Popen
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+            )
+            print(f"Server process started with PID: {process.pid}")
+        except Exception as e:
+            # Fallback: try to use the current Python implicitly
+            print(f"Error starting server process: {e}")
+            cmd = [sys.executable, script_path, "-c", config]
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+            )
+
     print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
-
-    # Set environment variable for config file path
-    # The gunicorn_config.py reads this to configure the server
-    env = os.environ.copy()
-    env["YSERVER_CONFIG"] = config
-
-    try:
-        # Start the process with Popen
-        # Don't set cwd here - let gunicorn's --chdir handle it
-        # This ensures database paths work correctly
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            start_new_session=True,  # Detach from parent process group
-            env=env,  # Pass environment with config path
-        )
-
-        print(f"Server process started with PID: {process.pid}")
-
-    except Exception as e:
-        # Fallback: try to use gunicorn from system path
-        print(f"Error starting server process: {e}")
-        gunicorn_which = shutil.which("gunicorn")
-        fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
-        process = subprocess.Popen(
-            fallback_cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            start_new_session=True,  # Detach from parent process group
-            env=env,
-        )
 
     # Save the PID to the database for persistent tracking
     exp.server_pid = process.pid
     db.session.commit()
 
-    # identify the db to be set
-    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
-
+    # Identify the database URI to be set
     db_type = "sqlite"
     if db_uri_main.startswith("postgresql"):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
 
     print(f"Database URI: {db_uri}")
 
-    # Wait for the server to start and be ready to accept connections
-    # Retry logic to handle gunicorn startup time
-    max_retries = 5
-    retry_delay = 5
+    # Wait for the server to start and configure database
+    if use_gunicorn:
+        # For gunicorn (PostgreSQL), use health check and retry logic
+        max_retries = 5
+        retry_delay = 5
 
-    for attempt in range(max_retries):
-        time.sleep(retry_delay)
+        for attempt in range(max_retries):
+            time.sleep(retry_delay)
 
-        try:
-            # Check if server is responding
-            health_check_url = f"http://{exp.server}:{exp.port}/"
-            response = requests.get(health_check_url, timeout=5)
-            print(f"Server is ready (attempt {attempt + 1}/{max_retries})")
-            break
-        except Exception as e:
-            print(f"Server not ready yet (attempt {attempt + 1}/{max_retries}): {e}")
-            if attempt == max_retries - 1:
-                print("Warning: Server may not be fully started, proceeding anyway")
-
-    # Now call change_db endpoint with retry logic
-    data = {"path": f"{db_uri}"}
-    headers = {"Content-Type": "application/json"}
-    ns = f"http://{exp.server}:{exp.port}/change_db"
-
-    for attempt in range(3):
-        try:
-            response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
-            if response.status_code == 200:
-                print("Database configuration successful")
+            try:
+                # Check if server is responding
+                health_check_url = f"http://{exp.server}:{exp.port}/"
+                response = requests.get(health_check_url, timeout=5)
+                print(f"Server is ready (attempt {attempt + 1}/{max_retries})")
                 break
-            else:
+            except Exception as e:
                 print(
-                    f"Database configuration returned status {response.status_code}: {response.text}"
+                    f"Server not ready yet (attempt {attempt + 1}/{max_retries}): {e}"
                 )
+                if attempt == max_retries - 1:
+                    print("Warning: Server may not be fully started, proceeding anyway")
+
+        # Now call change_db endpoint with retry logic
+        data = {"path": f"{db_uri}"}
+        headers = {"Content-Type": "application/json"}
+        ns = f"http://{exp.server}:{exp.port}/change_db"
+
+        for attempt in range(3):
+            try:
+                response = post(
+                    f"{ns}", headers=headers, data=json.dumps(data), timeout=30
+                )
+                if response.status_code == 200:
+                    print("Database configuration successful")
+                    break
+                else:
+                    print(
+                        f"Database configuration returned status {response.status_code}: {response.text}"
+                    )
+            except Exception as e:
+                print(f"Error calling change_db (attempt {attempt + 1}/3): {e}")
+                if attempt < 2:
+                    time.sleep(5)
+                else:
+                    print(
+                        "Warning: Could not configure database via change_db endpoint"
+                    )
+    else:
+        # For standard Python (SQLite), use simple wait and single call
+        time.sleep(20)
+        data = {"path": f"{db_uri}"}
+        headers = {"Content-Type": "application/json"}
+        ns = f"http://{exp.server}:{exp.port}/change_db"
+        try:
+            post(f"{ns}", headers=headers, data=json.dumps(data))
+            print("Database configuration successful")
         except Exception as e:
-            print(f"Error calling change_db (attempt {attempt + 1}/3): {e}")
-            if attempt < 2:
-                time.sleep(5)
-            else:
-                print("Warning: Could not configure database via change_db endpoint")
+            print(f"Warning: Could not configure database: {e}")
 
     return process
 
