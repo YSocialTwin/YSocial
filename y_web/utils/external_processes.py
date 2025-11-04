@@ -566,12 +566,46 @@ def start_server(exp):
 
     print(f"Database URI: {db_uri}")
 
-    # Wait for the server to start
-    time.sleep(20)
+    # Wait for the server to start and be ready to accept connections
+    # Retry logic to handle gunicorn startup time
+    max_retries = 5
+    retry_delay = 5
+
+    for attempt in range(max_retries):
+        time.sleep(retry_delay)
+
+        try:
+            # Check if server is responding
+            health_check_url = f"http://{exp.server}:{exp.port}/"
+            response = requests.get(health_check_url, timeout=5)
+            print(f"Server is ready (attempt {attempt + 1}/{max_retries})")
+            break
+        except Exception as e:
+            print(f"Server not ready yet (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt == max_retries - 1:
+                print("Warning: Server may not be fully started, proceeding anyway")
+
+    # Now call change_db endpoint with retry logic
     data = {"path": f"{db_uri}"}
     headers = {"Content-Type": "application/json"}
     ns = f"http://{exp.server}:{exp.port}/change_db"
-    post(f"{ns}", headers=headers, data=json.dumps(data))
+
+    for attempt in range(3):
+        try:
+            response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
+            if response.status_code == 200:
+                print("Database configuration successful")
+                break
+            else:
+                print(
+                    f"Database configuration returned status {response.status_code}: {response.text}"
+                )
+        except Exception as e:
+            print(f"Error calling change_db (attempt {attempt + 1}/3): {e}")
+            if attempt < 2:
+                time.sleep(5)
+            else:
+                print("Warning: Could not configure database via change_db endpoint")
 
     return process
 
