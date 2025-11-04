@@ -631,14 +631,14 @@ def start_server(exp):
                     print("Warning: Server may not be fully started, proceeding anyway")
 
         # Now call change_db endpoint with retry logic
-        #data = {"path": f"{db_uri}"}
-        #headers = {"Content-Type": "application/json"}
-        #ns = f"http://{exp.server}:{exp.port}/change_db"
-        #time.sleep(20)
-        #response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
-        #if response.status_code == 200:
+        # data = {"path": f"{db_uri}"}
+        # headers = {"Content-Type": "application/json"}
+        # ns = f"http://{exp.server}:{exp.port}/change_db"
+        # time.sleep(20)
+        # response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
+        # if response.status_code == 200:
         #    print("Database configuration successful")
-        #else:
+        # else:
         #    print(f"Database configuration returned status {response.status_code}: {response.text}")
 
     else:
