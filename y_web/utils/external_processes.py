@@ -435,8 +435,8 @@ def start_server(exp):
     Start the y_server using gunicorn via subprocess.Popen.
 
     This function launches a server process for an experiment using gunicorn
-    WSGI server with the gunicorn_config.py configuration file. The process PID
-    is stored in the database for later management and graceful termination.
+    WSGI server. The process PID is stored in the database for later management
+    and graceful termination.
 
     Args:
         exp: the experiment object
@@ -469,16 +469,18 @@ def start_server(exp):
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
-    # Build the gunicorn command: gunicorn -c gunicorn_config.py wsgi:app
-    # The gunicorn_config.py file reads configuration from the config file
-    # We also pass bind address explicitly to ensure proper binding
+    # Build the gunicorn command with explicit parameters
+    # Use absolute path to gunicorn_config.py to avoid path issues
+    gunicorn_config_path = f"{server_dir}{os.sep}gunicorn_config.py"
+
     gunicorn_args = [
         "-c",
-        "gunicorn_config.py",
+        gunicorn_config_path,
         "--bind",
         f"{exp.server}:{exp.port}",
+        "--chdir",
+        server_dir,  # Set working directory for the app
         "wsgi:app",
-        "--capture-output",
     ]
 
     # Build the gunicorn command
@@ -509,7 +511,6 @@ def start_server(exp):
 
     print(f"Starting server for experiment {exp_uid} with gunicorn...")
     print(f"Command: {' '.join(cmd)}")
-    print(f"Working directory: {server_dir}")
     print(f"Config file: {config}")
 
     # Set environment variable for config file path
@@ -519,13 +520,14 @@ def start_server(exp):
 
     try:
         # Start the process with Popen
+        # Don't set cwd here - let gunicorn's --chdir handle it
+        # This ensures database paths work correctly
         process = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
             start_new_session=True,  # Detach from parent process group
-            cwd=server_dir,  # Run from server directory
             env=env,  # Pass environment with config path
         )
 
@@ -542,7 +544,6 @@ def start_server(exp):
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
             start_new_session=True,  # Detach from parent process group
-            cwd=server_dir,
             env=env,
         )
 
