@@ -603,8 +603,8 @@ def upload_experiment():
 
         client_exec = Client_Execution(
             client_id=cl.id,
-            last_active_hour=0,
-            last_active_day=0,
+            last_active_hour=-1,
+            last_active_day=-1,
             expected_duration_rounds=cl.days * client["simulation"]["slots"],
         )
         db.session.add(client_exec)
