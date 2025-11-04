@@ -631,30 +631,16 @@ def start_server(exp):
                     print("Warning: Server may not be fully started, proceeding anyway")
 
         # Now call change_db endpoint with retry logic
-        data = {"path": f"{db_uri}"}
-        headers = {"Content-Type": "application/json"}
-        ns = f"http://{exp.server}:{exp.port}/change_db"
+        #data = {"path": f"{db_uri}"}
+        #headers = {"Content-Type": "application/json"}
+        #ns = f"http://{exp.server}:{exp.port}/change_db"
+        #time.sleep(20)
+        #response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
+        #if response.status_code == 200:
+        #    print("Database configuration successful")
+        #else:
+        #    print(f"Database configuration returned status {response.status_code}: {response.text}")
 
-        for attempt in range(3):
-            try:
-                response = post(
-                    f"{ns}", headers=headers, data=json.dumps(data), timeout=30
-                )
-                if response.status_code == 200:
-                    print("Database configuration successful")
-                    break
-                else:
-                    print(
-                        f"Database configuration returned status {response.status_code}: {response.text}"
-                    )
-            except Exception as e:
-                print(f"Error calling change_db (attempt {attempt + 1}/3): {e}")
-                if attempt < 2:
-                    time.sleep(5)
-                else:
-                    print(
-                        "Warning: Could not configure database via change_db endpoint"
-                    )
     else:
         # For standard Python (SQLite), use simple wait and single call
         time.sleep(20)
