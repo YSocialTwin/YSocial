@@ -28,7 +28,7 @@ CREATE TABLE exps (
     db_name            TEXT,
     owner              TEXT,
     exp_descr          TEXT,
-    status             INTEGER DEFAULT 0,
+    status             INTEGER DEFAULT 0 NOT NULL,
     running            INTEGER DEFAULT 0 NOT NULL,
     port               INTEGER NOT NULL,
     server             TEXT DEFAULT '127.0.0.1',
@@ -188,9 +188,9 @@ CREATE TABLE client_execution (
     id                       SERIAL PRIMARY KEY,
     elapsed_time             INTEGER DEFAULT 0 NOT NULL,
     client_id                INTEGER NOT NULL REFERENCES client(id) ON DELETE CASCADE,
-    expected_duration_rounds INTEGER NOT NULL,
-    last_active_hour         INTEGER NOT NULL,
-    last_active_day          INTEGER NOT NULL
+    expected_duration_rounds INTEGER DEFAULT 0 NOT NULL,
+    last_active_hour         INTEGER DEFAULT -1 NOT NULL,
+    last_active_day          INTEGER DEFAULT -1 NOT NULL
 );
 
 -- -----------------------------
