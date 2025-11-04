@@ -84,10 +84,11 @@ CREATE TABLE "exps" (
    
 2. **Status default:** Model has `nullable=False` without default, schema has `DEFAULT 0`
 
-**Solution:**
-Either:
-1. Change model to use `db.Integer` instead of `db.Boolean`, OR
-2. Change schema to use `BOOLEAN` instead of `INTEGER`
+**Solution (IMPLEMENTED):**
+Changed model to use `db.Integer` instead of `db.Boolean` for cross-database compatibility:
+- Model: `llm_agents_enabled = db.Column(db.Integer, nullable=False, default=1)`
+- Form handling: Convert boolean to integer (1/0) when creating experiments
+- This ensures compatibility with both SQLite and PostgreSQL
 
 ### 3. **population_activity_profile Table**
 

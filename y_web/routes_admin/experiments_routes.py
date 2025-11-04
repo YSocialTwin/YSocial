@@ -692,8 +692,8 @@ def create_experiment():
     # Use current logged-in user as owner
     owner = current_user.username
 
-    # Get LLM agents setting
-    llm_agents_enabled = request.form.get("llm_agents_enabled") == "true"
+    # Get LLM agents setting (convert to integer for database compatibility)
+    llm_agents_enabled = 1 if request.form.get("llm_agents_enabled") == "true" else 0
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
