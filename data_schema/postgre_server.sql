@@ -69,7 +69,7 @@ CREATE TABLE follow (
     user_id     INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
     follower_id INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
     action      TEXT,
-    round       INTEGER REFERENCES rounds(id) ON DELETE CASCADE
+    round       INTEGER
 );
 
 CREATE TABLE recommendations (

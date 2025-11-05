@@ -1128,11 +1128,9 @@ def start_client_process(exp, cli, population, resume=True):
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
         if ce:
-            # if not resume:
-            #    ce.elapsed_time = 0
-            #    ce.expected_duration_rounds = cli.days * 24
             first_run = False
         else:
+            print(f"Client {cli.name} first execution.")
             first_run = True
             ce = Client_Execution(
                 client_id=cli.id,
