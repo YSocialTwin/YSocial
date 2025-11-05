@@ -8,10 +8,11 @@ from idlelib.replace import replace
 from pathlib import Path
 
 import psutil
+from flask import current_app
 
 from y_web import db
 from y_web.models import Exps, Jupyter_instances
-from flask import current_app
+
 
 def find_free_port(start_port=8889):
     """Find the next free port starting from start_port."""
@@ -246,7 +247,9 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         sqlite = True
     else:
         name = exp.db_name
-        db_name = current_app.config["SQLALCHEMY_DATABASE_URI"].replace("dashboard", name)
+        db_name = current_app.config["SQLALCHEMY_DATABASE_URI"].replace(
+            "dashboard", name
+        )
         sqlite = False
 
     # Prepare environment
