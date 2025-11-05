@@ -1331,10 +1331,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
             # update client execution object
             ce = Client_Execution.query.filter_by(client_id=cli_id).first()
-            ce.elapsed_time += 1
-            ce.last_active_hour = h
-            ce.last_active_day = d
-            db.session.commit()
+            if ce:
+                ce.elapsed_time += 1
+                ce.last_active_hour = h
+                ce.last_active_day = d
+                db.session.add(ce)  # Explicitly mark as modified for PostgreSQL
+                db.session.commit()
 
         # evaluate follows (once per day, only for a random sample of daily active agents)
         if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
