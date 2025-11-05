@@ -1125,8 +1125,11 @@ def start_client_process(exp, cli, population, resume=True):
             open(f"{data_base_path}client_{cli.name}-{population.name}.json")
         )
 
+        print("Starting client process...")
+
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
+        print(f"Client {cli.name} execution record: {ce}")
         if ce:
             first_run = False
         else:

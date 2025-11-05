@@ -972,6 +972,9 @@ def delete_simulation(exp_id):
             db.session.query(Client_Execution).filter_by(client_id=cid).delete()
             db.session.commit()
 
+            db.session.query(Client).filter_by(id=cid).delete()
+            db.session.commit()
+
         # delete experiment topics
         db.session.query(Exp_Topic).filter_by(exp_id=exp_id).delete()
         db.session.commit()
