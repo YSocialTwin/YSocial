@@ -4,13 +4,14 @@ import signal
 import subprocess
 import sys
 import time
+from idlelib.replace import replace
 from pathlib import Path
 
 import psutil
 
 from y_web import db
 from y_web.models import Exps, Jupyter_instances
-
+from flask import current_app
 
 def find_free_port(start_port=8889):
     """Find the next free port starting from start_port."""
@@ -242,8 +243,11 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
 
     if "database_server.db" in exp.db_name:
         db_name = f"y_web{os.sep}{exp.db_name}"  # SQLite path
+        sqlite = True
     else:
-        db_name = f"postgresql://postgresql:password@localhost:5432/{exp.db_name}"  # PostgreSQL connection string
+        name = exp.db_name
+        db_name = current_app.config["SQLALCHEMY_DATABASE_URI"].replace("dashboard", name)
+        sqlite = False
 
     # Prepare environment
     env = os.environ.copy()
@@ -254,7 +258,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             "JUPYTER_CONFIG_DIR": str(Path.home() / ".jupyter"),
             "XDG_RUNTIME_DIR": "/tmp",
             "PATH": os.environ.get("PATH", ""),
-            "DB": str(os.path.abspath(db_name)),
+            "DB": str(os.path.abspath(db_name)) if sqlite else db_name,
         }
     )
 
