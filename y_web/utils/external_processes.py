@@ -1063,13 +1063,7 @@ def start_client(exp, cli, population, resume=True):
 
     process = Process(
         target=start_client_process,
-        args=(
-            exp,
-            cli,
-            population,
-            resume,
-            db_type
-        ),
+        args=(exp, cli, population, resume, db_type),
     )
     process.start()
 
