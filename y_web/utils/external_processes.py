@@ -1057,6 +1057,10 @@ def terminate_client(cli, pause=False):
 
 def start_client(exp, cli, population, resume=True):
     """Handle start client operation."""
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
     process = Process(
         target=start_client_process,
         args=(
@@ -1064,6 +1068,7 @@ def start_client(exp, cli, population, resume=True):
             cli,
             population,
             resume,
+            db_type
         ),
     )
     process.start()
@@ -1074,7 +1079,7 @@ def start_client(exp, cli, population, resume=True):
     print(f"Client process started with PID: {process.pid}")
 
 
-def start_client_process(exp, cli, population, resume=True):
+def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     """
     Initialize and start client simulation process.
 
@@ -1091,7 +1096,7 @@ def start_client_process(exp, cli, population, resume=True):
     from y_web import create_app, db
     from y_web.models import Client_Execution
 
-    app = create_app()  # create app instance for this subprocess
+    app = create_app(db_type)  # create app instance for this subprocess
 
     with app.app_context():
         yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
