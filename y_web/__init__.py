@@ -222,19 +222,21 @@ def cleanup_db_jupyter_with_new_app():
             # Create a fresh app instance (use same DB_TYPE env var)
             from y_web import create_app
 
-            app = create_app(os.getenv("DB_TYPE", "sqlite"))
-            with app.app_context():
-                from y_web.utils.jupyter_utils import stop_all_jupyter_instances
-                from y_web.utils.external_processes import stop_all_exps
-                from y_web import db
+            # close both
+            for dbms in ["sqlite", "postgresql"]:
+                app = create_app(dbms)
+                with app.app_context():
+                    from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+                    from y_web.utils.external_processes import stop_all_exps
+                    from y_web import db
 
-                stop_all_jupyter_instances()
-                stop_all_exps()
-                
-                # For PostgreSQL, ensure changes are committed by explicitly closing the session
-                db.session.commit()
-                db.session.close()
-                print("Database session committed and closed successfully (new context)")
+                    stop_all_jupyter_instances()
+                    stop_all_exps()
+
+                    # For PostgreSQL, ensure changes are committed by explicitly closing the session
+                    db.session.commit()
+                    db.session.close()
+                    print("Database session committed and closed successfully (new context)")
 
     except Exception as e:
         print("Error during DB cleanup with fresh app:", e)
