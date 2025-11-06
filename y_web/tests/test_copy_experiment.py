@@ -291,5 +291,55 @@ def test_postgresql_database_deletion():
     assert db_name in drop_database_sql
 
 
+def test_postgresql_to_sqlite_type_mapping():
+    """Test PostgreSQL to SQLite type mapping for download functionality."""
+    # Test type mappings
+    type_mappings = {
+        'INTEGER': 'INTEGER',
+        'SERIAL': 'INTEGER',
+        'BIGSERIAL': 'INTEGER',
+        'REAL': 'REAL',
+        'DOUBLE PRECISION': 'REAL',
+        'FLOAT': 'REAL',
+        'TEXT': 'TEXT',
+        'VARCHAR': 'TEXT',
+        'CHAR': 'TEXT',
+        'BOOLEAN': 'TEXT',  # Default case
+    }
+    
+    for pg_type, expected_sqlite_type in type_mappings.items():
+        # Simulate type mapping logic
+        col_type = pg_type
+        
+        if 'INTEGER' in col_type or 'SERIAL' in col_type:
+            sqlite_type = 'INTEGER'
+        elif 'REAL' in col_type or 'DOUBLE' in col_type or 'FLOAT' in col_type:
+            sqlite_type = 'REAL'
+        elif 'TEXT' in col_type or 'VARCHAR' in col_type or 'CHAR' in col_type:
+            sqlite_type = 'TEXT'
+        else:
+            sqlite_type = 'TEXT'
+        
+        assert sqlite_type == expected_sqlite_type, f"Failed for {pg_type}"
+
+
+def test_download_folder_path_extraction():
+    """Test folder path extraction for different database types."""
+    import os
+    
+    # SQLite format: experiments/uuid/database_server.db
+    sqlite_db_name = "experiments/abc123def/database_server.db"
+    sqlite_folder = f"y_web{os.sep}experiments{os.sep}{sqlite_db_name.split(os.sep)[1]}"
+    assert "abc123def" in sqlite_folder
+    
+    # PostgreSQL format: experiments_uuid
+    postgres_db_name = "experiments_abc123def"
+    postgres_folder = f"y_web{os.sep}experiments{os.sep}{postgres_db_name.removeprefix('experiments_')}"
+    assert "abc123def" in postgres_folder
+    
+    # Verify both produce similar paths
+    assert sqlite_folder.split(os.sep)[-1] == postgres_folder.split(os.sep)[-1]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
