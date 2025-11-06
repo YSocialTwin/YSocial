@@ -929,25 +929,26 @@ def delete_simulation(exp_id):
                 f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
                 ignore_errors=True,
             )
-            
+
             # Drop the PostgreSQL database
             try:
                 from urllib.parse import urlparse
+
                 from sqlalchemy import create_engine, text
-                
+
                 current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
                 parsed_uri = urlparse(current_uri)
-                
+
                 user = parsed_uri.username or "postgres"
                 password = parsed_uri.password or "password"
                 host = parsed_uri.hostname or "localhost"
                 port_db = parsed_uri.port or 5432
-                
+
                 # Connect to postgres database
                 admin_engine = create_engine(
                     f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
                 )
-                
+
                 # Drop the database if it exists
                 with admin_engine.connect().execution_options(
                     isolation_level="AUTOCOMMIT"
@@ -962,15 +963,17 @@ def delete_simulation(exp_id):
                             AND pid <> pg_backend_pid()
                             """
                         ),
-                        {"dbname": exp.db_name}
+                        {"dbname": exp.db_name},
                     )
                     # Drop the database
                     conn.execute(text(f'DROP DATABASE IF EXISTS "{exp.db_name}"'))
-                
+
                 admin_engine.dispose()
             except Exception as e:
                 # Log error but continue with deletion
-                current_app.logger.error(f"Error dropping PostgreSQL database: {str(e)}", exc_info=True)
+                current_app.logger.error(
+                    f"Error dropping PostgreSQL database: {str(e)}", exc_info=True
+                )
 
         # delete the experiment
         db.session.delete(exp)
@@ -1656,7 +1659,7 @@ def update_prompts(uid):
 @login_required
 def download_experiment_file(eid):
     """Download experiment file.
-    
+
     For SQLite: Downloads experiment folder as-is with the database file.
     For PostgreSQL: Creates an SQLite copy of the PostgreSQL database first,
     then downloads the experiment folder with the SQLite copy.
@@ -1665,104 +1668,120 @@ def download_experiment_file(eid):
 
     # get experiment details
     experiment = Exps.query.filter_by(idexp=eid).first()
-    
+
     # Determine database type
     db_type = "sqlite"
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
-    
+
     # Get folder path based on database type
     if db_type == "sqlite":
-        folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+        folder = (
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+        )
     else:
         # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
         folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}"
-    
+
     # For PostgreSQL, create an SQLite copy of the database
     if db_type == "postgresql":
         try:
-            from urllib.parse import urlparse
-            from sqlalchemy import create_engine, inspect
             import sqlite3
-            
+            from urllib.parse import urlparse
+
+            from sqlalchemy import create_engine, inspect
+
             # Connect to PostgreSQL database
             current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
             parsed_uri = urlparse(current_uri)
-            
+
             user = parsed_uri.username or "postgres"
             password = parsed_uri.password or "password"
             host = parsed_uri.hostname or "localhost"
             port_db = parsed_uri.port or 5432
-            
-            pg_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
+
+            pg_uri = (
+                f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
+            )
             pg_engine = create_engine(pg_uri)
-            
+
             # Create SQLite database in the experiment folder
             sqlite_path = os.path.join(folder, "database_server.db")
             sqlite_uri = f"sqlite:///{sqlite_path}"
             sqlite_engine = create_engine(sqlite_uri)
-            
+
             # Get inspector for PostgreSQL database
             inspector = inspect(pg_engine)
-            
+
             # Copy all tables from PostgreSQL to SQLite
             # Use raw connection for SQLite to handle parameter binding correctly
             with pg_engine.connect() as pg_conn:
                 from sqlalchemy import text
-                
+
                 # Get all table names
                 table_names = inspector.get_table_names()
-                
+
                 # Get raw SQLite connection
                 sqlite_raw_conn = sqlite3.connect(sqlite_path)
                 sqlite_cursor = sqlite_raw_conn.cursor()
-                
+
                 for table_name in table_names:
                     # Read from PostgreSQL using text()
                     result = pg_conn.execute(text(f"SELECT * FROM {table_name}"))
                     rows = result.fetchall()
                     columns = result.keys()
-                    
+
                     if rows:
                         # Create table in SQLite if it doesn't exist
                         # Get column definitions from PostgreSQL
                         pg_columns = inspector.get_columns(table_name)
                         col_defs = []
                         for col in pg_columns:
-                            col_type = str(col['type'])
+                            col_type = str(col["type"])
                             # Map PostgreSQL types to SQLite types
-                            if 'INTEGER' in col_type or 'SERIAL' in col_type:
-                                sqlite_type = 'INTEGER'
-                            elif 'REAL' in col_type or 'DOUBLE' in col_type or 'FLOAT' in col_type:
-                                sqlite_type = 'REAL'
-                            elif 'TEXT' in col_type or 'VARCHAR' in col_type or 'CHAR' in col_type:
-                                sqlite_type = 'TEXT'
+                            if "INTEGER" in col_type or "SERIAL" in col_type:
+                                sqlite_type = "INTEGER"
+                            elif (
+                                "REAL" in col_type
+                                or "DOUBLE" in col_type
+                                or "FLOAT" in col_type
+                            ):
+                                sqlite_type = "REAL"
+                            elif (
+                                "TEXT" in col_type
+                                or "VARCHAR" in col_type
+                                or "CHAR" in col_type
+                            ):
+                                sqlite_type = "TEXT"
                             else:
-                                sqlite_type = 'TEXT'
-                            
+                                sqlite_type = "TEXT"
+
                             col_defs.append(f"{col['name']} {sqlite_type}")
-                        
+
                         create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
                         sqlite_cursor.execute(create_table_sql)
-                        
+
                         # Insert data into SQLite using raw connection
-                        placeholders = ', '.join(['?' for _ in columns])
+                        placeholders = ", ".join(["?" for _ in columns])
                         insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-                        
+
                         for row in rows:
                             sqlite_cursor.execute(insert_sql, tuple(row))
-                
+
                 sqlite_raw_conn.commit()
                 sqlite_raw_conn.close()
-            
+
             pg_engine.dispose()
             sqlite_engine.dispose()
-            
+
         except Exception as e:
-            current_app.logger.error(f"Error creating SQLite copy of PostgreSQL database: {str(e)}", exc_info=True)
+            current_app.logger.error(
+                f"Error creating SQLite copy of PostgreSQL database: {str(e)}",
+                exc_info=True,
+            )
             flash(f"Error creating database copy: {str(e)}")
             return redirect(url_for("experiments.experiment_details", uid=eid))
-    
+
     # compress the folder and send the file
     shutil.make_archive(folder, "zip", folder)
     # move the file to the temp_data folder
@@ -2595,47 +2614,47 @@ def delete_activity_profile(profile_id):
 def copy_experiment():
     """
     Copy an existing experiment with a new name.
-    
+
     Creates a complete copy of an experiment including:
     - New unique folder with UUID
     - All configuration files (server, populations, clients, prompts)
     - Database tables (for both SQLite and PostgreSQL)
     - All related records (populations, clients, topics, etc.)
-    
+
     The copy is ready to start without needing a reset.
     """
     check_privileges(current_user.username)
-    
+
     # Get form data
     new_exp_name = request.form.get("new_exp_name")
     source_exp_id = request.form.get("source_exp_id")
-    
+
     # Validate inputs
     if not new_exp_name or not source_exp_id:
         flash("Both experiment name and source experiment are required.")
         return redirect(url_for("experiments.settings"))
-    
+
     # Check if experiment name already exists
     existing_exp = Exps.query.filter_by(exp_name=new_exp_name).first()
     if existing_exp:
         flash(f"An experiment with name '{new_exp_name}' already exists.")
         return redirect(url_for("experiments.settings"))
-    
+
     # Get source experiment
     source_exp = Exps.query.filter_by(idexp=source_exp_id).first()
     if not source_exp:
         flash("Source experiment not found.")
         return redirect(url_for("experiments.settings"))
-    
+
     try:
         # Create new unique ID for the folder
         new_uid = str(uuid.uuid4()).replace("-", "_")
-        
+
         # Determine database type
         db_type = "sqlite"
         if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
             db_type = "postgresql"
-        
+
         # Extract source experiment folder
         if db_type == "sqlite":
             # Source: experiments/old_uid/database_server.db -> old_uid
@@ -2648,86 +2667,92 @@ def copy_experiment():
         else:
             # PostgreSQL: experiments_old_uid -> old_uid
             source_uid = source_exp.db_name.replace("experiments_", "")
-        
+
         source_folder = f"y_web{os.sep}experiments{os.sep}{source_uid}"
         new_folder = f"y_web{os.sep}experiments{os.sep}{new_uid}"
-        
+
         # Check if source folder exists
         if not os.path.exists(source_folder):
             flash(f"Source experiment folder not found: {source_folder}")
             return redirect(url_for("experiments.settings"))
-        
+
         # Create new experiment folder and copy all files
         pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
-        
+
         # Copy all files from source to new folder, excluding log files
         for item in os.listdir(source_folder):
             # Skip log files (server logs and client logs)
-            if item.endswith('.log'):
+            if item.endswith(".log"):
                 continue
-            
+
             source_item = os.path.join(source_folder, item)
             dest_item = os.path.join(new_folder, item)
-            
+
             if os.path.isfile(source_item):
                 shutil.copy2(source_item, dest_item)
             elif os.path.isdir(source_item):
                 shutil.copytree(source_item, dest_item)
-        
+
         # Get suggested port for new experiment
         suggested_port = get_suggested_port()
         if not suggested_port:
-            flash("Error: No available port found in range 5000-6000. Cannot create experiment.")
+            flash(
+                "Error: No available port found in range 5000-6000. Cannot create experiment."
+            )
             return redirect(url_for("experiments.settings"))
-        
+
         # Handle database copying first to get the correct db_uri
         new_db_name = ""
         new_db_uri = ""
-        
+
         if db_type == "sqlite":
             # Create a fresh SQLite database with clean schema (no data from source)
             new_db_path = os.path.join(new_folder, "database_server.db")
-            
+
             # Copy the clean database schema instead of the source database
             clean_db_path = f"data_schema{os.sep}database_clean_server.db"
             if os.path.exists(clean_db_path):
                 shutil.copy2(clean_db_path, new_db_path)
             else:
-                flash("Warning: Clean database template not found. Using empty database.")
+                flash(
+                    "Warning: Clean database template not found. Using empty database."
+                )
                 # Create an empty database file
                 import sqlite3
+
                 conn = sqlite3.connect(new_db_path)
                 conn.close()
-            
+
             new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
-            
+
             # Build absolute path for database_uri
             # Use the absolute path of the new_db_path
             new_db_uri = os.path.abspath(new_db_path)
-            
+
         elif db_type == "postgresql":
             # Create new PostgreSQL database with clean schema (no data from source)
             from urllib.parse import urlparse
+
             from sqlalchemy import create_engine, text
             from werkzeug.security import generate_password_hash
-            
+
             current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
             parsed_uri = urlparse(current_uri)
-            
+
             user = parsed_uri.username or "postgres"
             password = parsed_uri.password or "password"
             host = parsed_uri.hostname or "localhost"
             port_db = parsed_uri.port or 5432
-            
+
             new_dbname = f"experiments_{new_uid}"
             new_db_name = new_dbname
             new_db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{new_dbname}"
-            
+
             # Connect to postgres database
             admin_engine = create_engine(
                 f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
             )
-            
+
             # Check if database already exists
             with admin_engine.connect() as conn:
                 result = conn.execute(
@@ -2735,14 +2760,14 @@ def copy_experiment():
                     {"dbname": new_dbname},
                 )
                 db_exists = result.scalar() is not None
-            
+
             if not db_exists:
                 # Create new empty database
                 with admin_engine.connect().execution_options(
                     isolation_level="AUTOCOMMIT"
                 ) as conn:
                     conn.execute(text(f'CREATE DATABASE "{new_dbname}"'))
-                
+
                 # Connect to the newly created database and apply schema
                 experiment_engine = create_engine(new_db_uri)
                 with experiment_engine.connect() as conn:
@@ -2751,10 +2776,10 @@ def copy_experiment():
                     with open(schema_path, "r") as schema_file:
                         schema_sql = schema_file.read()
                         conn.execute(text(schema_sql))
-                    
+
                     # Insert initial admin user
                     hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
-                    
+
                     stmt = text(
                         """
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
@@ -2765,7 +2790,7 @@ def copy_experiment():
                                 :round_actions, :toxicity, :is_page, :daily_activity_level)
                         """
                     )
-                    
+
                     conn.execute(
                         stmt,
                         {
@@ -2785,11 +2810,11 @@ def copy_experiment():
                             "daily_activity_level": 1,
                         },
                     )
-                
+
                 experiment_engine.dispose()
-            
+
             admin_engine.dispose()
-        
+
         # Update config_server.json with new name, port, and database_uri
         config_path = os.path.join(new_folder, "config_server.json")
         if not os.path.exists(config_path):
@@ -2798,29 +2823,32 @@ def copy_experiment():
             if os.path.exists(new_folder):
                 shutil.rmtree(new_folder, ignore_errors=True)
             return redirect(url_for("experiments.settings"))
-        
+
         with open(config_path, "r") as f:
             config = json.load(f)
-        
+
         # Update all necessary fields
         config["name"] = new_exp_name
         config["port"] = suggested_port
         config["database_uri"] = new_db_uri
-        
+
         with open(config_path, "w") as f:
             json.dump(config, f, indent=4)
-        
+
         # Verify the config was written correctly
         with open(config_path, "r") as f:
             verify_config = json.load(f)
-        
-        if verify_config.get("port") != suggested_port or verify_config.get("database_uri") != new_db_uri:
+
+        if (
+            verify_config.get("port") != suggested_port
+            or verify_config.get("database_uri") != new_db_uri
+        ):
             flash("Error: Failed to update config_server.json correctly.")
             # Cleanup and return
             if os.path.exists(new_folder):
                 shutil.rmtree(new_folder, ignore_errors=True)
             return redirect(url_for("experiments.settings"))
-        
+
         # Update all client configuration files with new port
         # Client configs have the format: client_*.json
         for item in os.listdir(new_folder):
@@ -2829,22 +2857,23 @@ def copy_experiment():
                 try:
                     with open(client_config_path, "r") as f:
                         client_config = json.load(f)
-                    
+
                     # Update the API endpoint in servers section
                     if "servers" in client_config and "api" in client_config["servers"]:
                         # Update the port in the API URL
                         old_api = client_config["servers"]["api"]
                         # Replace the port in the URL (format: http://host:port/)
                         import re
-                        new_api = re.sub(r':\d+/', f':{suggested_port}/', old_api)
+
+                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
                         client_config["servers"]["api"] = new_api
-                        
+
                         with open(client_config_path, "w") as f:
                             json.dump(client_config, f, indent=4)
                 except Exception as e:
                     flash(f"Warning: Failed to update client config {item}: {str(e)}")
                     # Continue anyway - this is not critical enough to fail the entire copy
-        
+
         # Create new experiment record in admin database
         new_exp = Exps(
             exp_name=new_exp_name,
@@ -2861,7 +2890,7 @@ def copy_experiment():
         )
         db.session.add(new_exp)
         db.session.commit()
-        
+
         # Copy Exp_stats
         source_stats = Exp_stats.query.filter_by(exp_id=source_exp.idexp).first()
         if source_stats:
@@ -2875,14 +2904,14 @@ def copy_experiment():
             )
             db.session.add(new_stats)
             db.session.commit()
-        
+
         # Copy Exp_Topic relationships
         source_topics = Exp_Topic.query.filter_by(exp_id=source_exp.idexp).all()
         for topic in source_topics:
             new_topic = Exp_Topic(exp_id=new_exp.idexp, topic_id=topic.topic_id)
             db.session.add(new_topic)
         db.session.commit()
-        
+
         # Copy Population_Experiment relationships
         source_pop_exps = Population_Experiment.query.filter_by(
             id_exp=source_exp.idexp
@@ -2893,7 +2922,7 @@ def copy_experiment():
             )
             db.session.add(new_pop_exp)
         db.session.commit()
-        
+
         # Copy Client records
         source_clients = Client.query.filter_by(id_exp=source_exp.idexp).all()
         for source_client in source_clients:
@@ -2937,57 +2966,57 @@ def copy_experiment():
             )
             db.session.add(new_client)
             db.session.commit()
-        
+
         # Note: Client_Execution entries are NOT copied - they will be created
         # when the client is first started, ensuring fresh execution state
-        
+
         # Note: Rounds table is in the experiment database (db_exp)
         # The clean database template already has the initial round (day=0, hour=0)
-        
+
         # Create Jupyter instance record
         jupyter_instance = Jupyter_instances(
-            port=-1,
-            notebook_dir="",
-            exp_id=new_exp.idexp,
-            status="stopped"
+            port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped"
         )
         db.session.add(jupyter_instance)
         db.session.commit()
-        
-        flash(f"Experiment '{new_exp_name}' successfully created as a copy of '{source_exp.exp_name}'.")
-        
+
+        flash(
+            f"Experiment '{new_exp_name}' successfully created as a copy of '{source_exp.exp_name}'."
+        )
+
     except Exception as e:
         # Cleanup on error
-        if 'new_folder' in locals() and os.path.exists(new_folder):
+        if "new_folder" in locals() and os.path.exists(new_folder):
             shutil.rmtree(new_folder, ignore_errors=True)
-        
-        if db_type == "postgresql" and 'new_dbname' in locals():
+
+        if db_type == "postgresql" and "new_dbname" in locals():
             try:
                 from urllib.parse import urlparse
+
                 from sqlalchemy import create_engine, text
-                
+
                 current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
                 parsed_uri = urlparse(current_uri)
-                
+
                 user = parsed_uri.username or "postgres"
                 password = parsed_uri.password or "password"
                 host = parsed_uri.hostname or "localhost"
                 port_db = parsed_uri.port or 5432
-                
+
                 admin_engine = create_engine(
                     f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
                 )
-                
+
                 with admin_engine.connect().execution_options(
                     isolation_level="AUTOCOMMIT"
                 ) as conn:
                     conn.execute(text(f'DROP DATABASE IF EXISTS "{new_dbname}"'))
-                
+
                 admin_engine.dispose()
             except Exception:
                 pass
-        
+
         flash(f"Error copying experiment: {str(e)}")
         current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
-    
+
     return redirect(url_for("experiments.settings"))
