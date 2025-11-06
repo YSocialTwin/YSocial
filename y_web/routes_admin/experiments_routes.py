@@ -2691,6 +2691,30 @@ def copy_experiment():
                 shutil.rmtree(new_folder, ignore_errors=True)
             return redirect(url_for("experiments.settings"))
         
+        # Update all client configuration files with new port
+        # Client configs have the format: client_*.json
+        for item in os.listdir(new_folder):
+            if item.startswith("client") and item.endswith(".json"):
+                client_config_path = os.path.join(new_folder, item)
+                try:
+                    with open(client_config_path, "r") as f:
+                        client_config = json.load(f)
+                    
+                    # Update the API endpoint in servers section
+                    if "servers" in client_config and "api" in client_config["servers"]:
+                        # Update the port in the API URL
+                        old_api = client_config["servers"]["api"]
+                        # Replace the port in the URL (format: http://host:port/)
+                        import re
+                        new_api = re.sub(r':\d+/', f':{suggested_port}/', old_api)
+                        client_config["servers"]["api"] = new_api
+                        
+                        with open(client_config_path, "w") as f:
+                            json.dump(client_config, f, indent=4)
+                except Exception as e:
+                    flash(f"Warning: Failed to update client config {item}: {str(e)}")
+                    # Continue anyway - this is not critical enough to fail the entire copy
+        
         # Create new experiment record in admin database
         new_exp = Exps(
             exp_name=new_exp_name,

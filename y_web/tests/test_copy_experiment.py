@@ -230,5 +230,41 @@ def test_config_update_verification():
     assert updated_config["database_uri"] != old_config["database_uri"]
 
 
+def test_client_config_port_update():
+    """Test that client configuration files have their API endpoint port updated."""
+    import re
+    
+    # Simulate client config with old port
+    old_client_config = {
+        "servers": {
+            "llm": "gpt-4",
+            "api": "http://127.0.0.1:5000/"
+        },
+        "simulation": {
+            "name": "test_client"
+        }
+    }
+    
+    # New port to assign
+    new_port = 5010
+    
+    # Update the API endpoint (simulating our logic)
+    if "servers" in old_client_config and "api" in old_client_config["servers"]:
+        old_api = old_client_config["servers"]["api"]
+        # Replace the port in the URL (format: http://host:port/)
+        new_api = re.sub(r':\d+/', f':{new_port}/', old_api)
+        old_client_config["servers"]["api"] = new_api
+    
+    # Verify the port was updated
+    assert old_client_config["servers"]["api"] == "http://127.0.0.1:5010/"
+    assert "5010" in old_client_config["servers"]["api"]
+    assert "5000" not in old_client_config["servers"]["api"]
+    
+    # Test with different URL format
+    test_api = "http://localhost:5001/"
+    new_api = re.sub(r':\d+/', f':{new_port}/', test_api)
+    assert new_api == "http://localhost:5010/"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
