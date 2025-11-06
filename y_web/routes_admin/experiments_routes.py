@@ -2483,19 +2483,19 @@ def copy_experiment():
     # Validate inputs
     if not new_exp_name or not source_exp_id:
         flash("Both experiment name and source experiment are required.")
-        return redirect(request.referrer)
+        return redirect(url_for("experiments.settings"))
     
     # Check if experiment name already exists
     existing_exp = Exps.query.filter_by(exp_name=new_exp_name).first()
     if existing_exp:
         flash(f"An experiment with name '{new_exp_name}' already exists.")
-        return redirect(request.referrer)
+        return redirect(url_for("experiments.settings"))
     
     # Get source experiment
     source_exp = Exps.query.filter_by(idexp=source_exp_id).first()
     if not source_exp:
         flash("Source experiment not found.")
-        return redirect(request.referrer)
+        return redirect(url_for("experiments.settings"))
     
     try:
         # Create new unique ID for the folder
@@ -2514,7 +2514,7 @@ def copy_experiment():
                 source_uid = source_parts[1]
             else:
                 flash("Invalid source experiment path.")
-                return redirect(request.referrer)
+                return redirect(url_for("experiments.settings"))
         else:
             # PostgreSQL: experiments_old_uid -> old_uid
             source_uid = source_exp.db_name.replace("experiments_", "")
@@ -2525,7 +2525,7 @@ def copy_experiment():
         # Check if source folder exists
         if not os.path.exists(source_folder):
             flash(f"Source experiment folder not found: {source_folder}")
-            return redirect(request.referrer)
+            return redirect(url_for("experiments.settings"))
         
         # Create new experiment folder and copy all files
         pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
@@ -2555,12 +2555,19 @@ def copy_experiment():
         new_db_uri = ""
         
         if db_type == "sqlite":
-            # Copy SQLite database file
-            source_db_path = os.path.join(source_folder, "database_server.db")
+            # Create a fresh SQLite database with clean schema (no data from source)
             new_db_path = os.path.join(new_folder, "database_server.db")
             
-            if os.path.exists(source_db_path):
-                shutil.copy2(source_db_path, new_db_path)
+            # Copy the clean database schema instead of the source database
+            clean_db_path = f"data_schema{os.sep}database_clean_server.db"
+            if os.path.exists(clean_db_path):
+                shutil.copy2(clean_db_path, new_db_path)
+            else:
+                flash("Warning: Clean database template not found. Using empty database.")
+                # Create an empty database file
+                import sqlite3
+                conn = sqlite3.connect(new_db_path)
+                conn.close()
             
             new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
             
@@ -2569,9 +2576,10 @@ def copy_experiment():
             new_db_uri = os.path.abspath(new_db_path)
             
         elif db_type == "postgresql":
-            # Create new PostgreSQL database by copying from source
+            # Create new PostgreSQL database with clean schema (no data from source)
             from urllib.parse import urlparse
             from sqlalchemy import create_engine, text
+            from werkzeug.security import generate_password_hash
             
             current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
             parsed_uri = urlparse(current_uri)
@@ -2581,7 +2589,6 @@ def copy_experiment():
             host = parsed_uri.hostname or "localhost"
             port_db = parsed_uri.port or 5432
             
-            source_dbname = source_exp.db_name
             new_dbname = f"experiments_{new_uid}"
             new_db_name = new_dbname
             new_db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{new_dbname}"
@@ -2591,25 +2598,65 @@ def copy_experiment():
                 f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
             )
             
-            # Check if source database exists
+            # Check if database already exists
             with admin_engine.connect() as conn:
                 result = conn.execute(
                     text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                    {"dbname": source_dbname},
+                    {"dbname": new_dbname},
                 )
-                if not result.scalar():
-                    flash(f"Source database '{source_dbname}' not found.")
-                    admin_engine.dispose()
-                    return redirect(request.referrer)
+                db_exists = result.scalar() is not None
             
-            # Create new database as a copy of source
-            with admin_engine.connect().execution_options(
-                isolation_level="AUTOCOMMIT"
-            ) as conn:
-                # PostgreSQL TEMPLATE allows copying an existing database
-                conn.execute(
-                    text(f'CREATE DATABASE "{new_dbname}" TEMPLATE "{source_dbname}"')
-                )
+            if not db_exists:
+                # Create new empty database
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    conn.execute(text(f'CREATE DATABASE "{new_dbname}"'))
+                
+                # Connect to the newly created database and apply schema
+                experiment_engine = create_engine(new_db_uri)
+                with experiment_engine.connect() as conn:
+                    # Load schema from SQL file
+                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    with open(schema_path, "r") as schema_file:
+                        schema_sql = schema_file.read()
+                        conn.execute(text(schema_sql))
+                    
+                    # Insert initial admin user
+                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    
+                    stmt = text(
+                        """
+                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
+                                               language, owner, joined_on, frecsys_type,
+                                               round_actions, toxicity, is_page, daily_activity_level)
+                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
+                                :language, :owner, :joined_on, :frecsys_type,
+                                :round_actions, :toxicity, :is_page, :daily_activity_level)
+                        """
+                    )
+                    
+                    conn.execute(
+                        stmt,
+                        {
+                            "username": "admin",
+                            "email": "admin@ysocial.com",
+                            "password": hashed_pw,
+                            "user_type": "user",
+                            "leaning": "none",
+                            "age": 0,
+                            "language": "en",
+                            "owner": "admin",
+                            "joined_on": 0,
+                            "frecsys_type": "default",
+                            "round_actions": 3,
+                            "toxicity": "none",
+                            "is_page": 0,
+                            "daily_activity_level": 1,
+                        },
+                    )
+                
+                experiment_engine.dispose()
             
             admin_engine.dispose()
         
@@ -2734,8 +2781,8 @@ def copy_experiment():
                 db.session.add(new_client_exec)
                 db.session.commit()
         
-        # Add initial round to the experiment database (Rounds table is in db_exp)
-        # Note: We don't add Rounds here as it's in the experiment database which was already copied
+        # Note: Rounds table is in the experiment database (db_exp)
+        # The clean database template already has the initial round (day=0, hour=0)
         
         # Create Jupyter instance record
         jupyter_instance = Jupyter_instances(
@@ -2783,4 +2830,4 @@ def copy_experiment():
         flash(f"Error copying experiment: {str(e)}")
         current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
     
-    return redirect(request.referrer)
+    return redirect(url_for("experiments.settings"))
