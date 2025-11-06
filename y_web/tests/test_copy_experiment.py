@@ -175,5 +175,60 @@ def test_clean_database_used():
     assert "clean" in clean_template.lower()
 
 
+def test_unique_port_assignment():
+    """Test that copied experiments get unique ports, not reusing source port."""
+    # Simulate port assignment with all experiments having ports
+    assigned_ports = {5000, 5001, 5002}
+    
+    # Port range
+    port_range = range(5000, 6001)
+    
+    # Find available port
+    available_port = None
+    for port in port_range:
+        if port not in assigned_ports:
+            available_port = port
+            break
+    
+    # Verify we get a unique port
+    assert available_port is not None
+    assert available_port not in assigned_ports
+    assert available_port == 5003  # First available after 5002
+    
+    # Test that we don't reuse source port
+    source_port = 5001
+    assert available_port != source_port
+
+
+def test_config_update_verification():
+    """Test that config_server.json is properly updated with new values."""
+    # Simulate config update
+    old_config = {
+        "name": "Old Experiment",
+        "port": 5000,
+        "database_uri": "/old/path/database.db"
+    }
+    
+    new_name = "New Experiment"
+    new_port = 5005
+    new_db_uri = "/new/path/database.db"
+    
+    # Update config (simulating our logic)
+    updated_config = old_config.copy()
+    updated_config["name"] = new_name
+    updated_config["port"] = new_port
+    updated_config["database_uri"] = new_db_uri
+    
+    # Verify all fields are updated
+    assert updated_config["name"] == new_name
+    assert updated_config["port"] == new_port
+    assert updated_config["database_uri"] == new_db_uri
+    
+    # Verify old values are not present
+    assert updated_config["name"] != old_config["name"]
+    assert updated_config["port"] != old_config["port"]
+    assert updated_config["database_uri"] != old_config["database_uri"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

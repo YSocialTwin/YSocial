@@ -2547,8 +2547,8 @@ def copy_experiment():
         # Get suggested port for new experiment
         suggested_port = get_suggested_port()
         if not suggested_port:
-            flash("Warning: No available port found in range 5000-6000.")
-            suggested_port = source_exp.port
+            flash("Error: No available port found in range 5000-6000. Cannot create experiment.")
+            return redirect(url_for("experiments.settings"))
         
         # Handle database copying first to get the correct db_uri
         new_db_name = ""
@@ -2662,16 +2662,34 @@ def copy_experiment():
         
         # Update config_server.json with new name, port, and database_uri
         config_path = os.path.join(new_folder, "config_server.json")
-        if os.path.exists(config_path):
-            with open(config_path, "r") as f:
-                config = json.load(f)
-            
-            config["name"] = new_exp_name
-            config["port"] = suggested_port
-            config["database_uri"] = new_db_uri
-            
-            with open(config_path, "w") as f:
-                json.dump(config, f, indent=4)
+        if not os.path.exists(config_path):
+            flash("Error: config_server.json not found in copied experiment folder.")
+            # Cleanup and return
+            if os.path.exists(new_folder):
+                shutil.rmtree(new_folder, ignore_errors=True)
+            return redirect(url_for("experiments.settings"))
+        
+        with open(config_path, "r") as f:
+            config = json.load(f)
+        
+        # Update all necessary fields
+        config["name"] = new_exp_name
+        config["port"] = suggested_port
+        config["database_uri"] = new_db_uri
+        
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
+        
+        # Verify the config was written correctly
+        with open(config_path, "r") as f:
+            verify_config = json.load(f)
+        
+        if verify_config.get("port") != suggested_port or verify_config.get("database_uri") != new_db_uri:
+            flash("Error: Failed to update config_server.json correctly.")
+            # Cleanup and return
+            if os.path.exists(new_folder):
+                shutil.rmtree(new_folder, ignore_errors=True)
+            return redirect(url_for("experiments.settings"))
         
         # Create new experiment record in admin database
         new_exp = Exps(
