@@ -924,28 +924,57 @@ def delete_simulation(exp_id):
                 ignore_errors=True,
             )
         elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
+            # Remove experiment folder
             shutil.rmtree(
                 f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
                 ignore_errors=True,
             )
+            
+            # Drop the PostgreSQL database
+            try:
+                from urllib.parse import urlparse
+                from sqlalchemy import create_engine, text
+                
+                current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+                parsed_uri = urlparse(current_uri)
+                
+                user = parsed_uri.username or "postgres"
+                password = parsed_uri.password or "password"
+                host = parsed_uri.hostname or "localhost"
+                port_db = parsed_uri.port or 5432
+                
+                # Connect to postgres database
+                admin_engine = create_engine(
+                    f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+                )
+                
+                # Drop the database if it exists
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    # Terminate existing connections to the database
+                    conn.execute(
+                        text(
+                            f"""
+                            SELECT pg_terminate_backend(pg_stat_activity.pid)
+                            FROM pg_stat_activity
+                            WHERE pg_stat_activity.datname = :dbname
+                            AND pid <> pg_backend_pid()
+                            """
+                        ),
+                        {"dbname": exp.db_name}
+                    )
+                    # Drop the database
+                    conn.execute(text(f'DROP DATABASE IF EXISTS "{exp.db_name}"'))
+                
+                admin_engine.dispose()
+            except Exception as e:
+                # Log error but continue with deletion
+                current_app.logger.error(f"Error dropping PostgreSQL database: {str(e)}", exc_info=True)
 
         # delete the experiment
         db.session.delete(exp)
         db.session.commit()
-
-        # check database type
-        if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
-            # remove the experiment folder
-            shutil.rmtree(
-                f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[0]}{os.sep}{exp.db_name.split(os.sep)[1]}",
-                ignore_errors=True,
-            )
-        elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
-            # remove the experiment folder
-            shutil.rmtree(
-                f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
-                ignore_errors=True,
-            )
 
         # remove populaiton_experiment
         db.session.query(Population_Experiment).filter_by(id_exp=exp_id).delete()

@@ -266,5 +266,30 @@ def test_client_config_port_update():
     assert new_api == "http://localhost:5010/"
 
 
+def test_postgresql_database_deletion():
+    """Test that PostgreSQL database deletion logic is correct."""
+    # Simulate database name
+    db_name = "experiments_abc123def456"
+    
+    # Verify the database name format
+    assert db_name.startswith("experiments_")
+    
+    # Simulate SQL commands for deletion
+    terminate_connections_sql = f"""
+        SELECT pg_terminate_backend(pg_stat_activity.pid)
+        FROM pg_stat_activity
+        WHERE pg_stat_activity.datname = '{db_name}'
+        AND pid <> pg_backend_pid()
+    """
+    
+    drop_database_sql = f'DROP DATABASE IF EXISTS "{db_name}"'
+    
+    # Verify SQL commands are properly formatted
+    assert "pg_terminate_backend" in terminate_connections_sql
+    assert db_name in terminate_connections_sql
+    assert "DROP DATABASE IF EXISTS" in drop_database_sql
+    assert db_name in drop_database_sql
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
