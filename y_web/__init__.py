@@ -193,27 +193,48 @@ def cleanup_db_jupyter_with_new_app():
     """
     print("Cleaning up db...")
     try:
-        # Create a fresh app instance (use same DB_TYPE env var)
-        from y_web import create_app
-
-        app = create_app(os.getenv("DB_TYPE", "sqlite"))
-        with app.app_context():
+        # Try to use existing app context first
+        from flask import current_app
+        try:
+            # Check if we're already in an app context
+            _ = current_app.name
+            app_context_exists = True
+            print("Using existing app context for cleanup")
+        except RuntimeError:
+            # No app context exists
+            app_context_exists = False
+            print("No existing app context, creating new app for cleanup")
+        
+        if app_context_exists:
+            # Use existing context
             from y_web.utils.jupyter_utils import stop_all_jupyter_instances
-
-            stop_all_jupyter_instances()
-
             from y_web.utils.external_processes import stop_all_exps
-
+            from y_web import db
+            
+            stop_all_jupyter_instances()
             stop_all_exps()
             
-            # For PostgreSQL, ensure changes are committed by explicitly closing the session
-            try:
+            # Ensure changes are committed
+            db.session.commit()
+            db.session.close()
+            print("Database session committed and closed successfully (existing context)")
+        else:
+            # Create a fresh app instance (use same DB_TYPE env var)
+            from y_web import create_app
+
+            app = create_app(os.getenv("DB_TYPE", "sqlite"))
+            with app.app_context():
+                from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+                from y_web.utils.external_processes import stop_all_exps
                 from y_web import db
+
+                stop_all_jupyter_instances()
+                stop_all_exps()
+                
+                # For PostgreSQL, ensure changes are committed by explicitly closing the session
                 db.session.commit()
                 db.session.close()
-                print("Database session committed and closed successfully")
-            except Exception as db_err:
-                print(f"Error committing/closing database session: {db_err}")
+                print("Database session committed and closed successfully (new context)")
 
     except Exception as e:
         print("Error during DB cleanup with fresh app:", e)
