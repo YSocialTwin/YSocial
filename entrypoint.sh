@@ -11,7 +11,7 @@ if [ "$LLM_BACKEND" = "vllm" ]; then
     echo "vLLM backend selected. Please ensure vLLM server is running on port 8000."
 else
     echo "Starting Ollama server..."
-    ollama serve &
+    OLLAMA_HOST=0.0.0.0:11434 ollama serve &
 fi
 
 # Start Flask app in the foreground with the specified backend
