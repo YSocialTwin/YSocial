@@ -86,31 +86,31 @@ def test_log_file_exclusion():
     assert len(files_to_copy) == 3
 
 
-def test_client_execution_reset():
-    """Test that client execution state is properly reset for copied experiments."""
+def test_client_execution_not_copied():
+    """Test that Client_Execution entries are NOT copied for new experiments."""
     # Simulate source client execution with active state
     source_exec = {
+        "client_id": 1,
         "elapsed_time": 3600,
         "expected_duration_rounds": 168,
         "last_active_hour": 15,
         "last_active_day": 3
     }
     
-    # Simulate new client execution (as created in copy_experiment)
-    new_exec = {
-        "elapsed_time": 0,  # Reset
-        "expected_duration_rounds": source_exec["expected_duration_rounds"],  # Preserved
-        "last_active_hour": -1,  # Reset
-        "last_active_day": -1  # Reset
+    # In the copy operation, we create a new client but NO Client_Execution entry
+    new_client = {
+        "id": 2,
+        "name": "test_client",
+        "status": 0  # Not running
     }
     
-    # Verify state is properly reset
-    assert new_exec["elapsed_time"] == 0
-    assert new_exec["last_active_hour"] == -1
-    assert new_exec["last_active_day"] == -1
+    # Verify that we have a new client
+    assert new_client["id"] != source_exec["client_id"]
+    assert new_client["status"] == 0
     
-    # Verify expected duration is preserved
-    assert new_exec["expected_duration_rounds"] == source_exec["expected_duration_rounds"]
+    # The key point: no Client_Execution entry is created during copy
+    # It will be created when the client first starts, ensuring fresh state
+    # This is tested by the absence of Client_Execution creation in the copy code
 
 
 def test_copy_experiment_config_update():

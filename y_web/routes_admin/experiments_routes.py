@@ -2807,21 +2807,9 @@ def copy_experiment():
             )
             db.session.add(new_client)
             db.session.commit()
-            
-            # Copy Client_Execution for this client
-            source_client_exec = Client_Execution.query.filter_by(
-                client_id=source_client.id
-            ).first()
-            if source_client_exec:
-                new_client_exec = Client_Execution(
-                    client_id=new_client.id,
-                    elapsed_time=0,  # Reset
-                    expected_duration_rounds=source_client_exec.expected_duration_rounds,
-                    last_active_hour=-1,  # Reset
-                    last_active_day=-1,  # Reset
-                )
-                db.session.add(new_client_exec)
-                db.session.commit()
+        
+        # Note: Client_Execution entries are NOT copied - they will be created
+        # when the client is first started, ensuring fresh execution state
         
         # Note: Rounds table is in the experiment database (db_exp)
         # The clean database template already has the initial round (day=0, hour=0)
