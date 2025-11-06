@@ -1655,16 +1655,109 @@ def update_prompts(uid):
 @experiments.route("/admin/download_experiment/<int:eid>", methods=["POST", "GET"])
 @login_required
 def download_experiment_file(eid):
-    """Download experiment file."""
+    """Download experiment file.
+    
+    For SQLite: Downloads experiment folder as-is with the database file.
+    For PostgreSQL: Creates an SQLite copy of the PostgreSQL database first,
+    then downloads the experiment folder with the SQLite copy.
+    """
     check_privileges(current_user.username)
 
     # get experiment details
     experiment = Exps.query.filter_by(idexp=eid).first()
-    # get the prompts file for the experiment
-    folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+    
+    # Determine database type
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+    
+    # Get folder path based on database type
+    if db_type == "sqlite":
+        folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+    else:
+        # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
+        folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}"
+    
+    # For PostgreSQL, create an SQLite copy of the database
+    if db_type == "postgresql":
+        try:
+            from urllib.parse import urlparse
+            from sqlalchemy import create_engine, inspect
+            import sqlite3
+            
+            # Connect to PostgreSQL database
+            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+            parsed_uri = urlparse(current_uri)
+            
+            user = parsed_uri.username or "postgres"
+            password = parsed_uri.password or "password"
+            host = parsed_uri.hostname or "localhost"
+            port_db = parsed_uri.port or 5432
+            
+            pg_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
+            pg_engine = create_engine(pg_uri)
+            
+            # Create SQLite database in the experiment folder
+            sqlite_path = os.path.join(folder, "database_server.db")
+            sqlite_uri = f"sqlite:///{sqlite_path}"
+            sqlite_engine = create_engine(sqlite_uri)
+            
+            # Get inspector for PostgreSQL database
+            inspector = inspect(pg_engine)
+            
+            # Copy all tables from PostgreSQL to SQLite
+            with pg_engine.connect() as pg_conn, sqlite_engine.connect() as sqlite_conn:
+                # Get all table names
+                table_names = inspector.get_table_names()
+                
+                for table_name in table_names:
+                    # Read from PostgreSQL
+                    result = pg_conn.execute(f"SELECT * FROM {table_name}")
+                    rows = result.fetchall()
+                    columns = result.keys()
+                    
+                    if rows:
+                        # Create table in SQLite if it doesn't exist
+                        # Get column definitions from PostgreSQL
+                        pg_columns = inspector.get_columns(table_name)
+                        col_defs = []
+                        for col in pg_columns:
+                            col_type = str(col['type'])
+                            # Map PostgreSQL types to SQLite types
+                            if 'INTEGER' in col_type or 'SERIAL' in col_type:
+                                sqlite_type = 'INTEGER'
+                            elif 'REAL' in col_type or 'DOUBLE' in col_type or 'FLOAT' in col_type:
+                                sqlite_type = 'REAL'
+                            elif 'TEXT' in col_type or 'VARCHAR' in col_type or 'CHAR' in col_type:
+                                sqlite_type = 'TEXT'
+                            else:
+                                sqlite_type = 'TEXT'
+                            
+                            col_defs.append(f"{col['name']} {sqlite_type}")
+                        
+                        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
+                        sqlite_conn.execute(create_table_sql)
+                        
+                        # Insert data into SQLite
+                        placeholders = ', '.join(['?' for _ in columns])
+                        insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        
+                        for row in rows:
+                            sqlite_conn.execute(insert_sql, tuple(row))
+                
+                sqlite_conn.commit()
+            
+            pg_engine.dispose()
+            sqlite_engine.dispose()
+            
+        except Exception as e:
+            current_app.logger.error(f"Error creating SQLite copy of PostgreSQL database: {str(e)}", exc_info=True)
+            flash(f"Error creating database copy: {str(e)}")
+            return redirect(url_for("experiments.experiment_details", uid=eid))
+    
     # compress the folder and send the file
     shutil.make_archive(folder, "zip", folder)
-    # move th file to the temp_data folder
+    # move the file to the temp_data folder
     shutil.move(
         f"{folder}.zip",
         f"y_web{os.sep}experiments{os.sep}temp_data{os.sep}{folder.split(os.sep)[-1]}.zip",
