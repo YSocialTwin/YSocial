@@ -310,7 +310,6 @@ def build_screen_command(script_path, config_path, screen_name=None):
 #############
 
 
-@deprecated
 def terminate_process_on_port(port):
     """
     Terminate the process using the specified port.
@@ -345,7 +344,9 @@ def terminate_server_process(exp_id):
 
     This function terminates a server process that was started using the
     start_server() function and has its PID stored in the database.
-    It clears the PID from the database after termination.
+    It handles graceful shutdown of gunicorn-based servers using SIGTERM,
+    followed by SIGKILL if needed. It clears the PID from the database
+    after termination.
 
     Args:
         exp_id: the experiment ID whose server process should be terminated
@@ -433,9 +434,10 @@ def start_server(exp):
     """
     Start the y_server using subprocess.Popen.
 
-    This function launches a server process for an experiment using subprocess.Popen
-    instead of screen sessions. The process PID is stored in the database for
-    later management and graceful termination.
+    This function launches a server process for an experiment. For PostgreSQL databases,
+    it uses gunicorn WSGI server. For SQLite databases, it uses the standard Python
+    execution. The process PID is stored in the database for later management and
+    graceful termination.
 
     Args:
         exp: the experiment object
@@ -457,84 +459,199 @@ def start_server(exp):
             f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
         )
 
-    # Determine the script path based on platform type
+    # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
+        server_dir = f"{yserver_path}external{os.sep}YServer"
         script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
     elif exp.platform_type == "forum":
+        server_dir = f"{yserver_path}external{os.sep}YServerReddit"
         script_path = (
             f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
         )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
+    # Check database type to decide whether to use gunicorn or direct Python
+    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
+    use_gunicorn = db_uri_main.startswith("postgresql")
+
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
-    # Build the command as a list for subprocess.Popen
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not python_cmd.startswith("/")
-    ):
-        # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [script_path, "-c", config]
+    if use_gunicorn:
+        # Use gunicorn for PostgreSQL
+        print(f"Starting server for experiment {exp_uid} with gunicorn (PostgreSQL)...")
+
+        # Build the gunicorn command with explicit parameters
+        gunicorn_config_path = f"{server_dir}{os.sep}gunicorn_config.py"
+
+        gunicorn_args = [
+            "-c",
+            gunicorn_config_path,
+            "--bind",
+            f"{exp.server}:{exp.port}",
+            "--chdir",
+            server_dir,  # Set working directory for the app
+            "wsgi:app",
+        ]
+
+        # Build the gunicorn command
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not python_cmd.startswith("/")
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            # Replace 'python' with 'gunicorn' in pipenv run scenarios
+            if cmd_parts[-1] == "python":
+                cmd_parts[-1] = "gunicorn"
+            cmd = cmd_parts + gunicorn_args
+        else:
+            # Try to find gunicorn in the same directory as python
+            gunicorn_path = Path(python_cmd).parent / "gunicorn"
+            if gunicorn_path.exists():
+                cmd = [str(gunicorn_path)] + gunicorn_args
+            else:
+                # Fallback to system gunicorn
+                gunicorn_which = shutil.which("gunicorn")
+                if gunicorn_which:
+                    cmd = [gunicorn_which] + gunicorn_args
+                else:
+                    # Last resort: try 'gunicorn' and let subprocess fail if not found
+                    cmd = ["gunicorn"] + gunicorn_args
+
+        # Set environment variable for config file path
+        env = os.environ.copy()
+        env["YSERVER_CONFIG"] = config
+
+        try:
+            # Start the process with Popen
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+                env=env,  # Pass environment with config path
+            )
+            print(f"Server process started with PID: {process.pid}")
+        except Exception as e:
+            # Fallback: try to use gunicorn from system path
+            print(f"Error starting server process: {e}")
+            gunicorn_which = shutil.which("gunicorn")
+            fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
+            process = subprocess.Popen(
+                fallback_cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+                env=env,
+            )
     else:
-        # Simple python executable path
-        cmd = [python_cmd, script_path, "-c", config]
+        # Use standard Python execution for SQLite
+        print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
 
-    print(f"Starting server for experiment {exp_uid} ...")
+        # Build the command as a list for subprocess.Popen
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not python_cmd.startswith("/")
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            cmd = cmd_parts + [script_path, "-c", config]
+        else:
+            # Simple python executable path
+            cmd = [python_cmd, script_path, "-c", config]
+
+        try:
+            # Start the process with Popen
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+            )
+            print(f"Server process started with PID: {process.pid}")
+        except Exception as e:
+            # Fallback: try to use the current Python implicitly
+            print(f"Error starting server process: {e}")
+            cmd = [sys.executable, script_path, "-c", config]
+            process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,  # Detach from parent process group
+            )
+
     print(f"Command: {' '.join(cmd)}")
-
-    try:
-        # Start the process with Popen
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            start_new_session=True,  # Detach from parent process group
-        )
-
-        print(f"Server process started with PID: {process.pid}")
-
-    except Exception as e:
-        # env not correctly identify, try to use the current one implicitly
-        print(f"Error starting server process: {e}")
-        cmd = [sys.executable, script_path, "-c", config]
-        process = subprocess.Popen(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            stdin=subprocess.DEVNULL,
-            start_new_session=True,  # Detach from parent process group
-        )
+    print(f"Config file: {config}")
 
     # Save the PID to the database for persistent tracking
     exp.server_pid = process.pid
     db.session.commit()
 
-    # identify the db to be set
-    db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
-
+    # Identify the database URI to be set
     db_type = "sqlite"
     if db_uri_main.startswith("postgresql"):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
 
     print(f"Database URI: {db_uri}")
 
-    # Wait for the server to start
-    time.sleep(20)
-    data = {"path": f"{db_uri}"}
-    headers = {"Content-Type": "application/json"}
-    ns = f"http://{exp.server}:{exp.port}/change_db"
-    post(f"{ns}", headers=headers, data=json.dumps(data))
+    # Wait for the server to start and configure database
+    if use_gunicorn:
+        # For gunicorn (PostgreSQL), use health check and retry logic
+        max_retries = 5
+        retry_delay = 5
+
+        for attempt in range(max_retries):
+            time.sleep(retry_delay)
+
+            try:
+                # Check if server is responding
+                health_check_url = f"http://{exp.server}:{exp.port}/"
+                response = requests.get(health_check_url, timeout=5)
+                print(f"Server is ready (attempt {attempt + 1}/{max_retries})")
+                break
+            except Exception as e:
+                print(
+                    f"Server not ready yet (attempt {attempt + 1}/{max_retries}): {e}"
+                )
+                if attempt == max_retries - 1:
+                    print("Warning: Server may not be fully started, proceeding anyway")
+
+        # Now call change_db endpoint with retry logic
+        # data = {"path": f"{db_uri}"}
+        # headers = {"Content-Type": "application/json"}
+        # ns = f"http://{exp.server}:{exp.port}/change_db"
+        # time.sleep(20)
+        # response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
+        # if response.status_code == 200:
+        #    print("Database configuration successful")
+        # else:
+        #    print(f"Database configuration returned status {response.status_code}: {response.text}")
+
+    else:
+        # For standard Python (SQLite), use simple wait and single call
+        time.sleep(20)
+        data = {"path": f"{db_uri}"}
+        headers = {"Content-Type": "application/json"}
+        ns = f"http://{exp.server}:{exp.port}/change_db"
+        try:
+            post(f"{ns}", headers=headers, data=json.dumps(data))
+            print("Database configuration successful")
+        except Exception as e:
+            print(f"Warning: Could not configure database: {e}")
 
     return process
 
@@ -940,14 +1057,13 @@ def terminate_client(cli, pause=False):
 
 def start_client(exp, cli, population, resume=True):
     """Handle start client operation."""
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
     process = Process(
         target=start_client_process,
-        args=(
-            exp,
-            cli,
-            population,
-            resume,
-        ),
+        args=(exp, cli, population, resume, db_type),
     )
     process.start()
 
@@ -957,7 +1073,7 @@ def start_client(exp, cli, population, resume=True):
     print(f"Client process started with PID: {process.pid}")
 
 
-def start_client_process(exp, cli, population, resume=True):
+def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     """
     Initialize and start client simulation process.
 
@@ -974,7 +1090,7 @@ def start_client_process(exp, cli, population, resume=True):
     from y_web import create_app, db
     from y_web.models import Client_Execution
 
-    app = create_app()  # create app instance for this subprocess
+    app = create_app(db_type)  # create app instance for this subprocess
 
     with app.app_context():
         yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
@@ -1008,14 +1124,15 @@ def start_client_process(exp, cli, population, resume=True):
             open(f"{data_base_path}client_{cli.name}-{population.name}.json")
         )
 
+        print("Starting client process...")
+
         # DB query requires app context
         ce = Client_Execution.query.filter_by(client_id=cli.id).first()
+        print(f"Client {cli.name} execution record: {ce}")
         if ce:
-            # if not resume:
-            #    ce.elapsed_time = 0
-            #    ce.expected_duration_rounds = cli.days * 24
             first_run = False
         else:
+            print(f"Client {cli.name} first execution.")
             first_run = True
             ce = Client_Execution(
                 client_id=cli.id,
@@ -1037,10 +1154,15 @@ def start_client_process(exp, cli, population, resume=True):
                 first_run=first_run,
                 network=path,
                 log_file=log_file,
+                llm=exp.llm_agents_enabled,
             )
         else:
             cl = YClientWeb(
-                config_file, data_base_path, first_run=first_run, log_file=log_file
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                log_file=log_file,
+                llm=exp.llm_agents_enabled,
             )
 
         if resume:
@@ -1209,10 +1331,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
             # update client execution object
             ce = Client_Execution.query.filter_by(client_id=cli_id).first()
-            ce.elapsed_time += 1
-            ce.last_active_hour = h
-            ce.last_active_day = d
-            db.session.commit()
+            if ce:
+                ce.elapsed_time += 1
+                ce.last_active_hour = h
+                ce.last_active_day = d
+                db.session.add(ce)  # Explicitly mark as modified for PostgreSQL
+                db.session.commit()
 
         # evaluate follows (once per day, only for a random sample of daily active agents)
         if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:

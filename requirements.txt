@@ -44,3 +44,5 @@ black>=23.0.0
 isort>=5.12.0
 psutil
 ysights
+gunicorn
+gevent

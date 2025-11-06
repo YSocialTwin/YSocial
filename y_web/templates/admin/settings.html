@@ -337,6 +337,20 @@
                                         <span class="right" style="width: 70%;"><input type="textarea" name="exp_descr"
                                                                                        class="input"></span>
                                     </div>
+
+                                    <div class="box-line">
+                                        <span class="left">Enable LLM Agents</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div style="display: flex; align-items: center; gap: 8px;">
+                                                <label class="switch-small">
+                                                    <input type="checkbox" id="llm_agents_toggle" name="llm_agents_enabled" value="true" checked>
+                                                    <span class="slider-small round"></span>
+                                                </label>
+                                                <span style="font-size: 0.9rem; color: #6b7280;">Enable AI-driven agents in the simulation</span>
+                                            </div>
+                                        </span>
+                                    </div>
+
                                     <div class="box-line">
                                         <span class="left">Simulation Topics</span>
                                         <span class="right" style="width: 70%;">
@@ -381,8 +395,8 @@
     });
 
     tags.addEventListener('click', function (event) {
-        if (event.target.classList.contains('delete-button')) {
-            const tagText = event.target.parentNode.textContent.slice(0, -1);
+        if (event.target.classList.contains('delete-button') && !event.target.disabled) {
+            const tagText = event.target.parentNode.textContent.slice(0, -1).trim();
             tagList.splice(tagList.indexOf(tagText), 1);
             hiddenInput.value = tagList.join(',');
             event.target.parentNode.remove();
@@ -557,12 +571,61 @@
                         document.addEventListener('DOMContentLoaded', function() {
                             const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
                             const perspectiveApiField = document.getElementById('perspective_api_field');
+                            const llmAgentsToggle = document.getElementById('llm_agents_toggle');
+                            const sentimentToggle = document.getElementById('sentiment_annotation_toggle');
+                            const emotionToggle = document.getElementById('emotion_annotation_toggle');
+                            const inputTag = document.getElementById('input-tag');
 
                             toxicityToggle.addEventListener('change', function() {
                                 if (this.checked) {
                                     perspectiveApiField.style.display = 'flex';
                                 } else {
                                     perspectiveApiField.style.display = 'none';
+                                }
+                            });
+
+                            // Handle LLM agents toggle
+                            llmAgentsToggle.addEventListener('change', function() {
+                                if (!this.checked) {
+                                    // Disable all annotation toggles
+                                    toxicityToggle.checked = false;
+                                    toxicityToggle.disabled = true;
+                                    sentimentToggle.checked = false;
+                                    sentimentToggle.disabled = true;
+                                    emotionToggle.checked = false;
+                                    emotionToggle.disabled = true;
+                                    perspectiveApiField.style.display = 'none';
+
+                                    // Clear and disable topics input, set to "Topic1"
+                                    tagList.length = 0;
+                                    while (tags.firstChild) {
+                                        tags.removeChild(tags.firstChild);
+                                    }
+                                    tagList.push('Topic1');
+                                    const tag = document.createElement('li');
+                                    tag.innerHTML = `Topic1 <button class="delete-button" disabled style="cursor: not-allowed; opacity: 0.5;">X</button>`;
+                                    tags.appendChild(tag);
+                                    hiddenInput.value = 'Topic1';
+                                    inputTag.disabled = true;
+                                    inputTag.placeholder = 'Topics disabled when LLM agents are off';
+                                    updateButtonState();
+                                } else {
+                                    // Re-enable all annotation toggles
+                                    toxicityToggle.disabled = false;
+                                    sentimentToggle.checked = true;
+                                    sentimentToggle.disabled = false;
+                                    emotionToggle.checked = true;
+                                    emotionToggle.disabled = false;
+
+                                    // Re-enable topics input and clear default
+                                    tagList.length = 0;
+                                    while (tags.firstChild) {
+                                        tags.removeChild(tags.firstChild);
+                                    }
+                                    hiddenInput.value = '';
+                                    inputTag.disabled = false;
+                                    inputTag.placeholder = 'Enter topic name';
+                                    updateButtonState();
                                 }
                             });
                         });

@@ -322,6 +322,8 @@
                                         </span>
                                     </div>
                                     {% endif %}
+                                    {% if experiment.db_name.startswith('database_') %}
+                                    {# SQLite database - show Search a Hashtag field #}
                                     <div class="box-line">
                                         <span class="left">Search a Hashtag</span>
                                        <!-- <span class="right" style="width: 70%;"><input type="text"
@@ -348,7 +350,13 @@
 
                                         </span>
                                     </div>
+                                    {% else %}
+                                    {# PostgreSQL database - hide field and set default to 0 #}
+                                    <input type="hidden" name="search" id="search" value="0">
+                                    {% endif %}
                                     {% if experiment.platform_type == "microblogging" %}
+                                    {% if experiment.db_name.startswith('database_') %}
+                                    {# SQLite database - show Cast Vote field #}
                                     <div class="box-line">
                                         <span class="left">Cast Vote</span>
                                         <!-- <span class="right" style="width: 70%;"><input type="text"
@@ -375,6 +383,10 @@
 
                                         </span>
                                     </div>
+                                    {% else %}
+                                    {# PostgreSQL database - hide field and set default to 0 #}
+                                    <input type="hidden" name="vote" id="vote" value="0">
+                                    {% endif %}
                                     {% endif %}
                                     {% if experiment.platform_type == "forum" %}
                                     <div class="box-line">
@@ -385,6 +397,7 @@
                                                                                        value="0"></span>
                                     </div>
                                     {% endif %}
+                                    {% if llm_agents_enabled %}
                                     <div class="form-section-header">Large Language Models</div>
                                     <div class="form-section-description">
                                         Configure the LLM server and model for agent content generation.
@@ -482,6 +495,7 @@
                                     <div id="image_action_warning" style="padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that the minicpm-v:latest model is available on your server to enable this feature.
                                     </div>
+                                    {% endif %}
 
                                     <div class="form-section-header">Recommendation Systems</div>
                                     <div class="form-section-description">
@@ -574,7 +588,7 @@
                                                 <div class="box-line" id="er_param_field" style="display: none;">
                                                     <span class="left">Rewiring probability</span>
                                                     <span class="right">
-                                                        <input type="number" name="network_p" class="input" value="0.1">
+                                                        <input type="number" name="network_p" class="input" value="0.1" min="0" max="1" step="0.00001">
                                                     </span>
                                                 </div>
                                                 <div class="box-line" id="ba_param_field" style="display: none;">
@@ -1015,7 +1029,12 @@ let llmModelSelected = false;
 function updateFormButtonState() {
     const submitButton = document.getElementById('create_client_button');
     if (submitButton) {
+        {% if llm_agents_enabled %}
         submitButton.disabled = !(llmModelsFetched && llmModelSelected);
+        {% else %}
+        // When LLM agents are disabled, form can be submitted without LLM validation
+        submitButton.disabled = false;
+        {% endif %}
     }
 }
 
@@ -1221,7 +1240,12 @@ function displayNetworkFileNameCreate(input) {
 
 // On page load, disable image action by default and setup form validation
 document.addEventListener('DOMContentLoaded', function() {
+    {% if llm_agents_enabled %}
     disableImageAction();
+    {% else %}
+    // When LLM agents are disabled, enable image action automatically
+    enableImageAction();
+    {% endif %}
     
     // Setup form button state management
     const modelsSelect = document.getElementById('models_select_client');
@@ -1229,9 +1253,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Ensure button is disabled initially
     if (submitButton) {
+        {% if llm_agents_enabled %}
         submitButton.disabled = true;
+        {% else %}
+        // When LLM agents are disabled, form can be submitted immediately
+        submitButton.disabled = false;
+        {% endif %}
     }
     
+    {% if llm_agents_enabled %}
     if (modelsSelect) {
         // Monitor model selection
         modelsSelect.addEventListener('change', function() {
@@ -1239,6 +1269,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateFormButtonState();
         });
     }
+    {% endif %}
     
     // Setup network mutual exclusivity
     const networkModelSelect = document.getElementById('network_model_select');
