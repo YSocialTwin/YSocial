@@ -1707,12 +1707,14 @@ def download_experiment_file(eid):
             
             # Copy all tables from PostgreSQL to SQLite
             with pg_engine.connect() as pg_conn, sqlite_engine.connect() as sqlite_conn:
+                from sqlalchemy import text
+                
                 # Get all table names
                 table_names = inspector.get_table_names()
                 
                 for table_name in table_names:
-                    # Read from PostgreSQL
-                    result = pg_conn.execute(f"SELECT * FROM {table_name}")
+                    # Read from PostgreSQL using text()
+                    result = pg_conn.execute(text(f"SELECT * FROM {table_name}"))
                     rows = result.fetchall()
                     columns = result.keys()
                     
@@ -1735,12 +1737,12 @@ def download_experiment_file(eid):
                             
                             col_defs.append(f"{col['name']} {sqlite_type}")
                         
-                        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
+                        create_table_sql = text(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})")
                         sqlite_conn.execute(create_table_sql)
                         
                         # Insert data into SQLite
                         placeholders = ', '.join(['?' for _ in columns])
-                        insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+                        insert_sql = text(f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})")
                         
                         for row in rows:
                             sqlite_conn.execute(insert_sql, tuple(row))
