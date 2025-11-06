@@ -146,23 +146,25 @@ def stop_all_exps():
 
         # Commit all changes at once
         db.session.commit()
-        
+
         # Explicitly flush to ensure changes are written to database
         db.session.flush()
-        
-        print(f"Successfully cleared PIDs for {len(exps)} experiments and {len(clis)} clients")
-        
+
+        print(
+            f"Successfully cleared PIDs for {len(exps)} experiments and {len(clis)} clients"
+        )
+
     except Exception as e:
         print(f"Error in stop_all_exps: {e}")
         # Try to rollback and commit again
         try:
             db.session.rollback()
-            
+
             # Try again with a fresh query
             db.session.query(Exps).update({Exps.running: 0, Exps.server_pid: None})
             db.session.query(Client).update({Client.status: 0, Client.pid: None})
             db.session.commit()
-            
+
             print("Successfully cleared PIDs on retry after error")
         except Exception as e2:
             print(f"Failed to clear PIDs even on retry: {e2}")
