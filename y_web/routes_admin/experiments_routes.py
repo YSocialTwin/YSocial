@@ -1706,11 +1706,16 @@ def download_experiment_file(eid):
             inspector = inspect(pg_engine)
             
             # Copy all tables from PostgreSQL to SQLite
-            with pg_engine.connect() as pg_conn, sqlite_engine.connect() as sqlite_conn:
+            # Use raw connection for SQLite to handle parameter binding correctly
+            with pg_engine.connect() as pg_conn:
                 from sqlalchemy import text
                 
                 # Get all table names
                 table_names = inspector.get_table_names()
+                
+                # Get raw SQLite connection
+                sqlite_raw_conn = sqlite3.connect(sqlite_path)
+                sqlite_cursor = sqlite_raw_conn.cursor()
                 
                 for table_name in table_names:
                     # Read from PostgreSQL using text()
@@ -1737,17 +1742,18 @@ def download_experiment_file(eid):
                             
                             col_defs.append(f"{col['name']} {sqlite_type}")
                         
-                        create_table_sql = text(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})")
-                        sqlite_conn.execute(create_table_sql)
+                        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
+                        sqlite_cursor.execute(create_table_sql)
                         
-                        # Insert data into SQLite
+                        # Insert data into SQLite using raw connection
                         placeholders = ', '.join(['?' for _ in columns])
-                        insert_sql = text(f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})")
+                        insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
                         
                         for row in rows:
-                            sqlite_conn.execute(insert_sql, tuple(row))
+                            sqlite_cursor.execute(insert_sql, tuple(row))
                 
-                sqlite_conn.commit()
+                sqlite_raw_conn.commit()
+                sqlite_raw_conn.close()
             
             pg_engine.dispose()
             sqlite_engine.dispose()
