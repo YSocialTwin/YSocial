@@ -970,6 +970,9 @@ def delete_client(uid):
     exp_id = client.id_exp
     pop_id = client.population_id
 
+    Client_Execution.query.filter_by(client_id=uid).delete()
+    db.session.commit()
+
     # delete association of population and experiment if no other client is using it
     pop_exp = Population_Experiment.query.filter_by(
         id_population=client.population_id, id_exp=exp_id

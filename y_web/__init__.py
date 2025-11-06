@@ -231,20 +231,20 @@ def create_app(db_type="sqlite"):
     """
     app = Flask(__name__, static_url_path="/static")
 
-    # Copy databases if missing (keep your existing logic)
-    if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
-        shutil.copyfile(
-            f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_dashboard.db",
-            f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
-        )
-        shutil.copyfile(
-            f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_clean_server.db",
-            f"{BASE_DIR}{os.sep}db{os.sep}dummy.db",
-        )
-
     app.config["SECRET_KEY"] = "4323432nldsf"
 
     if db_type == "sqlite":
+        # Copy databases if missing
+        if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
+            shutil.copyfile(
+                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_dashboard.db",
+                f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
+            )
+            shutil.copyfile(
+                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_clean_server.db",
+                f"{BASE_DIR}{os.sep}db{os.sep}dummy.db",
+            )
+
         app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{BASE_DIR}/db/dashboard.db"
         app.config["SQLALCHEMY_BINDS"] = {
             "db_admin": f"sqlite:///{BASE_DIR}/db/dashboard.db",

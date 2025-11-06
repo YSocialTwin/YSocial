@@ -603,8 +603,8 @@ def upload_experiment():
 
         client_exec = Client_Execution(
             client_id=cl.id,
-            last_active_hour=0,
-            last_active_day=0,
+            last_active_hour=-1,
+            last_active_day=-1,
             expected_duration_rounds=cl.days * client["simulation"]["slots"],
         )
         db.session.add(client_exec)
@@ -692,8 +692,8 @@ def create_experiment():
     # Use current logged-in user as owner
     owner = current_user.username
 
-    # Get LLM agents setting
-    llm_agents_enabled = request.form.get("llm_agents_enabled") == "true"
+    # Get LLM agents setting (convert to integer for database compatibility)
+    llm_agents_enabled = 1 if request.form.get("llm_agents_enabled") == "true" else 0
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
@@ -714,6 +714,9 @@ def create_experiment():
     pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
         parents=True, exist_ok=True
     )
+
+    db_uri = os.getcwd().split("y_web")[0]
+    db_uri = f"{db_uri}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
@@ -829,6 +832,7 @@ def create_experiment():
         ),
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
+        "database_uri": db_uri,
     }
 
     with open(
@@ -966,6 +970,9 @@ def delete_simulation(exp_id):
         for cid in cids:
             # delete the client executions
             db.session.query(Client_Execution).filter_by(client_id=cid).delete()
+            db.session.commit()
+
+            db.session.query(Client).filter_by(id=cid).delete()
             db.session.commit()
 
         # delete experiment topics

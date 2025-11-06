@@ -12,7 +12,7 @@ lab = Blueprint("lab", __name__)
 
 def __check_notebook_enabled():
     """Check if Jupyter Notebook functionality is enabled"""
-    if current_app.config["ENABLE_NOTEBOOK"] != False:
+    if current_app.config["ENABLE_NOTEBOOK"] is not False:
         return False
     else:
         return (
@@ -31,7 +31,7 @@ def __check_notebook_enabled():
 def api_start_jupyter(experiment_id):
     """API endpoint to start Jupyter Lab"""
     disabled = __check_notebook_enabled()
-    if disabled != False:
+    if disabled is not False:
         return disabled
 
     try:
@@ -51,8 +51,28 @@ def api_start_jupyter(experiment_id):
             404,
         )
 
-    path = exp.db_name.split(os.sep)
-    notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
+    # determine the database type and set the notebook directory accordingly
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
+    if db_type == "sqlite":
+        path = exp.db_name.split(os.sep)
+        notebook_dir = f"y_web{os.sep}{path[0]}{os.sep}{path[1]}{os.sep}notebooks"
+    elif db_type == "postgresql":
+        db_name = exp.db_name
+        db_name = db_name.split("experiments_")[-1]
+        notebook_dir = f"y_web{os.sep}experiments{os.sep}{db_name}{os.sep}notebooks"
+    else:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Unsupported database type for experiment ID: {experiment_id}",
+                }
+            ),
+            400,
+        )
 
     success, message, instance_id = start_jupyter(
         exp_id,
@@ -68,7 +88,7 @@ def api_start_jupyter(experiment_id):
 def api_stop_jupyter(instance_id):
     """API endpoint to stop Jupyter Lab"""
     disabled = __check_notebook_enabled()
-    if disabled != False:
+    if disabled is not False:
         return disabled
 
     try:
@@ -102,7 +122,7 @@ def api_jupyter_instances():
 def api_create_notebook(expid):
     """API endpoint to create a new notebook"""
     disabled = __check_notebook_enabled()
-    if disabled != False:
+    if disabled is not False:
         return disabled
 
     path = (
@@ -130,7 +150,7 @@ def api_create_notebook(expid):
 def jupyter_page(exp_id):
     """Jupyter Lab embedded page for specific instance"""
     disabled = __check_notebook_enabled()
-    if disabled != False:
+    if disabled is not False:
         return disabled
 
     instances = db.session.query(Jupyter_instances).all()
