@@ -2458,3 +2458,320 @@ def delete_activity_profile(profile_id):
     db.session.delete(profile)
     db.session.commit()
     return miscellanea()
+
+
+@experiments.route("/admin/copy_experiment", methods=["POST"])
+@login_required
+def copy_experiment():
+    """
+    Copy an existing experiment with a new name.
+    
+    Creates a complete copy of an experiment including:
+    - New unique folder with UUID
+    - All configuration files (server, populations, clients, prompts)
+    - Database tables (for both SQLite and PostgreSQL)
+    - All related records (populations, clients, topics, etc.)
+    
+    The copy is ready to start without needing a reset.
+    """
+    check_privileges(current_user.username)
+    
+    # Get form data
+    new_exp_name = request.form.get("new_exp_name")
+    source_exp_id = request.form.get("source_exp_id")
+    
+    # Validate inputs
+    if not new_exp_name or not source_exp_id:
+        flash("Both experiment name and source experiment are required.")
+        return redirect(request.referrer)
+    
+    # Check if experiment name already exists
+    existing_exp = Exps.query.filter_by(exp_name=new_exp_name).first()
+    if existing_exp:
+        flash(f"An experiment with name '{new_exp_name}' already exists.")
+        return redirect(request.referrer)
+    
+    # Get source experiment
+    source_exp = Exps.query.filter_by(idexp=source_exp_id).first()
+    if not source_exp:
+        flash("Source experiment not found.")
+        return redirect(request.referrer)
+    
+    try:
+        # Create new unique ID for the folder
+        new_uid = str(uuid.uuid4()).replace("-", "_")
+        
+        # Determine database type
+        db_type = "sqlite"
+        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+            db_type = "postgresql"
+        
+        # Extract source experiment folder
+        if db_type == "sqlite":
+            # Source: experiments/old_uid/database_server.db -> old_uid
+            source_parts = source_exp.db_name.split(os.sep)
+            if len(source_parts) >= 2:
+                source_uid = source_parts[1]
+            else:
+                flash("Invalid source experiment path.")
+                return redirect(request.referrer)
+        else:
+            # PostgreSQL: experiments_old_uid -> old_uid
+            source_uid = source_exp.db_name.replace("experiments_", "")
+        
+        source_folder = f"y_web{os.sep}experiments{os.sep}{source_uid}"
+        new_folder = f"y_web{os.sep}experiments{os.sep}{new_uid}"
+        
+        # Check if source folder exists
+        if not os.path.exists(source_folder):
+            flash(f"Source experiment folder not found: {source_folder}")
+            return redirect(request.referrer)
+        
+        # Create new experiment folder and copy all files
+        pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
+        
+        # Copy all files from source to new folder
+        for item in os.listdir(source_folder):
+            source_item = os.path.join(source_folder, item)
+            dest_item = os.path.join(new_folder, item)
+            
+            if os.path.isfile(source_item):
+                shutil.copy2(source_item, dest_item)
+            elif os.path.isdir(source_item):
+                shutil.copytree(source_item, dest_item)
+        
+        # Update config_server.json with new name and suggested port
+        config_path = os.path.join(new_folder, "config_server.json")
+        if os.path.exists(config_path):
+            with open(config_path, "r") as f:
+                config = json.load(f)
+            
+            config["name"] = new_exp_name
+            
+            # Get suggested port for new experiment
+            suggested_port = get_suggested_port()
+            if suggested_port:
+                config["port"] = suggested_port
+            else:
+                flash("Warning: No available port found in range 5000-6000.")
+                suggested_port = source_exp.port
+            
+            with open(config_path, "w") as f:
+                json.dump(config, f, indent=4)
+        else:
+            suggested_port = get_suggested_port() or source_exp.port
+        
+        # Handle database copying
+        new_db_name = ""
+        if db_type == "sqlite":
+            # Copy SQLite database file
+            source_db_path = os.path.join(source_folder, "database_server.db")
+            new_db_path = os.path.join(new_folder, "database_server.db")
+            
+            if os.path.exists(source_db_path):
+                shutil.copy2(source_db_path, new_db_path)
+            
+            new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
+            
+        elif db_type == "postgresql":
+            # Create new PostgreSQL database by copying from source
+            from urllib.parse import urlparse
+            from sqlalchemy import create_engine, text
+            
+            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+            parsed_uri = urlparse(current_uri)
+            
+            user = parsed_uri.username or "postgres"
+            password = parsed_uri.password or "password"
+            host = parsed_uri.hostname or "localhost"
+            port_db = parsed_uri.port or 5432
+            
+            source_dbname = source_exp.db_name
+            new_dbname = f"experiments_{new_uid}".replace("-", "_")
+            new_db_name = new_dbname
+            
+            # Connect to postgres database
+            admin_engine = create_engine(
+                f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+            )
+            
+            # Check if source database exists
+            with admin_engine.connect() as conn:
+                result = conn.execute(
+                    text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
+                    {"dbname": source_dbname},
+                )
+                if not result.scalar():
+                    flash(f"Source database '{source_dbname}' not found.")
+                    admin_engine.dispose()
+                    return redirect(request.referrer)
+            
+            # Create new database as a copy of source
+            with admin_engine.connect().execution_options(
+                isolation_level="AUTOCOMMIT"
+            ) as conn:
+                # PostgreSQL TEMPLATE allows copying an existing database
+                conn.execute(
+                    text(f'CREATE DATABASE "{new_dbname}" TEMPLATE "{source_dbname}"')
+                )
+            
+            admin_engine.dispose()
+        
+        # Create new experiment record in admin database
+        new_exp = Exps(
+            exp_name=new_exp_name,
+            platform_type=source_exp.platform_type,
+            db_name=new_db_name,
+            owner=current_user.username,
+            exp_descr=source_exp.exp_descr,
+            status=0,  # Not loaded
+            running=0,  # Not running
+            port=suggested_port,
+            server=source_exp.server,
+            annotations=source_exp.annotations,
+            llm_agents_enabled=source_exp.llm_agents_enabled,
+        )
+        db.session.add(new_exp)
+        db.session.commit()
+        
+        # Copy Exp_stats
+        source_stats = Exp_stats.query.filter_by(exp_id=source_exp.idexp).first()
+        if source_stats:
+            new_stats = Exp_stats(
+                exp_id=new_exp.idexp,
+                rounds=0,  # Reset to 0 for new experiment
+                agents=source_stats.agents,
+                posts=0,  # Reset to 0
+                reactions=0,  # Reset to 0
+                mentions=0,  # Reset to 0
+            )
+            db.session.add(new_stats)
+            db.session.commit()
+        
+        # Copy Exp_Topic relationships
+        source_topics = Exp_Topic.query.filter_by(exp_id=source_exp.idexp).all()
+        for topic in source_topics:
+            new_topic = Exp_Topic(exp_id=new_exp.idexp, topic_id=topic.topic_id)
+            db.session.add(new_topic)
+        db.session.commit()
+        
+        # Copy Population_Experiment relationships
+        source_pop_exps = Population_Experiment.query.filter_by(
+            id_exp=source_exp.idexp
+        ).all()
+        for pop_exp in source_pop_exps:
+            new_pop_exp = Population_Experiment(
+                id_exp=new_exp.idexp, id_population=pop_exp.id_population
+            )
+            db.session.add(new_pop_exp)
+        db.session.commit()
+        
+        # Copy Client records
+        source_clients = Client.query.filter_by(id_exp=source_exp.idexp).all()
+        for source_client in source_clients:
+            new_client = Client(
+                name=source_client.name,
+                descr=source_client.descr,
+                days=source_client.days,
+                percentage_new_agents_iteration=source_client.percentage_new_agents_iteration,
+                percentage_removed_agents_iteration=source_client.percentage_removed_agents_iteration,
+                max_length_thread_reading=source_client.max_length_thread_reading,
+                reading_from_follower_ratio=source_client.reading_from_follower_ratio,
+                probability_of_daily_follow=source_client.probability_of_daily_follow,
+                attention_window=source_client.attention_window,
+                visibility_rounds=source_client.visibility_rounds,
+                post=source_client.post,
+                share=source_client.share,
+                image=source_client.image,
+                comment=source_client.comment,
+                read=source_client.read,
+                news=source_client.news,
+                search=source_client.search,
+                vote=source_client.vote,
+                share_link=source_client.share_link if hasattr(source_client, 'share_link') else None,
+                llm=source_client.llm,
+                llm_api_key=source_client.llm_api_key,
+                llm_max_tokens=source_client.llm_max_tokens,
+                llm_temperature=source_client.llm_temperature,
+                llm_v_agent=source_client.llm_v_agent,
+                llm_v=source_client.llm_v,
+                llm_v_api_key=source_client.llm_v_api_key,
+                llm_v_max_tokens=source_client.llm_v_max_tokens,
+                llm_v_temperature=source_client.llm_v_temperature,
+                status=0,  # Not running
+                id_exp=new_exp.idexp,
+                probability_of_secondary_follow=source_client.probability_of_secondary_follow,
+                population_id=source_client.population_id,
+                network_type=source_client.network_type if hasattr(source_client, 'network_type') else "",
+                crecsys=source_client.crecsys if hasattr(source_client, 'crecsys') else None,
+                frecsys=source_client.frecsys if hasattr(source_client, 'frecsys') else None,
+                pid=None,  # No process ID yet
+            )
+            db.session.add(new_client)
+            db.session.commit()
+            
+            # Copy Client_Execution for this client
+            source_client_exec = Client_Execution.query.filter_by(
+                client_id=source_client.id
+            ).first()
+            if source_client_exec:
+                new_client_exec = Client_Execution(
+                    client_id=new_client.id,
+                    elapsed_time=0,  # Reset
+                    expected_duration_rounds=source_client_exec.expected_duration_rounds,
+                    last_active_hour=-1,  # Reset
+                    last_active_day=-1,  # Reset
+                )
+                db.session.add(new_client_exec)
+                db.session.commit()
+        
+        # Add initial round to the experiment database (Rounds table is in db_exp)
+        # Note: We don't add Rounds here as it's in the experiment database which was already copied
+        
+        # Create Jupyter instance record
+        jupyter_instance = Jupyter_instances(
+            port=-1,
+            notebook_dir="",
+            exp_id=new_exp.idexp,
+            status="stopped"
+        )
+        db.session.add(jupyter_instance)
+        db.session.commit()
+        
+        flash(f"Experiment '{new_exp_name}' successfully created as a copy of '{source_exp.exp_name}'.")
+        
+    except Exception as e:
+        # Cleanup on error
+        if 'new_folder' in locals() and os.path.exists(new_folder):
+            shutil.rmtree(new_folder, ignore_errors=True)
+        
+        if db_type == "postgresql" and 'new_dbname' in locals():
+            try:
+                from urllib.parse import urlparse
+                from sqlalchemy import create_engine, text
+                
+                current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+                parsed_uri = urlparse(current_uri)
+                
+                user = parsed_uri.username or "postgres"
+                password = parsed_uri.password or "password"
+                host = parsed_uri.hostname or "localhost"
+                port_db = parsed_uri.port or 5432
+                
+                admin_engine = create_engine(
+                    f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+                )
+                
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    conn.execute(text(f'DROP DATABASE IF EXISTS "{new_dbname}"'))
+                
+                admin_engine.dispose()
+            except Exception:
+                pass
+        
+        flash(f"Error copying experiment: {str(e)}")
+        current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
+    
+    return redirect(request.referrer)
