@@ -2530,8 +2530,12 @@ def copy_experiment():
         # Create new experiment folder and copy all files
         pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
         
-        # Copy all files from source to new folder
+        # Copy all files from source to new folder, excluding log files
         for item in os.listdir(source_folder):
+            # Skip log files (server logs and client logs)
+            if item.endswith('.log'):
+                continue
+            
             source_item = os.path.join(source_folder, item)
             dest_item = os.path.join(new_folder, item)
             
@@ -2561,8 +2565,8 @@ def copy_experiment():
             new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
             
             # Build absolute path for database_uri
-            db_uri_base = os.getcwd().split("y_web")[0]
-            new_db_uri = f"{db_uri_base}{os.sep}y_web{os.sep}experiments{os.sep}{new_uid}{os.sep}database_server.db"
+            # Use the absolute path of the new_db_path
+            new_db_uri = os.path.abspath(new_db_path)
             
         elif db_type == "postgresql":
             # Create new PostgreSQL database by copying from source
@@ -2578,7 +2582,7 @@ def copy_experiment():
             port_db = parsed_uri.port or 5432
             
             source_dbname = source_exp.db_name
-            new_dbname = f"experiments_{new_uid}".replace("-", "_")
+            new_dbname = f"experiments_{new_uid}"
             new_db_name = new_dbname
             new_db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{new_dbname}"
             
@@ -2693,7 +2697,7 @@ def copy_experiment():
                 news=source_client.news,
                 search=source_client.search,
                 vote=source_client.vote,
-                share_link=source_client.share_link if hasattr(source_client, 'share_link') else None,
+                share_link=source_client.share_link,
                 llm=source_client.llm,
                 llm_api_key=source_client.llm_api_key,
                 llm_max_tokens=source_client.llm_max_tokens,
@@ -2707,9 +2711,9 @@ def copy_experiment():
                 id_exp=new_exp.idexp,
                 probability_of_secondary_follow=source_client.probability_of_secondary_follow,
                 population_id=source_client.population_id,
-                network_type=source_client.network_type if hasattr(source_client, 'network_type') else "",
-                crecsys=source_client.crecsys if hasattr(source_client, 'crecsys') else None,
-                frecsys=source_client.frecsys if hasattr(source_client, 'frecsys') else None,
+                network_type=source_client.network_type,
+                crecsys=source_client.crecsys,
+                frecsys=source_client.frecsys,
                 pid=None,  # No process ID yet
             )
             db.session.add(new_client)

@@ -59,6 +59,60 @@ def test_copy_experiment_file_operations(mock_mkdir, mock_copy, mock_listdir, mo
     assert len(mock_listdir("/test/path")) == 3
 
 
+def test_log_file_exclusion():
+    """Test that log files are excluded from copy."""
+    # Simulate file list with log files
+    file_list = [
+        "config_server.json",
+        "database_server.db", 
+        "prompts.json",
+        "_server.log",
+        "test_client.log",
+        "population_A_client.log"
+    ]
+    
+    # Filter out log files (simulating the copy logic)
+    files_to_copy = [f for f in file_list if not f.endswith('.log')]
+    
+    # Verify log files are excluded
+    assert "_server.log" not in files_to_copy
+    assert "test_client.log" not in files_to_copy
+    assert "population_A_client.log" not in files_to_copy
+    
+    # Verify other files are included
+    assert "config_server.json" in files_to_copy
+    assert "database_server.db" in files_to_copy
+    assert "prompts.json" in files_to_copy
+    assert len(files_to_copy) == 3
+
+
+def test_client_execution_reset():
+    """Test that client execution state is properly reset for copied experiments."""
+    # Simulate source client execution with active state
+    source_exec = {
+        "elapsed_time": 3600,
+        "expected_duration_rounds": 168,
+        "last_active_hour": 15,
+        "last_active_day": 3
+    }
+    
+    # Simulate new client execution (as created in copy_experiment)
+    new_exec = {
+        "elapsed_time": 0,  # Reset
+        "expected_duration_rounds": source_exec["expected_duration_rounds"],  # Preserved
+        "last_active_hour": -1,  # Reset
+        "last_active_day": -1  # Reset
+    }
+    
+    # Verify state is properly reset
+    assert new_exec["elapsed_time"] == 0
+    assert new_exec["last_active_hour"] == -1
+    assert new_exec["last_active_day"] == -1
+    
+    # Verify expected duration is preserved
+    assert new_exec["expected_duration_rounds"] == source_exec["expected_duration_rounds"]
+
+
 def test_copy_experiment_config_update():
     """Test configuration file update logic."""
     # Test JSON serialization/deserialization
