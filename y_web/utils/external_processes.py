@@ -125,26 +125,49 @@ def cleanup_client_processes_from_db():
 
 def stop_all_exps():
     """Stop all experiments and terminate server and client processes"""
-    # Terminate all running server processes
-    cleanup_server_processes_from_db()
+    try:
+        # Terminate all running server processes
+        cleanup_server_processes_from_db()
 
-    # Terminate all running client processes
-    cleanup_client_processes_from_db()
+        # Terminate all running client processes
+        cleanup_client_processes_from_db()
 
-    # set to 0 all Exps.running
-    exps = db.session.query(Exps).all()
-    for exp in exps:
-        exp.running = 0
-        exp.server_pid = None
+        # set to 0 all Exps.running
+        exps = db.session.query(Exps).all()
+        for exp in exps:
+            exp.running = 0
+            exp.server_pid = None
 
-    # set to 0 all Client.status
-    clis = db.session.query(Client).all()
-    for cli in clis:
-        cli.status = 0
-        cli.pid = None
+        # set to 0 all Client.status
+        clis = db.session.query(Client).all()
+        for cli in clis:
+            cli.status = 0
+            cli.pid = None
 
-    # Commit all changes at once
-    db.session.commit()
+        # Commit all changes at once
+        db.session.commit()
+
+        # Explicitly flush to ensure changes are written to database
+        db.session.flush()
+
+        print(
+            f"Successfully cleared PIDs for {len(exps)} experiments and {len(clis)} clients"
+        )
+
+    except Exception as e:
+        print(f"Error in stop_all_exps: {e}")
+        # Try to rollback and commit again
+        try:
+            db.session.rollback()
+
+            # Try again with a fresh query
+            db.session.query(Exps).update({Exps.running: 0, Exps.server_pid: None})
+            db.session.query(Client).update({Client.status: 0, Client.pid: None})
+            db.session.commit()
+
+            print("Successfully cleared PIDs on retry after error")
+        except Exception as e2:
+            print(f"Failed to clear PIDs even on retry: {e2}")
 
 
 @deprecated
