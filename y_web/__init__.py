@@ -195,6 +195,7 @@ def cleanup_db_jupyter_with_new_app():
     try:
         # Try to use existing app context first
         from flask import current_app
+
         try:
             # Check if we're already in an app context
             _ = current_app.name
@@ -204,20 +205,22 @@ def cleanup_db_jupyter_with_new_app():
             # No app context exists
             app_context_exists = False
             print("No existing app context, creating new app for cleanup")
-        
+
         if app_context_exists:
             # Use existing context
-            from y_web.utils.jupyter_utils import stop_all_jupyter_instances
-            from y_web.utils.external_processes import stop_all_exps
             from y_web import db
-            
+            from y_web.utils.external_processes import stop_all_exps
+            from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+
             stop_all_jupyter_instances()
             stop_all_exps()
-            
+
             # Ensure changes are committed
             db.session.commit()
             db.session.close()
-            print("Database session committed and closed successfully (existing context)")
+            print(
+                "Database session committed and closed successfully (existing context)"
+            )
         else:
             # Create a fresh app instance (use same DB_TYPE env var)
             from y_web import create_app
@@ -226,9 +229,9 @@ def cleanup_db_jupyter_with_new_app():
             for dbms in ["sqlite", "postgresql"]:
                 app = create_app(dbms)
                 with app.app_context():
-                    from y_web.utils.jupyter_utils import stop_all_jupyter_instances
-                    from y_web.utils.external_processes import stop_all_exps
                     from y_web import db
+                    from y_web.utils.external_processes import stop_all_exps
+                    from y_web.utils.jupyter_utils import stop_all_jupyter_instances
 
                     try:
                         stop_all_jupyter_instances()
@@ -237,7 +240,9 @@ def cleanup_db_jupyter_with_new_app():
                         # For PostgreSQL, ensure changes are committed by explicitly closing the session
                         db.session.commit()
                         db.session.close()
-                        print("Database session committed and closed successfully (new context)")
+                        print(
+                            "Database session committed and closed successfully (new context)"
+                        )
                     except Exception as e1:
                         print(f"Error during DB cleanup with {dbms} app:", e1)
                         pass
@@ -245,6 +250,7 @@ def cleanup_db_jupyter_with_new_app():
     except Exception as e:
         print("Error during DB cleanup with fresh app:", e)
         import traceback
+
         traceback.print_exc()
 
 
