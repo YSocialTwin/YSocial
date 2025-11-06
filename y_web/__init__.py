@@ -230,17 +230,13 @@ def cleanup_db_jupyter_with_new_app():
                     from y_web.utils.external_processes import stop_all_exps
                     from y_web import db
 
-                    try:
-                        stop_all_jupyter_instances()
-                        stop_all_exps()
+                    stop_all_jupyter_instances()
+                    stop_all_exps()
 
-                        # For PostgreSQL, ensure changes are committed by explicitly closing the session
-                        db.session.commit()
-                        db.session.close()
-                        print("Database session committed and closed successfully (new context)")
-                    except Exception as e1:
-                        print(f"Error during DB cleanup with {dbms} app:", e1)
-                        pass
+                    # For PostgreSQL, ensure changes are committed by explicitly closing the session
+                    db.session.commit()
+                    db.session.close()
+                    print("Database session committed and closed successfully (new context)")
 
     except Exception as e:
         print("Error during DB cleanup with fresh app:", e)
