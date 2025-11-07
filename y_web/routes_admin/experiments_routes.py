@@ -613,6 +613,13 @@ def upload_experiment():
         db.session.add(exp_stats)
         db.session.commit()
 
+        # Create Jupyter instance record
+        jupyter_instance = Jupyter_instances(
+            port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"
+        )
+        db.session.add(jupyter_instance)
+        db.session.commit()
+
     except Exception as e:
         flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
