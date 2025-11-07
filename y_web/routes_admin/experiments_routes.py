@@ -385,6 +385,8 @@ def upload_experiment():
     check_privileges(current_user.username)
 
     experiment = request.files["experiment"]
+    # Get experiment name from form, fallback to name from config if not provided
+    exp_name_override = request.form.get("exp_name", "").strip()
     uid = uuid.uuid4()
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
@@ -399,14 +401,30 @@ def upload_experiment():
     )
     # remove the zip file
     os.remove(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+    
+    # Determine database type
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+    
+    # Get suggested port for new experiment
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        flash("Error: No available port found in range 5000-6000. Cannot upload experiment.")
+        shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+        return redirect(request.referrer)
+    
     # create the experiment in the database from the config_server.json file
     try:
         # list the files in the directory
         files = os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
-        experiment = json.load(
-            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}config_server.json")
-        )
-        name = experiment["name"]
+        config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}config_server.json"
+        
+        with open(config_path, "r") as f:
+            experiment_config = json.load(f)
+        
+        # Use override name if provided, otherwise use name from config
+        name = exp_name_override if exp_name_override else experiment_config["name"]
 
         # check if the experiment already exists
         exp = Exps.query.filter_by(exp_name=name).first()
@@ -418,15 +436,140 @@ def upload_experiment():
             shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
             return settings()
 
+        # Prepare database URI and name based on db_type
+        db_name = ""
+        db_uri = ""
+        
+        if db_type == "sqlite":
+            db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
+            db_uri = os.path.abspath(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}database_server.db")
+        elif db_type == "postgresql":
+            from urllib.parse import urlparse
+            from sqlalchemy import create_engine, text
+            from werkzeug.security import generate_password_hash
+            
+            # Get current URI and parse it
+            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+            parsed_uri = urlparse(current_uri)
+            
+            # Extract components
+            user = parsed_uri.username or "postgres"
+            password = parsed_uri.password or "password"
+            host = parsed_uri.hostname or "localhost"
+            port_db = parsed_uri.port or 5432
+            
+            # New database name
+            dbname = f"experiments_{str(uid).replace('-', '_')}"
+            db_name = dbname
+            db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{dbname}"
+            
+            # Connect to the default 'postgres' DB to check/create the new one
+            admin_engine = create_engine(
+                f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+            )
+            
+            # Check and create database if needed
+            with admin_engine.connect() as conn:
+                result = conn.execute(
+                    text(f"SELECT 1 FROM pg_database WHERE datname = :dbname"),
+                    {"dbname": dbname},
+                )
+                db_exists = result.scalar() is not None
+            
+            if not db_exists:
+                # CREATE DATABASE must run in AUTOCOMMIT mode
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    conn.execute(text(f'CREATE DATABASE "{dbname}"'))
+                
+                # Connect to the newly created database
+                experiment_engine = create_engine(db_uri)
+                with experiment_engine.connect() as dummy_conn:
+                    # Load schema
+                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    with open(schema_path, "r") as schema_file:
+                        schema_sql = schema_file.read()
+                        dummy_conn.execute(text(schema_sql))
+                    
+                    # Insert initial admin user
+                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    
+                    stmt = text(
+                        """
+                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
+                                               language, owner, joined_on, frecsys_type,
+                                               round_actions, toxicity, is_page, daily_activity_level)
+                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
+                                :language, :owner, :joined_on, :frecsys_type,
+                                :round_actions, :toxicity, :is_page, :daily_activity_level)
+                        """
+                    )
+                    
+                    dummy_conn.execute(
+                        stmt,
+                        {
+                            "username": "admin",
+                            "email": "admin@ysocial.com",
+                            "password": hashed_pw,
+                            "user_type": "user",
+                            "leaning": "none",
+                            "age": 0,
+                            "language": "en",
+                            "owner": "admin",
+                            "joined_on": 0,
+                            "frecsys_type": "default",
+                            "round_actions": 3,
+                            "toxicity": "none",
+                            "is_page": 0,
+                            "daily_activity_level": 1,
+                        },
+                    )
+                
+                experiment_engine.dispose()
+            
+            admin_engine.dispose()
+        
+        # Update config_server.json with new port, name, and database_uri
+        experiment_config["name"] = name
+        experiment_config["port"] = suggested_port
+        experiment_config["database_uri"] = db_uri
+        
+        with open(config_path, "w") as f:
+            json.dump(experiment_config, f, indent=4)
+        
+        # Update all client configuration files with new port
+        for item in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}"):
+            if item.startswith("client") and item.endswith(".json"):
+                client_config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{item}"
+                try:
+                    with open(client_config_path, "r") as f:
+                        client_config = json.load(f)
+                    
+                    # Update the API endpoint in servers section
+                    if "servers" in client_config and "api" in client_config["servers"]:
+                        # Update the port in the API URL
+                        import re
+                        old_api = client_config["servers"]["api"]
+                        # Replace the port in the URL (format: http://host:port/)
+                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
+                        client_config["servers"]["api"] = new_api
+                        
+                        with open(client_config_path, "w") as f:
+                            json.dump(client_config, f, indent=4)
+                except Exception as e:
+                    flash(f"Warning: Failed to update client config {item}: {str(e)}")
+                    # Continue anyway - this is not critical enough to fail the entire upload
+
         exp = Exps(
             exp_name=name,
-            db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+            db_name=db_name,
             owner=current_user.username,
             exp_descr="",
             status=0,
-            port=experiment["port"],
-            server=experiment["host"],
-            platform_type=experiment["platform_type"],
+            port=suggested_port,
+            server=experiment_config.get("host", "127.0.0.1"),
+            platform_type=experiment_config.get("platform_type", "microblogging"),
         )
 
         db.session.add(exp)
@@ -438,9 +581,9 @@ def upload_experiment():
         db.session.add(exp_stats)
         db.session.commit()
 
-    except:
+    except Exception as e:
         flash(
-            "There was an error loading the experiment files. Please check the files and try again."
+            f"There was an error loading the experiment files: {str(e)}"
         )
         # remove the directory containing the files
         shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)

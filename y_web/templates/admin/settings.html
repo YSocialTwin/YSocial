@@ -722,7 +722,6 @@
                         </div>
                     </div>
 
-                    {%if dbtype=="sqlite" %}
                     <div class="sidebar-box">
                         <h3>Upload Experiment</h3>
                         <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
@@ -768,13 +767,28 @@
                                     text-align: center;
                                 }
                             </style>
+                            <div style="margin-bottom: 12px;">
+                                <label for="exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Experiment Name (optional)
+                                </label>
+                                <input type="text" 
+                                       id="exp_name" 
+                                       name="exp_name" 
+                                       class="input" 
+                                       placeholder="Leave empty to use name from config...">
+                            </div>
                             <div class="file-upload-wrapper-exp">
-                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)">
+                                <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)" required>
                                 <label for="experiment" class="file-upload-label-exp">
                                     <span class="file-upload-icon-exp">📦</span>
                                     <span class="file-upload-text-exp">Choose ZIP file...</span>
                                 </label>
                                 <div id="experiment-file-name-display" class="file-name-display-exp"></div>
+                            </div>
+                            <div class="help-block" style="margin-bottom: 12px;">
+                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
+                                    Upload a ZIP file containing experiment data. The system will automatically assign a free port (5000-6000) and configure the database.
+                                </p>
                             </div>
                             <div class="button-wrap">
                                 <button class="button is-solid primary-button is-fullwidth">
@@ -793,7 +807,6 @@
                             }
                         </script>
                     </div>
-                    {% endif %}
 
                     <!-- Copy Experiment Box -->
                     <div class="sidebar-box">
