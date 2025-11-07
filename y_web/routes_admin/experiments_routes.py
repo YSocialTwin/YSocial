@@ -463,8 +463,11 @@ def upload_experiment():
             host = parsed_uri.hostname or "localhost"
             port_db = parsed_uri.port or 5432
 
-            # New database name
+            # New database name - sanitize to ensure PostgreSQL compatibility
             dbname = f"experiments_{str(uid).replace('-', '_')}"
+            # Validate database name (only alphanumeric and underscore)
+            if not dbname.replace("_", "").isalnum():
+                raise ValueError(f"Invalid database name: {dbname}")
             db_name = dbname
             db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{dbname}"
 
@@ -476,13 +479,14 @@ def upload_experiment():
             # Check and create database if needed
             with admin_engine.connect() as conn:
                 result = conn.execute(
-                    text(f"SELECT 1 FROM pg_database WHERE datname = :dbname"),
+                    text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
                     {"dbname": dbname},
                 )
                 db_exists = result.scalar() is not None
 
             if not db_exists:
                 # CREATE DATABASE must run in AUTOCOMMIT mode
+                # Note: Database names are validated above to prevent SQL injection
                 with admin_engine.connect().execution_options(
                     isolation_level="AUTOCOMMIT"
                 ) as conn:
@@ -491,11 +495,18 @@ def upload_experiment():
                 # Connect to the newly created database
                 experiment_engine = create_engine(db_uri)
                 with experiment_engine.connect() as dummy_conn:
-                    # Load schema
+                    # Load and execute schema
                     schema_path = os.path.join("data_schema", "postgre_server.sql")
-                    with open(schema_path, "r") as schema_file:
-                        schema_sql = schema_file.read()
-                        dummy_conn.execute(text(schema_sql))
+                    try:
+                        with open(schema_path, "r") as schema_file:
+                            schema_sql = schema_file.read()
+                            dummy_conn.execute(text(schema_sql))
+                    except Exception as e:
+                        # If schema execution fails, log and re-raise
+                        current_app.logger.error(
+                            f"Failed to execute schema for database {dbname}: {str(e)}"
+                        )
+                        raise
 
                     # Insert initial admin user
                     hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
@@ -550,22 +561,37 @@ def upload_experiment():
                 try:
                     with open(client_config_path, "r") as f:
                         client_config = json.load(f)
+                except json.JSONDecodeError as e:
+                    flash(f"Warning: Failed to parse client config {item}: {str(e)}")
+                    continue
+                except IOError as e:
+                    flash(f"Warning: Failed to read client config {item}: {str(e)}")
+                    continue
 
-                    # Update the API endpoint in servers section
-                    if "servers" in client_config and "api" in client_config["servers"]:
+                # Update the API endpoint in servers section
+                if "servers" in client_config and "api" in client_config["servers"]:
+                    try:
                         # Update the port in the API URL
                         import re
 
                         old_api = client_config["servers"]["api"]
-                        # Replace the port in the URL (format: http://host:port/)
-                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
+                        # Replace port in URL - handles both with and without trailing slash
+                        # Pattern matches :port/ or :port at end of string
+                        new_api = re.sub(
+                            r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
+                        )
                         client_config["servers"]["api"] = new_api
 
                         with open(client_config_path, "w") as f:
                             json.dump(client_config, f, indent=4)
-                except Exception as e:
-                    flash(f"Warning: Failed to update client config {item}: {str(e)}")
-                    # Continue anyway - this is not critical enough to fail the entire upload
+                    except IOError as e:
+                        flash(
+                            f"Warning: Failed to write updated client config {item}: {str(e)}"
+                        )
+                    except Exception as e:
+                        flash(
+                            f"Warning: Failed to update port in client config {item}: {str(e)}"
+                        )
 
         exp = Exps(
             exp_name=name,

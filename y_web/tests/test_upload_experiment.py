@@ -92,11 +92,17 @@ def test_port_regex_patterns():
         ("http://localhost:3000/", 5000, "http://localhost:5000/"),
         ("https://example.com:443/", 6000, "https://example.com:6000/"),
         ("http://192.168.1.1:9999/api/", 5555, "http://192.168.1.1:5555/api/"),
+        # Test without trailing slash
+        ("http://127.0.0.1:8080", 5500, "http://127.0.0.1:5500"),
+        ("http://localhost:3000", 5000, "http://localhost:5000"),
     ]
 
     for old_url, new_port, expected_url in test_cases:
-        new_url = re.sub(r":\d+/", f":{new_port}/", old_url)
-        assert new_url == expected_url, f"Failed for {old_url}"
+        # Updated regex pattern that handles both with and without trailing slash
+        new_url = re.sub(r":(\d+)(/|$)", f":{new_port}\\2", old_url)
+        assert (
+            new_url == expected_url
+        ), f"Failed for {old_url}: got {new_url}, expected {expected_url}"
 
 
 def test_database_name_formats():
