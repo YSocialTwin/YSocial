@@ -727,6 +727,22 @@
 
             <!-- Upload and Copy Experiment Row -->
             <div class="columns">
+                <style>
+                    /* Force Upload and Copy Experiment boxes to have equal height */
+                    .columns .column .sidebar-box {
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .columns .column .sidebar-box form {
+                        flex-grow: 1;
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .columns .column .sidebar-box .button-wrap {
+                        margin-top: auto;
+                    }
+                </style>
                 <!--Upload Experiment column-->
                 <div class="column is-4">
                     <div class="sidebar-box">
