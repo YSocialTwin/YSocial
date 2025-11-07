@@ -227,25 +227,26 @@ def cleanup_db_jupyter_with_new_app():
 
             # close both
             for dbms in ["sqlite", "postgresql"]:
-                app = create_app(dbms)
-                with app.app_context():
-                    from y_web import db
-                    from y_web.utils.external_processes import stop_all_exps
-                    from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+                try:
+                    app = create_app(dbms)
+                    with app.app_context():
+                        from y_web import db
+                        from y_web.utils.external_processes import stop_all_exps
+                        from y_web.utils.jupyter_utils import stop_all_jupyter_instances
 
-                    try:
-                        stop_all_jupyter_instances()
-                        stop_all_exps()
 
-                        # For PostgreSQL, ensure changes are committed by explicitly closing the session
-                        db.session.commit()
-                        db.session.close()
-                        print(
-                            "Database session committed and closed successfully (new context)"
-                        )
-                    except Exception as e1:
-                        print(f"Error during DB cleanup with {dbms} app:", e1)
-                        pass
+                            stop_all_jupyter_instances()
+                            stop_all_exps()
+
+                            # For PostgreSQL, ensure changes are committed by explicitly closing the session
+                            db.session.commit()
+                            db.session.close()
+                            print(
+                                "Database session committed and closed successfully (new context)"
+                            )
+                except Exception as e1:
+                    print(f"Error during DB cleanup with {dbms} app:", e1)
+                    pass
 
     except Exception as e:
         print("Error during DB cleanup with fresh app:", e)
