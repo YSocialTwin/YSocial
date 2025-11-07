@@ -1119,10 +1119,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
         if exp.platform_type == "microblogging":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient/")
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
             from y_client.clients import YClientWeb
         elif exp.platform_type == "forum":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit/")
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
             from y_client.clients import YClientWeb
         else:
             raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
