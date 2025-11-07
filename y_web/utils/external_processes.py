@@ -522,7 +522,7 @@ def start_server(exp):
         if (
             isinstance(python_cmd, str)
             and " " in python_cmd
-            and not python_cmd.startswith("/")
+            and not os.path.isabs(python_cmd)
         ):
             # Handle commands like "pipenv run python"
             cmd_parts = python_cmd.split()
@@ -531,7 +531,7 @@ def start_server(exp):
                 cmd_parts[-1] = "gunicorn"
             cmd = cmd_parts + gunicorn_args
         else:
-            # Try to find gunicorn in the same directory as python
+            # Try to find gunicorn in the same directory as python (may contain spaces on Windows)
             gunicorn_path = Path(python_cmd).parent / "gunicorn"
             if gunicorn_path.exists():
                 cmd = [str(gunicorn_path)] + gunicorn_args
@@ -580,13 +580,13 @@ def start_server(exp):
         if (
             isinstance(python_cmd, str)
             and " " in python_cmd
-            and not python_cmd.startswith("/")
+            and not os.path.isabs(python_cmd)
         ):
             # Handle commands like "pipenv run python"
             cmd_parts = python_cmd.split()
             cmd = cmd_parts + [script_path, "-c", config]
         else:
-            # Simple python executable path
+            # Simple python executable path (may contain spaces on Windows)
             cmd = [python_cmd, script_path, "-c", config]
 
         try:
@@ -1119,10 +1119,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
         if exp.platform_type == "microblogging":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient/")
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
             from y_client.clients import YClientWeb
         elif exp.platform_type == "forum":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit/")
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
             from y_client.clients import YClientWeb
         else:
             raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
