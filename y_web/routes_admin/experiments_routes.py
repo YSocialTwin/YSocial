@@ -385,6 +385,8 @@ def upload_experiment():
     check_privileges(current_user.username)
 
     experiment = request.files["experiment"]
+    # Get experiment name from form, fallback to name from config if not provided
+    exp_name_override = request.form.get("exp_name", "").strip()
     uid = uuid.uuid4()
 
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
@@ -399,14 +401,32 @@ def upload_experiment():
     )
     # remove the zip file
     os.remove(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+
+    # Determine database type
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
+    # Get suggested port for new experiment
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        flash(
+            "Error: No available port found in range 5000-6000. Cannot upload experiment."
+        )
+        shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+        return redirect(request.referrer)
+
     # create the experiment in the database from the config_server.json file
     try:
         # list the files in the directory
         files = os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
-        experiment = json.load(
-            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}config_server.json")
-        )
-        name = experiment["name"]
+        config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}config_server.json"
+
+        with open(config_path, "r") as f:
+            experiment_config = json.load(f)
+
+        # Use override name if provided, otherwise use name from config
+        name = exp_name_override if exp_name_override else experiment_config["name"]
 
         # check if the experiment already exists
         exp = Exps.query.filter_by(exp_name=name).first()
@@ -418,15 +438,208 @@ def upload_experiment():
             shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
             return settings()
 
+        # Check client configuration files for llm_agents setting
+        # Default to enabled (1) unless we find [null] in any client config
+        llm_agents_enabled = 1
+        client_files = [
+            f
+            for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
+            if f.endswith(".json") and f.startswith("client")
+        ]
+
+        for client_file in client_files:
+            try:
+                client_config_path = (
+                    f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{client_file}"
+                )
+                with open(client_config_path, "r") as f:
+                    client_config = json.load(f)
+
+                # Check if agents.llm_agents exists and equals [null]
+                if (
+                    "agents" in client_config
+                    and "llm_agents" in client_config["agents"]
+                ):
+                    llm_agents_value = client_config["agents"]["llm_agents"]
+                    # Check if it's a list with a single null value
+                    if (
+                        isinstance(llm_agents_value, list)
+                        and len(llm_agents_value) == 1
+                        and llm_agents_value[0] is None
+                    ):
+                        llm_agents_enabled = 0
+                        break  # If any client has [null], disable for entire experiment
+            except Exception as e:
+                # If we can't read a client config, log but continue
+                current_app.logger.warning(
+                    f"Could not check llm_agents in {client_file}: {str(e)}"
+                )
+
+        # Prepare database URI and name based on db_type
+        db_name = ""
+        db_uri = ""
+
+        if db_type == "sqlite":
+            db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
+            db_uri = os.path.abspath(
+                f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}database_server.db"
+            )
+        elif db_type == "postgresql":
+            from urllib.parse import urlparse
+
+            from sqlalchemy import create_engine, text
+            from werkzeug.security import generate_password_hash
+
+            # Get current URI and parse it
+            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+            parsed_uri = urlparse(current_uri)
+
+            # Extract components
+            user = parsed_uri.username or "postgres"
+            password = parsed_uri.password or "password"
+            host = parsed_uri.hostname or "localhost"
+            port_db = parsed_uri.port or 5432
+
+            # New database name - sanitize to ensure PostgreSQL compatibility
+            dbname = f"experiments_{str(uid).replace('-', '_')}"
+            # Validate database name (only alphanumeric and underscore)
+            if not dbname.replace("_", "").isalnum():
+                raise ValueError(f"Invalid database name: {dbname}")
+            db_name = dbname
+            db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{dbname}"
+
+            # Connect to the default 'postgres' DB to check/create the new one
+            admin_engine = create_engine(
+                f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+            )
+
+            # Check and create database if needed
+            with admin_engine.connect() as conn:
+                result = conn.execute(
+                    text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
+                    {"dbname": dbname},
+                )
+                db_exists = result.scalar() is not None
+
+            if not db_exists:
+                # CREATE DATABASE must run in AUTOCOMMIT mode
+                # Note: Database names are validated above to prevent SQL injection
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    conn.execute(text(f'CREATE DATABASE "{dbname}"'))
+
+                # Connect to the newly created database
+                experiment_engine = create_engine(db_uri)
+                with experiment_engine.connect() as dummy_conn:
+                    # Load and execute schema
+                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    try:
+                        with open(schema_path, "r") as schema_file:
+                            schema_sql = schema_file.read()
+                            dummy_conn.execute(text(schema_sql))
+                    except Exception as e:
+                        # If schema execution fails, log and re-raise
+                        current_app.logger.error(
+                            f"Failed to execute schema for database {dbname}: {str(e)}"
+                        )
+                        raise
+
+                    # Insert initial admin user
+                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+
+                    stmt = text(
+                        """
+                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
+                                               language, owner, joined_on, frecsys_type,
+                                               round_actions, toxicity, is_page, daily_activity_level)
+                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
+                                :language, :owner, :joined_on, :frecsys_type,
+                                :round_actions, :toxicity, :is_page, :daily_activity_level)
+                        """
+                    )
+
+                    dummy_conn.execute(
+                        stmt,
+                        {
+                            "username": "admin",
+                            "email": "admin@ysocial.com",
+                            "password": hashed_pw,
+                            "user_type": "user",
+                            "leaning": "none",
+                            "age": 0,
+                            "language": "en",
+                            "owner": "admin",
+                            "joined_on": 0,
+                            "frecsys_type": "default",
+                            "round_actions": 3,
+                            "toxicity": "none",
+                            "is_page": 0,
+                            "daily_activity_level": 1,
+                        },
+                    )
+
+                experiment_engine.dispose()
+
+            admin_engine.dispose()
+
+        # Update config_server.json with new port, name, and database_uri
+        experiment_config["name"] = name
+        experiment_config["port"] = suggested_port
+        experiment_config["database_uri"] = db_uri
+
+        with open(config_path, "w") as f:
+            json.dump(experiment_config, f, indent=4)
+
+        # Update all client configuration files with new port
+        for item in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}"):
+            if item.startswith("client") and item.endswith(".json"):
+                client_config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{item}"
+                try:
+                    with open(client_config_path, "r") as f:
+                        client_config = json.load(f)
+                except json.JSONDecodeError as e:
+                    flash(f"Warning: Failed to parse client config {item}: {str(e)}")
+                    continue
+                except IOError as e:
+                    flash(f"Warning: Failed to read client config {item}: {str(e)}")
+                    continue
+
+                # Update the API endpoint in servers section
+                if "servers" in client_config and "api" in client_config["servers"]:
+                    try:
+                        # Update the port in the API URL
+                        import re
+
+                        old_api = client_config["servers"]["api"]
+                        # Replace port in URL - handles both with and without trailing slash
+                        # Pattern matches :port/ or :port at end of string
+                        new_api = re.sub(
+                            r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
+                        )
+                        client_config["servers"]["api"] = new_api
+
+                        with open(client_config_path, "w") as f:
+                            json.dump(client_config, f, indent=4)
+                    except IOError as e:
+                        flash(
+                            f"Warning: Failed to write updated client config {item}: {str(e)}"
+                        )
+                    except Exception as e:
+                        flash(
+                            f"Warning: Failed to update port in client config {item}: {str(e)}"
+                        )
+
         exp = Exps(
             exp_name=name,
-            db_name=f"experiments{os.sep}{uid}{os.sep}database_server.db",
+            db_name=db_name,
             owner=current_user.username,
             exp_descr="",
             status=0,
-            port=experiment["port"],
-            server=experiment["host"],
-            platform_type=experiment["platform_type"],
+            port=suggested_port,
+            server=experiment_config.get("host", "127.0.0.1"),
+            platform_type=experiment_config.get("platform_type", "microblogging"),
+            llm_agents_enabled=llm_agents_enabled,
         )
 
         db.session.add(exp)
@@ -438,10 +651,15 @@ def upload_experiment():
         db.session.add(exp_stats)
         db.session.commit()
 
-    except:
-        flash(
-            "There was an error loading the experiment files. Please check the files and try again."
+        # Create Jupyter instance record
+        jupyter_instance = Jupyter_instances(
+            port=-1, notebook_dir="", exp_id=exp.idexp, status="stopped"
         )
+        db.session.add(jupyter_instance)
+        db.session.commit()
+
+    except Exception as e:
+        flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
         shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
         return redirect(request.referrer)
@@ -456,101 +674,174 @@ def upload_experiment():
         and f != "prompts.json"
     ]
 
-    for population in populations:
-        name = population.split(".")[0]
-        pop = json.load(open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population}"))
+    for population_file in populations:
+        original_name = population_file.split(".")[0]
+        pop = json.load(
+            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population_file}")
+        )
 
         # check if the population already exists
-        population = Population.query.filter_by(name=name).first()
-        if population:
-            flash(
-                "The population already exists. Please check the population name and try again."
-            )
-            shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
-            return redirect(request.referrer)
+        existing_population = Population.query.filter_by(name=original_name).first()
+        population_created_or_reused = None  # Track if we need to create agents
 
-        population = Population(name=name, descr="")
-        db.session.add(population)
-        db.session.commit()
+        if existing_population:
+            # Population exists - need to check if agents are the same
+            # Get agent names from uploaded config
+            uploaded_agent_names = set()
+            for agent in pop["agents"]:
+                uploaded_agent_names.add(agent["name"])
 
-        pop_exp = Population_Experiment(id_exp=exp.idexp, id_population=population.id)
-        db.session.add(pop_exp)
-        db.session.commit()
+            # Get agent names from existing population
+            existing_agent_names = set()
+            # Get agents linked to this population
+            agent_pop_links = Agent_Population.query.filter_by(
+                population_id=existing_population.id
+            ).all()
+            for link in agent_pop_links:
+                agent = Agent.query.get(link.agent_id)
+                if agent:
+                    existing_agent_names.add(agent.name)
 
-        for agent in pop["agents"]:
-            if agent["is_page"] == 1:
-                # check if the page already exists
-                page = Page.query.filter_by(name=agent["name"]).first()
-
+            # Get pages linked to this population
+            page_pop_links = Page_Population.query.filter_by(
+                population_id=existing_population.id
+            ).all()
+            for link in page_pop_links:
+                page = Page.query.get(link.page_id)
                 if page:
-                    # add page to the population
-                    ap = Page_Population(page_id=page.id, population_id=population.id)
-                    db.session.add(ap)
-                    db.session.commit()
+                    existing_agent_names.add(page.name)
 
-                else:
-                    # add page to the database
-                    page = Page(
-                        name=agent["name"],
-                        descr="",
-                        page_type="",
-                        feed=agent["feed_url"],
-                        keywords="",
-                        pg_type=agent["type"],
-                        leaning=agent["leaning"],
-                        logo="",
-                    )
-                    db.session.add(page)
-                    db.session.commit()
-
-                    # add page to the population
-                    ap = Page_Population(page_id=page.id, population_id=population.id)
-                    db.session.add(ap)
-                    db.session.commit()
-
-            # add agent to the database
-            else:
-                ag = Agent(
-                    name=agent["name"],
-                    age=agent["age"],
-                    ag_type=agent["type"],
-                    leaning=agent["leaning"],
-                    interests=",".join(agent["interests"][0]),
-                    oe=agent["oe"],
-                    co=agent["co"],
-                    ne=agent["ne"],
-                    ag=agent["ag"],
-                    ex=agent["ex"],
-                    language=agent["language"],
-                    education_level=agent["education_level"],
-                    round_actions=agent["round_actions"],
-                    nationality=agent["nationality"],
-                    toxicity=agent["toxicity"],
-                    gender=agent["gender"],
-                    crecsys=agent["rec_sys"],
-                    frecsys=agent["frec_sys"],
-                    profile_pic="",
-                    daily_activity_level=agent["daily_activity_level"],
-                    profession=agent["profession"] if "profession" in agent else "",
+            # Check if agents are the same
+            if uploaded_agent_names == existing_agent_names:
+                # Agents are the same - just link existing population to experiment
+                population = existing_population
+                pop_exp = Population_Experiment(
+                    id_exp=exp.idexp, id_population=population.id
                 )
-                db.session.add(ag)
+                db.session.add(pop_exp)
                 db.session.commit()
 
-                if "prompts" in agent and agent["prompts"] is not None:
-                    ag_profile = Agent_Profile(agent_id=ag.id, profile=agent["prompts"])
-                    db.session.add(ag_profile)
+                # Skip agent creation - use existing agents
+                population_created_or_reused = population
+            else:
+                # Agents are different - create new population with modified name
+                # Find a unique name by appending a counter
+                counter = 1
+                new_name = f"{original_name}_{counter}"
+                while Population.query.filter_by(name=new_name).first():
+                    counter += 1
+                    new_name = f"{original_name}_{counter}"
+
+                # Create new population with unique name
+                population = Population(name=new_name, descr="")
+                db.session.add(population)
+                db.session.commit()
+
+                pop_exp = Population_Experiment(
+                    id_exp=exp.idexp, id_population=population.id
+                )
+                db.session.add(pop_exp)
+                db.session.commit()
+
+                # Mark that we need to create agents for this new population
+                population_created_or_reused = None
+        else:
+            # Create new population and its agents
+            population = Population(name=original_name, descr="")
+            db.session.add(population)
+            db.session.commit()
+
+            pop_exp = Population_Experiment(
+                id_exp=exp.idexp, id_population=population.id
+            )
+            db.session.add(pop_exp)
+            db.session.commit()
+
+            # Mark that we need to create agents for this new population
+            population_created_or_reused = None
+
+        # Only create agents if this is a new population or agents are different
+        if population_created_or_reused is None:
+            for agent in pop["agents"]:
+                if agent["is_page"] == 1:
+                    # check if the page already exists
+                    page = Page.query.filter_by(name=agent["name"]).first()
+
+                    if page:
+                        # add page to the population
+                        ap = Page_Population(
+                            page_id=page.id, population_id=population.id
+                        )
+                        db.session.add(ap)
+                        db.session.commit()
+
+                    else:
+                        # add page to the database
+                        page = Page(
+                            name=agent["name"],
+                            descr="",
+                            page_type="",
+                            feed=agent["feed_url"],
+                            keywords="",
+                            pg_type=agent["type"],
+                            leaning=agent["leaning"],
+                            logo="",
+                        )
+                        db.session.add(page)
+                        db.session.commit()
+
+                        # add page to the population
+                        ap = Page_Population(
+                            page_id=page.id, population_id=population.id
+                        )
+                        db.session.add(ap)
+                        db.session.commit()
+
+                # add agent to the database
+                else:
+                    ag = Agent(
+                        name=agent["name"],
+                        age=agent["age"],
+                        ag_type=agent["type"],
+                        leaning=agent["leaning"],
+                        interests=",".join(agent["interests"][0]),
+                        oe=agent["oe"],
+                        co=agent["co"],
+                        ne=agent["ne"],
+                        ag=agent["ag"],
+                        ex=agent["ex"],
+                        language=agent["language"],
+                        education_level=agent["education_level"],
+                        round_actions=agent["round_actions"],
+                        nationality=agent["nationality"],
+                        toxicity=agent["toxicity"],
+                        gender=agent["gender"],
+                        crecsys=agent["rec_sys"],
+                        frecsys=agent["frec_sys"],
+                        profile_pic="",
+                        daily_activity_level=agent["daily_activity_level"],
+                        profession=agent["profession"] if "profession" in agent else "",
+                    )
+                    db.session.add(ag)
                     db.session.commit()
 
-                # add agent to population
-                ap = Agent_Population(agent_id=ag.id, population_id=population.id)
-                db.session.add(ap)
-                db.session.commit()
+                    if "prompts" in agent and agent["prompts"] is not None:
+                        ag_profile = Agent_Profile(
+                            agent_id=ag.id, profile=agent["prompts"]
+                        )
+                        db.session.add(ag_profile)
+                        db.session.commit()
+
+                    # add agent to population
+                    ap = Agent_Population(agent_id=ag.id, population_id=population.id)
+                    db.session.add(ap)
+                    db.session.commit()
 
         # get the json file that start with "client" and contains "population"
         client = [
             f
             for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
-            if f.endswith(".json") and f.startswith("client") and name in f
+            if f.endswith(".json") and f.startswith("client") and original_name in f
         ]
         if len(client) == 0:
             flash("No client file found for the population")
