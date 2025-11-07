@@ -634,90 +634,103 @@ def upload_experiment():
         pop = json.load(open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population}"))
 
         # check if the population already exists
-        population = Population.query.filter_by(name=name).first()
-        if population:
-            flash(
-                "The population already exists. Please check the population name and try again."
+        existing_population = Population.query.filter_by(name=name).first()
+        if existing_population:
+            # Use existing population - just link it to the new experiment
+            population = existing_population
+            pop_exp = Population_Experiment(
+                id_exp=exp.idexp, id_population=population.id
             )
-            shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
-            return redirect(request.referrer)
+            db.session.add(pop_exp)
+            db.session.commit()
+        else:
+            # Create new population and its agents
+            population = Population(name=name, descr="")
+            db.session.add(population)
+            db.session.commit()
 
-        population = Population(name=name, descr="")
-        db.session.add(population)
-        db.session.commit()
+            pop_exp = Population_Experiment(
+                id_exp=exp.idexp, id_population=population.id
+            )
+            db.session.add(pop_exp)
+            db.session.commit()
 
-        pop_exp = Population_Experiment(id_exp=exp.idexp, id_population=population.id)
-        db.session.add(pop_exp)
-        db.session.commit()
+        # Only create agents if this is a new population
+        if not existing_population:
+            for agent in pop["agents"]:
+                if agent["is_page"] == 1:
+                    # check if the page already exists
+                    page = Page.query.filter_by(name=agent["name"]).first()
 
-        for agent in pop["agents"]:
-            if agent["is_page"] == 1:
-                # check if the page already exists
-                page = Page.query.filter_by(name=agent["name"]).first()
+                    if page:
+                        # add page to the population
+                        ap = Page_Population(
+                            page_id=page.id, population_id=population.id
+                        )
+                        db.session.add(ap)
+                        db.session.commit()
 
-                if page:
-                    # add page to the population
-                    ap = Page_Population(page_id=page.id, population_id=population.id)
-                    db.session.add(ap)
-                    db.session.commit()
+                    else:
+                        # add page to the database
+                        page = Page(
+                            name=agent["name"],
+                            descr="",
+                            page_type="",
+                            feed=agent["feed_url"],
+                            keywords="",
+                            pg_type=agent["type"],
+                            leaning=agent["leaning"],
+                            logo="",
+                        )
+                        db.session.add(page)
+                        db.session.commit()
 
+                        # add page to the population
+                        ap = Page_Population(
+                            page_id=page.id, population_id=population.id
+                        )
+                        db.session.add(ap)
+                        db.session.commit()
+
+                # add agent to the database
                 else:
-                    # add page to the database
-                    page = Page(
+                    ag = Agent(
                         name=agent["name"],
-                        descr="",
-                        page_type="",
-                        feed=agent["feed_url"],
-                        keywords="",
-                        pg_type=agent["type"],
+                        age=agent["age"],
+                        ag_type=agent["type"],
                         leaning=agent["leaning"],
-                        logo="",
+                        interests=",".join(agent["interests"][0]),
+                        oe=agent["oe"],
+                        co=agent["co"],
+                        ne=agent["ne"],
+                        ag=agent["ag"],
+                        ex=agent["ex"],
+                        language=agent["language"],
+                        education_level=agent["education_level"],
+                        round_actions=agent["round_actions"],
+                        nationality=agent["nationality"],
+                        toxicity=agent["toxicity"],
+                        gender=agent["gender"],
+                        crecsys=agent["rec_sys"],
+                        frecsys=agent["frec_sys"],
+                        profile_pic="",
+                        daily_activity_level=agent["daily_activity_level"],
+                        profession=agent["profession"] if "profession" in agent else "",
                     )
-                    db.session.add(page)
+                    db.session.add(ag)
                     db.session.commit()
 
-                    # add page to the population
-                    ap = Page_Population(page_id=page.id, population_id=population.id)
+                    if "prompts" in agent and agent["prompts"] is not None:
+                        ag_profile = Agent_Profile(
+                            agent_id=ag.id, profile=agent["prompts"]
+                        )
+                        db.session.add(ag_profile)
+                        db.session.commit()
+
+                    # add agent to population
+                    ap = Agent_Population(agent_id=ag.id, population_id=population.id)
                     db.session.add(ap)
                     db.session.commit()
-
-            # add agent to the database
-            else:
-                ag = Agent(
-                    name=agent["name"],
-                    age=agent["age"],
-                    ag_type=agent["type"],
-                    leaning=agent["leaning"],
-                    interests=",".join(agent["interests"][0]),
-                    oe=agent["oe"],
-                    co=agent["co"],
-                    ne=agent["ne"],
-                    ag=agent["ag"],
-                    ex=agent["ex"],
-                    language=agent["language"],
-                    education_level=agent["education_level"],
-                    round_actions=agent["round_actions"],
-                    nationality=agent["nationality"],
-                    toxicity=agent["toxicity"],
-                    gender=agent["gender"],
-                    crecsys=agent["rec_sys"],
-                    frecsys=agent["frec_sys"],
-                    profile_pic="",
-                    daily_activity_level=agent["daily_activity_level"],
-                    profession=agent["profession"] if "profession" in agent else "",
-                )
-                db.session.add(ag)
-                db.session.commit()
-
-                if "prompts" in agent and agent["prompts"] is not None:
-                    ag_profile = Agent_Profile(agent_id=ag.id, profile=agent["prompts"])
-                    db.session.add(ag_profile)
-                    db.session.commit()
-
-                # add agent to population
-                ap = Agent_Population(agent_id=ag.id, population_id=population.id)
-                db.session.add(ap)
-                db.session.commit()
 
         # get the json file that start with "client" and contains "population"
         client = [
