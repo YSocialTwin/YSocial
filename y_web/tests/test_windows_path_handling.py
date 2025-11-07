@@ -62,7 +62,9 @@ class TestPathDetectionLogic:
 
         for cmd in commands:
             result = os.path.isabs(cmd)
-            assert not result, f"Command {cmd} should not be recognized as absolute path"
+            assert (
+                not result
+            ), f"Command {cmd} should not be recognized as absolute path"
 
     def test_path_classification_logic(self):
         """
@@ -107,9 +109,7 @@ class TestPathDetectionLogic:
         for path, has_space, is_absolute, should_split in test_cases:
             # Check space detection
             actual_has_space = " " in path
-            assert (
-                actual_has_space == has_space
-            ), f"Space detection failed for {path}"
+            assert actual_has_space == has_space, f"Space detection failed for {path}"
 
             # Check absolute path detection
             actual_is_abs = os.path.isabs(path)
@@ -163,13 +163,9 @@ class TestPathDetectionLogic:
         # On Windows, the new logic should correctly identify this as a path
         if os.name == "nt":
             # Old logic would split (bad)
-            assert (
-                old_condition == True
-            ), "Old logic should have split the path (bug)"
+            assert old_condition == True, "Old logic should have split the path (bug)"
             # New logic should NOT split (good)
-            assert (
-                new_condition == False
-            ), "New logic should NOT split the path (fix)"
+            assert new_condition == False, "New logic should NOT split the path (fix)"
         else:
             # On Unix, the path isn't absolute, so behavior may differ
             # But that's okay because Unix paths don't have spaces in drive letters
@@ -185,9 +181,7 @@ class TestPathDetectionLogic:
 
         # The logic should split this
         should_split = (
-            isinstance(command, str)
-            and " " in command
-            and not os.path.isabs(command)
+            isinstance(command, str) and " " in command and not os.path.isabs(command)
         )
 
         assert should_split, "Commands with spaces should still be split"
@@ -195,4 +189,3 @@ class TestPathDetectionLogic:
         # If we were to split it:
         parts = command.split()
         assert parts == ["pipenv", "run", "python"]
-
