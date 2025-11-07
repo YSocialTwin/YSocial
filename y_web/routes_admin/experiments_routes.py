@@ -629,23 +629,80 @@ def upload_experiment():
         and f != "prompts.json"
     ]
 
-    for population in populations:
-        name = population.split(".")[0]
-        pop = json.load(open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population}"))
+    for population_file in populations:
+        original_name = population_file.split(".")[0]
+        pop = json.load(
+            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population_file}")
+        )
 
         # check if the population already exists
-        existing_population = Population.query.filter_by(name=name).first()
+        existing_population = Population.query.filter_by(name=original_name).first()
+        population_created_or_reused = None  # Track if we need to create agents
+
         if existing_population:
-            # Use existing population - just link it to the new experiment
-            population = existing_population
-            pop_exp = Population_Experiment(
-                id_exp=exp.idexp, id_population=population.id
-            )
-            db.session.add(pop_exp)
-            db.session.commit()
+            # Population exists - need to check if agents are the same
+            # Get agent names from uploaded config
+            uploaded_agent_names = set()
+            for agent in pop["agents"]:
+                uploaded_agent_names.add(agent["name"])
+
+            # Get agent names from existing population
+            existing_agent_names = set()
+            # Get agents linked to this population
+            agent_pop_links = Agent_Population.query.filter_by(
+                population_id=existing_population.id
+            ).all()
+            for link in agent_pop_links:
+                agent = Agent.query.get(link.agent_id)
+                if agent:
+                    existing_agent_names.add(agent.name)
+
+            # Get pages linked to this population
+            page_pop_links = Page_Population.query.filter_by(
+                population_id=existing_population.id
+            ).all()
+            for link in page_pop_links:
+                page = Page.query.get(link.page_id)
+                if page:
+                    existing_agent_names.add(page.name)
+
+            # Check if agents are the same
+            if uploaded_agent_names == existing_agent_names:
+                # Agents are the same - just link existing population to experiment
+                population = existing_population
+                pop_exp = Population_Experiment(
+                    id_exp=exp.idexp, id_population=population.id
+                )
+                db.session.add(pop_exp)
+                db.session.commit()
+
+                # Skip agent creation - use existing agents
+                population_created_or_reused = population
+            else:
+                # Agents are different - create new population with modified name
+                # Find a unique name by appending a counter
+                counter = 1
+                new_name = f"{original_name}_{counter}"
+                while Population.query.filter_by(name=new_name).first():
+                    counter += 1
+                    new_name = f"{original_name}_{counter}"
+
+                # Create new population with unique name
+                population = Population(name=new_name, descr="")
+                db.session.add(population)
+                db.session.commit()
+
+                pop_exp = Population_Experiment(
+                    id_exp=exp.idexp, id_population=population.id
+                )
+                db.session.add(pop_exp)
+                db.session.commit()
+
+                # Mark that we need to create agents for this new population
+                population_created_or_reused = None
         else:
             # Create new population and its agents
-            population = Population(name=name, descr="")
+            population = Population(name=original_name, descr="")
             db.session.add(population)
             db.session.commit()
 
@@ -655,8 +712,11 @@ def upload_experiment():
             db.session.add(pop_exp)
             db.session.commit()
 
-        # Only create agents if this is a new population
-        if not existing_population:
+            # Mark that we need to create agents for this new population
+            population_created_or_reused = None
+
+        # Only create agents if this is a new population or agents are different
+        if population_created_or_reused is None:
             for agent in pop["agents"]:
                 if agent["is_page"] == 1:
                     # check if the page already exists
@@ -736,7 +796,7 @@ def upload_experiment():
         client = [
             f
             for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
-            if f.endswith(".json") and f.startswith("client") and name in f
+            if f.endswith(".json") and f.startswith("client") and original_name in f
         ]
         if len(client) == 0:
             flash("No client file found for the population")
