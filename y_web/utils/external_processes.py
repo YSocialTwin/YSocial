@@ -522,7 +522,7 @@ def start_server(exp):
         if (
             isinstance(python_cmd, str)
             and " " in python_cmd
-            and not python_cmd.startswith("/")
+            and not os.path.isabs(python_cmd)
         ):
             # Handle commands like "pipenv run python"
             cmd_parts = python_cmd.split()
@@ -531,7 +531,7 @@ def start_server(exp):
                 cmd_parts[-1] = "gunicorn"
             cmd = cmd_parts + gunicorn_args
         else:
-            # Try to find gunicorn in the same directory as python
+            # Try to find gunicorn in the same directory as python (may contain spaces on Windows)
             gunicorn_path = Path(python_cmd).parent / "gunicorn"
             if gunicorn_path.exists():
                 cmd = [str(gunicorn_path)] + gunicorn_args
@@ -580,13 +580,13 @@ def start_server(exp):
         if (
             isinstance(python_cmd, str)
             and " " in python_cmd
-            and not python_cmd.startswith("/")
+            and not os.path.isabs(python_cmd)
         ):
             # Handle commands like "pipenv run python"
             cmd_parts = python_cmd.split()
             cmd = cmd_parts + [script_path, "-c", config]
         else:
-            # Simple python executable path
+            # Simple python executable path (may contain spaces on Windows)
             cmd = [python_cmd, script_path, "-c", config]
 
         try:
