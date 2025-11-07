@@ -438,6 +438,43 @@ def upload_experiment():
             shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
             return settings()
 
+        # Check client configuration files for llm_agents setting
+        # Default to enabled (1) unless we find [null] in any client config
+        llm_agents_enabled = 1
+        client_files = [
+            f
+            for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
+            if f.endswith(".json") and f.startswith("client")
+        ]
+
+        for client_file in client_files:
+            try:
+                client_config_path = (
+                    f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{client_file}"
+                )
+                with open(client_config_path, "r") as f:
+                    client_config = json.load(f)
+
+                # Check if agents.llm_agents exists and equals [null]
+                if (
+                    "agents" in client_config
+                    and "llm_agents" in client_config["agents"]
+                ):
+                    llm_agents_value = client_config["agents"]["llm_agents"]
+                    # Check if it's a list with a single null value
+                    if (
+                        isinstance(llm_agents_value, list)
+                        and len(llm_agents_value) == 1
+                        and llm_agents_value[0] is None
+                    ):
+                        llm_agents_enabled = 0
+                        break  # If any client has [null], disable for entire experiment
+            except Exception as e:
+                # If we can't read a client config, log but continue
+                current_app.logger.warning(
+                    f"Could not check llm_agents in {client_file}: {str(e)}"
+                )
+
         # Prepare database URI and name based on db_type
         db_name = ""
         db_uri = ""
@@ -602,6 +639,7 @@ def upload_experiment():
             port=suggested_port,
             server=experiment_config.get("host", "127.0.0.1"),
             platform_type=experiment_config.get("platform_type", "microblogging"),
+            llm_agents_enabled=llm_agents_enabled,
         )
 
         db.session.add(exp)
