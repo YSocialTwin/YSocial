@@ -266,8 +266,12 @@ def detect_env_handler():
 
     # Determine platform-specific directory and executable names
     is_windows = sys.platform.startswith("win")
-    bin_dir = "Scripts" if is_windows else "bin"
-    python_name = "python.exe" if is_windows else "python"
+
+    if is_windows:
+        return python_exe
+
+    bin_dir = "bin"
+    python_name = "python"
 
     # --- Case 1: Conda / Miniconda ---
     conda_prefix = os.environ.get("CONDA_PREFIX")
