@@ -1264,18 +1264,18 @@ def terminate_client(cli, pause=False):
 def start_client(exp, cli, population, resume=True):
     """
     Handle start client operation using subprocess.Popen.
-    
+
     This function launches a client process for an experiment. The process
     is started using subprocess.Popen to allow for better process management
     and isolation. The process PID is stored in the database for later
     management and graceful termination.
-    
+
     Args:
         exp: the experiment object
         cli: the client object
         population: the population object
         resume: whether to resume from last state (default: True)
-    
+
     Returns:
         subprocess.Popen: The started process object
     """
@@ -1285,40 +1285,48 @@ def start_client(exp, cli, population, resume=True):
 
     # Get the Python executable to use
     python_cmd = detect_env_handler()
-    
+
     # Build path to the client process runner script
     utils_path = os.path.dirname(os.path.abspath(__file__))
     runner_script = os.path.join(utils_path, "y_client_process_runner.py")
-    
+
     # Validate that runner script exists
     if not Path(runner_script).exists():
         raise FileNotFoundError(
             f"Client runner script not found: {runner_script}\n"
             f"Please ensure y_client_process_runner.py exists in the utils directory."
         )
-    
+
     # Build the command arguments
     cmd_args = [
-        "--exp-id", str(exp.idexp),
-        "--client-id", str(cli.id),
-        "--population-id", str(population.id),
-        "--db-type", db_type,
+        "--exp-id",
+        str(exp.idexp),
+        "--client-id",
+        str(cli.id),
+        "--population-id",
+        str(population.id),
+        "--db-type",
+        db_type,
     ]
-    
+
     if resume:
         cmd_args.append("--resume")
     else:
         cmd_args.append("--no-resume")
-    
+
     # Build the command as a list for subprocess.Popen
-    if isinstance(python_cmd, str) and " " in python_cmd and not os.path.isabs(python_cmd):
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
         # Handle commands like "pipenv run python"
         cmd_parts = python_cmd.split()
         cmd = cmd_parts + [runner_script] + cmd_args
     else:
         # Simple python executable path (may contain spaces on Windows)
         cmd = [python_cmd, runner_script] + cmd_args
-    
+
     # Create log files for client output
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
     if "experiments_" in exp.db_name:
@@ -1326,11 +1334,13 @@ def start_client(exp, cli, population, resume=True):
         log_dir = Path(f"{BASE_DIR}experiments{os.sep}{uid}")
     else:
         uid = exp.db_name.split(os.sep)[1]
-        log_dir = Path(f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}")
-    
+        log_dir = Path(
+            f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}"
+        )
+
     stdout_log = log_dir / f"{cli.name}_client_stdout.log"
     stderr_log = log_dir / f"{cli.name}_client_stderr.log"
-    
+
     # Open log files for the subprocess
     try:
         out_file = open(stdout_log, "a")
@@ -1339,16 +1349,18 @@ def start_client(exp, cli, population, resume=True):
         print(f"Warning: Could not open log files: {e}")
         out_file = subprocess.DEVNULL
         err_file = subprocess.DEVNULL
-    
+
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
-    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     if "PYTHONPATH" in env:
         env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
     else:
         env["PYTHONPATH"] = project_root
-    
+
     # Start the process with Popen
     try:
         if sys.platform.startswith("win"):
@@ -1377,7 +1389,7 @@ def start_client(exp, cli, population, resume=True):
                 env=env,
                 cwd=project_root,
             )
-        
+
         print(f"Client process started with PID: {process.pid}")
         #if out_file != subprocess.DEVNULL:
         #    print(f"Logs: {stdout_log} and {stderr_log}")
@@ -1389,7 +1401,7 @@ def start_client(exp, cli, population, resume=True):
     # Store PID in database
     cli.pid = process.pid
     db.session.commit()
-    
+
     return process
 
 

@@ -271,21 +271,21 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
     if sys.platform.startswith("win"):
         # Try to find jupyter-lab executable using multiple methods
         jupyter_lab_cmd = None
-        
+
         # Method 1: Check in Python's Scripts directory
         python_dir = Path(sys.executable).parent
         jupyter_lab_exe = python_dir / "Scripts" / "jupyter-lab.exe"
         if jupyter_lab_exe.exists():
             jupyter_lab_cmd = str(jupyter_lab_exe)
             print(f"Found jupyter-lab.exe: {jupyter_lab_cmd}")
-        
+
         # Method 2: Try shutil.which to find in PATH
         if not jupyter_lab_cmd:
             jupyter_lab_which = shutil.which("jupyter-lab")
             if jupyter_lab_which:
                 jupyter_lab_cmd = jupyter_lab_which
                 print(f"Found jupyter-lab via which: {jupyter_lab_cmd}")
-        
+
         # Method 3: Try to find jupyter.exe and verify it supports lab subcommand
         if not jupyter_lab_cmd:
             jupyter_exe = python_dir / "Scripts" / "jupyter.exe"
@@ -296,16 +296,20 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                         [str(jupyter_exe), "lab", "--version"],
                         capture_output=True,
                         text=True,
-                        timeout=5
+                        timeout=5,
                     )
                     if result.returncode == 0:
                         jupyter_lab_cmd = str(jupyter_exe)
-                        print(f"Found jupyter.exe with lab subcommand support: {jupyter_lab_cmd}")
+                        print(
+                            f"Found jupyter.exe with lab subcommand support: {jupyter_lab_cmd}"
+                        )
                     else:
-                        print(f"jupyter.exe exists but 'lab' subcommand not available: {result.stderr}")
+                        print(
+                            f"jupyter.exe exists but 'lab' subcommand not available: {result.stderr}"
+                        )
                 except (subprocess.TimeoutExpired, Exception) as e:
                     print(f"Could not verify jupyter lab support: {e}")
-        
+
         if jupyter_lab_cmd:
             # Use the found executable
             # Check if we found jupyter.exe (needs "lab" argument) or jupyter-lab.exe
@@ -351,7 +355,9 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                 ]
         else:
             # No jupyter-lab executable found, try python -m jupyterlab as last resort
-            print("WARNING: jupyter-lab executable not found. Trying 'python -m jupyterlab'")
+            print(
+                "WARNING: jupyter-lab executable not found. Trying 'python -m jupyterlab'"
+            )
             print("If this fails, install jupyterlab with: pip install jupyterlab")
             cmd = [
                 sys.executable,
@@ -447,7 +453,9 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             if process.poll() is not None:
                 # Process ended early which usually means an error
                 err = "".join(stderr_output) + (process.stderr.read() or "")
-                print(f"Process exited early with return code {process.returncode}: {err}")
+                print(
+                    f"Process exited early with return code {process.returncode}: {err}"
+                )
                 # Return error message with details
                 return False, f"Jupyter Lab failed to start: {err[:500]}", None
 
