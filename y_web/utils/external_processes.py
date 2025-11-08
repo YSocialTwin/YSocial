@@ -584,63 +584,71 @@ def start_server(exp):
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 
+        # Open log files for the subprocess - they need to stay open for the lifetime of the process
+        try:
+            out_file = open(stdout_log, "a")
+            err_file = open(stderr_log, "a")
+        except Exception as e:
+            print(f"Warning: Could not open log files: {e}")
+            out_file = subprocess.DEVNULL
+            err_file = subprocess.DEVNULL
+
         try:
             # Start the process with Popen
             # On Windows, use creationflags instead of start_new_session to avoid console window
             # Redirect output to files instead of PIPE to avoid blocking
-            with open(stdout_log, "a") as out_file, open(stderr_log, "a") as err_file:
-                if sys.platform.startswith("win"):
-                    try:
-                        creationflags = subprocess.CREATE_NO_WINDOW
-                    except AttributeError:
-                        creationflags = 0x08000000
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        creationflags=creationflags,
-                        env=env,
-                    )
-                else:
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        start_new_session=True,
-                        env=env,
-                    )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
             print(f"Server process started with PID: {process.pid}")
-            print(f"Logs: {stdout_log} and {stderr_log}")
+            if out_file != subprocess.DEVNULL:
+                print(f"Logs: {stdout_log} and {stderr_log}")
         except Exception as e:
             # Fallback: try to use gunicorn from system path
             print(f"Error starting server process: {e}")
             gunicorn_which = shutil.which("gunicorn")
             fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
-            with open(stdout_log, "a") as out_file, open(stderr_log, "a") as err_file:
-                if sys.platform.startswith("win"):
-                    try:
-                        creationflags = subprocess.CREATE_NO_WINDOW
-                    except AttributeError:
-                        creationflags = 0x08000000
-                    process = subprocess.Popen(
-                        fallback_cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        creationflags=creationflags,
-                        env=env,
-                    )
-                else:
-                    process = subprocess.Popen(
-                        fallback_cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        start_new_session=True,
-                        env=env,
-                    )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
     else:
         # Use standard Python execution for SQLite
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
@@ -664,62 +672,72 @@ def start_server(exp):
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 
+        # Open log files for the subprocess - they need to stay open for the lifetime of the process
+        # We don't use 'with' because the process needs to outlive this function
+        try:
+            out_file = open(stdout_log, "a")
+            err_file = open(stderr_log, "a")
+        except Exception as e:
+            print(f"Warning: Could not open log files: {e}")
+            # Fallback to DEVNULL if log files can't be opened
+            out_file = subprocess.DEVNULL
+            err_file = subprocess.DEVNULL
+
         try:
             # Start the process with Popen
             # On Windows, use creationflags instead of start_new_session to avoid console window
             # Redirect output to files instead of PIPE to avoid blocking
-            with open(stdout_log, "a") as out_file, open(stderr_log, "a") as err_file:
-                if sys.platform.startswith("win"):
-                    # DETACHED_PROCESS = 0x00000008 - creates process without console
-                    # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
-                    try:
-                        creationflags = subprocess.CREATE_NO_WINDOW
-                    except AttributeError:
-                        # Fallback for older Python versions
-                        creationflags = 0x08000000
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        creationflags=creationflags,
-                    )
-                else:
-                    # On Unix, use start_new_session for proper detachment
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        start_new_session=True,
-                    )
+            if sys.platform.startswith("win"):
+                # DETACHED_PROCESS = 0x00000008 - creates process without console
+                # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    # Fallback for older Python versions
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                )
+            else:
+                # On Unix, use start_new_session for proper detachment
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
             print(f"Server process started with PID: {process.pid}")
-            print(f"Logs: {stdout_log} and {stderr_log}")
+            if out_file != subprocess.DEVNULL:
+                print(f"Logs: {stdout_log} and {stderr_log}")
         except Exception as e:
             # Fallback: try to use the current Python implicitly
             print(f"Error starting server process: {e}")
             cmd = [sys.executable, script_path, "-c", config]
-            with open(stdout_log, "a") as out_file, open(stderr_log, "a") as err_file:
-                if sys.platform.startswith("win"):
-                    try:
-                        creationflags = subprocess.CREATE_NO_WINDOW
-                    except AttributeError:
-                        creationflags = 0x08000000
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        creationflags=creationflags,
-                    )
-                else:
-                    process = subprocess.Popen(
-                        cmd,
-                        stdout=out_file,
-                        stderr=err_file,
-                        stdin=subprocess.DEVNULL,
-                        start_new_session=True,
-                    )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                )
+            else:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
 
     print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
