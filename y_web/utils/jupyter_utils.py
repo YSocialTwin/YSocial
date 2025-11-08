@@ -403,15 +403,35 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         print(f"Working directory: {str(notebook_dir.parent)}")
         print(f"Python executable: {sys.executable}")
         
-        process = subprocess.Popen(
-            cmd,
-            env=env,
-            cwd=str(notebook_dir.parent),  # critical for Ubuntu
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            preexec_fn=os.setsid if os.name != "nt" else None,
-            text=True,
-        )
+        # Use proper process isolation similar to start_client
+        if sys.platform.startswith("win"):
+            # On Windows, use creationflags to avoid console window and ensure proper isolation
+            try:
+                creationflags = subprocess.CREATE_NO_WINDOW
+            except AttributeError:
+                creationflags = 0x08000000
+            process = subprocess.Popen(
+                cmd,
+                env=env,
+                cwd=str(notebook_dir.parent),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                creationflags=creationflags,
+                text=True,
+            )
+        else:
+            # On Unix, use start_new_session for proper detachment
+            process = subprocess.Popen(
+                cmd,
+                env=env,
+                cwd=str(notebook_dir.parent),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+                text=True,
+            )
 
         # Store instance info
         instance = db.session.query(Jupyter_instances).filter_by(exp_id=expid).first()
