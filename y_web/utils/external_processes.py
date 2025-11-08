@@ -1304,95 +1304,95 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     from y_web import create_app, db
     from y_web.models import Client_Execution
 
-    print("HEREEEEEE", db_type)
-    app = create_app(db_type)  # create app instance for this subprocess
+    #app = current_app
+    #app2 = create_app(db_type)  # create app instance for this subprocess
 
-    with app.app_context():
-        yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    #with app2.app_context():
+    yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
-        if exp.platform_type == "microblogging":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
-            from y_client.clients import YClientWeb
-        elif exp.platform_type == "forum":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
-            from y_client.clients import YClientWeb
-        else:
-            raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+    if exp.platform_type == "microblogging":
+        sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
+        from y_client.clients import YClientWeb
+    elif exp.platform_type == "forum":
+        sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
+        from y_client.clients import YClientWeb
+    else:
+        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-        # get experiment base path
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    # get experiment base path
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
 
-        # postgres
-        if "experiments_" in exp.db_name:
-            uid = exp.db_name.removeprefix("experiments_")
-            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )  #
-        else:
-            uid = exp.db_name.split(os.sep)[1]
-            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )  # .replace(' ', '')
+    # postgres
+    if "experiments_" in exp.db_name:
+        uid = exp.db_name.removeprefix("experiments_")
+        filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
+            "utils/", ""
+        )  #
+    else:
+        uid = exp.db_name.split(os.sep)[1]
+        filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
+            "utils/", ""
+        )  # .replace(' ', '')
 
-        data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
-        config_file = json.load(
-            open(f"{data_base_path}client_{cli.name}-{population.name}.json")
-        )
+    data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
+    config_file = json.load(
+        open(f"{data_base_path}client_{cli.name}-{population.name}.json")
+    )
 
-        print("Starting client process...")
+    print("Starting client process...")
 
-        # DB query requires app context
-        ce = Client_Execution.query.filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} execution record: {ce}")
-        if ce:
-            first_run = False
-        else:
-            print(f"Client {cli.name} first execution.")
-            first_run = True
-            ce = Client_Execution(
+    # DB query requires app context
+    ce = Client_Execution.query.filter_by(client_id=cli.id).first()
+    print(f"Client {cli.name} execution record: {ce}")
+    if ce:
+        first_run = False
+    else:
+        print(f"Client {cli.name} first execution.")
+        first_run = True
+        ce = Client_Execution(
                 client_id=cli.id,
                 elapsed_time=0,
                 expected_duration_rounds=cli.days * 24,
                 last_active_hour=-1,
                 last_active_day=-1,
-            )
-            db.session.add(ce)
-            db.session.commit()
+        )
+        db.session.add(ce)
+        db.session.commit()
 
-        log_file = f"{data_base_path}{cli.name}_client.log"
-        if first_run and cli.network_type:
-            path = f"{cli.name}_network.csv"
+    log_file = f"{data_base_path}{cli.name}_client.log"
+    if first_run and cli.network_type:
+        path = f"{cli.name}_network.csv"
 
-            cl = YClientWeb(
+        cl = YClientWeb(
                 config_file,
                 data_base_path,
                 first_run=first_run,
                 network=path,
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
-            )
-        else:
-            cl = YClientWeb(
+        )
+    else:
+        cl = YClientWeb(
                 config_file,
                 data_base_path,
                 first_run=first_run,
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
-            )
+        )
 
-        if resume:
-            cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
+    if resume:
+        cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
 
-        cl.read_agents()
-        cl.add_feeds()
+    cl.read_agents()
+    cl.add_feeds()
 
-        if first_run and cli.network_type:
-            cl.add_network()
+    if first_run and cli.network_type:
+        cl.add_network()
 
-        if not os.path.exists(filename):
-            cl.save_agents(filename)
+    if not os.path.exists(filename):
+        cl.save_agents(filename)
 
-        run_simulation(cl, cli.id, filename, exp, population)
+    run_simulation(cl, cli.id, filename, exp, population)
 
 
 def get_users_per_hour(population, agents):
