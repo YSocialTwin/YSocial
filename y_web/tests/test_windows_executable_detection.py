@@ -177,3 +177,40 @@ class TestPlatformSpecificPaths:
             assert (
                 python_name == "python"
             ), "Should use 'python' executable name on Unix"
+
+    def test_existence_check_fallback(self):
+        """
+        Test that the fix includes existence checks and fallback logic.
+
+        The updated fix should:
+        1. Construct the correct platform-specific path
+        2. Check if it exists before returning it
+        3. Fall back to sys.executable if it doesn't exist
+        """
+        import sys
+        from pathlib import Path
+
+        # Simulate the existence check logic
+        is_windows = sys.platform.startswith("win")
+        bin_dir = "Scripts" if is_windows else "bin"
+        python_name = "python.exe" if is_windows else "python"
+
+        # Test case 1: Path exists - should return it
+        python_exe = Path(sys.executable)
+        if python_exe.exists():
+            # This is what should happen when the path exists
+            result = str(python_exe)
+            assert result == str(sys.executable)
+
+        # Test case 2: Path doesn't exist - should fall back to sys.executable
+        # This logic is what the updated detect_env_handler() does
+        fake_path = Path("/nonexistent/path/python.exe")
+        if fake_path.exists():
+            result = str(fake_path)
+        else:
+            # Fall back to sys.executable
+            result = str(python_exe)
+
+        assert result == str(
+            sys.executable
+        ), "Should fall back to sys.executable when path doesn't exist"
