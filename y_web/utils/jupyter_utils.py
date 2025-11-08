@@ -203,6 +203,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         tuple: (success, message, instance_id)
     """
     import os
+    import shutil
     import subprocess
     import sys
     import time
@@ -265,28 +266,79 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         }
     )
 
-    cmd = [
-        sys.executable,
-        "-m",
-        "jupyter",
-        "lab",
-        f"--port={port}",
-        "--ServerApp.token=embed-jupyter-token",
-        "--ServerApp.password=",
-        f"--ServerApp.ip={current_host or '0.0.0.0'}",
-        "--no-browser",
-        f"--ServerApp.root_dir={notebook_dir.resolve()}",
-        f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
-        "--ServerApp.allow_origin_pat=.*",
-        "--ServerApp.disable_check_xsrf=True",
-        "--IdentityProvider.token=",
-        "--ServerApp.allow_remote_access=True",
-        "--ServerApp.allow_host=*",
-        f"--ServerApp.base_url=/jupyter/{expid}/",
-        "--ServerApp.trust_xheaders=True",
-        # tornado_settings singolo per iframe embedding
-        f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
-    ]
+    # Build jupyter-lab command with proper Windows support
+    # On Windows, try to find jupyter-lab.exe in Scripts directory first
+    if sys.platform.startswith("win"):
+        # Try to find jupyter-lab executable in the Python environment's Scripts directory
+        python_dir = Path(sys.executable).parent
+        jupyter_lab_exe = python_dir / "Scripts" / "jupyter-lab.exe"
+        
+        if jupyter_lab_exe.exists():
+            # Use the direct executable path
+            cmd = [
+                str(jupyter_lab_exe),
+                f"--port={port}",
+                "--ServerApp.token=embed-jupyter-token",
+                "--ServerApp.password=",
+                f"--ServerApp.ip={current_host or '0.0.0.0'}",
+                "--no-browser",
+                f"--ServerApp.root_dir={notebook_dir.resolve()}",
+                f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                "--ServerApp.allow_origin_pat=.*",
+                "--ServerApp.disable_check_xsrf=True",
+                "--IdentityProvider.token=",
+                "--ServerApp.allow_remote_access=True",
+                "--ServerApp.allow_host=*",
+                f"--ServerApp.base_url=/jupyter/{expid}/",
+                "--ServerApp.trust_xheaders=True",
+                f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+            ]
+        else:
+            # Fallback to python -m jupyter lab
+            cmd = [
+                sys.executable,
+                "-m",
+                "jupyter",
+                "lab",
+                f"--port={port}",
+                "--ServerApp.token=embed-jupyter-token",
+                "--ServerApp.password=",
+                f"--ServerApp.ip={current_host or '0.0.0.0'}",
+                "--no-browser",
+                f"--ServerApp.root_dir={notebook_dir.resolve()}",
+                f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                "--ServerApp.allow_origin_pat=.*",
+                "--ServerApp.disable_check_xsrf=True",
+                "--IdentityProvider.token=",
+                "--ServerApp.allow_remote_access=True",
+                "--ServerApp.allow_host=*",
+                f"--ServerApp.base_url=/jupyter/{expid}/",
+                "--ServerApp.trust_xheaders=True",
+                f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+            ]
+    else:
+        # Unix/Linux/Mac: use python -m jupyter lab
+        cmd = [
+            sys.executable,
+            "-m",
+            "jupyter",
+            "lab",
+            f"--port={port}",
+            "--ServerApp.token=embed-jupyter-token",
+            "--ServerApp.password=",
+            f"--ServerApp.ip={current_host or '0.0.0.0'}",
+            "--no-browser",
+            f"--ServerApp.root_dir={notebook_dir.resolve()}",
+            f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+            "--ServerApp.allow_origin_pat=.*",
+            "--ServerApp.disable_check_xsrf=True",
+            "--IdentityProvider.token=",
+            "--ServerApp.allow_remote_access=True",
+            "--ServerApp.allow_host=*",
+            f"--ServerApp.base_url=/jupyter/{expid}/",
+            "--ServerApp.trust_xheaders=True",
+            f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+        ]
 
     try:
         process = subprocess.Popen(
