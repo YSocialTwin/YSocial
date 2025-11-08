@@ -398,11 +398,6 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         ]
 
     try:
-        # Log the command being executed for debugging
-        print(f"Starting Jupyter Lab with command: {' '.join(cmd)}")
-        print(f"Working directory: {str(notebook_dir.parent)}")
-        print(f"Python executable: {sys.executable}")
-        
         # Use proper process isolation similar to start_client
         if sys.platform.startswith("win"):
             # On Windows, use creationflags to avoid console window and ensure proper isolation
