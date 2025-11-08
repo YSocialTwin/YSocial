@@ -656,9 +656,18 @@ def start_server(exp):
 
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
-        # Simply concatenate BASE_DIR and exp.db_name, then normalize to forward slashes
-        # This maintains the original behavior but works correctly on Windows
-        db_uri = f"{BASE_DIR}{exp.db_name}".replace("\\", "/")
+        # YServer prepends the system drive, so we need to strip it from our path
+        full_path = f"{BASE_DIR}{exp.db_name}"
+
+        # On Windows, strip the drive letter (e.g., "C:")
+        # On Unix, strip the leading "/"
+        # YServer will add them back when constructing file paths
+        if len(full_path) > 2 and full_path[1] == ":":
+            # Windows path - strip drive letter "C:"
+            db_uri = full_path[2:].replace("\\", "/")
+        else:
+            # Unix path - strip leading "/"
+            db_uri = full_path[1:].replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
@@ -771,8 +780,18 @@ def start_server_screen(exp):
 
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
-        # Simply concatenate BASE_DIR and exp.db_name, then normalize to forward slashes
-        db_uri = f"{BASE_DIR}{exp.db_name}".replace("\\", "/")
+        # YServer prepends the system drive, so we need to strip it from our path
+        full_path = f"{BASE_DIR}{exp.db_name}"
+
+        # On Windows, strip the drive letter (e.g., "C:")
+        # On Unix, strip the leading "/"
+        # YServer will add them back when constructing file paths
+        if len(full_path) > 2 and full_path[1] == ":":
+            # Windows path - strip drive letter "C:"
+            db_uri = full_path[2:].replace("\\", "/")
+        else:
+            # Unix path - strip leading "/"
+            db_uri = full_path[1:].replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
