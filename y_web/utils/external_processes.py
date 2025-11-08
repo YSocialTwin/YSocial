@@ -269,8 +269,9 @@ def detect_env_handler():
     # Determine platform-specific directory and executable names
     is_windows = sys.platform.startswith("win")
 
+    # On Windows, always return sys.executable directly to avoid path resolution issues
     if is_windows:
-        return python_exe
+        return str(python_exe)
 
     bin_dir = "bin"
     python_name = "python"
