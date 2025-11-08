@@ -745,7 +745,7 @@ def start_server(exp):
             print(f"Database URI contains colon: {':' in db_uri}")
             raise
 
-    #print(f"Command: {' '.join(cmd)}")
+    # print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
 
     # Save the PID to the database for persistent tracking
