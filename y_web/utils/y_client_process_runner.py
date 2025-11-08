@@ -5,17 +5,17 @@ This script is invoked as a subprocess to run client simulations.
 It's designed to be called by start_client using subprocess.Popen.
 """
 import argparse
-import sys
 import random
+import sys
 import traceback
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
 
 from y_web.models import (
     ActivityProfile,
     PopulationActivityProfile,
 )
-
 
 
 def main():
