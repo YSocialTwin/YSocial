@@ -696,17 +696,14 @@ def start_server(exp):
                     # Fallback for older Python versions
                     creationflags = 0x08000000
                 
-                # On Windows, ensure we're in the correct working directory
-                # This helps Python find the script file
-                cwd = Path(script_path).parent
-                
+                # On Windows, use shell=True to properly handle paths with spaces
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
-                    cwd=str(cwd),
+                    shell=True,
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
