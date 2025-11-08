@@ -64,8 +64,9 @@ def cleanup_server_processes_from_db():
                 try:
                     os.kill(exp.server_pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
-                    print(f"Process {exp.server_pid} still running, sending SIGKILL")
-                    os.kill(exp.server_pid, signal.SIGKILL)
+                    print(f"Process server {exp.server_pid} still running, terminating")
+                    __terminate_process(exp.server_pid)
+                    # os.kill(exp.server_pid, signal.SIGKILL)
                 except OSError:
                     # Process doesn't exist anymore
                     pass
@@ -104,8 +105,9 @@ def cleanup_client_processes_from_db():
                 try:
                     os.kill(client.pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
-                    print(f"Process {client.pid} still running, sending SIGKILL")
-                    os.kill(client.pid, signal.SIGKILL)
+                    print(f"Process {client.pid} still running, terminating")
+                    __terminate_process(client.pid)
+                    # os.kill(client.pid, signal.SIGKILL)
                 except OSError:
                     # Process doesn't exist anymore
                     pass
@@ -264,12 +266,21 @@ def detect_env_handler():
     """
     python_exe = Path(sys.executable)
 
+    # Determine platform-specific directory and executable names
+    is_windows = sys.platform.startswith("win")
+
+    if is_windows:
+        return python_exe
+
+    bin_dir = "bin"
+    python_name = "python"
+
     # --- Case 1: Conda / Miniconda ---
     conda_prefix = os.environ.get("CONDA_PREFIX")
     if conda_prefix:
         conda_prefix = Path(conda_prefix).resolve()
         env_name = os.environ.get("CONDA_DEFAULT_ENV") or conda_prefix.name
-        env_bin = conda_prefix / "bin"
+        env_bin = conda_prefix / bin_dir
 
         # Detect conda base (handle .../envs/<env_name>)
         if conda_prefix.parent.name == "envs":
@@ -278,10 +289,14 @@ def detect_env_handler():
             conda_base = conda_prefix
 
         conda_sh = conda_base / "etc" / "profile.d" / "conda.sh"
-        python_bin = env_bin / "python"
+        python_bin = env_bin / python_name
 
-        if conda_sh.exists():
-            # Safe approach: just use the environment's Python binary
+        # Verify the Python executable exists before returning it
+        if python_bin.exists():
+            return str(python_bin)
+        elif conda_sh.exists():
+            # On Unix, if conda.sh exists but python binary doesn't, still try to return it
+            # (might be a symlink or other edge case)
             return str(python_bin)
 
     # --- Case 2: Pipenv ---
@@ -291,8 +306,11 @@ def detect_env_handler():
     # --- Case 3: Virtualenv / venv ---
     venv_prefix = os.environ.get("VIRTUAL_ENV")
     if venv_prefix:
-        python_bin = Path(venv_prefix) / "bin" / "python"
-        return str(python_bin)
+        python_bin = Path(venv_prefix) / bin_dir / python_name
+        # Verify the Python executable exists before returning it
+        if python_bin.exists():
+            return str(python_bin)
+        # If it doesn't exist, fall through to system Python
 
     # --- Case 4: System Python fallback ---
     return str(python_exe)
@@ -352,7 +370,8 @@ def terminate_process_on_port(port):
 
         if pid:
             print(f"Found process {pid} using port {port}. Killing process...")
-            os.kill(int(pid), 9)  # Send SIGKILL to the process
+            __terminate_process(int(pid))
+            # os.kill(int(pid), 9)  # Send SIGKILL to the process
             print(f"Process {pid} terminated.")
         else:
             print(f"No process found using port {port}.")
@@ -405,7 +424,8 @@ def terminate_server_process(exp_id):
                 print(
                     f"Server process {pid} did not terminate gracefully, forcing kill..."
                 )
-                os.kill(pid, signal.SIGKILL)
+                # os.kill(pid, signal.SIGKILL)
+                __terminate_process(pid)
                 time.sleep(0.5)
                 print(f"Server process {pid} killed.")
 
@@ -421,6 +441,26 @@ def terminate_server_process(exp_id):
     except Exception as e:
         print(f"Error terminating server process: {e}")
         return False
+
+
+def __terminate_process(pid):
+    import platform
+
+    try:
+        if platform.system() == "Windows":
+            # On Windows: use psutil or taskkill
+            try:
+                import psutil
+
+                p = psutil.Process(pid)
+                p.terminate()  # graceful
+            except ImportError:
+                os.system(f"taskkill /PID {pid} /F")
+        else:
+            # On Unix: send SIGKILL
+            os.kill(pid, signal.SIGKILL)
+    except Exception as e:
+        print(f"Error terminating process {pid}: {e}")
 
 
 def get_server_process_status(exp_id):
@@ -494,6 +534,21 @@ def start_server(exp):
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
+    # Validate that script_path exists
+    if not Path(script_path).exists():
+        raise FileNotFoundError(
+            f"Server script not found: {script_path}\n"
+            f"Please ensure the YServer submodule is initialized.\n"
+            f"Run: git submodule update --init --recursive"
+        )
+
+    # Validate that config file exists
+    if not Path(config).exists():
+        raise FileNotFoundError(
+            f"Configuration file not found: {config}\n"
+            f"Please ensure the experiment is properly configured."
+        )
+
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
     use_gunicorn = db_uri_main.startswith("postgresql")
@@ -532,7 +587,11 @@ def start_server(exp):
             cmd = cmd_parts + gunicorn_args
         else:
             # Try to find gunicorn in the same directory as python (may contain spaces on Windows)
-            gunicorn_path = Path(python_cmd).parent / "gunicorn"
+            # On Windows, executables have .exe extension
+            gunicorn_name = (
+                "gunicorn.exe" if sys.platform.startswith("win") else "gunicorn"
+            )
+            gunicorn_path = Path(python_cmd).parent / gunicorn_name
             if gunicorn_path.exists():
                 cmd = [str(gunicorn_path)] + gunicorn_args
             else:
@@ -548,30 +607,76 @@ def start_server(exp):
         env = os.environ.copy()
         env["YSERVER_CONFIG"] = config
 
+        # Create log files for server output
+        log_dir = Path(config).parent
+        stdout_log = log_dir / "server_stdout.log"
+        stderr_log = log_dir / "server_stderr.log"
+
+        # Open log files for the subprocess - they need to stay open for the lifetime of the process
+        try:
+            out_file = open(stdout_log, "a")
+            err_file = open(stderr_log, "a")
+        except Exception as e:
+            print(f"Warning: Could not open log files: {e}")
+            out_file = subprocess.DEVNULL
+            err_file = subprocess.DEVNULL
+
         try:
             # Start the process with Popen
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-                env=env,  # Pass environment with config path
-            )
+            # On Windows, use creationflags instead of start_new_session to avoid console window
+            # Redirect output to files instead of PIPE to avoid blocking
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
             print(f"Server process started with PID: {process.pid}")
+            if out_file != subprocess.DEVNULL:
+                print(f"Logs: {stdout_log} and {stderr_log}")
         except Exception as e:
             # Fallback: try to use gunicorn from system path
             print(f"Error starting server process: {e}")
             gunicorn_which = shutil.which("gunicorn")
             fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
-            process = subprocess.Popen(
-                fallback_cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-                env=env,
-            )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
     else:
         # Use standard Python execution for SQLite
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
@@ -589,29 +694,82 @@ def start_server(exp):
             # Simple python executable path (may contain spaces on Windows)
             cmd = [python_cmd, script_path, "-c", config]
 
+        # Create log files for server output to avoid pipe buffering issues
+        # The server process should run independently without blocking on PIPE
+        log_dir = Path(config).parent
+        stdout_log = log_dir / "server_stdout.log"
+        stderr_log = log_dir / "server_stderr.log"
+
+        # Open log files for the subprocess - they need to stay open for the lifetime of the process
+        # We don't use 'with' because the process needs to outlive this function
+        try:
+            out_file = open(stdout_log, "a")
+            err_file = open(stderr_log, "a")
+        except Exception as e:
+            print(f"Warning: Could not open log files: {e}")
+            # Fallback to DEVNULL if log files can't be opened
+            out_file = subprocess.DEVNULL
+            err_file = subprocess.DEVNULL
+
         try:
             # Start the process with Popen
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-            )
+            # On Windows, use creationflags instead of start_new_session to avoid console window
+            # Redirect output to files instead of PIPE to avoid blocking
+            if sys.platform.startswith("win"):
+                # DETACHED_PROCESS = 0x00000008 - creates process without console
+                # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    # Fallback for older Python versions
+                    creationflags = 0x08000000
+
+                # On Windows, use shell=True to properly handle paths with spaces
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    shell=True,
+                )
+            else:
+                # On Unix, use start_new_session for proper detachment
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=out_file,
+                    stderr=err_file,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
             print(f"Server process started with PID: {process.pid}")
+            if out_file != subprocess.DEVNULL:
+                print(f"Logs: {stdout_log} and {stderr_log}")
         except Exception as e:
             # Fallback: try to use the current Python implicitly
             print(f"Error starting server process: {e}")
-            cmd = [sys.executable, script_path, "-c", config]
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-            )
+            print(f"Command: {' '.join(cmd)}")
+            print(f"Config file: {config}")
 
-    print(f"Command: {' '.join(cmd)}")
+            # Add detailed debugging information
+            full_path = f"{BASE_DIR}{exp.db_name}"
+            if len(full_path) > 2 and full_path[1] == ":":
+                # Windows - strip "C:\" (drive + separator)
+                if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                    db_uri = full_path[3:].replace("\\", "/")
+                else:
+                    db_uri = full_path[2:].replace("\\", "/")
+            else:
+                # Unix - strip "/"
+                db_uri = full_path[1:].replace("\\", "/")
+
+            print(f"Database URI: {db_uri}")
+            print(f"Database URI type: {type(db_uri)}")
+            print(f"Database URI repr: {repr(db_uri)}")
+            print(f"Database URI contains colon: {':' in db_uri}")
+            raise
+
+    # print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
 
     # Save the PID to the database for persistent tracking
@@ -624,12 +782,31 @@ def start_server(exp):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"
+        # Construct the database URI properly for both Windows and Unix
+        # YServer prepends the system drive, so we need to strip it from our path
+        full_path = f"{BASE_DIR}{exp.db_name}"
+
+        # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
+        # On Unix, strip the leading "/"
+        # YServer will add them back when constructing file paths
+        if len(full_path) > 2 and full_path[1] == ":":
+            # Windows path - strip drive letter and separator "C:\" or "C:/"
+            # Check if there's a separator after the drive letter
+            if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                db_uri = full_path[3:].replace("\\", "/")
+            else:
+                db_uri = full_path[2:].replace("\\", "/")
+        else:
+            # Unix path - strip leading "/"
+            db_uri = full_path[1:].replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
 
     print(f"Database URI: {db_uri}")
+    print(f"Database URI type: {type(db_uri)}")
+    print(f"Database URI repr: {repr(db_uri)}")
+    print(f"Database URI contains colon: {':' in db_uri}")
 
     # Wait for the server to start and configure database
     if use_gunicorn:
@@ -670,9 +847,13 @@ def start_server(exp):
         data = {"path": f"{db_uri}"}
         headers = {"Content-Type": "application/json"}
         ns = f"http://{exp.server}:{exp.port}/change_db"
+        print(f"Sending to /change_db endpoint: {json.dumps(data)}")
+        print(f"POST URL: {ns}")
         try:
-            post(f"{ns}", headers=headers, data=json.dumps(data))
-            print("Database configuration successful")
+            response = post(f"{ns}", headers=headers, data=json.dumps(data))
+            print(
+                f"Database configuration successful. Response: {response.status_code}"
+            )
         except Exception as e:
             print(f"Warning: Could not configure database: {e}")
 
@@ -736,7 +917,23 @@ def start_server_screen(exp):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+        # Construct the database URI properly for both Windows and Unix
+        # YServer prepends the system drive, so we need to strip it from our path
+        full_path = f"{BASE_DIR}{exp.db_name}"
+
+        # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
+        # On Unix, strip the leading "/"
+        # YServer will add them back when constructing file paths
+        if len(full_path) > 2 and full_path[1] == ":":
+            # Windows path - strip drive letter and separator "C:\" or "C:/"
+            # Check if there's a separator after the drive letter
+            if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                db_uri = full_path[3:].replace("\\", "/")
+            else:
+                db_uri = full_path[2:].replace("\\", "/")
+        else:
+            # Unix path - strip leading "/"
+            db_uri = full_path[1:].replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
@@ -1056,7 +1253,8 @@ def terminate_client(cli, pause=False):
         else:
             # If we get here, process is still running after timeout
             print(f"Client process {pid} did not terminate gracefully, forcing kill...")
-            os.kill(pid, signal.SIGKILL)
+            __terminate_process(pid)
+
             time.sleep(0.5)
             print(f"Client process {pid} killed.")
 
@@ -1069,13 +1267,6 @@ def terminate_client(cli, pause=False):
     # Clear PID from database
     cli.pid = None
     db.session.commit()
-
-    # update client execution object
-    # if not pause:
-    #    ce = Client_Execution.query.filter_by(client_id=cli.id).first()
-    #    ce.expected_duration_rounds = 0
-    #    ce.elapsed_time = 0
-    #    db.session.commit()
 
 
 def start_client(exp, cli, population, resume=True):
@@ -1098,24 +1289,34 @@ def start_client(exp, cli, population, resume=True):
 
 def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     """
-    Initialize and start client simulation process.
-
-    Args:
-        exp: Experiment object
-        cli: Client configuration object
-        population: Population object
-        resume: Boolean indicating if resuming (default: False)
+    Start client simulation without pushing Flask app context.
+    Independent of the main Flask runtime.
     """
     import json
     import os
     import sys
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import create_engine
+    from y_web.models import Client_Execution, Exps, Client, Population
 
-    from y_web import create_app, db
-    from y_web.models import Client_Execution
+    from y_web import create_app, db  # only to reuse URI config
 
-    app = create_app(db_type)  # create app instance for this subprocess
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app(db_type)
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
 
-    with app.app_context():
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
+    try:
+        # Retrieve data fresh from DB (no app context)
+        exp = session.query(Exps).get(exp.idexp)
+        cli = session.query(Client).get(cli.id)
+        population = session.query(Population).get(population.id)
+
+        # ---------- your logic below (unchanged except DB usage) ----------
         yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
         if exp.platform_type == "microblogging":
@@ -1127,31 +1328,23 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         else:
             raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-        # get experiment base path
         BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
 
-        # postgres
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )  #
+            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace("utils/", "")
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )  # .replace(' ', '')
+            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace("utils/", "")
 
         data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
-        config_file = json.load(
-            open(f"{data_base_path}client_{cli.name}-{population.name}.json")
-        )
+        config_file = json.load(open(f"{data_base_path}client_{cli.name}-{population.name}.json"))
 
         print("Starting client process...")
 
-        # DB query requires app context
-        ce = Client_Execution.query.filter_by(client_id=cli.id).first()
+        ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
         print(f"Client {cli.name} execution record: {ce}")
+
         if ce:
             first_run = False
         else:
@@ -1164,29 +1357,17 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 last_active_hour=-1,
                 last_active_day=-1,
             )
-            db.session.add(ce)
-            db.session.commit()
+            session.add(ce)
+            session.commit()
 
         log_file = f"{data_base_path}{cli.name}_client.log"
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
-
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                network=path,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-            )
+            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
+                            network=path, log_file=log_file, llm=exp.llm_agents_enabled)
         else:
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-            )
+            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
+                            log_file=log_file, llm=exp.llm_agents_enabled)
 
         if resume:
             cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
@@ -1202,18 +1383,23 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         run_simulation(cl, cli.id, filename, exp, population)
 
+    finally:
+        session.close()
+        engine.dispose()
 
-def get_users_per_hour(population, agents):
+
+
+def get_users_per_hour(population, agents, session):
     # get population activity profiles
     activity_profiles = defaultdict(list)
     population_activity_profiles = (
-        db.session.query(PopulationActivityProfile)
+        session.query(PopulationActivityProfile)
         .filter(PopulationActivityProfile.population == population.id)
         .all()
     )
     for ap in population_activity_profiles:
         profile = (
-            db.session.query(ActivityProfile)
+            session.query(ActivityProfile)
             .filter(ActivityProfile.id == ap.activity_profile)
             .first()
         )
@@ -1251,6 +1437,21 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
     """
     Run the simulation
     """
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import create_engine
+    from y_web.models import Client_Execution, Exps, Client, Population
+
+    from y_web import create_app, db  # only to reuse URI config
+
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app("sqlite")
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
+
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     platform_type = exp.platform_type
 
     total_days = int(cl.days)
@@ -1258,11 +1459,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
     page_agents = [p for p in cl.agents.agents if p.is_page]
 
-    hour_to_page = get_users_per_hour(population, page_agents)
+    hour_to_page = get_users_per_hour(population, page_agents, session)
 
     for d1 in range(total_days):
         common_agents = [p for p in cl.agents.agents if not p.is_page]
-        hour_to_users = get_users_per_hour(population, common_agents)
+        hour_to_users = get_users_per_hour(population, common_agents, session)
 
         daily_active = {}
         tid, _, _ = cl.sim_clock.get_current_slot()
@@ -1353,13 +1554,13 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
             cl.sim_clock.increment_slot()
 
             # update client execution object
-            ce = Client_Execution.query.filter_by(client_id=cli_id).first()
+            ce = session.query(Client_Execution).filter_by(client_id=cli_id).first()
             if ce:
                 ce.elapsed_time += 1
                 ce.last_active_hour = h
                 ce.last_active_day = d
-                db.session.add(ce)  # Explicitly mark as modified for PostgreSQL
-                db.session.commit()
+                session.add(ce)  # Explicitly mark as modified for PostgreSQL
+                session.commit()
 
         # evaluate follows (once per day, only for a random sample of daily active agents)
         if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
@@ -1394,3 +1595,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
         # saving "living" agents at the end of the day
         cl.save_agents(agent_file)
+
+    session.close()
+    engine.dispose()
