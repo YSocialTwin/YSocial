@@ -264,12 +264,17 @@ def detect_env_handler():
     """
     python_exe = Path(sys.executable)
 
+    # Determine platform-specific directory and executable names
+    is_windows = sys.platform.startswith("win")
+    bin_dir = "Scripts" if is_windows else "bin"
+    python_name = "python.exe" if is_windows else "python"
+
     # --- Case 1: Conda / Miniconda ---
     conda_prefix = os.environ.get("CONDA_PREFIX")
     if conda_prefix:
         conda_prefix = Path(conda_prefix).resolve()
         env_name = os.environ.get("CONDA_DEFAULT_ENV") or conda_prefix.name
-        env_bin = conda_prefix / "bin"
+        env_bin = conda_prefix / bin_dir
 
         # Detect conda base (handle .../envs/<env_name>)
         if conda_prefix.parent.name == "envs":
@@ -278,10 +283,11 @@ def detect_env_handler():
             conda_base = conda_prefix
 
         conda_sh = conda_base / "etc" / "profile.d" / "conda.sh"
-        python_bin = env_bin / "python"
+        python_bin = env_bin / python_name
 
-        if conda_sh.exists():
+        if conda_sh.exists() or is_windows:
             # Safe approach: just use the environment's Python binary
+            # On Windows, conda.sh doesn't exist, so just use the python binary
             return str(python_bin)
 
     # --- Case 2: Pipenv ---
@@ -291,7 +297,7 @@ def detect_env_handler():
     # --- Case 3: Virtualenv / venv ---
     venv_prefix = os.environ.get("VIRTUAL_ENV")
     if venv_prefix:
-        python_bin = Path(venv_prefix) / "bin" / "python"
+        python_bin = Path(venv_prefix) / bin_dir / python_name
         return str(python_bin)
 
     # --- Case 4: System Python fallback ---
@@ -532,7 +538,11 @@ def start_server(exp):
             cmd = cmd_parts + gunicorn_args
         else:
             # Try to find gunicorn in the same directory as python (may contain spaces on Windows)
-            gunicorn_path = Path(python_cmd).parent / "gunicorn"
+            # On Windows, executables have .exe extension
+            gunicorn_name = (
+                "gunicorn.exe" if sys.platform.startswith("win") else "gunicorn"
+            )
+            gunicorn_path = Path(python_cmd).parent / gunicorn_name
             if gunicorn_path.exists():
                 cmd = [str(gunicorn_path)] + gunicorn_args
             else:
