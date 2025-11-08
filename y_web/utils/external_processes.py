@@ -795,11 +795,6 @@ def start_server(exp):
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
 
-    print(f"Database URI: {db_uri}")
-    print(f"Database URI type: {type(db_uri)}")
-    print(f"Database URI repr: {repr(db_uri)}")
-    print(f"Database URI contains colon: {':' in db_uri}")
-
     # Wait for the server to start and configure database
     if use_gunicorn:
         # For gunicorn (PostgreSQL), use health check and retry logic
