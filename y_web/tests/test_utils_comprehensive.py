@@ -233,9 +233,7 @@ class TestExternalProcesses:
             mock_popen.return_value = mock_process
 
             # Mock current_app config
-            mock_current_app.config = {
-                "SQLALCHEMY_DATABASE_URI": "sqlite:///test.db"
-            }
+            mock_current_app.config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///test.db"}
 
             # Mock Path.exists to return True for runner script
             mock_path_instance = Mock()
