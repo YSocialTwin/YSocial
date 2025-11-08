@@ -64,7 +64,7 @@ def cleanup_server_processes_from_db():
                 try:
                     os.kill(exp.server_pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
-                    print(f"Process {exp.server_pid} still running, sending SIGKILL")
+                    print(f"Process server {exp.server_pid} still running, terminating")
                     __terminate_process(exp.server_pid)
                     # os.kill(exp.server_pid, signal.SIGKILL)
                 except OSError:
@@ -105,7 +105,7 @@ def cleanup_client_processes_from_db():
                 try:
                     os.kill(client.pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
-                    print(f"Process {client.pid} still running, sending SIGKILL")
+                    print(f"Process {client.pid} still running, terminating")
                     __terminate_process(client.pid)
                     # os.kill(client.pid, signal.SIGKILL)
                 except OSError:
@@ -458,8 +458,7 @@ def __terminate_process(pid):
                 os.system(f"taskkill /PID {pid} /F")
         else:
             # On Unix: send SIGKILL
-            __terminate_process(pid)
-            # os.kill(pid, signal.SIGKILL)
+            os.kill(pid, signal.SIGKILL)
     except Exception as e:
         print(f"Error terminating process {pid}: {e}")
 
