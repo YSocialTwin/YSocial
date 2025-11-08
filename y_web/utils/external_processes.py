@@ -285,9 +285,12 @@ def detect_env_handler():
         conda_sh = conda_base / "etc" / "profile.d" / "conda.sh"
         python_bin = env_bin / python_name
 
-        if conda_sh.exists() or is_windows:
-            # Safe approach: just use the environment's Python binary
-            # On Windows, conda.sh doesn't exist, so just use the python binary
+        # Verify the Python executable exists before returning it
+        if python_bin.exists():
+            return str(python_bin)
+        elif conda_sh.exists():
+            # On Unix, if conda.sh exists but python binary doesn't, still try to return it
+            # (might be a symlink or other edge case)
             return str(python_bin)
 
     # --- Case 2: Pipenv ---
@@ -298,7 +301,10 @@ def detect_env_handler():
     venv_prefix = os.environ.get("VIRTUAL_ENV")
     if venv_prefix:
         python_bin = Path(venv_prefix) / bin_dir / python_name
-        return str(python_bin)
+        # Verify the Python executable exists before returning it
+        if python_bin.exists():
+            return str(python_bin)
+        # If it doesn't exist, fall through to system Python
 
     # --- Case 4: System Python fallback ---
     return str(python_exe)
