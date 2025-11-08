@@ -506,6 +506,21 @@ def start_server(exp):
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
+    # Validate that script_path exists
+    if not Path(script_path).exists():
+        raise FileNotFoundError(
+            f"Server script not found: {script_path}\n"
+            f"Please ensure the YServer submodule is initialized.\n"
+            f"Run: git submodule update --init --recursive"
+        )
+
+    # Validate that config file exists
+    if not Path(config).exists():
+        raise FileNotFoundError(
+            f"Configuration file not found: {config}\n"
+            f"Please ensure the experiment is properly configured."
+        )
+
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
     use_gunicorn = db_uri_main.startswith("postgresql")
