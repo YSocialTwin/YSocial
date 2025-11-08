@@ -1391,7 +1391,7 @@ def start_client(exp, cli, population, resume=True):
             )
 
         print(f"Client process started with PID: {process.pid}")
-        #if out_file != subprocess.DEVNULL:
+        # if out_file != subprocess.DEVNULL:
         #    print(f"Logs: {stdout_log} and {stderr_log}")
     except Exception as e:
         print(f"Error starting client process: {e}")
@@ -1403,5 +1403,3 @@ def start_client(exp, cli, population, resume=True):
     db.session.commit()
 
     return process
-
-
