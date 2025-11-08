@@ -1304,6 +1304,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     from y_web import create_app, db
     from y_web.models import Client_Execution
 
+    print("HEREEEEEE", db_type)
     app = create_app(db_type)  # create app instance for this subprocess
 
     with app.app_context():

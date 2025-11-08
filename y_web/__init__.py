@@ -226,6 +226,7 @@ def cleanup_db_jupyter_with_new_app():
             from y_web import create_app
 
             # close both
+            print("HEREEE  why")
             for dbms in ["sqlite", "postgresql"]:
                 try:
                     app = create_app(dbms)
