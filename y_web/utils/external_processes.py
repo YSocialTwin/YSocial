@@ -424,7 +424,7 @@ def terminate_server_process(exp_id):
                 print(
                     f"Server process {pid} did not terminate gracefully, forcing kill..."
                 )
-                #os.kill(pid, signal.SIGKILL)
+                # os.kill(pid, signal.SIGKILL)
                 __terminate_process(pid)
                 time.sleep(0.5)
                 print(f"Server process {pid} killed.")
@@ -445,11 +445,13 @@ def terminate_server_process(exp_id):
 
 def __terminate_process(pid):
     import platform
+
     try:
         if platform.system() == "Windows":
             # On Windows: use psutil or taskkill
             try:
                 import psutil
+
                 p = psutil.Process(pid)
                 p.terminate()  # graceful
             except ImportError:
