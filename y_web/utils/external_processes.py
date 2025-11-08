@@ -65,7 +65,8 @@ def cleanup_server_processes_from_db():
                     os.kill(exp.server_pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
                     print(f"Process {exp.server_pid} still running, sending SIGKILL")
-                    os.kill(exp.server_pid, signal.SIGKILL)
+                    __terminate_process(exp.server_pid)
+                    # os.kill(exp.server_pid, signal.SIGKILL)
                 except OSError:
                     # Process doesn't exist anymore
                     pass
@@ -105,7 +106,8 @@ def cleanup_client_processes_from_db():
                     os.kill(client.pid, 0)  # Check if process exists
                     # If we get here, process is still running, force kill
                     print(f"Process {client.pid} still running, sending SIGKILL")
-                    os.kill(client.pid, signal.SIGKILL)
+                    __terminate_process(client.pid)
+                    # os.kill(client.pid, signal.SIGKILL)
                 except OSError:
                     # Process doesn't exist anymore
                     pass
@@ -368,7 +370,8 @@ def terminate_process_on_port(port):
 
         if pid:
             print(f"Found process {pid} using port {port}. Killing process...")
-            os.kill(int(pid), 9)  # Send SIGKILL to the process
+            __terminate_process(int(pid))
+            # os.kill(int(pid), 9)  # Send SIGKILL to the process
             print(f"Process {pid} terminated.")
         else:
             print(f"No process found using port {port}.")
@@ -453,7 +456,8 @@ def __terminate_process(pid):
                 os.system(f"taskkill /PID {pid} /F")
         else:
             # On Unix: send SIGKILL
-            os.kill(pid, signal.SIGKILL)
+            __terminate_process(pid)
+            # os.kill(pid, signal.SIGKILL)
     except Exception as e:
         print(f"Error terminating process {pid}: {e}")
 
@@ -1248,7 +1252,8 @@ def terminate_client(cli, pause=False):
         else:
             # If we get here, process is still running after timeout
             print(f"Client process {pid} did not terminate gracefully, forcing kill...")
-            os.kill(pid, signal.SIGKILL)
+            __terminate_process(pid)
+
             time.sleep(0.5)
             print(f"Client process {pid} killed.")
 
@@ -1261,13 +1266,6 @@ def terminate_client(cli, pause=False):
     # Clear PID from database
     cli.pid = None
     db.session.commit()
-
-    # update client execution object
-    # if not pause:
-    #    ce = Client_Execution.query.filter_by(client_id=cli.id).first()
-    #    ce.expected_duration_rounds = 0
-    #    ce.elapsed_time = 0
-    #    db.session.commit()
 
 
 def start_client(exp, cli, population, resume=True):
