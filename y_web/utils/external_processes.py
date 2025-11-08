@@ -659,12 +659,16 @@ def start_server(exp):
         # YServer prepends the system drive, so we need to strip it from our path
         full_path = f"{BASE_DIR}{exp.db_name}"
 
-        # On Windows, strip the drive letter (e.g., "C:")
+        # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
         # YServer will add them back when constructing file paths
         if len(full_path) > 2 and full_path[1] == ":":
-            # Windows path - strip drive letter "C:"
-            db_uri = full_path[2:].replace("\\", "/")
+            # Windows path - strip drive letter and separator "C:\" or "C:/"
+            # Check if there's a separator after the drive letter
+            if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                db_uri = full_path[3:].replace("\\", "/")
+            else:
+                db_uri = full_path[2:].replace("\\", "/")
         else:
             # Unix path - strip leading "/"
             db_uri = full_path[1:].replace("\\", "/")
@@ -783,12 +787,16 @@ def start_server_screen(exp):
         # YServer prepends the system drive, so we need to strip it from our path
         full_path = f"{BASE_DIR}{exp.db_name}"
 
-        # On Windows, strip the drive letter (e.g., "C:")
+        # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
         # YServer will add them back when constructing file paths
         if len(full_path) > 2 and full_path[1] == ":":
-            # Windows path - strip drive letter "C:"
-            db_uri = full_path[2:].replace("\\", "/")
+            # Windows path - strip drive letter and separator "C:\" or "C:/"
+            # Check if there's a separator after the drive letter
+            if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                db_uri = full_path[3:].replace("\\", "/")
+            else:
+                db_uri = full_path[2:].replace("\\", "/")
         else:
             # Unix path - strip leading "/"
             db_uri = full_path[1:].replace("\\", "/")
