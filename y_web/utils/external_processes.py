@@ -1271,43 +1271,114 @@ def terminate_client(cli, pause=False):
 
 
 def start_client(exp, cli, population, resume=True):
-    """Handle start client operation."""
+    """Handle start client operation using subprocess.Popen for better cross-platform compatibility."""
     db_type = "sqlite"
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    process = Process(
-        target=start_client_process,
-        args=(exp, cli, population, resume, db_type),
-    )
-    process.start()
+    # Get Python executable
+    python_bin = detect_env_handler()
+    
+    # Get the client runner script path
+    script_path = Path(__file__).parent / "y_client_run.py"
+    
+    if not script_path.exists():
+        raise FileNotFoundError(f"Client runner script not found: {script_path}")
+    
+    # Get experiment base path
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    
+    # Determine UID from experiment database name
+    if "experiments_" in exp.db_name:
+        uid = exp.db_name.removeprefix("experiments_")
+    else:
+        uid = exp.db_name.split(os.sep)[1]
+    
+    data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
+    config_path = f"{data_base_path}client_{cli.name}-{population.name}.json"
+    
+    if not os.path.exists(config_path):
+        raise FileNotFoundError(f"Client configuration not found: {config_path}")
+    
+    # Create log files in experiment directory
+    log_dir = Path(data_base_path)
+    stdout_log = log_dir / f"{cli.name}_client_stdout.log"
+    stderr_log = log_dir / f"{cli.name}_client_stderr.log"
+    
+    # Build command
+    cmd = [
+        python_bin,
+        str(script_path),
+        "-c", config_path,
+        "--exp-id", str(exp.id),
+        "--client-id", str(cli.id),
+        "--population-id", str(population.id),
+        "--db-type", db_type,
+    ]
+    
+    if resume:
+        cmd.append("--resume")
+    
+    print(f"Starting client process with command: {' '.join(cmd)}")
+    
+    # Open log files (keep handles open for subprocess)
+    out_file = open(stdout_log, "a")
+    err_file = open(stderr_log, "a")
+    
+    try:
+        # Start subprocess with platform-specific settings
+        if sys.platform.startswith("win"):
+            # Windows-specific: use CREATE_NO_WINDOW and shell=True
+            creationflags = subprocess.CREATE_NO_WINDOW
+            process = subprocess.Popen(
+                cmd,
+                stdout=out_file,
+                stderr=err_file,
+                stdin=subprocess.DEVNULL,
+                creationflags=creationflags,
+                shell=True,
+            )
+        else:
+            # Unix: use start_new_session for process group detachment
+            process = subprocess.Popen(
+                cmd,
+                stdout=out_file,
+                stderr=err_file,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+            )
+        
+        # Store PID in database
+        cli.pid = process.pid
+        db.session.commit()
+        print(f"Client process started with PID: {process.pid}")
+        print(f"Logs: stdout={stdout_log}, stderr={stderr_log}")
+        
+    except Exception as e:
+        out_file.close()
+        err_file.close()
+        print(f"Error starting client process: {e}")
+        raise
 
-    # Store PID in database
-    cli.pid = process.pid
-    db.session.commit()
-    print(f"Client process started with PID: {process.pid}")
 
-
-def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
+def run_client_simulation(exp, cli, population, config_file, resume=True):
     """
-    Initialize and start client simulation process.
-
+    Run client simulation - called from subprocess.
+    
     Args:
         exp: Experiment object
         cli: Client configuration object
         population: Population object
-        resume: Boolean indicating if resuming (default: False)
+        config_file: Loaded configuration dictionary
+        resume: Boolean indicating if resuming (default: True)
     """
     import json
     import os
     import sys
 
-    from y_web import create_app, db
+    from y_web import db
     from y_web.models import Client_Execution
 
-    # app = current_app
-    # app2 = create_app(db_type)  # create app instance for this subprocess
-    # with app2.app_context():
     yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
     if exp.platform_type == "microblogging":
