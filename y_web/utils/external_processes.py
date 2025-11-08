@@ -695,12 +695,18 @@ def start_server(exp):
                 except AttributeError:
                     # Fallback for older Python versions
                     creationflags = 0x08000000
+                
+                # On Windows, ensure we're in the correct working directory
+                # This helps Python find the script file
+                cwd = Path(script_path).parent
+                
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
+                    cwd=str(cwd),
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
@@ -717,27 +723,26 @@ def start_server(exp):
         except Exception as e:
             # Fallback: try to use the current Python implicitly
             print(f"Error starting server process: {e}")
-            cmd = [sys.executable, script_path, "-c", config]
-            if sys.platform.startswith("win"):
-                try:
-                    creationflags = subprocess.CREATE_NO_WINDOW
-                except AttributeError:
-                    creationflags = 0x08000000
-                process = subprocess.Popen(
-                    cmd,
-                    stdout=out_file,
-                    stderr=err_file,
-                    stdin=subprocess.DEVNULL,
-                    creationflags=creationflags,
-                )
+            print(f"Command: {' '.join(cmd)}")
+            print(f"Config file: {config}")
+            
+            # Add detailed debugging information
+            full_path = f"{BASE_DIR}{exp.db_name}"
+            if len(full_path) > 2 and full_path[1] == ':':
+                # Windows - strip "C:\" (drive + separator)
+                if len(full_path) > 3 and full_path[2] in ("/", "\\"):
+                    db_uri = full_path[3:].replace("\\", "/")
+                else:
+                    db_uri = full_path[2:].replace("\\", "/")
             else:
-                process = subprocess.Popen(
-                    cmd,
-                    stdout=out_file,
-                    stderr=err_file,
-                    stdin=subprocess.DEVNULL,
-                    start_new_session=True,
-                )
+                # Unix - strip "/"
+                db_uri = full_path[1:].replace("\\", "/")
+            
+            print(f"Database URI: {db_uri}")
+            print(f"Database URI type: {type(db_uri)}")
+            print(f"Database URI repr: {repr(db_uri)}")
+            print(f"Database URI contains colon: {':' in db_uri}")
+            raise
 
     print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
