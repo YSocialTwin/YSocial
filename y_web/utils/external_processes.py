@@ -699,7 +699,7 @@ def start_server(exp):
                 except AttributeError:
                     # Fallback for older Python versions
                     creationflags = 0x08000000
-                
+
                 # On Windows, use shell=True to properly handle paths with spaces
                 process = subprocess.Popen(
                     cmd,
@@ -726,10 +726,10 @@ def start_server(exp):
             print(f"Error starting server process: {e}")
             print(f"Command: {' '.join(cmd)}")
             print(f"Config file: {config}")
-            
+
             # Add detailed debugging information
             full_path = f"{BASE_DIR}{exp.db_name}"
-            if len(full_path) > 2 and full_path[1] == ':':
+            if len(full_path) > 2 and full_path[1] == ":":
                 # Windows - strip "C:\" (drive + separator)
                 if len(full_path) > 3 and full_path[2] in ("/", "\\"):
                     db_uri = full_path[3:].replace("\\", "/")
@@ -738,7 +738,7 @@ def start_server(exp):
             else:
                 # Unix - strip "/"
                 db_uri = full_path[1:].replace("\\", "/")
-            
+
             print(f"Database URI: {db_uri}")
             print(f"Database URI type: {type(db_uri)}")
             print(f"Database URI repr: {repr(db_uri)}")
