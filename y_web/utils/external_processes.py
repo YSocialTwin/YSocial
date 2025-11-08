@@ -1348,6 +1348,15 @@ def start_client(exp, cli, population, resume=True):
         out_file = subprocess.DEVNULL
         err_file = subprocess.DEVNULL
     
+    # Set up environment with PYTHONPATH to ensure imports work
+    # The subprocess needs to be able to import y_web modules
+    env = os.environ.copy()
+    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = project_root
+    
     # Start the process with Popen
     try:
         if sys.platform.startswith("win"):
@@ -1362,6 +1371,8 @@ def start_client(exp, cli, population, resume=True):
                 stderr=err_file,
                 stdin=subprocess.DEVNULL,
                 creationflags=creationflags,
+                env=env,
+                cwd=project_root,
             )
         else:
             # On Unix, use start_new_session for proper detachment
@@ -1371,6 +1382,8 @@ def start_client(exp, cli, population, resume=True):
                 stderr=err_file,
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
+                env=env,
+                cwd=project_root,
             )
         
         print(f"Client process started with PID: {process.pid}")
