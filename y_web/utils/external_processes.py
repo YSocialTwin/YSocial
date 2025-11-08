@@ -756,6 +756,9 @@ def start_server(exp):
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
 
     print(f"Database URI: {db_uri}")
+    print(f"Database URI type: {type(db_uri)}")
+    print(f"Database URI repr: {repr(db_uri)}")
+    print(f"Database URI contains colon: {':' in db_uri}")
 
     # Wait for the server to start and configure database
     if use_gunicorn:
@@ -796,9 +799,13 @@ def start_server(exp):
         data = {"path": f"{db_uri}"}
         headers = {"Content-Type": "application/json"}
         ns = f"http://{exp.server}:{exp.port}/change_db"
+        print(f"Sending to /change_db endpoint: {json.dumps(data)}")
+        print(f"POST URL: {ns}")
         try:
-            post(f"{ns}", headers=headers, data=json.dumps(data))
-            print("Database configuration successful")
+            response = post(f"{ns}", headers=headers, data=json.dumps(data))
+            print(
+                f"Database configuration successful. Response: {response.status_code}"
+            )
         except Exception as e:
             print(f"Warning: Could not configure database: {e}")
 
