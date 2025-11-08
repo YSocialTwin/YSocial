@@ -1289,123 +1289,117 @@ def start_client(exp, cli, population, resume=True):
 
 def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     """
-    Initialize and start client simulation process.
-
-    Args:
-        exp: Experiment object
-        cli: Client configuration object
-        population: Population object
-        resume: Boolean indicating if resuming (default: False)
+    Start client simulation without pushing Flask app context.
+    Independent of the main Flask runtime.
     """
     import json
     import os
     import sys
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import create_engine
+    from y_web.models import Client_Execution, Exps, Client, Population
 
-    from y_web import create_app, db
-    from y_web.models import Client_Execution
+    from y_web import create_app, db  # only to reuse URI config
 
-    #app = current_app
-    #app2 = create_app(db_type)  # create app instance for this subprocess
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app(db_type)
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
 
-    #with app2.app_context():
-    yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
 
-    if exp.platform_type == "microblogging":
-        sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
-        from y_client.clients import YClientWeb
-    elif exp.platform_type == "forum":
-        sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
-        from y_client.clients import YClientWeb
-    else:
-        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+    try:
+        # Retrieve data fresh from DB (no app context)
+        exp = session.query(Exps).get(exp.idexp)
+        cli = session.query(Client).get(cli.id)
+        population = session.query(Population).get(population.id)
 
-    # get experiment base path
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+        # ---------- your logic below (unchanged except DB usage) ----------
+        yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
-    # postgres
-    if "experiments_" in exp.db_name:
-        uid = exp.db_name.removeprefix("experiments_")
-        filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
-            "utils/", ""
-        )  #
-    else:
-        uid = exp.db_name.split(os.sep)[1]
-        filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
-            "utils/", ""
-        )  # .replace(' ', '')
+        if exp.platform_type == "microblogging":
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
+            from y_client.clients import YClientWeb
+        elif exp.platform_type == "forum":
+            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
+            from y_client.clients import YClientWeb
+        else:
+            raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-    data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
-    config_file = json.load(
-        open(f"{data_base_path}client_{cli.name}-{population.name}.json")
-    )
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
 
-    print("Starting client process...")
+        if "experiments_" in exp.db_name:
+            uid = exp.db_name.removeprefix("experiments_")
+            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace("utils/", "")
+        else:
+            uid = exp.db_name.split(os.sep)[1]
+            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace("utils/", "")
 
-    # DB query requires app context
-    ce = Client_Execution.query.filter_by(client_id=cli.id).first()
-    print(f"Client {cli.name} execution record: {ce}")
-    if ce:
-        first_run = False
-    else:
-        print(f"Client {cli.name} first execution.")
-        first_run = True
-        ce = Client_Execution(
+        data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
+        config_file = json.load(open(f"{data_base_path}client_{cli.name}-{population.name}.json"))
+
+        print("Starting client process...")
+
+        ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
+        print(f"Client {cli.name} execution record: {ce}")
+
+        if ce:
+            first_run = False
+        else:
+            print(f"Client {cli.name} first execution.")
+            first_run = True
+            ce = Client_Execution(
                 client_id=cli.id,
                 elapsed_time=0,
                 expected_duration_rounds=cli.days * 24,
                 last_active_hour=-1,
                 last_active_day=-1,
-        )
-        db.session.add(ce)
-        db.session.commit()
+            )
+            session.add(ce)
+            session.commit()
 
-    log_file = f"{data_base_path}{cli.name}_client.log"
-    if first_run and cli.network_type:
-        path = f"{cli.name}_network.csv"
+        log_file = f"{data_base_path}{cli.name}_client.log"
+        if first_run and cli.network_type:
+            path = f"{cli.name}_network.csv"
+            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
+                            network=path, log_file=log_file, llm=exp.llm_agents_enabled)
+        else:
+            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
+                            log_file=log_file, llm=exp.llm_agents_enabled)
 
-        cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                network=path,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-        )
-    else:
-        cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-        )
+        if resume:
+            cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
 
-    if resume:
-        cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
+        cl.read_agents()
+        cl.add_feeds()
 
-    cl.read_agents()
-    cl.add_feeds()
+        if first_run and cli.network_type:
+            cl.add_network()
 
-    if first_run and cli.network_type:
-        cl.add_network()
+        if not os.path.exists(filename):
+            cl.save_agents(filename)
 
-    if not os.path.exists(filename):
-        cl.save_agents(filename)
+        run_simulation(cl, cli.id, filename, exp, population)
 
-    run_simulation(cl, cli.id, filename, exp, population)
+    finally:
+        session.close()
+        engine.dispose()
 
 
-def get_users_per_hour(population, agents):
+
+def get_users_per_hour(population, agents, session):
     # get population activity profiles
     activity_profiles = defaultdict(list)
     population_activity_profiles = (
-        db.session.query(PopulationActivityProfile)
+        session.query(PopulationActivityProfile)
         .filter(PopulationActivityProfile.population == population.id)
         .all()
     )
     for ap in population_activity_profiles:
         profile = (
-            db.session.query(ActivityProfile)
+            session.query(ActivityProfile)
             .filter(ActivityProfile.id == ap.activity_profile)
             .first()
         )
@@ -1443,6 +1437,21 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
     """
     Run the simulation
     """
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy import create_engine
+    from y_web.models import Client_Execution, Exps, Client, Population
+
+    from y_web import create_app, db  # only to reuse URI config
+
+    # Create app only to get DB URI, but don't push its context
+    app2 = create_app("sqlite")
+    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
+
+    # Build an independent SQLAlchemy engine/session
+    engine = create_engine(db_uri, pool_pre_ping=True)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+
     platform_type = exp.platform_type
 
     total_days = int(cl.days)
@@ -1450,11 +1459,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
     page_agents = [p for p in cl.agents.agents if p.is_page]
 
-    hour_to_page = get_users_per_hour(population, page_agents)
+    hour_to_page = get_users_per_hour(population, page_agents, session)
 
     for d1 in range(total_days):
         common_agents = [p for p in cl.agents.agents if not p.is_page]
-        hour_to_users = get_users_per_hour(population, common_agents)
+        hour_to_users = get_users_per_hour(population, common_agents, session)
 
         daily_active = {}
         tid, _, _ = cl.sim_clock.get_current_slot()
@@ -1545,13 +1554,13 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
             cl.sim_clock.increment_slot()
 
             # update client execution object
-            ce = Client_Execution.query.filter_by(client_id=cli_id).first()
+            ce = session.query(Client_Execution).filter_by(client_id=cli_id).first()
             if ce:
                 ce.elapsed_time += 1
                 ce.last_active_hour = h
                 ce.last_active_day = d
-                db.session.add(ce)  # Explicitly mark as modified for PostgreSQL
-                db.session.commit()
+                session.add(ce)  # Explicitly mark as modified for PostgreSQL
+                session.commit()
 
         # evaluate follows (once per day, only for a random sample of daily active agents)
         if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
@@ -1586,3 +1595,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
 
         # saving "living" agents at the end of the day
         cl.save_agents(agent_file)
+
+    session.close()
+    engine.dispose()
