@@ -581,28 +581,57 @@ def start_server(exp):
 
         try:
             # Start the process with Popen
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-                env=env,  # Pass environment with config path
-            )
+            # On Windows, use creationflags instead of start_new_session to avoid console window
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
             print(f"Server process started with PID: {process.pid}")
         except Exception as e:
             # Fallback: try to use gunicorn from system path
             print(f"Error starting server process: {e}")
             gunicorn_which = shutil.which("gunicorn")
             fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
-            process = subprocess.Popen(
-                fallback_cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-                env=env,
-            )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                    env=env,
+                )
+            else:
+                process = subprocess.Popen(
+                    fallback_cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                    env=env,
+                )
     else:
         # Use standard Python execution for SQLite
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
@@ -622,25 +651,56 @@ def start_server(exp):
 
         try:
             # Start the process with Popen
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-            )
+            # On Windows, use creationflags instead of start_new_session to avoid console window
+            if sys.platform.startswith("win"):
+                # DETACHED_PROCESS = 0x00000008 - creates process without console
+                # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    # Fallback for older Python versions
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                )
+            else:
+                # On Unix, use start_new_session for proper detachment
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
             print(f"Server process started with PID: {process.pid}")
         except Exception as e:
             # Fallback: try to use the current Python implicitly
             print(f"Error starting server process: {e}")
             cmd = [sys.executable, script_path, "-c", config]
-            process = subprocess.Popen(
-                cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                stdin=subprocess.DEVNULL,
-                start_new_session=True,  # Detach from parent process group
-            )
+            if sys.platform.startswith("win"):
+                try:
+                    creationflags = subprocess.CREATE_NO_WINDOW
+                except AttributeError:
+                    creationflags = 0x08000000
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=creationflags,
+                )
+            else:
+                process = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
 
     print(f"Command: {' '.join(cmd)}")
     print(f"Config file: {config}")
