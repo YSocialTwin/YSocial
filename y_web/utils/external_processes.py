@@ -1304,10 +1304,9 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     from y_web import create_app, db
     from y_web.models import Client_Execution
 
-    #app = current_app
-    #app2 = create_app(db_type)  # create app instance for this subprocess
-
-    #with app2.app_context():
+    # app = current_app
+    # app2 = create_app(db_type)  # create app instance for this subprocess
+    # with app2.app_context():
     yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
 
     if exp.platform_type == "microblogging":
@@ -1350,11 +1349,11 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         print(f"Client {cli.name} first execution.")
         first_run = True
         ce = Client_Execution(
-                client_id=cli.id,
-                elapsed_time=0,
-                expected_duration_rounds=cli.days * 24,
-                last_active_hour=-1,
-                last_active_day=-1,
+            client_id=cli.id,
+            elapsed_time=0,
+            expected_duration_rounds=cli.days * 24,
+            last_active_hour=-1,
+            last_active_day=-1,
         )
         db.session.add(ce)
         db.session.commit()
@@ -1364,20 +1363,20 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         path = f"{cli.name}_network.csv"
 
         cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                network=path,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
+            config_file,
+            data_base_path,
+            first_run=first_run,
+            network=path,
+            log_file=log_file,
+            llm=exp.llm_agents_enabled,
         )
     else:
         cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
+            config_file,
+            data_base_path,
+            first_run=first_run,
+            log_file=log_file,
+            llm=exp.llm_agents_enabled,
         )
 
     if resume:
