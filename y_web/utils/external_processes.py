@@ -655,7 +655,12 @@ def start_server(exp):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"
+        # Construct the database URI properly for both Windows and Unix
+        # Use Path to handle path properly, then convert to string with forward slashes for URI
+        base_path = Path(BASE_DIR)
+        db_path = base_path / exp.db_name
+        # Convert to absolute path and use forward slashes for URI (works on both platforms)
+        db_uri = str(db_path.resolve()).replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
@@ -767,7 +772,11 @@ def start_server_screen(exp):
         db_type = "postgresql"
 
     if db_type == "sqlite":
-        db_uri = f"{BASE_DIR[1:]}{exp.db_name}"  # change this to the postgres URI
+        # Construct the database URI properly for both Windows and Unix
+        base_path = Path(BASE_DIR)
+        db_path = base_path / exp.db_name
+        # Convert to absolute path and use forward slashes for URI (works on both platforms)
+        db_uri = str(db_path.resolve()).replace("\\", "/")
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
