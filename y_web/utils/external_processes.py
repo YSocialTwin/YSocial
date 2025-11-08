@@ -1295,11 +1295,12 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     import json
     import os
     import sys
-    from sqlalchemy.orm import sessionmaker
+
     from sqlalchemy import create_engine
-    from y_web.models import Client_Execution, Exps, Client, Population
+    from sqlalchemy.orm import sessionmaker
 
     from y_web import create_app, db  # only to reuse URI config
+    from y_web.models import Client, Client_Execution, Exps, Population
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app(db_type)
@@ -1332,13 +1333,19 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace("utils/", "")
+            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
+                "utils/", ""
+            )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace("utils/", "")
+            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
+                "utils/", ""
+            )
 
         data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
-        config_file = json.load(open(f"{data_base_path}client_{cli.name}-{population.name}.json"))
+        config_file = json.load(
+            open(f"{data_base_path}client_{cli.name}-{population.name}.json")
+        )
 
         print("Starting client process...")
 
@@ -1363,11 +1370,22 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         log_file = f"{data_base_path}{cli.name}_client.log"
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
-            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
-                            network=path, log_file=log_file, llm=exp.llm_agents_enabled)
+            cl = YClientWeb(
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                network=path,
+                log_file=log_file,
+                llm=exp.llm_agents_enabled,
+            )
         else:
-            cl = YClientWeb(config_file, data_base_path, first_run=first_run,
-                            log_file=log_file, llm=exp.llm_agents_enabled)
+            cl = YClientWeb(
+                config_file,
+                data_base_path,
+                first_run=first_run,
+                log_file=log_file,
+                llm=exp.llm_agents_enabled,
+            )
 
         if resume:
             cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
@@ -1386,7 +1404,6 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     finally:
         session.close()
         engine.dispose()
-
 
 
 def get_users_per_hour(population, agents, session):
@@ -1437,11 +1454,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
     """
     Run the simulation
     """
-    from sqlalchemy.orm import sessionmaker
     from sqlalchemy import create_engine
-    from y_web.models import Client_Execution, Exps, Client, Population
+    from sqlalchemy.orm import sessionmaker
 
     from y_web import create_app, db  # only to reuse URI config
+    from y_web.models import Client, Client_Execution, Exps, Population
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app("sqlite")
