@@ -203,6 +203,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         tuple: (success, message, instance_id)
     """
     import os
+    import shutil
     import subprocess
     import sys
     import time
@@ -265,39 +266,173 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         }
     )
 
-    cmd = [
-        sys.executable,
-        "-m",
-        "jupyter",
-        "lab",
-        f"--port={port}",
-        "--ServerApp.token=embed-jupyter-token",
-        "--ServerApp.password=",
-        f"--ServerApp.ip={current_host or '0.0.0.0'}",
-        "--no-browser",
-        f"--ServerApp.root_dir={notebook_dir.resolve()}",
-        f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
-        "--ServerApp.allow_origin_pat=.*",
-        "--ServerApp.disable_check_xsrf=True",
-        "--IdentityProvider.token=",
-        "--ServerApp.allow_remote_access=True",
-        "--ServerApp.allow_host=*",
-        f"--ServerApp.base_url=/jupyter/{expid}/",
-        "--ServerApp.trust_xheaders=True",
-        # tornado_settings singolo per iframe embedding
-        f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
-    ]
+    # Build jupyter-lab command with proper Windows support
+    # On Windows, try multiple approaches to find and run jupyter-lab
+    if sys.platform.startswith("win"):
+        # Try to find jupyter-lab executable using multiple methods
+        jupyter_lab_cmd = None
+
+        # Method 1: Check in Python's Scripts directory
+        python_dir = Path(sys.executable).parent
+        jupyter_lab_exe = python_dir / "Scripts" / "jupyter-lab.exe"
+        if jupyter_lab_exe.exists():
+            jupyter_lab_cmd = str(jupyter_lab_exe)
+            print(f"Found jupyter-lab.exe: {jupyter_lab_cmd}")
+
+        # Method 2: Try shutil.which to find in PATH
+        if not jupyter_lab_cmd:
+            jupyter_lab_which = shutil.which("jupyter-lab")
+            if jupyter_lab_which:
+                jupyter_lab_cmd = jupyter_lab_which
+                print(f"Found jupyter-lab via which: {jupyter_lab_cmd}")
+
+        # Method 3: Try to find jupyter.exe and verify it supports lab subcommand
+        if not jupyter_lab_cmd:
+            jupyter_exe = python_dir / "Scripts" / "jupyter.exe"
+            if jupyter_exe.exists():
+                # Test if 'lab' subcommand is available
+                try:
+                    result = subprocess.run(
+                        [str(jupyter_exe), "lab", "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    if result.returncode == 0:
+                        jupyter_lab_cmd = str(jupyter_exe)
+                        print(
+                            f"Found jupyter.exe with lab subcommand support: {jupyter_lab_cmd}"
+                        )
+                    else:
+                        print(
+                            f"jupyter.exe exists but 'lab' subcommand not available: {result.stderr}"
+                        )
+                except (subprocess.TimeoutExpired, Exception) as e:
+                    print(f"Could not verify jupyter lab support: {e}")
+
+        if jupyter_lab_cmd:
+            # Use the found executable
+            # Check if we found jupyter.exe (needs "lab" argument) or jupyter-lab.exe
+            if "jupyter-lab" in jupyter_lab_cmd:
+                cmd = [
+                    jupyter_lab_cmd,
+                    f"--port={port}",
+                    "--ServerApp.token=embed-jupyter-token",
+                    "--ServerApp.password=",
+                    f"--ServerApp.ip={current_host or '0.0.0.0'}",
+                    "--no-browser",
+                    f"--ServerApp.root_dir={notebook_dir.resolve()}",
+                    f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                    "--ServerApp.allow_origin_pat=.*",
+                    "--ServerApp.disable_check_xsrf=True",
+                    "--IdentityProvider.token=",
+                    "--ServerApp.allow_remote_access=True",
+                    "--ServerApp.allow_host=*",
+                    f"--ServerApp.base_url=/jupyter/{expid}/",
+                    "--ServerApp.trust_xheaders=True",
+                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+                ]
+            else:
+                # Using jupyter.exe - add "lab" as first argument
+                cmd = [
+                    jupyter_lab_cmd,
+                    "lab",
+                    f"--port={port}",
+                    "--ServerApp.token=embed-jupyter-token",
+                    "--ServerApp.password=",
+                    f"--ServerApp.ip={current_host or '0.0.0.0'}",
+                    "--no-browser",
+                    f"--ServerApp.root_dir={notebook_dir.resolve()}",
+                    f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                    "--ServerApp.allow_origin_pat=.*",
+                    "--ServerApp.disable_check_xsrf=True",
+                    "--IdentityProvider.token=",
+                    "--ServerApp.allow_remote_access=True",
+                    "--ServerApp.allow_host=*",
+                    f"--ServerApp.base_url=/jupyter/{expid}/",
+                    "--ServerApp.trust_xheaders=True",
+                    f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+                ]
+        else:
+            # No jupyter-lab executable found, try python -m jupyterlab as last resort
+            print(
+                "WARNING: jupyter-lab executable not found. Trying 'python -m jupyterlab'"
+            )
+            print("If this fails, install jupyterlab with: pip install jupyterlab")
+            cmd = [
+                sys.executable,
+                "-m",
+                "jupyterlab",
+                f"--port={port}",
+                "--ServerApp.token=embed-jupyter-token",
+                "--ServerApp.password=",
+                f"--ServerApp.ip={current_host or '0.0.0.0'}",
+                "--no-browser",
+                f"--ServerApp.root_dir={notebook_dir.resolve()}",
+                f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+                "--ServerApp.allow_origin_pat=.*",
+                "--ServerApp.disable_check_xsrf=True",
+                "--IdentityProvider.token=",
+                "--ServerApp.allow_remote_access=True",
+                "--ServerApp.allow_host=*",
+                f"--ServerApp.base_url=/jupyter/{expid}/",
+                "--ServerApp.trust_xheaders=True",
+                f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+            ]
+    else:
+        # Unix/Linux/Mac: use python -m jupyter lab
+        cmd = [
+            sys.executable,
+            "-m",
+            "jupyter",
+            "lab",
+            f"--port={port}",
+            "--ServerApp.token=embed-jupyter-token",
+            "--ServerApp.password=",
+            f"--ServerApp.ip={current_host or '0.0.0.0'}",
+            "--no-browser",
+            f"--ServerApp.root_dir={notebook_dir.resolve()}",
+            f"--ServerApp.allow_origin=http://{current_host}:{current_port}",
+            "--ServerApp.allow_origin_pat=.*",
+            "--ServerApp.disable_check_xsrf=True",
+            "--IdentityProvider.token=",
+            "--ServerApp.allow_remote_access=True",
+            "--ServerApp.allow_host=*",
+            f"--ServerApp.base_url=/jupyter/{expid}/",
+            "--ServerApp.trust_xheaders=True",
+            f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
+        ]
 
     try:
-        process = subprocess.Popen(
-            cmd,
-            env=env,
-            cwd=str(notebook_dir.parent),  # critical for Ubuntu
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            preexec_fn=os.setsid if os.name != "nt" else None,
-            text=True,
-        )
+        # Use proper process isolation similar to start_client
+        if sys.platform.startswith("win"):
+            # On Windows, use creationflags to avoid console window and ensure proper isolation
+            try:
+                creationflags = subprocess.CREATE_NO_WINDOW
+            except AttributeError:
+                creationflags = 0x08000000
+            process = subprocess.Popen(
+                cmd,
+                env=env,
+                cwd=str(notebook_dir.parent),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                creationflags=creationflags,
+                text=True,
+            )
+        else:
+            # On Unix, use start_new_session for proper detachment
+            process = subprocess.Popen(
+                cmd,
+                env=env,
+                cwd=str(notebook_dir.parent),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+                text=True,
+            )
 
         # Store instance info
         instance = db.session.query(Jupyter_instances).filter_by(exp_id=expid).first()
@@ -318,7 +453,11 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             if process.poll() is not None:
                 # Process ended early which usually means an error
                 err = "".join(stderr_output) + (process.stderr.read() or "")
-                print(f"Process exited early: {err}")
+                print(
+                    f"Process exited early with return code {process.returncode}: {err}"
+                )
+                # Return error message with details
+                return False, f"Jupyter Lab failed to start: {err[:500]}", None
 
             # Read non-blocking from stderr (just a small chunk)
             line = process.stderr.readline()

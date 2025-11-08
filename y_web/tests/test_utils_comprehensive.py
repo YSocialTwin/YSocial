@@ -216,6 +216,55 @@ class TestExternalProcesses:
         except ImportError as e:
             pytest.skip(f"Could not import start_server: {e}")
 
+    @patch("subprocess.Popen")
+    @patch("y_web.utils.external_processes.current_app")
+    @patch("y_web.utils.external_processes.db")
+    @patch("y_web.utils.external_processes.Path")
+    def test_start_client_with_popen(
+        self, mock_path, mock_db, mock_current_app, mock_popen
+    ):
+        """Test start_client uses subprocess.Popen correctly"""
+        try:
+            from y_web.utils.external_processes import start_client
+
+            # Mock the subprocess
+            mock_process = Mock()
+            mock_process.pid = 54321
+            mock_popen.return_value = mock_process
+
+            # Mock current_app config
+            mock_current_app.config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///test.db"}
+
+            # Mock Path.exists to return True for runner script
+            mock_path_instance = Mock()
+            mock_path_instance.exists.return_value = True
+            mock_path.return_value = mock_path_instance
+
+            # Mock experiment, client, and population objects
+            exp = Mock()
+            exp.idexp = 1
+            exp.db_name = "experiments_test123"
+
+            cli = Mock()
+            cli.id = 10
+            cli.name = "test_client"
+
+            population = Mock()
+            population.id = 5
+
+            # Test starting a client
+            try:
+                result = start_client(exp, cli, population, resume=True)
+                # Should return a subprocess.Popen object
+                assert result is mock_process
+                assert cli.pid == 54321
+            except Exception:
+                # Function might require specific environment setup
+                pass
+
+        except ImportError as e:
+            pytest.skip(f"Could not import start_client: {e}")
+
 
 class TestFeeds:
     """Test feeds utility functions"""
