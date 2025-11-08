@@ -277,19 +277,34 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         jupyter_lab_exe = python_dir / "Scripts" / "jupyter-lab.exe"
         if jupyter_lab_exe.exists():
             jupyter_lab_cmd = str(jupyter_lab_exe)
+            print(f"Found jupyter-lab.exe: {jupyter_lab_cmd}")
         
         # Method 2: Try shutil.which to find in PATH
         if not jupyter_lab_cmd:
             jupyter_lab_which = shutil.which("jupyter-lab")
             if jupyter_lab_which:
                 jupyter_lab_cmd = jupyter_lab_which
+                print(f"Found jupyter-lab via which: {jupyter_lab_cmd}")
         
-        # Method 3: Try to find jupyter.exe and use it with lab argument
+        # Method 3: Try to find jupyter.exe and verify it supports lab subcommand
         if not jupyter_lab_cmd:
             jupyter_exe = python_dir / "Scripts" / "jupyter.exe"
             if jupyter_exe.exists():
-                jupyter_lab_cmd = str(jupyter_exe)
-                # Will be used with "lab" as first argument below
+                # Test if 'lab' subcommand is available
+                try:
+                    result = subprocess.run(
+                        [str(jupyter_exe), "lab", "--version"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    if result.returncode == 0:
+                        jupyter_lab_cmd = str(jupyter_exe)
+                        print(f"Found jupyter.exe with lab subcommand support: {jupyter_lab_cmd}")
+                    else:
+                        print(f"jupyter.exe exists but 'lab' subcommand not available: {result.stderr}")
+                except (subprocess.TimeoutExpired, Exception) as e:
+                    print(f"Could not verify jupyter lab support: {e}")
         
         if jupyter_lab_cmd:
             # Use the found executable
@@ -335,12 +350,13 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                     f'--ServerApp.tornado_settings={{"headers": {{"X-Frame-Options": "ALLOWALL", "Content-Security-Policy": "frame-ancestors http://{current_host}:{current_port}"}}}}',
                 ]
         else:
-            # Fallback to python -m jupyter lab
+            # No jupyter-lab executable found, try python -m jupyterlab as last resort
+            print("WARNING: jupyter-lab executable not found. Trying 'python -m jupyterlab'")
+            print("If this fails, install jupyterlab with: pip install jupyterlab")
             cmd = [
                 sys.executable,
                 "-m",
-                "jupyter",
-                "lab",
+                "jupyterlab",
                 f"--port={port}",
                 "--ServerApp.token=embed-jupyter-token",
                 "--ServerApp.password=",
