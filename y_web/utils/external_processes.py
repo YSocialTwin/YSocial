@@ -1280,7 +1280,35 @@ def start_client(exp, cli, population, resume=True):
         db_type = "postgresql"
 
     # Get the Python executable to use
-    python_cmd = detect_env_handler()
+    # When running from PyInstaller, client processes need system Python with y_web installed
+    if getattr(sys, 'frozen', False):
+        # Running from PyInstaller - need system Python with dependencies
+        from y_web.utils.jupyter_utils import get_python_executable
+        python_cmd = get_python_executable()
+        
+        # Verify that the system Python can import y_web
+        try:
+            import subprocess
+            result = subprocess.run(
+                [python_cmd, '-c', 'import y_web'],
+                capture_output=True,
+                timeout=5
+            )
+            if result.returncode != 0:
+                raise RuntimeError(
+                    f"Client simulation requires y_web package to be installed in system Python.\n"
+                    f"Python: {python_cmd}\n"
+                    f"Please install the package:\n"
+                    f"  pip install -e /path/to/YSocial\n"
+                    f"Or use the application from source instead of the executable."
+                )
+        except subprocess.TimeoutExpired:
+            print("Warning: Could not verify y_web installation (timeout)")
+        except Exception as e:
+            print(f"Warning: Could not verify y_web installation: {e}")
+    else:
+        # Running from source - use detected environment
+        python_cmd = detect_env_handler()
 
     # Build path to the client process runner script
     # Get the runner script path - works for both dev and PyInstaller
@@ -1349,13 +1377,30 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
-    project_root = os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )
-    if "PYTHONPATH" in env:
-        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+    
+    if getattr(sys, 'frozen', False):
+        # Running from PyInstaller - the runner script is in the bundle
+        # but subprocess uses system Python which needs y_web in its path
+        # User should have installed the package or set PYTHONPATH
+        if "PYTHONPATH" not in env:
+            print("Warning: Running from PyInstaller bundle. Ensure y_web package is installed in system Python.")
     else:
-        env["PYTHONPATH"] = project_root
+        # Running from source - add project root to PYTHONPATH
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+        else:
+            env["PYTHONPATH"] = project_root
+    
+    # Determine working directory
+    if getattr(sys, 'frozen', False):
+        # When frozen, use current working directory
+        cwd = os.getcwd()
+    else:
+        # When running from source, use project root
+        cwd = project_root
 
     # Start the process with Popen
     try:
@@ -1372,7 +1417,7 @@ def start_client(exp, cli, population, resume=True):
                 stdin=subprocess.DEVNULL,
                 creationflags=creationflags,
                 env=env,
-                cwd=project_root,
+                cwd=cwd,
             )
         else:
             # On Unix, use start_new_session for proper detachment
@@ -1383,7 +1428,7 @@ def start_client(exp, cli, population, resume=True):
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
                 env=env,
-                cwd=project_root,
+                cwd=cwd,
             )
 
         print(f"Client process started with PID: {process.pid}")
