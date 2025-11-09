@@ -55,7 +55,6 @@ def user_data():
         if llm_backend and llm_backend.get("url")
         else []
     )
-    ollamas = ollama_status()
 
     # Get all experiments for bulk assignment
     experiments = Exps.query.all()
@@ -66,7 +65,6 @@ def user_data():
     return render_template(
         "admin/users.html",
         m=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         experiments=experiments,
         all_users=all_users,
@@ -193,7 +191,6 @@ def user_details(uid):
 
     llm_backend = llm_backend_status()
     models = get_llm_models(llm_backend["url"]) if llm_backend["url"] else []
-    ollamas = ollama_status()
 
     return render_template(
         "admin/user_details.html",
@@ -204,7 +201,6 @@ def user_details(uid):
         none=None,
         llm_backend=llm_backend,
         models=models,
-        ollamas=ollamas,
     )
 
 

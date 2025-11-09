@@ -177,7 +177,6 @@ def jupyter_page(exp_id):
     current_host = request.host.split(":")[0]
     jupyter_url = f"http://{current_host}:{inst['port']}/lab?token=embed-jupyter-token"
 
-    ollamas = ollama_status()
     experiment = Exps.query.filter_by(idexp=exp_id).first()
 
     return render_template(
@@ -187,7 +186,6 @@ def jupyter_page(exp_id):
         jupyter_port=inst["port"],
         jupyter_token="embed-jupyter-token",
         notebook_dir=str(inst["notebook_dir"]),
-        ollamas=ollamas,
         experiment=experiment,
         current_host=current_host,
     )

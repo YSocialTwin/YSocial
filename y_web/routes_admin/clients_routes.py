@@ -237,8 +237,6 @@ def clients(idexp):
         else Population.query.all()
     )
 
-    ollamas = ollama_status()
-
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
 
@@ -251,7 +249,6 @@ def clients(idexp):
         "admin/clients.html",
         experiment=exp,
         populations=pops,
-        ollamas=ollamas,
         crecsys=crecsys,
         frecsys=frecsys,
         llm_agents_enabled=llm_agents_enabled,
@@ -1076,7 +1073,6 @@ def client_details(uid):
 
     models = get_llm_models()  # Use generic function for any LLM server
 
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     frecsys = Follow_Recsys.query.all()
@@ -1092,7 +1088,6 @@ def client_details(uid):
         population=population,
         pages=pages,
         models=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         frecsys=frecsys,
         crecsys=crecsys,

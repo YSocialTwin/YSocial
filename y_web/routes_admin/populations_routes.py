@@ -328,7 +328,6 @@ def populations():
     # Regular expression to match model values
 
     models = get_llm_models()  # Use generic function for any LLM server
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
     education_levels = Education.query.all()
@@ -350,7 +349,6 @@ def populations():
     return render_template(
         "admin/populations.html",
         models=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         leanings=leanings,
         education_levels=education_levels,
@@ -618,7 +616,6 @@ def population_details(uid):
         agent_profiles["assigned_count"].append(actual_count)
 
     models = get_llm_models()  # Use generic function for any LLM server
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     crecsys = Content_Recsys.query.all()
@@ -632,7 +629,6 @@ def population_details(uid):
         data=dd,
         activity_profiles=agent_profiles,
         models=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         crecsys=crecsys,
         frecsys=frecsys,

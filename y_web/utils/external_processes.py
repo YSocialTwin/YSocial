@@ -10,19 +10,15 @@ LLM model management.
 
 import json
 import os
-import random
 import re
 import shutil
 import signal
 import subprocess
 import sys
 import time
-import traceback
-from collections import defaultdict
 from multiprocessing import Process
 from pathlib import Path
 
-import numpy as np
 import requests
 from flask import current_app
 from ollama import Client as oclient
@@ -31,12 +27,9 @@ from sklearn.utils import deprecated
 
 from y_web import db
 from y_web.models import (
-    ActivityProfile,
     Client,
-    Client_Execution,
     Exps,
     Ollama_Pull,
-    PopulationActivityProfile,
 )
 
 # Dictionary to track Ollama model download processes
@@ -766,7 +759,6 @@ def start_server(exp):
             print(f"Database URI: {db_uri}")
             print(f"Database URI type: {type(db_uri)}")
             print(f"Database URI repr: {repr(db_uri)}")
-            print(f"Database URI contains colon: {':' in db_uri}")
             raise
 
     # print(f"Command: {' '.join(cmd)}")
@@ -802,11 +794,6 @@ def start_server(exp):
     elif db_type == "postgresql":
         old_db_name = db_uri_main.split("/")[-1]
         db_uri = db_uri_main.replace(old_db_name, exp.db_name)
-
-    print(f"Database URI: {db_uri}")
-    print(f"Database URI type: {type(db_uri)}")
-    print(f"Database URI repr: {repr(db_uri)}")
-    print(f"Database URI contains colon: {':' in db_uri}")
 
     # Wait for the server to start and configure database
     if use_gunicorn:
@@ -971,15 +958,15 @@ def is_ollama_running():
     try:
         response = requests.get("http://127.0.0.1:11434/api/version")
         if response.status_code == 200:
-            print("Ollama is running.")
+            # print("Ollama is running.")
             return True
         else:
-            print(
-                f"Ollama responded but not running correctly. Status: {response.status_code}"
-            )
+            # print(
+            #    f"Ollama responded but not running correctly. Status: {response.status_code}"
+            # )
             return False
     except requests.ConnectionError:
-        print("Ollama is not running or cannot be reached.")
+        # print("Ollama is not running or cannot be reached.")
         return False
 
 
@@ -1270,348 +1257,144 @@ def terminate_client(cli, pause=False):
 
 
 def start_client(exp, cli, population, resume=True):
-    """Handle start client operation."""
+    """
+    Handle start client operation using subprocess.Popen.
+
+    This function launches a client process for an experiment. The process
+    is started using subprocess.Popen to allow for better process management
+    and isolation. The process PID is stored in the database for later
+    management and graceful termination.
+
+    Args:
+        exp: the experiment object
+        cli: the client object
+        population: the population object
+        resume: whether to resume from last state (default: True)
+
+    Returns:
+        subprocess.Popen: The started process object
+    """
     db_type = "sqlite"
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    process = Process(
-        target=start_client_process,
-        args=(exp, cli, population, resume, db_type),
+    # Get the Python executable to use
+    python_cmd = detect_env_handler()
+
+    # Build path to the client process runner script
+    utils_path = os.path.dirname(os.path.abspath(__file__))
+    runner_script = os.path.join(utils_path, "y_client_process_runner.py")
+
+    # Validate that runner script exists
+    if not Path(runner_script).exists():
+        raise FileNotFoundError(
+            f"Client runner script not found: {runner_script}\n"
+            f"Please ensure y_client_process_runner.py exists in the utils directory."
+        )
+
+    # Build the command arguments
+    cmd_args = [
+        "--exp-id",
+        str(exp.idexp),
+        "--client-id",
+        str(cli.id),
+        "--population-id",
+        str(population.id),
+        "--db-type",
+        db_type,
+    ]
+
+    if resume:
+        cmd_args.append("--resume")
+    else:
+        cmd_args.append("--no-resume")
+
+    # Build the command as a list for subprocess.Popen
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
+        # Handle commands like "pipenv run python"
+        cmd_parts = python_cmd.split()
+        cmd = cmd_parts + [runner_script] + cmd_args
+    else:
+        # Simple python executable path (may contain spaces on Windows)
+        cmd = [python_cmd, runner_script] + cmd_args
+
+    # Create log files for client output
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    if "experiments_" in exp.db_name:
+        uid = exp.db_name.removeprefix("experiments_")
+        log_dir = Path(f"{BASE_DIR}experiments{os.sep}{uid}")
+    else:
+        uid = exp.db_name.split(os.sep)[1]
+        log_dir = Path(
+            f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}"
+        )
+
+    stdout_log = log_dir / f"{cli.name}_client_stdout.log"
+    stderr_log = log_dir / f"{cli.name}_client_stderr.log"
+
+    # Open log files for the subprocess
+    try:
+        out_file = open(stdout_log, "a")
+        err_file = open(stderr_log, "a")
+    except Exception as e:
+        print(f"Warning: Could not open log files: {e}")
+        out_file = subprocess.DEVNULL
+        err_file = subprocess.DEVNULL
+
+    # Set up environment with PYTHONPATH to ensure imports work
+    # The subprocess needs to be able to import y_web modules
+    env = os.environ.copy()
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     )
-    process.start()
+    if "PYTHONPATH" in env:
+        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+    else:
+        env["PYTHONPATH"] = project_root
+
+    # Start the process with Popen
+    try:
+        if sys.platform.startswith("win"):
+            # On Windows, use creationflags to avoid console window
+            try:
+                creationflags = subprocess.CREATE_NO_WINDOW
+            except AttributeError:
+                creationflags = 0x08000000
+            process = subprocess.Popen(
+                cmd,
+                stdout=out_file,
+                stderr=err_file,
+                stdin=subprocess.DEVNULL,
+                creationflags=creationflags,
+                env=env,
+                cwd=project_root,
+            )
+        else:
+            # On Unix, use start_new_session for proper detachment
+            process = subprocess.Popen(
+                cmd,
+                stdout=out_file,
+                stderr=err_file,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+                env=env,
+                cwd=project_root,
+            )
+
+        print(f"Client process started with PID: {process.pid}")
+        # if out_file != subprocess.DEVNULL:
+        #    print(f"Logs: {stdout_log} and {stderr_log}")
+    except Exception as e:
+        print(f"Error starting client process: {e}")
+        print(f"Command: {' '.join(cmd)}")
+        raise
 
     # Store PID in database
     cli.pid = process.pid
     db.session.commit()
-    print(f"Client process started with PID: {process.pid}")
 
-
-def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
-    """
-    Start client simulation without pushing Flask app context.
-    Independent of the main Flask runtime.
-    """
-    import json
-    import os
-    import sys
-
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-
-    from y_web import create_app, db  # only to reuse URI config
-    from y_web.models import Client, Client_Execution, Exps, Population
-
-    # Create app only to get DB URI, but don't push its context
-    app2 = create_app(db_type)
-    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
-
-    # Build an independent SQLAlchemy engine/session
-    engine = create_engine(db_uri, pool_pre_ping=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    try:
-        # Retrieve data fresh from DB (no app context)
-        exp = session.query(Exps).get(exp.idexp)
-        cli = session.query(Client).get(cli.id)
-        population = session.query(Population).get(population.id)
-
-        # ---------- your logic below (unchanged except DB usage) ----------
-        yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
-
-        if exp.platform_type == "microblogging":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
-            from y_client.clients import YClientWeb
-        elif exp.platform_type == "forum":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
-            from y_client.clients import YClientWeb
-        else:
-            raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
-
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
-
-        if "experiments_" in exp.db_name:
-            uid = exp.db_name.removeprefix("experiments_")
-            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )
-        else:
-            uid = exp.db_name.split(os.sep)[1]
-            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
-            )
-
-        data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
-        config_file = json.load(
-            open(f"{data_base_path}client_{cli.name}-{population.name}.json")
-        )
-
-        print("Starting client process...")
-
-        ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} execution record: {ce}")
-
-        if ce:
-            first_run = False
-        else:
-            print(f"Client {cli.name} first execution.")
-            first_run = True
-            ce = Client_Execution(
-                client_id=cli.id,
-                elapsed_time=0,
-                expected_duration_rounds=cli.days * 24,
-                last_active_hour=-1,
-                last_active_day=-1,
-            )
-            session.add(ce)
-            session.commit()
-
-        log_file = f"{data_base_path}{cli.name}_client.log"
-        if first_run and cli.network_type:
-            path = f"{cli.name}_network.csv"
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                network=path,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-            )
-        else:
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
-            )
-
-        if resume:
-            cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
-
-        cl.read_agents()
-        cl.add_feeds()
-
-        if first_run and cli.network_type:
-            cl.add_network()
-
-        if not os.path.exists(filename):
-            cl.save_agents(filename)
-
-        run_simulation(cl, cli.id, filename, exp, population)
-
-    finally:
-        session.close()
-        engine.dispose()
-
-
-def get_users_per_hour(population, agents, session):
-    # get population activity profiles
-    activity_profiles = defaultdict(list)
-    population_activity_profiles = (
-        session.query(PopulationActivityProfile)
-        .filter(PopulationActivityProfile.population == population.id)
-        .all()
-    )
-    for ap in population_activity_profiles:
-        profile = (
-            session.query(ActivityProfile)
-            .filter(ActivityProfile.id == ap.activity_profile)
-            .first()
-        )
-        activity_profiles[profile.name] = [int(x) for x in profile.hours.split(",")]
-
-    hours_to_users = defaultdict(list)
-    for ag in agents:
-        profile = activity_profiles[ag.activity_profile]
-
-        for h in profile:
-            hours_to_users[h].append(ag)
-
-    return hours_to_users
-
-
-def sample_agents(agents, expected_active_users):
-    weights = [a.daily_activity_level for a in agents]
-    # normalize weights to sum to 1
-    weights = [w / sum(weights) for w in weights]
-
-    try:
-        sagents = np.random.choice(
-            agents,
-            size=expected_active_users,
-            p=weights,
-            replace=False,
-        )
-    except Exception as e:
-        sagents = np.random.choice(agents, size=expected_active_users, replace=False)
-
-    return sagents
-
-
-def run_simulation(cl, cli_id, agent_file, exp, population):
-    """
-    Run the simulation
-    """
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-
-    from y_web import create_app, db  # only to reuse URI config
-    from y_web.models import Client, Client_Execution, Exps, Population
-
-    # Create app only to get DB URI, but don't push its context
-    app2 = create_app("sqlite")
-    db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
-
-    # Build an independent SQLAlchemy engine/session
-    engine = create_engine(db_uri, pool_pre_ping=True)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    platform_type = exp.platform_type
-
-    total_days = int(cl.days)
-    daily_slots = int(cl.slots)
-
-    page_agents = [p for p in cl.agents.agents if p.is_page]
-
-    hour_to_page = get_users_per_hour(population, page_agents, session)
-
-    for d1 in range(total_days):
-        common_agents = [p for p in cl.agents.agents if not p.is_page]
-        hour_to_users = get_users_per_hour(population, common_agents, session)
-
-        daily_active = {}
-        tid, _, _ = cl.sim_clock.get_current_slot()
-
-        for _ in range(daily_slots):
-            tid, d, h = cl.sim_clock.get_current_slot()
-
-            # get expected active users for this time slot considering the global population (at least 1)
-            expected_active_users = max(
-                int(len(cl.agents.agents) * cl.hourly_activity[str(h)]), 1
-            )
-
-            # take the minimum between expected active over the whole population and available users at time h
-            expected_active_users = min(expected_active_users, len(hour_to_users[h]))
-
-            # get active pages at this hour
-            active_pages = hour_to_page[h]
-
-            if platform_type == "microblogging":
-                # pages post all the time their activity profile is active
-                for page in active_pages:
-                    page.select_action(
-                        tid=tid,
-                        actions=[],
-                        max_length_thread_reading=cl.max_length_thread_reading,
-                    )
-
-                # check whether there are agents left
-            if len(cl.agents.agents) == 0:
-                break
-
-            # get the daily activities of each agent
-            try:
-                sagents = sample_agents(hour_to_users[h], expected_active_users)
-            except Exception as e:
-                # case of no active agents at this hour
-                sagents = []
-
-            # shuffle agents
-            random.shuffle(sagents)
-
-            ################# PARALLELIZED SECTION #################
-            # def agent_task(g, tid):
-            for g in sagents:
-                acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
-
-                daily_active[g.name] = None
-
-                # Get a random integer within g.round_actions.
-                # If g.is_page == 1, then rounds = 0 (the page does not perform actions)
-                if g.is_page == 1:
-                    rounds = 0
-                else:
-                    rounds = random.randint(1, int(g.round_actions))
-
-                for _ in range(rounds):
-                    # sample two elements from a list with replacement
-
-                    candidates = random.choices(
-                        acts,
-                        k=2,
-                        weights=[cl.actions_likelihood[a] for a in acts],
-                    )
-                    candidates.append("NONE")
-
-                    try:
-                        # reply to received mentions
-                        if g not in cl.pages:
-                            g.reply(tid=tid)
-
-                        # select action to be performed
-                        g.select_action(
-                            tid=tid,
-                            actions=candidates,
-                            max_length_thread_reading=cl.max_length_thread_reading,
-                        )
-                    except Exception as e:
-                        print(f"Error ({g.name}): {e}")
-                        print(traceback.format_exc())
-                        pass
-
-            # Run agent tasks in parallel
-            # with concurrent.futures.ThreadPoolExecutor() as executor:
-            #    executor.map(agent_task, sagents)
-            ################# END OF PARALLELIZATION #################
-
-            # increment slot
-            cl.sim_clock.increment_slot()
-
-            # update client execution object
-            ce = session.query(Client_Execution).filter_by(client_id=cli_id).first()
-            if ce:
-                ce.elapsed_time += 1
-                ce.last_active_hour = h
-                ce.last_active_day = d
-                session.add(ce)  # Explicitly mark as modified for PostgreSQL
-                session.commit()
-
-        # evaluate follows (once per day, only for a random sample of daily active agents)
-        if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
-            da = [
-                agent
-                for agent in cl.agents.agents
-                if agent.name in daily_active
-                and agent not in cl.pages
-                and random.random()
-                < float(cl.config["agents"]["probability_of_daily_follow"])
-            ]
-
-            # Evaluating new friendship ties
-            for agent in da:
-                if agent not in cl.pages:
-                    agent.select_action(tid=tid, actions=["FOLLOW", "NONE"])
-
-        # daily churn and new agents
-        if len(daily_active) > 0:
-            # daily churn
-            cl.churn(tid)
-
-            # daily new agents
-            if cl.percentage_new_agents_iteration > 0:
-                for _ in range(
-                    max(
-                        1,
-                        int(len(daily_active) * cl.percentage_new_agents_iteration),
-                    )
-                ):
-                    cl.add_agent()
-
-        # saving "living" agents at the end of the day
-        cl.save_agents(agent_file)
-
-    session.close()
-    engine.dispose()
+    return process

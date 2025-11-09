@@ -3,8 +3,6 @@ Flask-Login==0.6.1
 Flask-SQLAlchemy==2.5.1
 WTForms==2.3.3
 bs4
-cffi==1.15.0
-click==8.1.3
 colorama==0.4.4
 cryptography==37.0.2
 email_validator
@@ -46,3 +44,4 @@ psutil
 ysights
 gunicorn
 gevent
+jupyterlab

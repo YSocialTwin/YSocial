@@ -48,7 +48,6 @@ def agent_data():
     models = get_llm_models()  # Use generic function for any LLM server
 
     populations = Population.query.all()
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     # get professions
@@ -64,7 +63,6 @@ def agent_data():
         "admin/agents.html",
         populations=populations,
         models=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         professions=professions,
         nationalities=nationalities,
@@ -261,7 +259,6 @@ def agent_details(uid):
             id=agent.activity_profile
         ).first()
 
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     return render_template(
@@ -271,7 +268,6 @@ def agent_details(uid):
         profile=agent_profiles,
         populations=populations,
         activity_profile=activity_profile,
-        ollamas=ollamas,
         llm_backend=llm_backend,
     )
 
