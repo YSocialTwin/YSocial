@@ -14,6 +14,37 @@ from y_web import db
 from y_web.models import Exps, Jupyter_instances
 
 
+def get_python_executable():
+    """
+    Get the Python executable path that works for both dev and PyInstaller.
+    
+    When running from PyInstaller, sys.executable points to the bundled executable,
+    not a Python interpreter. We need to find a system Python interpreter instead.
+    
+    Returns:
+        str: Path to Python executable
+    """
+    # Check if running from PyInstaller bundle
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle - need to find system Python
+        # Try to find python in PATH
+        import shutil
+        python_cmd = shutil.which('python3') or shutil.which('python')
+        if python_cmd:
+            return python_cmd
+        # Fallback: try common locations
+        for path in ['/usr/bin/python3', '/usr/local/bin/python3', 
+                     '/opt/homebrew/bin/python3', 'C:\\Python311\\python.exe',
+                     'C:\\Python310\\python.exe', 'C:\\Python39\\python.exe']:
+            if os.path.exists(path):
+                return path
+        # Last resort: return sys.executable and hope for the best
+        return sys.executable
+    else:
+        # Running from source - sys.executable is correct
+        return sys.executable
+
+
 def find_free_port(start_port=8889):
     """Find the next free port starting from start_port."""
     # get all jupyter instances from the db
@@ -144,12 +175,12 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         except ImportError:
             print("ipykernel not found, installing...")
             subprocess.run(
-                [sys.executable, "-m", "pip", "install", "ipykernel"], check=True
+                [get_python_executable(), "-m", "pip", "install", "ipykernel"], check=True
             )
 
         # 2. Check if kernel spec already exists
         result = subprocess.run(
-            [sys.executable, "-m", "jupyter", "kernelspec", "list", "--json"],
+            [get_python_executable(), "-m", "jupyter", "kernelspec", "list", "--json"],
             capture_output=True,
             text=True,
         )
@@ -165,7 +196,7 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         print(f"Registering kernel '{kernel_name}'...")
         subprocess.run(
             [
-                sys.executable,
+                get_python_executable(),
                 "-m",
                 "ipykernel",
                 "install",
@@ -273,7 +304,8 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
         jupyter_lab_cmd = None
 
         # Method 1: Check in Python's Scripts directory
-        python_dir = Path(sys.executable).parent
+        python_exe = get_python_executable()
+        python_dir = Path(python_exe).parent
         jupyter_lab_exe = python_dir / "Scripts" / "jupyter-lab.exe"
         if jupyter_lab_exe.exists():
             jupyter_lab_cmd = str(jupyter_lab_exe)
@@ -360,7 +392,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
             )
             print("If this fails, install jupyterlab with: pip install jupyterlab")
             cmd = [
-                sys.executable,
+                get_python_executable(),
                 "-m",
                 "jupyterlab",
                 f"--port={port}",
@@ -382,7 +414,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
     else:
         # Unix/Linux/Mac: use python -m jupyter lab
         cmd = [
-            sys.executable,
+            get_python_executable(),
             "-m",
             "jupyter",
             "lab",
