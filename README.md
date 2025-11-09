@@ -103,7 +103,30 @@ In case of malfunctioning/installation issues Windows users are advised to use *
 
 For detailed usage examples and configuration options, please refer to the [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) file.
 
-### 📌 **Installation**
+### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
+
+If you prefer a click-and-run experience without setting up Python, download our pre-built executables:
+
+1. **Download** the appropriate package for your OS from the [Releases](https://github.com/YSocialTwin/YSocial/releases) page:
+   - `YSocial-linux.tar.gz` for Linux
+   - `YSocial-macos.tar.gz` for macOS  
+   - `YSocial-windows.zip` for Windows
+
+2. **Extract** the archive and run the executable:
+   - **Linux/macOS**: `./YSocial`
+   - **Windows**: Double-click `YSocial.exe`
+
+3. The application will **automatically open** in your browser at `http://localhost:8080`
+
+4. **Login** with default credentials:
+   - **Email:** `admin@ysocial.com`
+   - **Password:** `test`
+
+📘 The executables include all dependencies and support command-line options (run with `--help` for details).
+
+---
+
+### 📌 **Installation from Source**
 
 To avoid conflicts with the Python environment, we recommend using a virtual environment to install the server dependencies.
 

@@ -1,0 +1,237 @@
+name: Build Executables
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+    
+    - name: Update submodules
+      run: git submodule update --init --recursive
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache/pip
+          ~/Library/Caches/pip
+          ~\AppData\Local\pip\Cache
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller
+    
+    - name: Download NLTK data
+      run: |
+        python -c "import nltk; nltk.download('vader_lexicon')"
+    
+    - name: Create config_files directory if missing
+      shell: bash
+      run: |
+        mkdir -p config_files
+    
+    - name: Build with PyInstaller (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        pyinstaller y_social.spec --clean --noconfirm
+    
+    - name: Build with PyInstaller (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        pyinstaller y_social.spec --clean --noconfirm
+    
+    - name: Create README for distribution
+      shell: bash
+      run: |
+        cat > dist/YSocial/README.txt << 'EOF'
+        YSocial - LLM-powered Social Media Digital Twin
+        ================================================
+        
+        Thank you for downloading YSocial!
+        
+        QUICK START:
+        ------------
+        
+        1. Run the executable:
+           - Linux/macOS: ./YSocial
+           - Windows: YSocial.exe
+        
+        2. The application will automatically open in your default browser
+           at http://localhost:8080
+        
+        3. Default admin credentials:
+           Email: admin@ysocial.com
+           Password: test
+        
+        COMMAND LINE OPTIONS:
+        ---------------------
+        
+        Basic usage:
+          YSocial [OPTIONS]
+        
+        Options:
+          -x, --host HOST          Host address (default: localhost)
+          -y, --port PORT          Port number (default: 8080)
+          -d, --debug              Enable debug mode
+          -D, --db TYPE            Database type: sqlite or postgresql (default: sqlite)
+          -l, --llm-backend BACKEND LLM backend: ollama, vllm, or custom URL
+          -n, --no_notebook        Disable Jupyter Lab
+          --no-browser             Don't auto-open browser
+        
+        Examples:
+          # Start with default settings (auto-opens browser)
+          YSocial
+          
+          # Use different port
+          YSocial --port 5000
+          
+          # Use with Ollama LLM backend
+          YSocial --llm-backend ollama
+          
+          # Don't open browser automatically
+          YSocial --no-browser
+        
+        REQUIREMENTS:
+        -------------
+        
+        - For LLM features, you need to have an LLM backend running:
+          * Ollama (recommended): https://ollama.com/
+          * vLLM: Install separately and run the server
+          * Any OpenAI-compatible API server
+        
+        - The application uses SQLite by default (no setup required)
+        - For PostgreSQL, ensure a PostgreSQL server is running
+        
+        TROUBLESHOOTING:
+        ----------------
+        
+        - If the browser doesn't open automatically, manually navigate to
+          http://localhost:8080 (or your custom host:port)
+        
+        - On macOS, if you get a security warning, go to System Preferences >
+          Security & Privacy and allow the application to run
+        
+        - On Linux, ensure the executable has execute permissions:
+          chmod +x YSocial
+        
+        MORE INFORMATION:
+        -----------------
+        
+        - Documentation: https://ysocialtwin.github.io/
+        - GitHub: https://github.com/YSocialTwin/YSocial
+        - Paper: https://arxiv.org/abs/2408.00818
+        
+        LICENSE:
+        --------
+        YSocial is licensed under the GNU General Public License v3.0
+        EOF
+    
+    - name: Set executable permissions (Linux/macOS)
+      if: runner.os != 'Windows'
+      run: |
+        chmod +x dist/YSocial/YSocial
+    
+    - name: Create archive (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        cd dist
+        tar -czf YSocial-linux.tar.gz YSocial/
+    
+    - name: Create archive (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        cd dist
+        tar -czf YSocial-macos.tar.gz YSocial/
+    
+    - name: Create archive (Windows)
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        cd dist
+        Compress-Archive -Path YSocial -DestinationPath YSocial-windows.zip
+    
+    - name: Upload artifact (Linux)
+      if: runner.os == 'Linux'
+      uses: actions/upload-artifact@v4
+      with:
+        name: YSocial-linux
+        path: dist/YSocial-linux.tar.gz
+        retention-days: 90
+    
+    - name: Upload artifact (macOS)
+      if: runner.os == 'macOS'
+      uses: actions/upload-artifact@v4
+      with:
+        name: YSocial-macos
+        path: dist/YSocial-macos.tar.gz
+        retention-days: 90
+    
+    - name: Upload artifact (Windows)
+      if: runner.os == 'Windows'
+      uses: actions/upload-artifact@v4
+      with:
+        name: YSocial-windows
+        path: dist/YSocial-windows.zip
+        retention-days: 90
+    
+    # Upload to release if this is a release event
+    - name: Upload to Release (Linux)
+      if: github.event_name == 'release' && runner.os == 'Linux'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./dist/YSocial-linux.tar.gz
+        asset_name: YSocial-linux.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Upload to Release (macOS)
+      if: github.event_name == 'release' && runner.os == 'macOS'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./dist/YSocial-macos.tar.gz
+        asset_name: YSocial-macos.tar.gz
+        asset_content_type: application/gzip
+    
+    - name: Upload to Release (Windows)
+      if: github.event_name == 'release' && runner.os == 'Windows'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./dist/YSocial-windows.zip
+        asset_name: YSocial-windows.zip
+        asset_content_type: application/zip
