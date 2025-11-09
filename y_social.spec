@@ -56,6 +56,9 @@ hidden_imports = [
     'colorama',
     'tqdm',
     'pygments',
+    'sklearn',
+    'sklearn.utils',
+    'scipy',
 ]
 
 # Collect all submodules for important packages
@@ -69,6 +72,7 @@ hidden_imports += collect_submodules('bs4')
 hidden_imports += collect_submodules('openai')
 hidden_imports += collect_submodules('pyautogen')
 hidden_imports += collect_submodules('ysights')
+hidden_imports += collect_submodules('sklearn')
 
 # Data files to include
 datas = []
@@ -106,7 +110,6 @@ a = Analysis(
     excludes=[
         'matplotlib',
         'pandas',
-        'scipy',
         'pytest',
         'IPython',
         'notebook',

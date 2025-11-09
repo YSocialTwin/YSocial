@@ -121,12 +121,14 @@ Custom PyInstaller hooks:
 ### Large Executable Size
 The executable is large (~500MB-1GB) because it includes:
 - Python interpreter
-- All dependencies (Flask, SQLAlchemy, NLTK, etc.)
+- All dependencies (Flask, SQLAlchemy, NLTK, scikit-learn, scipy, etc.)
 - Static assets (CSS, JS, images)
 - Database schemas
 - Submodules (YServer, YClient)
 
 This is normal for PyInstaller-built applications with many dependencies.
+
+**Note**: Some large packages like matplotlib and pandas are excluded since they're not needed for the core application.
 
 ## Platform-Specific Notes
 
