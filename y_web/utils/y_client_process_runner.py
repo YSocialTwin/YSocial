@@ -230,7 +230,7 @@ def sample_agents(agents, expected_active_users):
             p=weights,
             replace=False,
         )
-    except Exception as e:
+    except Exception:
         sagents = np.random.choice(agents, size=expected_active_users, replace=False)
 
     return sagents
