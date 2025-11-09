@@ -100,9 +100,9 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
-    hookspath=[],
+    hookspath=[os.path.join(basedir, 'pyinstaller_hooks')],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=[os.path.join(basedir, 'pyinstaller_hooks', 'runtime_hook_nltk.py')],
     excludes=[
         'matplotlib',
         'pandas',

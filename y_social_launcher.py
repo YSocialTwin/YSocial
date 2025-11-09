@@ -54,9 +54,6 @@ def wait_for_server_and_open_browser(host, port, max_wait=30):
 
 def main():
     """Main launcher function."""
-    # Import the actual application
-    from y_social import start_app
-    
     parser = ArgumentParser(description="YSocial - LLM-powered Social Media Twin")
     
     parser.add_argument(
@@ -102,6 +99,9 @@ def main():
     )
     
     args = parser.parse_args()
+    
+    # Import the actual application after parsing args (allows --help to work without dependencies)
+    from y_social import start_app
     
     # Start browser opener in background thread unless disabled
     if not args.no_browser:
