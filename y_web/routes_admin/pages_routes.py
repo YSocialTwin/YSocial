@@ -45,14 +45,12 @@ def page_data():
     check_privileges(current_user.username)
 
     models = get_llm_models()  # Use generic function for any LLM server
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
     leanings = Leanings.query.all()
     activity_profiles = ActivityProfile.query.all()
     return render_template(
         "admin/pages.html",
         models=models,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         leanings=leanings,
         activity_profiles=activity_profiles,
@@ -241,7 +239,6 @@ def page_details(uid):
 
     feed = get_feed(page.feed)
 
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     return render_template(
@@ -250,7 +247,6 @@ def page_details(uid):
         page_populations=pops,
         populations=populations,
         feeds=feed[:3],
-        ollamas=ollamas,
         llm_backend=llm_backend,
         topics=topics,
         page_topics=page_topics,

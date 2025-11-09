@@ -176,8 +176,6 @@ def settings():
             # change the active experiment
             db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
 
-    ollamas = ollama_status()
-
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 
     # Get suggested port for new experiment
@@ -187,7 +185,6 @@ def settings():
         "admin/settings.html",
         experiments=experiments,
         users=users,
-        ollamas=ollamas,
         dbtype=dbtype,
         suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
@@ -217,12 +214,10 @@ def join_simulation():
 
     # Multiple active experiments - show selection menu
     check_privileges(current_user.username)
-    ollamas = ollama_status()
 
     return render_template(
         "admin/select_experiment.html",
         experiments=active_exps,
-        ollamas=ollamas,
     )
 
 
@@ -1441,8 +1436,6 @@ def experiment_details(uid):
     # get experiment clients
     clients = Client.query.filter_by(id_exp=uid).all()
 
-    ollamas = ollama_status()
-
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1460,7 +1453,6 @@ def experiment_details(uid):
         clients=clients,
         users=users,
         len=len,
-        ollamas=ollamas,
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
@@ -1915,10 +1907,8 @@ def prompts(uid):
     # read the prompts file
     prompts = json.load(open(prompts))
 
-    ollamas = ollama_status()
-
     return render_template(
-        "admin/prompts.html", experiment=experiment, prompts=prompts, ollamas=ollamas
+        "admin/prompts.html", experiment=experiment, prompts=prompts
     )
 
 
@@ -2104,9 +2094,7 @@ def miscellanea():
 
     check_privileges(current_user.username)
 
-    ollamas = ollama_status()
-
-    return render_template("admin/miscellanea.html", ollamas=ollamas)
+    return render_template("admin/miscellanea.html")
 
 
 @experiments.route("/admin/languages_data")

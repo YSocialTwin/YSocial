@@ -101,7 +101,6 @@ def dashboard():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    ollamas = ollama_status()
     llm_backend = llm_backend_status()
 
     # Get pagination parameters
@@ -198,7 +197,6 @@ def dashboard():
     return render_template(
         "admin/dashboard.html",
         experiments=res,
-        ollamas=ollamas,
         llm_backend=llm_backend,
         models=models,
         active_pulls=ollama_pulls,
@@ -388,5 +386,4 @@ def about():
         Rendered about page template
     """
     check_privileges(current_user.username)
-    ollamas = ollama_status()
-    return render_template("admin/about.html", ollamas=ollamas)
+    return render_template("admin/about.html")
