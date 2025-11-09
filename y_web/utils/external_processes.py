@@ -1279,36 +1279,16 @@ def start_client(exp, cli, population, resume=True):
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    # Get the Python executable to use
-    # When running from PyInstaller, client processes need system Python with y_web installed
+    # Determine how to run the client subprocess based on execution environment
     if getattr(sys, 'frozen', False):
-        # Running from PyInstaller - need system Python with dependencies
-        from y_web.utils.jupyter_utils import get_python_executable
-        python_cmd = get_python_executable()
-        
-        # Verify that the system Python can import y_web
-        try:
-            import subprocess
-            result = subprocess.run(
-                [python_cmd, '-c', 'import y_web'],
-                capture_output=True,
-                timeout=5
-            )
-            if result.returncode != 0:
-                raise RuntimeError(
-                    f"Client simulation requires y_web package to be installed in system Python.\n"
-                    f"Python: {python_cmd}\n"
-                    f"Please install the package:\n"
-                    f"  pip install -e /path/to/YSocial\n"
-                    f"Or use the application from source instead of the executable."
-                )
-        except subprocess.TimeoutExpired:
-            print("Warning: Could not verify y_web installation (timeout)")
-        except Exception as e:
-            print(f"Warning: Could not verify y_web installation: {e}")
+        # Running from PyInstaller - use the bundled executable with runpy
+        # This allows us to run Python scripts using the embedded interpreter
+        python_cmd = sys.executable
+        use_runpy = True
     else:
         # Running from source - use detected environment
         python_cmd = detect_env_handler()
+        use_runpy = False
 
     # Build path to the client process runner script
     # Get the runner script path - works for both dev and PyInstaller
@@ -1338,18 +1318,47 @@ def start_client(exp, cli, population, resume=True):
     else:
         cmd_args.append("--no-resume")
 
-    # Build the command as a list for subprocess.Popen
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not os.path.isabs(python_cmd)
-    ):
-        # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [runner_script] + cmd_args
+    # Build the command based on execution environment
+    if use_runpy:
+        # When frozen, use a special wrapper approach
+        # Create a temporary bootstrap script that uses runpy to execute the client runner
+        import tempfile
+        bootstrap_code = f"""
+import sys
+import os
+import runpy
+
+# Ensure the bundle path is in sys.path
+if hasattr(sys, '_MEIPASS'):
+    if sys._MEIPASS not in sys.path:
+        sys.path.insert(0, sys._MEIPASS)
+
+# Set up sys.argv for the target script
+sys.argv = ['y_client_process_runner.py'] + {cmd_args}
+
+# Run the client process runner module
+runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')
+"""
+        # Create a temporary file for the bootstrap script
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+            f.write(bootstrap_code)
+            bootstrap_script = f.name
+        
+        # Command runs the bootstrap script with the bundled executable
+        cmd = [python_cmd, bootstrap_script]
     else:
-        # Simple python executable path (may contain spaces on Windows)
-        cmd = [python_cmd, runner_script] + cmd_args
+        # Running from source - use the standard approach
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not os.path.isabs(python_cmd)
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            cmd = cmd_parts + [runner_script] + cmd_args
+        else:
+            # Simple python executable path (may contain spaces on Windows)
+            cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
     BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
@@ -1379,11 +1388,10 @@ def start_client(exp, cli, population, resume=True):
     env = os.environ.copy()
     
     if getattr(sys, 'frozen', False):
-        # Running from PyInstaller - the runner script is in the bundle
-        # but subprocess uses system Python which needs y_web in its path
-        # User should have installed the package or set PYTHONPATH
-        if "PYTHONPATH" not in env:
-            print("Warning: Running from PyInstaller bundle. Ensure y_web package is installed in system Python.")
+        # Running from PyInstaller - modules are in the bundle
+        # The bootstrap script will handle sys.path setup
+        # No PYTHONPATH needed as we're using runpy with the bundled interpreter
+        pass
     else:
         # Running from source - add project root to PYTHONPATH
         project_root = os.path.dirname(
@@ -1432,11 +1440,34 @@ def start_client(exp, cli, population, resume=True):
             )
 
         print(f"Client process started with PID: {process.pid}")
+        
+        # Clean up bootstrap script if it was created
+        if use_runpy and 'bootstrap_script' in locals():
+            # Register cleanup to delete the temporary bootstrap script
+            # after a delay to ensure the subprocess has started
+            import atexit
+            import time
+            def cleanup_bootstrap():
+                time.sleep(2)  # Wait for subprocess to start
+                try:
+                    if os.path.exists(bootstrap_script):
+                        os.unlink(bootstrap_script)
+                except Exception:
+                    pass
+            atexit.register(cleanup_bootstrap)
+        
         # if out_file != subprocess.DEVNULL:
         #    print(f"Logs: {stdout_log} and {stderr_log}")
     except Exception as e:
         print(f"Error starting client process: {e}")
         print(f"Command: {' '.join(cmd)}")
+        # Clean up bootstrap script on error
+        if use_runpy and 'bootstrap_script' in locals():
+            try:
+                if os.path.exists(bootstrap_script):
+                    os.unlink(bootstrap_script)
+            except Exception:
+                pass
         raise
 
     # Store PID in database

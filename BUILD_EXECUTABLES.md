@@ -130,41 +130,6 @@ This is normal for PyInstaller-built applications with many dependencies.
 
 **Note**: Some large packages like matplotlib and pandas are excluded since they're not needed for the core application.
 
-## Known Limitations
-
-### Client Simulations in Executable Mode
-
-When running from the PyInstaller executable, **client simulations require additional setup**:
-
-The client simulation processes run as separate Python subprocesses that need to import the `y_web` package. Since the package is bundled inside the executable and not accessible to external Python processes, you have two options:
-
-**Option 1: Install the package in your Python environment**
-```bash
-# Navigate to where you extracted the executable
-cd /path/to/YSocial
-
-# Install the package (requires source code)
-pip install -e /path/to/YSocial-source
-
-# Or set PYTHONPATH
-export PYTHONPATH=/path/to/YSocial-source:$PYTHONPATH
-```
-
-**Option 2: Run from source for client simulations**
-```bash
-# Clone and run from source instead of using the executable
-git clone --recursive https://github.com/YSocialTwin/YSocial.git
-cd YSocial
-pip install -r requirements.txt
-python y_social.py
-```
-
-**Note**: This limitation only affects client simulations. All other features (experiment management, Jupyter notebooks, server processes) work correctly in executable mode.
-
-### Progress Bars and Logs
-
-Progress bars and log files depend on the client processes successfully connecting to the database and updating their status. If you see progress bars not updating or log files not being created, ensure the client simulation subprocess setup is working correctly (see above).
-
 ## Platform-Specific Notes
 
 ### Linux
