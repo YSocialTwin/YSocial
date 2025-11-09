@@ -187,9 +187,6 @@ class TestPlatformSpecificPaths:
         2. Check if it exists before returning it
         3. Fall back to sys.executable if it doesn't exist
         """
-        import sys
-        from pathlib import Path
-
         # Simulate the existence check logic
         is_windows = sys.platform.startswith("win")
         bin_dir = "Scripts" if is_windows else "bin"
