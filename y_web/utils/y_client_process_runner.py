@@ -68,7 +68,6 @@ def main():
         start_client_process(exp, cli, population, args.resume, args.db_type)
     except Exception as e:
         print(f"ERROR in client process: {e}", file=sys.stderr)
-        import traceback
 
         traceback.print_exc(file=sys.stderr)
         sys.exit(1)
