@@ -12,6 +12,10 @@ import time
 import webbrowser
 from argparse import ArgumentParser
 
+# Force unbuffered output for better error messages in PyInstaller
+sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure') else None
+sys.stderr.reconfigure(line_buffering=True) if hasattr(sys.stderr, 'reconfigure') else None
+
 
 def wait_for_server_and_open_browser(host, port, max_wait=30):
     """
@@ -101,7 +105,15 @@ def main():
     args = parser.parse_args()
     
     # Import the actual application after parsing args (allows --help to work without dependencies)
-    from y_social import start_app
+    try:
+        from y_social import start_app
+    except Exception as e:
+        print(f"\n❌ Error importing y_social module:", file=sys.stderr)
+        print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.stderr.flush()
+        sys.exit(1)
     
     # Start browser opener in background thread unless disabled
     if not args.no_browser:
@@ -125,7 +137,22 @@ def main():
     except KeyboardInterrupt:
         print("\n\nShutting down YSocial...")
         sys.exit(0)
+    except Exception as e:
+        print(f"\n❌ Error starting YSocial:", file=sys.stderr)
+        print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.stderr.flush()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"\n❌ Unexpected error in main:", file=sys.stderr)
+        print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+        import traceback
+        traceback.print_exc()
+        sys.stderr.flush()
+        sys.exit(1)
