@@ -104,6 +104,11 @@ datas += [
     (os.path.join(basedir, 'config_files'), 'config_files'),
 ]
 
+# Add the client process runner script (executed as subprocess, not imported)
+runner_script_path = os.path.join(basedir, 'y_web', 'utils', 'y_client_process_runner.py')
+if os.path.exists(runner_script_path):
+    datas += [(runner_script_path, 'y_web/utils')]
+
 # Add database schema directory
 if os.path.exists(os.path.join(basedir, 'y_web', 'db')):
     datas += [(os.path.join(basedir, 'y_web', 'db'), 'y_web/db')]
