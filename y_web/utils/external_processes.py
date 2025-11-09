@@ -31,6 +31,7 @@ from y_web.models import (
     Exps,
     Ollama_Pull,
 )
+from y_web.utils.path_utils import get_base_path, get_resource_path
 
 # Dictionary to track Ollama model download processes
 ollama_processes = {}
@@ -1282,8 +1283,8 @@ def start_client(exp, cli, population, resume=True):
     python_cmd = detect_env_handler()
 
     # Build path to the client process runner script
-    utils_path = os.path.dirname(os.path.abspath(__file__))
-    runner_script = os.path.join(utils_path, "y_client_process_runner.py")
+    # Get the runner script path - works for both dev and PyInstaller
+    runner_script = get_resource_path(os.path.join('y_web', 'utils', 'y_client_process_runner.py'))
 
     # Validate that runner script exists
     if not Path(runner_script).exists():
