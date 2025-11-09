@@ -12,7 +12,7 @@ This spec file bundles the entire YSocial application including:
 
 import os
 import sys
-from PyInstaller.utils.hooks import collect_data_files, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_submodules, copy_metadata
 
 block_cipher = None
 
@@ -88,9 +88,11 @@ datas += collect_data_files('nltk')
 # Collect package metadata for packages that use importlib.metadata
 # This fixes "PackageNotFoundError: No package metadata was found for X" errors
 for pkg in ['anyio', 'openai', 'httpx', 'httpcore', 'sniffio', 'h11', 'certifi', 
-            'idna', 'flask', 'werkzeug', 'jinja2', 'click', 'itsdangerous']:
+            'idna', 'flask', 'werkzeug', 'jinja2', 'click', 'itsdangerous',
+            'flask_login', 'flask_sqlalchemy', 'wtforms', 'requests', 'urllib3',
+            'charset_normalizer', 'pygments', 'ysights']:
     try:
-        datas += collect_data_files(pkg, include_py_files=False)
+        datas += copy_metadata(pkg)
     except Exception:
         pass  # Package might not be installed
 
