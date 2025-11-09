@@ -1907,9 +1907,7 @@ def prompts(uid):
     # read the prompts file
     prompts = json.load(open(prompts))
 
-    return render_template(
-        "admin/prompts.html", experiment=experiment, prompts=prompts
-    )
+    return render_template("admin/prompts.html", experiment=experiment, prompts=prompts)
 
 
 @experiments.route("/admin/update_prompts/<int:uid>", methods=["POST"])
