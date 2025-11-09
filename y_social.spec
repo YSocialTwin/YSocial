@@ -59,6 +59,11 @@ hidden_imports = [
     'sklearn',
     'sklearn.utils',
     'scipy',
+    'anyio',
+    'httpx',
+    'httpcore',
+    'sniffio',
+    'h11',
 ]
 
 # Collect all submodules for important packages
@@ -79,6 +84,15 @@ datas = []
 
 # Add NLTK data
 datas += collect_data_files('nltk')
+
+# Collect package metadata for packages that use importlib.metadata
+# This fixes "PackageNotFoundError: No package metadata was found for X" errors
+for pkg in ['anyio', 'openai', 'httpx', 'httpcore', 'sniffio', 'h11', 'certifi', 
+            'idna', 'flask', 'werkzeug', 'jinja2', 'click', 'itsdangerous']:
+    try:
+        datas += collect_data_files(pkg, include_py_files=False)
+    except Exception:
+        pass  # Package might not be installed
 
 # Add y_web package data files
 datas += [
