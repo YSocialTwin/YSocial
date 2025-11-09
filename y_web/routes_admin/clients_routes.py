@@ -50,6 +50,7 @@ from y_web.utils import (
     terminate_client,
 )
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.utils.path_utils import get_resource_path
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -73,15 +74,16 @@ def reset_client(uid):
         os.remove(path)
 
     # copy the original prompts.json file
-    BASE = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     if exp.platform_type == "microblogging":
+        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts.json'))
         shutil.copy(
-            f"{BASE}data_schema{os.sep}prompts.json",
+            prompts_src,
             f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
         )
     elif exp.platform_type == "forum":
+        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts_forum.json'))
         shutil.copy(
-            f"{BASE}data_schema{os.sep}prompts_forum.json",
+            prompts_src,
             f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
         )
     else:
@@ -686,16 +688,16 @@ def create_client():
     # copy prompts.json into the experiment folder
 
     if exp.platform_type == "microblogging":
+        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts.json'))
         shutil.copyfile(
-            f"{BASE_DIR}data_schema{os.sep}prompts.json".replace("/y_web/utils", ""),
+            prompts_src,
             f"{data_base_path}prompts.json",
         )
 
     elif exp.platform_type == "forum":
+        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts_forum.json'))
         shutil.copyfile(
-            f"{BASE_DIR}data_schema{os.sep}prompts_forum.json".replace(
-                "/y_web/utils", ""
-            ),
+            prompts_src,
             f"{data_base_path}prompts.json",
         )
     else:
