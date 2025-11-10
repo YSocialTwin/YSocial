@@ -125,20 +125,20 @@
                                     <span class="right" style="display: flex; gap: 8px; align-items: center;">
                                         <div style="display: flex; gap: 3px;">
                                             {% if experiment.running == 0 %}
-                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" title="Run Experiment" onclick="event.preventDefault(); showLoading('Starting experiment server...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiment.idexp }}'); return false;" title="Run Experiment">
                                                 <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
                                             {% if experiment.running == 1 %}
-                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" title="Stop Experiment" onclick="event.preventDefault(); showLoading('Stopping experiment server...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiment.idexp }}'); return false;" title="Stop Experiment">
                                                 <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
-                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" title="Load Experiment" onclick="event.preventDefault(); showLoading('Loading experiment interface...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiment.idexp }}'); return false;" title="Load Experiment">
                                                 <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
-                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" title="Join This Experiment" onclick="event.preventDefault(); showLoading('Joining experiment...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiment.idexp }}'); return false;" title="Join This Experiment">
                                                 <i class="mdi mdi-login" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
@@ -164,6 +164,29 @@
                             </div>
                         </div>
                     </div>
+
+                    <script>
+                        // Experiment server control functions
+                        function startExperimentServer(expId) {
+                            showLoading('Starting experiment server...');
+                            window.location.href = `/admin/start_experiment/${expId}`;
+                        }
+
+                        function stopExperimentServer(expId) {
+                            showLoading('Stopping experiment server...');
+                            window.location.href = `/admin/stop_experiment/${expId}`;
+                        }
+
+                        function selectExperiment(expId) {
+                            showLoading('Loading experiment interface...');
+                            window.location.href = `/admin/select_experiment/${expId}`;
+                        }
+
+                        function joinExperiment(expId) {
+                            showLoading('Joining experiment...');
+                            window.location.href = `/admin/join_experiment/${expId}`;
+                        }
+                    </script>
 
                     {% if notebooks %}
                     <script>
