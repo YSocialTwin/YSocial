@@ -163,10 +163,7 @@ class YSocialSplashScreen:
         authors_title.pack(pady=(10, 5))
 
         authors_text = (
-            "Rossetti, Stella,\n"
-            "Cazabet, Abramski, Cau,\n"
-            "Citraro, Failla, Improta,\n"
-            "Morini, Pansanella"
+            "Rossetti et al."
         )
         authors_label = tk.Label(
             left_column,
@@ -181,7 +178,7 @@ class YSocialSplashScreen:
         # Release date
         release_label = tk.Label(
             left_column,
-            text="Release 2024",
+            text="v2.0.0 (Nalthis) 11/2025",
             font=("Helvetica", 9, "bold"),
             fg="#0d95e8",
             bg="#1a1a2e",
