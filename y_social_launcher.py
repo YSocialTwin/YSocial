@@ -96,14 +96,14 @@ def main():
             def show_splash():
                 """Show splash screen in a separate thread."""
                 try:
-                    splash_screen.show(duration=5)
+                    splash_screen.show(duration=2)
                 except Exception as e:
                     print(f"Splash screen error: {e}")
 
             splash_thread = threading.Thread(target=show_splash, daemon=True)
             splash_thread.start()
-            # Give splash screen time to appear
-            time.sleep(0.5)
+            # Give splash screen minimal time to appear
+            time.sleep(0.2)
         except Exception as e:
             print(f"Could not show splash screen: {e}")
             splash_screen = None
@@ -224,8 +224,8 @@ def main():
             # Close splash screen before showing desktop window
             if splash_screen:
                 try:
-                    # Give a moment to see the final status
-                    time.sleep(1)
+                    # Brief moment to see the final status
+                    time.sleep(0.3)
                     splash_screen.close()
                 except Exception:
                     pass
@@ -294,7 +294,7 @@ def main():
         # Close splash screen before starting the app
         if splash_screen:
             try:
-                time.sleep(1)
+                time.sleep(0.3)
                 splash_screen.close()
             except Exception:
                 pass
