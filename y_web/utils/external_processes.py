@@ -509,16 +509,18 @@ def start_server(exp):
     
     # Get writable path for experiments directory
     writable_base = get_writable_path()
+    # Define y_web directory path (replaces old BASE_DIR)
+    y_web_dir = os.path.join(writable_base, 'y_web')
 
     if "database_server.db" in exp.db_name:
         # Extract experiment uid from db_name path
         # db_name format: "experiments/uid/database_server.db"
-        config = os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0] + 'config_server.json')
+        config = os.path.join(y_web_dir, exp.db_name.split('database_server.db')[0] + 'config_server.json')
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = os.path.join(writable_base, 'y_web', 'experiments', uid, 'config_server.json')
+        config = os.path.join(y_web_dir, 'experiments', uid, 'config_server.json')
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
@@ -748,7 +750,7 @@ def start_server(exp):
             print(f"Config file: {config}")
 
             # Add detailed debugging information
-            full_path = f"{BASE_DIR}{exp.db_name}"
+            full_path = os.path.join(y_web_dir, exp.db_name)
             if len(full_path) > 2 and full_path[1] == ":":
                 # Windows - strip "C:\" (drive + separator)
                 if len(full_path) > 3 and full_path[2] in ("/", "\\"):
@@ -779,7 +781,7 @@ def start_server(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = f"{BASE_DIR}{exp.db_name}"
+        full_path = os.path.join(y_web_dir, exp.db_name)
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
@@ -909,7 +911,7 @@ def start_server_screen(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = f"{BASE_DIR}{exp.db_name}"
+        full_path = os.path.join(y_web_dir, exp.db_name)
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
