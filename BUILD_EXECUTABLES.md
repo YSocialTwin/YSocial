@@ -61,15 +61,17 @@ pyinstaller y_social.spec --clean --noconfirm
 
 ### Build Output
 
-The executable will be located in `dist/YSocial/`:
-- Linux/macOS: `dist/YSocial/YSocial`
-- Windows: `dist/YSocial/YSocial.exe`
+The executable will be a **single file** located in `dist/`:
+- Linux/macOS: `dist/YSocial`
+- Windows: `dist/YSocial.exe`
+
+**Note**: The single-file executable extracts resources to a temporary directory at runtime. User data (experiments, databases, logs) is stored in the current working directory where you run the executable.
 
 ### Testing the Executable
 
 ```bash
 # Linux/macOS
-cd dist/YSocial
+cd dist
 ./YSocial --help
 ./YSocial                    # Launches in desktop mode (default)
 
@@ -77,7 +79,7 @@ cd dist/YSocial
 ./YSocial --browser
 
 # Windows
-cd dist\YSocial
+cd dist
 YSocial.exe --help
 YSocial.exe                  # Launches in desktop mode (default)
 
@@ -150,7 +152,7 @@ Custom PyInstaller hooks:
 ### Executable Fails to Start
 - Check console output for error messages
 - Verify NLTK data was downloaded during build
-- Ensure data files are present in `dist/YSocial/`
+- The single-file executable extracts resources to a temporary location automatically
 
 ### Missing Templates or Static Files
 - Check `y_social.spec` includes correct data paths

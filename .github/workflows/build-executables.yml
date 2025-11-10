@@ -73,7 +73,7 @@ jobs:
     - name: Create README for distribution
       shell: bash
       run: |
-        cat > dist/YSocial/README.txt << 'EOF'
+        cat > dist/README.txt << 'EOF'
         YSocial - LLM-powered Social Media Digital Twin
         ================================================
         
@@ -82,16 +82,27 @@ jobs:
         QUICK START:
         ------------
         
-        1. Run the executable:
+        1. Extract the executable from the archive
+        
+        2. Run the executable:
            - Linux/macOS: ./YSocial
            - Windows: YSocial.exe
         
-        2. The application will automatically open in a NATIVE DESKTOP WINDOW
+        3. The application will automatically open in a NATIVE DESKTOP WINDOW
            (default behavior - no browser chrome!)
         
-        3. Default admin credentials:
+        4. Default admin credentials:
            Email: admin@ysocial.com
            Password: test
+        
+        IMPORTANT NOTES:
+        ----------------
+        
+        - This is a SINGLE-FILE executable (no _internal folder!)
+        - User data (experiments, databases, config) is stored in the directory
+          where you run the executable
+        - The executable extracts read-only resources to a temporary location
+          automatically at startup
         
         COMMAND LINE OPTIONS:
         ---------------------
@@ -180,26 +191,26 @@ jobs:
     - name: Set executable permissions (Linux/macOS)
       if: runner.os != 'Windows'
       run: |
-        chmod +x dist/YSocial/YSocial
+        chmod +x dist/YSocial
     
     - name: Create archive (Linux)
       if: runner.os == 'Linux'
       run: |
         cd dist
-        tar -czf YSocial-linux.tar.gz YSocial/
+        tar -czf YSocial-linux.tar.gz YSocial README.txt
     
     - name: Create archive (macOS)
       if: runner.os == 'macOS'
       run: |
         cd dist
-        tar -czf YSocial-macos.tar.gz YSocial/
+        tar -czf YSocial-macos.tar.gz YSocial README.txt
     
     - name: Create archive (Windows)
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
         cd dist
-        Compress-Archive -Path YSocial -DestinationPath YSocial-windows.zip
+        Compress-Archive -Path YSocial.exe,README.txt -DestinationPath YSocial-windows.zip
     
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
