@@ -512,7 +512,8 @@ def start_server(exp):
 
     if "database_server.db" in exp.db_name:
         # Extract experiment uid from db_name path
-        config = os.path.join(writable_base, exp.db_name.split('database_server.db')[0] + 'config_server.json')
+        # db_name format: "experiments/uid/database_server.db"
+        config = os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0] + 'config_server.json')
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
