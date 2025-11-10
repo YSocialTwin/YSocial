@@ -149,7 +149,7 @@
                                             <a class="link-tooltip" href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;" title="Stop JupyterLab">
                                                 <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
                                             </a>
-                                            <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" target="_blank" title="Open JupyterLab">
+                                            <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
                                                 <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
                                             </a>
                                             {% else %}

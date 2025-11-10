@@ -114,55 +114,120 @@ def main():
         help="Disable Jupyter Notebook server launch for experiments",
     )
     parser.add_argument(
+        "--browser",
+        action="store_true",
+        help="Launch in browser mode instead of desktop mode (desktop is default)",
+    )
+    parser.add_argument(
         "--no-browser",
         action="store_true",
-        help="Don't automatically open browser on startup",
+        help="Don't automatically open browser on startup (only applies to browser mode)",
+    )
+    parser.add_argument(
+        "--window-width",
+        type=int,
+        default=1280,
+        help="Desktop window width in pixels (default: 1280)",
+    )
+    parser.add_argument(
+        "--window-height",
+        type=int,
+        default=800,
+        help="Desktop window height in pixels (default: 800)",
     )
 
     args = parser.parse_args()
 
-    # Import the actual application after parsing args (allows --help to work without dependencies)
-    try:
-        from y_social import start_app
-    except Exception as e:
-        print(f"\n❌ Error importing y_social module:", file=sys.stderr)
-        print(f"   {type(e).__name__}: {e}", file=sys.stderr)
-        import traceback
+    # Desktop mode is default unless --browser is specified
+    if not args.browser:
+        # Desktop mode - use PyWebview
+        try:
+            from y_social_desktop import start_desktop_app
+        except ImportError:
+            print(
+                "\n❌ Error: PyWebview is not installed. Desktop mode requires pywebview.",
+                file=sys.stderr,
+            )
+            print(
+                "   Install it with: pip install pywebview",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n❌ Error importing y_social_desktop module:", file=sys.stderr)
+            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+            import traceback
 
-        traceback.print_exc()
-        sys.stderr.flush()
-        sys.exit(1)
+            traceback.print_exc()
+            sys.stderr.flush()
+            sys.exit(1)
 
-    # Start browser opener in background thread unless disabled
-    if not args.no_browser:
-        browser_thread = threading.Thread(
-            target=wait_for_server_and_open_browser,
-            args=(args.host, args.port),
-            daemon=True,
-        )
-        browser_thread.start()
+        try:
+            start_desktop_app(
+                db_type=args.db,
+                debug=args.debug,
+                host=args.host,
+                port=args.port,
+                llm_backend=args.llm_backend,
+                notebook=args.notebook,
+                window_width=args.window_width,
+                window_height=args.window_height,
+            )
+        except KeyboardInterrupt:
+            print("\n\nShutting down YSocial Desktop...")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\n❌ Error starting YSocial Desktop:", file=sys.stderr)
+            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+            import traceback
 
-    # Start the application
-    try:
-        start_app(
-            db_type=args.db,
-            debug=args.debug,
-            host=args.host,
-            port=args.port,
-            llm_backend=args.llm_backend,
-            notebook=args.notebook,
-        )
-    except KeyboardInterrupt:
-        print("\n\nShutting down YSocial...")
-        sys.exit(0)
-    except Exception as e:
-        print(f"\n❌ Error starting YSocial:", file=sys.stderr)
-        print(f"   {type(e).__name__}: {e}", file=sys.stderr)
-        import traceback
+            traceback.print_exc()
+            sys.stderr.flush()
+            sys.exit(1)
+    else:
+        # Browser mode - traditional web browser
+        # Import the actual application after parsing args (allows --help to work without dependencies)
+        try:
+            from y_social import start_app
+        except Exception as e:
+            print(f"\n❌ Error importing y_social module:", file=sys.stderr)
+            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+            import traceback
 
-        traceback.print_exc()
-        sys.stderr.flush()
-        sys.exit(1)
+            traceback.print_exc()
+            sys.stderr.flush()
+            sys.exit(1)
+
+        # Start browser opener in background thread unless disabled
+        if not args.no_browser:
+            browser_thread = threading.Thread(
+                target=wait_for_server_and_open_browser,
+                args=(args.host, args.port),
+                daemon=True,
+            )
+            browser_thread.start()
+
+        # Start the application
+        try:
+            start_app(
+                db_type=args.db,
+                debug=args.debug,
+                host=args.host,
+                port=args.port,
+                llm_backend=args.llm_backend,
+                notebook=args.notebook,
+            )
+        except KeyboardInterrupt:
+            print("\n\nShutting down YSocial...")
+            sys.exit(0)
+        except Exception as e:
+            print(f"\n❌ Error starting YSocial:", file=sys.stderr)
+            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+            import traceback
+
+            traceback.print_exc()
+            sys.stderr.flush()
+            sys.exit(1)
 
 
 if __name__ == "__main__":

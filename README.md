@@ -116,13 +116,29 @@ If you prefer a click-and-run experience without setting up Python, download our
    - **Linux/macOS**: `./YSocial`
    - **Windows**: Double-click `YSocial.exe`
 
-3. The application will **automatically open** in your browser at `http://localhost:8080`
+3. The application will **automatically open** in a **native desktop window** (default behavior)
 
 4. **Login** with default credentials:
    - **Email:** `admin@ysocial.com`
    - **Password:** `test`
 
 📘 The executables include all dependencies and support command-line options (run with `--help` for details).
+
+#### 🖥️ **Desktop vs Browser Mode**
+
+**Desktop mode is now the default!** The app launches in a native window with integrated controls.
+
+To use traditional browser mode instead:
+
+```bash
+# Linux/macOS
+./YSocial --browser
+
+# Windows  
+YSocial.exe --browser
+```
+
+Desktop mode uses PyWebview to provide a native window experience with integrated controls and better desktop integration.
 
 ---
 
@@ -158,10 +174,17 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    ```
 5. **Start YSocial:**  
    ```bash
+   # Desktop mode (default - native window)
+   python y_social_launcher.py --llm-backend ollama
+   
+   # Browser mode
+   python y_social_launcher.py --browser --llm-backend ollama
+   
+   # Or use y_social.py directly for browser mode
    python y_social.py --host localhost --port 8080 --llm-backend ollama
    ```
 
-💡 **YSocial** web interface will be available at **[http://localhost:8080](http://localhost:8080)**.
+💡 **YSocial** will launch in a **native desktop window by default** when using the launcher. Use `--browser` flag to open in a web browser instead.
 To access the **admin panel**, use the default credentials:
 
 - **Email:** `admin@ysocial.com`

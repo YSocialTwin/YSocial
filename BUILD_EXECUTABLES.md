@@ -61,25 +61,57 @@ pyinstaller y_social.spec --clean --noconfirm
 
 ### Build Output
 
-The executable will be located in `dist/YSocial/`:
-- Linux/macOS: `dist/YSocial/YSocial`
-- Windows: `dist/YSocial/YSocial.exe`
+The executable will be a **single file** located in `dist/`:
+- Linux/macOS: `dist/YSocial`
+- Windows: `dist/YSocial.exe`
+
+**Note**: The single-file executable extracts resources to a temporary directory at runtime. User data (experiments, databases, logs) is stored in the current working directory where you run the executable.
 
 ### Testing the Executable
 
 ```bash
 # Linux/macOS
-cd dist/YSocial
+cd dist
 ./YSocial --help
-./YSocial
+./YSocial                    # Launches in desktop mode (default)
+
+# Try browser mode instead
+./YSocial --browser
 
 # Windows
-cd dist\YSocial
+cd dist
 YSocial.exe --help
-YSocial.exe
+YSocial.exe                  # Launches in desktop mode (default)
+
+# Try browser mode instead
+YSocial.exe --browser
 ```
 
-The application should automatically open in your browser at http://localhost:8080.
+The application now **launches in desktop mode by default** with a native window. Use `--browser` flag to open in a web browser instead.
+
+## Desktop Mode (Default)
+
+**Desktop mode is now the default!** YSocial uses PyWebview to provide a native window experience without browser chrome:
+
+```bash
+# Start normally (desktop mode is default)
+./YSocial
+
+# Customize window size
+./YSocial --window-width 1600 --window-height 900
+
+# Switch to browser mode if needed
+./YSocial --browser
+```
+
+**Desktop mode features:**
+- Native window without browser UI/chrome
+- Integrated window controls (minimize, maximize, close)
+- Better desktop integration
+- Confirmation dialog on window close
+- Resizable window with minimum size constraints
+
+**Note:** Desktop mode requires a GUI environment. On Linux, it may require additional system packages depending on the backend used (GTK, Qt, etc.).
 
 ## Build Configuration Files
 
@@ -93,13 +125,22 @@ PyInstaller specification file that defines:
 ### `y_social_launcher.py`
 Wrapper script that:
 - Provides a clean command-line interface
-- Auto-opens browser when server is ready
+- Supports both browser mode (default) and desktop mode (`--desktop`)
+- Auto-opens browser/desktop window when server is ready
 - Handles graceful shutdown
 - Works with PyInstaller's bundled environment
+
+### `y_social_desktop.py`
+Desktop mode module that:
+- Uses PyWebview to create native desktop windows
+- Runs Flask server in background thread
+- Provides desktop app experience without browser chrome
+- Can be used standalone or via launcher
 
 ### `pyinstaller_hooks/`
 Custom PyInstaller hooks:
 - `hook-y_web.py`: Ensures y_web package data files are included
+- `hook-webview.py`: Ensures pywebview platform-specific modules are included
 - `runtime_hook_nltk.py`: Configures NLTK data paths at runtime
 
 ## Troubleshooting
@@ -111,7 +152,7 @@ Custom PyInstaller hooks:
 ### Executable Fails to Start
 - Check console output for error messages
 - Verify NLTK data was downloaded during build
-- Ensure data files are present in `dist/YSocial/`
+- The single-file executable extracts resources to a temporary location automatically
 
 ### Missing Templates or Static Files
 - Check `y_social.spec` includes correct data paths

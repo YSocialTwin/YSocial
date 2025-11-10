@@ -68,6 +68,8 @@ hidden_imports = [
     "httpcore",
     "sniffio",
     "h11",
+    "webview",
+    "webview.platforms",
 ]
 
 # Collect all submodules for important packages
@@ -82,6 +84,7 @@ hidden_imports += collect_submodules("openai")
 hidden_imports += collect_submodules("pyautogen")
 hidden_imports += collect_submodules("ysights")
 hidden_imports += collect_submodules("sklearn")
+hidden_imports += collect_submodules("webview")
 
 # Data files to include
 datas = []
@@ -113,10 +116,12 @@ for pkg in [
     "charset_normalizer",
     "pygments",
     "ysights",
+    "pywebview",
 ]:
     try:
         datas += copy_metadata(pkg)
     except Exception:
+        pass  # Package might not be installed
         pass  # Package might not be installed
 
 # Add y_web package data files
@@ -176,13 +181,17 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
     [],
-    exclude_binaries=True,
     name="YSocial",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
+    upx_exclude=[],
+    runtime_tmpdir=None,
     console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
@@ -190,15 +199,4 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=None,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="YSocial",
 )
