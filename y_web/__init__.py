@@ -99,7 +99,10 @@ def create_postgresql_db(app):
         with dashboard_engine.connect() as db_conn:
             # Load SQL schema
             from y_web.utils.path_utils import get_resource_path
-            schema_path = get_resource_path(os.path.join('data_schema', 'postgre_dashboard.sql'))
+
+            schema_path = get_resource_path(
+                os.path.join("data_schema", "postgre_dashboard.sql")
+            )
             schema_sql = open(schema_path, "r").read()
             db_conn.execute(text(schema_sql))
 
@@ -140,7 +143,10 @@ def create_postgresql_db(app):
         dummy_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_exp"])
         with dummy_engine.connect() as dummy_conn:
             from y_web.utils.path_utils import get_resource_path
-            schema_path = get_resource_path(os.path.join('data_schema', 'postgre_server.sql'))
+
+            schema_path = get_resource_path(
+                os.path.join("data_schema", "postgre_server.sql")
+            )
             schema_sql = open(schema_path, "r").read()
             dummy_conn.execute(text(schema_sql))
 
@@ -278,8 +284,13 @@ def create_app(db_type="sqlite"):
         # Copy databases if missing
         if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
             from y_web.utils.path_utils import get_resource_path
-            dashboard_src = get_resource_path(os.path.join('data_schema', 'database_dashboard.db'))
-            server_src = get_resource_path(os.path.join('data_schema', 'database_clean_server.db'))
+
+            dashboard_src = get_resource_path(
+                os.path.join("data_schema", "database_dashboard.db")
+            )
+            server_src = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
             shutil.copyfile(
                 dashboard_src,
                 f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
