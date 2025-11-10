@@ -1308,10 +1308,9 @@ def start_client(exp, cli, population, resume=True):
 
     # Determine how to run the client subprocess based on execution environment
     if getattr(sys, "frozen", False):
-        # Running from PyInstaller - use the bundled executable with -m flag
-        # The PyInstaller executable supports running Python modules with -m
-        # This is the standard way to run subprocesses from PyInstaller bundles
-        cmd = [sys.executable, "-m", "y_web.utils.y_client_process_runner"] + cmd_args
+        # Running from PyInstaller - invoke the bundled executable with special flag
+        # The launcher script detects this flag and routes to the client runner
+        cmd = [sys.executable, "--run-client-subprocess"] + cmd_args
     else:
         # Running from source - use detected environment with script path
         python_cmd = detect_env_handler()

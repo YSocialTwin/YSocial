@@ -13,32 +13,42 @@ import webbrowser
 from argparse import ArgumentParser
 
 # Force unbuffered output for better error messages in PyInstaller
-sys.stdout.reconfigure(line_buffering=True) if hasattr(sys.stdout, 'reconfigure') else None
-sys.stderr.reconfigure(line_buffering=True) if hasattr(sys.stderr, 'reconfigure') else None
+(
+    sys.stdout.reconfigure(line_buffering=True)
+    if hasattr(sys.stdout, "reconfigure")
+    else None
+)
+(
+    sys.stderr.reconfigure(line_buffering=True)
+    if hasattr(sys.stderr, "reconfigure")
+    else None
+)
 
 
 def wait_for_server_and_open_browser(host, port, max_wait=30):
     """
     Wait for the Flask server to start and then open the browser.
-    
+
     Args:
         host: The host address where the server will run
         port: The port number where the server will run
         max_wait: Maximum time to wait for server (seconds)
     """
     import socket
-    
+
     url = f"http://{host}:{port}"
     start_time = time.time()
-    
+
     # Wait for the server to be ready
     while time.time() - start_time < max_wait:
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(1)
-            result = sock.connect_ex((host if host != '0.0.0.0' else 'localhost', int(port)))
+            result = sock.connect_ex(
+                (host if host != "0.0.0.0" else "localhost", int(port))
+            )
             sock.close()
-            
+
             if result == 0:
                 # Server is ready, wait a bit more to ensure it's fully initialized
                 time.sleep(2)
@@ -50,31 +60,38 @@ def wait_for_server_and_open_browser(host, port, max_wait=30):
                 return
         except Exception:
             pass
-        
+
         time.sleep(0.5)
-    
+
     print(f"Warning: Could not verify server startup. Please manually open {url}")
 
 
 def main():
     """Main launcher function."""
+    # Check if we're being invoked as a client runner subprocess
+    # This happens when PyInstaller's bundled executable is called with client runner args
+    if len(sys.argv) > 1 and sys.argv[1] == "--run-client-subprocess":
+        # Remove the special flag and pass remaining args to client runner
+        sys.argv.pop(1)
+        # Import and run the client process runner
+        from y_web.utils.y_client_process_runner import main as client_main
+
+        client_main()
+        return
+
     parser = ArgumentParser(description="YSocial - LLM-powered Social Media Twin")
-    
+
     parser.add_argument(
-        "-x", "--host", 
-        default="localhost", 
-        help="Host address to run the app on (default: localhost)"
+        "-x",
+        "--host",
+        default="localhost",
+        help="Host address to run the app on (default: localhost)",
     )
     parser.add_argument(
-        "-y", "--port", 
-        default="8080", 
-        help="Port to run the app on (default: 8080)"
+        "-y", "--port", default="8080", help="Port to run the app on (default: 8080)"
     )
     parser.add_argument(
-        "-d", "--debug", 
-        default=False, 
-        action="store_true", 
-        help="Enable debug mode"
+        "-d", "--debug", default=False, action="store_true", help="Enable debug mode"
     )
     parser.add_argument(
         "-D",
@@ -101,9 +118,9 @@ def main():
         action="store_true",
         help="Don't automatically open browser on startup",
     )
-    
+
     args = parser.parse_args()
-    
+
     # Import the actual application after parsing args (allows --help to work without dependencies)
     try:
         from y_social import start_app
@@ -111,19 +128,20 @@ def main():
         print(f"\n❌ Error importing y_social module:", file=sys.stderr)
         print(f"   {type(e).__name__}: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.stderr.flush()
         sys.exit(1)
-    
+
     # Start browser opener in background thread unless disabled
     if not args.no_browser:
         browser_thread = threading.Thread(
             target=wait_for_server_and_open_browser,
             args=(args.host, args.port),
-            daemon=True
+            daemon=True,
         )
         browser_thread.start()
-    
+
     # Start the application
     try:
         start_app(
@@ -141,6 +159,7 @@ def main():
         print(f"\n❌ Error starting YSocial:", file=sys.stderr)
         print(f"   {type(e).__name__}: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.stderr.flush()
         sys.exit(1)
@@ -153,6 +172,7 @@ if __name__ == "__main__":
         print(f"\n❌ Unexpected error in main:", file=sys.stderr)
         print(f"   {type(e).__name__}: {e}", file=sys.stderr)
         import traceback
+
         traceback.print_exc()
         sys.stderr.flush()
         sys.exit(1)
