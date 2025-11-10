@@ -1289,29 +1289,6 @@ def start_client(exp, cli, population, resume=True):
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    # Get the Python executable to use
-    # In PyInstaller environments, sys.executable points to the bundled executable
-    # In development, we detect the appropriate Python from the environment
-    if getattr(sys, "frozen", False):
-        # Running from PyInstaller - use the bundled executable
-        python_cmd = sys.executable
-    else:
-        # Running from source - use detected environment
-        python_cmd = detect_env_handler()
-
-    # Build path to the client process runner script
-    # Get the runner script path - works for both dev and PyInstaller
-    runner_script = get_resource_path(
-        os.path.join("y_web", "utils", "y_client_process_runner.py")
-    )
-
-    # Validate that runner script exists
-    if not Path(runner_script).exists():
-        raise FileNotFoundError(
-            f"Client runner script not found: {runner_script}\n"
-            f"Please ensure y_client_process_runner.py exists in the utils directory."
-        )
-
     # Build the command arguments
     cmd_args = [
         "--exp-id",
@@ -1329,19 +1306,37 @@ def start_client(exp, cli, population, resume=True):
     else:
         cmd_args.append("--no-resume")
 
-    # Build the command - same approach for both PyInstaller and source
-    # Run the script directly using subprocess.Popen with the Python executable
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not os.path.isabs(python_cmd)
-    ):
-        # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [runner_script] + cmd_args
+    # Determine how to run the client subprocess based on execution environment
+    if getattr(sys, "frozen", False):
+        # Running from PyInstaller - use the bundled executable with -m flag
+        # The PyInstaller executable supports running Python modules with -m
+        # This is the standard way to run subprocesses from PyInstaller bundles
+        cmd = [sys.executable, "-m", "y_web.utils.y_client_process_runner"] + cmd_args
     else:
-        # Simple python executable path (may contain spaces on Windows)
-        cmd = [python_cmd, runner_script] + cmd_args
+        # Running from source - use detected environment with script path
+        python_cmd = detect_env_handler()
+        runner_script = get_resource_path(
+            os.path.join("y_web", "utils", "y_client_process_runner.py")
+        )
+
+        # Validate that runner script exists
+        if not Path(runner_script).exists():
+            raise FileNotFoundError(
+                f"Client runner script not found: {runner_script}\n"
+                f"Please ensure y_client_process_runner.py exists in the utils directory."
+            )
+
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not os.path.isabs(python_cmd)
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            cmd = cmd_parts + [runner_script] + cmd_args
+        else:
+            # Simple python executable path (may contain spaces on Windows)
+            cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
     from y_web.utils.path_utils import get_writable_path
