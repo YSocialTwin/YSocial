@@ -1283,16 +1283,15 @@ def start_client(exp, cli, population, resume=True):
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    # Determine how to run the client subprocess based on execution environment
+    # Get the Python executable to use
+    # In PyInstaller environments, sys.executable points to the bundled executable
+    # In development, we detect the appropriate Python from the environment
     if getattr(sys, 'frozen', False):
-        # Running from PyInstaller - use the bundled executable with runpy
-        # This allows us to run Python scripts using the embedded interpreter
+        # Running from PyInstaller - use the bundled executable
         python_cmd = sys.executable
-        use_runpy = True
     else:
         # Running from source - use detected environment
         python_cmd = detect_env_handler()
-        use_runpy = False
 
     # Build path to the client process runner script
     # Get the runner script path - works for both dev and PyInstaller
@@ -1322,28 +1321,19 @@ def start_client(exp, cli, population, resume=True):
     else:
         cmd_args.append("--no-resume")
 
-    # Build the command based on execution environment
-    if use_runpy:
-        # When frozen, we need to use Python's -c flag to execute code
-        # The bundled executable supports running Python code via -c
-        # We execute the client runner module using runpy
-        bootstrap_code = f"""import sys; import os; import runpy; sys.path.insert(0, sys._MEIPASS if hasattr(sys, '_MEIPASS') else '.'); sys.argv = ['y_client_process_runner.py'] + {cmd_args}; runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')"""
-        
-        # Command uses -c to execute Python code directly
-        cmd = [python_cmd, '-c', bootstrap_code]
+    # Build the command - same approach for both PyInstaller and source
+    # Run the script directly using subprocess.Popen with the Python executable
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
+        # Handle commands like "pipenv run python"
+        cmd_parts = python_cmd.split()
+        cmd = cmd_parts + [runner_script] + cmd_args
     else:
-        # Running from source - use the standard approach
-        if (
-            isinstance(python_cmd, str)
-            and " " in python_cmd
-            and not os.path.isabs(python_cmd)
-        ):
-            # Handle commands like "pipenv run python"
-            cmd_parts = python_cmd.split()
-            cmd = cmd_parts + [runner_script] + cmd_args
-        else:
-            # Simple python executable path (may contain spaces on Windows)
-            cmd = [python_cmd, runner_script] + cmd_args
+        # Simple python executable path (may contain spaces on Windows)
+        cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
     from y_web.utils.path_utils import get_writable_path
@@ -1426,34 +1416,11 @@ def start_client(exp, cli, population, resume=True):
             )
 
         print(f"Client process started with PID: {process.pid}")
-        
-        # Clean up bootstrap script if it was created
-        if use_runpy and 'bootstrap_script' in locals():
-            # Register cleanup to delete the temporary bootstrap script
-            # after a delay to ensure the subprocess has started
-            import atexit
-            import time
-            def cleanup_bootstrap():
-                time.sleep(2)  # Wait for subprocess to start
-                try:
-                    if os.path.exists(bootstrap_script):
-                        os.unlink(bootstrap_script)
-                except Exception:
-                    pass
-            atexit.register(cleanup_bootstrap)
-        
-        # if out_file != subprocess.DEVNULL:
-        #    print(f"Logs: {stdout_log} and {stderr_log}")
+        if out_file != subprocess.DEVNULL:
+            print(f"Logs: {stdout_log} and {stderr_log}")
     except Exception as e:
         print(f"Error starting client process: {e}")
         print(f"Command: {' '.join(cmd)}")
-        # Clean up bootstrap script on error
-        if use_runpy and 'bootstrap_script' in locals():
-            try:
-                if os.path.exists(bootstrap_script):
-                    os.unlink(bootstrap_script)
-            except Exception:
-                pass
         raise
 
     # Store PID in database
