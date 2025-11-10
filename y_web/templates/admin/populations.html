@@ -242,7 +242,7 @@
                         <div class="dashboard-box">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
-                                <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST">
+                                <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating population...');">
                                 <div class="box-lines">
 
                                     <style>
@@ -1650,7 +1650,7 @@
 
                         <div class="sidebar-box">
                             <h3>Create Empty Population</h3>
-                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST">
+                            <form action="/admin/create_population_empty" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating empty population...');">
                                 <div class="box-line">
                                     <span class="left">Population Name</span>
                                     <span class="right"><input type="text" name="empty_population_name" class="input" placeholder="Enter name"></span>
