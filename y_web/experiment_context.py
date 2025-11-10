@@ -34,7 +34,7 @@ def register_experiment_database(app, exp_id, db_name):
     Args:
         app: Flask application instance
         exp_id: Experiment ID
-        db_name: Database name or path
+        db_name: Database name or path (e.g., "experiments/uid/database_server.db")
     """
     bind_key = get_db_bind_key_for_exp(exp_id)
 
@@ -48,8 +48,10 @@ def register_experiment_database(app, exp_id, db_name):
         db_uri = f"{base_uri}/{db_name}"
     elif app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
         # SQLite: construct file path
-        # db_name is relative to repository root (e.g., "experiments/uid/database_server.db")
-        db_path = get_writable_path(db_name)
+        # db_name is stored as "experiments/uid/database_server.db" 
+        # but actual file is in "y_web/experiments/uid/database_server.db"
+        # Prepend y_web/ to match actual file location
+        db_path = get_writable_path(os.path.join("y_web", db_name))
         db_uri = f"sqlite:///{db_path}"
     else:
         raise ValueError("Unsupported database type")
