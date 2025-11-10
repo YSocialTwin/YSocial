@@ -254,14 +254,14 @@ class YSocialSplashScreen:
             self.loading_label.config(text=message)
             self.root.update()
 
-    def show(self, duration=2):
+    def show(self, duration=5):
         """
         Show the splash screen for a specified duration.
 
         Args:
             duration: Time to show splash screen in seconds (minimum)
         """
-        # Make splash visible immediately
+        # Already visible from __init__, just ensure updates are processed
         self.root.update_idletasks()
         self.root.update()
 

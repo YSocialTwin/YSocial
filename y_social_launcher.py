@@ -85,25 +85,31 @@ def main():
         return
 
     # Show splash screen if running as PyInstaller executable
+    # Create and display it as early as possible
     splash_thread = None
     splash_screen = None
     if is_pyinstaller():
         try:
             from splash_screen import YSocialSplashScreen
 
+            # Create splash screen immediately
             splash_screen = YSocialSplashScreen()
+
+            # Make it visible right away
+            splash_screen.root.update_idletasks()
+            splash_screen.root.update()
 
             def show_splash():
                 """Show splash screen in a separate thread."""
                 try:
-                    splash_screen.show(duration=2)
+                    # Stay visible longer (5 seconds minimum)
+                    splash_screen.show(duration=5)
                 except Exception as e:
                     print(f"Splash screen error: {e}")
 
             splash_thread = threading.Thread(target=show_splash, daemon=True)
             splash_thread.start()
-            # Give splash screen minimal time to appear
-            time.sleep(0.2)
+            # No delay - splash is already visible
         except Exception as e:
             print(f"Could not show splash screen: {e}")
             splash_screen = None
@@ -224,8 +230,6 @@ def main():
             # Close splash screen before showing desktop window
             if splash_screen:
                 try:
-                    # Brief moment to see the final status
-                    time.sleep(0.3)
                     splash_screen.close()
                 except Exception:
                     pass
@@ -294,7 +298,6 @@ def main():
         # Close splash screen before starting the app
         if splash_screen:
             try:
-                time.sleep(0.3)
                 splash_screen.close()
             except Exception:
                 pass
