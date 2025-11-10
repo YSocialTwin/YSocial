@@ -61,3 +61,30 @@ def get_resource_path(relative_path):
         str: Absolute path to the resource
     """
     return os.path.join(get_base_path(), relative_path)
+
+
+def get_writable_path(relative_path=''):
+    """
+    Get absolute path to writable directory, works for dev and for PyInstaller.
+    
+    When running from source, this returns paths relative to the repository root.
+    When running from PyInstaller bundle, this returns paths relative to the current
+    working directory (where user can write files).
+    
+    Args:
+        relative_path: Relative path from the writable base directory
+        
+    Returns:
+        str: Absolute path to the writable location
+    """
+    if getattr(sys, 'frozen', False):
+        # Running in PyInstaller bundle - use current working directory
+        # This is where users can write experiment data, logs, etc.
+        base = os.getcwd()
+    else:
+        # Running from source - use repository root
+        base = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    
+    if relative_path:
+        return os.path.join(base, relative_path)
+    return base

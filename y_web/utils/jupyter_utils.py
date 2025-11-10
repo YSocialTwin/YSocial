@@ -661,10 +661,18 @@ def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None
     else:
         # copy notebook template from sample_notebook/start_here.ipynb
         import shutil
+        from y_web.utils.path_utils import get_resource_path
 
-        base_notebook = f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"  # SQLite path
-        abs_path = os.path.abspath(base_notebook)
-        shutil.copy(abs_path, f"{notebook_dir}{os.sep}{filename}")
+        base_notebook = get_resource_path(f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb")
+        
+        if not os.path.exists(base_notebook):
+            # Try without get_resource_path for backward compatibility
+            base_notebook = f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"
+            if not os.path.exists(base_notebook):
+                print(f"Warning: Template notebook not found at {base_notebook}")
+                return False, f"Template notebook not found"
+        
+        shutil.copy(base_notebook, f"{notebook_dir}{os.sep}{filename}")
 
     return True
 

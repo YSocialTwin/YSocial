@@ -676,15 +676,17 @@ def create_client():
     else:
         uid = exp.db_name.removeprefix("experiments_")
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
 
     with open(
-        f"{BASE_DIR}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
         "w",
     ) as f:
         json.dump(config, f, indent=4)
 
-    data_base_path = f"{BASE_DIR}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
+    data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
     if exp.platform_type == "microblogging":
@@ -704,12 +706,12 @@ def create_client():
         raise Exception(f"unsupported platform: {exp.platform_type}")
 
     # Create agent population file
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
+    BASE_DIR = get_writable_path()
 
     if "database_server.db" in exp.db_name:
         filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json"
     else:
-        filename = f"{BASE_DIR}experiments{os.sep}{exp.db_name.replace('experiments_', '')}{os.sep}{population.name.replace(' ', '')}.json"
+        filename = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.replace('experiments_', '')}{os.sep}{population.name.replace(' ', '')}.json"
 
     agents = Agent_Population.query.filter_by(population_id=population.id).all()
     # get the agent details
@@ -1027,7 +1029,9 @@ def client_details(uid):
     )
 
     # get the client configuration file
-    BASE = os.path.dirname(os.path.abspath(__file__))
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE = get_writable_path()
 
     dbtypte = get_db_type()
 
@@ -1036,9 +1040,7 @@ def client_details(uid):
     else:
         exp_folder = experiment.db_name.removeprefix("experiments_")
 
-    path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json".replace(
-        f"routes_admin{os.sep}", ""
-    )
+    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
         with open(path, "r") as f:
@@ -1047,9 +1049,7 @@ def client_details(uid):
         config = None
 
     # open the agent population file to get the number of agents
-    path_agents = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json".replace(
-        f"routes_admin{os.sep}", ""
-    )
+    path_agents = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json"
 
     if os.path.exists(path_agents):
         with open(path_agents, "r") as f:
@@ -1149,7 +1149,9 @@ def set_network(uid):
     # get the client experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
-    BASE = os.path.dirname(os.path.abspath(__file__))
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE = get_writable_path()
 
     dbtypte = get_db_type()
 
@@ -1158,9 +1160,7 @@ def set_network(uid):
     else:
         exp_folder = exp.db_name.removeprefix("experiments_")
 
-    path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv".replace(
-        f"routes_admin{os.sep}", ""
-    )
+    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv"
 
     # since the network is undirected and Y assume directed relations we need to write the edges in both directions
     with open(path, "w") as f:
@@ -1187,7 +1187,9 @@ def upload_network(uid):
     # get the client experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
-    BASE = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0][:-1]
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE = get_writable_path()
 
     dbtypte = get_db_type()
 
@@ -1198,14 +1200,10 @@ def upload_network(uid):
 
     network = request.files["network_file"]
     network.save(
-        f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network_temp.csv"
+        f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network_temp.csv"
     )
 
-    path = (
-        f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}".replace(
-            f"routes_admin{os.sep}", ""
-        )
-    )
+    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}"
 
     try:
         with open(f"{path}_network.csv", "w") as o:
@@ -1349,12 +1347,12 @@ def update_agents_activity(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    BASE = os.path.dirname(os.path.abspath(__file__))
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
 
-    path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json".replace(
-        f"routes_admin{os.sep}", ""
-    )
+    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
         with open(path, "r") as f:
@@ -1379,12 +1377,12 @@ def reset_agents_activity(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    BASE = os.path.dirname(os.path.abspath(__file__))
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
 
-    path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json".replace(
-        f"routes_admin{os.path.sep}", ""
-    )
+    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
 
     if os.path.exists(path):
         with open(path, "r") as f:

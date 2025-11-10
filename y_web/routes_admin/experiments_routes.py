@@ -385,18 +385,20 @@ def upload_experiment():
     exp_name_override = request.form.get("exp_name", "").strip()
     uid = uuid.uuid4()
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
+    from y_web.utils.path_utils import get_writable_path
+    
+    BASE_DIR = get_writable_path()
 
-    pathlib.Path(f"{BASE_DIR}experiments{os.sep}{uid}").mkdir()
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(parents=True, exist_ok=True)
 
-    experiment.save(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+    experiment.save(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
     # unzip the file
     shutil.unpack_archive(
-        f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip",
-        f"{BASE_DIR}experiments{os.sep}{uid}",
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip",
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
     )
     # remove the zip file
-    os.remove(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+    os.remove(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
 
     # Determine database type
     db_type = "sqlite"

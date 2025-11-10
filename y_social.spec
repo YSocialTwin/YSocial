@@ -109,6 +109,11 @@ runner_script_path = os.path.join(basedir, 'y_web', 'utils', 'y_client_process_r
 if os.path.exists(runner_script_path):
     datas += [(runner_script_path, 'y_web/utils')]
 
+# Add sample notebook template
+sample_notebook_path = os.path.join(basedir, 'y_web', 'utils', 'sample_notebook')
+if os.path.exists(sample_notebook_path):
+    datas += [(sample_notebook_path, 'y_web/utils/sample_notebook')]
+
 # Add database schema directory
 if os.path.exists(os.path.join(basedir, 'y_web', 'db')):
     datas += [(os.path.join(basedir, 'y_web', 'db'), 'y_web/db')]
