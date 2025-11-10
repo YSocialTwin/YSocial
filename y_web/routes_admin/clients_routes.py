@@ -1122,7 +1122,7 @@ def get_progress(client_id):
 
     if client_execution is None:
         return json.dumps({"progress": 0})
-    
+
     # Calculate progress and cap at 100%
     if client_execution.expected_duration_rounds > 0:
         progress = int(
@@ -1134,7 +1134,7 @@ def get_progress(client_id):
         progress = min(100, max(0, progress))
     else:
         progress = 0
-    
+
     return json.dumps({"progress": progress})
 
 

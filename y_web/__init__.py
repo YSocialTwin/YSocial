@@ -315,11 +315,11 @@ def create_app(db_type="sqlite"):
         raise ValueError("Unsupported db_type, use 'sqlite' or 'postgresql'")
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    
+
     # Disable static file caching for development mode to ensure JS/CSS updates are loaded
     # This ensures loading indicators and other static assets work in development mode
     app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
-    
+
     # Enable template auto-reload in development mode
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
