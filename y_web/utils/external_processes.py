@@ -505,7 +505,7 @@ def start_server(exp):
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
     yserver_path = base_path
-    sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
+    sys.path.append(os.path.join(yserver_path, 'external', 'YServer'))
     
     # Get writable path for experiments directory
     writable_base = get_writable_path()
@@ -521,13 +521,11 @@ def start_server(exp):
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
-        server_dir = f"{yserver_path}external{os.sep}YServer"
-        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
+        server_dir = os.path.join(yserver_path, 'external', 'YServer')
+        script_path = os.path.join(yserver_path, 'external', 'YServer', 'y_server_run.py')
     elif exp.platform_type == "forum":
-        server_dir = f"{yserver_path}external{os.sep}YServerReddit"
-        script_path = (
-            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
-        )
+        server_dir = os.path.join(yserver_path, 'external', 'YServerReddit')
+        script_path = os.path.join(yserver_path, 'external', 'YServerReddit', 'y_server_run.py')
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
