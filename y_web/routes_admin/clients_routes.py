@@ -706,12 +706,14 @@ def create_client():
         raise Exception(f"unsupported platform: {exp.platform_type}")
 
     # Create agent population file
-    BASE_DIR = get_writable_path()
+    writable_base = get_writable_path()
 
     if "database_server.db" in exp.db_name:
-        filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json"
+        # exp.db_name is like "experiments/uid/database_server.db"
+        filename = os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0], f"{population.name.replace(' ', '')}.json")
     else:
-        filename = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.replace('experiments_', '')}{os.sep}{population.name.replace(' ', '')}.json"
+        # Legacy format
+        filename = os.path.join(writable_base, 'y_web', 'experiments', exp.db_name.replace('experiments_', ''), f"{population.name.replace(' ', '')}.json")
 
     agents = Agent_Population.query.filter_by(population_id=population.id).all()
     # get the agent details
