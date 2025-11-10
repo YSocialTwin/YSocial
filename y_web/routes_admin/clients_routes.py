@@ -1122,15 +1122,19 @@ def get_progress(client_id):
 
     if client_execution is None:
         return json.dumps({"progress": 0})
-    progress = (
-        int(
+    
+    # Calculate progress and cap at 100%
+    if client_execution.expected_duration_rounds > 0:
+        progress = int(
             100
             * float(client_execution.elapsed_time)
             / float(client_execution.expected_duration_rounds)
         )
-        if client_execution.expected_duration_rounds > 0
-        else 0
-    )
+        # Cap progress at 100% to prevent overflow
+        progress = min(100, max(0, progress))
+    else:
+        progress = 0
+    
     return json.dumps({"progress": progress})
 
 
