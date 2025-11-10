@@ -132,6 +132,15 @@ datas += [
     (os.path.join(basedir, "config_files"), "config_files"),
 ]
 
+# Add images directory for splash screen
+if os.path.exists(os.path.join(basedir, "images")):
+    datas += [(os.path.join(basedir, "images"), "images")]
+
+# Add splash screen module
+splash_screen_path = os.path.join(basedir, "splash_screen.py")
+if os.path.exists(splash_screen_path):
+    datas += [(splash_screen_path, ".")]
+
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
     basedir, "y_web", "utils", "y_client_process_runner.py"

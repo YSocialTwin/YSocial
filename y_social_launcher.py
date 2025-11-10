@@ -66,6 +66,11 @@ def wait_for_server_and_open_browser(host, port, max_wait=30):
     print(f"Warning: Could not verify server startup. Please manually open {url}")
 
 
+def is_pyinstaller():
+    """Check if running as a PyInstaller bundle."""
+    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
+
+
 def main():
     """Main launcher function."""
     # Check if we're being invoked as a client runner subprocess
@@ -78,6 +83,30 @@ def main():
 
         client_main()
         return
+
+    # Show splash screen if running as PyInstaller executable
+    splash_thread = None
+    splash_screen = None
+    if is_pyinstaller():
+        try:
+            from splash_screen import YSocialSplashScreen
+
+            splash_screen = YSocialSplashScreen()
+
+            def show_splash():
+                """Show splash screen in a separate thread."""
+                try:
+                    splash_screen.show(duration=5)
+                except Exception as e:
+                    print(f"Splash screen error: {e}")
+
+            splash_thread = threading.Thread(target=show_splash, daemon=True)
+            splash_thread.start()
+            # Give splash screen time to appear
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"Could not show splash screen: {e}")
+            splash_screen = None
 
     parser = ArgumentParser(description="YSocial - LLM-powered Social Media Twin")
 
@@ -138,12 +167,30 @@ def main():
 
     args = parser.parse_args()
 
+    # Update splash screen status if available
+    if splash_screen:
+        try:
+            splash_screen.update_status("Loading application modules...")
+        except Exception:
+            pass
+
     # Desktop mode is default unless --browser is specified
     if not args.browser:
         # Desktop mode - use PyWebview
+        if splash_screen:
+            try:
+                splash_screen.update_status("Initializing desktop mode...")
+            except Exception:
+                pass
+
         try:
             from y_social_desktop import start_desktop_app
         except ImportError:
+            if splash_screen:
+                try:
+                    splash_screen.close()
+                except Exception:
+                    pass
             print(
                 "\n❌ Error: PyWebview is not installed. Desktop mode requires pywebview.",
                 file=sys.stderr,
@@ -154,6 +201,11 @@ def main():
             )
             sys.exit(1)
         except Exception as e:
+            if splash_screen:
+                try:
+                    splash_screen.close()
+                except Exception:
+                    pass
             print(f"\n❌ Error importing y_social_desktop module:", file=sys.stderr)
             print(f"   {type(e).__name__}: {e}", file=sys.stderr)
             import traceback
@@ -162,7 +214,22 @@ def main():
             sys.stderr.flush()
             sys.exit(1)
 
+        if splash_screen:
+            try:
+                splash_screen.update_status("Starting YSocial Desktop...")
+            except Exception:
+                pass
+
         try:
+            # Close splash screen before showing desktop window
+            if splash_screen:
+                try:
+                    # Give a moment to see the final status
+                    time.sleep(1)
+                    splash_screen.close()
+                except Exception:
+                    pass
+
             start_desktop_app(
                 db_type=args.db,
                 debug=args.debug,
@@ -186,10 +253,21 @@ def main():
             sys.exit(1)
     else:
         # Browser mode - traditional web browser
+        if splash_screen:
+            try:
+                splash_screen.update_status("Initializing browser mode...")
+            except Exception:
+                pass
+
         # Import the actual application after parsing args (allows --help to work without dependencies)
         try:
             from y_social import start_app
         except Exception as e:
+            if splash_screen:
+                try:
+                    splash_screen.close()
+                except Exception:
+                    pass
             print(f"\n❌ Error importing y_social module:", file=sys.stderr)
             print(f"   {type(e).__name__}: {e}", file=sys.stderr)
             import traceback
@@ -197,6 +275,12 @@ def main():
             traceback.print_exc()
             sys.stderr.flush()
             sys.exit(1)
+
+        if splash_screen:
+            try:
+                splash_screen.update_status("Starting Flask server...")
+            except Exception:
+                pass
 
         # Start browser opener in background thread unless disabled
         if not args.no_browser:
@@ -206,6 +290,14 @@ def main():
                 daemon=True,
             )
             browser_thread.start()
+
+        # Close splash screen before starting the app
+        if splash_screen:
+            try:
+                time.sleep(1)
+                splash_screen.close()
+            except Exception:
+                pass
 
         # Start the application
         try:
