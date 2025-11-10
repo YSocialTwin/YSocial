@@ -68,6 +68,8 @@ hidden_imports = [
     "httpcore",
     "sniffio",
     "h11",
+    "webview",
+    "webview.platforms",
 ]
 
 # Collect all submodules for important packages
@@ -82,6 +84,7 @@ hidden_imports += collect_submodules("openai")
 hidden_imports += collect_submodules("pyautogen")
 hidden_imports += collect_submodules("ysights")
 hidden_imports += collect_submodules("sklearn")
+hidden_imports += collect_submodules("webview")
 
 # Data files to include
 datas = []
@@ -113,10 +116,12 @@ for pkg in [
     "charset_normalizer",
     "pygments",
     "ysights",
+    "pywebview",
 ]:
     try:
         datas += copy_metadata(pkg)
     except Exception:
+        pass  # Package might not be installed
         pass  # Package might not be installed
 
 # Add y_web package data files
