@@ -59,20 +59,20 @@
                                     <span class="right" style="display: flex; gap: 8px; align-items: center;">
                                         <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
                                             {% if experiments[exp]['experiment'].running == 0 %}
-                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Run Experiment">
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Run Experiment" onclick="showLoading('Starting experiment server...');">
                                                 <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
                                             {% if experiments[exp]['experiment'].running == 1 %}
-                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop Experiment">
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Stop Experiment" onclick="showLoading('Stopping experiment server...');">
                                                 <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
-                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load Experiment">
+                                            <a class="link-tooltip" href="/admin/select_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Load Experiment" onclick="showLoading('Loading experiment interface...');">
                                                 <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>
                                             {% if experiments[exp]['experiment'].status == 1 %}
-                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Join This Experiment">
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiments[exp]['experiment'].idexp }}" title="Join This Experiment" onclick="showLoading('Joining experiment...');">
                                                 <i class="mdi mdi-login" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}

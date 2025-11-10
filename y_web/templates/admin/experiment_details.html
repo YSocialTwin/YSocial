@@ -262,7 +262,8 @@
                                                 method: 'GET',
                                                 dataType: 'json',
                                                 success: function (data) {
-                                                    const percentage = data.progress;
+                                                    // Cap percentage at 100 to prevent overflow
+                                                    const percentage = Math.min(100, Math.max(0, data.progress || 0));
                                                     const progressBar = $('#progress-bar-{{client.id}}');
                                                     progressBar.css('width', percentage + '%');
                                                     progressBar.find('span').text(percentage + '%');

@@ -284,6 +284,25 @@
     window.addEventListener('beforeunload', function() {
         if (loadingOverlay) {
             loadingOverlay.style.display = 'none';
+            loadingCount = 0;
+        }
+    });
+
+    // Handle page shown from back/forward cache
+    window.addEventListener('pageshow', function(event) {
+        // If page is restored from cache, ensure loading is hidden
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+            loadingCount = 0;
+        }
+    });
+
+    // Ensure loading is hidden when page becomes visible
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden && loadingOverlay) {
+            // Page became visible, ensure loading is hidden
+            loadingOverlay.style.display = 'none';
+            loadingCount = 0;
         }
     });
 
