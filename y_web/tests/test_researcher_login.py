@@ -33,9 +33,7 @@ def app():
             },
             "SQLALCHEMY_TRACK_MODIFICATIONS": False,
             "WTF_CSRF_ENABLED": False,
-            "SQLALCHEMY_ENGINE_OPTIONS": {
-                "connect_args": {"check_same_thread": False}
-            },
+            "SQLALCHEMY_ENGINE_OPTIONS": {"connect_args": {"check_same_thread": False}},
         }
     )
 
@@ -100,7 +98,14 @@ def app():
             return User_mgmt.query.get(int(user_id))
 
     # Create auth blueprint
-    from flask import Blueprint, flash, redirect, render_template_string, request, url_for
+    from flask import (
+        Blueprint,
+        flash,
+        redirect,
+        render_template_string,
+        request,
+        url_for,
+    )
     from flask_login import current_user, login_user, logout_user
 
     auth = Blueprint("auth", __name__)
