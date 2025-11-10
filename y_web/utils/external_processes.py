@@ -505,30 +505,36 @@ def start_server(exp):
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
     yserver_path = base_path
-    sys.path.append(os.path.join(yserver_path, 'external', 'YServer'))
-    
+    sys.path.append(os.path.join(yserver_path, "external", "YServer"))
+
     # Get writable path for experiments directory
     writable_base = get_writable_path()
     # Define y_web directory path (replaces old BASE_DIR)
-    y_web_dir = os.path.join(writable_base, 'y_web')
+    y_web_dir = os.path.join(writable_base, "y_web")
 
     if "database_server.db" in exp.db_name:
         # Extract experiment uid from db_name path
         # db_name format: "experiments/uid/database_server.db"
-        config = os.path.join(y_web_dir, exp.db_name.split('database_server.db')[0] + 'config_server.json')
+        config = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0] + "config_server.json"
+        )
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = os.path.join(y_web_dir, 'experiments', uid, 'config_server.json')
+        config = os.path.join(y_web_dir, "experiments", uid, "config_server.json")
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
-        server_dir = os.path.join(yserver_path, 'external', 'YServer')
-        script_path = os.path.join(yserver_path, 'external', 'YServer', 'y_server_run.py')
+        server_dir = os.path.join(yserver_path, "external", "YServer")
+        script_path = os.path.join(
+            yserver_path, "external", "YServer", "y_server_run.py"
+        )
     elif exp.platform_type == "forum":
-        server_dir = os.path.join(yserver_path, 'external', 'YServerReddit')
-        script_path = os.path.join(yserver_path, 'external', 'YServerReddit', 'y_server_run.py')
+        server_dir = os.path.join(yserver_path, "external", "YServerReddit")
+        script_path = os.path.join(
+            yserver_path, "external", "YServerReddit", "y_server_run.py"
+        )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
@@ -1286,7 +1292,7 @@ def start_client(exp, cli, population, resume=True):
     # Get the Python executable to use
     # In PyInstaller environments, sys.executable points to the bundled executable
     # In development, we detect the appropriate Python from the environment
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running from PyInstaller - use the bundled executable
         python_cmd = sys.executable
     else:
@@ -1295,7 +1301,9 @@ def start_client(exp, cli, population, resume=True):
 
     # Build path to the client process runner script
     # Get the runner script path - works for both dev and PyInstaller
-    runner_script = get_resource_path(os.path.join('y_web', 'utils', 'y_client_process_runner.py'))
+    runner_script = get_resource_path(
+        os.path.join("y_web", "utils", "y_client_process_runner.py")
+    )
 
     # Validate that runner script exists
     if not Path(runner_script).exists():
@@ -1337,15 +1345,20 @@ def start_client(exp, cli, population, resume=True):
 
     # Create log files for client output
     from y_web.utils.path_utils import get_writable_path
+
     writable_base = get_writable_path()
-    
+
     if "experiments_" in exp.db_name:
         uid = exp.db_name.removeprefix("experiments_")
-        log_dir = Path(os.path.join(writable_base, 'y_web', 'experiments', uid))
+        log_dir = Path(os.path.join(writable_base, "y_web", "experiments", uid))
     else:
         # exp.db_name format: "experiments/uid/database_server.db"
         uid = exp.db_name.split(os.sep)[1]
-        log_dir = Path(os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0]))
+        log_dir = Path(
+            os.path.join(
+                writable_base, "y_web", exp.db_name.split("database_server.db")[0]
+            )
+        )
 
     stdout_log = log_dir / f"{cli.name}_client_stdout.log"
     stderr_log = log_dir / f"{cli.name}_client_stderr.log"
@@ -1362,8 +1375,8 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
-    
-    if getattr(sys, 'frozen', False):
+
+    if getattr(sys, "frozen", False):
         # Running from PyInstaller - modules are in the bundle
         # The bootstrap script will handle sys.path setup
         # No PYTHONPATH needed as we're using runpy with the bundled interpreter
@@ -1377,9 +1390,9 @@ def start_client(exp, cli, population, resume=True):
             env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
         else:
             env["PYTHONPATH"] = project_root
-    
+
     # Determine working directory
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # When frozen, use current working directory
         cwd = os.getcwd()
     else:

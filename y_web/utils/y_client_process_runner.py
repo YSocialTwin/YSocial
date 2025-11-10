@@ -106,33 +106,43 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         # Get base path (PyInstaller-aware) for reading bundled resources
         base_path = get_base_path()
-        
+
         # Get writable path for experiment data (where experiments are stored)
         writable_base = get_writable_path()
 
         # Add external client modules to path
         if exp.platform_type == "microblogging":
-            sys.path.append(os.path.join(base_path, 'external', 'YClient'))
+            sys.path.append(os.path.join(base_path, "external", "YClient"))
             from y_client.clients import YClientWeb
         elif exp.platform_type == "forum":
-            sys.path.append(os.path.join(base_path, 'external', 'YClientReddit'))
+            sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
             from y_client.clients import YClientWeb
         else:
             raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
         # Base directory for experiment data (writable location)
-        BASE_DIR = os.path.join(writable_base, 'y_web')
+        BASE_DIR = os.path.join(writable_base, "y_web")
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = os.path.join(BASE_DIR, 'experiments', uid, f"{population.name.replace(' ', '')}.json")
+            filename = os.path.join(
+                BASE_DIR, "experiments", uid, f"{population.name.replace(' ', '')}.json"
+            )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = os.path.join(BASE_DIR, exp.db_name.split('database_server.db')[0], f"{population.name.replace(' ', '')}.json")
+            filename = os.path.join(
+                BASE_DIR,
+                exp.db_name.split("database_server.db")[0],
+                f"{population.name.replace(' ', '')}.json",
+            )
 
-        data_base_path = os.path.join(BASE_DIR, 'experiments', uid) + os.sep
+        data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
         config_file = json.load(
-            open(os.path.join(data_base_path, f"client_{cli.name}-{population.name}.json"))
+            open(
+                os.path.join(
+                    data_base_path, f"client_{cli.name}-{population.name}.json"
+                )
+            )
         )
 
         print("Starting client process...")
