@@ -186,7 +186,12 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             )
 
         if resume:
-            cl.days = int((ce.expected_duration_rounds - ce.elapsed_time) / 24)
+            remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
+            # If we've already reached or exceeded expected duration, don't run
+            if remaining_rounds <= 0:
+                print(f"Client {cli_id} already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})")
+                return
+            cl.days = int(remaining_rounds / 24)
 
         cl.read_agents()
         cl.add_feeds()
@@ -376,6 +381,14 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 ce.last_active_day = d
                 session.add(ce)  # Explicitly mark as modified for PostgreSQL
                 session.commit()
+                
+                # Check if we've reached 100% completion
+                if ce.elapsed_time >= ce.expected_duration_rounds:
+                    print(f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})")
+                    # Clean up and exit
+                    session.close()
+                    engine.dispose()
+                    return
 
         # evaluate follows (once per day, only for a random sample of daily active agents)
         if float(cl.config["agents"]["probability_of_daily_follow"]) > 0:
