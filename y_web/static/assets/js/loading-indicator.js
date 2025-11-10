@@ -290,17 +290,19 @@
 
     // Handle page shown from back/forward cache
     window.addEventListener('pageshow', function(event) {
-        // If page is restored from cache, ensure loading is hidden
-        if (loadingOverlay) {
+        // Only hide loading if page is persisted (restored from cache)
+        // Don't hide on normal page load/navigation
+        if (event.persisted && loadingOverlay) {
             loadingOverlay.style.display = 'none';
             loadingCount = 0;
         }
     });
 
-    // Ensure loading is hidden when page becomes visible
+    // Ensure loading is hidden when page becomes visible after being hidden
     document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && loadingOverlay) {
-            // Page became visible, ensure loading is hidden
+        if (!document.hidden && loadingOverlay && loadingOverlay.style.display === 'flex') {
+            // Only hide if loading is actually showing and page was hidden
+            // This prevents hiding during normal navigation
             loadingOverlay.style.display = 'none';
             loadingCount = 0;
         }
