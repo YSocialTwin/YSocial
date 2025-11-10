@@ -31,7 +31,7 @@ from y_web.models import (
     Exps,
     Ollama_Pull,
 )
-from y_web.utils.path_utils import get_base_path, get_resource_path
+from y_web.utils.path_utils import get_base_path, get_resource_path, get_writable_path
 
 # Dictionary to track Ollama model download processes
 ollama_processes = {}
@@ -502,19 +502,22 @@ def start_server(exp):
     Returns:
         subprocess.Popen: The started process object
     """
-    yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    # Get base path - this will be bundle location when frozen, repo root otherwise
+    base_path = get_base_path()
+    yserver_path = base_path
     sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    
+    # Get writable path for experiments directory
+    writable_base = get_writable_path()
 
     if "database_server.db" in exp.db_name:
-        config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
+        # Extract experiment uid from db_name path
+        config = os.path.join(writable_base, exp.db_name.split('database_server.db')[0] + 'config_server.json')
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = (
-            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
-        )
+        config = os.path.join(writable_base, 'y_web', 'experiments', uid, 'config_server.json')
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
