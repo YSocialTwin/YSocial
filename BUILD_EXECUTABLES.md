@@ -71,32 +71,35 @@ The executable will be located in `dist/YSocial/`:
 # Linux/macOS
 cd dist/YSocial
 ./YSocial --help
-./YSocial
+./YSocial                    # Launches in desktop mode (default)
 
-# Try desktop mode (native window without browser chrome)
-./YSocial --desktop
+# Try browser mode instead
+./YSocial --browser
 
 # Windows
 cd dist\YSocial
 YSocial.exe --help
-YSocial.exe
+YSocial.exe                  # Launches in desktop mode (default)
 
-# Try desktop mode (native window without browser chrome)
-YSocial.exe --desktop
+# Try browser mode instead
+YSocial.exe --browser
 ```
 
-The application should automatically open in your browser at http://localhost:8080, or in a native desktop window if using `--desktop` mode.
+The application now **launches in desktop mode by default** with a native window. Use `--browser` flag to open in a web browser instead.
 
-## Desktop Mode
+## Desktop Mode (Default)
 
-YSocial now supports true desktop application mode using PyWebview, which provides a native window experience without browser chrome:
+**Desktop mode is now the default!** YSocial uses PyWebview to provide a native window experience without browser chrome:
 
 ```bash
-# Start in desktop mode
-./YSocial --desktop
+# Start normally (desktop mode is default)
+./YSocial
 
 # Customize window size
-./YSocial --desktop --window-width 1600 --window-height 900
+./YSocial --window-width 1600 --window-height 900
+
+# Switch to browser mode if needed
+./YSocial --browser
 ```
 
 **Desktop mode features:**

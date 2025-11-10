@@ -114,14 +114,14 @@ def main():
         help="Disable Jupyter Notebook server launch for experiments",
     )
     parser.add_argument(
-        "--no-browser",
+        "--browser",
         action="store_true",
-        help="Don't automatically open browser on startup",
+        help="Launch in browser mode instead of desktop mode (desktop is default)",
     )
     parser.add_argument(
-        "--desktop",
+        "--no-browser",
         action="store_true",
-        help="Launch in desktop mode with native window (uses PyWebview instead of browser)",
+        help="Don't automatically open browser on startup (only applies to browser mode)",
     )
     parser.add_argument(
         "--window-width",
@@ -138,8 +138,8 @@ def main():
 
     args = parser.parse_args()
 
-    # Check if desktop mode is requested
-    if args.desktop:
+    # Desktop mode is default unless --browser is specified
+    if not args.browser:
         # Desktop mode - use PyWebview
         try:
             from y_social_desktop import start_desktop_app

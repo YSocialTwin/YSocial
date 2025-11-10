@@ -38,7 +38,8 @@ def register_experiment_database(app, exp_id, db_name):
     """
     bind_key = get_db_bind_key_for_exp(exp_id)
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Use get_writable_path to handle both development and PyInstaller modes
+    from y_web.utils.path_utils import get_writable_path
 
     # Check database type
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
@@ -47,7 +48,9 @@ def register_experiment_database(app, exp_id, db_name):
         db_uri = f"{base_uri}/{db_name}"
     elif app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
         # SQLite: construct file path
-        db_uri = f"sqlite:///{BASE_DIR}/{db_name}"
+        # db_name is relative to repository root (e.g., "experiments/uid/database_server.db")
+        db_path = get_writable_path(db_name)
+        db_uri = f"sqlite:///{db_path}"
     else:
         raise ValueError("Unsupported database type")
 

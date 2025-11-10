@@ -86,8 +86,8 @@ jobs:
            - Linux/macOS: ./YSocial
            - Windows: YSocial.exe
         
-        2. The application will automatically open in your default browser
-           at http://localhost:8080
+        2. The application will automatically open in a NATIVE DESKTOP WINDOW
+           (default behavior - no browser chrome!)
         
         3. Default admin credentials:
            Email: admin@ysocial.com
@@ -106,39 +106,38 @@ jobs:
           -D, --db TYPE            Database type: sqlite or postgresql (default: sqlite)
           -l, --llm-backend BACKEND LLM backend: ollama, vllm, or custom URL
           -n, --no_notebook        Disable Jupyter Lab
-          --no-browser             Don't auto-open browser
-          --desktop                Launch in desktop mode (native window)
+          --browser                Launch in browser mode (desktop is default)
+          --no-browser             Don't auto-open browser (browser mode only)
           --window-width WIDTH     Desktop window width (default: 1280)
           --window-height HEIGHT   Desktop window height (default: 800)
         
         Examples:
-          # Start with default settings (auto-opens browser)
+          # Start with default settings (opens in native desktop window)
           YSocial
           
-          # Desktop mode (native window without browser chrome)
-          YSocial --desktop
-          
           # Desktop mode with custom window size
-          YSocial --desktop --window-width 1600 --window-height 900
+          YSocial --window-width 1600 --window-height 900
+          
+          # Use browser mode instead of desktop
+          YSocial --browser
           
           # Use different port
           YSocial --port 5000
           
           # Use with Ollama LLM backend
           YSocial --llm-backend ollama
-          
-          # Don't open browser automatically
-          YSocial --no-browser
         
-        DESKTOP MODE:
-        -------------
+        DESKTOP MODE (DEFAULT):
+        -----------------------
         
-        Desktop mode (--desktop) provides a true desktop application experience
-        using a native window without browser chrome/UI. Features include:
+        Desktop mode is now the DEFAULT! The app launches in a native window
+        without browser chrome/UI. Features include:
         - Native window controls (minimize, maximize, close)
         - Better desktop integration
         - Confirmation dialog on window close
         - Resizable window with minimum size constraints
+        
+        To use traditional browser mode instead, add the --browser flag.
         
         Note: Desktop mode requires a GUI environment.
         
@@ -156,8 +155,9 @@ jobs:
         TROUBLESHOOTING:
         ----------------
         
-        - If the browser doesn't open automatically, manually navigate to
-          http://localhost:8080 (or your custom host:port)
+        - Desktop mode is default. If you prefer browser mode, use --browser flag
+        - In browser mode, if the browser doesn't open automatically, manually
+          navigate to http://localhost:8080 (or your custom host:port)
         
         - On macOS, if you get a security warning, go to System Preferences >
           Security & Privacy and allow the application to run

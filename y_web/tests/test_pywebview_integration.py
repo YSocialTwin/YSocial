@@ -59,9 +59,11 @@ class TestLauncherDesktopModeSupport(unittest.TestCase):
         """Test that y_social_launcher.py contains desktop mode code."""
         with open("y_social_launcher.py", "r") as f:
             content = f.read()
-            self.assertIn("--desktop", content)
+            self.assertIn("--browser", content)
             self.assertIn("y_social_desktop", content)
             self.assertIn("start_desktop_app", content)
+            # Desktop is default, so check for browser flag
+            self.assertIn("not args.browser", content)
 
 
 class TestDesktopModeFunction(unittest.TestCase):
