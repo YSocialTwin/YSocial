@@ -7,11 +7,12 @@ while the application initializes.
 
 import os
 import sys
-import tkinter as tk
-from tkinter import ttk
-from PIL import Image, ImageTk
 import threading
 import time
+import tkinter as tk
+from tkinter import ttk
+
+from PIL import Image, ImageTk
 
 
 class YSocialSplashScreen:
@@ -162,9 +163,7 @@ class YSocialSplashScreen:
         )
         authors_title.pack(pady=(10, 5))
 
-        authors_text = (
-            "Rossetti et al."
-        )
+        authors_text = "Rossetti et al."
         authors_label = tk.Label(
             left_column,
             text=authors_text,
