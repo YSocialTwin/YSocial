@@ -433,4 +433,11 @@ def create_app(db_type="sqlite"):
 
     app.register_blueprint(lab_blueprint)
 
+    # Add context processor to detect PyInstaller mode
+    @app.context_processor
+    def inject_pyinstaller_mode():
+        """Inject PyInstaller mode detection into all templates."""
+        import sys
+        return dict(is_pyinstaller=getattr(sys, "frozen", False))
+
     return app
