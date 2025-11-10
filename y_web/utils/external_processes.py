@@ -1324,32 +1324,13 @@ def start_client(exp, cli, population, resume=True):
 
     # Build the command based on execution environment
     if use_runpy:
-        # When frozen, use a special wrapper approach
-        # Create a temporary bootstrap script that uses runpy to execute the client runner
-        import tempfile
-        bootstrap_code = f"""
-import sys
-import os
-import runpy
-
-# Ensure the bundle path is in sys.path
-if hasattr(sys, '_MEIPASS'):
-    if sys._MEIPASS not in sys.path:
-        sys.path.insert(0, sys._MEIPASS)
-
-# Set up sys.argv for the target script
-sys.argv = ['y_client_process_runner.py'] + {cmd_args}
-
-# Run the client process runner module
-runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')
-"""
-        # Create a temporary file for the bootstrap script
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
-            f.write(bootstrap_code)
-            bootstrap_script = f.name
+        # When frozen, we need to use Python's -c flag to execute code
+        # The bundled executable supports running Python code via -c
+        # We execute the client runner module using runpy
+        bootstrap_code = f"""import sys; import os; import runpy; sys.path.insert(0, sys._MEIPASS if hasattr(sys, '_MEIPASS') else '.'); sys.argv = ['y_client_process_runner.py'] + {cmd_args}; runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')"""
         
-        # Command runs the bootstrap script with the bundled executable
-        cmd = [python_cmd, bootstrap_script]
+        # Command uses -c to execute Python code directly
+        cmd = [python_cmd, '-c', bootstrap_code]
     else:
         # Running from source - use the standard approach
         if (
