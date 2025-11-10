@@ -17,25 +17,31 @@ from y_web.models import Exps, Jupyter_instances
 def get_python_executable():
     """
     Get the Python executable path that works for both dev and PyInstaller.
-    
+
     When running from PyInstaller, sys.executable points to the bundled executable,
     not a Python interpreter. We need to find a system Python interpreter instead.
-    
+
     Returns:
         str: Path to Python executable
     """
     # Check if running from PyInstaller bundle
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # Running in PyInstaller bundle - need to find system Python
         # Try to find python in PATH
         import shutil
-        python_cmd = shutil.which('python3') or shutil.which('python')
+
+        python_cmd = shutil.which("python3") or shutil.which("python")
         if python_cmd:
             return python_cmd
         # Fallback: try common locations
-        for path in ['/usr/bin/python3', '/usr/local/bin/python3', 
-                     '/opt/homebrew/bin/python3', 'C:\\Python311\\python.exe',
-                     'C:\\Python310\\python.exe', 'C:\\Python39\\python.exe']:
+        for path in [
+            "/usr/bin/python3",
+            "/usr/local/bin/python3",
+            "/opt/homebrew/bin/python3",
+            "C:\\Python311\\python.exe",
+            "C:\\Python310\\python.exe",
+            "C:\\Python39\\python.exe",
+        ]:
             if os.path.exists(path):
                 return path
         # Last resort: return sys.executable and hope for the best
@@ -175,7 +181,8 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
         except ImportError:
             print("ipykernel not found, installing...")
             subprocess.run(
-                [get_python_executable(), "-m", "pip", "install", "ipykernel"], check=True
+                [get_python_executable(), "-m", "pip", "install", "ipykernel"],
+                check=True,
             )
 
         # 2. Check if kernel spec already exists
@@ -661,17 +668,22 @@ def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None
     else:
         # copy notebook template from sample_notebook/start_here.ipynb
         import shutil
+
         from y_web.utils.path_utils import get_resource_path
 
-        base_notebook = get_resource_path(f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb")
-        
+        base_notebook = get_resource_path(
+            f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"
+        )
+
         if not os.path.exists(base_notebook):
             # Try without get_resource_path for backward compatibility
-            base_notebook = f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"
+            base_notebook = (
+                f"y_web{os.sep}utils{os.sep}sample_notebook{os.sep}start_here.ipynb"
+            )
             if not os.path.exists(base_notebook):
                 print(f"Warning: Template notebook not found at {base_notebook}")
                 return False, f"Template notebook not found"
-        
+
         shutil.copy(base_notebook, f"{notebook_dir}{os.sep}{filename}")
 
     return True

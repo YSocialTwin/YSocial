@@ -75,13 +75,15 @@ def reset_client(uid):
 
     # copy the original prompts.json file
     if exp.platform_type == "microblogging":
-        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts.json'))
+        prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
         shutil.copy(
             prompts_src,
             f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
         )
     elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts_forum.json'))
+        prompts_src = get_resource_path(
+            os.path.join("data_schema", "prompts_forum.json")
+        )
         shutil.copy(
             prompts_src,
             f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
@@ -690,14 +692,16 @@ def create_client():
     # copy prompts.json into the experiment folder
 
     if exp.platform_type == "microblogging":
-        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts.json'))
+        prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
         shutil.copyfile(
             prompts_src,
             f"{data_base_path}prompts.json",
         )
 
     elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(os.path.join('data_schema', 'prompts_forum.json'))
+        prompts_src = get_resource_path(
+            os.path.join("data_schema", "prompts_forum.json")
+        )
         shutil.copyfile(
             prompts_src,
             f"{data_base_path}prompts.json",
@@ -710,10 +714,21 @@ def create_client():
 
     if "database_server.db" in exp.db_name:
         # exp.db_name is like "experiments/uid/database_server.db"
-        filename = os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0], f"{population.name.replace(' ', '')}.json")
+        filename = os.path.join(
+            writable_base,
+            "y_web",
+            exp.db_name.split("database_server.db")[0],
+            f"{population.name.replace(' ', '')}.json",
+        )
     else:
         # Legacy format
-        filename = os.path.join(writable_base, 'y_web', 'experiments', exp.db_name.replace('experiments_', ''), f"{population.name.replace(' ', '')}.json")
+        filename = os.path.join(
+            writable_base,
+            "y_web",
+            "experiments",
+            exp.db_name.replace("experiments_", ""),
+            f"{population.name.replace(' ', '')}.json",
+        )
 
     agents = Agent_Population.query.filter_by(population_id=population.id).all()
     # get the agent details
@@ -1032,7 +1047,7 @@ def client_details(uid):
 
     # get the client configuration file
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE = get_writable_path()
 
     dbtypte = get_db_type()
@@ -1152,7 +1167,7 @@ def set_network(uid):
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE = get_writable_path()
 
     dbtypte = get_db_type()
@@ -1190,7 +1205,7 @@ def upload_network(uid):
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE = get_writable_path()
 
     dbtypte = get_db_type()
@@ -1350,7 +1365,7 @@ def update_agents_activity(uid):
     population = Population.query.filter_by(id=client.population_id).first()
 
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
 
@@ -1380,7 +1395,7 @@ def reset_agents_activity(uid):
     population = Population.query.filter_by(id=client.population_id).first()
 
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
 

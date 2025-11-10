@@ -87,6 +87,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
     from y_web import create_app, db  # only to reuse URI config
     from y_web.models import Client, Client_Execution, Exps, Population
+    from y_web.utils.path_utils import get_base_path, get_writable_path
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app(db_type)
@@ -103,34 +104,45 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         cli = session.query(Client).get(cli.id)
         population = session.query(Population).get(population.id)
 
-        # ---------- your logic below (unchanged except DB usage) ----------
-        yclient_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+        # Get base path (PyInstaller-aware) for reading bundled resources
+        base_path = get_base_path()
 
+        # Get writable path for experiment data (where experiments are stored)
+        writable_base = get_writable_path()
+
+        # Add external client modules to path
         if exp.platform_type == "microblogging":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClient")
+            sys.path.append(os.path.join(base_path, "external", "YClient"))
             from y_client.clients import YClientWeb
         elif exp.platform_type == "forum":
-            sys.path.append(f"{yclient_path}{os.sep}external{os.sep}YClientReddit")
+            sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
             from y_client.clients import YClientWeb
         else:
             raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-        BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+        # Base directory for experiment data (writable location)
+        BASE_DIR = os.path.join(writable_base, "y_web")
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
+            filename = os.path.join(
+                BASE_DIR, "experiments", uid, f"{population.name.replace(' ', '')}.json"
             )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}{population.name.replace(' ', '')}.json".replace(
-                "utils/", ""
+            filename = os.path.join(
+                BASE_DIR,
+                exp.db_name.split("database_server.db")[0],
+                f"{population.name.replace(' ', '')}.json",
             )
 
-        data_base_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}"
+        data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
         config_file = json.load(
-            open(f"{data_base_path}client_{cli.name}-{population.name}.json")
+            open(
+                os.path.join(
+                    data_base_path, f"client_{cli.name}-{population.name}.json"
+                )
+            )
         )
 
         print("Starting client process...")

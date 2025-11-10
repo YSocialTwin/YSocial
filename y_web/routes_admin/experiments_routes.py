@@ -28,7 +28,6 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db  # , app
-from y_web.utils.path_utils import get_resource_path
 from y_web.models import (
     ActivityProfile,
     Admin_users,
@@ -65,6 +64,7 @@ from y_web.utils import (
 )
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
+from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
 
@@ -386,12 +386,16 @@ def upload_experiment():
     uid = uuid.uuid4()
 
     from y_web.utils.path_utils import get_writable_path
-    
+
     BASE_DIR = get_writable_path()
 
-    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(parents=True, exist_ok=True)
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+        parents=True, exist_ok=True
+    )
 
-    experiment.save(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
+    experiment.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip"
+    )
     # unzip the file
     shutil.unpack_archive(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip",
@@ -531,7 +535,9 @@ def upload_experiment():
                 experiment_engine = create_engine(db_uri)
                 with experiment_engine.connect() as dummy_conn:
                     # Load and execute schema
-                    schema_path = get_resource_path(os.path.join("data_schema", "postgre_server.sql"))
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     try:
                         with open(schema_path, "r") as schema_file:
                             schema_sql = schema_file.read()
@@ -1010,7 +1016,9 @@ def create_experiment():
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
         if db_type == "sqlite":
-            clean_db_source = get_resource_path(os.path.join('data_schema', 'database_clean_server.db'))
+            clean_db_source = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
             shutil.copyfile(
                 clean_db_source,
                 f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
@@ -1061,7 +1069,9 @@ def create_experiment():
                 experiment_engine = create_engine(db_uri)
                 with experiment_engine.connect() as dummy_conn:
                     # Load schema
-                    schema_path = get_resource_path(os.path.join("data_schema", "postgre_server.sql"))
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     with open(schema_path, "r") as schema_file:
                         schema_sql = schema_file.read()
                         dummy_conn.execute(text(schema_sql))
@@ -2991,7 +3001,9 @@ def copy_experiment():
             new_db_path = os.path.join(new_folder, "database_server.db")
 
             # Copy the clean database schema instead of the source database
-            clean_db_path = get_resource_path(os.path.join('data_schema', 'database_clean_server.db'))
+            clean_db_path = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
             if os.path.exists(clean_db_path):
                 shutil.copy2(clean_db_path, new_db_path)
             else:
@@ -3053,7 +3065,9 @@ def copy_experiment():
                 experiment_engine = create_engine(new_db_uri)
                 with experiment_engine.connect() as conn:
                     # Load schema from SQL file
-                    schema_path = get_resource_path(os.path.join("data_schema", "postgre_server.sql"))
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     with open(schema_path, "r") as schema_file:
                         schema_sql = schema_file.read()
                         conn.execute(text(schema_sql))

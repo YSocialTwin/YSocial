@@ -505,30 +505,36 @@ def start_server(exp):
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
     yserver_path = base_path
-    sys.path.append(os.path.join(yserver_path, 'external', 'YServer'))
-    
+    sys.path.append(os.path.join(yserver_path, "external", "YServer"))
+
     # Get writable path for experiments directory
     writable_base = get_writable_path()
     # Define y_web directory path (replaces old BASE_DIR)
-    y_web_dir = os.path.join(writable_base, 'y_web')
+    y_web_dir = os.path.join(writable_base, "y_web")
 
     if "database_server.db" in exp.db_name:
         # Extract experiment uid from db_name path
         # db_name format: "experiments/uid/database_server.db"
-        config = os.path.join(y_web_dir, exp.db_name.split('database_server.db')[0] + 'config_server.json')
+        config = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0] + "config_server.json"
+        )
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = os.path.join(y_web_dir, 'experiments', uid, 'config_server.json')
+        config = os.path.join(y_web_dir, "experiments", uid, "config_server.json")
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
-        server_dir = os.path.join(yserver_path, 'external', 'YServer')
-        script_path = os.path.join(yserver_path, 'external', 'YServer', 'y_server_run.py')
+        server_dir = os.path.join(yserver_path, "external", "YServer")
+        script_path = os.path.join(
+            yserver_path, "external", "YServer", "y_server_run.py"
+        )
     elif exp.platform_type == "forum":
-        server_dir = os.path.join(yserver_path, 'external', 'YServerReddit')
-        script_path = os.path.join(yserver_path, 'external', 'YServerReddit', 'y_server_run.py')
+        server_dir = os.path.join(yserver_path, "external", "YServerReddit")
+        script_path = os.path.join(
+            yserver_path, "external", "YServerReddit", "y_server_run.py"
+        )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
@@ -1283,28 +1289,6 @@ def start_client(exp, cli, population, resume=True):
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    # Determine how to run the client subprocess based on execution environment
-    if getattr(sys, 'frozen', False):
-        # Running from PyInstaller - use the bundled executable with runpy
-        # This allows us to run Python scripts using the embedded interpreter
-        python_cmd = sys.executable
-        use_runpy = True
-    else:
-        # Running from source - use detected environment
-        python_cmd = detect_env_handler()
-        use_runpy = False
-
-    # Build path to the client process runner script
-    # Get the runner script path - works for both dev and PyInstaller
-    runner_script = get_resource_path(os.path.join('y_web', 'utils', 'y_client_process_runner.py'))
-
-    # Validate that runner script exists
-    if not Path(runner_script).exists():
-        raise FileNotFoundError(
-            f"Client runner script not found: {runner_script}\n"
-            f"Please ensure y_client_process_runner.py exists in the utils directory."
-        )
-
     # Build the command arguments
     cmd_args = [
         "--exp-id",
@@ -1322,17 +1306,25 @@ def start_client(exp, cli, population, resume=True):
     else:
         cmd_args.append("--no-resume")
 
-    # Build the command based on execution environment
-    if use_runpy:
-        # When frozen, we need to use Python's -c flag to execute code
-        # The bundled executable supports running Python code via -c
-        # We execute the client runner module using runpy
-        bootstrap_code = f"""import sys; import os; import runpy; sys.path.insert(0, sys._MEIPASS if hasattr(sys, '_MEIPASS') else '.'); sys.argv = ['y_client_process_runner.py'] + {cmd_args}; runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')"""
-        
-        # Command uses -c to execute Python code directly
-        cmd = [python_cmd, '-c', bootstrap_code]
+    # Determine how to run the client subprocess based on execution environment
+    if getattr(sys, "frozen", False):
+        # Running from PyInstaller - invoke the bundled executable with special flag
+        # The launcher script detects this flag and routes to the client runner
+        cmd = [sys.executable, "--run-client-subprocess"] + cmd_args
     else:
-        # Running from source - use the standard approach
+        # Running from source - use detected environment with script path
+        python_cmd = detect_env_handler()
+        runner_script = get_resource_path(
+            os.path.join("y_web", "utils", "y_client_process_runner.py")
+        )
+
+        # Validate that runner script exists
+        if not Path(runner_script).exists():
+            raise FileNotFoundError(
+                f"Client runner script not found: {runner_script}\n"
+                f"Please ensure y_client_process_runner.py exists in the utils directory."
+            )
+
         if (
             isinstance(python_cmd, str)
             and " " in python_cmd
@@ -1347,15 +1339,20 @@ def start_client(exp, cli, population, resume=True):
 
     # Create log files for client output
     from y_web.utils.path_utils import get_writable_path
+
     writable_base = get_writable_path()
-    
+
     if "experiments_" in exp.db_name:
         uid = exp.db_name.removeprefix("experiments_")
-        log_dir = Path(os.path.join(writable_base, 'y_web', 'experiments', uid))
+        log_dir = Path(os.path.join(writable_base, "y_web", "experiments", uid))
     else:
         # exp.db_name format: "experiments/uid/database_server.db"
         uid = exp.db_name.split(os.sep)[1]
-        log_dir = Path(os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0]))
+        log_dir = Path(
+            os.path.join(
+                writable_base, "y_web", exp.db_name.split("database_server.db")[0]
+            )
+        )
 
     stdout_log = log_dir / f"{cli.name}_client_stdout.log"
     stderr_log = log_dir / f"{cli.name}_client_stderr.log"
@@ -1372,8 +1369,8 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
-    
-    if getattr(sys, 'frozen', False):
+
+    if getattr(sys, "frozen", False):
         # Running from PyInstaller - modules are in the bundle
         # The bootstrap script will handle sys.path setup
         # No PYTHONPATH needed as we're using runpy with the bundled interpreter
@@ -1387,9 +1384,9 @@ def start_client(exp, cli, population, resume=True):
             env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
         else:
             env["PYTHONPATH"] = project_root
-    
+
     # Determine working directory
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # When frozen, use current working directory
         cwd = os.getcwd()
     else:
@@ -1426,34 +1423,11 @@ def start_client(exp, cli, population, resume=True):
             )
 
         print(f"Client process started with PID: {process.pid}")
-        
-        # Clean up bootstrap script if it was created
-        if use_runpy and 'bootstrap_script' in locals():
-            # Register cleanup to delete the temporary bootstrap script
-            # after a delay to ensure the subprocess has started
-            import atexit
-            import time
-            def cleanup_bootstrap():
-                time.sleep(2)  # Wait for subprocess to start
-                try:
-                    if os.path.exists(bootstrap_script):
-                        os.unlink(bootstrap_script)
-                except Exception:
-                    pass
-            atexit.register(cleanup_bootstrap)
-        
-        # if out_file != subprocess.DEVNULL:
-        #    print(f"Logs: {stdout_log} and {stderr_log}")
+        if out_file != subprocess.DEVNULL:
+            print(f"Logs: {stdout_log} and {stderr_log}")
     except Exception as e:
         print(f"Error starting client process: {e}")
         print(f"Command: {' '.join(cmd)}")
-        # Clean up bootstrap script on error
-        if use_runpy and 'bootstrap_script' in locals():
-            try:
-                if os.path.exists(bootstrap_script):
-                    os.unlink(bootstrap_script)
-            except Exception:
-                pass
         raise
 
     # Store PID in database
