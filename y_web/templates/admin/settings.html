@@ -312,7 +312,7 @@
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">New Experiment</h3>
                         <div class="box-content">
-                            <form action="/admin/create_experiment" enctype="multipart/form-data" method="POST">
+                            <form action="/admin/create_experiment" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating experiment...');">
                                 <div class="box-lines">
 
                                     <div class="box-line">
@@ -747,7 +747,7 @@
                 <div class="column is-4">
                     <div class="sidebar-box">
                         <h3>Upload Experiment</h3>
-                        <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST">
+                        <form action="/admin/upload_experiment" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Uploading experiment...');">
                             <style>
                                 .file-upload-wrapper-exp {
                                     position: relative;
@@ -837,7 +837,7 @@
                     <!-- Copy Experiment Box -->
                     <div class="sidebar-box">
                         <h3>Copy Experiment</h3>
-                        <form action="/admin/copy_experiment" method="POST">
+                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
                             <div style="margin-bottom: 12px;">
                                 <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
                                     New Experiment Name
