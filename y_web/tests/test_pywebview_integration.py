@@ -98,7 +98,7 @@ class TestPyInstallerSpecUpdated(unittest.TestCase):
         with open("y_social.spec", "r") as f:
             content = f.read()
             self.assertIn("webview", content)
-            self.assertIn("collect_submodules(\"webview\")", content)
+            self.assertIn('collect_submodules("webview")', content)
 
     def test_spec_includes_pywebview_metadata(self):
         """Test that y_social.spec includes pywebview metadata."""

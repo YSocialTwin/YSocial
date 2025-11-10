@@ -48,7 +48,7 @@ def register_experiment_database(app, exp_id, db_name):
         db_uri = f"{base_uri}/{db_name}"
     elif app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
         # SQLite: construct file path
-        # db_name is stored as "experiments/uid/database_server.db" 
+        # db_name is stored as "experiments/uid/database_server.db"
         # but actual file is in "y_web/experiments/uid/database_server.db"
         # Prepend y_web/ to match actual file location
         db_path = get_writable_path(os.path.join("y_web", db_name))
