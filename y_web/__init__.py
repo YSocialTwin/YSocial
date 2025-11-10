@@ -307,20 +307,30 @@ def create_app(db_type="sqlite"):
     db.init_app(app)
     login_manager.init_app(app)
 
-    from .models import User_mgmt as User
+    from .models import Admin_users, User_mgmt
 
     @login_manager.user_loader
     def load_user(user_id):
         """
         Load user by ID for Flask-Login session management.
 
+        Supports both Admin_users (for admin/researcher) and User_mgmt (for regular users).
+        Admin users are identified by 'admin_' prefix in the user_id.
+
         Args:
-            user_id: User ID string to load
+            user_id: User ID string to load (format: 'admin_<id>' for admins, '<id>' for regular users)
 
         Returns:
-            User_mgmt object if found, None otherwise
+            Admin_users or User_mgmt object if found, None otherwise
         """
-        return User.query.get(int(user_id))
+        user_id_str = str(user_id)
+        if user_id_str.startswith("admin_"):
+            # Admin or researcher user
+            admin_id = int(user_id_str.replace("admin_", ""))
+            return Admin_users.query.get(admin_id)
+        else:
+            # Regular experiment participant
+            return User_mgmt.query.get(int(user_id))
 
     # Setup experiment context handler
     from .experiment_context import (
