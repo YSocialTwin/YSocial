@@ -1365,15 +1365,16 @@ runpy.run_module('y_web.utils.y_client_process_runner', run_name='__main__')
             cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    from y_web.utils.path_utils import get_writable_path
+    writable_base = get_writable_path()
+    
     if "experiments_" in exp.db_name:
         uid = exp.db_name.removeprefix("experiments_")
-        log_dir = Path(f"{BASE_DIR}experiments{os.sep}{uid}")
+        log_dir = Path(os.path.join(writable_base, 'y_web', 'experiments', uid))
     else:
+        # exp.db_name format: "experiments/uid/database_server.db"
         uid = exp.db_name.split(os.sep)[1]
-        log_dir = Path(
-            f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}"
-        )
+        log_dir = Path(os.path.join(writable_base, 'y_web', exp.db_name.split('database_server.db')[0]))
 
     stdout_log = log_dir / f"{cli.name}_client_stdout.log"
     stderr_log = log_dir / f"{cli.name}_client_stderr.log"
