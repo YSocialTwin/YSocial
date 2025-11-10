@@ -107,10 +107,19 @@ jobs:
           -l, --llm-backend BACKEND LLM backend: ollama, vllm, or custom URL
           -n, --no_notebook        Disable Jupyter Lab
           --no-browser             Don't auto-open browser
+          --desktop                Launch in desktop mode (native window)
+          --window-width WIDTH     Desktop window width (default: 1280)
+          --window-height HEIGHT   Desktop window height (default: 800)
         
         Examples:
           # Start with default settings (auto-opens browser)
           YSocial
+          
+          # Desktop mode (native window without browser chrome)
+          YSocial --desktop
+          
+          # Desktop mode with custom window size
+          YSocial --desktop --window-width 1600 --window-height 900
           
           # Use different port
           YSocial --port 5000
@@ -120,6 +129,18 @@ jobs:
           
           # Don't open browser automatically
           YSocial --no-browser
+        
+        DESKTOP MODE:
+        -------------
+        
+        Desktop mode (--desktop) provides a true desktop application experience
+        using a native window without browser chrome/UI. Features include:
+        - Native window controls (minimize, maximize, close)
+        - Better desktop integration
+        - Confirmation dialog on window close
+        - Resizable window with minimum size constraints
+        
+        Note: Desktop mode requires a GUI environment.
         
         REQUIREMENTS:
         -------------

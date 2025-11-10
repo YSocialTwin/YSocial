@@ -73,13 +73,40 @@ cd dist/YSocial
 ./YSocial --help
 ./YSocial
 
+# Try desktop mode (native window without browser chrome)
+./YSocial --desktop
+
 # Windows
 cd dist\YSocial
 YSocial.exe --help
 YSocial.exe
+
+# Try desktop mode (native window without browser chrome)
+YSocial.exe --desktop
 ```
 
-The application should automatically open in your browser at http://localhost:8080.
+The application should automatically open in your browser at http://localhost:8080, or in a native desktop window if using `--desktop` mode.
+
+## Desktop Mode
+
+YSocial now supports true desktop application mode using PyWebview, which provides a native window experience without browser chrome:
+
+```bash
+# Start in desktop mode
+./YSocial --desktop
+
+# Customize window size
+./YSocial --desktop --window-width 1600 --window-height 900
+```
+
+**Desktop mode features:**
+- Native window without browser UI/chrome
+- Integrated window controls (minimize, maximize, close)
+- Better desktop integration
+- Confirmation dialog on window close
+- Resizable window with minimum size constraints
+
+**Note:** Desktop mode requires a GUI environment. On Linux, it may require additional system packages depending on the backend used (GTK, Qt, etc.).
 
 ## Build Configuration Files
 
@@ -93,13 +120,22 @@ PyInstaller specification file that defines:
 ### `y_social_launcher.py`
 Wrapper script that:
 - Provides a clean command-line interface
-- Auto-opens browser when server is ready
+- Supports both browser mode (default) and desktop mode (`--desktop`)
+- Auto-opens browser/desktop window when server is ready
 - Handles graceful shutdown
 - Works with PyInstaller's bundled environment
+
+### `y_social_desktop.py`
+Desktop mode module that:
+- Uses PyWebview to create native desktop windows
+- Runs Flask server in background thread
+- Provides desktop app experience without browser chrome
+- Can be used standalone or via launcher
 
 ### `pyinstaller_hooks/`
 Custom PyInstaller hooks:
 - `hook-y_web.py`: Ensures y_web package data files are included
+- `hook-webview.py`: Ensures pywebview platform-specific modules are included
 - `runtime_hook_nltk.py`: Configures NLTK data paths at runtime
 
 ## Troubleshooting
