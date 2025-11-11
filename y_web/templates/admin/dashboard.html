@@ -337,9 +337,8 @@
 
             <div class="columns">
 
-                    <div class="column-is-4">
-                        <!-- Empty column for spacing -->
-                         <div class="dashboard-box">
+                    <div class="column is-4">
+                        <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Services</h3>
                         <hr>
                         <div class="box-content">
@@ -396,9 +395,9 @@
                     </div>
 
                     {% if llm_backend["status"] and llm_backend["installed"] %}
-                    <div class="column-is-4">
+                    <div class="column is-4">
                         {% if len(models) > 0 %}
-                        <div class="dashboard-box">
+                        <div class="dashboard-box" style="height: 100%;">
                             <h3 class="title is-5 is-thin">Available LLMs</h3>
 
                             <div class="box-content">
@@ -486,9 +485,9 @@
                         {% endif %}
                     </div>
 
-                    <div class="column-is-4">
+                    <div class="column is-4">
                          {% if llm_backend['backend'] == 'ollama' %}
-                        <div class="dashboard-box">
+                        <div class="dashboard-box" style="height: 100%;">
                             <h3 class="title is-5 is-thin">Add LLM Model</h3>
                              <div class="box-content">
                                 <div class="box-lines">
