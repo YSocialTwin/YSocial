@@ -12,8 +12,13 @@ This document describes the strategies applied to reduce the PyInstaller executa
 
 **Implementation:**
 - Custom `hook-nltk.py` in `pyinstaller_hooks/`
-- Modified spec file to collect only `sentiment/vader_lexicon` via `collect_data_files()`
+- Modified spec file with **3-method fallback approach** for robust VADER collection:
+  1. Try `collect_data_files()` with multiple subdir patterns
+  2. Manual discovery via NLTK data paths
+  3. Use `nltk.data.find()` with proper path handling
+  4. Final fallback: collect all sentiment data
 - Hidden imports limited to `nltk.sentiment.vader`
+- Verbose logging during build to confirm VADER collection
 
 **Size Savings:** ~99MB
 
@@ -98,7 +103,34 @@ When updating NLTK or adding new NLTK features:
 ## Troubleshooting
 
 ### "Resource vader_lexicon not found"
-**Solution:** Ensure `nltk_data/sentiment/vader_lexicon.zip` is in the bundle
+**Cause:** VADER lexicon was not included in the bundle during PyInstaller build
+
+**Solutions:**
+1. **Before building:** Ensure VADER lexicon is downloaded
+   ```bash
+   python -c "import nltk; nltk.download('vader_lexicon')"
+   ```
+
+2. **Check build output:** Look for VADER collection messages during `pyinstaller y_social.spec`
+   - `✓ Method 1 SUCCESS` = collect_data_files worked
+   - `✓ Method 2 SUCCESS` = manual discovery worked
+   - `✓ Method 3 SUCCESS` = nltk.data.find worked
+   - `✓ FALLBACK SUCCESS` = collected all sentiment data
+   - `⚠ WARNING: Could not collect VADER lexicon` = build will fail at runtime
+
+3. **If collection fails:** Check NLTK data location
+   ```bash
+   python -c "import nltk; print(nltk.data.path)"
+   ```
+   Ensure vader_lexicon exists in one of these paths under `sentiment/` or `corpora/`
+
+4. **Manual addition:** Add to spec file manually if auto-detection fails
+   ```python
+   datas += [('/path/to/nltk_data/sentiment/vader_lexicon.zip', 'nltk_data/sentiment')]
+   ```
+
+### "⚠ No VADER lexicon data found via collect_data_files"
+**This is expected** - it means Method 1 failed but the build tries Methods 2-4 automatically. Check for subsequent success messages.
 
 ### Executable crashes on startup
 **Solution:** Check UPX exclusions, some DLLs don't compress well
