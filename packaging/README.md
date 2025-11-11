@@ -291,6 +291,119 @@ set icon size of viewOptions to 48
 # Current: 48 (compact size optimized for small window)
 ```
 
+## Visual Adjustment and Testing
+
+### Interactive DMG Layout Adjustment
+
+To visually adjust the DMG layout without rebuilding each time:
+
+1. **Create a test DMG:**
+   ```bash
+   ./packaging/create_dmg.sh
+   ```
+
+2. **Mount and test:**
+   ```bash
+   open dist/YSocial-1.0.0.dmg
+   ```
+
+3. **Manually adjust in Finder:**
+   - Open the mounted DMG
+   - Press `Cmd+J` to open View Options
+   - Adjust icon size with the slider
+   - Drag icons to desired positions
+   - Arrange items visually
+
+4. **Get the new positions:**
+   - Open Terminal
+   - Run the following to see current icon positions:
+   ```bash
+   osascript -e 'tell application "Finder"
+     tell disk "YSocial"
+       get properties of items
+     end tell
+   end tell'
+   ```
+   
+   Or use this simpler command for each item:
+   ```bash
+   osascript -e 'tell application "Finder" to get position of item "YSocial.app" of disk "YSocial"'
+   osascript -e 'tell application "Finder" to get position of item "Applications" of disk "YSocial"'
+   osascript -e 'tell application "Finder" to get position of item "README.md" of disk "YSocial"'
+   osascript -e 'tell application "Finder" to get position of item "Uninstall YSocial.command" of disk "YSocial"'
+   ```
+
+5. **Update the script:**
+   - Edit `packaging/create_dmg.sh`
+   - Update the positions in the AppleScript section
+   - Rebuild to test
+
+### Recommended Layout Guidelines
+
+For a 284×383 window with 48px icons:
+
+**Horizontal spacing:**
+- Left items: x ≈ 20-25% of width (≈ 50-70px)
+- Right items: x ≈ 70-80% of width (≈ 200-225px)
+
+**Vertical spacing:**
+- Top items: y ≈ 40-45% of height (≈ 150-170px)
+- Bottom items: y ≈ 80-85% of height (≈ 305-325px)
+
+**Current positions:**
+- YSocial.app: (50, 160) - 18% from left, 42% from top
+- Applications: (210, 160) - 74% from left, 42% from top
+- README.md: (70, 310) - 25% from left, 81% from top
+- Uninstall: (190, 310) - 67% from left, 81% from top
+
+### Alternative Position Suggestions
+
+If you need to adjust, try these alternatives:
+
+**Option A: More centered (balanced spacing)**
+```applescript
+set position of item "YSocial.app" of container window to {60, 155}
+set position of item "Applications" of container window to {200, 155}
+set position of item "README.md" of container window to {75, 305}
+set position of item "Uninstall YSocial.command" of container window to {185, 305}
+```
+
+**Option B: Tighter grouping**
+```applescript
+set position of item "YSocial.app" of container window to {55, 150}
+set position of item "Applications" of container window to {205, 150}
+set position of item "README.md" of container window to {80, 300}
+set position of item "Uninstall YSocial.command" of container window to {180, 300}
+```
+
+**Option C: Wider spacing**
+```applescript
+set position of item "YSocial.app" of container window to {45, 165}
+set position of item "Applications" of container window to {215, 165}
+set position of item "README.md" of container window to {65, 315}
+set position of item "Uninstall YSocial.command" of container window to {195, 315}
+```
+
+### Quick Test Workflow
+
+For rapid iteration:
+
+```bash
+# 1. Edit the positions in create_dmg.sh
+vim packaging/create_dmg.sh  # Or your preferred editor
+
+# 2. Build new DMG
+./packaging/create_dmg.sh
+
+# 3. Unmount old DMG if mounted
+hdiutil detach /Volumes/YSocial 2>/dev/null || true
+
+# 4. Open new DMG
+open dist/YSocial-1.0.0.dmg
+
+# 5. Visually inspect and repeat
+```
+
 ## Troubleshooting
 
 ### "YSocial executable not found"

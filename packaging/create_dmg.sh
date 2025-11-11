@@ -174,17 +174,33 @@ tell application "Finder"
         set current view of container window to icon view
         set toolbar visible of container window to false
         set statusbar visible of container window to false
+        
+        -- Window size: 284x383 (matches background image exactly)
+        -- Format: {left, top, right, bottom}
+        -- To adjust: change right = left + width, bottom = top + height
         set the bounds of container window to {400, 100, 684, 483}
+        
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
+        
+        -- Icon size: 48px (try 32, 48, 64, or 72 for different looks)
         set icon size of viewOptions to 48
         set background picture of viewOptions to file ".background:background.png"
         
-        -- Position icons (centered to align with arrow in background - 284x383 window)
+        -- ICON POSITIONS: Adjust these coordinates to customize layout
+        -- Format: {x, y} where x is horizontal (left-to-right), y is vertical (top-to-bottom)
+        -- Window dimensions: 284 width × 383 height
+        -- Tips: 
+        --   - Keep x between 30-250 for visibility
+        --   - Keep y between 100-350 for visibility
+        --   - Main icons (top): y around 150-170
+        --   - Secondary files (bottom): y around 300-320
+        
+        -- Main application and target
         set position of item "YSocial.app" of container window to {50, 160}
         set position of item "Applications" of container window to {210, 160}
         
-        -- Position additional files (smaller, at bottom)
+        -- Additional files (documentation and uninstaller)
         set position of item "README.md" of container window to {70, 310}
         set position of item "Uninstall YSocial.command" of container window to {190, 310}
         
