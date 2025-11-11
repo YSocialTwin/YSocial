@@ -14,6 +14,40 @@ The DMG packaging scripts transform the PyInstaller-built YSocial executable int
 - **User README** with comprehensive usage instructions
 - **Compressed DMG** for efficient distribution
 
+## Version Management
+
+YSocial uses a centralized version file (`VERSION` in the project root) that is automatically read by:
+
+1. **PyInstaller** - Includes the VERSION file in the built executable
+2. **Splash Screen** - Displays the version on application startup
+3. **DMG Scripts** - Uses the version for naming the installer file
+
+### Updating the Version
+
+To update the version for all components:
+
+1. Edit the `VERSION` file in the project root:
+   ```bash
+   echo "2.1.0" > VERSION
+   ```
+
+2. Rebuild the executable and DMG:
+   ```bash
+   pyinstaller y_social.spec --clean --noconfirm
+   ./packaging/create_dmg.sh
+   ```
+
+The version will automatically be:
+- Displayed in the splash screen as "v2.1.0 (Nalthis) 11/2025"
+- Used in the DMG filename: `YSocial-2.1.0.dmg`
+- Included in the .app bundle metadata
+
+**Note:** You can still override the version for DMG creation:
+```bash
+VERSION=2.1.0 ./packaging/create_dmg.sh  # Uses VERSION file
+VERSION=custom ./packaging/create_dmg.sh  # Overrides with "custom"
+```
+
 ## Files in This Directory
 
 - **`create_dmg.sh`** - Main DMG creation script (no external dependencies)

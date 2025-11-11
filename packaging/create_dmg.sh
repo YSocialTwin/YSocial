@@ -7,15 +7,24 @@ set -e  # Exit on error
 
 # Configuration
 APP_NAME="YSocial"
-VERSION="${VERSION:-2.0.0}"
+
+# Read VERSION from file if it exists, otherwise use default
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VERSION_FILE="${PROJECT_ROOT}/VERSION"
+
+if [ -f "$VERSION_FILE" ]; then
+    VERSION=$(cat "$VERSION_FILE" | tr -d '[:space:]')
+else
+    VERSION="${VERSION:-2.0.0}"
+fi
+
 DMG_NAME="${APP_NAME}-${VERSION}"
 SOURCE_APP="dist/${APP_NAME}"
 BACKGROUND_IMAGE="y_web/static/assets/img/installer/background.png"
 ICON_FILE="images/YSocial_ico.png"
 
 # Directories
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 STAGING_DIR="${PROJECT_ROOT}/dmg_staging"
 DMG_DIR="${STAGING_DIR}/.background"
 FINAL_DMG="${PROJECT_ROOT}/dist/${DMG_NAME}.dmg"

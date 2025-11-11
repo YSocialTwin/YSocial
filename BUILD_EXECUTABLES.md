@@ -2,6 +2,39 @@
 
 This document describes how to build standalone executables for YSocial using PyInstaller.
 
+## Version Management
+
+YSocial uses a centralized `VERSION` file in the project root that is automatically:
+- Included in the PyInstaller executable
+- Displayed in the splash screen on application startup
+- Used by DMG packaging scripts for installer naming
+
+### Updating the Version
+
+Before building or releasing:
+
+1. Edit the `VERSION` file:
+   ```bash
+   echo "2.1.0" > VERSION
+   ```
+
+2. Commit the change:
+   ```bash
+   git add VERSION
+   git commit -m "Bump version to 2.1.0"
+   ```
+
+3. Create a release tag:
+   ```bash
+   git tag v2.1.0
+   git push origin v2.1.0
+   ```
+
+The version will automatically be:
+- Displayed in the splash screen: "v2.1.0 (Nalthis) 11/2025"
+- Used in DMG filename: `YSocial-2.1.0.dmg`
+- Embedded in the .app bundle metadata
+
 ## Automated Builds (GitHub Actions)
 
 The repository includes a GitHub Actions workflow that automatically builds executables for Windows, macOS, and Linux.
@@ -11,7 +44,7 @@ The repository includes a GitHub Actions workflow that automatically builds exec
 The workflow can be triggered in three ways:
 
 1. **Manual trigger**: Go to Actions → Build Executables → Run workflow
-2. **Git tags**: Push a tag starting with `v` (e.g., `v1.0.0`)
+2. **Git tags**: Push a tag starting with `v` (e.g., `v2.1.0`)
 3. **Releases**: Create a new release on GitHub
 
 ### Artifacts

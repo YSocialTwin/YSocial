@@ -136,6 +136,11 @@ datas += [
 if os.path.exists(os.path.join(basedir, "images")):
     datas += [(os.path.join(basedir, "images"), "images")]
 
+# Add VERSION file
+version_file_path = os.path.join(basedir, "VERSION")
+if os.path.exists(version_file_path):
+    datas += [(version_file_path, ".")]
+
 # PyInstaller utils are now part of y_web package and will be included automatically
 # No need to explicitly add splash_screen.py and installation_id.py as separate files
 
