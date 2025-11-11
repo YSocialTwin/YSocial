@@ -51,8 +51,8 @@ class YSocialSplashScreen:
         try:
             logo_path = self._get_resource_path("images/YSocial_v.png")
             logo_img = Image.open(logo_path)
-            # Calculate dimensions preserving aspect ratio (target width ~150px)
-            logo_target_width = 150
+            # Calculate dimensions preserving aspect ratio (target width ~100px)
+            logo_target_width = 100
             logo_aspect_ratio = logo_img.width / logo_img.height
             logo_target_height = int(logo_target_width / logo_aspect_ratio)
             logo_img = logo_img.resize(
@@ -115,17 +115,17 @@ class YSocialSplashScreen:
         # Logo at top of left column
         if self.logo_photo:
             logo_label = tk.Label(left_column, image=self.logo_photo, bg="#1a1a2e")
-            logo_label.pack(pady=(20, 10))
+            logo_label.pack(pady=(10, 5))
         else:
             # Fallback if logo can't be loaded
             logo_label = tk.Label(
                 left_column,
                 text="YSocial",
-                font=("Helvetica", 24, "bold"),
+                font=("Helvetica", 18, "bold"),
                 fg="#0d95e8",
                 bg="#1a1a2e",
             )
-            logo_label.pack(pady=(20, 10))
+            logo_label.pack(pady=(10, 5))
 
         # Title
         title_label = tk.Label(
@@ -136,7 +136,7 @@ class YSocialSplashScreen:
             bg="#1a1a2e",
             justify=tk.CENTER,
         )
-        title_label.pack(pady=(10, 5))
+        title_label.pack(pady=(5, 3))
 
         # Subtitle
         subtitle_label = tk.Label(
@@ -147,11 +147,11 @@ class YSocialSplashScreen:
             bg="#1a1a2e",
             justify=tk.CENTER,
         )
-        subtitle_label.pack(pady=(0, 20))
+        subtitle_label.pack(pady=(0, 10))
 
         # Separator line
         separator = tk.Frame(left_column, bg="#0d95e8", height=2)
-        separator.pack(fill=tk.X, padx=20, pady=10)
+        separator.pack(fill=tk.X, padx=20, pady=8)
 
         # Authors section
         authors_title = tk.Label(
