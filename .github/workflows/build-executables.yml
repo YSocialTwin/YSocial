@@ -2,11 +2,11 @@ name: Build Executables
 
 on:
   workflow_dispatch:
-  push:
-    tags:
-      - 'v*'
-  release:
-    types: [created]
+#  push:
+#    tags:
+#      - 'v*'
+#  release:
+#    types: [created]
 
 jobs:
   build:
