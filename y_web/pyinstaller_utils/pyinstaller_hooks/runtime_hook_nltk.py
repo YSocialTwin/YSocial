@@ -15,6 +15,10 @@ if getattr(sys, "frozen", False):
     nltk_data_path = os.path.join(bundle_dir, "nltk_data")
 
     # Set NLTK data path
-    import nltk
-
-    nltk.data.path.insert(0, nltk_data_path)
+    try:
+        import nltk
+        nltk.data.path.insert(0, nltk_data_path)
+    except Exception as e:
+        # If NLTK import fails, just continue - it might not be needed yet
+        # The application will handle NLTK import errors when actually using it
+        pass
