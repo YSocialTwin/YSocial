@@ -166,9 +166,11 @@ The DMG includes a comprehensive uninstaller that:
 - **Safe**: Shows what will be deleted before proceeding
 - **Thorough**: Finds and removes:
   - YSocial.app from /Applications
+  - **PyInstaller standalone executables** (searches common locations)
   - All data directories (y_web/, db/, logs/, etc.)
   - Configuration files
   - User-created experiment data
+- **Selective**: Allows choosing which items to remove
 - **Interactive**: Asks for confirmation before deletion
 - **Size reporting**: Shows how much disk space will be freed
 
@@ -182,7 +184,7 @@ From the DMG:
 ```
 
 The uninstaller will:
-1. Scan for YSocial installations
+1. Scan for YSocial installations (.app bundle and PyInstaller executables)
 2. Display all found items with their sizes
 3. **Allow selective removal** - choose which items to delete
 4. Show selected items and confirm
@@ -193,6 +195,7 @@ The uninstaller will:
 Users can choose to remove:
 - Only the application (keep data)
 - Only data directories (keep application)
+- PyInstaller executable separately from .app bundle
 - Specific data folders (e.g., keep experiments, remove logs)
 - Everything at once
 
@@ -200,11 +203,12 @@ Users can choose to remove:
 ```
 Found items:
   [1] [Directory] /Applications/YSocial.app (150 MB)
-  [2] [Directory] ~/YSocial (45 MB)
+  [2] [File] ~/Downloads/dist/YSocial (180 MB)
+  [3] [Directory] ~/YSocial (45 MB)
   
-Your selection: 1    # Remove only the app
+Your selection: 1 2  # Remove both app forms
 # Or: all           # Remove everything
-# Or: 1 2           # Remove specific items
+# Or: 3             # Remove only data
 ```
 
 **Note:** May require sudo for system-level installations.

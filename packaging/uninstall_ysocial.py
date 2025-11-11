@@ -6,7 +6,7 @@ This script removes YSocial and all its generated data files.
 Works on macOS, Linux, and Windows.
 
 WARNING: This will permanently delete:
-- YSocial application
+- YSocial application (.app bundle or PyInstaller executable)
 - All databases (experiments, users, etc.)
 - All log files
 - All configuration files
@@ -94,6 +94,56 @@ def find_ysocial_data_in_cwd():
             dirs.clear()  # Don't recurse into this directory
     
     return data_dirs
+
+
+def find_pyinstaller_executables():
+    """
+    Find PyInstaller standalone executables in common locations.
+    
+    Returns:
+        list: List of Path objects pointing to PyInstaller executables
+    """
+    executables = []
+    home = Path.home()
+    system = platform.system()
+    
+    # Common locations where users might have the PyInstaller executable
+    search_paths = [
+        home / 'Downloads',
+        home / 'Desktop',
+        home / 'Documents',
+        home / 'Applications',
+        Path.cwd(),
+    ]
+    
+    # Executable name patterns based on platform
+    if system == 'Windows':
+        patterns = ['YSocial.exe', 'YSocial', 'ysocial.exe', 'ysocial']
+    else:
+        patterns = ['YSocial', 'ysocial']
+    
+    for search_path in search_paths:
+        if not search_path.exists():
+            continue
+            
+        # Search in the immediate directory and dist/ subdirectory
+        for pattern in patterns:
+            # Check direct location
+            exe_path = search_path / pattern
+            if exe_path.is_file() and os.access(exe_path, os.X_OK):
+                # Verify it's likely a PyInstaller executable by checking size (>10MB typically)
+                if exe_path.stat().st_size > 10 * 1024 * 1024:
+                    if exe_path not in executables:
+                        executables.append(exe_path)
+            
+            # Check in dist/ subdirectory (PyInstaller default output)
+            dist_exe_path = search_path / 'dist' / pattern
+            if dist_exe_path.is_file() and os.access(dist_exe_path, os.X_OK):
+                if dist_exe_path.stat().st_size > 10 * 1024 * 1024:
+                    if dist_exe_path not in executables:
+                        executables.append(dist_exe_path)
+    
+    return executables
 
 
 def get_directory_size(path):
@@ -312,6 +362,13 @@ def main():
     for data_dir in additional_dirs:
         if data_dir not in paths_to_remove and data_dir.exists():
             paths_to_remove.append(data_dir)
+    
+    # Search for PyInstaller executables
+    print("Searching for PyInstaller executables...")
+    pyinstaller_exes = find_pyinstaller_executables()
+    for exe_path in pyinstaller_exes:
+        if exe_path not in paths_to_remove and exe_path.exists():
+            paths_to_remove.append(exe_path)
     
     # Remove duplicates and sort
     paths_to_remove = sorted(set(paths_to_remove))
