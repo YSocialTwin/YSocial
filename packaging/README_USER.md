@@ -17,7 +17,7 @@ Welcome to YSocial! This guide will help you get started with using the applicat
 YSocial runs as a local web application. When you launch it:
 - A web interface will open automatically (desktop mode)
 - Or your default browser will open to http://localhost:8080 (browser mode)
-- Default login: `admin` / `admin` (change this after first login!)
+- Default login: `admin@ysocial.com` / `test` (change this after first login!)
 
 ## Command Line Options
 
@@ -53,6 +53,8 @@ YSocial supports various command-line flags for customization. To use them, open
 **Development:**
 - `-d, --debug` - Enable debug mode (more verbose logging)
 
+Please, refer to the online documentation for all options' details and needed dependencies (i.e., PostgreSQL server, ollama/vllm services).
+
 ### Usage Examples
 
 **Launch in browser mode:**
@@ -71,6 +73,9 @@ YSocial supports various command-line flags for customization. To use them, open
 ```
 
 **PostgreSQL database:**
+
+Assuming you have a PostgreSQL server running and configured:
+
 ```bash
 /Applications/YSocial.app/Contents/MacOS/YSocial --db postgresql
 ```
@@ -111,7 +116,7 @@ To completely remove YSocial and all its data:
 2. **The uninstaller will:**
    - Scan for YSocial.app and all data directories
    - **Search for PyInstaller standalone executables**
-   - **Search for installation tracking file** (installation_id.json)
+   - **Search for installation identification file** (installation_id.json used to track aggregated statistics in a fully anonymous way and to provide bug reports and usage statistics)
    - Display all found items with their sizes
    - **Let you select which items to remove** (individually or all)
    - Show selected items and total size to be freed
@@ -148,7 +153,7 @@ To completely remove YSocial and all its data:
 If you prefer to uninstall manually:
 1. Delete `/Applications/YSocial.app` (or PyInstaller executable)
 2. Delete any folders where you ran YSocial (containing `y_web/`, `db/`, etc.)
-3. Delete installation tracking file: `~/Library/Application Support/YSocial/installation_id.json` (macOS)
+3. Delete installation identification file: `~/Library/Application Support/YSocial/installation_id.json` (macOS)
 4. Common locations:
    - `~/YSocial/`
    - `~/Documents/YSocial/`
@@ -183,14 +188,13 @@ For comprehensive documentation, visit:
 
 - **GitHub Issues:** https://github.com/YSocialTwin/YSocial/issues
 - **Documentation:** https://ysocialtwin.github.io/
-- **Discord Community:** [Link in README]
 
 ## System Requirements
 
 - **macOS:** 10.13 (High Sierra) or later
 - **RAM:** 4GB minimum, 8GB+ recommended
 - **Storage:** 2GB+ for application and data
-- **Python:** 3.8+ (included in app bundle)
+- **Python:** 3.11+ (included in app bundle)
 
 ## Troubleshooting
 
@@ -221,9 +225,9 @@ See LICENSE file for details.
 
 ## Credits
 
-**Authors:** Rossetti, Stella, Cazabet, Abramski, Cau, Citraro, Failla, Improta, Morini, Pansanella
+**Maintainer:** [Giulio Rossetti](https://giuliorossetti.github.io/)
 
-**Year:** 2024
+**Year:** 2025
 
 ---
 
