@@ -190,7 +190,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
                 print(
-                    f"Client {cli_id} already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
                 )
                 return
             cl.days = int(remaining_rounds / 24)
