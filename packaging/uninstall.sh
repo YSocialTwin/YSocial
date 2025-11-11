@@ -6,7 +6,7 @@ set -e
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-UNINSTALLER="$SCRIPT_DIR/uninstall_ysocial.py"
+UNINSTALLER="$SCRIPT_DIR/.uninstall_ysocial.py"
 
 echo "YSocial Uninstaller"
 echo "==================="
