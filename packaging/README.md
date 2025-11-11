@@ -225,15 +225,15 @@ The uninstaller will:
    - Applied to DMG window via AppleScript
 
 2. **Window Layout:**
-   - Window size: 568x766 pixels (2x the background image: 284x383)
-   - Icon view with 72px icons (main app/Applications)
+   - Window size: 284x383 pixels (matches background image exactly)
+   - Icon view with 48px icons (compact, clean design)
    - Additional files (README, Uninstaller) shown at bottom
-   - YSocial.app positioned on middle left (x=100, y=320)
-   - Applications symlink on middle right (x=420, y=320)
-   - README.md at bottom left (x=140, y=620)
-   - Uninstall script at bottom right (x=380, y=620)
+   - YSocial.app positioned on middle left (x=50, y=160)
+   - Applications symlink on middle right (x=210, y=160)
+   - README.md at bottom left (x=70, y=310)
+   - Uninstall script at bottom right (x=190, y=310)
    - Icons aligned with arrow graphic in background image
-   - Window dimensions match background image aspect ratio
+   - Window dimensions exactly match background image (no scaling)
    - Clean, professional appearance
 
 3. **Visual Polish:**
@@ -265,9 +265,9 @@ BACKGROUND_IMAGE="path/to/your/background.png"
 In `create_dmg.sh`, modify the AppleScript bounds:
 
 ```applescript
-set the bounds of container window to {400, 100, 968, 866}
+set the bounds of container window to {400, 100, 684, 483}
 # Format: {left, top, right, bottom}
-# Current: 568x766 window (2x background image size: 284x383)
+# Current: 284x383 window (exact background image size)
 ```
 
 ### Change Icon Positions
@@ -275,10 +275,10 @@ set the bounds of container window to {400, 100, 968, 866}
 In `create_dmg.sh`, modify the icon positions:
 
 ```applescript
-set position of item "YSocial.app" of container window to {100, 320}
-set position of item "Applications" of container window to {420, 320}
+set position of item "YSocial.app" of container window to {50, 160}
+set position of item "Applications" of container window to {210, 160}
 # Format: {x, y} from top-left
-# Current positions are centered vertically to align with arrow in background
+# Current positions are centered to align with arrow in background
 ```
 
 ### Change Icon Size
@@ -286,9 +286,9 @@ set position of item "Applications" of container window to {420, 320}
 In `create_dmg.sh`, modify the icon size:
 
 ```applescript
-set icon size of viewOptions to 72
+set icon size of viewOptions to 48
 # Values: 16, 32, 48, 64, 72, 128, 256
-# Current: 72 (balanced size for app icons and additional files)
+# Current: 48 (compact size optimized for small window)
 ```
 
 ## Troubleshooting
