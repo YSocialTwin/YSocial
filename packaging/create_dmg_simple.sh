@@ -133,11 +133,11 @@ create-dmg \
     --volicon "$APP_BUNDLE/Contents/Resources/YSocial.icns" \
     $BACKGROUND_ARG \
     --window-pos 200 120 \
-    --window-size 600 400 \
+    --window-size 568 766 \
     --icon-size 128 \
-    --icon "${APP_NAME}.app" 150 190 \
+    --icon "${APP_NAME}.app" 140 550 \
     --hide-extension "${APP_NAME}.app" \
-    --app-drop-link 450 190 \
+    --app-drop-link 420 550 \
     "$FINAL_DMG" \
     "$STAGING_DIR"
 

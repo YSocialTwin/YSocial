@@ -158,15 +158,15 @@ tell application "Finder"
         set current view of container window to icon view
         set toolbar visible of container window to false
         set statusbar visible of container window to false
-        set the bounds of container window to {400, 100, 1000, 550}
+        set the bounds of container window to {400, 100, 968, 866}
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
         set icon size of viewOptions to 128
         set background picture of viewOptions to file ".background:background.png"
         
-        -- Position icons
-        set position of item "YSocial.app" of container window to {150, 200}
-        set position of item "Applications" of container window to {450, 200}
+        -- Position icons (adjusted for background size: 284x383, scaled 2x = 568x766)
+        set position of item "YSocial.app" of container window to {140, 550}
+        set position of item "Applications" of container window to {420, 550}
         
         close
         open
