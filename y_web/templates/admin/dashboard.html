@@ -336,7 +336,7 @@
             </div>
 
             <div class="columns">
-
+                    {% if llm_backend['backend'] is not none %}
                     <div class="column is-4">
                         <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Services</h3>
@@ -393,6 +393,7 @@
                         </div>
                     </div>
                     </div>
+                    {% endif %}
 
                     {% if llm_backend["status"] and llm_backend["installed"] %}
                     <div class="column is-4">
@@ -604,6 +605,20 @@
     </div>
 
 </div>
+
+<!-- Floating Database Status Indicator (only shown when no LLM backend is configured) -->
+{% if llm_backend['backend'] is none %}
+<div style="position: fixed; bottom: 20px; left: 20px; z-index: 1000; background: rgba(255, 255, 255, 0.95); border-radius: 8px; padding: 10px 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.1);">
+    <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="mdi mdi-database" style="font-size: 18px; color: #555;"></i>
+        <span style="font-size: 0.9em; color: #333; font-weight: 500;">{{ dbtype }}</span>
+        {% if db_server %}
+        <span style="font-size: 0.8em; color: #666;">({{ db_server }}:{{ dbport }})</span>
+        {% endif %}
+        <i class="mdi mdi-checkbox-blank-circle {% if db_conn %} active {% endif %}" style="font-size: 16px;"></i>
+    </div>
+</div>
+{% endif %}
 
 <script>
     // Experiment server control functions
