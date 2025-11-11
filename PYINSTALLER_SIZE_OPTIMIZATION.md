@@ -2,6 +2,8 @@
 
 This document describes the strategies applied to reduce the PyInstaller executable size.
 
+**IMPORTANT NOTE:** matplotlib, pandas, IPython, jupyter, notebook, jupyterlab, setuptools, pip, and wheel are **NOT** excluded from the build because they are required for YSocial's JupyterLab data science functionality.
+
 ## Optimization Strategies Applied
 
 ### 1. NLTK Data Minimization ✅
@@ -10,21 +12,24 @@ This document describes the strategies applied to reduce the PyInstaller executa
 
 **Implementation:**
 - Custom `hook-nltk.py` in `pyinstaller_hooks/`
-- Modified spec file to collect only `sentiment/vader_lexicon.zip`
+- Modified spec file to collect only `sentiment/vader_lexicon` via `collect_data_files()`
 - Hidden imports limited to `nltk.sentiment.vader`
 
 **Size Savings:** ~99MB
 
 ### 2. Excluded Unnecessary Packages ✅
 **Excluded packages:**
-- matplotlib, pandas (data science - not used)
 - pytest, unittest (testing frameworks)
-- IPython, notebook, jupyter (development tools)
-- setuptools, pip, wheel (packaging tools)
 - sphinx, docutils (documentation)
 - Unused NLTK modules (parsing, translation, etc.)
+- Unused visualization: seaborn, plotly, bokeh
 
-**Size Savings:** ~50-100MB depending on dependencies
+**RETAINED packages (needed for JupyterLab):**
+- matplotlib, pandas (data visualization and analysis)
+- IPython, jupyter, notebook, jupyterlab (interactive computing)
+- setuptools, pip, wheel (package management for notebook extensions)
+
+**Size Savings:** ~20-30MB (from excluded packages only)
 
 ### 3. Binary Stripping ✅
 **Enabled:** `strip=True` in EXE configuration
@@ -58,9 +63,12 @@ This document describes the strategies applied to reduce the PyInstaller executa
 - Many unused packages included
 
 ### After Optimization:
-- Expected size: 200-400MB (50% reduction)
+- Expected size: 400-600MB (~25% reduction)
 - NLTK data: ~1MB (99% reduction)
 - Only necessary packages included
+- JupyterLab and data science packages retained for functionality
+
+**Note:** The size reduction is more modest (~25% vs originally estimated 50%) because matplotlib, pandas, IPython, jupyter, notebook, jupyterlab, setuptools, pip, and wheel are required for YSocial's JupyterLab data science functionality and must be included.
 
 ## Testing
 

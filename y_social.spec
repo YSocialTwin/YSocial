@@ -11,11 +11,14 @@ This spec file bundles the entire YSocial application including:
 
 SIZE OPTIMIZATION STRATEGIES APPLIED:
 1. NLTK: Only VADER lexicon included (~1MB vs ~100MB full corpus)
-2. Excluded packages: matplotlib, pandas, pytest, IPython, notebook, etc.
-3. Binary stripping: Enabled to remove debug symbols
-4. UPX compression: Enabled with proper exclusions
-5. Minimal NLTK submodules: Only sentiment.vader imported
-6. Test/docs exclusion: Removed unittest, sphinx, setuptools, etc.
+2. Binary stripping: Enabled to remove debug symbols
+3. UPX compression: Enabled with proper exclusions
+4. Minimal NLTK submodules: Only sentiment.vader imported
+5. Test/docs exclusion: Removed unittest, sphinx, pytest, etc.
+6. Selective visualization: Excluded seaborn, plotly, bokeh (matplotlib/pandas kept for JupyterLab)
+
+NOTE: matplotlib, pandas, IPython, jupyter, notebook, jupyterlab, setuptools, pip, wheel
+are INCLUDED (not excluded) because they are required for JupyterLab data science functionality.
 """
 
 import os
@@ -101,25 +104,37 @@ datas = []
 
 # Add only VADER lexicon from NLTK (not all NLTK data)
 # This dramatically reduces size - from ~100MB to ~1MB of NLTK data
-import nltk
-import os as os_mod
-
-# Find NLTK data location
 try:
-    nltk_data_dir = nltk.data.find("sentiment/vader_lexicon.zip")
-    vader_dir = os_mod.path.dirname(nltk_data_dir)
-    sentiment_dir = os_mod.path.dirname(vader_dir)
+    # Use collect_data_files with subdir to properly handle NLTK data
+    vader_data = collect_data_files("nltk", subdir="sentiment/vader_lexicon")
+    if vader_data:
+        datas += vader_data
+        print(f"✓ Added VADER lexicon data ({len(vader_data)} files)")
+    else:
+        print("⚠ No VADER lexicon data found via collect_data_files")
+        # Try alternative approach
+        import nltk
 
-    # Add only the VADER lexicon
-    datas += [(nltk_data_dir, "nltk_data/sentiment")]
-    print(f"✓ Added VADER lexicon from: {nltk_data_dir}")
-except LookupError:
-    print("⚠ VADER lexicon not found - will collect minimal NLTK data")
-    # Fallback: collect minimal nltk data
+        try:
+            # Find the data and add it manually
+            vader_path = nltk.data.find("sentiment/vader_lexicon.zip")
+            # Convert to string path if it's a special object
+            vader_str = (
+                str(vader_path) if hasattr(vader_path, "__fspath__") else vader_path
+            )
+            if isinstance(vader_str, str) and os.path.exists(vader_str):
+                datas += [(vader_str, "nltk_data/sentiment")]
+                print(f"✓ Added VADER lexicon from: {vader_str}")
+        except (LookupError, AttributeError, TypeError) as e:
+            print(f"⚠ Could not find VADER lexicon: {e}")
+except Exception as e:
+    print(f"⚠ Error collecting VADER lexicon: {e}")
+    # Fallback: try to collect minimal nltk sentiment data
     try:
-        datas += collect_data_files("nltk", subdir="sentiment/vader_lexicon")
-    except:
-        pass
+        datas += collect_data_files("nltk", subdir="sentiment")
+        print("✓ Collected sentiment data as fallback")
+    except Exception:
+        print("⚠ Could not collect any NLTK data")
 
 # Collect package metadata for packages that use importlib.metadata
 # This fixes "PackageNotFoundError: No package metadata was found for X" errors
@@ -211,16 +226,9 @@ a = Analysis(
     ],
     excludes=[
         # Exclude unused packages to reduce size
-        "matplotlib",
-        "matplotlib.pyplot",
-        "matplotlib.backends",
-        "pandas",
-        "pandas.io",
+        # NOTE: matplotlib, pandas, IPython, notebook, jupyter, jupyterlab, setuptools, pip, wheel
+        # are NOT excluded because they are needed for JupyterLab functionality
         "pytest",
-        "IPython",
-        "notebook",
-        "jupyter",
-        "jupyterlab",  # Already excluded elsewhere but ensure it's here
         # Exclude unused test modules
         "unittest",
         "test",
@@ -229,10 +237,6 @@ a = Analysis(
         # Exclude documentation
         "sphinx",
         "docutils",
-        # Exclude development tools
-        "setuptools",
-        "pip",
-        "wheel",
         # Exclude unused NLTK modules (keep only sentiment)
         "nltk.tokenize.stanford",
         "nltk.translate",
@@ -240,13 +244,7 @@ a = Analysis(
         "nltk.parse",
         "nltk.tag.stanford",
         "nltk.stem.snowball",
-        # Exclude tkinter if not needed (we use it for splash, so keep it)
-        # Exclude unused scientific packages
-        "matplotlib.tests",
-        "scipy.stats.tests",
-        "numpy.tests",
-        "sklearn.tests",
-        # Exclude unused data science packages
+        # Exclude unused scientific visualization
         "seaborn",
         "plotly",
         "bokeh",
