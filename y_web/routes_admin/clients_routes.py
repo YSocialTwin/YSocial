@@ -61,15 +61,19 @@ def reset_client(uid):
     """Handle reset client operation."""
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # delete experiment json files
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
-    path = f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{population.name}.json"
+    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}{population.name}.json"
     if os.path.exists(path):
         os.remove(path)
 
-    path = f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
+    path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json"
     if os.path.exists(path):
         os.remove(path)
 
@@ -78,7 +82,7 @@ def reset_client(uid):
         prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
         shutil.copy(
             prompts_src,
-            f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
         )
     elif exp.platform_type == "forum":
         prompts_src = get_resource_path(
@@ -86,7 +90,7 @@ def reset_client(uid):
         )
         shutil.copy(
             prompts_src,
-            f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}{os.sep}prompts.json",
         )
     else:
         raise Exception(f"unsupported platform: {exp.platform_type}")
@@ -853,7 +857,9 @@ def create_client():
         # get agent ids for all agents in populations
         agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
 
-        BASE = os.path.dirname(os.path.abspath(__file__))
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE = get_writable_path()
         dbtypte = get_db_type()
 
         if dbtypte == "sqlite":
@@ -861,9 +867,7 @@ def create_client():
         else:
             exp_folder = exp.db_name.removeprefix("experiments_")
 
-        network_path = f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv".replace(
-            f"routes_admin{os.sep}", ""
-        )
+        network_path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv"
 
         if network_file and network_file.filename:
             # Handle uploaded network file
@@ -1006,10 +1010,12 @@ def delete_client(uid):
     db.session.delete(client)
     db.session.commit()
 
+    from y_web.utils.path_utils import get_writable_path
+
     # remove the db file on the client
-    BASE_PATH = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
+    BASE_PATH = get_writable_path()
     path = (
-        f"{BASE_PATH}external{os.sep}YClient{os.sep}experiments{os.sep}{client.name}.db"
+        f"{BASE_PATH}{os.sep}external{os.sep}YClient{os.sep}experiments{os.sep}{client.name}.db"
     )
     if os.path.exists(path):
         os.remove(path)
@@ -1325,10 +1331,11 @@ def download_agent_list(uid):
 
     # get the experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    
+    from y_web.utils.path_utils import get_writable_path
+
     # get the experiment folder
-    BASE = os.path.dirname(os.path.abspath(__file__)).replace(
-        f"{os.sep}routes_admin", ""
-    )
+    BASE = get_writable_path()
 
     dbtypte = get_db_type()
 
@@ -1338,7 +1345,7 @@ def download_agent_list(uid):
         exp_folder = exp.db_name.removeprefix("experiments_")
 
     with open(
-        f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
+        f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
         "w",
     ) as f:
         for a in agents:
@@ -1347,7 +1354,7 @@ def download_agent_list(uid):
         f.flush()
 
     return send_file(
-        f"{BASE}{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
+        f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
         as_attachment=True,
     )
 

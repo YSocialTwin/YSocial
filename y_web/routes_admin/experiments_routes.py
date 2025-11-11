@@ -914,19 +914,29 @@ def upload_database():
     """Upload database."""
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     database = request.files["sqlite_filename"]
     config = request.files["yserver_filename"]
     uid = uuid.uuid4()
-    pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
         parents=True, exist_ok=True
     )
 
-    database.save(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db")
-    config.save(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+    database.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
+    )
+    config.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+    )
 
     try:
         experiment = json.load(
-            open(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+            )
         )
         experiment = experiment["name"]
 
@@ -937,7 +947,10 @@ def upload_database():
             flash(
                 "The experiment already exists. Please check the experiment name and try again."
             )
-            shutil.rmtree(f"y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return settings()
 
         exp = Exps(
@@ -963,7 +976,10 @@ def upload_database():
             "There was an error loading the experiment files. Please check the files and try again."
         )
         # remove the directory containing the files
-        shutil.rmtree(f"y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
 
     return settings()
 
@@ -1005,13 +1021,16 @@ def create_experiment():
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     uid = str(uuid.uuid4()).replace("-", "_")
-    pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
         parents=True, exist_ok=True
     )
 
-    db_uri = os.getcwd().split("y_web")[0]
-    db_uri = f"{db_uri}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
+    db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
@@ -1021,7 +1040,7 @@ def create_experiment():
             )
             shutil.copyfile(
                 clean_db_source,
-                f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
             )
         elif db_type == "postgresql":
             from urllib.parse import urlparse
@@ -1136,7 +1155,8 @@ def create_experiment():
     }
 
     with open(
-        f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json", "w"
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
+        "w",
     ) as f:
         json.dump(config, f, indent=4)
 
