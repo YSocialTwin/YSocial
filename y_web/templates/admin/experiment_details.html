@@ -239,9 +239,11 @@
                                     <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
                                         <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         {{ client.name }}
+                                        {% if client_executions.get(client.id, False) %}
                                         <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
                                             <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
                                         </a>
+                                        {% endif %}
                                     </span>
                                     <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
                                         <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">

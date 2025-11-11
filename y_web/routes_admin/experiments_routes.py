@@ -1450,6 +1450,13 @@ def experiment_details(uid):
     # get experiment clients
     clients = Client.query.filter_by(id_exp=uid).all()
 
+    # get client execution data to check if clients have been run
+    client_executions = {}
+    for client in clients:
+        execution = Client_Execution.query.filter_by(client_id=client.id).first()
+        # Client has been run at least once if execution exists and elapsed_time > 0
+        client_executions[client.id] = execution and execution.elapsed_time > 0
+
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1465,6 +1472,7 @@ def experiment_details(uid):
         "admin/experiment_details.html",
         experiment=experiment,
         clients=clients,
+        client_executions=client_executions,
         users=users,
         len=len,
         dbtype=dbtype,

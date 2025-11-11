@@ -101,6 +101,21 @@ class YSocialSplashScreen:
 
         return os.path.join(base_path, relative_path)
 
+    def _get_version(self):
+        """
+        Read version from VERSION file.
+
+        Returns:
+            Version string (e.g., "2.0.0")
+        """
+        try:
+            version_path = self._get_resource_path("VERSION")
+            with open(version_path, "r") as f:
+                return f.read().strip()
+        except Exception as e:
+            print(f"Warning: Could not read VERSION file: {e}")
+            return "2.0.0"  # Fallback version
+
     def _create_content(self):
         """Create the splash screen content with two-column layout."""
         # Create two-column layout
@@ -174,10 +189,11 @@ class YSocialSplashScreen:
         )
         authors_label.pack(pady=(0, 10))
 
-        # Release date
+        # Release date with version from VERSION file
+        version = self._get_version()
         release_label = tk.Label(
             left_column,
-            text="v2.0.0 (Nalthis) 11/2025",
+            text=f"v{version} (Nalthis) 11/2025",
             font=("Helvetica", 9, "bold"),
             fg="#0d95e8",
             bg="#1a1a2e",
