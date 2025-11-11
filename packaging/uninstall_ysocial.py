@@ -132,7 +132,7 @@ def confirm_uninstall(paths_to_remove):
     print("\n" + "="*70)
     print("YSocial Uninstaller")
     print("="*70)
-    print("\nThe following items will be permanently deleted:\n")
+    print("\nThe following items were found:\n")
     
     total_size = 0
     found_items = False
@@ -157,6 +157,101 @@ def confirm_uninstall(paths_to_remove):
     
     response = input("\nDo you want to continue? Type 'yes' to proceed: ").strip().lower()
     return response == 'yes'
+
+
+def select_items_to_remove(paths_to_remove):
+    """
+    Allow user to select which items to remove.
+    
+    Args:
+        paths_to_remove: List of Path objects that can be removed
+        
+    Returns:
+        list: List of Path objects selected for removal
+    """
+    print("\n" + "="*70)
+    print("YSocial Uninstaller - Select Items to Remove")
+    print("="*70)
+    print("\nThe following items were found:\n")
+    
+    # Create a list of items with their details
+    items = []
+    for i, path in enumerate(paths_to_remove, 1):
+        if path.exists():
+            size = get_directory_size(path) if path.is_dir() else path.stat().st_size
+            item_type = "Directory" if path.is_dir() else "File"
+            items.append({
+                'number': i,
+                'path': path,
+                'size': size,
+                'type': item_type
+            })
+            print(f"  [{i}] [{item_type}] {path}")
+            print(f"      Size: {format_size(size)}")
+    
+    if not items:
+        print("  No YSocial files found on this system.")
+        return []
+    
+    total_size = sum(item['size'] for item in items)
+    print(f"\nTotal size: {format_size(total_size)}")
+    
+    print("\n" + "="*70)
+    print("Selection Options:")
+    print("  - Enter item numbers separated by spaces (e.g., '1 3 5')")
+    print("  - Enter 'all' to select all items")
+    print("  - Enter 'none' or press Enter to cancel")
+    print("="*70)
+    
+    while True:
+        response = input("\nYour selection: ").strip().lower()
+        
+        if response == '' or response == 'none':
+            return []
+        
+        if response == 'all':
+            return [item['path'] for item in items]
+        
+        # Parse selection
+        try:
+            numbers = [int(n.strip()) for n in response.split()]
+            selected = []
+            invalid = []
+            
+            for num in numbers:
+                if 1 <= num <= len(items):
+                    selected.append(items[num - 1]['path'])
+                else:
+                    invalid.append(num)
+            
+            if invalid:
+                print(f"  ⚠ Invalid item numbers: {', '.join(map(str, invalid))}")
+                print(f"  Please enter numbers between 1 and {len(items)}")
+                continue
+            
+            if selected:
+                # Show selected items and confirm
+                print(f"\n  Selected {len(selected)} item(s):")
+                selected_size = 0
+                for item in items:
+                    if item['path'] in selected:
+                        print(f"    [{item['number']}] {item['path']}")
+                        selected_size += item['size']
+                print(f"\n  Total size to be freed: {format_size(selected_size)}")
+                
+                confirm = input("\n  Confirm selection? (yes/no): ").strip().lower()
+                if confirm == 'yes':
+                    return selected
+                else:
+                    print("\n  Selection cancelled. Please select again.")
+                    continue
+            else:
+                print("  No items selected.")
+                return []
+                
+        except ValueError:
+            print("  ⚠ Invalid input. Please enter numbers, 'all', or 'none'.")
+            continue
 
 
 def remove_path(path):
@@ -225,17 +320,29 @@ def main():
         print("\n✓ No YSocial installation found on this system.")
         return 0
     
-    # Confirm with user
-    if not confirm_uninstall(paths_to_remove):
+    # Let user select which items to remove
+    selected_paths = select_items_to_remove(paths_to_remove)
+    
+    if not selected_paths:
+        print("\nUninstallation cancelled.")
+        return 1
+    
+    # Final confirmation with warning
+    print("\n" + "="*70)
+    print("WARNING: This action cannot be undone!")
+    print("="*70)
+    final_confirm = input("\nType 'DELETE' to proceed with removal: ").strip()
+    
+    if final_confirm != 'DELETE':
         print("\nUninstallation cancelled.")
         return 1
     
     # Perform uninstallation
-    print("\nRemoving YSocial...\n")
+    print("\nRemoving selected items...\n")
     success_count = 0
     fail_count = 0
     
-    for path in paths_to_remove:
+    for path in selected_paths:
         if remove_path(path):
             success_count += 1
         else:
@@ -244,10 +351,10 @@ def main():
     # Summary
     print("\n" + "="*70)
     if fail_count == 0:
-        print("✓ YSocial has been successfully uninstalled!")
+        print("✓ Selected items have been successfully removed!")
         print(f"  Removed {success_count} item(s)")
     else:
-        print("⚠ YSocial uninstallation completed with errors")
+        print("⚠ Removal completed with errors")
         print(f"  Successfully removed: {success_count} item(s)")
         print(f"  Failed to remove: {fail_count} item(s)")
         print("\nSome items may require administrator/sudo privileges.")

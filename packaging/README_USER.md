@@ -109,12 +109,33 @@ To completely remove YSocial and all its data:
      ```
    
 2. **The uninstaller will:**
-   - Find and remove YSocial.app from Applications
-   - Locate and remove all YSocial data directories
-   - Show you what will be deleted before proceeding
-   - Ask for confirmation
+   - Scan for YSocial.app and all data directories
+   - Display all found items with their sizes
+   - **Let you select which items to remove** (individually or all)
+   - Show selected items and total size to be freed
+   - Ask for final confirmation before deletion
    
-3. **If you need sudo privileges:**
+3. **Selection options:**
+   - Enter item numbers separated by spaces (e.g., `1 3 5`)
+   - Enter `all` to remove everything
+   - Enter `none` or press Enter to cancel
+   
+4. **Example uninstall session:**
+   ```
+   Found items:
+     [1] [Directory] /Applications/YSocial.app (Size: 150 MB)
+     [2] [Directory] ~/YSocial (Size: 45 MB)
+     [3] [Directory] ~/Documents/YSocialData (Size: 120 MB)
+   
+   Your selection: 1 3
+   
+   Selected 2 items: (270 MB)
+   Confirm? yes
+   
+   Type 'DELETE' to proceed: DELETE
+   ```
+   
+5. **If you need sudo privileges:**
    ```bash
    sudo ./uninstall.sh
    ```

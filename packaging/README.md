@@ -183,10 +183,29 @@ From the DMG:
 
 The uninstaller will:
 1. Scan for YSocial installations
-2. Show what will be deleted and total size
-3. Ask for confirmation (type 'yes' to proceed)
-4. Remove all YSocial files
-5. Report results
+2. Display all found items with their sizes
+3. **Allow selective removal** - choose which items to delete
+4. Show selected items and confirm
+5. Require final 'DELETE' confirmation
+6. Remove selected files and report results
+
+**Selective Deletion:**
+Users can choose to remove:
+- Only the application (keep data)
+- Only data directories (keep application)
+- Specific data folders (e.g., keep experiments, remove logs)
+- Everything at once
+
+**Example interaction:**
+```
+Found items:
+  [1] [Directory] /Applications/YSocial.app (150 MB)
+  [2] [Directory] ~/YSocial (45 MB)
+  
+Your selection: 1    # Remove only the app
+# Or: all           # Remove everything
+# Or: 1 2           # Remove specific items
+```
 
 **Note:** May require sudo for system-level installations.
 
