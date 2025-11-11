@@ -130,6 +130,22 @@ fi
 echo "🔗 Creating Applications symlink..."
 ln -s /Applications "$STAGING_DIR/Applications"
 
+# Copy uninstall script and user README to DMG
+echo "📄 Adding uninstall script and README..."
+if [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+    cp "$SCRIPT_DIR/uninstall.sh" "$STAGING_DIR/Uninstall YSocial.command"
+    chmod +x "$STAGING_DIR/Uninstall YSocial.command"
+fi
+
+if [ -f "$SCRIPT_DIR/uninstall_ysocial.py" ]; then
+    cp "$SCRIPT_DIR/uninstall_ysocial.py" "$STAGING_DIR/.uninstall_ysocial.py"
+    chmod +x "$STAGING_DIR/.uninstall_ysocial.py"
+fi
+
+if [ -f "$SCRIPT_DIR/README_USER.md" ]; then
+    cp "$SCRIPT_DIR/README_USER.md" "$STAGING_DIR/README.md"
+fi
+
 # Calculate DMG size (in MB, with 20% padding)
 echo "📏 Calculating DMG size..."
 APP_SIZE=$(du -sm "$APP_BUNDLE" | cut -f1)
@@ -161,12 +177,16 @@ tell application "Finder"
         set the bounds of container window to {400, 100, 968, 866}
         set viewOptions to the icon view options of container window
         set arrangement of viewOptions to not arranged
-        set icon size of viewOptions to 128
+        set icon size of viewOptions to 72
         set background picture of viewOptions to file ".background:background.png"
         
         -- Position icons (centered vertically to align with arrow in background)
         set position of item "YSocial.app" of container window to {100, 320}
         set position of item "Applications" of container window to {420, 320}
+        
+        -- Position additional files (smaller, at bottom)
+        set position of item "README.md" of container window to {140, 620}
+        set position of item "Uninstall YSocial.command" of container window to {380, 620}
         
         close
         open

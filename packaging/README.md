@@ -10,7 +10,18 @@ The DMG packaging scripts transform the PyInstaller-built YSocial executable int
 - **Drag-to-Applications** shortcut for easy installation
 - **Professional .app bundle** with proper macOS metadata
 - **Custom icon** throughout the installer
+- **Uninstall script** for complete removal
+- **User README** with comprehensive usage instructions
 - **Compressed DMG** for efficient distribution
+
+## Files in This Directory
+
+- **`create_dmg.sh`** - Main DMG creation script (no external dependencies)
+- **`create_dmg_simple.sh`** - Alternative using create-dmg tool
+- **`uninstall_ysocial.py`** - Platform-independent uninstaller (Python)
+- **`uninstall.sh`** - Shell wrapper for the uninstaller
+- **`README_USER.md`** - User-facing documentation included in DMG
+- **`README.md`** (this file) - Developer documentation
 
 ## Prerequisites
 
@@ -116,9 +127,11 @@ Mount and test the DMG before distribution:
 open dist/YSocial-1.0.0.dmg
 
 # The DMG window should show:
-# - YSocial.app icon on the left
-# - Applications folder shortcut on the right
-# - Custom background image
+# - YSocial.app icon (center left)
+# - Applications folder shortcut (center right)
+# - README.md file (bottom left)
+# - Uninstall YSocial.command (bottom right)
+# - Custom background image with arrow
 # - Drag YSocial.app to Applications to install
 ```
 
@@ -129,6 +142,53 @@ The DMG file is now ready for distribution! You can:
 - Attach it to a GitHub release
 - Share it via download links
 - Include it in documentation
+
+## DMG Contents
+
+When users open the DMG, they will find:
+
+1. **YSocial.app** - The main application (drag to Applications)
+2. **Applications** - Symlink to /Applications folder (drag target)
+3. **README.md** - User documentation with:
+   - Installation instructions
+   - All command-line flags and options
+   - Where data is stored
+   - Uninstall instructions
+   - Troubleshooting guide
+4. **Uninstall YSocial.command** - Uninstaller script (double-click to run)
+5. **Background image** - Custom YSocial splash screen with arrow
+
+## Uninstaller
+
+The DMG includes a comprehensive uninstaller that:
+
+- **Platform-independent**: Written in Python, works on macOS, Linux, Windows
+- **Safe**: Shows what will be deleted before proceeding
+- **Thorough**: Finds and removes:
+  - YSocial.app from /Applications
+  - All data directories (y_web/, db/, logs/, etc.)
+  - Configuration files
+  - User-created experiment data
+- **Interactive**: Asks for confirmation before deletion
+- **Size reporting**: Shows how much disk space will be freed
+
+### Using the Uninstaller
+
+From the DMG:
+```bash
+# Double-click "Uninstall YSocial.command" in the DMG
+# Or from Terminal:
+./uninstall.sh
+```
+
+The uninstaller will:
+1. Scan for YSocial installations
+2. Show what will be deleted and total size
+3. Ask for confirmation (type 'yes' to proceed)
+4. Remove all YSocial files
+5. Report results
+
+**Note:** May require sudo for system-level installations.
 
 ## What the Scripts Do
 
@@ -166,9 +226,12 @@ The DMG file is now ready for distribution! You can:
 
 2. **Window Layout:**
    - Window size: 568x766 pixels (2x the background image: 284x383)
-   - Icon view with 128px icons
+   - Icon view with 72px icons (main app/Applications)
+   - Additional files (README, Uninstaller) shown at bottom
    - YSocial.app positioned on middle left (x=100, y=320)
    - Applications symlink on middle right (x=420, y=320)
+   - README.md at bottom left (x=140, y=620)
+   - Uninstall script at bottom right (x=380, y=620)
    - Icons aligned with arrow graphic in background image
    - Window dimensions match background image aspect ratio
    - Clean, professional appearance
@@ -223,8 +286,9 @@ set position of item "Applications" of container window to {420, 320}
 In `create_dmg.sh`, modify the icon size:
 
 ```applescript
-set icon size of viewOptions to 128
-# Values: 16, 32, 48, 64, 128, 256
+set icon size of viewOptions to 72
+# Values: 16, 32, 48, 64, 72, 128, 256
+# Current: 72 (balanced size for app icons and additional files)
 ```
 
 ## Troubleshooting

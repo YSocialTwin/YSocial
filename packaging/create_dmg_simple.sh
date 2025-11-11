@@ -113,6 +113,22 @@ if [ -f "$PROJECT_ROOT/$ICON_FILE" ]; then
     fi
 fi
 
+# Copy uninstall script and user README to DMG
+echo "📄 Adding uninstall script and README..."
+if [ -f "$SCRIPT_DIR/uninstall.sh" ]; then
+    cp "$SCRIPT_DIR/uninstall.sh" "$STAGING_DIR/Uninstall YSocial.command"
+    chmod +x "$STAGING_DIR/Uninstall YSocial.command"
+fi
+
+if [ -f "$SCRIPT_DIR/uninstall_ysocial.py" ]; then
+    cp "$SCRIPT_DIR/uninstall_ysocial.py" "$STAGING_DIR/.uninstall_ysocial.py"
+    chmod +x "$STAGING_DIR/.uninstall_ysocial.py"
+fi
+
+if [ -f "$SCRIPT_DIR/README_USER.md" ]; then
+    cp "$SCRIPT_DIR/README_USER.md" "$STAGING_DIR/README.md"
+fi
+
 # Create DMG using create-dmg tool
 echo "💿 Creating DMG..."
 
@@ -125,7 +141,7 @@ fi
 # Icon argument if available
 ICON_ARG=""
 if [ -f "$APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
-    ICON_ARG="--icon-size 128 --icon $APP_BUNDLE/Contents/Resources/YSocial.icns"
+    ICON_ARG="--icon-size 72 --icon $APP_BUNDLE/Contents/Resources/YSocial.icns"
 fi
 
 create-dmg \
@@ -134,10 +150,12 @@ create-dmg \
     $BACKGROUND_ARG \
     --window-pos 200 120 \
     --window-size 568 766 \
-    --icon-size 128 \
+    --icon-size 72 \
     --icon "${APP_NAME}.app" 100 320 \
     --hide-extension "${APP_NAME}.app" \
     --app-drop-link 420 320 \
+    --icon "README.md" 140 620 \
+    --icon "Uninstall YSocial.command" 380 620 \
     "$FINAL_DMG" \
     "$STAGING_DIR"
 
