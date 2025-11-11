@@ -288,6 +288,14 @@
                         }
                     </script>
 
+
+                </div>
+
+
+                <!--Dashboard column-->
+                <div class="column is-4">
+                    <!--Dashboard box-->
+
                     <div class="dashboard-box is-compact">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
                         <div class="help-block">
@@ -298,17 +306,17 @@
                             <hr>
                             <p>
                                 <b>1. Create one or more Agent Populations</b><br>
-                                Define one or more <a href="http://localhost:8080/admin/populations">Agent Populations</a>.
+                                Define one or more <a href="/admin/populations">Agent Populations</a>.
                             </p>
                             <hr>
                             <p>
-                                <b>2. Add Custom Agents/Pages (Optional) to an existing population</b><br>
-                                Create ad-hoc synthetic <a href="http://localhost:8080/admin/agents">agents</a> or <a href="http://localhost:8080/admin/pages">pages</a> and add them to an existing population.
+                                <b>2. Add Agents/Pages to an existing population</b><br>
+                                Create ad-hoc synthetic <a href="/admin/agents">agents</a> or <a href="/admin/pages">pages</a> and add them to an existing population.
                             </p>
                             <hr>
                             <p>
                                 <b>3. Create an Experiment</b><br>
-                                Set up a new <a href="http://localhost:8080/admin/experiments">Experiment</a> to define your simulation environment.
+                                Describe your simulation with an <a href="/admin/experiments">Experiment</a>.
                             </p>
                             <hr>
                             <p>
@@ -318,18 +326,20 @@
                             <hr>
                             <p>
                                 <b>5. Run the Simulation</b><br>
-                                Start the experiment server and run the clients to begin the simulation.
+                                Start the experiment and run the clients to begin your simulation.
                             </p>
                         </div>
                     </div>
+
                 </div>
 
+            </div>
 
+            <div class="columns">
 
-                <!--Dashboard column-->
-                <div class="column is-4">
-                    <!--Dashboard box-->
-                    <div class="dashboard-box">
+                    <div class="column-is-4">
+                        <!-- Empty column for spacing -->
+                         <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Services</h3>
                         <hr>
                         <div class="box-content">
@@ -383,213 +393,213 @@
 
                         </div>
                     </div>
+                    </div>
 
                     {% if llm_backend["status"] and llm_backend["installed"] %}
+                    <div class="column-is-4">
+                        {% if len(models) > 0 %}
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Available LLMs</h3>
 
+                            <div class="box-content">
+                                <div id="models-table"></div>
 
-                    {% if len(models) > 0 %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available LLMs</h3>
+                                <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
-                        <div class="box-content">
-                            <div id="models-table"></div>
+                                <style>
+                                  #models-table td {
+                                    vertical-align: middle !important;
+                                  }
+                                </style>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                                <script>
+                                    const modelsTableDiv = document.getElementById('models-table');
 
-                            <style>
-                              #models-table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
+                                    const updateUrl = (prev, query) => {
+                                        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+                                    };
 
-                            <script>
-                                const modelsTableDiv = document.getElementById('models-table');
+                                    new gridjs.Grid({
+                                        columns: [
+                                            { id: 'model_name', name: 'Model Name', sort: true },
+                                            {
+                                                id: 'actions',
+                                                name: 'Actions',
+                                                sort: false,
+                                                formatter: (cell, row) => {
+                                                    const modelName = row.cells[0].data;
+                                                    const backend = '{{ llm_backend["backend"] }}';
 
-                                const updateUrl = (prev, query) => {
-                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-                                };
-
-                                new gridjs.Grid({
-                                    columns: [
-                                        { id: 'model_name', name: 'Model Name', sort: true },
-                                        {
-                                            id: 'actions',
-                                            name: 'Actions',
-                                            sort: false,
-                                            formatter: (cell, row) => {
-                                                const modelName = row.cells[0].data;
-                                                const backend = '{{ llm_backend["backend"] }}';
-                                                
-                                                // Only show delete button for Ollama backend
-                                                if (backend === 'ollama') {
-                                                    return gridjs.html(`
-                                                        <div style="display: flex; gap: 8px; justify-content: center;">
-                                                            <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
-                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                                                Delete
-                                                            </a>
-                                                        </div>
-                                                    `);
-                                                } else {
-                                                    return gridjs.html(`<div style="text-align: center;">-</div>`);
+                                                    // Only show delete button for Ollama backend
+                                                    if (backend === 'ollama') {
+                                                        return gridjs.html(`
+                                                            <div style="display: flex; gap: 8px; justify-content: center;">
+                                                                <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
+                                                                   style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                    Delete
+                                                                </a>
+                                                            </div>
+                                                        `);
+                                                    } else {
+                                                        return gridjs.html(`<div style="text-align: center;">-</div>`);
+                                                    }
                                                 }
-                                            }
-                                        },
-                                    ],
-                                    server: {
-                                        url: '/admin/models_data',
-                                        then: results => results.data,
-                                        total: results => results.total,
-                                    },
-                                    search: {
-                                        enabled: true,
+                                            },
+                                        ],
                                         server: {
-                                            url: (prev, search) => {
-                                                return updateUrl(prev, { search });
+                                            url: '/admin/models_data',
+                                            then: results => results.data,
+                                            total: results => results.total,
+                                        },
+                                        search: {
+                                            enabled: true,
+                                            server: {
+                                                url: (prev, search) => {
+                                                    return updateUrl(prev, { search });
+                                                },
                                             },
                                         },
-                                    },
-                                    sort: {
-                                        enabled: true,
-                                        multiColumn: false,
-                                        server: {
-                                            url: (prev, columns) => {
-                                                const columnIds = ['model_name'];
-                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                                                return updateUrl(prev, { sort });
+                                        sort: {
+                                            enabled: true,
+                                            multiColumn: false,
+                                            server: {
+                                                url: (prev, columns) => {
+                                                    const columnIds = ['model_name'];
+                                                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                                                    return updateUrl(prev, { sort });
+                                                },
                                             },
                                         },
-                                    },
-                                    pagination: {
-                                        enabled: true,
-                                        limit: 4,
-                                        server: {
-                                            url: (prev, page, limit) => {
-                                                return updateUrl(prev, { start: page * limit, length: limit });
+                                        pagination: {
+                                            enabled: true,
+                                            limit: 4,
+                                            server: {
+                                                url: (prev, page, limit) => {
+                                                    return updateUrl(prev, { start: page * limit, length: limit });
+                                                },
                                             },
                                         },
-                                    },
-                                }).render(modelsTableDiv);
-                            </script>
+                                    }).render(modelsTableDiv);
+                                </script>
+                            </div>
                         </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
 
-                    {% if llm_backend['backend'] == 'ollama' %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Add LLM Model</h3>
-                         <div class="box-content">
-                            <div class="box-lines">
-                                 <div class="box-line">
-                                    <span class="left">
-                                        If the model you want to use is not available, you can pull it from the Ollama server.
-                                        For a list of available models refer to the <a href="https://ollama.com/search">Ollama directory</a>.
-                                    </span>
-                                 </div>
-                            </div>
-                         </div>
-
-                        <hr>
-
-                        <div class="box-content">
-                            <form action="/admin/ollama_pull" enctype="multipart/form-data" method="POST">
-                            <div class="box-lines">
-                                <div class="box-line">
-                                    <span class="left">Model Name</span>
-                                    <span class="right">
-                                        <input type="text" name="model_name" class="input" value="">
-                                    </span>
+                    <div class="column-is-4">
+                         {% if llm_backend['backend'] == 'ollama' %}
+                        <div class="dashboard-box">
+                            <h3 class="title is-5 is-thin">Add LLM Model</h3>
+                             <div class="box-content">
+                                <div class="box-lines">
+                                     <div class="box-line">
+                                        <span class="left">
+                                            If the model you want to use is not available, you can pull it from the Ollama server.
+                                            For a list of available models refer to the <a href="https://ollama.com/search">Ollama directory</a>.
+                                        </span>
+                                     </div>
                                 </div>
-                                 <div class="box-line">
-                                    <span class="left"></span>
-                                    <span class="right">
+                             </div>
 
-                                    <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Download Model
-                                    </button>
-                                </div>
-                                    </span>
-                                </div>
-                            </div>
-                             <div class="box-lines">
-                                {% for pull in active_pulls %}
+                            <hr>
 
-                                {% if pull[1] < 1 %}
-                                <div class="box-line">
-                                <span class="left" id="model_pull_name_{{ pull[0] }}">
-                                    {{ pull[0] }}
-                                </span>
-                                 <span class="right" style="height: 22px; width: 70%;">
-                                <div class="progress" style="height: 22px; width: 100%;" >
-                                    <div id="pull-progress-bar_{{ pull[0] }}" class="progress-bar progress-bar-striped progress_exp" role="progressbar"
-                                         aria-valuenow="{{ pull[1] }}" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
-                                        {{ pull[1] }}%
+                            <div class="box-content">
+                                <form action="/admin/ollama_pull" enctype="multipart/form-data" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <span class="left">Model Name</span>
+                                        <span class="right">
+                                            <input type="text" name="model_name" class="input" value="">
+                                        </span>
+                                    </div>
+                                     <div class="box-line">
+                                        <span class="left"></span>
+                                        <span class="right">
+
+                                        <div class="button-wrap">
+                                        <button class="button is-solid primary-button is-fullwidth">
+                                            Download Model
+                                        </button>
+                                    </div>
+                                        </span>
                                     </div>
                                 </div>
-                                 </span>
-                                    <span class="right" style="height: 22px; width: 10%;">
-                                        <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="Delete">
-                                        <i class="mdi mdi-delete" style="font-size: 20px;"></i>
-                                    </a>
-                                    </span>
-                                </div>
-                                {% endif %}
+                                 <div class="box-lines">
+                                    {% for pull in active_pulls %}
 
-                                 <script>
-                                        $(document).ready(function () {
-                                                    // Start the background progress as soon as the page loads
-                                                    $.ajax({
-                                                        url: `/admin/pull_progress/{{ pull[0] }}`,
-                                                        method: 'GET'
+                                    {% if pull[1] < 1 %}
+                                    <div class="box-line">
+                                    <span class="left" id="model_pull_name_{{ pull[0] }}">
+                                        {{ pull[0] }}
+                                    </span>
+                                     <span class="right" style="height: 22px; width: 70%;">
+                                    <div class="progress" style="height: 22px; width: 100%;" >
+                                        <div id="pull-progress-bar_{{ pull[0] }}" class="progress-bar progress-bar-striped progress_exp" role="progressbar"
+                                             aria-valuenow="{{ pull[1] }}" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                                            {{ pull[1] }}%
+                                        </div>
+                                    </div>
+                                     </span>
+                                        <span class="right" style="height: 22px; width: 10%;">
+                                            <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="Delete">
+                                            <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+                                        </a>
+                                        </span>
+                                    </div>
+                                    {% endif %}
+
+                                     <script>
+                                            $(document).ready(function () {
+                                                        // Start the background progress as soon as the page loads
+                                                        $.ajax({
+                                                            url: `/admin/pull_progress/{{ pull[0] }}`,
+                                                            method: 'GET'
+                                                        });
+
+                                                        // Poll progress updates
+                                                        function pullProgress() {
+                                                            $.ajax({
+                                                                url: '/admin/pull_progress/{{ pull[0] }}',
+                                                                method: 'GET',
+                                                                dataType: 'json',
+                                                                success: function (data) {
+                                                                    const model_name  = data.model_name;
+                                                                    const percentage = data.progress;
+                                                                    const progressBar = $('#pull-progress-bar_{{ pull[0] }}');
+
+                                                                    const textContainer = document.getElementById('model_pull_name_{{ pull[0] }}');
+                                                                    textContainer.textContent = model_name;
+
+                                                                    // Update the progress bar width and text
+                                                                    progressBar.css('width', percentage + '%');
+                                                                    progressBar.text(percentage + '%');
+
+                                                                    // If progress is less than 100, keep polling
+                                                                    if (percentage < 100) {
+                                                                        setTimeout(pullProgress, 500);
+                                                                    }
+                                                                }
+                                                            });
+                                                        }
+
+                                                        // Start polling immediately
+                                                        pullProgress();
                                                     });
 
-                                                    // Poll progress updates
-                                                    function pullProgress() {
-                                                        $.ajax({
-                                                            url: '/admin/pull_progress/{{ pull[0] }}',
-                                                            method: 'GET',
-                                                            dataType: 'json',
-                                                            success: function (data) {
-                                                                const model_name  = data.model_name;
-                                                                const percentage = data.progress;
-                                                                const progressBar = $('#pull-progress-bar_{{ pull[0] }}');
+                                        </script>
 
-                                                                const textContainer = document.getElementById('model_pull_name_{{ pull[0] }}');
-                                                                textContainer.textContent = model_name;
+                                    {% endfor %}
 
-                                                                // Update the progress bar width and text
-                                                                progressBar.css('width', percentage + '%');
-                                                                progressBar.text(percentage + '%');
+                                </div>
+                                </form>
 
-                                                                // If progress is less than 100, keep polling
-                                                                if (percentage < 100) {
-                                                                    setTimeout(pullProgress, 500);
-                                                                }
-                                                            }
-                                                        });
-                                                    }
 
-                                                    // Start polling immediately
-                                                    pullProgress();
-                                                });
-
-                                    </script>
-
-                                {% endfor %}
 
                             </div>
-                            </form>
-
-
-
                         </div>
+                        {% endif %}
                     </div>
                     {% endif %}
-                    
-                    {% endif %}
-                </div>
-
             </div>
         </div>
     </div>
