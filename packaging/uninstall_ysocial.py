@@ -96,6 +96,30 @@ def find_ysocial_data_in_cwd():
     return data_dirs
 
 
+def find_installation_id_file():
+    """
+    Find the installation_id.json file based on platform.
+    
+    Returns:
+        Path or None: Path to installation_id.json if it exists, None otherwise
+    """
+    system = platform.system()
+    home = Path.home()
+    
+    # Determine config directory based on platform (same logic as installation_id.py)
+    if system == "Windows":
+        config_dir = Path(os.getenv("APPDATA", str(home))) / "YSocial"
+    elif system == "Darwin":  # macOS
+        config_dir = home / "Library" / "Application Support" / "YSocial"
+    else:  # Linux and others
+        config_dir = home / ".config" / "ysocial"
+    
+    id_file = config_dir / "installation_id.json"
+    if id_file.exists():
+        return id_file
+    return None
+
+
 def find_pyinstaller_executables():
     """
     Find PyInstaller standalone executables in common locations.
@@ -355,6 +379,12 @@ def main():
     for config_dir in paths_info['config_dirs']:
         if config_dir.exists():
             paths_to_remove.append(config_dir)
+    
+    # Search for installation_id.json file
+    print("Searching for installation ID file...")
+    install_id_file = find_installation_id_file()
+    if install_id_file:
+        paths_to_remove.append(install_id_file)
     
     # Search for additional YSocial data directories
     print("Searching for YSocial data directories...")
