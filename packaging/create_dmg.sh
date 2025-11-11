@@ -7,10 +7,10 @@ set -e  # Exit on error
 
 # Configuration
 APP_NAME="YSocial"
-VERSION="${VERSION:-1.0.0}"
+VERSION="${VERSION:-2.0.0}"
 DMG_NAME="${APP_NAME}-${VERSION}"
 SOURCE_APP="dist/${APP_NAME}"
-BACKGROUND_IMAGE="images/YSocial_v.png"
+BACKGROUND_IMAGE="y_web/static/assets/img/installer/background.png"
 ICON_FILE="images/YSocial_ico.png"
 
 # Directories
