@@ -122,7 +122,7 @@ def get_version():
 def get_or_create_installation_id():
     """
     Get existing installation ID or create a new one.
-    
+
     If the installation ID exists but the version has changed, updates the
     version and timestamp fields while preserving the installation_id.
 
@@ -154,7 +154,9 @@ def get_or_create_installation_id():
                         try:
                             with open(id_file, "w") as f_out:
                                 json.dump(installation_info, f_out, indent=2)
-                            print(f"✓ Added version to installation info: {installation_info['version']}")
+                            print(
+                                f"✓ Added version to installation info: {installation_info['version']}"
+                            )
                         except Exception as e:
                             print(f"Warning: Could not update installation ID: {e}")
                     else:
@@ -163,14 +165,23 @@ def get_or_create_installation_id():
                         if installation_info["version"] != current_version:
                             # Update version and timestamp
                             from datetime import timezone
+
                             installation_info["version"] = current_version
-                            installation_info["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+                            installation_info["timestamp"] = (
+                                datetime.now(timezone.utc)
+                                .isoformat()
+                                .replace("+00:00", "Z")
+                            )
                             # Save updated info
                             try:
                                 with open(id_file, "w") as f_out:
                                     json.dump(installation_info, f_out, indent=2)
-                                print(f"✓ Updated version from {installation_info.get('version', 'Unknown')} to {current_version}")
-                                print(f"  New timestamp: {installation_info['timestamp']}")
+                                print(
+                                    f"✓ Updated version from {installation_info.get('version', 'Unknown')} to {current_version}"
+                                )
+                                print(
+                                    f"  New timestamp: {installation_info['timestamp']}"
+                                )
                             except Exception as e:
                                 print(f"Warning: Could not update installation ID: {e}")
                     return installation_info
