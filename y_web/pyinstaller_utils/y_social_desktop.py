@@ -19,8 +19,8 @@ def start_desktop_app(
     llm_backend=None,
     notebook=False,
     window_title="YSocial - Social Media Digital Twin",
-    window_width=1280,
-    window_height=800,
+    window_width=0,  # 0 means fullscreen
+    window_height=0,  # 0 means fullscreen
 ):
     """
     Start YSocial in desktop mode with PyWebview.
@@ -33,8 +33,8 @@ def start_desktop_app(
         llm_backend: LLM backend to use
         notebook: Enable Jupyter notebook support
         window_title: Title for the desktop window
-        window_width: Width of the desktop window
-        window_height: Height of the desktop window
+        window_width: Width of the desktop window (0 for fullscreen)
+        window_height: Height of the desktop window (0 for fullscreen)
     """
     from y_social import start_app
 
@@ -91,6 +91,14 @@ def start_desktop_app(
     print(f"📱 Opening native window for: {url}")
     print(f"{'='*60}\n")
 
+    # Determine if fullscreen mode should be used
+    use_fullscreen = window_width == 0 or window_height == 0
+
+    # If fullscreen, use default size initially
+    if use_fullscreen:
+        window_width = 1280
+        window_height = 800
+
     # Create a PyWebview window
     window = webview.create_window(
         title=window_title,
@@ -98,7 +106,7 @@ def start_desktop_app(
         width=window_width,
         height=window_height,
         resizable=True,
-        fullscreen=False,
+        fullscreen=use_fullscreen,
         min_size=(800, 600),
         confirm_close=True,
     )

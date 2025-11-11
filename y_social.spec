@@ -132,6 +132,13 @@ datas += [
     (os.path.join(basedir, "config_files"), "config_files"),
 ]
 
+# Add images directory for splash screen
+if os.path.exists(os.path.join(basedir, "images")):
+    datas += [(os.path.join(basedir, "images"), "images")]
+
+# PyInstaller utils are now part of y_web package and will be included automatically
+# No need to explicitly add splash_screen.py and installation_id.py as separate files
+
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
     basedir, "y_web", "utils", "y_client_process_runner.py"
@@ -160,9 +167,19 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
-    hookspath=[os.path.join(basedir, "pyinstaller_hooks")],
+    hookspath=[
+        os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks")
+    ],
     hooksconfig={},
-    runtime_hooks=[os.path.join(basedir, "pyinstaller_hooks", "runtime_hook_nltk.py")],
+    runtime_hooks=[
+        os.path.join(
+            basedir,
+            "y_web",
+            "pyinstaller_utils",
+            "pyinstaller_hooks",
+            "runtime_hook_nltk.py",
+        )
+    ],
     excludes=[
         "matplotlib",
         "pandas",
@@ -198,5 +215,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon=os.path.join(basedir, "images", "YSocial_ico.png"),
 )
