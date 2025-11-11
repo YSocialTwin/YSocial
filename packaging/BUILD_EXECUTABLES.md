@@ -92,6 +92,12 @@ mkdir -p config_files
 pyinstaller y_social.spec --clean --noconfirm
 ```
 
+**Important Notes:**
+- The spec file already has `console=False` configured for Windows, which prevents the console window from showing
+- Do **NOT** use the `--windowed` flag when building with a spec file - it will cause an error
+- The `--windowed` flag is only for building directly from Python files, not spec files
+- Console output is automatically suppressed when running the built executable on Windows
+
 ### Build Output
 
 The executable will be a **single file** located in `dist/`:

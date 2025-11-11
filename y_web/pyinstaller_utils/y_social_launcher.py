@@ -12,17 +12,38 @@ import time
 import webbrowser
 from argparse import ArgumentParser
 
-# Force unbuffered output for better error messages in PyInstaller
-(
-    sys.stdout.reconfigure(line_buffering=True)
-    if hasattr(sys.stdout, "reconfigure")
-    else None
-)
-(
-    sys.stderr.reconfigure(line_buffering=True)
-    if hasattr(sys.stderr, "reconfigure")
-    else None
-)
+
+def is_pyinstaller():
+    """Check if running as a PyInstaller bundle."""
+    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
+
+
+# Suppress console output when running as PyInstaller executable
+# This prevents the terminal window from showing when console=False in spec
+if is_pyinstaller():
+    # On Windows with console=False, redirect stdout/stderr to suppress output
+    # This prevents Flask and other print statements from showing a console window
+    if sys.platform.startswith("win"):
+        try:
+            # Redirect to DEVNULL to completely suppress console output
+            sys.stdout = open(os.devnull, "w")
+            sys.stderr = open(os.devnull, "w")
+        except Exception:
+            # If redirection fails, continue anyway
+            pass
+else:
+    # When running from source (not frozen), keep normal output with line buffering
+    # Force unbuffered output for better error messages
+    (
+        sys.stdout.reconfigure(line_buffering=True)
+        if hasattr(sys.stdout, "reconfigure")
+        else None
+    )
+    (
+        sys.stderr.reconfigure(line_buffering=True)
+        if hasattr(sys.stderr, "reconfigure")
+        else None
+    )
 
 
 def wait_for_server_and_open_browser(host, port, max_wait=30):
@@ -64,11 +85,6 @@ def wait_for_server_and_open_browser(host, port, max_wait=30):
         time.sleep(0.5)
 
     print(f"Warning: Could not verify server startup. Please manually open {url}")
-
-
-def is_pyinstaller():
-    """Check if running as a PyInstaller bundle."""
-    return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
 
 def main():
