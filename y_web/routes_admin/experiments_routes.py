@@ -925,12 +925,18 @@ def upload_database():
         parents=True, exist_ok=True
     )
 
-    database.save(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db")
-    config.save(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+    database.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
+    )
+    config.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+    )
 
     try:
         experiment = json.load(
-            open(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+            )
         )
         experiment = experiment["name"]
 
@@ -941,7 +947,10 @@ def upload_database():
             flash(
                 "The experiment already exists. Please check the experiment name and try again."
             )
-            shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return settings()
 
         exp = Exps(
@@ -967,7 +976,10 @@ def upload_database():
             "There was an error loading the experiment files. Please check the files and try again."
         )
         # remove the directory containing the files
-        shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
 
     return settings()
 
@@ -1143,7 +1155,8 @@ def create_experiment():
     }
 
     with open(
-        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json", "w"
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
+        "w",
     ) as f:
         json.dump(config, f, indent=4)
 
