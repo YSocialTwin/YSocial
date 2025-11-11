@@ -164,9 +164,9 @@ tell application "Finder"
         set icon size of viewOptions to 128
         set background picture of viewOptions to file ".background:background.png"
         
-        -- Position icons (adjusted for background size: 284x383, scaled 2x = 568x766)
-        set position of item "YSocial.app" of container window to {140, 550}
-        set position of item "Applications" of container window to {420, 550}
+        -- Position icons (centered vertically to align with arrow in background)
+        set position of item "YSocial.app" of container window to {100, 320}
+        set position of item "Applications" of container window to {420, 320}
         
         close
         open

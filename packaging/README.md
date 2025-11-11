@@ -167,8 +167,9 @@ The DMG file is now ready for distribution! You can:
 2. **Window Layout:**
    - Window size: 568x766 pixels (2x the background image: 284x383)
    - Icon view with 128px icons
-   - YSocial.app positioned on left
-   - Applications symlink on right
+   - YSocial.app positioned on middle left (x=100, y=320)
+   - Applications symlink on middle right (x=420, y=320)
+   - Icons aligned with arrow graphic in background image
    - Window dimensions match background image aspect ratio
    - Clean, professional appearance
 
@@ -211,10 +212,10 @@ set the bounds of container window to {400, 100, 968, 866}
 In `create_dmg.sh`, modify the icon positions:
 
 ```applescript
-set position of item "YSocial.app" of container window to {140, 550}
-set position of item "Applications" of container window to {420, 550}
+set position of item "YSocial.app" of container window to {100, 320}
+set position of item "Applications" of container window to {420, 320}
 # Format: {x, y} from top-left
-# Current positions are near bottom of window to accommodate tall background
+# Current positions are centered vertically to align with arrow in background
 ```
 
 ### Change Icon Size
