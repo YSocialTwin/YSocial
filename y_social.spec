@@ -136,15 +136,8 @@ datas += [
 if os.path.exists(os.path.join(basedir, "images")):
     datas += [(os.path.join(basedir, "images"), "images")]
 
-# Add splash screen module
-splash_screen_path = os.path.join(basedir, "splash_screen.py")
-if os.path.exists(splash_screen_path):
-    datas += [(splash_screen_path, ".")]
-
-# Add installation ID module
-installation_id_path = os.path.join(basedir, "installation_id.py")
-if os.path.exists(installation_id_path):
-    datas += [(installation_id_path, ".")]
+# PyInstaller utils are now part of y_web package and will be included automatically
+# No need to explicitly add splash_screen.py and installation_id.py as separate files
 
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
@@ -174,9 +167,19 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
-    hookspath=[os.path.join(basedir, "pyinstaller_hooks")],
+    hookspath=[
+        os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks")
+    ],
     hooksconfig={},
-    runtime_hooks=[os.path.join(basedir, "pyinstaller_hooks", "runtime_hook_nltk.py")],
+    runtime_hooks=[
+        os.path.join(
+            basedir,
+            "y_web",
+            "pyinstaller_utils",
+            "pyinstaller_hooks",
+            "runtime_hook_nltk.py",
+        )
+    ],
     excludes=[
         "matplotlib",
         "pandas",
