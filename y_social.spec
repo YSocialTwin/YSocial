@@ -305,7 +305,11 @@ a = Analysis(
     hookspath=[
         os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks")
     ],
-    hooksconfig={},
+    hooksconfig={
+        # Disable PyInstaller's auto-generated NLTK runtime hook
+        # We use our own custom runtime hook instead
+        "nltk": {"no_runtime_hook": True},
+    },
     runtime_hooks=[
         os.path.join(
             basedir,
