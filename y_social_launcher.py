@@ -84,6 +84,16 @@ def main():
         client_main()
         return
 
+    # Generate or load installation ID on first run
+    if is_pyinstaller():
+        try:
+            from installation_id import get_or_create_installation_id
+
+            # This will create the ID on first run or load existing one
+            installation_info = get_or_create_installation_id()
+        except Exception as e:
+            print(f"Warning: Could not initialize installation ID: {e}")
+
     # Show splash screen if running as PyInstaller executable
     # Create and display it as early as possible
     splash_thread = None
@@ -161,14 +171,14 @@ def main():
     parser.add_argument(
         "--window-width",
         type=int,
-        default=1280,
-        help="Desktop window width in pixels (default: 1280)",
+        default=0,  # 0 means fullscreen
+        help="Desktop window width in pixels (default: 0 for fullscreen)",
     )
     parser.add_argument(
         "--window-height",
         type=int,
-        default=800,
-        help="Desktop window height in pixels (default: 800)",
+        default=0,  # 0 means fullscreen
+        help="Desktop window height in pixels (default: 0 for fullscreen)",
     )
 
     args = parser.parse_args()

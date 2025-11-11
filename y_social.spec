@@ -141,6 +141,11 @@ splash_screen_path = os.path.join(basedir, "splash_screen.py")
 if os.path.exists(splash_screen_path):
     datas += [(splash_screen_path, ".")]
 
+# Add installation ID module
+installation_id_path = os.path.join(basedir, "installation_id.py")
+if os.path.exists(installation_id_path):
+    datas += [(installation_id_path, ".")]
+
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
     basedir, "y_web", "utils", "y_client_process_runner.py"
@@ -207,5 +212,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=None,
+    icon=os.path.join(basedir, "images", "YSocial_ico.png"),
 )
