@@ -1014,9 +1014,7 @@ def delete_client(uid):
 
     # remove the db file on the client
     BASE_PATH = get_writable_path()
-    path = (
-        f"{BASE_PATH}{os.sep}external{os.sep}YClient{os.sep}experiments{os.sep}{client.name}.db"
-    )
+    path = f"{BASE_PATH}{os.sep}external{os.sep}YClient{os.sep}experiments{os.sep}{client.name}.db"
     if os.path.exists(path):
         os.remove(path)
     else:
@@ -1331,7 +1329,7 @@ def download_agent_list(uid):
 
     # get the experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
-    
+
     from y_web.utils.path_utils import get_writable_path
 
     # get the experiment folder
