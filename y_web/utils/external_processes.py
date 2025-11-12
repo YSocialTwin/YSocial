@@ -540,11 +540,15 @@ def start_server(exp):
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
-    # Check both sys.frozen AND if sys.executable points to a bundle
+    # Check multiple PyInstaller indicators
     is_frozen = getattr(sys, "frozen", False)
+    has_meipass = hasattr(sys, "_MEIPASS")
     is_bundle_exe = "python" not in Path(sys.executable).name.lower()
 
-    if not (is_frozen or is_bundle_exe) and not Path(script_path).exists():
+    if (
+        not (is_frozen or has_meipass or is_bundle_exe)
+        and not Path(script_path).exists()
+    ):
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
             f"Please ensure the YServer submodule is initialized.\n"
@@ -585,11 +589,12 @@ def start_server(exp):
         # Build the gunicorn command
         # Note: gunicorn doesn't work well with PyInstaller bundles for server mode
         # If running from PyInstaller, we need to use the standard Python server instead
-        # Check both sys.frozen AND if sys.executable points to a bundle
+        # Check multiple PyInstaller indicators
         is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
         is_bundle_exe = "python" not in Path(sys.executable).name.lower()
 
-        if is_frozen or is_bundle_exe:
+        if is_frozen or has_meipass or is_bundle_exe:
             # PyInstaller mode - cannot use gunicorn with frozen executable
             # Fall back to using the server runner with Flask's built-in server
             print(
@@ -715,12 +720,15 @@ def start_server(exp):
 
         # Build the command as a list for subprocess.Popen
         # Check if running from PyInstaller bundle
-        # We need to check both sys.frozen AND if sys.executable points to a bundle
-        # because sys.frozen might not be set in the parent process
+        # We need to check multiple indicators:
+        # 1. sys.frozen - set when running in frozen mode
+        # 2. sys._MEIPASS - PyInstaller's temp extraction directory
+        # 3. Executable name doesn't contain "python"
         is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
         is_bundle_exe = "python" not in Path(sys.executable).name.lower()
 
-        if is_frozen or is_bundle_exe:
+        if is_frozen or has_meipass or is_bundle_exe:
             # Running from PyInstaller - invoke the bundled executable with special flag
             # The launcher script detects this flag and routes to the server runner
             cmd = [

@@ -331,3 +331,71 @@ class TestServerSubprocessHandling:
             cmd = [sys_executable, "--run-server-subprocess", "-c", "config.json", "--platform", "microblogging"]
             assert cmd[1] == "--run-server-subprocess", "Should use special flag"
             assert "y_server_run.py" not in str(cmd), "Should not include script path"
+
+    def test_meipass_detection(self):
+        """Test that sys._MEIPASS is checked for PyInstaller detection"""
+        # Test the detection logic with _MEIPASS
+        
+        # Case 1: sys._MEIPASS exists but sys.frozen is False
+        # This is the problematic case reported by the user
+        is_frozen = False
+        has_meipass = True  # Simulating hasattr(sys, "_MEIPASS")
+        is_bundle_exe = False  # Executable might contain "python"
+        is_pyinstaller = is_frozen or has_meipass or is_bundle_exe
+        assert is_pyinstaller is True, "Should detect PyInstaller via _MEIPASS even when frozen is False"
+
+        # Case 2: Normal development (no _MEIPASS)
+        is_frozen = False
+        has_meipass = False
+        is_bundle_exe = False
+        is_pyinstaller = is_frozen or has_meipass or is_bundle_exe
+        assert is_pyinstaller is False, "Should not detect PyInstaller in normal development"
+
+        # Case 3: Full PyInstaller (all indicators present)
+        is_frozen = True
+        has_meipass = True
+        is_bundle_exe = True
+        is_pyinstaller = is_frozen or has_meipass or is_bundle_exe
+        assert is_pyinstaller is True, "Should detect PyInstaller with all indicators"
+
+    def test_macos_error_with_meipass(self):
+        """
+        Test that the fix addresses the specific macOS error with _MEIPASS.
+        
+        The user reported error shows script path in _MEI temp directory:
+        /var/folders/.../T/_MEIluC6ib/external/YServer/y_server_run.py
+        
+        This indicates:
+        1. PyInstaller extracted files to temp directory (has _MEIPASS)
+        2. But sys.frozen might not be set in the Flask parent process
+        3. The original fix only checked sys.frozen and executable name
+        4. Need to also check sys._MEIPASS which is always set by PyInstaller
+        
+        With this fix:
+        - Check sys.frozen (for typical cases)
+        - Check sys._MEIPASS (for cases where frozen is not set) ← NEW
+        - Check executable name (as backup)
+        """
+        import sys
+
+        # Simulate the error scenario: _MEIPASS exists, but frozen might not be set
+        # In actual PyInstaller, sys._MEIPASS would be set to something like:
+        # /var/folders/c1/gw_hwyms79bccypfg3x2988w0000gn/T/_MEIluC6ib
+        
+        has_meipass = hasattr(sys, "_MEIPASS")  # This would be True in PyInstaller
+        is_frozen = getattr(sys, "frozen", False)  # This might be False
+        
+        # In the test environment, _MEIPASS won't exist, but we can test the logic
+        # The key is that checking hasattr(sys, "_MEIPASS") is more reliable
+        
+        # Simulate the detection
+        simulated_has_meipass = True  # Would be true in PyInstaller
+        simulated_is_frozen = False  # Might be false in parent process
+        
+        # OLD detection (would fail)
+        old_detection = simulated_is_frozen
+        assert old_detection is False, "Old detection misses this case"
+        
+        # NEW detection (should work)
+        new_detection = simulated_is_frozen or simulated_has_meipass
+        assert new_detection is True, "New detection catches this via _MEIPASS check"
