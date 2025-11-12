@@ -163,14 +163,27 @@ xcrun stapler validate dist/YSocial
 ### App hangs at splash screen (even on build machine)
 **Problem**: After signing, the app hangs at splash screen even on the machine that built it.
 
-**Diagnosis**: Check if entitlements were actually applied:
+**Diagnosis Step 1**: Check if entitlements were actually applied:
 ```bash
 codesign -d --entitlements - dist/YSocial
 ```
 
-If you see an empty output or no entitlements listed, they weren't applied correctly.
+If you see an empty output or no entitlements listed, they weren't applied correctly. Follow the solution below.
 
-**Solution**: The signing command must include entitlements with an absolute path:
+If entitlements ARE listed correctly (you see all 4 keys), continue to Diagnosis Step 2.
+
+**Diagnosis Step 2**: Check for signing-related issues:
+1. Look for crash reports or errors in Console.app (Applications > Utilities > Console), filter for "YSocial"
+2. Try building without the timestamp server (can cause delays/timeouts):
+   ```bash
+   ./packaging/build_and_package_macos.sh --no-timestamp
+   ```
+3. Check what processes are running:
+   ```bash
+   ps aux | grep YSocial
+   ```
+
+**Solution for missing entitlements**: The signing command must include entitlements with an absolute path:
 ```bash
 codesign --force --sign - \
   --entitlements "$(pwd)/entitlements.plist" \

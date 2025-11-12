@@ -3,9 +3,10 @@
 # This script automates the complete build, sign, and DMG creation process
 #
 # Usage:
-#   ./packaging/build_and_package_macos.sh [--dev-id "Developer ID Application: Your Name"]
+#   ./packaging/build_and_package_macos.sh [--dev-id "Developer ID Application: Your Name"] [--no-timestamp]
 #
 # If --dev-id is not provided, uses ad-hoc signing (--sign -)
+# Use --no-timestamp for faster signing (skips Apple timestamp server)
 #
 # Steps performed:
 #   1. Build executable with PyInstaller
@@ -19,15 +20,20 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Parse command line arguments
 CODESIGN_IDENTITY="-"  # Default to ad-hoc signing
+USE_TIMESTAMP="--timestamp"  # Default to using timestamp
 while [[ $# -gt 0 ]]; do
     case $1 in
         --dev-id)
             CODESIGN_IDENTITY="$2"
             shift 2
             ;;
+        --no-timestamp)
+            USE_TIMESTAMP=""
+            shift
+            ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--dev-id \"Developer ID Application: Your Name\"]"
+            echo "Usage: $0 [--dev-id \"Developer ID Application: Your Name\"] [--no-timestamp]"
             exit 1
             ;;
     esac
@@ -77,9 +83,13 @@ else
     echo "   Using Developer ID: $CODESIGN_IDENTITY"
 fi
 
+if [ -z "$USE_TIMESTAMP" ]; then
+    echo "   Skipping timestamp server (--no-timestamp flag)"
+fi
+
 codesign --force --sign "$CODESIGN_IDENTITY" \
   --entitlements "$PROJECT_ROOT/entitlements.plist" \
-  --timestamp \
+  $USE_TIMESTAMP \
   --options runtime \
   dist/YSocial
 
