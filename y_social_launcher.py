@@ -45,36 +45,10 @@ if __name__ == "__main__":
         import_thread = threading.Thread(target=do_imports, daemon=True)
         import_thread.start()
 
-        # Keep splash visible for minimum 2 seconds or until imports are done
-        start_time = time.time()
-        min_splash_time = 2.0
-        max_splash_time = 30.0  # Maximum 30 seconds to prevent infinite loop
-        update_interval = 0.1  # Update every 100ms instead of every 50ms
-
-        while True:
-            # Check if minimum time has passed and imports are done
-            elapsed = time.time() - start_time
-            if elapsed >= min_splash_time and imports_done:
-                break
-            
-            # Safety timeout: if taking too long, break out
-            if elapsed >= max_splash_time:
-                # Imports are taking too long, proceed anyway
-                break
-
-            # Update the splash screen to keep it responsive
-            # Use update_idletasks() instead of update() to avoid blocking
-            try:
-                splash.root.update_idletasks()
-            except Exception:
-                # If splash update fails, break out of loop
-                break
-
-            # Sleep to avoid busy waiting and reduce CPU usage
-            time.sleep(update_interval)
-
-        # Wait for import thread to complete (with generous timeout)
-        import_thread.join(timeout=10)
+        # Wait for import thread to complete with timeout
+        # The splash will remain visible during this time
+        # We don't update it to avoid conflicts with Hardened Runtime on signed executables
+        import_thread.join(timeout=30)
 
         # Close splash
         try:
