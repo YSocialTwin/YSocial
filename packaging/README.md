@@ -50,6 +50,7 @@ VERSION=custom ./packaging/create_dmg.sh  # Overrides with "custom"
 
 ## Files in This Directory
 
+- **`build_and_package_macos.sh`** - **NEW!** Automated build, sign, and package script (recommended)
 - **`create_dmg.sh`** - Main DMG creation script (no external dependencies)
 - **`create_dmg_simple.sh`** - Alternative using create-dmg tool
 - **`uninstall_ysocial.py`** - Platform-independent uninstaller (Python)
@@ -117,7 +118,39 @@ cd /path/to/YSocial
 
 ## Complete Build Process
 
-### Step 1: Build the YSocial Executable
+### Automated (Recommended for macOS)
+
+Use the automated build and package script:
+
+```bash
+# Navigate to project root
+cd /path/to/YSocial
+
+# Ensure dependencies are installed
+pip install -r requirements.txt
+pip install pyinstaller
+
+# Initialize git submodules if not already done
+git submodule update --init --recursive
+
+# Run automated build, sign, and package
+./packaging/build_and_package_macos.sh
+```
+
+This script automatically:
+1. Builds the executable with PyInstaller
+2. Signs it with entitlements (ad-hoc signing by default)
+3. Creates the DMG installer
+4. Signs the .app bundle inside the DMG
+
+For production distribution with a Developer ID:
+```bash
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
+```
+
+### Manual Process
+
+#### Step 1: Build the YSocial Executable
 
 First, build the YSocial executable using PyInstaller:
 
@@ -134,11 +167,18 @@ git submodule update --init --recursive
 
 # Build the executable
 pyinstaller y_social.spec --clean --noconfirm
+
+# (macOS only) Sign the executable
+codesign --force --sign - \
+  --entitlements entitlements.plist \
+  --timestamp \
+  --options runtime \
+  dist/YSocial
 ```
 
-This will create the executable at `dist/YSocial`.
+This will create the signed executable at `dist/YSocial`.
 
-### Step 2: Create the DMG
+#### Step 2: Create the DMG
 
 Once the executable is built, create the DMG installer:
 
@@ -152,7 +192,27 @@ Once the executable is built, create the DMG installer:
 
 The DMG will be created at `dist/YSocial-1.0.0.dmg` (or with your specified version).
 
-### Step 3: Test the DMG
+#### Step 3: Sign the .app Bundle (if using manual process)
+
+If you created the DMG manually, you should sign the .app bundle:
+
+```bash
+# Mount the DMG
+hdiutil attach dist/YSocial-*.dmg -mountpoint /Volumes/YSocial -nobrowse
+
+# Sign the .app bundle
+codesign --force --sign - \
+  --entitlements entitlements.plist \
+  --timestamp \
+  --options runtime \
+  --deep \
+  /Volumes/YSocial/YSocial.app
+
+# Unmount
+hdiutil detach /Volumes/YSocial
+```
+
+#### Step 4: Test the DMG
 
 Mount and test the DMG before distribution:
 

@@ -32,12 +32,15 @@ codesign --force --sign - \
 - The entitlements file is automatically embedded by PyInstaller, but you still need to sign the final executable
 - Use `--options runtime` to enable Hardened Runtime
 
-### For App Store or Public Distribution
+### For Production Distribution with Developer ID (Optional)
 
-For wider distribution, you need a Developer ID certificate:
+For wider distribution outside your organization, you can use a Developer ID certificate instead of ad-hoc signing:
 
 ```bash
-# Sign with Developer ID (replace "Developer ID Application: Your Name" with your identity)
+# Automated (recommended)
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
+
+# Or manually
 codesign --force --sign "Developer ID Application: Your Name" \
   --entitlements entitlements.plist \
   --timestamp \
@@ -51,16 +54,44 @@ codesign --verify --deep --strict --verbose=2 dist/YSocial
 codesign -d --entitlements - dist/YSocial
 ```
 
-### For .app Bundle Distribution (DMG)
+**When to use Developer ID:**
+- Distributing to users outside your organization
+- Want to avoid Gatekeeper security warnings
+- Planning to notarize the app with Apple
 
-When creating a .app bundle with the `create_dmg.sh` script:
+**When ad-hoc signing is sufficient:**
+- Testing and development
+- Internal distribution within your organization
+- Users can bypass Gatekeeper (right-click → Open)
+
+### Automated Build and Package Script
+
+The easiest way to build, sign, and package YSocial is to use the automated script:
+
+```bash
+# With ad-hoc signing (recommended for testing and local distribution)
+./packaging/build_and_package_macos.sh
+
+# Or with Developer ID for wider distribution
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
+```
+
+This script automatically:
+1. Builds the executable with PyInstaller
+2. Signs the executable with entitlements
+3. Creates the DMG installer
+4. Signs the .app bundle inside the DMG
+
+### Manual Build and Package Process
+
+If you prefer to run the steps manually:
 
 ```bash
 # 1. Build the executable
 pyinstaller y_social.spec --clean --noconfirm
 
 # 2. Sign the executable before bundling
-codesign --force --sign "Developer ID Application: Your Name" \
+codesign --force --sign - \
   --entitlements entitlements.plist \
   --timestamp \
   --options runtime \
@@ -70,8 +101,18 @@ codesign --force --sign "Developer ID Application: Your Name" \
 ./packaging/create_dmg.sh
 
 # 4. Sign the .app bundle inside the DMG
-# (You'll need to extract, sign, and recreate the DMG)
+# Mount the DMG, sign the .app, then unmount
+hdiutil attach dist/YSocial-*.dmg -mountpoint /Volumes/YSocial -nobrowse
+codesign --force --sign - \
+  --entitlements entitlements.plist \
+  --timestamp \
+  --options runtime \
+  --deep \
+  /Volumes/YSocial/YSocial.app
+hdiutil detach /Volumes/YSocial
 ```
+
+**Note**: For production distribution with a Developer ID certificate, replace `--sign -` with `--sign "Developer ID Application: Your Name"`
 
 ## What the Entitlements Do
 

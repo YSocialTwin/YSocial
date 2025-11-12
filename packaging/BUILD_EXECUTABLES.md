@@ -56,9 +56,29 @@ Build artifacts are available for 90 days after the workflow completes:
 
 For releases, these artifacts are automatically attached to the release.
 
-## Manual Local Build
+### Quick Start: macOS Automated Build
 
-To build executables locally for testing:
+For macOS, use the automated build script that handles all steps including signing and DMG creation:
+
+```bash
+# Navigate to project root
+cd /path/to/YSocial
+
+# Run automated build and package script
+./packaging/build_and_package_macos.sh
+```
+
+This automatically performs:
+1. PyInstaller build
+2. Code signing with entitlements
+3. DMG creation
+4. Signing of .app bundle in DMG
+
+For more details, see [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md).
+
+### Manual Local Build
+
+To build executables manually for testing:
 
 ### Prerequisites
 
