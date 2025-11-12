@@ -330,12 +330,13 @@ def build_screen_command(script_path, config_path, screen_name=None):
     screen_name = screen_name or "experiment"
 
     # Quote script and config paths to handle spaces
-    script_path_quoted = f'"{script_path}"'
-    config_path_quoted = f'"{config_path}"' if config_path else ""
+    # Use single quotes inside the bash -c command to prevent shell expansion
+    script_path_escaped = script_path.replace("'", "'\\''")
+    config_path_escaped = config_path.replace("'", "'\\''") if config_path else ""
 
-    run_cmd = f"{python_cmd} {script_path_quoted}"
-    if config_path_quoted:
-        run_cmd += f" -c {config_path_quoted}"
+    run_cmd = f"{python_cmd} '{script_path_escaped}'"
+    if config_path_escaped:
+        run_cmd += f" -c '{config_path_escaped}'"
 
     # Single bash -c block inside screen
     screen_cmd = f"screen -dmS {screen_name} bash -c '{run_cmd}'"

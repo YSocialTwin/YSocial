@@ -2,8 +2,38 @@
 # Script to create a macOS .dmg installer for YSocial
 # This script packages the PyInstaller-built YSocial executable into a disk image
 # with a custom background and drag-to-Applications functionality
+#
+# Usage:
+#   ./packaging/create_dmg.sh [--codesign-identity "identity"] [--entitlements "path/to/entitlements.plist"]
+#
+# Examples:
+#   ./packaging/create_dmg.sh                                    # No code signing
+#   ./packaging/create_dmg.sh --codesign-identity "-"            # Ad-hoc signing
+#   ./packaging/create_dmg.sh --codesign-identity "Developer ID Application: Your Name"  # Developer ID
 
 set -e  # Exit on error
+
+# Parse command line arguments
+CODESIGN_IDENTITY=""
+ENTITLEMENTS_FILE=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --codesign-identity)
+            CODESIGN_IDENTITY="$2"
+            shift 2
+            ;;
+        --entitlements)
+            ENTITLEMENTS_FILE="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--codesign-identity \"identity\"] [--entitlements \"path/to/entitlements.plist\"]"
+            exit 1
+            ;;
+    esac
+done
 
 # Configuration
 APP_NAME="YSocial"
@@ -155,6 +185,31 @@ if [ -f "$SCRIPT_DIR/README_USER.md" ]; then
     cp "$SCRIPT_DIR/README_USER.md" "$STAGING_DIR/README.md"
 fi
 
+# Sign the .app bundle if codesign identity is provided
+if [ -n "$CODESIGN_IDENTITY" ]; then
+    echo "🔐 Signing YSocial.app bundle..."
+    CODESIGN_CMD="codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep"
+    
+    # Add entitlements if provided
+    if [ -n "$ENTITLEMENTS_FILE" ]; then
+        # Handle both absolute and relative paths
+        if [ -f "$ENTITLEMENTS_FILE" ]; then
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$ENTITLEMENTS_FILE\""
+        elif [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
+        else
+            echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"
+        fi
+    fi
+    
+    # Execute the signing command
+    eval "$CODESIGN_CMD \"$APP_BUNDLE\""
+    
+    # Verify the signature
+    codesign --verify --deep --verbose "$APP_BUNDLE"
+    echo "✅ .app bundle signed successfully"
+fi
+
 # Calculate DMG size (in MB, with 20% padding)
 echo "📏 Calculating DMG size..."
 APP_SIZE=$(du -sm "$APP_BUNDLE" | cut -f1)
@@ -168,11 +223,29 @@ hdiutil create -srcfolder "$STAGING_DIR" -volname "$APP_NAME" -fs HFS+ \
 # Mount the temporary DMG
 echo "📂 Mounting temporary DMG..."
 MOUNT_DIR="/Volumes/$APP_NAME"
+
+# Unmount if already mounted
+if [ -d "$MOUNT_DIR" ]; then
+    echo "   Unmounting existing volume..."
+    hdiutil detach "$MOUNT_DIR" 2>/dev/null || true
+    sleep 1
+fi
+
 hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | egrep '^/dev/' | sed 1q | awk '{print $1}' > /tmp/dmg_device.txt
 DMG_DEVICE=$(cat /tmp/dmg_device.txt)
 
-# Wait for mount
-sleep 2
+# Wait for mount to complete
+sleep 3
+
+# Verify the mount is writable
+if [ ! -w "$MOUNT_DIR" ]; then
+    echo "⚠️  Warning: Mounted DMG is not writable, remounting..."
+    hdiutil detach "$DMG_DEVICE" 2>/dev/null || true
+    sleep 2
+    hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | egrep '^/dev/' | sed 1q | awk '{print $1}' > /tmp/dmg_device.txt
+    DMG_DEVICE=$(cat /tmp/dmg_device.txt)
+    sleep 3
+fi
 
 # Set custom DMG appearance using AppleScript
 echo "🎨 Customizing DMG appearance..."
@@ -212,11 +285,19 @@ if [ -f "$MOUNT_DIR/.background/background.png" ]; then
 fi
 
 # Set custom icon for DMG volume if available
-if [ -f "$APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
+MOUNTED_APP_BUNDLE="$MOUNT_DIR/YSocial.app"
+if [ -f "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
     echo "🎨 Setting DMG volume icon..."
-    cp "$APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns"
-    SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
-    SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+    # Try to copy the icon, but don't fail if it doesn't work
+    if cp "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null; then
+        SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
+        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+        echo "   ✅ Volume icon set successfully"
+    else
+        echo "   ⚠️  Warning: Could not set volume icon (DMG will still work)"
+    fi
+else
+    echo "   ℹ️  No custom icon found, skipping volume icon"
 fi
 
 # Hide background folder

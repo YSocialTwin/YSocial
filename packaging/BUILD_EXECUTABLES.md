@@ -56,9 +56,29 @@ Build artifacts are available for 90 days after the workflow completes:
 
 For releases, these artifacts are automatically attached to the release.
 
-## Manual Local Build
+### Quick Start: macOS Automated Build
 
-To build executables locally for testing:
+For macOS, use the automated build script that handles all steps including signing and DMG creation:
+
+```bash
+# Navigate to project root
+cd /path/to/YSocial
+
+# Run automated build and package script
+./packaging/build_and_package_macos.sh
+```
+
+This automatically performs:
+1. PyInstaller build
+2. Code signing with entitlements
+3. DMG creation
+4. Signing of .app bundle in DMG
+
+For more details, see [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md).
+
+### Manual Local Build
+
+To build executables manually for testing:
 
 ### Prerequisites
 
@@ -90,6 +110,14 @@ mkdir -p config_files
 
 # 6. Build with PyInstaller
 pyinstaller y_social.spec --clean --noconfirm
+
+# 7. (macOS only) Sign the executable for distribution
+# This step is CRITICAL for macOS - without it, the app will hang on other machines
+codesign --force --sign - \
+  --entitlements entitlements.plist \
+  --timestamp \
+  --options runtime \
+  dist/YSocial
 ```
 
 **Important Notes:**
@@ -97,6 +125,7 @@ pyinstaller y_social.spec --clean --noconfirm
 - Do **NOT** use the `--windowed` flag when building with a spec file - it will cause an error
 - The `--windowed` flag is only for building directly from Python files, not spec files
 - Console output is automatically suppressed when running the built executable on Windows
+- **macOS**: Code signing step (#7) is **mandatory** for the executable to work on other macOS machines. See [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md) for details.
 
 ### Build Output
 
@@ -218,9 +247,11 @@ This is normal for PyInstaller-built applications with many dependencies.
 - Use Ubuntu-based systems for broadest compatibility
 
 ### macOS
-- Unsigned executables will show security warnings
-- Users need to right-click → Open, or allow in System Preferences
-- Consider code signing for production releases
+- **IMPORTANT**: The executable must be properly signed to work on other machines
+- Without proper signing, the app will hang at the splash screen on other macOS devices
+- See [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md) for detailed signing instructions
+- Quick signing for testing: `codesign --force --sign - --entitlements entitlements.plist --timestamp --options runtime dist/YSocial`
+- For production releases, use a Developer ID certificate and notarize the app
 
 ### Windows
 - Antivirus may flag the executable (false positive)
