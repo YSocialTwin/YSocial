@@ -65,6 +65,21 @@ jobs:
       run: |
         pyinstaller y_social.spec --clean --noconfirm
     
+    - name: Sign macOS executable
+      if: runner.os == 'macOS'
+      run: |
+        # Sign with ad-hoc signature and entitlements
+        # This is required for the app to work on other macOS machines
+        codesign --force --sign - \
+          --entitlements entitlements.plist \
+          --timestamp \
+          --options runtime \
+          dist/YSocial
+        
+        # Verify the signature
+        codesign --verify --verbose dist/YSocial
+        echo "macOS executable signed successfully"
+    
     - name: Build with PyInstaller (Windows)
       if: runner.os == 'Windows'
       run: |
@@ -170,8 +185,12 @@ jobs:
         - In browser mode, if the browser doesn't open automatically, manually
           navigate to http://localhost:8080 (or your custom host:port)
         
-        - On macOS, if you get a security warning, go to System Preferences >
-          Security & Privacy and allow the application to run
+        - On macOS, the executable is code-signed with entitlements to allow it
+          to work properly. If you still get security warnings, go to System
+          Preferences > Security & Privacy and allow the application to run
+        
+        - On macOS, if the app hangs at the splash screen, ensure it was properly
+          signed during the build process
         
         - On Linux, ensure the executable has execute permissions:
           chmod +x YSocial
