@@ -127,8 +127,9 @@ class FastSplashScreen:
         self._create_content()
 
         # Force the window to appear immediately
+        # Note: Only update_idletasks() once - no event loop processing
+        # This avoids conflicts with Hardened Runtime on signed macOS executables
         self.root.update_idletasks()
-        self.root.update()
 
     def _create_content(self):
         """Create the splash screen content."""
@@ -223,7 +224,7 @@ class FastSplashScreen:
         )
         self.loading_label.pack(side=tk.BOTTOM, pady=(0, 20))
 
-        # Progress bar
+        # Progress bar (static - no animation to avoid conflicts with Hardened Runtime)
         style = ttk.Style()
         style.theme_use("default")
         style.configure(
@@ -238,11 +239,12 @@ class FastSplashScreen:
         self.progress = ttk.Progressbar(
             left_column,
             length=200,
-            mode="indeterminate",
+            mode="determinate",  # Changed from "indeterminate" to avoid animation
             style="Custom.Horizontal.TProgressbar",
         )
         self.progress.pack(side=tk.BOTTOM, pady=(0, 5))
-        self.progress.start(10)
+        self.progress["value"] = 50  # Static progress bar at 50%
+        # DO NOT call self.progress.start() - animation conflicts with Hardened Runtime
 
         # License at very bottom
         bottom_label = tk.Label(
@@ -273,11 +275,16 @@ class FastSplashScreen:
             placeholder.pack(fill=tk.BOTH, expand=True)
 
     def update_status(self, message):
-        """Update the loading status message."""
+        """
+        Update the loading status message.
+        
+        NOTE: This method intentionally does NOT call root.update() to avoid
+        conflicts with Hardened Runtime on signed macOS executables.
+        """
         try:
             if hasattr(self, "loading_label"):
                 self.loading_label.config(text=message)
-                self.root.update()
+                # DO NOT call self.root.update() here - causes hang with Hardened Runtime
         except Exception:
             pass  # Silently fail if window is closed
 
