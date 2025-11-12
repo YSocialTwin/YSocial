@@ -264,9 +264,10 @@ if [ -f "$MOUNT_DIR/.background/background.png" ]; then
 fi
 
 # Set custom icon for DMG volume if available
-if [ -f "$APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
+MOUNTED_APP_BUNDLE="$MOUNT_DIR/YSocial.app"
+if [ -f "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
     echo "🎨 Setting DMG volume icon..."
-    cp "$APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns"
+    cp "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns"
     SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
     SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
 fi
