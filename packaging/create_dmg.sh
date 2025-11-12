@@ -2,8 +2,38 @@
 # Script to create a macOS .dmg installer for YSocial
 # This script packages the PyInstaller-built YSocial executable into a disk image
 # with a custom background and drag-to-Applications functionality
+#
+# Usage:
+#   ./packaging/create_dmg.sh [--codesign-identity "identity"] [--entitlements "path/to/entitlements.plist"]
+#
+# Examples:
+#   ./packaging/create_dmg.sh                                    # No code signing
+#   ./packaging/create_dmg.sh --codesign-identity "-"            # Ad-hoc signing
+#   ./packaging/create_dmg.sh --codesign-identity "Developer ID Application: Your Name"  # Developer ID
 
 set -e  # Exit on error
+
+# Parse command line arguments
+CODESIGN_IDENTITY=""
+ENTITLEMENTS_FILE=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --codesign-identity)
+            CODESIGN_IDENTITY="$2"
+            shift 2
+            ;;
+        --entitlements)
+            ENTITLEMENTS_FILE="$2"
+            shift 2
+            ;;
+        *)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--codesign-identity \"identity\"] [--entitlements \"path/to/entitlements.plist\"]"
+            exit 1
+            ;;
+    esac
+done
 
 # Configuration
 APP_NAME="YSocial"
@@ -153,6 +183,28 @@ fi
 
 if [ -f "$SCRIPT_DIR/README_USER.md" ]; then
     cp "$SCRIPT_DIR/README_USER.md" "$STAGING_DIR/README.md"
+fi
+
+# Sign the .app bundle if codesign identity is provided
+if [ -n "$CODESIGN_IDENTITY" ]; then
+    echo "🔐 Signing YSocial.app bundle..."
+    CODESIGN_CMD="codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep"
+    
+    # Add entitlements if provided
+    if [ -n "$ENTITLEMENTS_FILE" ]; then
+        if [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
+        else
+            echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"
+        fi
+    fi
+    
+    # Execute the signing command
+    eval "$CODESIGN_CMD \"$APP_BUNDLE\""
+    
+    # Verify the signature
+    codesign --verify --deep --verbose "$APP_BUNDLE"
+    echo "✅ .app bundle signed successfully"
 fi
 
 # Calculate DMG size (in MB, with 20% padding)

@@ -6,6 +6,11 @@
 #   ./packaging/build_and_package_macos.sh [--dev-id "Developer ID Application: Your Name"]
 #
 # If --dev-id is not provided, uses ad-hoc signing (--sign -)
+#
+# Steps performed:
+#   1. Build executable with PyInstaller
+#   2. Sign the executable with entitlements
+#   3. Create DMG installer with signed .app bundle
 
 set -e  # Exit on error
 
@@ -53,7 +58,7 @@ fi
 cd "$PROJECT_ROOT"
 
 # Step 1: Build the executable with PyInstaller
-echo "📦 Step 1/4: Building executable with PyInstaller..."
+echo "📦 Step 1/3: Building executable with PyInstaller..."
 echo "   Command: pyinstaller y_social.spec --clean --noconfirm"
 pyinstaller y_social.spec --clean --noconfirm
 
@@ -65,7 +70,7 @@ echo "✅ Build complete: dist/YSocial"
 echo ""
 
 # Step 2: Sign the executable
-echo "🔐 Step 2/4: Signing executable with entitlements..."
+echo "🔐 Step 2/3: Signing executable with entitlements..."
 if [ "$CODESIGN_IDENTITY" = "-" ]; then
     echo "   Using ad-hoc signing (--sign -)"
 else
@@ -84,10 +89,9 @@ codesign --verify --verbose dist/YSocial
 echo "✅ Executable signed successfully"
 echo ""
 
-# Step 3: Create the DMG
-echo "💿 Step 3/4: Creating DMG installer..."
-echo "   Running: ./packaging/create_dmg.sh"
-./packaging/create_dmg.sh
+# Step 3: Create the DMG with signed .app bundle
+echo "💿 Step 3/4: Creating DMG installer with signed .app bundle..."
+./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements entitlements.plist
 
 # Find the created DMG
 DMG_FILE=$(find dist -name "YSocial-*.dmg" -type f | head -n 1)
@@ -96,41 +100,6 @@ if [ -z "$DMG_FILE" ]; then
     exit 1
 fi
 echo "✅ DMG created: $DMG_FILE"
-echo ""
-
-# Step 4: Sign the .app bundle inside the DMG
-echo "🔐 Step 4/4: Signing .app bundle in DMG..."
-
-# Mount the DMG
-DMG_VOLUME="/Volumes/YSocial"
-echo "   Mounting DMG..."
-hdiutil attach "$DMG_FILE" -mountpoint "$DMG_VOLUME" -nobrowse -quiet
-
-# Wait for mount
-sleep 2
-
-# Sign the .app bundle
-APP_BUNDLE="$DMG_VOLUME/YSocial.app"
-if [ -d "$APP_BUNDLE" ]; then
-    echo "   Signing YSocial.app..."
-    codesign --force --sign "$CODESIGN_IDENTITY" \
-      --entitlements entitlements.plist \
-      --timestamp \
-      --options runtime \
-      --deep \
-      "$APP_BUNDLE"
-    
-    # Verify the signature
-    echo "   Verifying .app signature..."
-    codesign --verify --deep --verbose "$APP_BUNDLE"
-    echo "✅ .app bundle signed successfully"
-else
-    echo "⚠️  Warning: YSocial.app not found in DMG"
-fi
-
-# Unmount the DMG
-echo "   Unmounting DMG..."
-hdiutil detach "$DMG_VOLUME" -quiet
 
 echo ""
 echo "=================================="

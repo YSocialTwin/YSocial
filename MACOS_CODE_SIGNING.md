@@ -79,8 +79,9 @@ The easiest way to build, sign, and package YSocial is to use the automated scri
 This script automatically:
 1. Builds the executable with PyInstaller
 2. Signs the executable with entitlements
-3. Creates the DMG installer
-4. Signs the .app bundle inside the DMG
+3. Creates the DMG installer with signed .app bundle
+
+The .app bundle signing happens during DMG creation, so there's no need to manually sign it afterward.
 
 ### Manual Build and Package Process
 
@@ -97,22 +98,14 @@ codesign --force --sign - \
   --options runtime \
   dist/YSocial
 
-# 3. Create the DMG (which will copy the signed executable into the .app bundle)
-./packaging/create_dmg.sh
-
-# 4. Sign the .app bundle inside the DMG
-# Mount the DMG, sign the .app, then unmount
-hdiutil attach dist/YSocial-*.dmg -mountpoint /Volumes/YSocial -nobrowse
-codesign --force --sign - \
-  --entitlements entitlements.plist \
-  --timestamp \
-  --options runtime \
-  --deep \
-  /Volumes/YSocial/YSocial.app
-hdiutil detach /Volumes/YSocial
+# 3. Create the DMG (which will create and sign the .app bundle automatically)
+./packaging/create_dmg.sh --codesign-identity "-" --entitlements entitlements.plist
 ```
 
-**Note**: For production distribution with a Developer ID certificate, replace `--sign -` with `--sign "Developer ID Application: Your Name"`
+**Note**: 
+- The `create_dmg.sh` script now accepts `--codesign-identity` and `--entitlements` parameters
+- When these are provided, it automatically signs the .app bundle during DMG creation
+- For production distribution with a Developer ID certificate, replace `-` with your Developer ID
 
 ## What the Entitlements Do
 

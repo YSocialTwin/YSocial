@@ -71,7 +71,26 @@ VERSION=custom ./packaging/create_dmg.sh  # Overrides with "custom"
 
 ## Scripts
 
-### 1. `create_dmg.sh` (Recommended - No external dependencies)
+### 1. `build_and_package_macos.sh` (Recommended - All-in-one)
+
+The automated script that handles the complete build, sign, and package workflow.
+
+**Advantages:**
+- One command does everything
+- Automatically signs both executable and .app bundle
+- No manual steps required
+- Uses ad-hoc signing by default (easy for testing)
+
+**Usage:**
+```bash
+cd /path/to/YSocial
+./packaging/build_and_package_macos.sh
+
+# Or with Developer ID for production
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
+```
+
+### 2. `create_dmg.sh` (Manual workflow - No external dependencies)
 
 The main DMG creation script that uses only built-in macOS tools.
 
@@ -79,20 +98,22 @@ The main DMG creation script that uses only built-in macOS tools.
 - No external dependencies required
 - Works on any macOS system with Xcode tools
 - Full control over DMG appearance and layout
+- Supports code signing the .app bundle during creation
 - Includes detailed progress output
 
 **Usage:**
 ```bash
 cd /path/to/YSocial
 ./packaging/create_dmg.sh
+
+# With code signing
+./packaging/create_dmg.sh --codesign-identity "-" --entitlements entitlements.plist
+
+# With Developer ID
+./packaging/create_dmg.sh --codesign-identity "Developer ID Application: Your Name" --entitlements entitlements.plist
 ```
 
-**With custom version:**
-```bash
-VERSION=1.2.3 ./packaging/create_dmg.sh
-```
-
-### 2. `create_dmg_simple.sh` (Alternative - Requires create-dmg)
+### 3. `create_dmg_simple.sh` (Alternative - Requires create-dmg)
 
 A simpler script using the `create-dmg` tool for easier customization.
 
@@ -140,8 +161,9 @@ git submodule update --init --recursive
 This script automatically:
 1. Builds the executable with PyInstaller
 2. Signs it with entitlements (ad-hoc signing by default)
-3. Creates the DMG installer
-4. Signs the .app bundle inside the DMG
+3. Creates the DMG installer with signed .app bundle
+
+The .app bundle is automatically signed during DMG creation.
 
 For production distribution with a Developer ID:
 ```bash
@@ -178,41 +200,23 @@ codesign --force --sign - \
 
 This will create the signed executable at `dist/YSocial`.
 
-#### Step 2: Create the DMG
+#### Step 2: Create the DMG with signed .app bundle
 
-Once the executable is built, create the DMG installer:
+Once the executable is built and signed, create the DMG installer:
 
 ```bash
-# Using the main script (recommended)
-./packaging/create_dmg.sh
+# Using the main script with code signing (recommended)
+./packaging/create_dmg.sh --codesign-identity "-" --entitlements entitlements.plist
 
-# OR using the simple script (requires create-dmg)
+# OR using the simple script (requires create-dmg, no .app signing)
 ./packaging/create_dmg_simple.sh
 ```
 
 The DMG will be created at `dist/YSocial-1.0.0.dmg` (or with your specified version).
 
-#### Step 3: Sign the .app Bundle (if using manual process)
+**Note**: When using `--codesign-identity`, the `create_dmg.sh` script automatically signs the .app bundle during DMG creation, so no additional signing step is needed.
 
-If you created the DMG manually, you should sign the .app bundle:
-
-```bash
-# Mount the DMG
-hdiutil attach dist/YSocial-*.dmg -mountpoint /Volumes/YSocial -nobrowse
-
-# Sign the .app bundle
-codesign --force --sign - \
-  --entitlements entitlements.plist \
-  --timestamp \
-  --options runtime \
-  --deep \
-  /Volumes/YSocial/YSocial.app
-
-# Unmount
-hdiutil detach /Volumes/YSocial
-```
-
-#### Step 4: Test the DMG
+#### Step 3: Test the DMG
 
 Mount and test the DMG before distribution:
 
