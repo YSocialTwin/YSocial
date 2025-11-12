@@ -220,11 +220,29 @@ hdiutil create -srcfolder "$STAGING_DIR" -volname "$APP_NAME" -fs HFS+ \
 # Mount the temporary DMG
 echo "📂 Mounting temporary DMG..."
 MOUNT_DIR="/Volumes/$APP_NAME"
+
+# Unmount if already mounted
+if [ -d "$MOUNT_DIR" ]; then
+    echo "   Unmounting existing volume..."
+    hdiutil detach "$MOUNT_DIR" 2>/dev/null || true
+    sleep 1
+fi
+
 hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | egrep '^/dev/' | sed 1q | awk '{print $1}' > /tmp/dmg_device.txt
 DMG_DEVICE=$(cat /tmp/dmg_device.txt)
 
-# Wait for mount
-sleep 2
+# Wait for mount to complete
+sleep 3
+
+# Verify the mount is writable
+if [ ! -w "$MOUNT_DIR" ]; then
+    echo "⚠️  Warning: Mounted DMG is not writable, remounting..."
+    hdiutil detach "$DMG_DEVICE" 2>/dev/null || true
+    sleep 2
+    hdiutil attach -readwrite -noverify -noautoopen "$TEMP_DMG" | egrep '^/dev/' | sed 1q | awk '{print $1}' > /tmp/dmg_device.txt
+    DMG_DEVICE=$(cat /tmp/dmg_device.txt)
+    sleep 3
+fi
 
 # Set custom DMG appearance using AppleScript
 echo "🎨 Customizing DMG appearance..."
@@ -267,9 +285,16 @@ fi
 MOUNTED_APP_BUNDLE="$MOUNT_DIR/YSocial.app"
 if [ -f "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" ]; then
     echo "🎨 Setting DMG volume icon..."
-    cp "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns"
-    SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
-    SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+    # Try to copy the icon, but don't fail if it doesn't work
+    if cp "$MOUNTED_APP_BUNDLE/Contents/Resources/YSocial.icns" "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null; then
+        SetFile -c icnC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
+        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+        echo "   ✅ Volume icon set successfully"
+    else
+        echo "   ⚠️  Warning: Could not set volume icon (DMG will still work)"
+    fi
+else
+    echo "   ℹ️  No custom icon found, skipping volume icon"
 fi
 
 # Hide background folder
