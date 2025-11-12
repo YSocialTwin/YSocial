@@ -78,7 +78,7 @@ else
 fi
 
 codesign --force --sign "$CODESIGN_IDENTITY" \
-  --entitlements entitlements.plist \
+  --entitlements "$PROJECT_ROOT/entitlements.plist" \
   --timestamp \
   --options runtime \
   dist/YSocial
@@ -86,12 +86,24 @@ codesign --force --sign "$CODESIGN_IDENTITY" \
 # Verify the signature
 echo "   Verifying signature..."
 codesign --verify --verbose dist/YSocial
+
+# Verify entitlements were applied
+echo "   Checking entitlements..."
+if codesign -d --entitlements - dist/YSocial 2>&1 | grep -q "com.apple.security.cs.disable-library-validation"; then
+    echo "   ✅ Entitlements verified"
+else
+    echo "   ⚠️  WARNING: Entitlements may not have been applied correctly!"
+    echo "   The app might not work on other machines."
+    echo "   Checking what was applied:"
+    codesign -d --entitlements - dist/YSocial 2>&1 | head -20
+fi
+
 echo "✅ Executable signed successfully"
 echo ""
 
 # Step 3: Create the DMG with signed .app bundle
-echo "💿 Step 3/4: Creating DMG installer with signed .app bundle..."
-./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements entitlements.plist
+echo "💿 Step 3/3: Creating DMG installer with signed .app bundle..."
+./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements "$PROJECT_ROOT/entitlements.plist"
 
 # Find the created DMG
 DMG_FILE=$(find dist -name "YSocial-*.dmg" -type f | head -n 1)
