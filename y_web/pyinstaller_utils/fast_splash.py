@@ -277,7 +277,7 @@ class FastSplashScreen:
     def update_status(self, message):
         """
         Update the loading status message.
-        
+
         NOTE: This method intentionally does NOT call root.update() to avoid
         conflicts with Hardened Runtime on signed macOS executables.
         """
