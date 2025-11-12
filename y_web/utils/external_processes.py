@@ -579,7 +579,26 @@ def start_server(exp):
         ]
 
         # Build the gunicorn command
-        if (
+        # Note: gunicorn doesn't work well with PyInstaller bundles for server mode
+        # If running from PyInstaller, we need to use the standard Python server instead
+        if getattr(sys, "frozen", False):
+            # PyInstaller mode - cannot use gunicorn with frozen executable
+            # Fall back to using the server runner with Flask's built-in server
+            print(
+                "Warning: Running from PyInstaller bundle. Using Flask server instead of gunicorn."
+            )
+            print(
+                "For production use with PostgreSQL, run from source or use Docker deployment."
+            )
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)
@@ -687,7 +706,19 @@ def start_server(exp):
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
 
         # Build the command as a list for subprocess.Popen
-        if (
+        # Check if running from PyInstaller bundle
+        if getattr(sys, "frozen", False):
+            # Running from PyInstaller - invoke the bundled executable with special flag
+            # The launcher script detects this flag and routes to the server runner
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)

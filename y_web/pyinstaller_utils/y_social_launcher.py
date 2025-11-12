@@ -100,6 +100,17 @@ def main():
         client_main()
         return
 
+    # Check if we're being invoked as a server runner subprocess
+    # This happens when PyInstaller's bundled executable is called with server runner args
+    if len(sys.argv) > 1 and sys.argv[1] == "--run-server-subprocess":
+        # Remove the special flag and pass remaining args to server runner
+        sys.argv.pop(1)
+        # Import and run the server process
+        from y_web.utils.y_server_process_runner import main as server_main
+
+        server_main()
+        return
+
     # Generate or load installation ID on first run
     if is_pyinstaller():
         try:
