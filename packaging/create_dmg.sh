@@ -192,7 +192,10 @@ if [ -n "$CODESIGN_IDENTITY" ]; then
     
     # Add entitlements if provided
     if [ -n "$ENTITLEMENTS_FILE" ]; then
-        if [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
+        # Handle both absolute and relative paths
+        if [ -f "$ENTITLEMENTS_FILE" ]; then
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$ENTITLEMENTS_FILE\""
+        elif [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
             CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
         else
             echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"

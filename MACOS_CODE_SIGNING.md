@@ -12,7 +12,7 @@ When you build a PyInstaller single-file executable on macOS and run it on other
 
 ## The Solution
 
-YSocial now includes an `entitlements.plist` file that disables library validation for ad-hoc signed applications. This allows the executable to load its own extracted libraries.
+YSocial now includes a `packaging/entitlements.plist` file that disables library validation for ad-hoc signed applications. This allows the executable to load its own extracted libraries.
 
 ### After Building with PyInstaller
 
@@ -21,7 +21,7 @@ After building the executable with `pyinstaller y_social.spec`, sign it with the
 ```bash
 # For ad-hoc signing (testing and local distribution)
 codesign --force --sign - \
-  --entitlements entitlements.plist \
+  --entitlements packaging/entitlements.plist \
   --timestamp \
   --options runtime \
   dist/YSocial
@@ -42,7 +42,7 @@ For wider distribution outside your organization, you can use a Developer ID cer
 
 # Or manually
 codesign --force --sign "Developer ID Application: Your Name" \
-  --entitlements entitlements.plist \
+  --entitlements packaging/entitlements.plist \
   --timestamp \
   --options runtime \
   dist/YSocial
@@ -93,13 +93,13 @@ pyinstaller y_social.spec --clean --noconfirm
 
 # 2. Sign the executable before bundling
 codesign --force --sign - \
-  --entitlements entitlements.plist \
+  --entitlements packaging/entitlements.plist \
   --timestamp \
   --options runtime \
   dist/YSocial
 
 # 3. Create the DMG (which will create and sign the .app bundle automatically)
-./packaging/create_dmg.sh --codesign-identity "-" --entitlements entitlements.plist
+./packaging/create_dmg.sh --codesign-identity "-" --entitlements packaging/entitlements.plist
 ```
 
 **Note**: 
@@ -183,10 +183,10 @@ If entitlements ARE listed correctly (you see all 4 keys), continue to Diagnosis
    ps aux | grep YSocial
    ```
 
-**Solution for missing entitlements**: The signing command must include entitlements with an absolute path:
+**Solution for missing entitlements**: The signing command must include entitlements with an absolute or relative path from project root:
 ```bash
 codesign --force --sign - \
-  --entitlements "$(pwd)/entitlements.plist" \
+  --entitlements packaging/entitlements.plist \
   --timestamp \
   --options runtime \
   dist/YSocial

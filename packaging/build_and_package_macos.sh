@@ -56,8 +56,8 @@ if [ ! -f "$PROJECT_ROOT/y_social.spec" ]; then
     exit 1
 fi
 
-if [ ! -f "$PROJECT_ROOT/entitlements.plist" ]; then
-    echo "❌ Error: entitlements.plist not found"
+if [ ! -f "$SCRIPT_DIR/entitlements.plist" ]; then
+    echo "❌ Error: entitlements.plist not found in packaging directory"
     exit 1
 fi
 
@@ -88,7 +88,7 @@ if [ -z "$USE_TIMESTAMP" ]; then
 fi
 
 codesign --force --sign "$CODESIGN_IDENTITY" \
-  --entitlements "$PROJECT_ROOT/entitlements.plist" \
+  --entitlements "$SCRIPT_DIR/entitlements.plist" \
   $USE_TIMESTAMP \
   --options runtime \
   dist/YSocial
@@ -113,7 +113,7 @@ echo ""
 
 # Step 3: Create the DMG with signed .app bundle
 echo "💿 Step 3/3: Creating DMG installer with signed .app bundle..."
-./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements "$PROJECT_ROOT/entitlements.plist"
+./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements "packaging/entitlements.plist"
 
 # Find the created DMG
 DMG_FILE=$(find dist -name "YSocial-*.dmg" -type f | head -n 1)

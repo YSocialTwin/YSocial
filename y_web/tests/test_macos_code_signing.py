@@ -11,16 +11,16 @@ from pathlib import Path
 
 
 def test_entitlements_file_exists():
-    """Test that entitlements.plist file exists in the project root."""
-    project_root = Path(__file__).parent.parent
-    entitlements_path = project_root / "entitlements.plist"
-    assert entitlements_path.exists(), "entitlements.plist file not found"
+    """Test that entitlements.plist file exists in the packaging directory."""
+    project_root = Path(__file__).parent.parent.parent
+    entitlements_path = project_root / "packaging" / "entitlements.plist"
+    assert entitlements_path.exists(), "entitlements.plist file not found in packaging directory"
 
 
 def test_entitlements_file_valid_xml():
     """Test that entitlements.plist is valid XML."""
-    project_root = Path(__file__).parent.parent
-    entitlements_path = project_root / "entitlements.plist"
+    project_root = Path(__file__).parent.parent.parent
+    entitlements_path = project_root / "packaging" / "entitlements.plist"
     
     try:
         tree = ET.parse(entitlements_path)
@@ -32,8 +32,8 @@ def test_entitlements_file_valid_xml():
 
 def test_entitlements_contains_required_keys():
     """Test that entitlements.plist contains all required security keys."""
-    project_root = Path(__file__).parent.parent
-    entitlements_path = project_root / "entitlements.plist"
+    project_root = Path(__file__).parent.parent.parent
+    entitlements_path = project_root / "packaging" / "entitlements.plist"
     
     tree = ET.parse(entitlements_path)
     root = tree.getroot()
@@ -61,7 +61,7 @@ def test_entitlements_contains_required_keys():
 
 def test_spec_file_references_entitlements():
     """Test that y_social.spec references the entitlements file."""
-    project_root = Path(__file__).parent.parent
+    project_root = Path(__file__).parent.parent.parent
     spec_path = project_root / "y_social.spec"
     
     with open(spec_path, "r") as f:
@@ -71,8 +71,8 @@ def test_spec_file_references_entitlements():
         "entitlements.plist" in spec_content
     ), "y_social.spec does not reference entitlements.plist"
     assert (
-        'entitlements_file=os.path.join(basedir, "entitlements.plist")' in spec_content
-    ), "entitlements_file not properly configured in spec"
+        'entitlements_file=os.path.join(basedir, "packaging", "entitlements.plist")' in spec_content
+    ), "entitlements_file not properly configured in spec (should be in packaging directory)"
 
 
 def test_spec_file_is_onefile_mode():
