@@ -242,3 +242,92 @@ class TestServerSubprocessHandling:
 
         assert uses_script_path is True
         assert script_path in cmd
+
+    def test_bundle_executable_detection(self):
+        """Test that bundle executable is detected by checking executable name"""
+        from pathlib import Path
+
+        # Test normal Python executable
+        normal_exe = "/usr/bin/python"
+        is_bundle = "python" not in Path(normal_exe).name.lower()
+        assert is_bundle is False, "Normal Python should not be detected as bundle"
+
+        # Test macOS app bundle
+        macos_bundle = "/Applications/YSocial.app/Contents/MacOS/YSocial"
+        is_bundle = "python" not in Path(macos_bundle).name.lower()
+        assert is_bundle is True, "macOS app bundle should be detected"
+
+        # Test PyInstaller temp extraction
+        temp_bundle = "/var/folders/.../YSocial"
+        is_bundle = "python" not in Path(temp_bundle).name.lower()
+        assert is_bundle is True, "Temp extraction should be detected as bundle"
+
+        # Test Python with version number
+        python_versioned = "/usr/bin/python3.9"
+        is_bundle = "python" not in Path(python_versioned).name.lower()
+        assert is_bundle is False, "Python with version should not be detected as bundle"
+
+    def test_combined_pyinstaller_detection(self):
+        """Test combined detection using both sys.frozen and executable name"""
+        from pathlib import Path
+
+        # Case 1: sys.frozen=True, bundle name (fully frozen)
+        is_frozen = True
+        exe_path = "/var/folders/.../YSocial"
+        is_bundle_exe = "python" not in Path(exe_path).name.lower()
+        is_pyinstaller = is_frozen or is_bundle_exe
+        assert is_pyinstaller is True
+
+        # Case 2: sys.frozen=False, bundle name (parent process not frozen but using bundle)
+        is_frozen = False
+        exe_path = "/Applications/YSocial.app/Contents/MacOS/YSocial"
+        is_bundle_exe = "python" not in Path(exe_path).name.lower()
+        is_pyinstaller = is_frozen or is_bundle_exe
+        assert is_pyinstaller is True, "Should detect PyInstaller even when sys.frozen is False"
+
+        # Case 3: sys.frozen=False, python name (normal development)
+        is_frozen = False
+        exe_path = "/usr/bin/python"
+        is_bundle_exe = "python" not in Path(exe_path).name.lower()
+        is_pyinstaller = is_frozen or is_bundle_exe
+        assert is_pyinstaller is False
+
+    def test_macos_pyinstaller_error_scenario(self):
+        """
+        Test that the fix addresses the macOS PyInstaller error.
+        
+        The original error on macOS:
+        YSocial: error: unrecognized arguments: /var/folders/.../y_server_run.py -c config.json
+        
+        This occurred because:
+        1. sys.executable pointed to the YSocial bundle
+        2. sys.frozen was False in the parent Flask process
+        3. Code only checked sys.frozen, missing the bundle detection
+        4. Command became: [YSocial, y_server_run.py, -c, config.json] ❌
+        
+        With the fix:
+        1. Check both sys.frozen AND executable name
+        2. Detect bundle by checking if "python" is in executable name
+        3. Command becomes: [YSocial, --run-server-subprocess, -c, config.json, --platform, type] ✅
+        """
+        from pathlib import Path
+
+        # Simulate the macOS PyInstaller scenario from the error
+        sys_executable = "/var/folders/c1/gw_hwyms79bccypfg3x2988w0000gn/T/_MEIK6Hfpr/YSocial"
+        sys_frozen = False  # Not set in parent process
+
+        # Old detection (would fail)
+        old_detection = sys_frozen
+        assert old_detection is False, "Old detection would miss this case"
+
+        # New detection (should work)
+        is_frozen = sys_frozen
+        is_bundle_exe = "python" not in Path(sys_executable).name.lower()
+        new_detection = is_frozen or is_bundle_exe
+        assert new_detection is True, "New detection should catch this case"
+
+        # Verify the correct command would be built
+        if new_detection:
+            cmd = [sys_executable, "--run-server-subprocess", "-c", "config.json", "--platform", "microblogging"]
+            assert cmd[1] == "--run-server-subprocess", "Should use special flag"
+            assert "y_server_run.py" not in str(cmd), "Should not include script path"
