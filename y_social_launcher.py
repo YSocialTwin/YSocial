@@ -14,50 +14,8 @@ if __name__ == "__main__":
     is_frozen = getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
     if is_frozen:
-        # For frozen builds, show splash immediately before any heavy imports
-        # Import only the lightweight modules needed for splash
-        import threading
-        import time
-
-        # Import and show the fast splash screen
-        from y_web.pyinstaller_utils.fast_splash import FastSplashScreen
-
-        # Create and show splash immediately
-        splash = FastSplashScreen()
-
-        # Flag to track when imports are done
-        imports_done = False
-
-        # Import heavy modules in a background thread
-        def do_imports():
-            """Import the heavy modules in background."""
-            global imports_done
-            try:
-                # Import the main launcher (heavy imports happen here)
-                from y_web.pyinstaller_utils.y_social_launcher import main
-
-                imports_done = True
-            except Exception as e:
-                imports_done = True
-                raise e
-
-        # Start import thread
-        import_thread = threading.Thread(target=do_imports, daemon=True)
-        import_thread.start()
-
-        # Wait for import thread to complete with timeout
-        # The splash will remain visible during this time
-        # We don't update it to avoid conflicts with Hardened Runtime on signed executables
-        import_thread.join(timeout=30)
-
-        # Close splash
-        try:
-            splash.close()
-        except Exception:
-            pass
-
-        # Now import and launch the main application on the MAIN thread
-        # This is critical for PyWebview which requires the main thread
+        # For frozen builds, launch directly without splash screen
+        # Splash screen causes issues with Hardened Runtime on signed macOS executables
         try:
             from y_web.pyinstaller_utils.y_social_launcher import main
 
