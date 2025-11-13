@@ -74,6 +74,7 @@ hidden_imports = [
     "webview",
     "webview.platforms",
     "pythonjsonlogger",
+    "pythonjsonlogger.jsonlogger",
 ]
 
 # Collect all submodules for important packages
