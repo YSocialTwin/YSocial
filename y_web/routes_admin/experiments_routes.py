@@ -1512,6 +1512,9 @@ def experiment_logs(exp_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+    BASE_DIR = get_writable_path()
+
     # Construct path to _server.log
     # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
     db_name = experiment.db_name
@@ -1519,13 +1522,13 @@ def experiment_logs(exp_id):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         # PostgreSQL format - UUID is after the underscore
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1584,17 +1587,20 @@ def experiment_trends(exp_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+    BASE_DIR = get_writable_path()
+
     # Construct path to _server.log
     db_name = experiment.db_name
     if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1788,19 +1794,22 @@ def client_logs(client_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+    BASE_DIR = get_writable_path()
+
     # Construct path to client log file
     db_name = experiment.db_name
     if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         # PostgreSQL format - UUID is after the underscore
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
