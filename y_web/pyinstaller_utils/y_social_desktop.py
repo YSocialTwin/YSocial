@@ -154,7 +154,7 @@ def start_desktop_app(
 
     # Create and start the desktop window
     print(f"\n{'='*60}")
-    print(f"🚀 Starting YSocial in Desktop Mode")
+    print(f"Starting YSocial in Desktop Mode")
     print(f"📱 Opening native window for: {url}")
     print(f"{'='*60}\n")
 
@@ -184,7 +184,7 @@ def start_desktop_app(
     # Start the webview - this blocks until the window is closed
     webview.start(debug=debug)
 
-    print("\n👋 YSocial desktop window closed. Exiting...")
+    print("\nYSocial desktop window closed. Exiting...")
 
 
 if __name__ == "__main__":
@@ -253,7 +253,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nShutting down YSocial Desktop...")
     except Exception as e:
-        print(f"\n❌ Error starting YSocial Desktop:")
+        print(f"\nError starting YSocial Desktop:")
         print(f"   {type(e).__name__}: {e}")
         import traceback
 
