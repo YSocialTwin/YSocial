@@ -178,52 +178,85 @@ def main():
     notebook = False
 
     # Desktop mode is default unless --browser is specified
+    use_browser_fallback = False
+    
     if not args.browser:
         # Desktop mode - use PyWebview
         try:
             from .y_social_desktop import start_desktop_app
         except ImportError:
             print(
-                "\n❌ Error: PyWebview is not installed. Desktop mode requires pywebview.",
+                "\n⚠️  Warning: PyWebview is not installed. Falling back to browser mode.",
                 file=sys.stderr,
             )
             print(
-                "   Install it with: pip install pywebview",
+                "   For desktop mode, install pywebview: pip install pywebview\n",
                 file=sys.stderr,
             )
-            sys.exit(1)
+            use_browser_fallback = True
         except Exception as e:
-            print(f"\n❌ Error importing y_social_desktop module:", file=sys.stderr)
-            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
-            import traceback
+            # Check if it's a GTK-related error (common on Linux with PyInstaller)
+            error_msg = str(e).lower()
+            if "gtk" in error_msg or "gi" in error_msg:
+                print(
+                    f"\n⚠️  Warning: GTK dependencies not available. Falling back to browser mode.",
+                    file=sys.stderr,
+                )
+                print(
+                    f"   This is expected on Linux PyInstaller builds.\n",
+                    file=sys.stderr,
+                )
+                use_browser_fallback = True
+            else:
+                print(f"\n❌ Error importing y_social_desktop module:", file=sys.stderr)
+                print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+                import traceback
 
-            traceback.print_exc()
-            sys.stderr.flush()
-            sys.exit(1)
+                traceback.print_exc()
+                sys.stderr.flush()
+                sys.exit(1)
 
-        try:
-            start_desktop_app(
-                db_type=args.db,
-                debug=args.debug,
-                host=args.host,
-                port=args.port,
-                llm_backend=args.llm_backend,
-                notebook=notebook,
-                window_width=args.window_width,
-                window_height=args.window_height,
-            )
-        except KeyboardInterrupt:
-            print("\n\nShutting down YSocial Desktop...")
-            sys.exit(0)
-        except Exception as e:
-            print(f"\n❌ Error starting YSocial Desktop:", file=sys.stderr)
-            print(f"   {type(e).__name__}: {e}", file=sys.stderr)
-            import traceback
+        if not use_browser_fallback:
+            try:
+                start_desktop_app(
+                    db_type=args.db,
+                    debug=args.debug,
+                    host=args.host,
+                    port=args.port,
+                    llm_backend=args.llm_backend,
+                    notebook=notebook,
+                    window_width=args.window_width,
+                    window_height=args.window_height,
+                )
+                # If desktop mode succeeds, we're done
+                sys.exit(0)
+            except KeyboardInterrupt:
+                print("\n\nShutting down YSocial Desktop...")
+                sys.exit(0)
+            except Exception as e:
+                # Check if it's a GTK-related error
+                error_msg = str(e).lower()
+                if "gtk" in error_msg or "gi" in error_msg or "webview" in error_msg:
+                    print(
+                        f"\n⚠️  Warning: Desktop mode failed ({type(e).__name__}). Falling back to browser mode.",
+                        file=sys.stderr,
+                    )
+                    print(
+                        f"   This is expected on Linux PyInstaller builds without GTK.\n",
+                        file=sys.stderr,
+                    )
+                    use_browser_fallback = True
+                else:
+                    print(f"\n❌ Error starting YSocial Desktop:", file=sys.stderr)
+                    print(f"   {type(e).__name__}: {e}", file=sys.stderr)
+                    import traceback
 
-            traceback.print_exc()
-            sys.stderr.flush()
-            sys.exit(1)
-    else:
+                    traceback.print_exc()
+                    sys.stderr.flush()
+                    sys.exit(1)
+    
+    # Browser mode - either explicitly requested or fallback from desktop mode
+    if args.browser or use_browser_fallback:
         # Browser mode - traditional web browser
         # Import the actual application after parsing args (allows --help to work without dependencies)
         try:
