@@ -313,19 +313,16 @@ def upload_page_collection():
     collection = request.files["collection"]
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE = get_writable_path()
-    
+
     # Ensure temp_data directory exists
     temp_data_dir = os.path.join(BASE, f"experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
-    
+
     if collection:
-        collection.save(
-            os.path.join(temp_data_dir, collection.filename)
-        )
-        pages = json.load(
-            open(os.path.join(temp_data_dir, collection.filename))
-        )
+        collection.save(os.path.join(temp_data_dir, collection.filename))
+        pages = json.load(open(os.path.join(temp_data_dir, collection.filename)))
         for page in pages:
             # check if the page already exists
             p = Page.query.filter_by(name=page["name"], feed=page["feed"]).first()
@@ -380,15 +377,14 @@ def download_pages():
         )
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE = get_writable_path()
-    
+
     # Ensure temp_data directory exists
     temp_data_dir = os.path.join(BASE, f"experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
-    
+
     with open(os.path.join(temp_data_dir, "pages.json"), "w") as f:
         json.dump(data, f)
 
-    return send_file(
-        os.path.join(temp_data_dir, "pages.json"), as_attachment=True
-    )
+    return send_file(os.path.join(temp_data_dir, "pages.json"), as_attachment=True)

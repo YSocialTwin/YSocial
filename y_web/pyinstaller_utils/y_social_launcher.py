@@ -179,7 +179,7 @@ def main():
 
     # Desktop mode is default unless --browser is specified
     use_browser_fallback = False
-    
+
     if not args.browser:
         # Desktop mode - use PyWebview
         try:
@@ -254,7 +254,7 @@ def main():
                     traceback.print_exc()
                     sys.stderr.flush()
                     sys.exit(1)
-    
+
     # Browser mode - either explicitly requested or fallback from desktop mode
     if args.browser or use_browser_fallback:
         # Browser mode - traditional web browser

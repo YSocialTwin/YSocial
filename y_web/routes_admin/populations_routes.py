@@ -780,12 +780,13 @@ def download_population(uid):
         )
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
-    
+
     # Ensure temp_data directory exists
     temp_data_dir = os.path.join(BASE_DIR, f"experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
-    
+
     filename = os.path.join(temp_data_dir, f"population_{population.name}.json")
     json.dump(res, open(filename, "w"), indent=4)
 
@@ -806,12 +807,13 @@ def upload_population():
     population_file = request.files["population_file"]
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
-    
+
     # Ensure temp_data directory exists
     temp_data_dir = os.path.join(BASE_DIR, f"experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
-    
+
     filename = os.path.join(temp_data_dir, population_file.filename)
     population_file.save(filename)
 

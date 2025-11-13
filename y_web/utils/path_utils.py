@@ -84,7 +84,7 @@ def get_writable_path(relative_path=""):
         # DMG-installed apps cannot write to /Applications or current working directory
         import platform
         from pathlib import Path
-        
+
         if platform.system() == "Darwin":  # macOS
             # Use Application Support directory (standard for macOS apps)
             base = Path.home() / "Library" / "Application Support" / "YSocial"
@@ -94,7 +94,7 @@ def get_writable_path(relative_path=""):
         else:
             # Linux and others - use hidden directory in home
             base = Path.home() / ".ysocial"
-        
+
         # Create base directory if it doesn't exist
         base.mkdir(parents=True, exist_ok=True)
         base = str(base)

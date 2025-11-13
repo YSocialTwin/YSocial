@@ -1240,17 +1240,25 @@ def delete_simulation(exp_id):
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
             from y_web.utils.path_utils import get_writable_path
+
             BASE_DIR = get_writable_path()
             shutil.rmtree(
-                os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}"),
+                os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
+                ),
                 ignore_errors=True,
             )
         elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
             # Remove experiment folder
             from y_web.utils.path_utils import get_writable_path
+
             BASE_DIR = get_writable_path()
             shutil.rmtree(
-                os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}"),
+                os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
+                ),
                 ignore_errors=True,
             )
 
@@ -1517,6 +1525,7 @@ def experiment_logs(exp_id):
         return jsonify({"error": "Experiment not found"}), 404
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # Construct path to _server.log
@@ -1526,7 +1535,9 @@ def experiment_logs(exp_id):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
@@ -1592,6 +1603,7 @@ def experiment_trends(exp_id):
         return jsonify({"error": "Experiment not found"}), 404
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # Construct path to _server.log
@@ -1599,7 +1611,9 @@ def experiment_trends(exp_id):
     if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
@@ -1799,6 +1813,7 @@ def client_logs(client_id):
         return jsonify({"error": "Experiment not found"}), 404
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # Construct path to client log file
@@ -1807,7 +1822,9 @@ def client_logs(client_id):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
@@ -1955,12 +1972,16 @@ def prompts(uid):
     check_privileges(current_user.username)
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # get experiment details
     experiment = Exps.query.filter_by(idexp=uid).first()
     # get the prompts file for the experiment
-    prompts = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json")
+    prompts = os.path.join(
+        BASE_DIR,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+    )
 
     # read the prompts file
     prompts = json.load(open(prompts))
@@ -1975,12 +1996,16 @@ def update_prompts(uid):
     check_privileges(current_user.username)
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # get experiment details
     experiment = Exps.query.filter_by(idexp=uid).first()
     # get the prompts file for the experiment
-    prompts_filename = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json")
+    prompts_filename = os.path.join(
+        BASE_DIR,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+    )
 
     # read the prompts file
     prompts = json.load(open(prompts_filename))
@@ -2007,6 +2032,7 @@ def download_experiment_file(eid):
     check_privileges(current_user.username)
 
     from y_web.utils.path_utils import get_writable_path
+
     BASE_DIR = get_writable_path()
 
     # get experiment details
@@ -2019,12 +2045,16 @@ def download_experiment_file(eid):
 
     # Get folder path based on database type
     if db_type == "sqlite":
-        folder = os.path.join(BASE_DIR,
-            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+        folder = os.path.join(
+            BASE_DIR,
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
         )
     else:
         # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
-        folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}")
+        folder = os.path.join(
+            BASE_DIR,
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
+        )
 
     # For PostgreSQL, create an SQLite copy of the database
     if db_type == "postgresql":
@@ -2127,11 +2157,11 @@ def download_experiment_file(eid):
 
     # compress the folder and send the file
     shutil.make_archive(folder, "zip", folder)
-    
+
     # Ensure temp_data directory exists
     temp_data_dir = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data")
     os.makedirs(temp_data_dir, exist_ok=True)
-    
+
     # move the file to the temp_data folder
     temp_data_path = os.path.join(temp_data_dir, f"{folder.split(os.sep)[-1]}.zip")
     shutil.move(
@@ -3016,10 +3046,15 @@ def copy_experiment():
             source_uid = source_exp.db_name.replace("experiments_", "")
 
         from y_web.utils.path_utils import get_writable_path
+
         BASE_DIR = get_writable_path()
 
-        source_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}")
-        new_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}")
+        source_folder = os.path.join(
+            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}"
+        )
+        new_folder = os.path.join(
+            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}"
+        )
 
         # Check if source folder exists
         if not os.path.exists(source_folder):
