@@ -355,11 +355,12 @@ def create_app(db_type="sqlite", desktop_mode=False):
     def before_request_handler():
         """Setup experiment context and desktop mode for each request."""
         setup_experiment_context()
-        
+
         # If in desktop mode, ensure webview window is accessible
         if app.config.get("DESKTOP_MODE"):
             try:
                 from y_web.pyinstaller_utils.y_social_desktop import get_desktop_window
+
                 window = get_desktop_window()
                 if window:
                     app.config["WEBVIEW_WINDOW"] = window

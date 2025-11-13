@@ -388,4 +388,6 @@ def download_pages():
     with open(os.path.join(temp_data_dir, "pages.json"), "w") as f:
         json.dump(data, f)
 
-    return send_file_desktop(os.path.join(temp_data_dir, "pages.json"), as_attachment=True)
+    return send_file_desktop(
+        os.path.join(temp_data_dir, "pages.json"), as_attachment=True
+    )

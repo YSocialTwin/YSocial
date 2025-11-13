@@ -35,10 +35,11 @@ def get_webview_window():
     window = current_app.config.get("WEBVIEW_WINDOW", None)
     if window:
         return window
-    
+
     # If not in config, try to get directly from desktop module
     try:
         from y_web.pyinstaller_utils.y_social_desktop import get_desktop_window
+
         return get_desktop_window()
     except ImportError:
         return None

@@ -18,11 +18,11 @@ _webview_window = None
 def check_webview_compatibility():
     """
     Check if webview can be used on this system.
-    
+
     This function attempts to detect if the required GUI backend is available
     before actually starting the webview. This helps provide better error messages
     for systems where GTK or other backends are not available.
-    
+
     Returns:
         tuple: (is_compatible, error_message)
     """
@@ -30,20 +30,22 @@ def check_webview_compatibility():
         # Try to detect the GUI backend that will be used
         # On Linux, this will typically try to load GTK
         # This is a simple check - the real test is webview.start()
-        
+
         # Check if we're on Linux and can import gi (GTK bindings)
-        if sys.platform.startswith('linux'):
+        if sys.platform.startswith("linux"):
             try:
                 import gi
-                gi.require_version('Gtk', '3.0')
+
+                gi.require_version("Gtk", "3.0")
                 from gi.repository import Gtk
+
                 return (True, None)
             except (ImportError, ValueError) as e:
                 return (False, f"GTK bindings not available: {e}")
-        
+
         # On other platforms, assume compatibility
         return (True, None)
-        
+
     except Exception as e:
         return (False, str(e))
 
@@ -93,7 +95,7 @@ def start_desktop_app(
         window_title: Title for the desktop window
         window_width: Width of the desktop window (0 for fullscreen)
         window_height: Height of the desktop window (0 for fullscreen)
-        
+
     Raises:
         RuntimeError: If webview backend is not compatible with the system
     """
@@ -101,7 +103,7 @@ def start_desktop_app(
     is_compatible, error_msg = check_webview_compatibility()
     if not is_compatible:
         raise RuntimeError(f"Webview not compatible: {error_msg}")
-    
+
     from y_social import start_app
 
     # Start Flask in a background thread
