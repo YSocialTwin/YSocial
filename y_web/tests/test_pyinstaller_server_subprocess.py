@@ -265,7 +265,9 @@ class TestServerSubprocessHandling:
         # Test Python with version number
         python_versioned = "/usr/bin/python3.9"
         is_bundle = "python" not in Path(python_versioned).name.lower()
-        assert is_bundle is False, "Python with version should not be detected as bundle"
+        assert (
+            is_bundle is False
+        ), "Python with version should not be detected as bundle"
 
     def test_combined_pyinstaller_detection(self):
         """Test combined detection using both sys.frozen and executable name"""
@@ -283,7 +285,9 @@ class TestServerSubprocessHandling:
         exe_path = "/Applications/YSocial.app/Contents/MacOS/YSocial"
         is_bundle_exe = "python" not in Path(exe_path).name.lower()
         is_pyinstaller = is_frozen or is_bundle_exe
-        assert is_pyinstaller is True, "Should detect PyInstaller even when sys.frozen is False"
+        assert (
+            is_pyinstaller is True
+        ), "Should detect PyInstaller even when sys.frozen is False"
 
         # Case 3: sys.frozen=False, python name (normal development)
         is_frozen = False
@@ -295,16 +299,16 @@ class TestServerSubprocessHandling:
     def test_macos_pyinstaller_error_scenario(self):
         """
         Test that the fix addresses the macOS PyInstaller error.
-        
+
         The original error on macOS:
         YSocial: error: unrecognized arguments: /var/folders/.../y_server_run.py -c config.json
-        
+
         This occurred because:
         1. sys.executable pointed to the YSocial bundle
         2. sys.frozen was False in the parent Flask process
         3. Code only checked sys.frozen, missing the bundle detection
         4. Command became: [YSocial, y_server_run.py, -c, config.json] ❌
-        
+
         With the fix:
         1. Check both sys.frozen AND executable name
         2. Detect bundle by checking if "python" is in executable name
@@ -313,7 +317,9 @@ class TestServerSubprocessHandling:
         from pathlib import Path
 
         # Simulate the macOS PyInstaller scenario from the error
-        sys_executable = "/var/folders/c1/gw_hwyms79bccypfg3x2988w0000gn/T/_MEIK6Hfpr/YSocial"
+        sys_executable = (
+            "/var/folders/c1/gw_hwyms79bccypfg3x2988w0000gn/T/_MEIK6Hfpr/YSocial"
+        )
         sys_frozen = False  # Not set in parent process
 
         # Old detection (would fail)
@@ -328,28 +334,39 @@ class TestServerSubprocessHandling:
 
         # Verify the correct command would be built
         if new_detection:
-            cmd = [sys_executable, "--run-server-subprocess", "-c", "config.json", "--platform", "microblogging"]
+            cmd = [
+                sys_executable,
+                "--run-server-subprocess",
+                "-c",
+                "config.json",
+                "--platform",
+                "microblogging",
+            ]
             assert cmd[1] == "--run-server-subprocess", "Should use special flag"
             assert "y_server_run.py" not in str(cmd), "Should not include script path"
 
     def test_meipass_detection(self):
         """Test that sys._MEIPASS is checked for PyInstaller detection"""
         # Test the detection logic with _MEIPASS
-        
+
         # Case 1: sys._MEIPASS exists but sys.frozen is False
         # This is the problematic case reported by the user
         is_frozen = False
         has_meipass = True  # Simulating hasattr(sys, "_MEIPASS")
         is_bundle_exe = False  # Executable might contain "python"
         is_pyinstaller = is_frozen or has_meipass or is_bundle_exe
-        assert is_pyinstaller is True, "Should detect PyInstaller via _MEIPASS even when frozen is False"
+        assert (
+            is_pyinstaller is True
+        ), "Should detect PyInstaller via _MEIPASS even when frozen is False"
 
         # Case 2: Normal development (no _MEIPASS)
         is_frozen = False
         has_meipass = False
         is_bundle_exe = False
         is_pyinstaller = is_frozen or has_meipass or is_bundle_exe
-        assert is_pyinstaller is False, "Should not detect PyInstaller in normal development"
+        assert (
+            is_pyinstaller is False
+        ), "Should not detect PyInstaller in normal development"
 
         # Case 3: Full PyInstaller (all indicators present)
         is_frozen = True
@@ -361,16 +378,16 @@ class TestServerSubprocessHandling:
     def test_macos_error_with_meipass(self):
         """
         Test that the fix addresses the specific macOS error with _MEIPASS.
-        
+
         The user reported error shows script path in _MEI temp directory:
         /var/folders/.../T/_MEIluC6ib/external/YServer/y_server_run.py
-        
+
         This indicates:
         1. PyInstaller extracted files to temp directory (has _MEIPASS)
         2. But sys.frozen might not be set in the Flask parent process
         3. The original fix only checked sys.frozen and executable name
         4. Need to also check sys._MEIPASS which is always set by PyInstaller
-        
+
         With this fix:
         - Check sys.frozen (for typical cases)
         - Check sys._MEIPASS (for cases where frozen is not set) ← NEW
@@ -381,21 +398,21 @@ class TestServerSubprocessHandling:
         # Simulate the error scenario: _MEIPASS exists, but frozen might not be set
         # In actual PyInstaller, sys._MEIPASS would be set to something like:
         # /var/folders/c1/gw_hwyms79bccypfg3x2988w0000gn/T/_MEIluC6ib
-        
+
         has_meipass = hasattr(sys, "_MEIPASS")  # This would be True in PyInstaller
         is_frozen = getattr(sys, "frozen", False)  # This might be False
-        
+
         # In the test environment, _MEIPASS won't exist, but we can test the logic
         # The key is that checking hasattr(sys, "_MEIPASS") is more reliable
-        
+
         # Simulate the detection
         simulated_has_meipass = True  # Would be true in PyInstaller
         simulated_is_frozen = False  # Might be false in parent process
-        
+
         # OLD detection (would fail)
         old_detection = simulated_is_frozen
         assert old_detection is False, "Old detection misses this case"
-        
+
         # NEW detection (should work)
         new_detection = simulated_is_frozen or simulated_has_meipass
         assert new_detection is True, "New detection catches this via _MEIPASS check"
