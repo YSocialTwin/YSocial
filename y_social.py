@@ -17,7 +17,10 @@ def start_app(
     import nltk
     import requests
 
-    nltk.download("vader_lexicon")
+    # Download NLTK data only when not running from PyInstaller bundle
+    # In PyInstaller mode, NLTK data is bundled and the runtime hook sets up the path
+    if not getattr(sys, "frozen", False):
+        nltk.download("vader_lexicon")
 
     # Parse and validate LLM backend
     llm_url = None
