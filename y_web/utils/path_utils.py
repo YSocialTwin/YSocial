@@ -70,8 +70,8 @@ def get_writable_path(relative_path=""):
     Get absolute path to writable directory, works for dev and for PyInstaller.
 
     When running from source, this returns paths relative to the repository root.
-    When running from PyInstaller bundle, this returns paths relative to the current
-    working directory (where user can write files).
+    When running from PyInstaller bundle, this returns paths relative to a user-writable
+    directory (Application Support on macOS, user's home directory on other platforms).
 
     Args:
         relative_path: Relative path from the writable base directory
@@ -80,9 +80,24 @@ def get_writable_path(relative_path=""):
         str: Absolute path to the writable location
     """
     if getattr(sys, "frozen", False):
-        # Running in PyInstaller bundle - use current working directory
-        # This is where users can write experiment data, logs, etc.
-        base = os.getcwd()
+        # Running in PyInstaller bundle - use user-writable directory
+        # DMG-installed apps cannot write to /Applications or current working directory
+        import platform
+        from pathlib import Path
+        
+        if platform.system() == "Darwin":  # macOS
+            # Use Application Support directory (standard for macOS apps)
+            base = Path.home() / "Library" / "Application Support" / "YSocial"
+        elif platform.system() == "Windows":
+            # Use AppData directory (standard for Windows apps)
+            base = Path.home() / "AppData" / "Local" / "YSocial"
+        else:
+            # Linux and others - use hidden directory in home
+            base = Path.home() / ".ysocial"
+        
+        # Create base directory if it doesn't exist
+        base.mkdir(parents=True, exist_ok=True)
+        base = str(base)
     else:
         # Running from source - use repository root
         base = os.path.dirname(
