@@ -312,13 +312,19 @@ def upload_page_collection():
 
     collection = request.files["collection"]
 
-    BASE = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
+    from y_web.utils.path_utils import get_writable_path
+    BASE = get_writable_path()
+    
+    # Ensure temp_data directory exists
+    temp_data_dir = os.path.join(BASE, f"experiments{os.sep}temp_data")
+    os.makedirs(temp_data_dir, exist_ok=True)
+    
     if collection:
         collection.save(
-            f"{BASE}experiments{os.sep}temp_data{os.sep}{collection.filename}"
+            os.path.join(temp_data_dir, collection.filename)
         )
         pages = json.load(
-            open(f"{BASE}experiments{os.sep}temp_data{os.sep}{collection.filename}")
+            open(os.path.join(temp_data_dir, collection.filename))
         )
         for page in pages:
             # check if the page already exists
@@ -340,7 +346,7 @@ def upload_page_collection():
             db.session.commit()
 
     # delete the file
-    os.remove(f"{BASE}experiments{os.sep}temp_data{os.sep}{collection.filename}")
+    os.remove(os.path.join(temp_data_dir, collection.filename))
 
     return redirect(request.referrer)
 
@@ -373,10 +379,16 @@ def download_pages():
             }
         )
 
-    BASE = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
-    with open(f"{BASE}experiments{os.sep}temp_data{os.sep}pages.json", "w") as f:
+    from y_web.utils.path_utils import get_writable_path
+    BASE = get_writable_path()
+    
+    # Ensure temp_data directory exists
+    temp_data_dir = os.path.join(BASE, f"experiments{os.sep}temp_data")
+    os.makedirs(temp_data_dir, exist_ok=True)
+    
+    with open(os.path.join(temp_data_dir, "pages.json"), "w") as f:
         json.dump(data, f)
 
     return send_file(
-        f"{BASE}experiments{os.sep}temp_data{os.sep}pages.json", as_attachment=True
+        os.path.join(temp_data_dir, "pages.json"), as_attachment=True
     )

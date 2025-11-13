@@ -24,6 +24,9 @@ block_cipher = None
 basedir = os.path.abspath(SPECPATH)
 
 # Collect all submodules for key packages
+# Note: ysights and jupyterlab are excluded since notebooks are disabled by default
+# in PyInstaller mode (bundled Python cannot be used as a Jupyter kernel).
+# Users who want to use notebooks should run from source.
 hidden_imports = [
     "nltk",
     "nltk.data",
@@ -49,8 +52,8 @@ hidden_imports = [
     "numpy",
     "pillow",
     "psutil",
-    "ysights",
-    "jupyterlab",
+    # "ysights",  # Excluded - only used in notebooks
+    # "jupyterlab",  # Excluded - notebooks disabled by default in PyInstaller
     "gunicorn",
     "gevent",
     "psycopg2",
@@ -70,6 +73,8 @@ hidden_imports = [
     "h11",
     "webview",
     "webview.platforms",
+    "pythonjsonlogger",
+    "pythonjsonlogger.jsonlogger",
 ]
 
 # Collect all submodules for important packages
@@ -82,7 +87,7 @@ hidden_imports += collect_submodules("nltk")
 hidden_imports += collect_submodules("bs4")
 hidden_imports += collect_submodules("openai")
 hidden_imports += collect_submodules("pyautogen")
-hidden_imports += collect_submodules("ysights")
+# hidden_imports += collect_submodules("ysights")  # Excluded - only used in notebooks
 hidden_imports += collect_submodules("sklearn")
 hidden_imports += collect_submodules("webview")
 
@@ -115,7 +120,7 @@ for pkg in [
     "urllib3",
     "charset_normalizer",
     "pygments",
-    "ysights",
+    # "ysights",  # Excluded - only used in notebooks
     "pywebview",
 ]:
     try:
