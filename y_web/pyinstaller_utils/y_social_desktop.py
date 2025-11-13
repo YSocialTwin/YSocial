@@ -35,12 +35,13 @@ class DesktopAPI:
             mime_type: MIME type of the file
             
         Returns:
-            dict: {'success': True/False, 'path': saved_path or None}
+            dict: {'success': True/False, 'path': saved_path or None, 'error': error message}
         """
         try:
             window = get_desktop_window()
             if not window:
-                return {'success': False, 'error': 'Window not available'}
+                print("ERROR: Window not available")
+                return {'success': False, 'error': 'Window not available', 'path': None}
             
             # Show save file dialog
             result = window.create_file_dialog(
@@ -48,11 +49,15 @@ class DesktopAPI:
                 save_filename=filename
             )
             
+            print(f"File dialog result: {result}")
+            
             if not result or len(result) == 0:
                 # User cancelled
-                return {'success': False, 'error': 'Cancelled'}
+                print("User cancelled file dialog")
+                return {'success': False, 'error': 'Cancelled', 'path': None}
             
             save_path = result[0]
+            print(f"Saving to: {save_path}")
             
             # Decode base64 content and save to file
             file_content = base64.b64decode(base64_content)
@@ -60,10 +65,15 @@ class DesktopAPI:
             with open(save_path, 'wb') as f:
                 f.write(file_content)
             
-            return {'success': True, 'path': save_path}
+            print(f"File saved successfully to {save_path}")
+            return {'success': True, 'path': save_path, 'error': None}
             
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            error_msg = str(e)
+            print(f"ERROR saving file: {error_msg}")
+            import traceback
+            traceback.print_exc()
+            return {'success': False, 'error': error_msg, 'path': None}
 
 
 def check_webview_compatibility():

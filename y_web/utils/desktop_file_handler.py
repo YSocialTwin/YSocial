@@ -204,14 +204,19 @@ def send_file_desktop(
                                 '{encoded_content}',
                                 '{mime_type}'
                             ).then(function(result) {{
-                                if (result && result.success) {{
+                                console.log('Save file dialog result:', result);
+                                if (result && result.success === true) {{
                                     document.getElementById('status').innerHTML = 
                                         '<p style="color: green;">✓ File saved successfully!</p>';
                                     document.getElementById('backBtn').style.display = 'inline-block';
                                     setTimeout(goBack, 1500);
-                                }} else {{
+                                }} else if (result && result.error === 'Cancelled') {{
                                     document.getElementById('status').innerHTML = 
                                         '<p style="color: orange;">Download cancelled.</p>';
+                                    document.getElementById('backBtn').style.display = 'inline-block';
+                                }} else {{
+                                    document.getElementById('status').innerHTML = 
+                                        '<p style="color: red;">Error: ' + (result ? result.error : 'Unknown error') + '</p>';
                                     document.getElementById('backBtn').style.display = 'inline-block';
                                 }}
                             }}).catch(function(error) {{
