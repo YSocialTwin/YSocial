@@ -20,7 +20,8 @@ def test_ensure_kernel_in_frozen_mode_with_existing_kernel():
     # Mock the frozen environment
     with patch("sys.frozen", True, create=True):
         with patch(
-            "y_web.utils.jupyter_utils.get_python_executable", return_value="/usr/bin/python3"
+            "y_web.utils.jupyter_utils.get_python_executable",
+            return_value="/usr/bin/python3",
         ):
             # Mock subprocess to simulate existing python3 kernel
             mock_result = MagicMock()
@@ -49,17 +50,18 @@ def test_ensure_kernel_in_frozen_mode_no_kernel():
     # Mock the frozen environment
     with patch("sys.frozen", True, create=True):
         with patch(
-            "y_web.utils.jupyter_utils.get_python_executable", return_value="/usr/bin/python3"
+            "y_web.utils.jupyter_utils.get_python_executable",
+            return_value="/usr/bin/python3",
         ):
             call_count = 0
-            
+
             def mock_subprocess_run(*args, **kwargs):
                 nonlocal call_count
                 call_count += 1
-                
+
                 mock_result = MagicMock()
                 cmd = args[0] if args else []
-                
+
                 # First call: kernelspec list (no kernels)
                 if call_count == 1 and "kernelspec" in cmd:
                     mock_result.returncode = 0
@@ -75,7 +77,7 @@ def test_ensure_kernel_in_frozen_mode_no_kernel():
                 else:
                     mock_result.returncode = 0
                     mock_result.stdout = ""
-                
+
                 return mock_result
 
             with patch("subprocess.run", side_effect=mock_subprocess_run) as mock_run:
@@ -95,7 +97,8 @@ def test_ensure_kernel_in_frozen_mode_no_jupyter():
     # Mock the frozen environment
     with patch("sys.frozen", True, create=True):
         with patch(
-            "y_web.utils.jupyter_utils.get_python_executable", return_value="/usr/bin/python3"
+            "y_web.utils.jupyter_utils.get_python_executable",
+            return_value="/usr/bin/python3",
         ):
             # Mock subprocess to simulate jupyter not being available
             mock_result = MagicMock()
@@ -116,7 +119,8 @@ def test_ensure_kernel_in_source_mode():
     # Mock non-frozen environment
     with patch("sys.frozen", False, create=True):
         with patch(
-            "y_web.utils.jupyter_utils.get_python_executable", return_value=sys.executable
+            "y_web.utils.jupyter_utils.get_python_executable",
+            return_value=sys.executable,
         ):
             # Mock ipykernel import succeeds
             with patch("builtins.__import__"):
@@ -126,7 +130,9 @@ def test_ensure_kernel_in_source_mode():
                 mock_result.stdout = json.dumps(
                     {
                         "kernelspecs": {
-                            "python3_ysocial": {"spec": {"display_name": "Python (python3_ysocial)"}}
+                            "python3_ysocial": {
+                                "spec": {"display_name": "Python (python3_ysocial)"}
+                            }
                         }
                     }
                 )
