@@ -233,6 +233,22 @@ def main():
             except KeyboardInterrupt:
                 print("\n\nShutting down YSocial Desktop...")
                 sys.exit(0)
+            except RuntimeError as e:
+                # RuntimeError indicates incompatibility (e.g., GTK not available)
+                error_msg = str(e).lower()
+                print(
+                    f"\n⚠️  Warning: Desktop mode not compatible. Falling back to browser mode.",
+                    file=sys.stderr,
+                )
+                print(f"   Reason: {e}", file=sys.stderr)
+                if "gtk" in error_msg:
+                    print(
+                        f"   To use desktop mode on Linux, install GTK dependencies.\n",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(f"", file=sys.stderr)
+                use_browser_fallback = True
             except Exception as e:
                 # Check if it's a GTK-related error
                 error_msg = str(e).lower()
