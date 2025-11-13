@@ -173,145 +173,51 @@ def ensure_kernel_installed(kernel_name="python3_ysocial"):
     2. If not, install it via pip.
     3. Verify that the kernel spec is registered.
     4. If missing, create/register it.
-
-    Note: When running from PyInstaller bundle, we use the system Python environment
-    for Jupyter kernels since the bundled Python cannot be used as a kernel directly.
     """
     try:
-        # Check if running from PyInstaller bundle
-        is_frozen = getattr(sys, "frozen", False)
-
-        if is_frozen:
-            # Running from PyInstaller - use system Python for Jupyter
-            # The system Python should have jupyterlab and ipykernel installed
-            print(
-                "Running from PyInstaller bundle - using system Python for Jupyter kernel"
-            )
-
-            # Get the system Python executable
-            python_exe = get_python_executable()
-
-            # Check if jupyter and ipykernel are available in system Python
-            try:
-                result = subprocess.run(
-                    [python_exe, "-m", "jupyter", "kernelspec", "list", "--json"],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-
-                if result.returncode == 0:
-                    data = json.loads(result.stdout)
-                    kernels = data.get("kernelspecs", {})
-
-                    # Look for a suitable Python kernel (python3 or our custom kernel)
-                    if kernel_name in kernels:
-                        print(f"Using existing kernel '{kernel_name}'")
-                        return True
-                    elif "python3" in kernels:
-                        print(
-                            f"Using existing 'python3' kernel (custom kernel '{kernel_name}' not needed in PyInstaller mode)"
-                        )
-                        return True
-                    else:
-                        # Try to install ipykernel in system Python if no kernel exists
-                        print(
-                            f"No Python kernel found. Installing ipykernel in system Python..."
-                        )
-                        subprocess.run(
-                            [python_exe, "-m", "pip", "install", "--user", "ipykernel"],
-                            capture_output=True,
-                            check=True,
-                        )
-                        # Install default python3 kernel
-                        subprocess.run(
-                            [
-                                python_exe,
-                                "-m",
-                                "ipykernel",
-                                "install",
-                                "--user",
-                                "--name",
-                                "python3",
-                            ],
-                            capture_output=True,
-                            check=True,
-                        )
-                        print("Installed default 'python3' kernel in system Python")
-                        return True
-                else:
-                    print(
-                        f"Warning: jupyter not available in system Python. Jupyter Lab may not work correctly."
-                    )
-                    print(
-                        f"Please install jupyter and ipykernel: pip install jupyterlab ipykernel"
-                    )
-                    return False
-
-            except (
-                subprocess.CalledProcessError,
-                subprocess.TimeoutExpired,
-                json.JSONDecodeError,
-            ) as e:
-                print(
-                    f"Warning: Could not verify Jupyter installation in system Python: {e}"
-                )
-                print(
-                    f"Please ensure jupyterlab and ipykernel are installed in your system Python"
-                )
-                return False
-        else:
-            # Running from source - use the current Python environment
-            # 1. Check if ipykernel is importable
-            try:
-                __import__("ipykernel")
-            except ImportError:
-                print("ipykernel not found, installing...")
-                subprocess.run(
-                    [get_python_executable(), "-m", "pip", "install", "ipykernel"],
-                    check=True,
-                )
-
-            # 2. Check if kernel spec already exists
-            result = subprocess.run(
-                [
-                    get_python_executable(),
-                    "-m",
-                    "jupyter",
-                    "kernelspec",
-                    "list",
-                    "--json",
-                ],
-                capture_output=True,
-                text=True,
-            )
-
-            if result.returncode == 0:
-                data = json.loads(result.stdout)
-                kernels = data.get("kernelspecs", {})
-                if kernel_name in kernels:
-                    print(f"Kernel '{kernel_name}' already registered.")
-                    return True
-
-            # 3. Register the kernel if missing
-            print(f"Registering kernel '{kernel_name}'...")
+        # 1. Check if ipykernel is importable
+        try:
+            __import__("ipykernel")
+        except ImportError:
+            print("ipykernel not found, installing...")
             subprocess.run(
-                [
-                    get_python_executable(),
-                    "-m",
-                    "ipykernel",
-                    "install",
-                    "--user",
-                    "--name",
-                    kernel_name,
-                    "--display-name",
-                    f"Python ({kernel_name})",
-                ],
+                [get_python_executable(), "-m", "pip", "install", "ipykernel"],
                 check=True,
             )
 
-            print(f"Kernel '{kernel_name}' successfully installed and registered.")
-            return True
+        # 2. Check if kernel spec already exists
+        result = subprocess.run(
+            [get_python_executable(), "-m", "jupyter", "kernelspec", "list", "--json"],
+            capture_output=True,
+            text=True,
+        )
+
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            kernels = data.get("kernelspecs", {})
+            if kernel_name in kernels:
+                print(f"Kernel '{kernel_name}' already registered.")
+                return True
+
+        # 3. Register the kernel if missing
+        print(f"Registering kernel '{kernel_name}'...")
+        subprocess.run(
+            [
+                get_python_executable(),
+                "-m",
+                "ipykernel",
+                "install",
+                "--user",
+                "--name",
+                kernel_name,
+                "--display-name",
+                f"Python ({kernel_name})",
+            ],
+            check=True,
+        )
+
+        print(f"Kernel '{kernel_name}' successfully installed and registered.")
+        return True
 
     except subprocess.CalledProcessError as e:
         print(f"Error while installing/registering kernel: {e}")

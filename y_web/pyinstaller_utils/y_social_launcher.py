@@ -149,13 +149,6 @@ def main():
         help="LLM backend to use: 'ollama', 'vllm', or custom URL (host:port). If not specified, LLM features will be disabled.",
     )
     parser.add_argument(
-        "-n",
-        "--no_notebook",
-        action="store_false",
-        dest="notebook",
-        help="Disable Jupyter Notebook server launch for experiments",
-    )
-    parser.add_argument(
         "--browser",
         action="store_true",
         help="Launch in browser mode instead of desktop mode (desktop is default)",
@@ -179,6 +172,10 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # Notebooks are always disabled in PyInstaller mode
+    # The bundled Python environment cannot be used as a Jupyter kernel
+    notebook = False
 
     # Desktop mode is default unless --browser is specified
     if not args.browser:
@@ -211,7 +208,7 @@ def main():
                 host=args.host,
                 port=args.port,
                 llm_backend=args.llm_backend,
-                notebook=args.notebook,
+                notebook=notebook,
                 window_width=args.window_width,
                 window_height=args.window_height,
             )
@@ -257,7 +254,7 @@ def main():
                 host=args.host,
                 port=args.port,
                 llm_backend=args.llm_backend,
-                notebook=args.notebook,
+                notebook=notebook,
             )
         except KeyboardInterrupt:
             print("\n\nShutting down YSocial...")
