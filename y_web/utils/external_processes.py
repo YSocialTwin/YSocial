@@ -539,8 +539,16 @@ def start_server(exp):
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-    # Validate that script_path exists
-    if not Path(script_path).exists():
+    # Validate that script_path exists (skip check for PyInstaller bundles)
+    # Check multiple PyInstaller indicators
+    is_frozen = getattr(sys, "frozen", False)
+    has_meipass = hasattr(sys, "_MEIPASS")
+    is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+    if (
+        not (is_frozen or has_meipass or is_bundle_exe)
+        and not Path(script_path).exists()
+    ):
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
             f"Please ensure the YServer submodule is initialized.\n"
@@ -579,7 +587,31 @@ def start_server(exp):
         ]
 
         # Build the gunicorn command
-        if (
+        # Note: gunicorn doesn't work well with PyInstaller bundles for server mode
+        # If running from PyInstaller, we need to use the standard Python server instead
+        # Check multiple PyInstaller indicators
+        is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
+        is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+        if is_frozen or has_meipass or is_bundle_exe:
+            # PyInstaller mode - cannot use gunicorn with frozen executable
+            # Fall back to using the server runner with Flask's built-in server
+            print(
+                "Warning: Running from PyInstaller bundle. Using Flask server instead of gunicorn."
+            )
+            print(
+                "For production use with PostgreSQL, run from source or use Docker deployment."
+            )
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)
@@ -687,7 +719,27 @@ def start_server(exp):
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
 
         # Build the command as a list for subprocess.Popen
-        if (
+        # Check if running from PyInstaller bundle
+        # We need to check multiple indicators:
+        # 1. sys.frozen - set when running in frozen mode
+        # 2. sys._MEIPASS - PyInstaller's temp extraction directory
+        # 3. Executable name doesn't contain "python"
+        is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
+        is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+        if is_frozen or has_meipass or is_bundle_exe:
+            # Running from PyInstaller - invoke the bundled executable with special flag
+            # The launcher script detects this flag and routes to the server runner
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)
@@ -729,14 +781,15 @@ def start_server(exp):
                     # Fallback for older Python versions
                     creationflags = 0x08000000
 
-                # On Windows, use shell=True to properly handle paths with spaces
+                # Don't use shell=True when passing special flags like --run-server-subprocess
+                # as the shell can interfere with argument parsing
+                # For PyInstaller bundles, we need direct subprocess invocation
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
-                    shell=True,
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
