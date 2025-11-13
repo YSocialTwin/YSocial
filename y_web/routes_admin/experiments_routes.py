@@ -2127,8 +2127,13 @@ def download_experiment_file(eid):
 
     # compress the folder and send the file
     shutil.make_archive(folder, "zip", folder)
+    
+    # Ensure temp_data directory exists
+    temp_data_dir = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data")
+    os.makedirs(temp_data_dir, exist_ok=True)
+    
     # move the file to the temp_data folder
-    temp_data_path = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data{os.sep}{folder.split(os.sep)[-1]}.zip")
+    temp_data_path = os.path.join(temp_data_dir, f"{folder.split(os.sep)[-1]}.zip")
     shutil.move(
         f"{folder}.zip",
         temp_data_path,
