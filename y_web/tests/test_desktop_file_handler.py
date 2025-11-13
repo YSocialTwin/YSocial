@@ -1,9 +1,8 @@
 """
 Tests for desktop file handler functionality.
 
-This test suite validates the desktop mode file download dialog feature,
-ensuring that downloads open system dialogs in desktop mode and work
-normally in browser mode.
+This test suite validates the desktop mode file download feature,
+ensuring that downloads work correctly in both desktop and browser modes.
 """
 
 import os
@@ -14,7 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 from flask import Flask
 
 from y_web.utils.desktop_file_handler import (
-    desktop_save_file,
+    desktop_download_file,
     get_webview_window,
     is_desktop_mode,
     send_file_desktop,
@@ -58,8 +57,8 @@ class TestDesktopFileHandler(unittest.TestCase):
         self.assertEqual(get_webview_window(), mock_window)
 
 
-class TestDesktopSaveFile(unittest.TestCase):
-    """Test desktop_save_file function."""
+class TestDesktopDownloadFile(unittest.TestCase):
+    """Test desktop_download_file function."""
 
     def setUp(self):
         """Set up test Flask app and temp file."""
@@ -71,9 +70,9 @@ class TestDesktopSaveFile(unittest.TestCase):
 
         # Create a temporary file to "download"
         self.temp_file = tempfile.NamedTemporaryFile(
-            mode="w", delete=False, suffix=".txt"
+            mode="w", delete=False, suffix=".json"
         )
-        self.temp_file.write("Test file content")
+        self.temp_file.write('{"test": "data"}')
         self.temp_file.close()
 
     def tearDown(self):
@@ -84,40 +83,27 @@ class TestDesktopSaveFile(unittest.TestCase):
             pass
         self.ctx.pop()
 
-    def test_desktop_save_file_no_window(self):
-        """Test that desktop_save_file returns False when no window."""
-        self.app.config["WEBVIEW_WINDOW"] = None
-        result = desktop_save_file(self.temp_file.name)
-        self.assertFalse(result)
+    def test_desktop_download_file_generates_html(self):
+        """Test that desktop_download_file generates valid HTML."""
+        result = desktop_download_file(self.temp_file.name, "test.json")
+        
+        self.assertIsInstance(result, str)
+        self.assertIn("<!DOCTYPE html>", result)
+        self.assertIn("test.json", result)
+        self.assertIn("Blob", result)
 
-    @patch("y_web.utils.desktop_file_handler.shutil.copy2")
-    def test_desktop_save_file_cancelled(self, mock_copy):
-        """Test that desktop_save_file returns False when dialog is cancelled."""
-        mock_window = MagicMock()
-        # Simulate user cancelling the dialog (returns None)
-        mock_window.create_file_dialog.return_value = None
-        self.app.config["WEBVIEW_WINDOW"] = mock_window
+    def test_desktop_download_file_with_custom_filename(self):
+        """Test that desktop_download_file uses custom filename."""
+        result = desktop_download_file(self.temp_file.name, "custom_name.json")
+        
+        self.assertIn("custom_name.json", result)
 
-        result = desktop_save_file(self.temp_file.name, "test.txt")
-
-        self.assertFalse(result)
-        mock_window.create_file_dialog.assert_called_once()
-        mock_copy.assert_not_called()
-
-    @patch("y_web.utils.desktop_file_handler.shutil.copy2")
-    def test_desktop_save_file_success(self, mock_copy):
-        """Test that desktop_save_file succeeds when user selects location."""
-        mock_window = MagicMock()
-        # Simulate user selecting a save location
-        mock_window.create_file_dialog.return_value = ["/tmp/saved_file.txt"]
-        self.app.config["WEBVIEW_WINDOW"] = mock_window
-
-        result = desktop_save_file(self.temp_file.name, "test.txt")
-
-        self.assertTrue(result)
-        mock_window.create_file_dialog.assert_called_once()
-        mock_copy.assert_called_once_with(self.temp_file.name, "/tmp/saved_file.txt")
-
+    def test_desktop_download_file_invalid_path(self):
+        """Test that desktop_download_file handles invalid paths."""
+        result = desktop_download_file("/nonexistent/file.json", "test.json")
+        
+        self.assertIn("Error", result)
+        self.assertIn("Go back", result)
 
 class TestSendFileDesktop(unittest.TestCase):
     """Test send_file_desktop function."""
@@ -166,41 +152,30 @@ class TestSendFileDesktop(unittest.TestCase):
         mock_send_file.assert_called_once()
         self.assertIsNotNone(response)
 
-    @patch("y_web.utils.desktop_file_handler.desktop_save_file")
-    def test_send_file_desktop_success(self, mock_save):
-        """Test that send_file_desktop shows success message on successful save."""
+    @patch("y_web.utils.desktop_file_handler.desktop_download_file")
+    def test_send_file_desktop_generates_html(self, mock_download):
+        """Test that send_file_desktop generates HTML download page."""
         self.app.config["DESKTOP_MODE"] = True
-        mock_save.return_value = True
+        mock_download.return_value = "<html>Download page</html>"
 
         response = send_file_desktop(self.temp_file.name, as_attachment=True)
 
-        mock_save.assert_called_once()
-        self.assertIn(b"File saved successfully", response.data)
+        mock_download.assert_called_once()
+        self.assertIn(b"Download page", response.data)
 
-    @patch("y_web.utils.desktop_file_handler.desktop_save_file")
-    def test_send_file_desktop_cancelled(self, mock_save):
-        """Test that send_file_desktop shows cancel message when user cancels."""
-        self.app.config["DESKTOP_MODE"] = True
-        mock_save.return_value = False
-
-        response = send_file_desktop(self.temp_file.name, as_attachment=True)
-
-        mock_save.assert_called_once()
-        self.assertIn(b"Download cancelled", response.data)
-
-    @patch("y_web.utils.desktop_file_handler.desktop_save_file")
-    def test_send_file_desktop_with_download_name(self, mock_save):
+    @patch("y_web.utils.desktop_file_handler.desktop_download_file")
+    def test_send_file_desktop_with_download_name(self, mock_download):
         """Test that send_file_desktop uses download_name when provided."""
         self.app.config["DESKTOP_MODE"] = True
-        mock_save.return_value = True
+        mock_download.return_value = "<html>Download page</html>"
 
         response = send_file_desktop(
             self.temp_file.name, as_attachment=True, download_name="custom_name.json"
         )
 
-        mock_save.assert_called_once()
+        mock_download.assert_called_once()
         # Check that the custom filename was used
-        call_args = mock_save.call_args
+        call_args = mock_download.call_args
         self.assertEqual(call_args[0][1], "custom_name.json")
 
 
