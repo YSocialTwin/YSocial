@@ -5,6 +5,8 @@ This module provides a desktop application mode using PyWebview to display
 the Flask application in a native window instead of a browser.
 """
 
+import base64
+import os
 import sys
 import threading
 import time
@@ -13,6 +15,55 @@ import webview
 
 # Global reference to the webview window for Flask app access
 _webview_window = None
+
+
+class DesktopAPI:
+    """
+    API class exposed to JavaScript in PyWebview.
+    
+    This allows JavaScript code in the webview to call Python functions,
+    particularly for showing native file save dialogs.
+    """
+    
+    def save_file_dialog(self, filename, base64_content, mime_type):
+        """
+        Show a native save file dialog and save the file.
+        
+        Args:
+            filename: Default filename for the save dialog
+            base64_content: Base64-encoded file content
+            mime_type: MIME type of the file
+            
+        Returns:
+            dict: {'success': True/False, 'path': saved_path or None}
+        """
+        try:
+            window = get_desktop_window()
+            if not window:
+                return {'success': False, 'error': 'Window not available'}
+            
+            # Show save file dialog
+            result = window.create_file_dialog(
+                dialog_type=webview.FileDialog.SAVE,
+                save_filename=filename
+            )
+            
+            if not result or len(result) == 0:
+                # User cancelled
+                return {'success': False, 'error': 'Cancelled'}
+            
+            save_path = result[0]
+            
+            # Decode base64 content and save to file
+            file_content = base64.b64decode(base64_content)
+            
+            with open(save_path, 'wb') as f:
+                f.write(file_content)
+            
+            return {'success': True, 'path': save_path}
+            
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
 
 def check_webview_compatibility():
@@ -168,7 +219,8 @@ def start_desktop_app(
         window_width = 1280
         window_height = 800
 
-    # Create a PyWebview window
+    # Create a PyWebview window with API
+    api = DesktopAPI()
     window = webview.create_window(
         title=window_title,
         url=url,
@@ -178,6 +230,7 @@ def start_desktop_app(
         fullscreen=use_fullscreen,
         min_size=(800, 600),
         confirm_close=True,
+        js_api=api,  # Expose API to JavaScript
     )
 
     # Store window reference globally for Flask app access
