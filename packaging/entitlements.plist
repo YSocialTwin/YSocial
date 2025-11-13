@@ -30,6 +30,16 @@
     <key>com.apple.security.files.downloads.read-write</key>
     <true/>
     
+    <!-- Allow read/write access to entire file system (required for experiment creation) -->
+    <!-- This is needed because experiments are created in the app's working directory -->
+    <key>com.apple.security.files.all</key>
+    <string>read-write</string>
+    
+    <!-- Disable App Sandbox to allow broader file system access -->
+    <!-- This is necessary for creating experiment directories and files -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    
     <!-- Network access for LLM backends and external services -->
     <key>com.apple.security.network.client</key>
     <true/>
