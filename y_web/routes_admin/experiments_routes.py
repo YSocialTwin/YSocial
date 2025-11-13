@@ -22,7 +22,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -62,6 +61,7 @@ from y_web.utils import (
     terminate_process_on_port,
     terminate_server_process,
 )
+from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
 from y_web.utils.path_utils import get_resource_path
@@ -2169,7 +2169,7 @@ def download_experiment_file(eid):
         temp_data_path,
     )
     # return the file
-    return send_file(
+    return send_file_desktop(
         temp_data_path,
         as_attachment=True,
     )

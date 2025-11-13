@@ -10,6 +10,30 @@ import time
 
 import webview
 
+# Global reference to the webview window for Flask app access
+_webview_window = None
+
+
+def get_desktop_window():
+    """
+    Get the current desktop window instance.
+
+    Returns:
+        PyWebview Window instance or None
+    """
+    return _webview_window
+
+
+def set_desktop_window(window):
+    """
+    Set the current desktop window instance.
+
+    Args:
+        window: PyWebview Window instance
+    """
+    global _webview_window
+    _webview_window = window
+
 
 def start_desktop_app(
     db_type="sqlite",
@@ -48,6 +72,7 @@ def start_desktop_app(
             port=port,
             llm_backend=llm_backend,
             notebook=notebook,
+            desktop_mode=True,  # Enable desktop mode
         )
 
     # Start Flask server in background thread
@@ -110,6 +135,9 @@ def start_desktop_app(
         min_size=(800, 600),
         confirm_close=True,
     )
+
+    # Store window reference globally for Flask app access
+    set_desktop_window(window)
 
     # Start the webview - this blocks until the window is closed
     webview.start(debug=debug)
