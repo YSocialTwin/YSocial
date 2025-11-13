@@ -20,5 +20,21 @@
     <!-- Allow JITT (Just-In-Time compilation) for Python runtime -->
     <key>com.apple.security.cs.allow-jit</key>
     <true/>
+    
+    <!-- File system access entitlements for creating experiments and managing files -->
+    <!-- Allow read/write access to user-selected files and folders -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    
+    <!-- Allow read/write access to Downloads folder -->
+    <key>com.apple.security.files.downloads.read-write</key>
+    <true/>
+    
+    <!-- Network access for LLM backends and external services -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    
+    <key>com.apple.security.network.server</key>
+    <true/>
 </dict>
 </plist>
