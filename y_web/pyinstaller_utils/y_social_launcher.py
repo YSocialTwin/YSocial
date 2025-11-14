@@ -18,6 +18,29 @@ def is_pyinstaller():
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
 
+def get_log_file_paths():
+    """
+    Get the paths to log files.
+    
+    Returns:
+        tuple: (stdout_log_path, stderr_log_path, log_dir)
+    """
+    import tempfile
+    log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
+    
+    # Check if log directory exists, otherwise use temp
+    if not os.path.exists(log_dir):
+        try:
+            os.makedirs(log_dir, exist_ok=True)
+        except Exception:
+            log_dir = tempfile.gettempdir()
+    
+    stdout_log = os.path.join(log_dir, "ysocial.log")
+    stderr_log = os.path.join(log_dir, "ysocial_error.log")
+    
+    return stdout_log, stderr_log, log_dir
+
+
 def show_error_dialog(title, message):
     """
     Show an error dialog to the user on Windows.
@@ -47,7 +70,7 @@ def show_error_dialog(title, message):
 if is_pyinstaller():
     # On Windows with console=False, redirect stdout/stderr to log file
     # This prevents Flask and other print statements from showing a console window
-    # while still allowing error diagnosis through the log file
+    # while still allowing diagnosis through the log file
     if sys.platform.startswith("win"):
         try:
             # Get user's home directory for log file
@@ -61,19 +84,29 @@ if is_pyinstaller():
                 # Fallback to temp directory if home directory is not writable
                 log_dir = tempfile.gettempdir()
             
-            log_file = os.path.join(log_dir, "ysocial_error.log")
+            # Create separate log files for stdout and stderr
+            stdout_log_file = os.path.join(log_dir, "ysocial.log")
+            stderr_log_file = os.path.join(log_dir, "ysocial_error.log")
             
-            # Redirect stdout to DEVNULL to suppress normal output
-            sys.stdout = open(os.devnull, "w", encoding="utf-8")
-            
-            # Redirect stderr to log file to capture errors
+            # Redirect stdout to log file to capture normal output (Flask logs, etc.)
             # Open in append mode with UTF-8 encoding and line buffering
-            sys.stderr = open(log_file, "a", encoding="utf-8", buffering=1)
+            sys.stdout = open(stdout_log_file, "a", encoding="utf-8", buffering=1)
             
-            # Write a startup marker to the log
+            # Redirect stderr to error log file to capture errors
+            # Open in append mode with UTF-8 encoding and line buffering
+            sys.stderr = open(stderr_log_file, "a", encoding="utf-8", buffering=1)
+            
+            # Write a startup marker to both logs
             import datetime
+            timestamp = datetime.datetime.now()
+            
+            sys.stdout.write(f"\n{'='*60}\n")
+            sys.stdout.write(f"YSocial started at {timestamp}\n")
+            sys.stdout.write(f"{'='*60}\n")
+            sys.stdout.flush()
+            
             sys.stderr.write(f"\n{'='*60}\n")
-            sys.stderr.write(f"YSocial started at {datetime.datetime.now()}\n")
+            sys.stderr.write(f"YSocial started at {timestamp}\n")
             sys.stderr.write(f"{'='*60}\n")
             sys.stderr.flush()
         except Exception as e:
@@ -85,7 +118,7 @@ if is_pyinstaller():
                 root.withdraw()
                 messagebox.showwarning(
                     "YSocial Warning",
-                    f"Could not set up error logging:\n{e}\n\nContinuing without error logs."
+                    f"Could not set up logging:\n{e}\n\nContinuing without log files."
                 )
             except Exception:
                 pass
@@ -276,10 +309,11 @@ def main():
                 
                 # Show error dialog on Windows
                 if sys.platform.startswith("win"):
-                    log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-                    log_file = os.path.join(log_dir, "ysocial_error.log")
+                    stdout_log, stderr_log, log_dir = get_log_file_paths()
                     dialog_msg = f"Error importing desktop module:\n\n{error_msg}\n\n"
-                    dialog_msg += f"Check the log file for details:\n{log_file}"
+                    dialog_msg += f"Check the log files for details:\n"
+                    dialog_msg += f"  • Errors: {stderr_log}\n"
+                    dialog_msg += f"  • Output: {stdout_log}"
                     show_error_dialog("YSocial Desktop Import Error", dialog_msg)
                 
                 sys.exit(1)
@@ -341,10 +375,11 @@ def main():
                     
                     # Show error dialog on Windows
                     if sys.platform.startswith("win"):
-                        log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-                        log_file = os.path.join(log_dir, "ysocial_error.log")
+                        stdout_log, stderr_log, log_dir = get_log_file_paths()
                         dialog_msg = f"Error starting YSocial Desktop:\n\n{error_msg}\n\n"
-                        dialog_msg += f"Check the log file for details:\n{log_file}"
+                        dialog_msg += f"Check the log files for details:\n"
+                        dialog_msg += f"  • Errors: {stderr_log}\n"
+                        dialog_msg += f"  • Output: {stdout_log}"
                         show_error_dialog("YSocial Desktop Error", dialog_msg)
                     
                     sys.exit(1)
@@ -366,10 +401,11 @@ def main():
             
             # Show error dialog on Windows
             if sys.platform.startswith("win"):
-                log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-                log_file = os.path.join(log_dir, "ysocial_error.log")
+                stdout_log, stderr_log, log_dir = get_log_file_paths()
                 dialog_msg = f"Error importing y_social module:\n\n{error_msg}\n\n"
-                dialog_msg += f"Check the log file for details:\n{log_file}"
+                dialog_msg += f"Check the log files for details:\n"
+                dialog_msg += f"  • Errors: {stderr_log}\n"
+                dialog_msg += f"  • Output: {stdout_log}"
                 show_error_dialog("YSocial Import Error", dialog_msg)
             
             sys.exit(1)
@@ -407,10 +443,11 @@ def main():
             
             # Show error dialog on Windows
             if sys.platform.startswith("win"):
-                log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-                log_file = os.path.join(log_dir, "ysocial_error.log")
+                stdout_log, stderr_log, log_dir = get_log_file_paths()
                 dialog_msg = f"Error starting YSocial:\n\n{error_msg}\n\n"
-                dialog_msg += f"Check the log file for details:\n{log_file}"
+                dialog_msg += f"Check the log files for details:\n"
+                dialog_msg += f"  • Errors: {stderr_log}\n"
+                dialog_msg += f"  • Output: {stdout_log}"
                 show_error_dialog("YSocial Startup Error", dialog_msg)
             
             sys.exit(1)
@@ -430,12 +467,13 @@ if __name__ == "__main__":
         
         # Show error dialog on Windows PyInstaller build
         if is_pyinstaller() and sys.platform.startswith("win"):
-            # Get log file path
-            log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-            log_file = os.path.join(log_dir, "ysocial_error.log")
+            # Get log file paths
+            stdout_log, stderr_log, log_dir = get_log_file_paths()
             
             dialog_msg = f"YSocial encountered an error:\n\n{error_msg}\n\n"
-            dialog_msg += f"Check the log file for details:\n{log_file}"
+            dialog_msg += f"Check the log files for details:\n"
+            dialog_msg += f"  • Errors: {stderr_log}\n"
+            dialog_msg += f"  • Output: {stdout_log}"
             show_error_dialog("YSocial Error", dialog_msg)
         
         sys.exit(1)
