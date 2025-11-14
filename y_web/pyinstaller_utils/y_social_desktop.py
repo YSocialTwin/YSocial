@@ -44,12 +44,20 @@ class DesktopAPI:
                 return {'success': False, 'error': 'Window not available', 'path': None}
             
             # Show save file dialog
+            # Note: On some platforms, if the user cancels the dialog,
+            # it may return a tuple with an empty or invalid path like '\'
             result = window.create_file_dialog(
                 dialog_type=webview.FileDialog.SAVE,
-                save_filename=filename
+                save_filename=filename,
+                directory=''  # Start in default directory
             )
             
             print(f"File dialog result: {result}")
+            print(f"File dialog result type: {type(result)}")
+            print(f"File dialog result length: {len(result) if result else 0}")
+            if result:
+                for i, item in enumerate(result):
+                    print(f"  result[{i}]: '{item}' (type: {type(item)})")
             
             if not result or len(result) == 0:
                 # User cancelled
@@ -57,13 +65,31 @@ class DesktopAPI:
                 return {'success': False, 'error': 'Cancelled', 'path': None}
             
             save_path = result[0]
-            print(f"Saving to: {save_path}")
+            print(f"Saving to: '{save_path}' (length: {len(save_path)})")
+            
+            # Validate the save path - check for invalid or empty paths
+            if not save_path or len(save_path) <= 1 or save_path in ['\\', '/', '.', '..']:
+                print(f"ERROR: Invalid or empty save path: '{save_path}'")
+                # This likely means the dialog was cancelled or returned an invalid path
+                return {'success': False, 'error': 'Cancelled', 'path': None}
             
             # Decode base64 content and save to file
-            file_content = base64.b64decode(base64_content)
+            try:
+                file_content = base64.b64decode(base64_content)
+            except Exception as e:
+                print(f"ERROR: Failed to decode base64 content: {e}")
+                return {'success': False, 'error': f'Failed to decode file content: {e}', 'path': None}
             
-            with open(save_path, 'wb') as f:
-                f.write(file_content)
+            # Write the file
+            try:
+                with open(save_path, 'wb') as f:
+                    f.write(file_content)
+            except FileExistsError as e:
+                print(f"ERROR: File already exists at {save_path}: {e}")
+                return {'success': False, 'error': f'File exists: {save_path}', 'path': None}
+            except Exception as e:
+                print(f"ERROR: Failed to write file: {e}")
+                return {'success': False, 'error': f'Failed to write file: {e}', 'path': None}
             
             print(f"File saved successfully to {save_path}")
             return {'success': True, 'path': save_path, 'error': None}
