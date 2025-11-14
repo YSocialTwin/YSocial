@@ -18,6 +18,8 @@ from PyInstaller.utils.hooks import (
     copy_metadata,
 )
 
+os.environ["PYTHONIOENCODING"] = "utf-8"
+
 block_cipher = None
 
 # Get the base directory

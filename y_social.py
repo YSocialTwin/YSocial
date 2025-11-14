@@ -11,6 +11,7 @@ def start_app(
     port=8080,
     llm_backend=None,
     notebook=False,
+    desktop_mode=False,
 ):
     import sys
 
@@ -76,7 +77,7 @@ def start_app(
         os.environ.pop("LLM_BACKEND", None)
         os.environ.pop("LLM_URL", None)
 
-    app = create_app(db_type=db_type)
+    app = create_app(db_type=db_type, desktop_mode=desktop_mode)
 
     with app.app_context():
         from y_web.models import Exps

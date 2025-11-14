@@ -260,7 +260,7 @@ def cleanup_db_jupyter_with_new_app():
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 
-def create_app(db_type="sqlite"):
+def create_app(db_type="sqlite", desktop_mode=False):
     """
     Create and configure the Flask application (factory pattern).
 
@@ -269,6 +269,7 @@ def create_app(db_type="sqlite"):
 
     Args:
         db_type: Database type to use, either "sqlite" or "postgresql"
+        desktop_mode: Whether the app is running in desktop mode with PyWebview
 
     Returns:
         Configured Flask application instance
@@ -279,6 +280,7 @@ def create_app(db_type="sqlite"):
     app = Flask(__name__, static_url_path="/static")
 
     app.config["SECRET_KEY"] = "4323432nldsf"
+    app.config["DESKTOP_MODE"] = desktop_mode
 
     if db_type == "sqlite":
         # Copy databases if missing
@@ -351,8 +353,19 @@ def create_app(db_type="sqlite"):
 
     @app.before_request
     def before_request_handler():
-        """Setup experiment context for each request."""
+        """Setup experiment context and desktop mode for each request."""
         setup_experiment_context()
+
+        # If in desktop mode, ensure webview window is accessible
+        if app.config.get("DESKTOP_MODE"):
+            try:
+                from y_web.pyinstaller_utils.y_social_desktop import get_desktop_window
+
+                window = get_desktop_window()
+                if window:
+                    app.config["WEBVIEW_WINDOW"] = window
+            except ImportError:
+                pass  # Desktop module not available
 
     @app.teardown_request
     def teardown_request_handler(exception=None):

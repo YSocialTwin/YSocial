@@ -18,7 +18,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
 )
 from flask_login import current_user, login_required
 
@@ -49,6 +48,7 @@ from y_web.utils import (
     start_client,
     terminate_client,
 )
+from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
 
@@ -1351,7 +1351,7 @@ def download_agent_list(uid):
             f.write(f"{agent.name}\n")
         f.flush()
 
-    return send_file(
+    return send_file_desktop(
         f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_agent_list.csv",
         as_attachment=True,
     )

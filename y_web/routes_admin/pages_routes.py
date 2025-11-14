@@ -9,7 +9,7 @@ pages with populations.
 import json
 import os
 
-from flask import Blueprint, flash, redirect, render_template, request, send_file
+from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
@@ -28,6 +28,7 @@ from y_web.utils import (
     get_llm_models,
     get_ollama_models,
 )
+from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 pages = Blueprint("pages", __name__)
@@ -387,4 +388,6 @@ def download_pages():
     with open(os.path.join(temp_data_dir, "pages.json"), "w") as f:
         json.dump(data, f)
 
-    return send_file(os.path.join(temp_data_dir, "pages.json"), as_attachment=True)
+    return send_file_desktop(
+        os.path.join(temp_data_dir, "pages.json"), as_attachment=True
+    )

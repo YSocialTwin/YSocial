@@ -15,7 +15,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
 )
 from flask_login import current_user, login_required
 
@@ -48,6 +47,7 @@ from y_web.utils import (
     get_llm_models,
     get_ollama_models,
 )
+from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 population = Blueprint("population", __name__)
@@ -790,7 +790,7 @@ def download_population(uid):
     filename = os.path.join(temp_data_dir, f"population_{population.name}.json")
     json.dump(res, open(filename, "w"), indent=4)
 
-    return send_file(filename, as_attachment=True)
+    return send_file_desktop(filename, as_attachment=True)
 
 
 @population.route("/admin/upload_population", methods=["POST"])

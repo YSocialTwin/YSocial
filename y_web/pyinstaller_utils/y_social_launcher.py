@@ -186,7 +186,7 @@ def main():
             from .y_social_desktop import start_desktop_app
         except ImportError:
             print(
-                "\n⚠️  Warning: PyWebview is not installed. Falling back to browser mode.",
+                "\nWarning: PyWebview is not installed. Falling back to browser mode.",
                 file=sys.stderr,
             )
             print(
@@ -199,7 +199,7 @@ def main():
             error_msg = str(e).lower()
             if "gtk" in error_msg or "gi" in error_msg:
                 print(
-                    f"\n⚠️  Warning: GTK dependencies not available. Falling back to browser mode.",
+                    f"\nWarning: GTK dependencies not available. Falling back to browser mode.",
                     file=sys.stderr,
                 )
                 print(
@@ -208,7 +208,7 @@ def main():
                 )
                 use_browser_fallback = True
             else:
-                print(f"\n❌ Error importing y_social_desktop module:", file=sys.stderr)
+                print(f"\nError importing y_social_desktop module:", file=sys.stderr)
                 print(f"   {type(e).__name__}: {e}", file=sys.stderr)
                 import traceback
 
@@ -233,12 +233,28 @@ def main():
             except KeyboardInterrupt:
                 print("\n\nShutting down YSocial Desktop...")
                 sys.exit(0)
+            except RuntimeError as e:
+                # RuntimeError indicates incompatibility (e.g., GTK not available)
+                error_msg = str(e).lower()
+                print(
+                    f"\nWarning: Desktop mode not compatible. Falling back to browser mode.",
+                    file=sys.stderr,
+                )
+                print(f"   Reason: {e}", file=sys.stderr)
+                if "gtk" in error_msg:
+                    print(
+                        f"   To use desktop mode on Linux, install GTK dependencies.\n",
+                        file=sys.stderr,
+                    )
+                else:
+                    print(f"", file=sys.stderr)
+                use_browser_fallback = True
             except Exception as e:
                 # Check if it's a GTK-related error
                 error_msg = str(e).lower()
                 if "gtk" in error_msg or "gi" in error_msg or "webview" in error_msg:
                     print(
-                        f"\n⚠️  Warning: Desktop mode failed ({type(e).__name__}). Falling back to browser mode.",
+                        f"\nWarning: Desktop mode failed ({type(e).__name__}). Falling back to browser mode.",
                         file=sys.stderr,
                     )
                     print(
@@ -247,7 +263,7 @@ def main():
                     )
                     use_browser_fallback = True
                 else:
-                    print(f"\n❌ Error starting YSocial Desktop:", file=sys.stderr)
+                    print(f"\nError starting YSocial Desktop:", file=sys.stderr)
                     print(f"   {type(e).__name__}: {e}", file=sys.stderr)
                     import traceback
 
@@ -262,7 +278,7 @@ def main():
         try:
             from y_social import start_app
         except Exception as e:
-            print(f"\n❌ Error importing y_social module:", file=sys.stderr)
+            print(f"\nError importing y_social module:", file=sys.stderr)
             print(f"   {type(e).__name__}: {e}", file=sys.stderr)
             import traceback
 
@@ -293,7 +309,7 @@ def main():
             print("\n\nShutting down YSocial...")
             sys.exit(0)
         except Exception as e:
-            print(f"\n❌ Error starting YSocial:", file=sys.stderr)
+            print(f"\nError starting YSocial:", file=sys.stderr)
             print(f"   {type(e).__name__}: {e}", file=sys.stderr)
             import traceback
 
@@ -306,7 +322,7 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        print(f"\n❌ Unexpected error in main:", file=sys.stderr)
+        print(f"\nUnexpected error in main:", file=sys.stderr)
         print(f"   {type(e).__name__}: {e}", file=sys.stderr)
         import traceback
 
