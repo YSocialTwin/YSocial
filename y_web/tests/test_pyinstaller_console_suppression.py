@@ -74,6 +74,18 @@ class TestConsoleSuppressionLogic:
         assert isinstance(os.devnull, str)
         assert len(os.devnull) > 0
 
+    def test_error_log_directory_path(self):
+        """Test that error log directory path is correct"""
+        # Verify the log directory path logic
+        home_dir = os.path.expanduser("~")
+        log_dir = os.path.join(home_dir, ".ysocial")
+        log_file = os.path.join(log_dir, "ysocial_error.log")
+
+        # Verify paths are constructed correctly
+        assert ".ysocial" in log_dir
+        assert "ysocial_error.log" in log_file
+        assert log_file.endswith("ysocial_error.log")
+
     def test_stdout_redirection_logic(self):
         """Test the logic for stdout redirection (without actually redirecting)"""
         # Save original stdout
@@ -82,11 +94,11 @@ class TestConsoleSuppressionLogic:
         # Simulate what would happen in the launcher
         try:
             # In the actual launcher, this would be:
-            # sys.stdout = open(os.devnull, "w")
+            # sys.stdout = open(os.devnull, "w", encoding="utf-8")
             # But we don't actually do it in the test to avoid breaking test output
 
-            # Just verify we can open devnull for writing
-            with open(os.devnull, "w") as devnull:
+            # Just verify we can open devnull for writing with UTF-8 encoding
+            with open(os.devnull, "w", encoding="utf-8") as devnull:
                 assert devnull.writable()
                 # Verify we can write to it without error
                 devnull.write("test\n")
@@ -95,21 +107,30 @@ class TestConsoleSuppressionLogic:
             assert sys.stdout is original_stdout
 
     def test_stderr_redirection_logic(self):
-        """Test the logic for stderr redirection (without actually redirecting)"""
+        """Test the logic for stderr redirection to log file"""
         # Save original stderr
         original_stderr = sys.stderr
 
         # Simulate what would happen in the launcher
         try:
-            # In the actual launcher, this would be:
-            # sys.stderr = open(os.devnull, "w")
+            # In the actual launcher on Windows, stderr would be redirected to a log file:
+            # sys.stderr = open(log_file, "a", encoding="utf-8", buffering=1)
             # But we don't actually do it in the test to avoid breaking test output
 
-            # Just verify we can open devnull for writing
-            with open(os.devnull, "w") as devnull:
-                assert devnull.writable()
+            # Just verify we can open a log file for appending with UTF-8 encoding
+            import tempfile
+
+            with tempfile.NamedTemporaryFile(
+                mode="a", encoding="utf-8", buffering=1, delete=False
+            ) as log_file:
+                assert log_file.writable()
                 # Verify we can write to it without error
-                devnull.write("test error\n")
+                log_file.write("test error\n")
+                log_file.flush()
+                log_path = log_file.name
+
+            # Clean up
+            os.unlink(log_path)
         finally:
             # Ensure stderr is restored (though we never changed it)
             assert sys.stderr is original_stderr
@@ -156,6 +177,7 @@ class TestLauncherImport:
 
             assert hasattr(y_social_launcher, "main")
             assert hasattr(y_social_launcher, "is_pyinstaller")
+            assert hasattr(y_social_launcher, "show_error_dialog")
         except ImportError as e:
             pytest.fail(f"Failed to import y_social_launcher: {e}")
 
@@ -170,3 +192,15 @@ class TestLauncherImport:
         assert isinstance(result, bool)
         # In a test environment, it should return False
         assert result is False
+
+    def test_show_error_dialog_function_exists(self):
+        """Test that show_error_dialog function exists and is callable"""
+        from y_web.pyinstaller_utils.y_social_launcher import show_error_dialog
+
+        assert callable(show_error_dialog)
+
+        # Call it to verify it works (should return silently on non-Windows)
+        try:
+            show_error_dialog("Test Title", "Test Message")
+        except Exception as e:
+            pytest.fail(f"show_error_dialog raised unexpected exception: {e}")
