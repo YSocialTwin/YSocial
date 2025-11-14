@@ -5,8 +5,10 @@ This script launches the YSocial application and automatically opens
 a browser window when the server is ready.
 """
 
+import datetime
 import os
 import sys
+import tempfile
 import threading
 import time
 import webbrowser
@@ -25,7 +27,6 @@ def get_log_file_paths():
     Returns:
         tuple: (stdout_log_path, stderr_log_path, log_dir)
     """
-    import tempfile
     log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
     
     # Check if log directory exists, otherwise use temp
@@ -67,14 +68,16 @@ def show_error_dialog(title, message):
 
 # Suppress console output when running as PyInstaller executable
 # This prevents the terminal window from showing when console=False in spec
-if is_pyinstaller():
+# Skip redirection if we're being invoked as a subprocess (to avoid file locking issues on Windows)
+is_subprocess = len(sys.argv) > 1 and sys.argv[1] in ["--run-client-subprocess", "--run-server-subprocess"]
+
+if is_pyinstaller() and not is_subprocess:
     # On Windows with console=False, redirect stdout/stderr to log file
     # This prevents Flask and other print statements from showing a console window
     # while still allowing diagnosis through the log file
     if sys.platform.startswith("win"):
         try:
             # Get user's home directory for log file
-            import tempfile
             log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
             
             # Create log directory if it doesn't exist
@@ -97,7 +100,6 @@ if is_pyinstaller():
             sys.stderr = open(stderr_log_file, "a", encoding="utf-8", buffering=1)
             
             # Write a startup marker to both logs
-            import datetime
             timestamp = datetime.datetime.now()
             
             sys.stdout.write(f"\n{'='*60}\n")
