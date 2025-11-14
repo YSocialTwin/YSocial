@@ -16,12 +16,22 @@ Key components:
 import atexit
 import os
 import shutil
+import sys
 
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Set BASE_DIR to a writable location when running from PyInstaller
+# In PyInstaller mode, __file__ points to temp extraction folder which is recreated each run
+# Use get_writable_path() to ensure database persistence across runs
+if getattr(sys, "frozen", False):
+    # Running in PyInstaller bundle - use persistent writable directory
+    from y_web.utils.path_utils import get_writable_path
+    BASE_DIR = get_writable_path("y_web")
+else:
+    # Running from source - use y_web directory
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -283,6 +293,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app.config["DESKTOP_MODE"] = desktop_mode
 
     if db_type == "sqlite":
+        # Ensure db directory exists (important for PyInstaller where BASE_DIR is in writable location)
+        db_dir = f"{BASE_DIR}{os.sep}db"
+        os.makedirs(db_dir, exist_ok=True)
+        
         # Copy databases if missing
         if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
             from y_web.utils.path_utils import get_resource_path
