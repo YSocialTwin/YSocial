@@ -113,23 +113,23 @@ def send_file_desktop(
 
     # Read the file and encode it
     try:
-        with open(file_path, 'rb') as f:
+        with open(file_path, "rb") as f:
             file_content = f.read()
-        
-        encoded_content = base64.b64encode(file_content).decode('utf-8')
-        
+
+        encoded_content = base64.b64encode(file_content).decode("utf-8")
+
         # Determine MIME type
         _, ext = os.path.splitext(default_filename)
-        mime_type = 'application/octet-stream'
-        if ext.lower() == '.json':
-            mime_type = 'application/json'
-        elif ext.lower() == '.csv':
-            mime_type = 'text/csv'
-        elif ext.lower() == '.zip':
-            mime_type = 'application/zip'
-        elif ext.lower() == '.txt':
-            mime_type = 'text/plain'
-        
+        mime_type = "application/octet-stream"
+        if ext.lower() == ".json":
+            mime_type = "application/json"
+        elif ext.lower() == ".csv":
+            mime_type = "text/csv"
+        elif ext.lower() == ".zip":
+            mime_type = "application/zip"
+        elif ext.lower() == ".txt":
+            mime_type = "text/plain"
+
         # Create HTML that uses pywebview API to save the file
         html = f"""
         <!DOCTYPE html>
@@ -267,9 +267,9 @@ def send_file_desktop(
         </body>
         </html>
         """
-        
+
         return Response(html, mimetype="text/html")
-        
+
     except Exception as e:
         print(f"Error preparing download: {e}")
         return Response(
@@ -283,7 +283,7 @@ def send_file_desktop(
             </body>
             </html>
             """,
-            mimetype="text/html"
+            mimetype="text/html",
         )
 
 

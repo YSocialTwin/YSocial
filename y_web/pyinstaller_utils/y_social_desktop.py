@@ -20,20 +20,20 @@ _webview_window = None
 class DesktopAPI:
     """
     API class exposed to JavaScript in PyWebview.
-    
+
     This allows JavaScript code in the webview to call Python functions,
     particularly for showing native file save dialogs.
     """
-    
+
     def save_file_dialog(self, filename, base64_content, mime_type):
         """
         Show a native save file dialog and save the file.
-        
+
         Args:
             filename: Default filename for the save dialog
             base64_content: Base64-encoded file content
             mime_type: MIME type of the file
-            
+
         Returns:
             dict: {'success': True/False, 'path': saved_path or None, 'error': error message}
         """
@@ -41,28 +41,28 @@ class DesktopAPI:
             window = get_desktop_window()
             if not window:
                 print("ERROR: Window not available")
-                return {'success': False, 'error': 'Window not available', 'path': None}
-            
+                return {"success": False, "error": "Window not available", "path": None}
+
             # Show save file dialog
             # Note: On some platforms, if the user cancels the dialog,
             # it may return a tuple with an empty or invalid path like '\'
             result = window.create_file_dialog(
                 dialog_type=webview.FileDialog.SAVE,
                 save_filename=filename,
-                directory=''  # Start in default directory
+                directory="",  # Start in default directory
             )
-            
+
             print(f"File dialog result: {result}")
             print(f"File dialog result type: {type(result)}")
-            
+
             # Handle different return types from create_file_dialog
             # On macOS, it may return a string directly
             # On other platforms, it returns a tuple
             if not result:
                 # User cancelled or empty result
                 print("User cancelled file dialog (empty result)")
-                return {'success': False, 'error': 'Cancelled', 'path': None}
-            
+                return {"success": False, "error": "Cancelled", "path": None}
+
             # Extract the path from result
             if isinstance(result, str):
                 # Result is a string directly (common on macOS)
@@ -75,67 +75,106 @@ class DesktopAPI:
             else:
                 # Unexpected result format
                 print(f"User cancelled or unexpected result format: {result}")
-                return {'success': False, 'error': 'Cancelled', 'path': None}
-            
+                return {"success": False, "error": "Cancelled", "path": None}
+
             print(f"Saving to: '{save_path}' (length: {len(save_path)})")
-            
+
             # Validate the save path - check for invalid or empty paths
-            if not save_path or len(save_path) <= 1 or save_path in ['\\', '/', '.', '..']:
+            if (
+                not save_path
+                or len(save_path) <= 1
+                or save_path in ["\\", "/", ".", ".."]
+            ):
                 print(f"ERROR: Invalid or empty save path: '{save_path}'")
                 # This likely means the dialog was cancelled or returned an invalid path
-                return {'success': False, 'error': 'Cancelled', 'path': None}
-            
+                return {"success": False, "error": "Cancelled", "path": None}
+
             # Check if the path is a directory instead of a file
             if os.path.isdir(save_path):
                 print(f"ERROR: Path is a directory, not a file: '{save_path}'")
-                return {'success': False, 'error': 'Selected path is a directory, not a file', 'path': None}
-            
+                return {
+                    "success": False,
+                    "error": "Selected path is a directory, not a file",
+                    "path": None,
+                }
+
             # Decode base64 content and save to file
             try:
                 file_content = base64.b64decode(base64_content)
             except Exception as e:
                 print(f"ERROR: Failed to decode base64 content: {e}")
-                return {'success': False, 'error': f'Failed to decode file content: {e}', 'path': None}
-            
+                return {
+                    "success": False,
+                    "error": f"Failed to decode file content: {e}",
+                    "path": None,
+                }
+
             # Write the file
             try:
                 # First check if parent directory exists
                 parent_dir = os.path.dirname(save_path)
                 if parent_dir and not os.path.exists(parent_dir):
                     print(f"ERROR: Parent directory does not exist: {parent_dir}")
-                    return {'success': False, 'error': f'Parent directory does not exist', 'path': None}
-                
+                    return {
+                        "success": False,
+                        "error": f"Parent directory does not exist",
+                        "path": None,
+                    }
+
                 # Try to open and write the file
-                with open(save_path, 'wb') as f:
+                with open(save_path, "wb") as f:
                     f.write(file_content)
             except IsADirectoryError as e:
                 print(f"ERROR: Path is a directory: {save_path}: {e}")
-                return {'success': False, 'error': f'Cannot save to directory: {save_path}', 'path': None}
+                return {
+                    "success": False,
+                    "error": f"Cannot save to directory: {save_path}",
+                    "path": None,
+                }
             except FileExistsError as e:
                 print(f"ERROR: File already exists at {save_path}: {e}")
-                return {'success': False, 'error': f'File exists: {save_path}', 'path': None}
+                return {
+                    "success": False,
+                    "error": f"File exists: {save_path}",
+                    "path": None,
+                }
             except PermissionError as e:
                 print(f"ERROR: Permission denied: {save_path}: {e}")
-                return {'success': False, 'error': f'Permission denied: {save_path}', 'path': None}
+                return {
+                    "success": False,
+                    "error": f"Permission denied: {save_path}",
+                    "path": None,
+                }
             except OSError as e:
                 # OSError with errno 17 (EEXIST) can mean the path is a directory
-                print(f"ERROR: OS error writing file: {save_path}: {e} (errno: {e.errno})")
+                print(
+                    f"ERROR: OS error writing file: {save_path}: {e} (errno: {e.errno})"
+                )
                 if e.errno == 17:  # EEXIST
-                    return {'success': False, 'error': f'Path exists and is a directory or has other conflict', 'path': None}
-                return {'success': False, 'error': f'OS error: {e}', 'path': None}
+                    return {
+                        "success": False,
+                        "error": f"Path exists and is a directory or has other conflict",
+                        "path": None,
+                    }
+                return {"success": False, "error": f"OS error: {e}", "path": None}
             except Exception as e:
                 print(f"ERROR: Failed to write file: {e}")
-                return {'success': False, 'error': f'Failed to write file: {e}', 'path': None}
-            
+                return {
+                    "success": False,
+                    "error": f"Failed to write file: {e}",
+                    "path": None,
+                }
+
             print(f"File saved successfully to {save_path}")
-            return {'success': True, 'path': save_path, 'error': None}
-            
+            return {"success": True, "path": save_path, "error": None}
+
         except Exception as e:
             error_msg = str(e)
             print(f"ERROR saving file: {error_msg}")
             import traceback
+
             traceback.print_exc()
-            return {'success': False, 'error': error_msg, 'path': None}
+            return {"success": False, "error": error_msg, "path": None}
 
 
 def check_webview_compatibility():
