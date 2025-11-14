@@ -73,6 +73,11 @@ class DesktopAPI:
                 # This likely means the dialog was cancelled or returned an invalid path
                 return {'success': False, 'error': 'Cancelled', 'path': None}
             
+            # Check if the path is a directory instead of a file
+            if os.path.isdir(save_path):
+                print(f"ERROR: Path is a directory, not a file: '{save_path}'")
+                return {'success': False, 'error': 'Selected path is a directory, not a file', 'path': None}
+            
             # Decode base64 content and save to file
             try:
                 file_content = base64.b64decode(base64_content)
@@ -82,11 +87,30 @@ class DesktopAPI:
             
             # Write the file
             try:
+                # First check if parent directory exists
+                parent_dir = os.path.dirname(save_path)
+                if parent_dir and not os.path.exists(parent_dir):
+                    print(f"ERROR: Parent directory does not exist: {parent_dir}")
+                    return {'success': False, 'error': f'Parent directory does not exist', 'path': None}
+                
+                # Try to open and write the file
                 with open(save_path, 'wb') as f:
                     f.write(file_content)
+            except IsADirectoryError as e:
+                print(f"ERROR: Path is a directory: {save_path}: {e}")
+                return {'success': False, 'error': f'Cannot save to directory: {save_path}', 'path': None}
             except FileExistsError as e:
                 print(f"ERROR: File already exists at {save_path}: {e}")
                 return {'success': False, 'error': f'File exists: {save_path}', 'path': None}
+            except PermissionError as e:
+                print(f"ERROR: Permission denied: {save_path}: {e}")
+                return {'success': False, 'error': f'Permission denied: {save_path}', 'path': None}
+            except OSError as e:
+                # OSError with errno 17 (EEXIST) can mean the path is a directory
+                print(f"ERROR: OS error writing file: {save_path}: {e} (errno: {e.errno})")
+                if e.errno == 17:  # EEXIST
+                    return {'success': False, 'error': f'Path exists and is a directory or has other conflict', 'path': None}
+                return {'success': False, 'error': f'OS error: {e}', 'path': None}
             except Exception as e:
                 print(f"ERROR: Failed to write file: {e}")
                 return {'success': False, 'error': f'Failed to write file: {e}', 'path': None}
