@@ -22,16 +22,18 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
-# Set BASE_DIR to a writable location when running from PyInstaller
-# In PyInstaller mode, __file__ points to temp extraction folder which is recreated each run
-# Use get_writable_path() to ensure database persistence across runs
+# BASE_DIR always points to y_web directory for Flask resources (templates, static files, etc.)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# WRITABLE_DIR is where user data (databases) should be stored
+# In PyInstaller mode, this is a persistent location; from source, it's the same as BASE_DIR
 if getattr(sys, "frozen", False):
-    # Running in PyInstaller bundle - use persistent writable directory
+    # Running in PyInstaller bundle - use persistent writable directory for user data
     from y_web.utils.path_utils import get_writable_path
-    BASE_DIR = get_writable_path("y_web")
+    WRITABLE_DIR = get_writable_path("y_web")
 else:
-    # Running from source - use y_web directory
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # Running from source - use y_web directory for both resources and data
+    WRITABLE_DIR = BASE_DIR
 
 db = SQLAlchemy()
 login_manager = LoginManager()
@@ -293,12 +295,12 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app.config["DESKTOP_MODE"] = desktop_mode
 
     if db_type == "sqlite":
-        # Ensure db directory exists (important for PyInstaller where BASE_DIR is in writable location)
-        db_dir = f"{BASE_DIR}{os.sep}db"
+        # Use WRITABLE_DIR for database storage to ensure persistence in PyInstaller
+        db_dir = f"{WRITABLE_DIR}{os.sep}db"
         os.makedirs(db_dir, exist_ok=True)
         
         # Copy databases if missing
-        if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
+        if not os.path.exists(f"{WRITABLE_DIR}{os.sep}db{os.sep}dashboard.db"):
             from y_web.utils.path_utils import get_resource_path
 
             dashboard_src = get_resource_path(
@@ -309,17 +311,17 @@ def create_app(db_type="sqlite", desktop_mode=False):
             )
             shutil.copyfile(
                 dashboard_src,
-                f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
+                f"{WRITABLE_DIR}{os.sep}db{os.sep}dashboard.db",
             )
             shutil.copyfile(
                 server_src,
-                f"{BASE_DIR}{os.sep}db{os.sep}dummy.db",
+                f"{WRITABLE_DIR}{os.sep}db{os.sep}dummy.db",
             )
 
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{BASE_DIR}/db/dashboard.db"
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{WRITABLE_DIR}/db/dashboard.db"
         app.config["SQLALCHEMY_BINDS"] = {
-            "db_admin": f"sqlite:///{BASE_DIR}/db/dashboard.db",
-            "db_exp": f"sqlite:///{BASE_DIR}/db/dummy.db",
+            "db_admin": f"sqlite:///{WRITABLE_DIR}/db/dashboard.db",
+            "db_exp": f"sqlite:///{WRITABLE_DIR}/db/dummy.db",
         }
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "connect_args": {"check_same_thread": False}
