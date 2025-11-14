@@ -22,6 +22,9 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 
+# Import path_utils for WRITABLE_DIR setup
+from y_web.utils.path_utils import get_writable_path
+
 # BASE_DIR always points to y_web directory for Flask resources (templates, static files, etc.)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -29,7 +32,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # In PyInstaller mode, this is a persistent location; from source, it's the same as BASE_DIR
 if getattr(sys, "frozen", False):
     # Running in PyInstaller bundle - use persistent writable directory for user data
-    from y_web.utils.path_utils import get_writable_path
     WRITABLE_DIR = get_writable_path("y_web")
 else:
     # Running from source - use y_web directory for both resources and data
