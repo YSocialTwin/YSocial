@@ -54,17 +54,29 @@ class DesktopAPI:
             
             print(f"File dialog result: {result}")
             print(f"File dialog result type: {type(result)}")
-            print(f"File dialog result length: {len(result) if result else 0}")
-            if result:
-                for i, item in enumerate(result):
-                    print(f"  result[{i}]: '{item}' (type: {type(item)})")
             
-            if not result or len(result) == 0:
-                # User cancelled
-                print("User cancelled file dialog")
+            # Handle different return types from create_file_dialog
+            # On macOS, it may return a string directly
+            # On other platforms, it returns a tuple
+            if not result:
+                # User cancelled or empty result
+                print("User cancelled file dialog (empty result)")
                 return {'success': False, 'error': 'Cancelled', 'path': None}
             
-            save_path = result[0]
+            # Extract the path from result
+            if isinstance(result, str):
+                # Result is a string directly (common on macOS)
+                save_path = result
+                print(f"Result is string: '{save_path}'")
+            elif isinstance(result, (tuple, list)) and len(result) > 0:
+                # Result is a tuple/list with path as first element
+                save_path = result[0]
+                print(f"Result is tuple/list, using first element: '{save_path}'")
+            else:
+                # Unexpected result format
+                print(f"User cancelled or unexpected result format: {result}")
+                return {'success': False, 'error': 'Cancelled', 'path': None}
+            
             print(f"Saving to: '{save_path}' (length: {len(save_path)})")
             
             # Validate the save path - check for invalid or empty paths
