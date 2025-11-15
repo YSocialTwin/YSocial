@@ -228,7 +228,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 splash = None
 if ENABLE_SPLASH:
     splash = Splash(
-        os.path.join(basedir, "images", "YSocial.png"),
+        os.path.join(basedir, "images", "header3.jpg"),
         binaries=a.binaries,
         datas=a.datas,
         text_pos=(10, 10),
