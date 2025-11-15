@@ -99,6 +99,25 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 cp "$PROJECT_ROOT/$SOURCE_APP" "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
 chmod +x "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
 
+# Copy Swift launcher if it exists (for macOS splash screen)
+LAUNCHER_PATH="$SCRIPT_DIR/macos_launcher/YSocialLauncher"
+if [ -f "$LAUNCHER_PATH" ]; then
+    echo "🚀 Adding macOS splash launcher..."
+    cp "$LAUNCHER_PATH" "$APP_BUNDLE/Contents/MacOS/YSocialLauncher"
+    chmod +x "$APP_BUNDLE/Contents/MacOS/YSocialLauncher"
+    
+    # Copy logo image for launcher
+    if [ -f "$PROJECT_ROOT/images/YSocial.png" ]; then
+        cp "$PROJECT_ROOT/images/YSocial.png" "$APP_BUNDLE/Contents/Resources/YSocial.png"
+    fi
+    
+    # Update CFBundleExecutable to use the launcher
+    BUNDLE_EXECUTABLE="YSocialLauncher"
+else
+    echo "⚠️  Warning: macOS launcher not found, using direct launch"
+    BUNDLE_EXECUTABLE="${APP_NAME}"
+fi
+
 # Create Info.plist
 cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -106,7 +125,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>${APP_NAME}</string>
+    <string>${BUNDLE_EXECUTABLE}</string>
     <key>CFBundleIdentifier</key>
     <string>com.ysocialtwin.ysocial</string>
     <key>CFBundleName</key>
