@@ -31,6 +31,7 @@ from y_web.models import (
     Exps,
     Ollama_Pull,
 )
+from y_web.utils.path_utils import get_base_path, get_resource_path, get_writable_path
 
 # Dictionary to track Ollama model download processes
 ollama_processes = {}
@@ -329,12 +330,13 @@ def build_screen_command(script_path, config_path, screen_name=None):
     screen_name = screen_name or "experiment"
 
     # Quote script and config paths to handle spaces
-    script_path_quoted = f'"{script_path}"'
-    config_path_quoted = f'"{config_path}"' if config_path else ""
+    # Use single quotes inside the bash -c command to prevent shell expansion
+    script_path_escaped = script_path.replace("'", "'\\''")
+    config_path_escaped = config_path.replace("'", "'\\''") if config_path else ""
 
-    run_cmd = f"{python_cmd} {script_path_quoted}"
-    if config_path_quoted:
-        run_cmd += f" -c {config_path_quoted}"
+    run_cmd = f"{python_cmd} '{script_path_escaped}'"
+    if config_path_escaped:
+        run_cmd += f" -c '{config_path_escaped}'"
 
     # Single bash -c block inside screen
     screen_cmd = f"screen -dmS {screen_name} bash -c '{run_cmd}'"
@@ -501,34 +503,52 @@ def start_server(exp):
     Returns:
         subprocess.Popen: The started process object
     """
-    yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
-    sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    # Get base path - this will be bundle location when frozen, repo root otherwise
+    base_path = get_base_path()
+    yserver_path = base_path
+    sys.path.append(os.path.join(yserver_path, "external", "YServer"))
+
+    # Get writable path for experiments directory
+    writable_base = get_writable_path()
+    # Define y_web directory path (replaces old BASE_DIR)
+    y_web_dir = os.path.join(writable_base, "y_web")
 
     if "database_server.db" in exp.db_name:
-        config = f"{yserver_path}y_web{os.sep}{exp.db_name.split('database_server.db')[0]}config_server.json"
+        # Extract experiment uid from db_name path
+        # db_name format: "experiments/uid/database_server.db"
+        config = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0] + "config_server.json"
+        )
         exp_uid = exp.db_name.split(os.sep)[1]
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_uid = f"{uid}{os.sep}"
-        config = (
-            f"{yserver_path}y_web{os.sep}experiments{os.sep}{exp_uid}config_server.json"
-        )
+        config = os.path.join(y_web_dir, "experiments", uid, "config_server.json")
 
     # Determine the server directory and script path based on platform type
     if exp.platform_type == "microblogging":
-        server_dir = f"{yserver_path}external{os.sep}YServer"
-        script_path = f"{yserver_path}external{os.sep}YServer{os.sep}y_server_run.py"
+        server_dir = os.path.join(yserver_path, "external", "YServer")
+        script_path = os.path.join(
+            yserver_path, "external", "YServer", "y_server_run.py"
+        )
     elif exp.platform_type == "forum":
-        server_dir = f"{yserver_path}external{os.sep}YServerReddit"
-        script_path = (
-            f"{yserver_path}external{os.sep}YServerReddit{os.sep}y_server_run.py"
+        server_dir = os.path.join(yserver_path, "external", "YServerReddit")
+        script_path = os.path.join(
+            yserver_path, "external", "YServerReddit", "y_server_run.py"
         )
     else:
         raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
 
-    # Validate that script_path exists
-    if not Path(script_path).exists():
+    # Validate that script_path exists (skip check for PyInstaller bundles)
+    # Check multiple PyInstaller indicators
+    is_frozen = getattr(sys, "frozen", False)
+    has_meipass = hasattr(sys, "_MEIPASS")
+    is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+    if (
+        not (is_frozen or has_meipass or is_bundle_exe)
+        and not Path(script_path).exists()
+    ):
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
             f"Please ensure the YServer submodule is initialized.\n"
@@ -567,7 +587,31 @@ def start_server(exp):
         ]
 
         # Build the gunicorn command
-        if (
+        # Note: gunicorn doesn't work well with PyInstaller bundles for server mode
+        # If running from PyInstaller, we need to use the standard Python server instead
+        # Check multiple PyInstaller indicators
+        is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
+        is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+        if is_frozen or has_meipass or is_bundle_exe:
+            # PyInstaller mode - cannot use gunicorn with frozen executable
+            # Fall back to using the server runner with Flask's built-in server
+            print(
+                "Warning: Running from PyInstaller bundle. Using Flask server instead of gunicorn."
+            )
+            print(
+                "For production use with PostgreSQL, run from source or use Docker deployment."
+            )
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)
@@ -607,8 +651,8 @@ def start_server(exp):
 
         # Open log files for the subprocess - they need to stay open for the lifetime of the process
         try:
-            out_file = open(stdout_log, "a")
-            err_file = open(stderr_log, "a")
+            out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+            err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
         except Exception as e:
             print(f"Warning: Could not open log files: {e}")
             out_file = subprocess.DEVNULL
@@ -675,7 +719,27 @@ def start_server(exp):
         print(f"Starting server for experiment {exp_uid} with Python (SQLite)...")
 
         # Build the command as a list for subprocess.Popen
-        if (
+        # Check if running from PyInstaller bundle
+        # We need to check multiple indicators:
+        # 1. sys.frozen - set when running in frozen mode
+        # 2. sys._MEIPASS - PyInstaller's temp extraction directory
+        # 3. Executable name doesn't contain "python"
+        is_frozen = getattr(sys, "frozen", False)
+        has_meipass = hasattr(sys, "_MEIPASS")
+        is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+        if is_frozen or has_meipass or is_bundle_exe:
+            # Running from PyInstaller - invoke the bundled executable with special flag
+            # The launcher script detects this flag and routes to the server runner
+            cmd = [
+                sys.executable,
+                "--run-server-subprocess",
+                "-c",
+                config,
+                "--platform",
+                exp.platform_type,
+            ]
+        elif (
             isinstance(python_cmd, str)
             and " " in python_cmd
             and not os.path.isabs(python_cmd)
@@ -696,8 +760,8 @@ def start_server(exp):
         # Open log files for the subprocess - they need to stay open for the lifetime of the process
         # We don't use 'with' because the process needs to outlive this function
         try:
-            out_file = open(stdout_log, "a")
-            err_file = open(stderr_log, "a")
+            out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+            err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
         except Exception as e:
             print(f"Warning: Could not open log files: {e}")
             # Fallback to DEVNULL if log files can't be opened
@@ -717,14 +781,15 @@ def start_server(exp):
                     # Fallback for older Python versions
                     creationflags = 0x08000000
 
-                # On Windows, use shell=True to properly handle paths with spaces
+                # Don't use shell=True when passing special flags like --run-server-subprocess
+                # as the shell can interfere with argument parsing
+                # For PyInstaller bundles, we need direct subprocess invocation
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
-                    shell=True,
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
@@ -745,7 +810,7 @@ def start_server(exp):
             print(f"Config file: {config}")
 
             # Add detailed debugging information
-            full_path = f"{BASE_DIR}{exp.db_name}"
+            full_path = os.path.join(y_web_dir, exp.db_name)
             if len(full_path) > 2 and full_path[1] == ":":
                 # Windows - strip "C:\" (drive + separator)
                 if len(full_path) > 3 and full_path[2] in ("/", "\\"):
@@ -776,7 +841,7 @@ def start_server(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = f"{BASE_DIR}{exp.db_name}"
+        full_path = os.path.join(y_web_dir, exp.db_name)
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
@@ -906,7 +971,7 @@ def start_server_screen(exp):
     if db_type == "sqlite":
         # Construct the database URI properly for both Windows and Unix
         # YServer prepends the system drive, so we need to strip it from our path
-        full_path = f"{BASE_DIR}{exp.db_name}"
+        full_path = os.path.join(y_web_dir, exp.db_name)
 
         # On Windows, strip the drive letter AND the following separator (e.g., "C:\")
         # On Unix, strip the leading "/"
@@ -1278,20 +1343,6 @@ def start_client(exp, cli, population, resume=True):
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    # Get the Python executable to use
-    python_cmd = detect_env_handler()
-
-    # Build path to the client process runner script
-    utils_path = os.path.dirname(os.path.abspath(__file__))
-    runner_script = os.path.join(utils_path, "y_client_process_runner.py")
-
-    # Validate that runner script exists
-    if not Path(runner_script).exists():
-        raise FileNotFoundError(
-            f"Client runner script not found: {runner_script}\n"
-            f"Please ensure y_client_process_runner.py exists in the utils directory."
-        )
-
     # Build the command arguments
     cmd_args = [
         "--exp-id",
@@ -1309,28 +1360,52 @@ def start_client(exp, cli, population, resume=True):
     else:
         cmd_args.append("--no-resume")
 
-    # Build the command as a list for subprocess.Popen
-    if (
-        isinstance(python_cmd, str)
-        and " " in python_cmd
-        and not os.path.isabs(python_cmd)
-    ):
-        # Handle commands like "pipenv run python"
-        cmd_parts = python_cmd.split()
-        cmd = cmd_parts + [runner_script] + cmd_args
+    # Determine how to run the client subprocess based on execution environment
+    if getattr(sys, "frozen", False):
+        # Running from PyInstaller - invoke the bundled executable with special flag
+        # The launcher script detects this flag and routes to the client runner
+        cmd = [sys.executable, "--run-client-subprocess"] + cmd_args
     else:
-        # Simple python executable path (may contain spaces on Windows)
-        cmd = [python_cmd, runner_script] + cmd_args
+        # Running from source - use detected environment with script path
+        python_cmd = detect_env_handler()
+        runner_script = get_resource_path(
+            os.path.join("y_web", "utils", "y_client_process_runner.py")
+        )
+
+        # Validate that runner script exists
+        if not Path(runner_script).exists():
+            raise FileNotFoundError(
+                f"Client runner script not found: {runner_script}\n"
+                f"Please ensure y_client_process_runner.py exists in the utils directory."
+            )
+
+        if (
+            isinstance(python_cmd, str)
+            and " " in python_cmd
+            and not os.path.isabs(python_cmd)
+        ):
+            # Handle commands like "pipenv run python"
+            cmd_parts = python_cmd.split()
+            cmd = cmd_parts + [runner_script] + cmd_args
+        else:
+            # Simple python executable path (may contain spaces on Windows)
+            cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    from y_web.utils.path_utils import get_writable_path
+
+    writable_base = get_writable_path()
+
     if "experiments_" in exp.db_name:
         uid = exp.db_name.removeprefix("experiments_")
-        log_dir = Path(f"{BASE_DIR}experiments{os.sep}{uid}")
+        log_dir = Path(os.path.join(writable_base, "y_web", "experiments", uid))
     else:
+        # exp.db_name format: "experiments/uid/database_server.db"
         uid = exp.db_name.split(os.sep)[1]
         log_dir = Path(
-            f"{BASE_DIR}{os.sep}{exp.db_name.split('database_server.db')[0]}"
+            os.path.join(
+                writable_base, "y_web", exp.db_name.split("database_server.db")[0]
+            )
         )
 
     stdout_log = log_dir / f"{cli.name}_client_stdout.log"
@@ -1338,8 +1413,8 @@ def start_client(exp, cli, population, resume=True):
 
     # Open log files for the subprocess
     try:
-        out_file = open(stdout_log, "a")
-        err_file = open(stderr_log, "a")
+        out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+        err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
     except Exception as e:
         print(f"Warning: Could not open log files: {e}")
         out_file = subprocess.DEVNULL
@@ -1348,13 +1423,29 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
-    project_root = os.path.dirname(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    )
-    if "PYTHONPATH" in env:
-        env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+
+    if getattr(sys, "frozen", False):
+        # Running from PyInstaller - modules are in the bundle
+        # The bootstrap script will handle sys.path setup
+        # No PYTHONPATH needed as we're using runpy with the bundled interpreter
+        pass
     else:
-        env["PYTHONPATH"] = project_root
+        # Running from source - add project root to PYTHONPATH
+        project_root = os.path.dirname(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        if "PYTHONPATH" in env:
+            env["PYTHONPATH"] = f"{project_root}{os.pathsep}{env['PYTHONPATH']}"
+        else:
+            env["PYTHONPATH"] = project_root
+
+    # Determine working directory
+    if getattr(sys, "frozen", False):
+        # When frozen, use current working directory
+        cwd = os.getcwd()
+    else:
+        # When running from source, use project root
+        cwd = project_root
 
     # Start the process with Popen
     try:
@@ -1371,7 +1462,7 @@ def start_client(exp, cli, population, resume=True):
                 stdin=subprocess.DEVNULL,
                 creationflags=creationflags,
                 env=env,
-                cwd=project_root,
+                cwd=cwd,
             )
         else:
             # On Unix, use start_new_session for proper detachment
@@ -1382,12 +1473,12 @@ def start_client(exp, cli, population, resume=True):
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
                 env=env,
-                cwd=project_root,
+                cwd=cwd,
             )
 
         print(f"Client process started with PID: {process.pid}")
-        # if out_file != subprocess.DEVNULL:
-        #    print(f"Logs: {stdout_log} and {stderr_log}")
+        if out_file != subprocess.DEVNULL:
+            print(f"Logs: {stdout_log} and {stderr_log}")
     except Exception as e:
         print(f"Error starting client process: {e}")
         print(f"Command: {' '.join(cmd)}")

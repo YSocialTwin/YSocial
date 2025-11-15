@@ -22,7 +22,6 @@ from flask import (
     redirect,
     render_template,
     request,
-    send_file,
     url_for,
 )
 from flask_login import current_user, login_required
@@ -62,8 +61,10 @@ from y_web.utils import (
     terminate_process_on_port,
     terminate_server_process,
 )
+from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
+from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
 
@@ -384,18 +385,24 @@ def upload_experiment():
     exp_name_override = request.form.get("exp_name", "").strip()
     uid = uuid.uuid4()
 
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__)).split("routes_admin")[0]
+    from y_web.utils.path_utils import get_writable_path
 
-    pathlib.Path(f"{BASE_DIR}experiments{os.sep}{uid}").mkdir()
+    BASE_DIR = get_writable_path()
 
-    experiment.save(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+        parents=True, exist_ok=True
+    )
+
+    experiment.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip"
+    )
     # unzip the file
     shutil.unpack_archive(
-        f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip",
-        f"{BASE_DIR}experiments{os.sep}{uid}",
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip",
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
     )
     # remove the zip file
-    os.remove(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}exp.zip")
+    os.remove(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
 
     # Determine database type
     db_type = "sqlite"
@@ -528,7 +535,9 @@ def upload_experiment():
                 experiment_engine = create_engine(db_uri)
                 with experiment_engine.connect() as dummy_conn:
                     # Load and execute schema
-                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     try:
                         with open(schema_path, "r") as schema_file:
                             schema_sql = schema_file.read()
@@ -905,19 +914,29 @@ def upload_database():
     """Upload database."""
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     database = request.files["sqlite_filename"]
     config = request.files["yserver_filename"]
     uid = uuid.uuid4()
-    pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
         parents=True, exist_ok=True
     )
 
-    database.save(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db")
-    config.save(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+    database.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
+    )
+    config.save(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+    )
 
     try:
         experiment = json.load(
-            open(f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
+            )
         )
         experiment = experiment["name"]
 
@@ -928,7 +947,10 @@ def upload_database():
             flash(
                 "The experiment already exists. Please check the experiment name and try again."
             )
-            shutil.rmtree(f"y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return settings()
 
         exp = Exps(
@@ -954,7 +976,10 @@ def upload_database():
             "There was an error loading the experiment files. Please check the files and try again."
         )
         # remove the directory containing the files
-        shutil.rmtree(f"y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
 
     return settings()
 
@@ -996,20 +1021,26 @@ def create_experiment():
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     uid = str(uuid.uuid4()).replace("-", "_")
-    pathlib.Path(f"y_web{os.sep}experiments{os.sep}{uid}").mkdir(
+    pathlib.Path(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}").mkdir(
         parents=True, exist_ok=True
     )
 
-    db_uri = os.getcwd().split("y_web")[0]
-    db_uri = f"{db_uri}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
+    db_uri = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
 
     # copy the clean database to the experiments folder
     if platform_type == "microblogging" or platform_type == "forum":
         if db_type == "sqlite":
+            clean_db_source = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
             shutil.copyfile(
-                f"data_schema{os.sep}database_clean_server.db",
-                f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
+                clean_db_source,
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db",
             )
         elif db_type == "postgresql":
             from urllib.parse import urlparse
@@ -1057,7 +1088,9 @@ def create_experiment():
                 experiment_engine = create_engine(db_uri)
                 with experiment_engine.connect() as dummy_conn:
                     # Load schema
-                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     with open(schema_path, "r") as schema_file:
                         schema_sql = schema_file.read()
                         dummy_conn.execute(text(schema_sql))
@@ -1122,7 +1155,8 @@ def create_experiment():
     }
 
     with open(
-        f"y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json", "w"
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json",
+        "w",
     ) as f:
         json.dump(config, f, indent=4)
 
@@ -1205,14 +1239,26 @@ def delete_simulation(exp_id):
         # remove the experiment folder
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
+            from y_web.utils.path_utils import get_writable_path
+
+            BASE_DIR = get_writable_path()
             shutil.rmtree(
-                f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
+                os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{exp.db_name.split(os.sep)[1]}",
+                ),
                 ignore_errors=True,
             )
         elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
             # Remove experiment folder
+            from y_web.utils.path_utils import get_writable_path
+
+            BASE_DIR = get_writable_path()
             shutil.rmtree(
-                f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
+                os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{exp.db_name.removeprefix('experiments_')}",
+                ),
                 ignore_errors=True,
             )
 
@@ -1436,6 +1482,13 @@ def experiment_details(uid):
     # get experiment clients
     clients = Client.query.filter_by(id_exp=uid).all()
 
+    # get client execution data to check if clients have been run
+    client_executions = {}
+    for client in clients:
+        execution = Client_Execution.query.filter_by(client_id=client.id).first()
+        # Client has been run at least once if execution exists and elapsed_time > 0
+        client_executions[client.id] = execution and execution.elapsed_time > 0
+
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1451,6 +1504,7 @@ def experiment_details(uid):
         "admin/experiment_details.html",
         experiment=experiment,
         clients=clients,
+        client_executions=client_executions,
         users=users,
         len=len,
         dbtype=dbtype,
@@ -1470,6 +1524,10 @@ def experiment_logs(exp_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # Construct path to _server.log
     # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
     db_name = experiment.db_name
@@ -1477,13 +1535,15 @@ def experiment_logs(exp_id):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         # PostgreSQL format - UUID is after the underscore
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1542,17 +1602,23 @@ def experiment_trends(exp_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # Construct path to _server.log
     db_name = experiment.db_name
     if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1746,19 +1812,25 @@ def client_logs(client_id):
     if not experiment:
         return jsonify({"error": "Experiment not found"}), 404
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # Construct path to client log file
     db_name = experiment.db_name
     if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         # Extract the UUID folder
         parts = db_name.split(os.sep)
         if len(parts) >= 2:
-            exp_folder = f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path"}), 400
     elif db_name.startswith("experiments_"):
         # PostgreSQL format - UUID is after the underscore
         uid = db_name.replace("experiments_", "")
-        exp_folder = f"y_web{os.sep}experiments{os.sep}{uid}"
+        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
     else:
         return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1899,10 +1971,17 @@ def prompts(uid):
     """Handle prompts operation."""
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # get experiment details
     experiment = Exps.query.filter_by(idexp=uid).first()
     # get the prompts file for the experiment
-    prompts = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json"
+    prompts = os.path.join(
+        BASE_DIR,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+    )
 
     # read the prompts file
     prompts = json.load(open(prompts))
@@ -1916,10 +1995,17 @@ def update_prompts(uid):
     """Update prompts."""
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # get experiment details
     experiment = Exps.query.filter_by(idexp=uid).first()
     # get the prompts file for the experiment
-    prompts_filename = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json"
+    prompts_filename = os.path.join(
+        BASE_DIR,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}{os.sep}prompts.json",
+    )
 
     # read the prompts file
     prompts = json.load(open(prompts_filename))
@@ -1945,6 +2031,10 @@ def download_experiment_file(eid):
     """
     check_privileges(current_user.username)
 
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
     # get experiment details
     experiment = Exps.query.filter_by(idexp=eid).first()
 
@@ -1955,12 +2045,16 @@ def download_experiment_file(eid):
 
     # Get folder path based on database type
     if db_type == "sqlite":
-        folder = (
-            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+        folder = os.path.join(
+            BASE_DIR,
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
         )
     else:
         # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
-        folder = f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}"
+        folder = os.path.join(
+            BASE_DIR,
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
+        )
 
     # For PostgreSQL, create an SQLite copy of the database
     if db_type == "postgresql":
@@ -2063,14 +2157,20 @@ def download_experiment_file(eid):
 
     # compress the folder and send the file
     shutil.make_archive(folder, "zip", folder)
+
+    # Ensure temp_data directory exists
+    temp_data_dir = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data")
+    os.makedirs(temp_data_dir, exist_ok=True)
+
     # move the file to the temp_data folder
+    temp_data_path = os.path.join(temp_data_dir, f"{folder.split(os.sep)[-1]}.zip")
     shutil.move(
         f"{folder}.zip",
-        f"y_web{os.sep}experiments{os.sep}temp_data{os.sep}{folder.split(os.sep)[-1]}.zip",
+        temp_data_path,
     )
     # return the file
-    return send_file(
-        f"experiments{os.sep}temp_data{os.sep}{folder.split(os.sep)[-1]}.zip",
+    return send_file_desktop(
+        temp_data_path,
         as_attachment=True,
     )
 
@@ -2945,8 +3045,16 @@ def copy_experiment():
             # PostgreSQL: experiments_old_uid -> old_uid
             source_uid = source_exp.db_name.replace("experiments_", "")
 
-        source_folder = f"y_web{os.sep}experiments{os.sep}{source_uid}"
-        new_folder = f"y_web{os.sep}experiments{os.sep}{new_uid}"
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE_DIR = get_writable_path()
+
+        source_folder = os.path.join(
+            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}"
+        )
+        new_folder = os.path.join(
+            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}"
+        )
 
         # Check if source folder exists
         if not os.path.exists(source_folder):
@@ -2987,7 +3095,9 @@ def copy_experiment():
             new_db_path = os.path.join(new_folder, "database_server.db")
 
             # Copy the clean database schema instead of the source database
-            clean_db_path = f"data_schema{os.sep}database_clean_server.db"
+            clean_db_path = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
             if os.path.exists(clean_db_path):
                 shutil.copy2(clean_db_path, new_db_path)
             else:
@@ -3049,7 +3159,9 @@ def copy_experiment():
                 experiment_engine = create_engine(new_db_uri)
                 with experiment_engine.connect() as conn:
                     # Load schema from SQL file
-                    schema_path = os.path.join("data_schema", "postgre_server.sql")
+                    schema_path = get_resource_path(
+                        os.path.join("data_schema", "postgre_server.sql")
+                    )
                     with open(schema_path, "r") as schema_file:
                         schema_sql = schema_file.read()
                         conn.execute(text(schema_sql))

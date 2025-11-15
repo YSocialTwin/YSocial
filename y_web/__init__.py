@@ -16,6 +16,7 @@ Key components:
 import atexit
 import os
 import shutil
+import sys
 
 from flask import Flask
 from flask_login import LoginManager
@@ -98,10 +99,12 @@ def create_postgresql_db(app):
         dashboard_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_admin"])
         with dashboard_engine.connect() as db_conn:
             # Load SQL schema
-            schema_sql = open(
-                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}postgre_dashboard.sql",
-                "r",
-            ).read()
+            from y_web.utils.path_utils import get_resource_path
+
+            schema_path = get_resource_path(
+                os.path.join("data_schema", "postgre_dashboard.sql")
+            )
+            schema_sql = open(schema_path, "r").read()
             db_conn.execute(text(schema_sql))
 
             # Generate hashed password
@@ -140,10 +143,12 @@ def create_postgresql_db(app):
 
         dummy_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_exp"])
         with dummy_engine.connect() as dummy_conn:
-            schema_sql = open(
-                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}postgre_server.sql",
-                "r",
-            ).read()
+            from y_web.utils.path_utils import get_resource_path
+
+            schema_path = get_resource_path(
+                os.path.join("data_schema", "postgre_server.sql")
+            )
+            schema_sql = open(schema_path, "r").read()
             dummy_conn.execute(text(schema_sql))
 
             # Generate hashed password
@@ -256,7 +261,7 @@ def cleanup_db_jupyter_with_new_app():
 atexit.register(cleanup_db_jupyter_with_new_app)
 
 
-def create_app(db_type="sqlite"):
+def create_app(db_type="sqlite", desktop_mode=False):
     """
     Create and configure the Flask application (factory pattern).
 
@@ -265,6 +270,7 @@ def create_app(db_type="sqlite"):
 
     Args:
         db_type: Database type to use, either "sqlite" or "postgresql"
+        desktop_mode: Whether the app is running in desktop mode with PyWebview
 
     Returns:
         Configured Flask application instance
@@ -275,23 +281,43 @@ def create_app(db_type="sqlite"):
     app = Flask(__name__, static_url_path="/static")
 
     app.config["SECRET_KEY"] = "4323432nldsf"
+    app.config["DESKTOP_MODE"] = desktop_mode
 
     if db_type == "sqlite":
-        # Copy databases if missing
-        if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
-            shutil.copyfile(
-                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_dashboard.db",
-                f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
-            )
-            shutil.copyfile(
-                f"{BASE_DIR}{os.sep}..{os.sep}data_schema{os.sep}database_clean_server.db",
-                f"{BASE_DIR}{os.sep}db{os.sep}dummy.db",
-            )
+        # Determine the database directory based on execution mode
+        if getattr(sys, "frozen", False):
+            # Running from PyInstaller - use writable location for database
+            from y_web.utils.path_utils import get_writable_path
 
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{BASE_DIR}/db/dashboard.db"
+            db_dir = os.path.join(get_writable_path(), "y_web", "db")
+        else:
+            # Running from source - use BASE_DIR
+            db_dir = f"{BASE_DIR}{os.sep}db"
+
+        # Ensure db directory exists
+        os.makedirs(db_dir, exist_ok=True)
+
+        # Copy databases if missing in the target location
+        dashboard_db_path = os.path.join(db_dir, "dashboard.db")
+        dummy_db_path = os.path.join(db_dir, "dummy.db")
+
+        if not os.path.exists(dashboard_db_path):
+            from y_web.utils.path_utils import get_resource_path
+
+            dashboard_src = get_resource_path(
+                os.path.join("data_schema", "database_dashboard.db")
+            )
+            server_src = get_resource_path(
+                os.path.join("data_schema", "database_clean_server.db")
+            )
+            shutil.copyfile(dashboard_src, dashboard_db_path)
+            shutil.copyfile(server_src, dummy_db_path)
+
+        # Use the database paths in the appropriate location
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{dashboard_db_path}"
         app.config["SQLALCHEMY_BINDS"] = {
-            "db_admin": f"sqlite:///{BASE_DIR}/db/dashboard.db",
-            "db_exp": f"sqlite:///{BASE_DIR}/db/dummy.db",
+            "db_admin": f"sqlite:///{dashboard_db_path}",
+            "db_exp": f"sqlite:///{dummy_db_path}",
         }
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "connect_args": {"check_same_thread": False}
@@ -303,6 +329,13 @@ def create_app(db_type="sqlite"):
         raise ValueError("Unsupported db_type, use 'sqlite' or 'postgresql'")
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+    # Disable static file caching for development mode to ensure JS/CSS updates are loaded
+    # This ensures loading indicators and other static assets work in development mode
+    app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 0
+
+    # Enable template auto-reload in development mode
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
 
     db.init_app(app)
     login_manager.init_app(app)
@@ -342,8 +375,19 @@ def create_app(db_type="sqlite"):
 
     @app.before_request
     def before_request_handler():
-        """Setup experiment context for each request."""
+        """Setup experiment context and desktop mode for each request."""
         setup_experiment_context()
+
+        # If in desktop mode, ensure webview window is accessible
+        if app.config.get("DESKTOP_MODE"):
+            try:
+                from y_web.pyinstaller_utils.y_social_desktop import get_desktop_window
+
+                window = get_desktop_window()
+                if window:
+                    app.config["WEBVIEW_WINDOW"] = window
+            except ImportError:
+                pass  # Desktop module not available
 
     @app.teardown_request
     def teardown_request_handler(exception=None):
@@ -430,5 +474,13 @@ def create_app(db_type="sqlite"):
     from .routes_admin.jupyterlab_routes import lab as lab_blueprint
 
     app.register_blueprint(lab_blueprint)
+
+    # Add context processor to detect PyInstaller mode
+    @app.context_processor
+    def inject_pyinstaller_mode():
+        """Inject PyInstaller mode detection into all templates."""
+        import sys
+
+        return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
     return app

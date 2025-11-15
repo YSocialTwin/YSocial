@@ -45,3 +45,4 @@ ysights
 gunicorn
 gevent
 jupyterlab
+pywebview
