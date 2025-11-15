@@ -8,7 +8,7 @@ This spec file bundles the entire YSocial application including:
 - Static files (CSS, JS, images, templates)
 - Data files (database schemas, prompts)
 - Configuration files
-- Splash screen during application startup (Windows/Linux only)
+- Splash screen during application startup (Windows only)
 """
 
 import os
@@ -19,11 +19,10 @@ from PyInstaller.utils.hooks import (
     copy_metadata,
 )
 
-# Only import Splash on supported platforms (not macOS)
+# Only import Splash on Windows where it's fully supported
 # PyInstaller's splash screen is not supported on macOS
-# Note: This check happens at BUILD time, so if you're building for Windows/Linux on macOS,
-# you'll need to build on the target platform or modify this check
-ENABLE_SPLASH = sys.platform != "darwin"
+# Linux support exists but we're keeping it simple with Windows only
+ENABLE_SPLASH = sys.platform == "win32"
 
 if ENABLE_SPLASH:
     from PyInstaller.building.splash import Splash
@@ -225,8 +224,7 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 # Configure splash screen to display during application startup
-# Note: PyInstaller's splash screen is only supported on Windows and Linux, not macOS
-# For macOS, a separate Swift-based launcher is used instead
+# Note: Splash screen is only enabled on Windows for simplicity
 splash = None
 if ENABLE_SPLASH:
     splash = Splash(
@@ -241,7 +239,7 @@ if ENABLE_SPLASH:
 
 # Build EXE with or without splash depending on platform
 if splash is not None:
-    # Windows/Linux: Include splash screen
+    # Windows: Include splash screen
     exe = EXE(
         pyz,
         a.scripts,
@@ -267,7 +265,7 @@ if splash is not None:
         icon=os.path.join(basedir, "images", "YSocial_ico.png"),
     )
 else:
-    # macOS: No built-in splash (using external Swift launcher instead)
+    # macOS/Linux: No splash screen
     exe = EXE(
         pyz,
         a.scripts,

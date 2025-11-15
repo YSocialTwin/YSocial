@@ -99,25 +99,6 @@ mkdir -p "$APP_BUNDLE/Contents/Resources"
 cp "$PROJECT_ROOT/$SOURCE_APP" "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
 chmod +x "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
 
-# Copy Swift launcher if it exists (for macOS splash screen)
-LAUNCHER_PATH="$SCRIPT_DIR/macos_launcher/YSocialLauncher"
-if [ -f "$LAUNCHER_PATH" ]; then
-    echo "🚀 Adding macOS splash launcher..."
-    cp "$LAUNCHER_PATH" "$APP_BUNDLE/Contents/MacOS/YSocialLauncher"
-    chmod +x "$APP_BUNDLE/Contents/MacOS/YSocialLauncher"
-    
-    # Copy logo image for launcher
-    if [ -f "$PROJECT_ROOT/images/YSocial.png" ]; then
-        cp "$PROJECT_ROOT/images/YSocial.png" "$APP_BUNDLE/Contents/Resources/YSocial.png"
-    fi
-    
-    # Update CFBundleExecutable to use the launcher
-    BUNDLE_EXECUTABLE="YSocialLauncher"
-else
-    echo "⚠️  Warning: macOS launcher not found, using direct launch"
-    BUNDLE_EXECUTABLE="${APP_NAME}"
-fi
-
 # Create Info.plist
 cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -125,7 +106,7 @@ cat > "$APP_BUNDLE/Contents/Info.plist" << EOF
 <plist version="1.0">
 <dict>
     <key>CFBundleExecutable</key>
-    <string>${BUNDLE_EXECUTABLE}</string>
+    <string>${APP_NAME}</string>
     <key>CFBundleIdentifier</key>
     <string>com.ysocialtwin.ysocial</string>
     <key>CFBundleName</key>
@@ -207,38 +188,22 @@ fi
 # Sign the .app bundle if codesign identity is provided
 if [ -n "$CODESIGN_IDENTITY" ]; then
     echo "🔐 Signing YSocial.app bundle..."
+    CODESIGN_CMD="codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep"
     
-    # Prepare entitlements path if provided
-    ENTITLEMENTS_ARG=""
+    # Add entitlements if provided
     if [ -n "$ENTITLEMENTS_FILE" ]; then
         # Handle both absolute and relative paths
         if [ -f "$ENTITLEMENTS_FILE" ]; then
-            ENTITLEMENTS_ARG="--entitlements \"$ENTITLEMENTS_FILE\""
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$ENTITLEMENTS_FILE\""
         elif [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
-            ENTITLEMENTS_ARG="--entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
+            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
         else
             echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"
         fi
     fi
     
-    # Sign individual executables first (from inside out)
-    # This ensures each component is properly signed before signing the bundle
-    
-    # Sign the Swift launcher if it exists
-    if [ -f "$APP_BUNDLE/Contents/MacOS/YSocialLauncher" ]; then
-        echo "   Signing YSocialLauncher..."
-        eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime $ENTITLEMENTS_ARG \"$APP_BUNDLE/Contents/MacOS/YSocialLauncher\"
-    fi
-    
-    # Sign the main PyInstaller executable
-    if [ -f "$APP_BUNDLE/Contents/MacOS/YSocial" ]; then
-        echo "   Signing YSocial executable..."
-        eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime $ENTITLEMENTS_ARG \"$APP_BUNDLE/Contents/MacOS/YSocial\"
-    fi
-    
-    # Finally, sign the entire app bundle
-    echo "   Signing entire app bundle..."
-    eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep $ENTITLEMENTS_ARG \"$APP_BUNDLE\"
+    # Execute the signing command
+    eval "$CODESIGN_CMD \"$APP_BUNDLE\""
     
     # Verify the signature
     codesign --verify --deep --verbose "$APP_BUNDLE"

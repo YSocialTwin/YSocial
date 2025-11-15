@@ -63,24 +63,8 @@ fi
 
 cd "$PROJECT_ROOT"
 
-# Step 1: Build the Swift launcher for macOS splash screen
-echo "🔨 Step 1/4: Building macOS Swift launcher..."
-if [ -f "$SCRIPT_DIR/macos_launcher/build_launcher.sh" ]; then
-    cd "$SCRIPT_DIR/macos_launcher"
-    ./build_launcher.sh
-    if [ ! -f "YSocialLauncher" ]; then
-        echo "❌ Error: Swift launcher build failed"
-        exit 1
-    fi
-    echo "✅ Swift launcher built successfully"
-    cd "$PROJECT_ROOT"
-else
-    echo "⚠️  Warning: macOS launcher build script not found, skipping..."
-fi
-echo ""
-
-# Step 2: Build the executable with PyInstaller
-echo "📦 Step 2/4: Building executable with PyInstaller..."
+# Step 1: Build the executable with PyInstaller
+echo "📦 Step 1/3: Building executable with PyInstaller..."
 echo "   Command: pyinstaller y_social.spec --clean --noconfirm"
 pyinstaller y_social.spec --clean --noconfirm
 
@@ -91,8 +75,8 @@ fi
 echo "✅ Build complete: dist/YSocial"
 echo ""
 
-# Step 3: Sign the executable
-echo "🔐 Step 3/4: Signing executable with entitlements..."
+# Step 2: Sign the executable
+echo "🔐 Step 2/3: Signing executable with entitlements..."
 if [ "$CODESIGN_IDENTITY" = "-" ]; then
     echo "   Using ad-hoc signing (--sign -)"
 else
@@ -127,8 +111,8 @@ fi
 echo "✅ Executable signed successfully"
 echo ""
 
-# Step 4: Create the DMG with signed .app bundle (including launcher)
-echo "💿 Step 4/4: Creating DMG installer with signed .app bundle and launcher..."
+# Step 3: Create the DMG with signed .app bundle
+echo "💿 Step 3/3: Creating DMG installer with signed .app bundle..."
 ./packaging/create_dmg.sh --codesign-identity "$CODESIGN_IDENTITY" --entitlements "packaging/entitlements.plist"
 
 # Find the created DMG
