@@ -8,6 +8,7 @@ This spec file bundles the entire YSocial application including:
 - Static files (CSS, JS, images, templates)
 - Data files (database schemas, prompts)
 - Configuration files
+- Splash screen during application startup
 """
 
 import os
@@ -17,6 +18,7 @@ from PyInstaller.utils.hooks import (
     collect_submodules,
     copy_metadata,
 )
+from PyInstaller.building.splash import Splash
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
 
@@ -151,13 +153,6 @@ if os.path.exists(version_file_path):
 # PyInstaller utils are now part of y_web package and will be included automatically
 # No need to explicitly add splash_screen.py and installation_id.py as separate files
 
-# Add the splash subprocess script (executed as subprocess, not imported)
-splash_subprocess_path = os.path.join(
-    basedir, "y_web", "pyinstaller_utils", "splash_subprocess.py"
-)
-if os.path.exists(splash_subprocess_path):
-    datas += [(splash_subprocess_path, "y_web/pyinstaller_utils")]
-
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
     basedir, "y_web", "utils", "y_client_process_runner.py"
@@ -221,9 +216,23 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
+# Configure splash screen to display during application startup
+# This provides visual feedback while heavy dependencies are loading
+splash = Splash(
+    os.path.join(basedir, "images", "YSocial.png"),
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=(10, 10),
+    text_size=12,
+    text_color="black",
+    text_default="Loading YSocial...",
+)
+
 exe = EXE(
     pyz,
     a.scripts,
+    splash,  # Include splash screen
+    splash.binaries,  # Include splash binaries
     a.binaries,
     a.zipfiles,
     a.datas,
