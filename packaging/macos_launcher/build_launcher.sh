@@ -15,7 +15,9 @@ echo "Project root: $PROJECT_ROOT"
 cd "$SCRIPT_DIR"
 
 # Build the launcher executable
+# Use -parse-as-library to allow @NSApplicationMain attribute
 swiftc -O \
+    -parse-as-library \
     -o YSocialLauncher \
     YSocialLauncher.swift
 

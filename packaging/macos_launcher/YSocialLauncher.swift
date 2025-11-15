@@ -1,11 +1,10 @@
-#!/usr/bin/env swift
 //
 // YSocial Launcher for macOS
 //
 // This launcher displays a splash screen while launching the main YSocial application.
 // It acts as a temporary window that shows the YSocial logo during app initialization.
 //
-// Build with: swiftc -o YSocialLauncher YSocialLauncher.swift
+// Build with: swiftc -parse-as-library -o YSocialLauncher YSocialLauncher.swift
 //
 
 import Cocoa
