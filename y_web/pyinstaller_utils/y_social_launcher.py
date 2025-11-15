@@ -20,6 +20,29 @@ def is_pyinstaller():
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
 
 
+def close_splash_screen():
+    """
+    Close the PyInstaller splash screen if it's active.
+
+    This should be called after heavy imports are complete to hide the splash
+    and show the main application.
+    
+    Note: On macOS builds, splash screen is not available (not supported by PyInstaller).
+    This function will silently do nothing in that case.
+    """
+    try:
+        import pyi_splash
+        
+        # Check if splash is alive before trying to close
+        # On some platforms, pyi_splash exists but isn't functional
+        if hasattr(pyi_splash, 'is_alive') and pyi_splash.is_alive():
+            pyi_splash.close()
+    except (ImportError, RuntimeError, AttributeError, Exception) as e:
+        # Splash not available, already closed, or not supported - that's fine
+        # This happens on macOS builds where splash isn't included
+        pass
+
+
 def get_log_file_paths():
     """
     Get the paths to log files.
@@ -398,7 +421,12 @@ def main():
         # Import the actual application after parsing args (allows --help to work without dependencies)
         try:
             from y_social import start_app
+
+            # Close splash screen after heavy imports complete
+            close_splash_screen()
         except Exception as e:
+            # Close splash on import error
+            close_splash_screen()
             error_msg = f"{type(e).__name__}: {e}"
             print(f"\nError importing y_social module:", file=sys.stderr)
             print(f"   {error_msg}", file=sys.stderr)

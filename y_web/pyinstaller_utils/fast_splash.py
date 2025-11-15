@@ -5,6 +5,12 @@ Fast Splash Screen for YSocial PyInstaller application.
 This lightweight script shows the splash screen immediately using only
 built-in libraries (tkinter, PIL) that are fast to import. It displays
 the splash screen while the main application loads heavy dependencies.
+
+NOTE: This module is NOT currently used in production builds.
+The active splash screen implementation uses PyInstaller's built-in Splash feature
+configured in y_social.spec. This provides a simpler, more reliable splash screen
+that displays during application startup without requiring custom subprocess management.
+This file is kept for reference and potential future use.
 """
 
 import os

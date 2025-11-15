@@ -8,6 +8,7 @@ This spec file bundles the entire YSocial application including:
 - Static files (CSS, JS, images, templates)
 - Data files (database schemas, prompts)
 - Configuration files
+- Splash screen during application startup (Windows only)
 """
 
 import os
@@ -17,6 +18,14 @@ from PyInstaller.utils.hooks import (
     collect_submodules,
     copy_metadata,
 )
+
+# Only import Splash on Windows where it's fully supported
+# PyInstaller's splash screen is not supported on macOS
+# Linux support exists but we're keeping it simple with Windows only
+ENABLE_SPLASH = sys.platform == "win32"
+
+if ENABLE_SPLASH:
+    from PyInstaller.building.splash import Splash
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
 
@@ -214,25 +223,68 @@ a = Analysis(
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
-exe = EXE(
-    pyz,
-    a.scripts,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    [],
-    name="YSocial",
-    debug=False,
-    bootloader_ignore_signals=False,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
-    console=False,
-    disable_windowed_traceback=False,
-    argv_emulation=False,
-    target_arch=None,
-    codesign_identity=None,
-    entitlements_file=os.path.join(basedir, "packaging", "entitlements.plist"),
-    icon=os.path.join(basedir, "images", "YSocial_ico.png"),
-)
+# Configure splash screen to display during application startup
+# Note: Splash screen is only enabled on Windows for simplicity
+splash = None
+if ENABLE_SPLASH:
+    splash = Splash(
+        os.path.join(basedir, "images", "YSocial.png"),
+        binaries=a.binaries,
+        datas=a.datas,
+        text_pos=(10, 10),
+        text_size=12,
+        text_color="black",
+        text_default="Loading YSocial...",
+    )
+
+# Build EXE with or without splash depending on platform
+if splash is not None:
+    # Windows: Include splash screen
+    exe = EXE(
+        pyz,
+        a.scripts,
+        splash,  # Include splash screen
+        splash.binaries,  # Include splash binaries
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        [],
+        name="YSocial",
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
+        console=False,
+        disable_windowed_traceback=False,
+        argv_emulation=False,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=os.path.join(basedir, "packaging", "entitlements.plist"),
+        icon=os.path.join(basedir, "images", "YSocial_ico.png"),
+    )
+else:
+    # macOS/Linux: No splash screen
+    exe = EXE(
+        pyz,
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        [],
+        name="YSocial",
+        debug=False,
+        bootloader_ignore_signals=False,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        runtime_tmpdir=None,
+        console=False,
+        disable_windowed_traceback=False,
+        argv_emulation=False,
+        target_arch=None,
+        codesign_identity=None,
+        entitlements_file=os.path.join(basedir, "packaging", "entitlements.plist"),
+        icon=os.path.join(basedir, "images", "YSocial_ico.png"),
+    )
