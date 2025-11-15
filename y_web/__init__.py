@@ -288,18 +288,19 @@ def create_app(db_type="sqlite", desktop_mode=False):
         if getattr(sys, "frozen", False):
             # Running from PyInstaller - use writable location for database
             from y_web.utils.path_utils import get_writable_path
+
             db_dir = os.path.join(get_writable_path(), "y_web", "db")
         else:
             # Running from source - use BASE_DIR
             db_dir = f"{BASE_DIR}{os.sep}db"
-        
+
         # Ensure db directory exists
         os.makedirs(db_dir, exist_ok=True)
-        
+
         # Copy databases if missing in the target location
         dashboard_db_path = os.path.join(db_dir, "dashboard.db")
         dummy_db_path = os.path.join(db_dir, "dummy.db")
-        
+
         if not os.path.exists(dashboard_db_path):
             from y_web.utils.path_utils import get_resource_path
 

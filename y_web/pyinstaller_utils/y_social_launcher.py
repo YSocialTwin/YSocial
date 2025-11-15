@@ -23,40 +23,40 @@ def is_pyinstaller():
 def get_log_file_paths():
     """
     Get the paths to log files.
-    
+
     Returns:
         tuple: (stdout_log_path, stderr_log_path, log_dir)
     """
     log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-    
+
     # Check if log directory exists, otherwise use temp
     if not os.path.exists(log_dir):
         try:
             os.makedirs(log_dir, exist_ok=True)
         except Exception:
             log_dir = tempfile.gettempdir()
-    
+
     stdout_log = os.path.join(log_dir, "ysocial.log")
     stderr_log = os.path.join(log_dir, "ysocial_error.log")
-    
+
     return stdout_log, stderr_log, log_dir
 
 
 def show_error_dialog(title, message):
     """
     Show an error dialog to the user on Windows.
-    
+
     Args:
         title: Dialog title
         message: Error message to display
     """
     if not sys.platform.startswith("win"):
         return
-    
+
     try:
         import tkinter as tk
         from tkinter import messagebox
-        
+
         root = tk.Tk()
         root.withdraw()
         messagebox.showerror(title, message)
@@ -69,7 +69,10 @@ def show_error_dialog(title, message):
 # Suppress console output when running as PyInstaller executable
 # This prevents the terminal window from showing when console=False in spec
 # Skip redirection if we're being invoked as a subprocess (to avoid file locking issues on Windows)
-is_subprocess = len(sys.argv) > 1 and sys.argv[1] in ["--run-client-subprocess", "--run-server-subprocess"]
+is_subprocess = len(sys.argv) > 1 and sys.argv[1] in [
+    "--run-client-subprocess",
+    "--run-server-subprocess",
+]
 
 if is_pyinstaller() and not is_subprocess:
     # On Windows with console=False, redirect stdout/stderr to log file
@@ -79,34 +82,34 @@ if is_pyinstaller() and not is_subprocess:
         try:
             # Get user's home directory for log file
             log_dir = os.path.join(os.path.expanduser("~"), ".ysocial")
-            
+
             # Create log directory if it doesn't exist
             try:
                 os.makedirs(log_dir, exist_ok=True)
             except Exception:
                 # Fallback to temp directory if home directory is not writable
                 log_dir = tempfile.gettempdir()
-            
+
             # Create separate log files for stdout and stderr
             stdout_log_file = os.path.join(log_dir, "ysocial.log")
             stderr_log_file = os.path.join(log_dir, "ysocial_error.log")
-            
+
             # Redirect stdout to log file to capture normal output (Flask logs, etc.)
             # Open in append mode with UTF-8 encoding and line buffering
             sys.stdout = open(stdout_log_file, "a", encoding="utf-8", buffering=1)
-            
+
             # Redirect stderr to error log file to capture errors
             # Open in append mode with UTF-8 encoding and line buffering
             sys.stderr = open(stderr_log_file, "a", encoding="utf-8", buffering=1)
-            
+
             # Write a startup marker to both logs
             timestamp = datetime.datetime.now()
-            
+
             sys.stdout.write(f"\n{'='*60}\n")
             sys.stdout.write(f"YSocial started at {timestamp}\n")
             sys.stdout.write(f"{'='*60}\n")
             sys.stdout.flush()
-            
+
             sys.stderr.write(f"\n{'='*60}\n")
             sys.stderr.write(f"YSocial started at {timestamp}\n")
             sys.stderr.write(f"{'='*60}\n")
@@ -116,11 +119,12 @@ if is_pyinstaller() and not is_subprocess:
             try:
                 import tkinter as tk
                 from tkinter import messagebox
+
                 root = tk.Tk()
                 root.withdraw()
                 messagebox.showwarning(
                     "YSocial Warning",
-                    f"Could not set up logging:\n{e}\n\nContinuing without log files."
+                    f"Could not set up logging:\n{e}\n\nContinuing without log files.",
                 )
             except Exception:
                 pass
@@ -308,7 +312,7 @@ def main():
 
                 traceback.print_exc()
                 sys.stderr.flush()
-                
+
                 # Show error dialog on Windows
                 if sys.platform.startswith("win"):
                     stdout_log, stderr_log, log_dir = get_log_file_paths()
@@ -317,7 +321,7 @@ def main():
                     dialog_msg += f"  • Errors: {stderr_log}\n"
                     dialog_msg += f"  • Output: {stdout_log}"
                     show_error_dialog("YSocial Desktop Import Error", dialog_msg)
-                
+
                 sys.exit(1)
 
         if not use_browser_fallback:
@@ -374,16 +378,18 @@ def main():
 
                     traceback.print_exc()
                     sys.stderr.flush()
-                    
+
                     # Show error dialog on Windows
                     if sys.platform.startswith("win"):
                         stdout_log, stderr_log, log_dir = get_log_file_paths()
-                        dialog_msg = f"Error starting YSocial Desktop:\n\n{error_msg}\n\n"
+                        dialog_msg = (
+                            f"Error starting YSocial Desktop:\n\n{error_msg}\n\n"
+                        )
                         dialog_msg += f"Check the log files for details:\n"
                         dialog_msg += f"  • Errors: {stderr_log}\n"
                         dialog_msg += f"  • Output: {stdout_log}"
                         show_error_dialog("YSocial Desktop Error", dialog_msg)
-                    
+
                     sys.exit(1)
 
     # Browser mode - either explicitly requested or fallback from desktop mode
@@ -400,7 +406,7 @@ def main():
 
             traceback.print_exc()
             sys.stderr.flush()
-            
+
             # Show error dialog on Windows
             if sys.platform.startswith("win"):
                 stdout_log, stderr_log, log_dir = get_log_file_paths()
@@ -409,7 +415,7 @@ def main():
                 dialog_msg += f"  • Errors: {stderr_log}\n"
                 dialog_msg += f"  • Output: {stdout_log}"
                 show_error_dialog("YSocial Import Error", dialog_msg)
-            
+
             sys.exit(1)
 
         # Start browser opener in background thread unless disabled
@@ -442,7 +448,7 @@ def main():
 
             traceback.print_exc()
             sys.stderr.flush()
-            
+
             # Show error dialog on Windows
             if sys.platform.startswith("win"):
                 stdout_log, stderr_log, log_dir = get_log_file_paths()
@@ -451,7 +457,7 @@ def main():
                 dialog_msg += f"  • Errors: {stderr_log}\n"
                 dialog_msg += f"  • Output: {stdout_log}"
                 show_error_dialog("YSocial Startup Error", dialog_msg)
-            
+
             sys.exit(1)
 
 
@@ -463,19 +469,19 @@ if __name__ == "__main__":
         print(f"\nUnexpected error in main:", file=sys.stderr)
         print(f"   {error_msg}", file=sys.stderr)
         import traceback
-        
+
         traceback.print_exc()
         sys.stderr.flush()
-        
+
         # Show error dialog on Windows PyInstaller build
         if is_pyinstaller() and sys.platform.startswith("win"):
             # Get log file paths
             stdout_log, stderr_log, log_dir = get_log_file_paths()
-            
+
             dialog_msg = f"YSocial encountered an error:\n\n{error_msg}\n\n"
             dialog_msg += f"Check the log files for details:\n"
             dialog_msg += f"  • Errors: {stderr_log}\n"
             dialog_msg += f"  • Output: {stdout_log}"
             show_error_dialog("YSocial Error", dialog_msg)
-        
+
         sys.exit(1)
