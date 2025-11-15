@@ -26,14 +26,20 @@ def close_splash_screen():
 
     This should be called after heavy imports are complete to hide the splash
     and show the main application.
+    
+    Note: On macOS builds, splash screen is not available (not supported by PyInstaller).
+    This function will silently do nothing in that case.
     """
     try:
         import pyi_splash
-
-        if pyi_splash.is_alive():
+        
+        # Check if splash is alive before trying to close
+        # On some platforms, pyi_splash exists but isn't functional
+        if hasattr(pyi_splash, 'is_alive') and pyi_splash.is_alive():
             pyi_splash.close()
-    except Exception:
-        # Splash not available or already closed - that's fine
+    except (ImportError, RuntimeError, AttributeError, Exception) as e:
+        # Splash not available, already closed, or not supported - that's fine
+        # This happens on macOS builds where splash isn't included
         pass
 
 
