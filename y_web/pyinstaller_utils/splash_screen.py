@@ -3,6 +3,11 @@ Dynamic splash screen for YSocial PyInstaller application.
 
 Displays the YSocial logo, robot image, author information, and release date
 while the application initializes.
+
+NOTE: This module is NOT currently used in production builds.
+The active splash screen implementation is in splash_subprocess.py which runs
+as a separate subprocess to avoid blocking the main application thread.
+This file is kept for reference and potential future use.
 """
 
 import os
