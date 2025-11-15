@@ -114,6 +114,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ysocialProcess?.executableURL = URL(fileURLWithPath: ysocialPath)
         ysocialProcess?.arguments = CommandLine.arguments.dropFirst().map { $0 }
         
+        // Set the working directory to the MacOS directory
+        // This ensures the PyInstaller app can find its resources
+        ysocialProcess?.currentDirectoryURL = URL(fileURLWithPath: launcherDir)
+        
+        // Inherit environment variables from the launcher
+        // This is important for PyInstaller to work correctly
+        var environment = ProcessInfo.processInfo.environment
+        // Ensure HOME is set (sometimes missing in app bundles)
+        if environment["HOME"] == nil {
+            environment["HOME"] = NSHomeDirectory()
+        }
+        ysocialProcess?.environment = environment
+        
         // Monitor for when YSocial process ends
         ysocialProcess?.terminationHandler = { [weak self] process in
             DispatchQueue.main.async {
