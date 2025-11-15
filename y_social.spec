@@ -21,7 +21,11 @@ from PyInstaller.utils.hooks import (
 
 # Only import Splash on supported platforms (not macOS)
 # PyInstaller's splash screen is not supported on macOS
-if sys.platform != "darwin":
+# Note: This check happens at BUILD time, so if you're building for Windows/Linux on macOS,
+# you'll need to build on the target platform or modify this check
+ENABLE_SPLASH = sys.platform != "darwin"
+
+if ENABLE_SPLASH:
     from PyInstaller.building.splash import Splash
 
 os.environ["PYTHONIOENCODING"] = "utf-8"
@@ -224,7 +228,7 @@ pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 # Note: PyInstaller's splash screen is only supported on Windows and Linux, not macOS
 # For macOS, a separate Swift-based launcher is used instead
 splash = None
-if sys.platform != "darwin":
+if ENABLE_SPLASH:
     splash = Splash(
         os.path.join(basedir, "images", "YSocial.png"),
         binaries=a.binaries,

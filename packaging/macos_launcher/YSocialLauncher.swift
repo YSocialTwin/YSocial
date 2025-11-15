@@ -109,6 +109,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let launcherDir = (launcherPath as NSString).deletingLastPathComponent
         let ysocialPath = (launcherDir as NSString).appendingPathComponent("YSocial")
         
+        // Debug: Print paths
+        print("Launcher path: \(launcherPath)")
+        print("Launcher dir: \(launcherDir)")
+        print("YSocial path: \(ysocialPath)")
+        
+        // Check if YSocial executable exists
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: ysocialPath) {
+            print("ERROR: YSocial executable not found at: \(ysocialPath)")
+            showErrorAlert(message: "YSocial executable not found.\nExpected at: \(ysocialPath)")
+            closeSplashAndQuit()
+            return
+        }
+        
         // Launch the YSocial process
         ysocialProcess = Process()
         ysocialProcess?.executableURL = URL(fileURLWithPath: ysocialPath)
@@ -127,24 +141,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         ysocialProcess?.environment = environment
         
+        // Set up standard output and error to capture any issues
+        let outputPipe = Pipe()
+        let errorPipe = Pipe()
+        ysocialProcess?.standardOutput = outputPipe
+        ysocialProcess?.standardError = errorPipe
+        
         // Monitor for when YSocial process ends
         ysocialProcess?.terminationHandler = { [weak self] process in
+            print("YSocial process terminated with status: \(process.terminationStatus)")
             DispatchQueue.main.async {
                 self?.closeSplashAndQuit()
             }
         }
         
         do {
+            print("Launching YSocial...")
             try ysocialProcess?.run()
+            print("YSocial process started successfully (PID: \(ysocialProcess?.processIdentifier ?? 0))")
             
             // Monitor for YSocial startup
-            // Close splash after a reasonable startup time or when app signals ready
+            // Close splash after a reasonable startup time
             DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                print("Closing splash after 5 seconds")
                 self.closeSplashAndQuit()
             }
         } catch {
             print("Error launching YSocial: \(error)")
-            showErrorAlert(message: "Failed to launch YSocial application.")
+            showErrorAlert(message: "Failed to launch YSocial application.\n\nError: \(error.localizedDescription)")
             closeSplashAndQuit()
         }
     }
