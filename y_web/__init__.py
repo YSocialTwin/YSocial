@@ -16,6 +16,7 @@ Key components:
 import atexit
 import os
 import shutil
+import sys
 
 from flask import Flask
 from flask_login import LoginManager
@@ -283,8 +284,23 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app.config["DESKTOP_MODE"] = desktop_mode
 
     if db_type == "sqlite":
-        # Copy databases if missing
-        if not os.path.exists(f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db"):
+        # Determine the database directory based on execution mode
+        if getattr(sys, "frozen", False):
+            # Running from PyInstaller - use writable location for database
+            from y_web.utils.path_utils import get_writable_path
+            db_dir = os.path.join(get_writable_path(), "y_web", "db")
+        else:
+            # Running from source - use BASE_DIR
+            db_dir = f"{BASE_DIR}{os.sep}db"
+        
+        # Ensure db directory exists
+        os.makedirs(db_dir, exist_ok=True)
+        
+        # Copy databases if missing in the target location
+        dashboard_db_path = os.path.join(db_dir, "dashboard.db")
+        dummy_db_path = os.path.join(db_dir, "dummy.db")
+        
+        if not os.path.exists(dashboard_db_path):
             from y_web.utils.path_utils import get_resource_path
 
             dashboard_src = get_resource_path(
@@ -293,19 +309,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
             server_src = get_resource_path(
                 os.path.join("data_schema", "database_clean_server.db")
             )
-            shutil.copyfile(
-                dashboard_src,
-                f"{BASE_DIR}{os.sep}db{os.sep}dashboard.db",
-            )
-            shutil.copyfile(
-                server_src,
-                f"{BASE_DIR}{os.sep}db{os.sep}dummy.db",
-            )
+            shutil.copyfile(dashboard_src, dashboard_db_path)
+            shutil.copyfile(server_src, dummy_db_path)
 
-        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{BASE_DIR}/db/dashboard.db"
+        # Use the database paths in the appropriate location
+        app.config["SQLALCHEMY_DATABASE_URI"] = f"sqlite:///{dashboard_db_path}"
         app.config["SQLALCHEMY_BINDS"] = {
-            "db_admin": f"sqlite:///{BASE_DIR}/db/dashboard.db",
-            "db_exp": f"sqlite:///{BASE_DIR}/db/dummy.db",
+            "db_admin": f"sqlite:///{dashboard_db_path}",
+            "db_exp": f"sqlite:///{dummy_db_path}",
         }
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "connect_args": {"check_same_thread": False}

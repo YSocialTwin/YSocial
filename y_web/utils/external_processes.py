@@ -651,8 +651,8 @@ def start_server(exp):
 
         # Open log files for the subprocess - they need to stay open for the lifetime of the process
         try:
-            out_file = open(stdout_log, "a")
-            err_file = open(stderr_log, "a")
+            out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+            err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
         except Exception as e:
             print(f"Warning: Could not open log files: {e}")
             out_file = subprocess.DEVNULL
@@ -760,8 +760,8 @@ def start_server(exp):
         # Open log files for the subprocess - they need to stay open for the lifetime of the process
         # We don't use 'with' because the process needs to outlive this function
         try:
-            out_file = open(stdout_log, "a")
-            err_file = open(stderr_log, "a")
+            out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+            err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
         except Exception as e:
             print(f"Warning: Could not open log files: {e}")
             # Fallback to DEVNULL if log files can't be opened
@@ -1413,8 +1413,8 @@ def start_client(exp, cli, population, resume=True):
 
     # Open log files for the subprocess
     try:
-        out_file = open(stdout_log, "a")
-        err_file = open(stderr_log, "a")
+        out_file = open(stdout_log, "a", encoding="utf-8", buffering=1)
+        err_file = open(stderr_log, "a", encoding="utf-8", buffering=1)
     except Exception as e:
         print(f"Warning: Could not open log files: {e}")
         out_file = subprocess.DEVNULL
