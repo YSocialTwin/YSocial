@@ -268,6 +268,16 @@ def start_desktop_app(
 
     from y_social import start_app
 
+    # Heavy import completed - terminate splash screen if it's still running
+    # Import the terminate function from y_social_launcher
+    try:
+        from .y_social_launcher import terminate_splash_screen
+
+        terminate_splash_screen()
+    except Exception:
+        # If we can't import or terminate, that's okay - splash might already be gone
+        pass
+
     # Start Flask in a background thread
     def run_flask():
         """Run Flask server in a separate thread."""

@@ -7,6 +7,7 @@ a browser window when the server is ready.
 
 import datetime
 import os
+import signal
 import sys
 import tempfile
 import threading
@@ -18,6 +19,29 @@ from argparse import ArgumentParser
 def is_pyinstaller():
     """Check if running as a PyInstaller bundle."""
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")
+
+
+def terminate_splash_screen():
+    """
+    Terminate the splash screen subprocess if it's running.
+
+    This function is called after heavy dependencies have been loaded.
+    """
+    splash_pid = os.environ.get("_YSOCIAL_SPLASH_PID")
+    if splash_pid:
+        try:
+            pid = int(splash_pid)
+            # Try to terminate gracefully
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError):
+                # Process already dead or no permission - that's fine
+                pass
+            # Clean up the environment variable
+            os.environ.pop("_YSOCIAL_SPLASH_PID", None)
+        except (ValueError, Exception):
+            # Invalid PID or other error - just clean up
+            os.environ.pop("_YSOCIAL_SPLASH_PID", None)
 
 
 def get_log_file_paths():
@@ -282,6 +306,8 @@ def main():
         try:
             from .y_social_desktop import start_desktop_app
         except ImportError:
+            # Import failed - terminate splash screen
+            terminate_splash_screen()
             print(
                 "\nWarning: PyWebview is not installed. Falling back to browser mode.",
                 file=sys.stderr,
@@ -292,6 +318,8 @@ def main():
             )
             use_browser_fallback = True
         except Exception as e:
+            # Import failed - terminate splash screen
+            terminate_splash_screen()
             # Check if it's a GTK-related error (common on Linux with PyInstaller)
             error_msg = str(e).lower()
             if "gtk" in error_msg or "gi" in error_msg:
@@ -398,7 +426,12 @@ def main():
         # Import the actual application after parsing args (allows --help to work without dependencies)
         try:
             from y_social import start_app
+
+            # Heavy import completed - terminate splash screen
+            terminate_splash_screen()
         except Exception as e:
+            # Import failed - terminate splash screen
+            terminate_splash_screen()
             error_msg = f"{type(e).__name__}: {e}"
             print(f"\nError importing y_social module:", file=sys.stderr)
             print(f"   {error_msg}", file=sys.stderr)

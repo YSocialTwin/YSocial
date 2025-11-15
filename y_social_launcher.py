@@ -45,23 +45,16 @@ if __name__ == "__main__":
             # Splash screen is non-critical, continue without it
             print(f"Warning: Could not start splash screen: {e}", file=sys.stderr)
 
+    # Store splash process in environment so main() can access it later
+    # We'll pass the PID so main() can terminate it after heavy imports complete
+    if splash_process is not None:
+        os.environ["_YSOCIAL_SPLASH_PID"] = str(splash_process.pid)
+
     # Now load the main application (with heavy dependencies)
     try:
         from y_web.pyinstaller_utils.y_social_launcher import main
 
-        # Terminate splash screen after imports are complete
-        if splash_process is not None:
-            try:
-                splash_process.terminate()
-                splash_process.wait(timeout=2)
-            except Exception:
-                # Force kill if terminate doesn't work
-                try:
-                    splash_process.kill()
-                except Exception:
-                    pass
-
-        # Run the main application
+        # Run the main application (splash will be terminated inside main() after heavy imports)
         main()
     except Exception as e:
         # Ensure splash screen is closed on error
