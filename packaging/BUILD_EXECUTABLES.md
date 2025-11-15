@@ -133,7 +133,17 @@ The executable will be a **single file** located in `dist/`:
 - Linux/macOS: `dist/YSocial`
 - Windows: `dist/YSocial.exe`
 
-**Note**: The single-file executable extracts resources to a temporary directory at runtime. User data (experiments, databases, logs) is stored in the current working directory where you run the executable.
+**Performance Optimization**: The single-file executable uses a persistent extraction directory for faster startup. On the first run, resources are extracted to a platform-specific cache location:
+- Windows: `%LOCALAPPDATA%\YSocial\Runtime`
+- macOS: `~/Library/Application Support/YSocial/Runtime`
+- Linux: `~/.local/share/ysocial/runtime`
+
+Subsequent runs skip extraction and start much faster (typically <1 second instead of 5-10 seconds). User data (experiments, databases, logs) is still stored in the current working directory where you run the executable.
+
+To disable persistent extraction and use temporary directories (default PyInstaller behavior), set:
+```bash
+export YSOCIAL_DISABLE_PERSISTENT_EXTRACTION=1
+```
 
 ### Testing the Executable
 
@@ -211,6 +221,13 @@ Custom PyInstaller hooks:
 - `hook-webview.py`: Ensures pywebview platform-specific modules are included
 - `runtime_hook_nltk.py`: Configures NLTK data paths at runtime
 
+### `persistent_extraction.py`
+Persistent extraction module that:
+- Determines platform-specific cache directories for PyInstaller extraction
+- Speeds up application startup on subsequent runs
+- Configures `runtime_tmpdir` in the spec file to use persistent locations
+- Can be disabled via `YSOCIAL_DISABLE_PERSISTENT_EXTRACTION` environment variable
+
 ## Troubleshooting
 
 ### Build Fails with Import Errors
@@ -220,7 +237,27 @@ Custom PyInstaller hooks:
 ### Executable Fails to Start
 - Check console output for error messages
 - Verify NLTK data was downloaded during build
-- The single-file executable extracts resources to a temporary location automatically
+- The single-file executable extracts resources to a persistent location for faster startup
+- If extraction fails, the app will fall back to default temporary directories
+
+### Slow Startup After Updates
+If the executable starts slowly after an update:
+- This is normal on the first run after updating (files need to be extracted to the cache)
+- Subsequent runs will be fast again
+- Old cached versions are automatically cleaned up on first run of new version
+
+### Clear Cached Extraction
+If you want to clear the cached extraction directory:
+```bash
+# Windows
+rd /s /q "%LOCALAPPDATA%\YSocial\Runtime"
+
+# macOS
+rm -rf ~/Library/Application\ Support/YSocial/Runtime
+
+# Linux
+rm -rf ~/.local/share/ysocial/runtime
+```
 
 ### Missing Templates or Static Files
 - Check `y_social.spec` includes correct data paths

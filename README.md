@@ -124,6 +124,8 @@ If you prefer a click-and-run experience without setting up Python, download our
 
 📘 The executables include all dependencies and support command-line options (run with `--help` for details).
 
+**⚡ Performance Note**: The first launch may take 5-10 seconds while resources are extracted. Subsequent launches are much faster (<1 second) as the application caches extracted files in a persistent location.
+
 #### 🖥️ **Desktop vs Browser Mode**
 
 **Desktop mode is now the default!** The app launches in a native window with integrated controls.

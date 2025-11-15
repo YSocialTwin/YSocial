@@ -69,7 +69,9 @@ class TestPersistentExtraction:
 
     def test_get_runtime_tmpdir_for_spec_can_be_disabled(self):
         """Test that persistent extraction can be disabled via environment variable."""
-        with mock.patch.dict(os.environ, {"YSOCIAL_DISABLE_PERSISTENT_EXTRACTION": "1"}):
+        with mock.patch.dict(
+            os.environ, {"YSOCIAL_DISABLE_PERSISTENT_EXTRACTION": "1"}
+        ):
             result = get_runtime_tmpdir_for_spec()
             assert result is None
 
