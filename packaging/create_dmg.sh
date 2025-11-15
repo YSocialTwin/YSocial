@@ -207,22 +207,38 @@ fi
 # Sign the .app bundle if codesign identity is provided
 if [ -n "$CODESIGN_IDENTITY" ]; then
     echo "🔐 Signing YSocial.app bundle..."
-    CODESIGN_CMD="codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep"
     
-    # Add entitlements if provided
+    # Prepare entitlements path if provided
+    ENTITLEMENTS_ARG=""
     if [ -n "$ENTITLEMENTS_FILE" ]; then
         # Handle both absolute and relative paths
         if [ -f "$ENTITLEMENTS_FILE" ]; then
-            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$ENTITLEMENTS_FILE\""
+            ENTITLEMENTS_ARG="--entitlements \"$ENTITLEMENTS_FILE\""
         elif [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
-            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
+            ENTITLEMENTS_ARG="--entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
         else
             echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"
         fi
     fi
     
-    # Execute the signing command
-    eval "$CODESIGN_CMD \"$APP_BUNDLE\""
+    # Sign individual executables first (from inside out)
+    # This ensures each component is properly signed before signing the bundle
+    
+    # Sign the Swift launcher if it exists
+    if [ -f "$APP_BUNDLE/Contents/MacOS/YSocialLauncher" ]; then
+        echo "   Signing YSocialLauncher..."
+        eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime $ENTITLEMENTS_ARG \"$APP_BUNDLE/Contents/MacOS/YSocialLauncher\"
+    fi
+    
+    # Sign the main PyInstaller executable
+    if [ -f "$APP_BUNDLE/Contents/MacOS/YSocial" ]; then
+        echo "   Signing YSocial executable..."
+        eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime $ENTITLEMENTS_ARG \"$APP_BUNDLE/Contents/MacOS/YSocial\"
+    fi
+    
+    # Finally, sign the entire app bundle
+    echo "   Signing entire app bundle..."
+    eval codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep $ENTITLEMENTS_ARG \"$APP_BUNDLE\"
     
     # Verify the signature
     codesign --verify --deep --verbose "$APP_BUNDLE"
