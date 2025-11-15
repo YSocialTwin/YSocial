@@ -9,7 +9,6 @@ This spec file bundles the entire YSocial application including:
 - Data files (database schemas, prompts)
 - Configuration files
 - Splash screen during application startup (Windows only)
-- Persistent extraction directory for faster subsequent launches
 """
 
 import os
@@ -34,16 +33,6 @@ block_cipher = None
 
 # Get the base directory
 basedir = os.path.abspath(SPECPATH)
-
-# Configure persistent extraction directory for faster subsequent launches
-# This speeds up application startup significantly after the first run
-sys.path.insert(0, os.path.join(basedir, "y_web", "pyinstaller_utils"))
-try:
-    from persistent_extraction import get_runtime_tmpdir_for_spec
-    RUNTIME_TMPDIR = get_runtime_tmpdir_for_spec()
-except Exception:
-    # Fallback to default if import fails
-    RUNTIME_TMPDIR = None
 
 # Collect all submodules for key packages
 # Note: ysights and jupyterlab are excluded since notebooks are disabled by default
@@ -266,7 +255,7 @@ if splash is not None:
         strip=False,
         upx=True,
         upx_exclude=[],
-        runtime_tmpdir=RUNTIME_TMPDIR,
+        runtime_tmpdir=None,
         console=False,
         disable_windowed_traceback=False,
         argv_emulation=False,
@@ -290,7 +279,7 @@ else:
         strip=False,
         upx=True,
         upx_exclude=[],
-        runtime_tmpdir=RUNTIME_TMPDIR,
+        runtime_tmpdir=None,
         console=False,
         disable_windowed_traceback=False,
         argv_emulation=False,
