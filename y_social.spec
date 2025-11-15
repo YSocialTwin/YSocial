@@ -151,6 +151,13 @@ if os.path.exists(version_file_path):
 # PyInstaller utils are now part of y_web package and will be included automatically
 # No need to explicitly add splash_screen.py and installation_id.py as separate files
 
+# Add the splash subprocess script (executed as subprocess, not imported)
+splash_subprocess_path = os.path.join(
+    basedir, "y_web", "pyinstaller_utils", "splash_subprocess.py"
+)
+if os.path.exists(splash_subprocess_path):
+    datas += [(splash_subprocess_path, "y_web/pyinstaller_utils")]
+
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
     basedir, "y_web", "utils", "y_client_process_runner.py"
