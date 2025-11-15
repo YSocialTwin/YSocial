@@ -46,5 +46,10 @@
     
     <key>com.apple.security.network.server</key>
     <true/>
+    
+    <!-- Allow sending Apple Events to launch subprocess (needed for Swift launcher) -->
+    <!-- This allows the launcher to start the PyInstaller app as a subprocess -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
 </dict>
 </plist>
