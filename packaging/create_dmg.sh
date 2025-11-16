@@ -50,7 +50,8 @@ else
 fi
 
 DMG_NAME="${APP_NAME}-${VERSION}"
-SOURCE_APP="dist/${APP_NAME}"
+# With multi-file packaging, PyInstaller creates a directory dist/YSocial
+SOURCE_APP_DIR="dist/${APP_NAME}"
 BACKGROUND_IMAGE="y_web/static/assets/img/installer/background.png"
 ICON_FILE="images/YSocial_ico.png"
 
@@ -66,16 +67,23 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
     exit 1
 fi
 
-# Check if source app exists
-if [ ! -f "$PROJECT_ROOT/$SOURCE_APP" ]; then
-    echo "❌ Error: YSocial executable not found at $PROJECT_ROOT/$SOURCE_APP"
+# Check if source app directory exists (multi-file packaging)
+if [ ! -d "$PROJECT_ROOT/$SOURCE_APP_DIR" ]; then
+    echo "❌ Error: YSocial directory not found at $PROJECT_ROOT/$SOURCE_APP_DIR"
+    echo "Please build the executable first using: pyinstaller y_social.spec"
+    exit 1
+fi
+
+# Check if the executable exists within the directory
+if [ ! -f "$PROJECT_ROOT/$SOURCE_APP_DIR/${APP_NAME}" ]; then
+    echo "❌ Error: YSocial executable not found at $PROJECT_ROOT/$SOURCE_APP_DIR/${APP_NAME}"
     echo "Please build the executable first using: pyinstaller y_social.spec"
     exit 1
 fi
 
 echo "🚀 Creating YSocial DMG installer..."
 echo "   Version: $VERSION"
-echo "   Source: $SOURCE_APP"
+echo "   Source: $SOURCE_APP_DIR/ (multi-file bundle)"
 
 # Clean up previous builds
 echo "🧹 Cleaning up previous builds..."
@@ -95,8 +103,10 @@ APP_BUNDLE="$STAGING_DIR/${APP_NAME}.app"
 mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
-# Copy executable to bundle
-cp "$PROJECT_ROOT/$SOURCE_APP" "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+# Copy entire PyInstaller bundle directory to MacOS folder
+# This includes the executable and all its dependencies
+echo "   Copying multi-file bundle to .app..."
+cp -R "$PROJECT_ROOT/$SOURCE_APP_DIR/"* "$APP_BUNDLE/Contents/MacOS/"
 chmod +x "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
 
 # Create Info.plist

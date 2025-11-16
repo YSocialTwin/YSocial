@@ -238,6 +238,8 @@ if ENABLE_SPLASH:
     )
 
 # Build EXE with or without splash depending on platform
+# For multi-file packaging, we only include pyz and scripts in EXE
+# All other files (binaries, data) are collected separately in COLLECT step
 if splash is not None:
     # Windows: Include splash screen
     exe = EXE(
@@ -245,9 +247,6 @@ if splash is not None:
         a.scripts,
         splash,  # Include splash screen
         splash.binaries,  # Include splash binaries
-        a.binaries,
-        a.zipfiles,
-        a.datas,
         [],
         name="YSocial",
         debug=False,
@@ -269,9 +268,6 @@ else:
     exe = EXE(
         pyz,
         a.scripts,
-        a.binaries,
-        a.zipfiles,
-        a.datas,
         [],
         name="YSocial",
         debug=False,
@@ -288,3 +284,18 @@ else:
         entitlements_file=os.path.join(basedir, "packaging", "entitlements.plist"),
         icon=os.path.join(basedir, "images", "YSocial_ico.png"),
     )
+
+# COLLECT step for multi-file (onedir) packaging
+# This creates a directory with the executable and all dependencies
+# Benefits: Faster startup, easier to debug, smaller memory footprint
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.zipfiles,
+    a.datas,
+    splash.binaries if splash is not None else [],
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name="YSocial",
+)

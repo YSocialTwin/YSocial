@@ -129,17 +129,26 @@ codesign --force --sign - \
 
 ### Build Output
 
-The executable will be a **single file** located in `dist/`:
-- Linux/macOS: `dist/YSocial`
-- Windows: `dist/YSocial.exe`
+The executable will be in a **directory** located in `dist/`:
+- Linux/macOS: `dist/YSocial/` directory containing `YSocial` executable and dependencies
+- Windows: `dist/YSocial/` directory containing `YSocial.exe` and dependencies
 
-**Note**: The single-file executable extracts resources to a temporary directory at runtime. User data (experiments, databases, logs) is stored in the current working directory where you run the executable.
+**Multi-file packaging (onedir mode)**: The application and all dependencies are stored in a directory. This provides:
+- **Faster startup** - No extraction needed at runtime
+- **Smaller memory footprint** - Resources loaded on demand
+- **Easier debugging** - Individual files can be inspected
+- **Better code signing** - Each library can be signed individually
+
+**Note**: User data (experiments, databases, logs) is stored in platform-specific user directories:
+- macOS: `~/Library/Application Support/YSocial/`
+- Windows: `%LOCALAPPDATA%/YSocial/`
+- Linux: `~/.ysocial/`
 
 ### Testing the Executable
 
 ```bash
 # Linux/macOS
-cd dist
+cd dist/YSocial
 ./YSocial --help
 ./YSocial                    # Launches in desktop mode (default)
 
@@ -147,7 +156,7 @@ cd dist
 ./YSocial --browser
 
 # Windows
-cd dist
+cd dist\YSocial
 YSocial.exe --help
 YSocial.exe                  # Launches in desktop mode (default)
 
@@ -228,14 +237,17 @@ Custom PyInstaller hooks:
 - Rebuild with `--clean` flag
 
 ### Large Executable Size
-The executable is large (~500MB-1GB) because it includes:
+The bundled application is large (~500MB-1GB) because it includes:
 - Python interpreter
 - All dependencies (Flask, SQLAlchemy, NLTK, scikit-learn, scipy, etc.)
 - Static assets (CSS, JS, images)
 - Database schemas
 - Submodules (YServer, YClient)
 
-This is normal for PyInstaller-built applications with many dependencies.
+This is normal for PyInstaller-built applications with many dependencies. The multi-file packaging mode helps by:
+- Loading resources on-demand instead of all at once
+- Reducing memory footprint during startup
+- Allowing individual components to be cached by the OS
 
 **Note**: Some large packages like matplotlib and pandas are excluded since they're not needed for the core application.
 
@@ -247,10 +259,11 @@ This is normal for PyInstaller-built applications with many dependencies.
 - Use Ubuntu-based systems for broadest compatibility
 
 ### macOS
-- **IMPORTANT**: The executable must be properly signed to work on other machines
+- **IMPORTANT**: The .app bundle must be properly signed to work on other machines
 - Without proper signing, the app will hang at the splash screen on other macOS devices
 - See [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md) for detailed signing instructions
-- Quick signing for testing: `codesign --force --sign - --entitlements entitlements.plist --timestamp --options runtime dist/YSocial`
+- With multi-file packaging, all dynamic libraries (.dylib, .so files) should be signed individually
+- Quick signing for testing: See the automated build script `packaging/build_and_package_macos.sh`
 - For production releases, use a Developer ID certificate and notarize the app
 
 ### Windows
