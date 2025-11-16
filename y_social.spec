@@ -288,12 +288,12 @@ else:
 # COLLECT step for multi-file (onedir) packaging
 # This creates a directory with the executable and all dependencies
 # Benefits: Faster startup, easier to debug, smaller memory footprint
+# Note: On Windows, splash.binaries are already included in the EXE step
 coll = COLLECT(
     exe,
     a.binaries,
     a.zipfiles,
     a.datas,
-    splash.binaries if splash is not None else [],
     strip=False,
     upx=True,
     upx_exclude=[],
