@@ -100,11 +100,13 @@ echo "   Signing dependencies..."
 find dist/YSocial_dist -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" $USE_TIMESTAMP --options runtime {} \; 2>/dev/null || true
 
 # Sign the main executable with entitlements
+# Note: We use --no-strict to avoid codesign treating the _internal directory as part of a bundle
 echo "   Signing main executable with entitlements..."
 codesign --force --sign "$CODESIGN_IDENTITY" \
   --entitlements "$SCRIPT_DIR/entitlements.plist" \
   $USE_TIMESTAMP \
   --options runtime \
+  --no-strict \
   dist/YSocial_dist/YSocial
 
 # Verify the signature

@@ -218,12 +218,12 @@ if [ -n "$CODESIGN_IDENTITY" ]; then
         fi
         
         if [ -n "$ENT_PATH" ]; then
-            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime --entitlements "$ENT_PATH" "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime --entitlements "$ENT_PATH" --no-strict "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
         else
-            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime --no-strict "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
         fi
     else
-        codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+        codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime --no-strict "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
     fi
     
     # Sign the .app bundle itself (NOT --deep, as components are already signed)
