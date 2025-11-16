@@ -30,6 +30,11 @@ def close_splash_screen():
     Note: On macOS builds, splash screen is not available (not supported by PyInstaller).
     This function will silently do nothing in that case.
     """
+    # Only attempt splash screen on Windows where it's enabled
+    # Splash screen is not built for macOS/Linux builds
+    if sys.platform != "win32":
+        return
+    
     try:
         import pyi_splash
 
