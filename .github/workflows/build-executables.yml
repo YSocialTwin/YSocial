@@ -68,16 +68,21 @@ jobs:
     - name: Sign macOS executable
       if: runner.os == 'macOS'
       run: |
-        # Sign with ad-hoc signature and entitlements
+        # Sign all dynamic libraries first (multi-file packaging)
+        echo "Signing dynamic libraries..."
+        find dist/YSocial -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign - --timestamp --options runtime {} \; 2>/dev/null || true
+        
+        # Sign the main executable with entitlements
         # This is required for the app to work on other macOS machines
+        echo "Signing main executable..."
         codesign --force --sign - \
           --entitlements entitlements.plist \
           --timestamp \
           --options runtime \
-          dist/YSocial
+          dist/YSocial/YSocial
         
         # Verify the signature
-        codesign --verify --verbose dist/YSocial
+        codesign --verify --verbose dist/YSocial/YSocial
         echo "macOS executable signed successfully"
     
     - name: Build with PyInstaller (Windows)
@@ -113,11 +118,12 @@ jobs:
         IMPORTANT NOTES:
         ----------------
         
-        - This is a SINGLE-FILE executable (no _internal folder!)
-        - User data (experiments, databases, config) is stored in the directory
-          where you run the executable
-        - The executable extracts read-only resources to a temporary location
-          automatically at startup
+        - This is a MULTI-FILE executable bundle (directory with YSocial + dependencies)
+        - User data (experiments, databases, config) is stored in platform-specific locations:
+          * macOS: ~/Library/Application Support/YSocial/
+          * Windows: %LOCALAPPDATA%/YSocial/
+          * Linux: ~/.ysocial/
+        - Resources are accessed directly from the installation directory (no extraction)
         
         COMMAND LINE OPTIONS:
         ---------------------
@@ -210,7 +216,7 @@ jobs:
     - name: Set executable permissions (Linux/macOS)
       if: runner.os != 'Windows'
       run: |
-        chmod +x dist/YSocial
+        chmod +x dist/YSocial/YSocial
     
     - name: Create archive (Linux)
       if: runner.os == 'Linux'
@@ -229,7 +235,7 @@ jobs:
       shell: pwsh
       run: |
         cd dist
-        Compress-Archive -Path YSocial.exe,README.txt -DestinationPath YSocial-windows.zip
+        Compress-Archive -Path YSocial,README.txt -DestinationPath YSocial-windows.zip
     
     - name: Upload artifact (Linux)
       if: runner.os == 'Linux'
