@@ -70,17 +70,17 @@ pyinstaller y_social.spec --clean --noconfirm
 
 # With multi-file packaging, PyInstaller creates a directory dist/YSocial
 # containing the executable and all dependencies
-if [ ! -d "dist/YSocial" ]; then
-    echo "❌ Error: Build failed - dist/YSocial directory not found"
+if [ ! -d "dist/YSocial_dist" ]; then
+    echo "❌ Error: Build failed - dist/YSocial_dist directory not found"
     exit 1
 fi
 
-if [ ! -f "dist/YSocial/YSocial" ]; then
-    echo "❌ Error: Build failed - dist/YSocial/YSocial executable not found"
+if [ ! -f "dist/YSocial_dist/YSocial" ]; then
+    echo "❌ Error: Build failed - dist/YSocial_dist/YSocial executable not found"
     exit 1
 fi
 
-echo "✅ Build complete: dist/YSocial/ (multi-file bundle)"
+echo "✅ Build complete: dist/YSocial_dist/ (multi-file bundle)"
 echo ""
 
 # Step 2: Sign the executable and all libraries
@@ -97,7 +97,7 @@ fi
 
 # Sign all .dylib and .so files first (dependencies)
 echo "   Signing dependencies..."
-find dist/YSocial -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" $USE_TIMESTAMP --options runtime {} \; 2>/dev/null || true
+find dist/YSocial_dist -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" $USE_TIMESTAMP --options runtime {} \; 2>/dev/null || true
 
 # Sign the main executable with entitlements
 echo "   Signing main executable with entitlements..."
@@ -105,21 +105,21 @@ codesign --force --sign "$CODESIGN_IDENTITY" \
   --entitlements "$SCRIPT_DIR/entitlements.plist" \
   $USE_TIMESTAMP \
   --options runtime \
-  dist/YSocial/YSocial
+  dist/YSocial_dist/YSocial
 
 # Verify the signature
 echo "   Verifying signature..."
-codesign --verify --verbose dist/YSocial/YSocial
+codesign --verify --verbose dist/YSocial_dist/YSocial
 
 # Verify entitlements were applied
 echo "   Checking entitlements..."
-if codesign -d --entitlements - dist/YSocial/YSocial 2>&1 | grep -q "com.apple.security.cs.disable-library-validation"; then
+if codesign -d --entitlements - dist/YSocial_dist/YSocial 2>&1 | grep -q "com.apple.security.cs.disable-library-validation"; then
     echo "   ✅ Entitlements verified"
 else
     echo "   ⚠️  WARNING: Entitlements may not have been applied correctly!"
     echo "   The app might not work on other machines."
     echo "   Checking what was applied:"
-    codesign -d --entitlements - dist/YSocial/YSocial 2>&1 | head -20
+    codesign -d --entitlements - dist/YSocial_dist/YSocial 2>&1 | head -20
 fi
 
 echo "✅ Executable bundle signed successfully"
@@ -143,7 +143,7 @@ echo "✅ Build and Package Complete!"
 echo "=================================="
 echo ""
 echo "📦 Output:"
-echo "   Executable Bundle: dist/YSocial/"
+echo "   Executable Bundle: dist/YSocial_dist/"
 echo "   DMG: $DMG_FILE"
 echo ""
 if [ "$CODESIGN_IDENTITY" = "-" ]; then

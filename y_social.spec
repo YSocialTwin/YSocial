@@ -298,7 +298,7 @@ if splash is not None:
         strip=False,
         upx=True,
         upx_exclude=[],
-        name="YSocial",
+        name="YSocial_dist",
     )
 else:
     coll = COLLECT(
@@ -309,5 +309,5 @@ else:
         strip=False,
         upx=True,
         upx_exclude=[],
-        name="YSocial",
+        name="YSocial_dist",
     )
