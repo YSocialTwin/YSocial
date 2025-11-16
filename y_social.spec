@@ -241,12 +241,11 @@ if ENABLE_SPLASH:
 # For multi-file packaging, we only include pyz and scripts in EXE
 # All other files (binaries, data) are collected separately in COLLECT step
 if splash is not None:
-    # Windows: Include splash screen
+    # Windows: Include splash screen (but NOT splash.binaries in EXE for onedir mode)
     exe = EXE(
         pyz,
         a.scripts,
-        splash,  # Include splash screen
-        splash.binaries,  # Include splash binaries
+        splash,  # Include splash screen object only
         [],
         name="YSocial",
         debug=False,
@@ -288,14 +287,27 @@ else:
 # COLLECT step for multi-file (onedir) packaging
 # This creates a directory with the executable and all dependencies
 # Benefits: Faster startup, easier to debug, smaller memory footprint
-# Note: On Windows, splash.binaries are already included in the EXE step
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.zipfiles,
-    a.datas,
-    strip=False,
-    upx=True,
-    upx_exclude=[],
-    name="YSocial",
-)
+# For Windows with splash: splash.binaries go here (not in EXE)
+if splash is not None:
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        splash.binaries,  # Include splash binaries in COLLECT for onedir mode
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        name="YSocial",
+    )
+else:
+    coll = COLLECT(
+        exe,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        strip=False,
+        upx=True,
+        upx_exclude=[],
+        name="YSocial",
+    )
