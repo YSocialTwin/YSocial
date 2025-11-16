@@ -247,6 +247,7 @@ if splash is not None:
         a.scripts,
         splash,  # Include splash screen object only
         [],
+        exclude_binaries=True,  # Essential for onedir mode - binaries go in COLLECT
         name="YSocial",
         debug=False,
         bootloader_ignore_signals=False,
@@ -268,6 +269,7 @@ else:
         pyz,
         a.scripts,
         [],
+        exclude_binaries=True,  # Essential for onedir mode - binaries go in COLLECT
         name="YSocial",
         debug=False,
         bootloader_ignore_signals=False,
