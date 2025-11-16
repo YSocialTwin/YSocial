@@ -19,9 +19,8 @@ from PyInstaller.utils.hooks import (
     copy_metadata,
 )
 
+
 # Only import Splash on Windows where it's fully supported
-# PyInstaller's splash screen is not supported on macOS
-# Linux support exists but we're keeping it simple with Windows only
 ENABLE_SPLASH = sys.platform == "win32"
 
 if ENABLE_SPLASH:
@@ -35,9 +34,6 @@ block_cipher = None
 basedir = os.path.abspath(SPECPATH)
 
 # Collect all submodules for key packages
-# Note: ysights and jupyterlab are excluded since notebooks are disabled by default
-# in PyInstaller mode (bundled Python cannot be used as a Jupyter kernel).
-# Users who want to use notebooks should run from source.
 hidden_imports = [
     "nltk",
     "nltk.data",
@@ -63,8 +59,6 @@ hidden_imports = [
     "numpy",
     "pillow",
     "psutil",
-    # "ysights",  # Excluded - only used in notebooks
-    # "jupyterlab",  # Excluded - notebooks disabled by default in PyInstaller
     "gunicorn",
     "gevent",
     "psycopg2",
@@ -88,6 +82,7 @@ hidden_imports = [
     "pythonjsonlogger.jsonlogger",
 ]
 
+
 # Collect all submodules for important packages
 hidden_imports += collect_submodules("flask")
 hidden_imports += collect_submodules("flask_login")
@@ -98,7 +93,6 @@ hidden_imports += collect_submodules("nltk")
 hidden_imports += collect_submodules("bs4")
 hidden_imports += collect_submodules("openai")
 hidden_imports += collect_submodules("pyautogen")
-# hidden_imports += collect_submodules("ysights")  # Excluded - only used in notebooks
 hidden_imports += collect_submodules("sklearn")
 hidden_imports += collect_submodules("webview")
 
@@ -108,109 +102,6 @@ datas = []
 # Add NLTK data
 datas += collect_data_files("nltk")
 
-# Collect package metadata for packages that use importlib.metadata
-# This fixes "PackageNotFoundError: No package metadata was found for X" errors
-# In multi-file (onedir) mode, we need to collect metadata for ALL packages
-for pkg in [
-    # Core dependencies
-    "anyio",
-    "openai",
-    "httpx",
-    "httpcore",
-    "sniffio",
-    "h11",
-    "certifi",
-    "idna",
-    "flask",
-    "werkzeug",
-    "jinja2",
-    "click",
-    "itsdangerous",
-    "flask_login",
-    "flask_sqlalchemy",
-    "wtforms",
-    "requests",
-    "urllib3",
-    "charset_normalizer",
-    "pygments",
-    "pywebview",
-    # Additional packages that may use importlib.metadata
-    "sqlalchemy",
-    "markupsafe",
-    "greenlet",
-    "typing_extensions",
-    "pyautogen",
-    "autogen",
-    "autogen-agentchat",
-    "autogen-core",
-    "autogen-ext",
-    "pyautoclass",
-    "pyautogen-agentchat",
-    "pydantic",
-    "pydantic_core",
-    "annotated_types",
-    "nltk",
-    "beautifulsoup4",
-    "bs4",
-    "soupsieve",
-    "feedparser",
-    "cryptography",
-    "cffi",
-    "pycparser",
-    "perspective",
-    "perspective-python",
-    "networkx",
-    "numpy",
-    "pillow",
-    "PIL",
-    "psutil",
-    "gunicorn",
-    "gevent",
-    "psycopg2",
-    "psycopg2-binary",
-    "sqlalchemy_utils",
-    "email_validator",
-    "faker",
-    "colorama",
-    "tqdm",
-    "scikit-learn",
-    "sklearn",
-    "scipy",
-    "ollama",
-    "transformers",
-    "tokenizers",
-    "huggingface_hub",
-    "safetensors",
-    "regex",
-    "filelock",
-    "packaging",
-    "importlib_metadata",
-    "zipp",
-    "python_multipart",
-    "starlette",
-    "fastapi",
-    "uvicorn",
-    "websockets",
-    "python_dotenv",
-    "aiohttp",
-    "yarl",
-    "multidict",
-    "frozenlist",
-    "aiosignal",
-    "attrs",
-    "async_timeout",
-    "charset_normalizer",
-    "diskcache",
-    "distro",
-    "tiktoken",
-    "tqdm",
-    "tenacity",
-    "pythonjsonlogger",
-]:
-    try:
-        datas += copy_metadata(pkg)
-    except Exception:
-        pass  # Package might not be installed
 
 # Add y_web package data files
 datas += [
@@ -229,20 +120,12 @@ version_file_path = os.path.join(basedir, "VERSION")
 if os.path.exists(version_file_path):
     datas += [(version_file_path, ".")]
 
-# PyInstaller utils are now part of y_web package and will be included automatically
-# No need to explicitly add splash_screen.py and installation_id.py as separate files
-
-# Add the client process runner script (executed as subprocess, not imported)
-runner_script_path = os.path.join(
-    basedir, "y_web", "utils", "y_client_process_runner.py"
-)
+# Add runner scripts
+runner_script_path = os.path.join(basedir, "y_web", "utils", "y_client_process_runner.py")
 if os.path.exists(runner_script_path):
     datas += [(runner_script_path, "y_web/utils")]
 
-# Add the server process runner script (executed as subprocess, not imported)
-server_runner_script_path = os.path.join(
-    basedir, "y_web", "utils", "y_server_process_runner.py"
-)
+server_runner_script_path = os.path.join(basedir, "y_web", "utils", "y_server_process_runner.py")
 if os.path.exists(server_runner_script_path):
     datas += [(server_runner_script_path, "y_web/utils")]
 
@@ -261,32 +144,23 @@ for submodule in ["YServer", "YClient", "YServerReddit", "YClientReddit"]:
     if os.path.exists(submodule_path) and os.listdir(submodule_path):
         datas += [(submodule_path, f"external/{submodule}")]
 
+runtime_hooks=[
+    os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks", "runtime_hook_nltk.py"),
+    os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks", "runtime_hook_metadata_patch.py"),
+]
+
+
 a = Analysis(
     ["y_social_launcher.py"],
     pathex=[basedir],
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
-    hookspath=[
-        os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks")
-    ],
+    hookspath=[os.path.join(basedir, "y_web", "pyinstaller_utils", "pyinstaller_hooks")],
     hooksconfig={},
-    runtime_hooks=[
-        os.path.join(
-            basedir,
-            "y_web",
-            "pyinstaller_utils",
-            "pyinstaller_hooks",
-            "runtime_hook_nltk.py",
-        )
-    ],
-    excludes=[
-        "matplotlib",
-        "pandas",
-        "pytest",
-        "IPython",
-        "notebook",
-    ],
+    # Only keep the NLTK runtime hook; remove splash fix hook
+    runtime_hooks=runtime_hooks,
+    excludes=["matplotlib", "pandas", "pytest", "IPython", "notebook"],
     win_no_prefer_redirects=False,
     win_private_assemblies=False,
     cipher=block_cipher,
@@ -296,7 +170,6 @@ a = Analysis(
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
 # Configure splash screen to display during application startup
-# Note: Splash screen is only enabled on Windows for simplicity
 splash = None
 if ENABLE_SPLASH:
     splash = Splash(
@@ -310,16 +183,13 @@ if ENABLE_SPLASH:
     )
 
 # Build EXE with or without splash depending on platform
-# For multi-file packaging, we only include pyz and scripts in EXE
-# All other files (binaries, data) are collected separately in COLLECT step
 if splash is not None:
-    # Windows: Include splash screen (but NOT splash.binaries in EXE for onedir mode)
     exe = EXE(
         pyz,
         a.scripts,
-        splash,  # Include splash screen object only
+        splash,
         [],
-        exclude_binaries=True,  # Essential for onedir mode - binaries go in COLLECT
+        exclude_binaries=True,
         name="YSocial",
         debug=False,
         bootloader_ignore_signals=False,
@@ -336,12 +206,11 @@ if splash is not None:
         icon=os.path.join(basedir, "images", "YSocial_ico.png"),
     )
 else:
-    # macOS/Linux: No splash screen
     exe = EXE(
         pyz,
         a.scripts,
         [],
-        exclude_binaries=True,  # Essential for onedir mode - binaries go in COLLECT
+        exclude_binaries=True,
         name="YSocial",
         debug=False,
         bootloader_ignore_signals=False,
@@ -359,16 +228,13 @@ else:
     )
 
 # COLLECT step for multi-file (onedir) packaging
-# This creates a directory with the executable and all dependencies
-# Benefits: Faster startup, easier to debug, smaller memory footprint
-# For Windows with splash: splash.binaries go here (not in EXE)
 if splash is not None:
     coll = COLLECT(
         exe,
         a.binaries,
         a.zipfiles,
         a.datas,
-        splash.binaries,  # Include splash binaries in COLLECT for onedir mode
+        splash.binaries,
         strip=False,
         upx=True,
         upx_exclude=[],
