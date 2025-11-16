@@ -180,8 +180,9 @@ TEMP_DMG="$DIST_DIR/YSocial-2.0.0_temp.dmg"
 echo "➡️ Calculating required DMG size..."
 
 APP_SIZE_BYTES=$(du -sk "$DMG_STAGING" | awk '{print $1}')
-# Add 50MB overhead for safety
-DMG_SIZE_MB=$(( APP_SIZE_BYTES / 1024 + 50 ))
+# Add 15% overhead + 100MB for filesystem metadata and safety margin
+# Multi-file PyInstaller bundles need more overhead due to many small files
+DMG_SIZE_MB=$(( APP_SIZE_BYTES / 1024 * 115 / 100 + 100 ))
 
 echo "   Staging size: $((APP_SIZE_BYTES/1024)) MB"
 echo "   DMG size: ${DMG_SIZE_MB} MB"
