@@ -80,17 +80,17 @@ def validate_macos_scripts():
     dmg_content = dmg_script.read_text()
     
     # Check build script looks for directory
-    if 'if [ ! -d "dist/YSocial" ]' not in build_content:
-        print("  ❌ build_and_package_macos.sh doesn't check for dist/YSocial directory")
+    if 'if [ ! -d "dist/YSocial_dist" ]' not in build_content:
+        print("  ❌ build_and_package_macos.sh doesn't check for dist/YSocial_dist directory")
         return False
     
     # Check build script signs libraries
-    if "find dist/YSocial" not in build_content or ".dylib" not in build_content:
+    if "find dist/YSocial_dist" not in build_content or ".dylib" not in build_content:
         print("  ❌ build_and_package_macos.sh doesn't sign .dylib files")
         return False
     
     # Check DMG script handles directory
-    if 'SOURCE_APP_DIR="dist/${APP_NAME}"' not in dmg_content:
+    if 'SOURCE_APP_DIR="dist/YSocial_dist"' not in dmg_content:
         print("  ❌ create_dmg.sh doesn't define SOURCE_APP_DIR for directory")
         return False
     
@@ -121,8 +121,8 @@ def validate_documentation():
         return False
     
     # Check for directory in output path
-    if "dist/YSocial/" not in build_content:
-        print("  ⚠️  BUILD_EXECUTABLES.md doesn't show dist/YSocial/ directory")
+    if "dist/YSocial_dist/" not in build_content:
+        print("  ⚠️  BUILD_EXECUTABLES.md doesn't show dist/YSocial_dist/ directory")
     
     # Check for migration documentation
     if not migration_doc.exists():
@@ -192,7 +192,7 @@ def main():
         print("Next steps:")
         print("1. Install PyInstaller: pip install pyinstaller")
         print("2. Build the executable: pyinstaller y_social.spec --clean --noconfirm")
-        print("3. Verify output is a directory: ls -la dist/YSocial/")
+        print("3. Verify output is a directory: ls -la dist/YSocial_dist/")
         print("4. Test startup time improvement")
         print("5. Run full test suite if available")
         return 0

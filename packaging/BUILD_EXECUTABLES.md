@@ -130,8 +130,8 @@ codesign --force --sign - \
 ### Build Output
 
 The executable will be in a **directory** located in `dist/`:
-- Linux/macOS: `dist/YSocial/` directory containing `YSocial` executable and dependencies
-- Windows: `dist/YSocial/` directory containing `YSocial.exe` and dependencies
+- Linux/macOS: `dist/YSocial_dist/` directory containing `YSocial` executable and dependencies
+- Windows: `dist/YSocial_dist/` directory containing `YSocial.exe` and dependencies
 
 **Multi-file packaging (onedir mode)**: The application and all dependencies are stored in a directory. This provides:
 - **Faster startup** - No extraction needed at runtime
@@ -148,7 +148,7 @@ The executable will be in a **directory** located in `dist/`:
 
 ```bash
 # Linux/macOS
-cd dist/YSocial
+cd dist/YSocial_dist
 ./YSocial --help
 ./YSocial                    # Launches in desktop mode (default)
 
@@ -156,7 +156,7 @@ cd dist/YSocial
 ./YSocial --browser
 
 # Windows
-cd dist\YSocial
+cd dist\YSocial_dist
 YSocial.exe --help
 YSocial.exe                  # Launches in desktop mode (default)
 

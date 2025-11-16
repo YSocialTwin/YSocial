@@ -50,8 +50,8 @@ else
 fi
 
 DMG_NAME="${APP_NAME}-${VERSION}"
-# With multi-file packaging, PyInstaller creates a directory dist/YSocial
-SOURCE_APP_DIR="dist/${APP_NAME}"
+# With multi-file packaging, PyInstaller creates a directory dist/YSocial_dist
+SOURCE_APP_DIR="dist/YSocial_dist"
 BACKGROUND_IMAGE="y_web/static/assets/img/installer/background.png"
 ICON_FILE="images/YSocial_ico.png"
 
