@@ -198,25 +198,40 @@ fi
 # Sign the .app bundle if codesign identity is provided
 if [ -n "$CODESIGN_IDENTITY" ]; then
     echo "🔐 Signing YSocial.app bundle..."
-    CODESIGN_CMD="codesign --force --sign \"$CODESIGN_IDENTITY\" --timestamp --options runtime --deep"
     
-    # Add entitlements if provided
+    # For multi-file PyInstaller bundles, we need to sign individual components first
+    # Sign all .dylib and .so files in the bundle
+    echo "   Signing libraries in bundle..."
+    find "$APP_BUNDLE" -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime {} \; 2>/dev/null || true
+    
+    # Sign the main executable
+    echo "   Signing main executable..."
     if [ -n "$ENTITLEMENTS_FILE" ]; then
         # Handle both absolute and relative paths
         if [ -f "$ENTITLEMENTS_FILE" ]; then
-            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$ENTITLEMENTS_FILE\""
+            ENT_PATH="$ENTITLEMENTS_FILE"
         elif [ -f "$PROJECT_ROOT/$ENTITLEMENTS_FILE" ]; then
-            CODESIGN_CMD="$CODESIGN_CMD --entitlements \"$PROJECT_ROOT/$ENTITLEMENTS_FILE\""
+            ENT_PATH="$PROJECT_ROOT/$ENTITLEMENTS_FILE"
         else
             echo "⚠️  Warning: Entitlements file not found: $ENTITLEMENTS_FILE"
+            ENT_PATH=""
         fi
+        
+        if [ -n "$ENT_PATH" ]; then
+            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime --entitlements "$ENT_PATH" "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+        else
+            codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
+        fi
+    else
+        codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime "$APP_BUNDLE/Contents/MacOS/${APP_NAME}"
     fi
     
-    # Execute the signing command
-    eval "$CODESIGN_CMD \"$APP_BUNDLE\""
+    # Sign the .app bundle itself (NOT --deep, as components are already signed)
+    echo "   Signing .app bundle..."
+    codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime "$APP_BUNDLE"
     
     # Verify the signature
-    codesign --verify --deep --verbose "$APP_BUNDLE"
+    codesign --verify --verbose "$APP_BUNDLE"
     echo "✅ .app bundle signed successfully"
 fi
 
