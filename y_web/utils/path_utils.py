@@ -16,7 +16,7 @@ def get_base_path():
     When running from source, this returns the repository root.
     When running from PyInstaller bundle, this returns the _MEIPASS directory
     where PyInstaller stores bundled files.
-    
+
     In multi-file mode (onedir), _MEIPASS points to the dist/YSocial directory.
     In single-file mode (onefile), _MEIPASS points to a temporary extraction directory.
 

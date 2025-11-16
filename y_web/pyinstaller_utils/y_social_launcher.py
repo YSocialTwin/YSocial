@@ -34,7 +34,7 @@ def close_splash_screen():
     # Splash screen is not built for macOS/Linux builds
     if sys.platform != "win32":
         return
-    
+
     try:
         import pyi_splash
 
