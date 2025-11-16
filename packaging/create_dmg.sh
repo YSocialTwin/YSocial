@@ -160,14 +160,50 @@ echo "========================================="
 echo "🔐 Signing .app bundle"
 echo "========================================="
 
-codesign --force --sign "$CODESIGN_IDENTITY" \
-  --entitlements "$ENTITLEMENTS" \
-  --timestamp \
-  --options runtime \
-  --deep \
-  "$APP_BUNDLE"
+# Sign libraries and frameworks inside the bundle first
+echo "   Signing libraries in bundle..."
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signing without runtime flag
+    find "$APP_BUNDLE/Contents/MacOS" -type f \( -name "*.dylib" -o -name "*.so" \) \
+        -exec codesign --force --sign "$CODESIGN_IDENTITY" {} \; 2>/dev/null || true
+else
+    # Developer ID signing with runtime flag
+    find "$APP_BUNDLE/Contents/MacOS" -type f \( -name "*.dylib" -o -name "*.so" \) \
+        -exec codesign --force --sign "$CODESIGN_IDENTITY" --timestamp --options runtime {} \; 2>/dev/null || true
+fi
 
-echo "✔️ App signed"
+# Sign the main executable inside the bundle
+echo "   Signing main executable in bundle..."
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signing without runtime flag
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      --entitlements "$ENTITLEMENTS" \
+      --no-strict \
+      "$APP_BUNDLE/Contents/MacOS/YSocial"
+else
+    # Developer ID signing with runtime flag
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      --entitlements "$ENTITLEMENTS" \
+      --timestamp \
+      --options runtime \
+      --no-strict \
+      "$APP_BUNDLE/Contents/MacOS/YSocial"
+fi
+
+# Sign the .app bundle itself (NOT with --deep to avoid .dist-info errors)
+echo "   Signing .app bundle..."
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signing
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      "$APP_BUNDLE"
+else
+    # Developer ID signing
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      --timestamp \
+      "$APP_BUNDLE"
+fi
+
+echo "✔️ App bundle signed"
 
 
 echo "========================================="
@@ -277,7 +313,36 @@ rm -f "$TEMP_DMG"
 rm -f /tmp/dmg_customization.applescript
 rm -f /tmp/dmg_device.txt
 
+# Sign the final DMG (important for distribution!)
+echo "🔐 Signing final DMG..."
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    echo "   ⚠️  WARNING: Using ad-hoc signing on DMG"
+    echo "   The DMG will ONLY work on this machine!"
+    codesign --force --sign "$CODESIGN_IDENTITY" "$DMG_PATH"
+else
+    echo "   Signing with Developer ID..."
+    codesign --force --sign "$CODESIGN_IDENTITY" --timestamp "$DMG_PATH"
+    
+    # Verify DMG signature
+    echo "   Verifying DMG signature..."
+    if codesign --verify --verbose "$DMG_PATH" 2>&1 | grep -q "valid"; then
+        echo "   ✅ DMG signature valid"
+    else
+        echo "   ⚠️  WARNING: DMG signature verification failed"
+    fi
+fi
+
 echo "========================================="
-echo "🎉 DMG Created:"
+echo "🎉 DMG Created and Signed:"
 echo "   $DMG_PATH"
 echo "========================================="
+
+# Final warnings about distribution
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    echo ""
+    echo "⚠️  ⚠️  ⚠️  IMPORTANT WARNING ⚠️  ⚠️  ⚠️"
+    echo "This DMG uses ad-hoc signing and will ONLY work on this Mac!"
+    echo "For distribution to other machines, you MUST use a Developer ID:"
+    echo "  ./packaging/build_and_package_macos.sh --dev-id \"Developer ID Application: Your Name\""
+    echo ""
+fi

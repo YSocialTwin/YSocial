@@ -86,9 +86,13 @@ echo ""
 # Step 2: Sign the executable and all libraries
 echo "🔐 Step 2/3: Signing executable bundle with entitlements..."
 if [ "$CODESIGN_IDENTITY" = "-" ]; then
-    echo "   Using ad-hoc signing (--sign -)"
+    echo "   ⚠️  WARNING: Using ad-hoc signing (--sign -)"
+    echo "   The app will ONLY work on this machine!"
+    echo "   For distribution, use: --dev-id \"Developer ID Application: Your Name\""
+    RUNTIME_FLAG=""
 else
     echo "   Using Developer ID: $CODESIGN_IDENTITY"
+    RUNTIME_FLAG="--options runtime"
 fi
 
 if [ -z "$USE_TIMESTAMP" ]; then
@@ -97,17 +101,32 @@ fi
 
 # Sign all .dylib and .so files first (dependencies)
 echo "   Signing dependencies..."
-find dist/YSocial_dist -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" $USE_TIMESTAMP --options runtime {} \; 2>/dev/null || true
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signing without runtime flag
+    find dist/YSocial_dist -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" {} \; 2>/dev/null || true
+else
+    # Developer ID signing with runtime flag
+    find dist/YSocial_dist -type f \( -name "*.dylib" -o -name "*.so" \) -exec codesign --force --sign "$CODESIGN_IDENTITY" $USE_TIMESTAMP $RUNTIME_FLAG {} \; 2>/dev/null || true
+fi
 
 # Sign the main executable with entitlements
 # Note: We use --no-strict to avoid codesign treating the _internal directory as part of a bundle
 echo "   Signing main executable with entitlements..."
-codesign --force --sign "$CODESIGN_IDENTITY" \
-  --entitlements "$SCRIPT_DIR/entitlements.plist" \
-  $USE_TIMESTAMP \
-  --options runtime \
-  --no-strict \
-  dist/YSocial_dist/YSocial
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    # Ad-hoc signing: no runtime flag, no timestamp
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      --entitlements "$SCRIPT_DIR/entitlements.plist" \
+      --no-strict \
+      dist/YSocial_dist/YSocial
+else
+    # Developer ID signing: with runtime and timestamp
+    codesign --force --sign "$CODESIGN_IDENTITY" \
+      --entitlements "$SCRIPT_DIR/entitlements.plist" \
+      $USE_TIMESTAMP \
+      $RUNTIME_FLAG \
+      --no-strict \
+      dist/YSocial_dist/YSocial
+fi
 
 # Verify the signature
 echo "   Verifying signature..."
@@ -148,6 +167,38 @@ echo "📦 Output:"
 echo "   Executable Bundle: dist/YSocial_dist/"
 echo "   DMG: $DMG_FILE"
 echo ""
+
+if [ "$CODESIGN_IDENTITY" = "-" ]; then
+    echo "⚠️  ⚠️  ⚠️  IMPORTANT DISTRIBUTION WARNING ⚠️  ⚠️  ⚠️"
+    echo ""
+    echo "The application was built with ad-hoc signing and will"
+    echo "ONLY work on this Mac. It CANNOT be distributed to other"
+    echo "machines without proper Apple Developer ID signing."
+    echo ""
+    echo "To create a distributable version:"
+    echo "  1. Get an Apple Developer ID certificate"
+    echo "  2. Run this script with --dev-id option:"
+    echo "     ./packaging/build_and_package_macos.sh --dev-id \"Developer ID Application: Your Name\""
+    echo ""
+    echo "For notarization (required for macOS Catalina+):"
+    echo "  3. After building, submit for notarization:"
+    echo "     xcrun notarytool submit $DMG_FILE --keychain-profile \"PROFILE_NAME\" --wait"
+    echo "  4. Staple the notarization ticket:"
+    echo "     xcrun stapler staple $DMG_FILE"
+    echo ""
+else
+    echo "✅ Application signed with Developer ID: $CODESIGN_IDENTITY"
+    echo ""
+    echo "📝 Next steps for distribution (recommended):"
+    echo "  1. Submit for notarization:"
+    echo "     xcrun notarytool submit $DMG_FILE --keychain-profile \"PROFILE_NAME\" --wait"
+    echo "  2. Staple the notarization ticket:"
+    echo "     xcrun stapler staple $DMG_FILE"
+    echo ""
+    echo "Note: Notarization is required for macOS Catalina (10.15) and later"
+    echo "to avoid Gatekeeper warnings when users download your app."
+    echo ""
+fi
 if [ "$CODESIGN_IDENTITY" = "-" ]; then
     echo "ℹ️  Note: Used ad-hoc signing (--sign -)"
     echo "   For wider distribution, re-run with:"

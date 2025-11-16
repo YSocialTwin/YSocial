@@ -64,15 +64,23 @@ For macOS, use the automated build script that handles all steps including signi
 # Navigate to project root
 cd /path/to/YSocial
 
-# Run automated build and package script
+# For local testing (ad-hoc signing - only works on this Mac):
 ./packaging/build_and_package_macos.sh
+
+# For distribution (requires Apple Developer ID):
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
 ```
 
 This automatically performs:
-1. PyInstaller build
-2. Code signing with entitlements
-3. DMG creation
-4. Signing of .app bundle in DMG
+1. PyInstaller build (multi-file mode)
+2. Code signing with entitlements (all libraries + executable)
+3. DMG creation with custom background and icons
+4. Signing of .app bundle and DMG
+
+**IMPORTANT FOR DISTRIBUTION:**
+- The default build uses ad-hoc signing and **ONLY works on the build machine**
+- For distribution to other Macs, you **MUST** use `--dev-id` with a valid Apple Developer ID certificate
+- For macOS Catalina+ (10.15+), notarization is also required (see below)
 
 For more details, see [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md).
 
@@ -110,22 +118,72 @@ mkdir -p config_files
 
 # 6. Build with PyInstaller
 pyinstaller y_social.spec --clean --noconfirm
-
-# 7. (macOS only) Sign the executable for distribution
-# This step is CRITICAL for macOS - without it, the app will hang on other machines
-codesign --force --sign - \
-  --entitlements entitlements.plist \
-  --timestamp \
-  --options runtime \
-  dist/YSocial
 ```
+
+The output will be in `dist/YSocial_dist/` directory.
+
+### macOS Code Signing and Distribution
+
+**CRITICAL:** macOS executables MUST be properly signed to work on other machines.
+
+#### Option 1: Local Testing Only (Ad-hoc Signing)
+
+For testing on your own Mac only:
+
+```bash
+# Use the automated script with default ad-hoc signing
+./packaging/build_and_package_macos.sh
+```
+
+⚠️ **WARNING**: This creates an app that ONLY works on the build machine!
+
+#### Option 2: Distribution to Other Macs (Developer ID Required)
+
+To create a distributable version:
+
+1. **Get an Apple Developer ID certificate** from https://developer.apple.com
+   - Certificate type: "Developer ID Application"
+   - Install the certificate in your macOS Keychain
+
+2. **Build with Developer ID signing:**
+
+```bash
+./packaging/build_and_package_macos.sh --dev-id "Developer ID Application: Your Name"
+```
+
+3. **Notarize for macOS Catalina+ (10.15+)** - REQUIRED for modern macOS:
+
+```bash
+# First-time setup: Store your notarization credentials
+xcrun notarytool store-credentials "PROFILE_NAME" \
+    --apple-id "your@email.com" \
+    --team-id "YOUR_TEAM_ID" \
+    --password "app-specific-password"
+
+# Submit the DMG for notarization
+xcrun notarytool submit dist/YSocial-*.dmg \
+    --keychain-profile "PROFILE_NAME" \
+    --wait
+
+# Staple the notarization ticket to the DMG
+xcrun stapler staple dist/YSocial-*.dmg
+
+# Verify notarization
+spctl -a -vv -t install dist/YSocial-*.dmg
+```
+
+**Why notarization is required:**
+- macOS Catalina (10.15) and later require notarization
+- Without it, users get Gatekeeper warnings: "Cannot be opened because the developer cannot be verified"
+- Notarization confirms the app is free of malware
+
+For detailed information, see [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md).
 
 **Important Notes:**
 - The spec file already has `console=False` configured for Windows, which prevents the console window from showing
 - Do **NOT** use the `--windowed` flag when building with a spec file - it will cause an error
 - The `--windowed` flag is only for building directly from Python files, not spec files
 - Console output is automatically suppressed when running the built executable on Windows
-- **macOS**: Code signing step (#7) is **mandatory** for the executable to work on other macOS machines. See [MACOS_CODE_SIGNING.md](../MACOS_CODE_SIGNING.md) for details.
 
 ### Build Output
 
