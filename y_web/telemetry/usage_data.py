@@ -2,6 +2,7 @@ import json
 import re
 import sys
 import traceback
+from datetime import datetime, timezone
 
 import requests
 
@@ -60,6 +61,7 @@ class Telemetry(object):
         :return:
         """
         data["uiid"] = self.uuid
+        data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         try:
             data = json.dumps(data)
             response = requests.post(
@@ -80,6 +82,8 @@ class Telemetry(object):
         safe_trace = self.__anonymize_traceback(stacktrace)
         data["stacktrace"] = safe_trace
         data["uiid"] = self.uuid
+        data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
         data = json.dumps(data)
         try:
             response = requests.post(

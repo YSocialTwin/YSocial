@@ -101,9 +101,11 @@ def create_page():
     telemetry.log_event(
         {
             "event": "create_page",
-            "page_name": name,
-            "feed": feed,
-            "logo": logo,
+            "data": {
+                "page_name": name,
+                "feed": feed,
+                "logo": logo,
+            }
         }
     )
 
