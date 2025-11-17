@@ -6,6 +6,7 @@ including custom error pages for common HTTP errors (400, 403, 404, 500).
 """
 
 import traceback
+
 from flask import Blueprint, render_template, request
 
 errors = Blueprint("errors", __name__)
@@ -36,6 +37,7 @@ def bad_request(e):
     }
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
 
     # Capture full traceback as string
@@ -45,7 +47,7 @@ def bad_request(e):
             "error_type": "400 Bad Request",
             "stacktrace": full_trace,
             "url": request.url,
-            "method": request.method
+            "method": request.method,
         }
     )
 
@@ -77,6 +79,7 @@ def forbidden(e):
     }
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
 
     # Capture full traceback as string
@@ -86,7 +89,7 @@ def forbidden(e):
             "error_type": "403 Forbidden",
             "stacktrace": full_trace,
             "url": request.url,
-            "method": request.method
+            "method": request.method,
         }
     )
 
@@ -118,6 +121,7 @@ def not_found(e):
     }
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
 
     # Capture full traceback as string
@@ -127,7 +131,7 @@ def not_found(e):
             "error_type": "404 Not Found",
             "stacktrace": full_trace,
             "url": request.url,
-            "method": request.method
+            "method": request.method,
         }
     )
 
@@ -159,6 +163,7 @@ def internal_server_error(e):
     }
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
 
     # Capture full traceback as string
@@ -168,7 +173,7 @@ def internal_server_error(e):
             "error_type": "500 Internal Server Error",
             "stacktrace": full_trace,
             "url": request.url,
-            "method": request.method
+            "method": request.method,
         }
     )
     return render_template("error_pages/500.html", error=error_details), 500

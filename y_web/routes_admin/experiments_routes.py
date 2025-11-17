@@ -1227,6 +1227,7 @@ def create_experiment():
     db.session.commit()
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
     telemetry.log_event(
         {
