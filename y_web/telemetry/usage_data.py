@@ -1,8 +1,10 @@
 import json
-import traceback
-import sys
-import requests
 import re
+import sys
+import traceback
+
+import requests
+
 from y_web.pyinstaller_utils import installation_id
 
 
@@ -39,10 +41,14 @@ class Telemetry(object):
                 if action == "register":
                     data["action"] = "register"
                     data = json.dumps(data)
-                    response = requests.post(f"http://{self.host}:{self.port}/register", json=data)
+                    response = requests.post(
+                        f"http://{self.host}:{self.port}/register", json=data
+                    )
                 elif action == "update":
                     data["action"] = "update"
-                    response = requests.post(f"http://{self.host}:{self.port}/register", json=data)
+                    response = requests.post(
+                        f"http://{self.host}:{self.port}/register", json=data
+                    )
                     return True
         except:
             return False
@@ -53,10 +59,12 @@ class Telemetry(object):
         :param data:
         :return:
         """
-        data['uiid'] = self.uuid
+        data["uiid"] = self.uuid
         try:
             data = json.dumps(data)
-            response = requests.post(f"http://{self.host}:{self.port}/log_event", json=data)
+            response = requests.post(
+                f"http://{self.host}:{self.port}/log_event", json=data
+            )
             return True
         except:
             return False
@@ -71,10 +79,12 @@ class Telemetry(object):
         stacktrace = data["stacktrace"]
         safe_trace = self.__anonymize_traceback(stacktrace)
         data["stacktrace"] = safe_trace
-        data['uiid'] = self.uuid
+        data["uiid"] = self.uuid
         data = json.dumps(data)
         try:
-            response = requests.post(f"http://{self.host}:{self.port}/log_stack_trace", json=data)
+            response = requests.post(
+                f"http://{self.host}:{self.port}/log_stack_trace", json=data
+            )
             return True
         except:
             return False
@@ -100,10 +110,11 @@ class Telemetry(object):
             match = path_pattern.search(line)
             if match:
                 filename, lineno, func = match.groups()
-                anonymized_lines.append(f'File "<anon>/{filename}", line {lineno}, in {func}\n')
+                anonymized_lines.append(
+                    f'File "<anon>/{filename}", line {lineno}, in {func}\n'
+                )
             else:
                 line = home_pattern.sub("<anon_path>", line)
                 anonymized_lines.append(line)
 
-        return ''.join(anonymized_lines)
-
+        return "".join(anonymized_lines)

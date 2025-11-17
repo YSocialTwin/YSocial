@@ -96,6 +96,7 @@ def create_page():
     db.session.commit()
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
     telemetry.log_event(
         {

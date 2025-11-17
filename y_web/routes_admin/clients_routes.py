@@ -9,6 +9,7 @@ client execution control (start/pause/resume/terminate).
 import json
 import os
 import shutil
+import traceback
 
 import faker
 import networkx as nx
@@ -51,7 +52,6 @@ from y_web.utils import (
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
-import traceback
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -978,6 +978,7 @@ def create_client():
                 db.session.commit()
 
     from y_web.telemetry import Telemetry
+
     telemetry = Telemetry()
     telemetry.log_event(
         data={
@@ -991,18 +992,17 @@ def create_client():
             "probability_of_daily_follow": probability_of_daily_follow,
             "attention_window": attention_window,
             "visibility_rounds": visibility_rounds,
-            "actions":
-                {
-                    "post": post,
-                    "share": share,
-                    "image": image,
-                    "comment": comment,
-                    "read": read,
-                    "news": news,
-                    "search": search,
-                    "vote": vote,
-                    "share_link": share_link,
-                },
+            "actions": {
+                "post": post,
+                "share": share,
+                "image": image,
+                "comment": comment,
+                "read": read,
+                "news": news,
+                "search": search,
+                "vote": vote,
+                "share_link": share_link,
+            },
             "llm": llm,
             "probability_of_secondary_follow": probability_of_secondary_follow,
             "crecsys": crecsys,
