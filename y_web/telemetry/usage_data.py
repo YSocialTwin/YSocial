@@ -14,17 +14,21 @@ class Telemetry(object):
     def __init__(self, host="localhost", port=9000):
         self.host = host
         self.port = port
+        self.uuid = None
 
         config_dir = installation_id.get_installation_config_dir()
+
         id_file = config_dir / "installation_id.json"
 
         if id_file.exists():
             try:
                 with open(id_file, "r") as f:
                     installation_info = json.load(f)
-                    self.uiid = installation_info.get("installation_id", None)
+                    self.uuid = installation_info.get("installation_id", None)
             except Exception:
-                self.uiid = None
+                pass
+        else:
+            self.uuid = None
 
     def register_update_app(self, data, action="register"):
         """
@@ -39,16 +43,16 @@ class Telemetry(object):
             id_file = config_dir / "installation_id.json"
             with open(id_file, "r") as f:
                 data = json.load(f)
+                data["uiid"] = self.uuid
                 if action == "register":
                     data["action"] = "register"
-                    data = json.dumps(data)
                     response = requests.post(
-                        f"http://{self.host}:{self.port}/register", json=data
+                        f"http://{self.host}:{self.port}/api/register", json=data
                     )
                 elif action == "update":
                     data["action"] = "update"
                     response = requests.post(
-                        f"http://{self.host}:{self.port}/register", json=data
+                        f"http://{self.host}:{self.port}/api/register", json=data
                     )
                     return True
         except:
@@ -60,12 +64,13 @@ class Telemetry(object):
         :param data:
         :return:
         """
+
         data["uiid"] = self.uuid
         data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
         try:
-            data = json.dumps(data)
             response = requests.post(
-                f"http://{self.host}:{self.port}/log_event", json=data
+                f"http://{self.host}:{self.port}/api/log_event", json=data
             )
             return True
         except:
@@ -84,10 +89,9 @@ class Telemetry(object):
         data["uiid"] = self.uuid
         data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-        data = json.dumps(data)
         try:
             response = requests.post(
-                f"http://{self.host}:{self.port}/log_stack_trace", json=data
+                f"http://{self.host}:{self.port}/api/log_stack_trace", json=data
             )
             return True
         except:

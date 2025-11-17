@@ -128,7 +128,6 @@ if __name__ == "__main__":
         from y_web.pyinstaller_utils.installation_id import (
             get_or_create_installation_id,
         )
-
         # This will create the ID on first run or load existing one
         installation_info = get_or_create_installation_id()
     except Exception as e:
