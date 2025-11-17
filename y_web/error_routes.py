@@ -5,6 +5,8 @@ Provides centralized error handling for the Y Social application,
 including custom error pages for common HTTP errors (400, 403, 404, 500).
 """
 
+import traceback
+
 from flask import Blueprint, render_template, request
 
 errors = Blueprint("errors", __name__)
@@ -33,6 +35,22 @@ def bad_request(e):
         "requested_url": request.url if request else None,
         "method": request.method if request else None,
     }
+
+    from y_web.telemetry import Telemetry
+
+    telemetry = Telemetry()
+
+    # Capture full traceback as string
+    full_trace = traceback.format_exc()
+    telemetry.log_stack_trace(
+        {
+            "error_type": "400 Bad Request",
+            "stacktrace": full_trace,
+            "url": request.url,
+            "method": request.method,
+        }
+    )
+
     return render_template("error_pages/400.html", error=error_details), 400
 
 
@@ -59,6 +77,22 @@ def forbidden(e):
         "requested_url": request.url if request else None,
         "method": request.method if request else None,
     }
+
+    from y_web.telemetry import Telemetry
+
+    telemetry = Telemetry()
+
+    # Capture full traceback as string
+    full_trace = traceback.format_exc()
+    telemetry.log_stack_trace(
+        {
+            "error_type": "403 Forbidden",
+            "stacktrace": full_trace,
+            "url": request.url,
+            "method": request.method,
+        }
+    )
+
     return render_template("error_pages/403.html", error=error_details), 403
 
 
@@ -85,6 +119,22 @@ def not_found(e):
         "requested_url": request.url if request else None,
         "method": request.method if request else None,
     }
+
+    from y_web.telemetry import Telemetry
+
+    telemetry = Telemetry()
+
+    # Capture full traceback as string
+    full_trace = traceback.format_exc()
+    telemetry.log_stack_trace(
+        {
+            "error_type": "404 Not Found",
+            "stacktrace": full_trace,
+            "url": request.url,
+            "method": request.method,
+        }
+    )
+
     return render_template("error_pages/404.html", error=error_details), 404
 
 
@@ -111,4 +161,19 @@ def internal_server_error(e):
         "requested_url": request.url if request else None,
         "method": request.method if request else None,
     }
+
+    from y_web.telemetry import Telemetry
+
+    telemetry = Telemetry()
+
+    # Capture full traceback as string
+    full_trace = traceback.format_exc()
+    telemetry.log_stack_trace(
+        {
+            "error_type": "500 Internal Server Error",
+            "stacktrace": full_trace,
+            "url": request.url,
+            "method": request.method,
+        }
+    )
     return render_template("error_pages/500.html", error=error_details), 500

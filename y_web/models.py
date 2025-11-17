@@ -364,6 +364,10 @@ class Admin_users(UserMixin, db.Model):
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
 
+    def get_id(self):
+        """Return user ID with 'admin_' prefix for Flask-Login."""
+        return f"admin_{self.id}"
+
 
 class Exps(db.Model):
     """
