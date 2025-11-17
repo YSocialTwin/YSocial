@@ -1226,6 +1226,17 @@ def create_experiment():
     db.session.add(jn_instance)
     db.session.commit()
 
+    from y_web.telemetry import Telemetry
+    telemetry = Telemetry()
+    telemetry.log_event(
+        {
+            "action": "create_experiment",
+            "platform_type": exp.platform_type,
+            "annotations": exp.annotations,
+            "llm_agents_enabled": exp.llm_agents_enabled,
+        },
+    )
+
     return settings()
 
 

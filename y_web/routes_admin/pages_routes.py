@@ -95,6 +95,17 @@ def create_page():
     db.session.add(page)
     db.session.commit()
 
+    from y_web.telemetry import Telemetry
+    telemetry = Telemetry()
+    telemetry.log_event(
+        {
+            "event": "create_page",
+            "page_name": name,
+            "feed": feed,
+            "logo": logo,
+        }
+    )
+
     return page_data()
 
 

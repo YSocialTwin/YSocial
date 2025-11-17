@@ -51,6 +51,7 @@ from y_web.utils import (
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
+import traceback
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -975,6 +976,39 @@ def create_client():
 
                 client.network_type = network_model
                 db.session.commit()
+
+    from y_web.telemetry import Telemetry
+    telemetry = Telemetry()
+    telemetry.log_event(
+        data={
+            "event_type": "create_client",
+            "llm_agents_enabled": llm_agents_enabled,
+            "days": days,
+            "percentage_new_agents_iteration": percentage_new_agents_iteration,
+            "percentage_removed_agents_iteration": percentage_removed_agents_iteration,
+            "max_length_thread_reading": max_length_thread_reading,
+            "reading_from_follower_ratio": reading_from_follower_ratio,
+            "probability_of_daily_follow": probability_of_daily_follow,
+            "attention_window": attention_window,
+            "visibility_rounds": visibility_rounds,
+            "actions":
+                {
+                    "post": post,
+                    "share": share,
+                    "image": image,
+                    "comment": comment,
+                    "read": read,
+                    "news": news,
+                    "search": search,
+                    "vote": vote,
+                    "share_link": share_link,
+                },
+            "llm": llm,
+            "probability_of_secondary_follow": probability_of_secondary_follow,
+            "crecsys": crecsys,
+            "frecsys": frecsys,
+        }
+    )
 
     # load experiment_details page
     from .experiments_routes import experiment_details
