@@ -186,8 +186,9 @@ def get_or_create_installation_id():
                                 )
 
                                 telemetry = Telemetry()
-                                telemetry.register_update_app(installation_info, action="update")
-
+                                telemetry.register_update_app(
+                                    installation_info, action="update"
+                                )
 
                             except Exception as e:
                                 print(f"Warning: Could not update installation ID: {e}")
