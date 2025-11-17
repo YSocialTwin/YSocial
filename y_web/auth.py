@@ -102,21 +102,8 @@ def login_post():
         )
 
     elif user.role == "admin" or user.role == "researcher":
-        # Admin and researcher go to admin panel
-        try:
-            _ = User_mgmt.query.first()
-        except:
-            flash("Server not ready. Please try again later.")
-            return redirect(url_for("auth.login"))
-
-        user_agent = User_mgmt.query.filter_by(username=user.username).first()
-        if not user_agent:
-            flash(
-                "User account not found in experiment database. Please contact an administrator."
-            )
-            return redirect(url_for("auth.login"))
-
-        login_user(user_agent, remember=remember)
+        # Admin and researcher go to admin panel - they login with Admin_users, not User_mgmt
+        login_user(user, remember=remember)
         return redirect(url_for("admin.dashboard"))
 
     else:
