@@ -66,7 +66,9 @@ class Telemetry(object):
         """
 
         data["uiid"] = self.uuid
-        data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        data["timestamp"] = (
+            datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
 
         try:
             response = requests.post(
@@ -87,7 +89,9 @@ class Telemetry(object):
         safe_trace = self.__anonymize_traceback(stacktrace)
         data["stacktrace"] = safe_trace
         data["uiid"] = self.uuid
-        data["timestamp"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        data["timestamp"] = (
+            datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        )
 
         try:
             response = requests.post(
