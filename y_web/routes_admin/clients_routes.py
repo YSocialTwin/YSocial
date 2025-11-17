@@ -982,7 +982,7 @@ def create_client():
     telemetry = Telemetry()
     telemetry.log_event(
         data={
-            "event_type": "create_client",
+            "action": "create_client",
             "data": {
                 "llm_agents_enabled": llm_agents_enabled,
                 "days": days,

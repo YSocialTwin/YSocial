@@ -1231,7 +1231,7 @@ def create_experiment():
     telemetry = Telemetry()
     telemetry.log_event(
         {
-            "event_type": "create_experiment",
+            "action": "create_experiment",
             "data": {
                 "platform_type": exp.platform_type,
                 "annotations": exp.annotations,
