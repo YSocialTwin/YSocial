@@ -134,6 +134,8 @@ def get_or_create_installation_id():
             - os: Operating system information
             - version: YSocial version at time of installation/update
     """
+    from y_web.telemetry import Telemetry
+
     config_dir = get_installation_config_dir()
     id_file = config_dir / "installation_id.json"
 
@@ -182,6 +184,11 @@ def get_or_create_installation_id():
                                 print(
                                     f"  New timestamp: {installation_info['timestamp']}"
                                 )
+
+                                telemetry = Telemetry()
+                                telemetry.register_update_app(installation_info, action="update")
+
+
                             except Exception as e:
                                 print(f"Warning: Could not update installation ID: {e}")
                     return installation_info
@@ -211,6 +218,9 @@ def get_or_create_installation_id():
         print(f"  Config saved to: {id_file}")
     except Exception as e:
         print(f"Warning: Could not save installation ID: {e}")
+
+    telemetry = Telemetry()
+    telemetry.register_update_app(installation_info, action="register")
 
     return installation_info
 
