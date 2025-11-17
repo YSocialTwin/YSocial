@@ -3,7 +3,6 @@ import re
 import sys
 import traceback
 from datetime import datetime, timezone
-
 import requests
 
 from y_web.pyinstaller_utils import installation_id
