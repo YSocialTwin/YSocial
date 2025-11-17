@@ -105,7 +105,7 @@ def create_page():
                 "page_name": name,
                 "feed": feed,
                 "logo": logo,
-            }
+            },
         }
     )
 

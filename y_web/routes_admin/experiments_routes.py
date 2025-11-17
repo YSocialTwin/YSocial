@@ -1236,7 +1236,7 @@ def create_experiment():
                 "platform_type": exp.platform_type,
                 "annotations": exp.annotations,
                 "llm_agents_enabled": exp.llm_agents_enabled,
-            }
+            },
         },
     )
 
