@@ -293,8 +293,12 @@ def create_app(db_type="sqlite"):
             "db_admin": f"sqlite:///{BASE_DIR}/db/dashboard.db",
             "db_exp": f"sqlite:///{BASE_DIR}/db/dummy.db",
         }
+        # Use NullPool for SQLite to avoid connection pooling issues
+        # This ensures each request gets a fresh connection and prevents hangs
+        from sqlalchemy.pool import NullPool
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {"check_same_thread": False}
+            "connect_args": {"check_same_thread": False},
+            "poolclass": NullPool
         }
 
     elif db_type == "postgresql":
@@ -342,12 +346,15 @@ def create_app(db_type="sqlite"):
 
     @app.before_request
     def before_request_handler():
-        """Setup experiment context for each request."""
+        """Setup experiment context and database session for each request."""
         setup_experiment_context()
 
     @app.teardown_request
     def teardown_request_handler(exception=None):
-        """Restore experiment context after each request."""
+        """Clean up database session and restore experiment context after each request."""
+        # Explicitly remove the database session to ensure proper cleanup
+        # This prevents session leaks and connection hangs, especially with SQLite
+        db.session.remove()
         teardown_experiment_context(exception)
 
     @app.context_processor
