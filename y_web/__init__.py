@@ -296,9 +296,10 @@ def create_app(db_type="sqlite"):
         # Use NullPool for SQLite to avoid connection pooling issues
         # This ensures each request gets a fresh connection and prevents hangs
         from sqlalchemy.pool import NullPool
+
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "connect_args": {"check_same_thread": False},
-            "poolclass": NullPool
+            "poolclass": NullPool,
         }
 
     elif db_type == "postgresql":
