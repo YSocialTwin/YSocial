@@ -1,5 +1,7 @@
-import requests
 import platform
+
+import requests
+
 import y_web.pyinstaller_utils.installation_id as installation_id
 
 
@@ -123,14 +125,15 @@ def download_file(url, dest_path, exp_size, exp_sha256):
             f.write(chunk)
 
     # check file size and sha256
-    import os
     import hashlib
+    import os
+
     actual_size = os.path.getsize(dest_path)
     if actual_size != exp_size:
         return False, "File size mismatch"
     sha256_hash = hashlib.sha256()
-    with open(dest_path,"rb") as f:
-        for byte_block in iter(lambda: f.read(4096),b""):
+    with open(dest_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
             sha256_hash.update(byte_block)
     actual_sha256 = sha256_hash.hexdigest()
     if actual_sha256 != exp_sha256:
