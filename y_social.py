@@ -85,7 +85,10 @@ def start_app(
 
     app.config["ENABLE_NOTEBOOK"] = notebook
 
-    app.run(debug=debug, host=host, port=port)
+    if db_type.lower() == "sqlite":
+        app.run(debug=debug, host=host, port=port, threaded=False)
+    else:
+        app.run(debug=debug, host=host, port=port)
 
 
 if __name__ == "__main__":

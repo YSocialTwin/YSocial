@@ -298,7 +298,8 @@ def create_app(db_type="sqlite"):
         from sqlalchemy.pool import NullPool
 
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {"check_same_thread": False},
+            "connect_args": {"check_same_thread": False, "timeout": 10},
+            "pool_pre_ping": True,
             "poolclass": NullPool,
         }
 
