@@ -100,7 +100,12 @@ def __get_release_link_by_platform(release_data, platform_keyword):
         if platform_keyword in files and tag == version:
             name = files[platform_keyword]["filename"]
             url = f"https://releases.y-not.social/latest/{name}"
-            return url, published, files[platform_keyword]["size"], files[platform_keyword]["sha256"]
+            return (
+                url,
+                published,
+                files[platform_keyword]["size"],
+                files[platform_keyword]["sha256"],
+            )
         return None, None, None, None
 
     else:
@@ -143,15 +148,15 @@ def download_file(url, dest_path, exp_size, exp_sha256):
 def update_release_info_in_db():
     """
     Check for updates and store/update release information in the database.
-    
+
     This function should be called at application startup to check for new releases.
     It updates a single-row table with the latest release information.
-    
+
     Returns:
         tuple: (has_update: bool, release_info: dict or None)
     """
     from datetime import datetime
-    
+
     try:
         print("Updating release information...")
         release_info = check_for_updates()
@@ -159,17 +164,17 @@ def update_release_info_in_db():
         # Import here to avoid circular imports
         from y_web import db
         from y_web.models import ReleaseInfo
-        
+
         # Get or create the single row
         record = ReleaseInfo.query.first()
-        
+
         if record is None:
             record = ReleaseInfo()
             db.session.add(record)
-        
+
         # Update the record with current check time
         record.latest_check_on = datetime.utcnow().isoformat()
-        
+
         if release_info:
             # New version available
             record.latest_version_tag = release_info.get("latest_version")
@@ -178,7 +183,7 @@ def update_release_info_in_db():
             record.download_url = release_info.get("download_url")
             record.size = release_info.get("size")
             record.sha256 = release_info.get("sha256")
-            
+
             db.session.commit()
             return True, release_info
         else:
@@ -186,7 +191,7 @@ def update_release_info_in_db():
             # No new version or unable to check
             db.session.commit()
             return False, None
-            
+
     except Exception as e:
         print(f"Error checking for updates: {e}")
         return False, None

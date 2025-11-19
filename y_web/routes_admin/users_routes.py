@@ -859,25 +859,25 @@ def check_for_updates_route():
     current_admin_user = Admin_users.query.filter_by(
         username=current_user.username
     ).first()
-    
+
     if not current_admin_user or current_admin_user.role != "admin":
         flash("Access denied. Only administrators can check for updates.", "error")
         return redirect(url_for("admin.dashboard"))
-    
+
     try:
         from y_web.utils.check_release import update_release_info_in_db
-        
+
         has_update, release_info = update_release_info_in_db()
-        
+
         if has_update:
             flash(
-                f"New version available: {release_info.get('release_name')} (v{release_info.get('latest_version')})", 
-                "success"
+                f"New version available: {release_info.get('release_name')} (v{release_info.get('latest_version')})",
+                "success",
             )
         else:
             flash("Your YSocial installation is up to date.", "info")
     except Exception as e:
         flash(f"Error checking for updates: {str(e)}", "error")
-    
+
     # Redirect back to the user details page
     return redirect(url_for("users.user_details", uid=current_admin_user.id))

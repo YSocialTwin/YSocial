@@ -447,8 +447,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     release_info = ReleaseInfo.query.first()
                     if release_info and release_info.latest_version_tag:
                         return dict(
-                            new_release_available=True,
-                            release_info=release_info
+                            new_release_available=True, release_info=release_info
                         )
             except Exception:
                 pass
@@ -511,6 +510,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
     with app.app_context():
         try:
             from y_web.utils.check_release import update_release_info_in_db
+
             update_release_info_in_db()
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
