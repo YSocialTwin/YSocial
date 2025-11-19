@@ -34,9 +34,9 @@ def check_for_updates():
             "latest_version": latest_tag,
             "release_name": latest_release["name"],
             "published_at": latest_release["published_at"],
-            "macos_download": url,
-            "macos_size": size,
-            "macos_sha256": sha,
+            "download_url": url,
+            "size": size,
+            "sha256": sha,
         }
     else:
         return None
@@ -140,3 +140,53 @@ def download_file(url, dest_path, exp_size, exp_sha256):
         return False, "SHA256 mismatch"
     print(f"Update downloaded successfully")
     return True, "File downloaded and verified successfully."
+
+
+def update_release_info_in_db():
+    """
+    Check for updates and store/update release information in the database.
+    
+    This function should be called at application startup to check for new releases.
+    It updates a single-row table with the latest release information.
+    
+    Returns:
+        tuple: (has_update: bool, release_info: dict or None)
+    """
+    from datetime import datetime
+    
+    try:
+        release_info = check_for_updates()
+        
+        # Import here to avoid circular imports
+        from y_web import db
+        from y_web.models import ReleaseInfo
+        
+        # Get or create the single row
+        record = ReleaseInfo.query.first()
+        
+        if record is None:
+            record = ReleaseInfo()
+            db.session.add(record)
+        
+        # Update the record with current check time
+        record.latest_check_on = datetime.utcnow().isoformat()
+        
+        if release_info:
+            # New version available
+            record.latest_version_tag = release_info.get("latest_version")
+            record.release_name = release_info.get("release_name")
+            record.published_at = release_info.get("published_at")
+            record.download_url = release_info.get("download_url")
+            record.size = release_info.get("size")
+            record.sha256 = release_info.get("sha256")
+            
+            db.session.commit()
+            return True, release_info
+        else:
+            # No new version or unable to check
+            db.session.commit()
+            return False, None
+            
+    except Exception as e:
+        print(f"Error checking for updates: {e}")
+        return False, None

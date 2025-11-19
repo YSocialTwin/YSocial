@@ -309,6 +309,20 @@ CREATE TABLE jupyter_instances (
     status       VARCHAR(10) NOT NULL DEFAULT 'active'
 );
 
+-- -----------------------------
+-- Release Information
+-- -----------------------------
+CREATE TABLE release_info (
+    id                  SERIAL PRIMARY KEY,
+    latest_version_tag  TEXT,
+    release_name        TEXT,
+    published_at        TEXT,
+    download_url        TEXT,
+    size                TEXT,
+    sha256              TEXT,
+    latest_check_on     TEXT
+);
+
 -- ================================================
 -- DATA INSERTIONS
 -- ================================================
