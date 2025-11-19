@@ -11,7 +11,7 @@ from y_web.pyinstaller_utils import installation_id
 
 class Telemetry(object):
 
-    def __init__(self, host="localhost", port=9000):
+    def __init__(self, host="telemetry.y-not.social", port=9000):
         self.host = host
         self.port = port
         self.uuid = None
