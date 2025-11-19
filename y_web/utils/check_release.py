@@ -29,7 +29,6 @@ def check_for_updates():
     if version_tuple(latest_tag) > version_tuple(current_version):
         os = __get_os()
         url, published, size, sha = __get_release_link_by_platform(latest_release, os)
-
         return {
             "latest_version": latest_tag,
             "release_name": latest_release["name"],
@@ -90,23 +89,22 @@ def __get_release_link_by_platform(release_data, platform_keyword):
         str: Download URL for the specified platform or None if not found.
     """
 
-    tag = release_data["tag"].strip("v")
-    url = f"https://releases.y-not.social/ysocial/latest/release.json"
+    tag = release_data["tag"].removeprefix("v")
+    url = f"https://releases.y-not.social/latest/release.json"
     response = requests.get(url, headers={"Accept": "application/json"})
     if response.status_code == 200:
         data = response.json()
-        version = data["version"].strip("v")
+        version = data["version"].removeprefix("v")
         published = data["published"]
         files = data["files"]
-
         if platform_keyword in files and tag == version:
-            name = files[platform_keyword]["name"]
-            url = f"https://releases.y-not.social/ysocial/latest/{name}"
-            return url, published, files["size"], files["sha256"]
-        return None
+            name = files[platform_keyword]["filename"]
+            url = f"https://releases.y-not.social/latest/{name}"
+            return url, published, files[platform_keyword]["size"], files[platform_keyword]["sha256"]
+        return None, None, None, None
 
     else:
-        return response.status_code
+        return response.status_code, None, None, None
 
 
 def download_file(url, dest_path, exp_size, exp_sha256):
@@ -155,8 +153,9 @@ def update_release_info_in_db():
     from datetime import datetime
     
     try:
+        print("Updating release information...")
         release_info = check_for_updates()
-        
+        print("Release info from update check:", release_info)
         # Import here to avoid circular imports
         from y_web import db
         from y_web.models import ReleaseInfo
@@ -183,6 +182,7 @@ def update_release_info_in_db():
             db.session.commit()
             return True, release_info
         else:
+
             # No new version or unable to check
             db.session.commit()
             return False, None
