@@ -32,12 +32,14 @@ def check_for_updates():
     if version_tuple(latest_tag) > version_tuple(current_version):
         # Check if running under PyInstaller
         is_pyinstaller = getattr(sys, "frozen", False)
-        
+
         if is_pyinstaller:
             # PyInstaller app: try to get platform-specific download
             os = __get_os()
-            url, published, size, sha = __get_release_link_by_platform(latest_release, os)
-            
+            url, published, size, sha = __get_release_link_by_platform(
+                latest_release, os
+            )
+
             # If platform-specific download not available, fall back to GitHub release page
             if url is None:
                 url = f"https://github.com/YSocialTwin/YSocial/releases/tag/{latest_release['tag']}"
@@ -49,7 +51,7 @@ def check_for_updates():
             published = latest_release.get("published_at")
             size = None
             sha = None
-        
+
         return {
             "latest_version": latest_tag,
             "release_name": latest_release["name"],
