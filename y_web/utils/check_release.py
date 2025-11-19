@@ -1,4 +1,5 @@
 import platform
+import sys
 
 import requests
 
@@ -10,7 +11,9 @@ def check_for_updates():
     Check for the latest release of YSocial and compare it with the current version.
 
     Returns:
-        dict: Information about the latest release and download links for different platforms.
+        dict: Information about the latest release and download links.
+              - If PyInstaller app: returns platform-specific download URL if available
+              - If not PyInstaller: returns GitHub release page URL
     """
 
     current_version = installation_id.get_version()
@@ -27,12 +30,30 @@ def check_for_updates():
     latest_tag = latest_release["tag"].strip("v")
 
     if version_tuple(latest_tag) > version_tuple(current_version):
-        os = __get_os()
-        url, published, size, sha = __get_release_link_by_platform(latest_release, os)
+        # Check if running under PyInstaller
+        is_pyinstaller = getattr(sys, "frozen", False)
+        
+        if is_pyinstaller:
+            # PyInstaller app: try to get platform-specific download
+            os = __get_os()
+            url, published, size, sha = __get_release_link_by_platform(latest_release, os)
+            
+            # If platform-specific download not available, fall back to GitHub release page
+            if url is None:
+                url = f"https://github.com/YSocialTwin/YSocial/releases/tag/{latest_release['tag']}"
+                size = None
+                sha = None
+        else:
+            # Not PyInstaller (development mode): always use GitHub release page
+            url = f"https://github.com/YSocialTwin/YSocial/releases/tag/{latest_release['tag']}"
+            published = latest_release.get("published_at")
+            size = None
+            sha = None
+        
         return {
             "latest_version": latest_tag,
             "release_name": latest_release["name"],
-            "published_at": latest_release["published_at"],
+            "published_at": latest_release.get("published_at"),
             "download_url": url,
             "size": size,
             "sha256": sha,

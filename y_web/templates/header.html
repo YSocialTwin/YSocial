@@ -86,9 +86,15 @@
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
             {% if release_info.download_url %}
+            {% set is_github_page = 'github.com' in release_info.download_url and '/releases/tag/' in release_info.download_url %}
             <a href="{{ release_info.download_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #039be5; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+                {% if is_github_page %}
+                <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
+                <span>View Release</span>
+                {% else %}
                 <i class="mdi mdi-download" style="font-size: 16px;"></i>
                 <span>Download</span>
+                {% endif %}
             </a>
             {% endif %}
             <button onclick="document.getElementById('release-banner').style.display='none';" style="background: transparent; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.borderColor='#039be5'; this.style.color='#039be5';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
