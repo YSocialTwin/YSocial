@@ -32,9 +32,9 @@ def check_for_updates():
             "latest_version": latest_tag,
             "release_name": latest_release["name"],
             "published_at": latest_release["published_at"],
-            "macos_download": url,
-            "macos_size": size,
-            "macos_sha256": sha,
+            "download": url,
+            "size": size,
+            "sha256": sha,
         }
     else:
         return None
