@@ -16,9 +16,9 @@
                 </div>
             </div>
 
-            <div class="columns" style="display: flex; align-items: stretch;">
+            <div class="columns is-multiline" style="display: flex; align-items: stretch;">
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
 
                     {% for message in get_flashed_messages() %}
                     <div class="alert alert-warning">
@@ -107,7 +107,7 @@
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
                     <!--Box-->
 
                     <div class="dashboard-box">
@@ -325,7 +325,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
                     <!--Box-->
                     <div class="dashboard-box is-compact" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
@@ -338,8 +338,9 @@
                                 <i class="mdi mdi-stop" style="font-size: 16px;"></i> Stop the experiment server<br>
                                 <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
                                 <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
-                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
-                                <br>
+                                {% if notebooks %}
+                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis<br>
+                                {% endif %}
                             </p>
                             <hr>
                             <p>

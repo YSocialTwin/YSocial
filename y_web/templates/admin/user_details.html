@@ -113,11 +113,11 @@ input:checked + .slider:before {
                 {% endfor %}
             </div>
 
-            <div class="columns" style="align-items: stretch;">
+            <div class="columns is-multiline" style="align-items: stretch;">
 
 
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">User Profile</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -160,36 +160,6 @@ input:checked + .slider:before {
                                     <span class="left">Perspective API</span>
                                     <span class="right">{% if user.perspective_api is none %} Not {% endif %} Configured </span>
                                 </div>
-                                
-                                {% if current_user_role == 'admin' %}
-                                <hr>
-                                <b>Telemetry Settings</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Control anonymous usage data collection for improving YSocial.</p>
-                                <div class="box-line">
-                                    <form action="/admin/update_telemetry_preference" method="POST" style="margin: 0;">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                                            <span style="font-size: 0.9em;">Telemetry Data Collection</span>
-                                            <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" name="telemetry_enabled" value="1" 
-                                                       {% if user.telemetry_enabled %}checked{% endif %}
-                                                       onchange="this.form.submit()">
-                                                <span class="slider round"></span>
-                                            </label>
-                                        </div>
-                                    </form>
-                                </div>
-                                <hr>
-                                <b>System Updates</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Check for new YSocial releases.</p>
-                                <div class="box-line">
-                                    <form action="/admin/check_for_updates" method="POST" style="margin: 0;">
-                                        <button type="submit" class="button is-solid primary-button" style="width: 100%;">
-                                            <i class="mdi mdi-update"></i> Check for Updates
-                                        </button>
-                                    </form>
-                                </div>
-                                {% endif %}
                             </div>
 
                             <div class="buttons" style="display: flex; justify-content: right">
@@ -201,7 +171,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
 
-                 <div class="column is-8" style="display: flex;">
+                 <div class="column is-12-mobile is-8-tablet" style="display: flex;">
 
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
@@ -251,8 +221,8 @@ input:checked + .slider:before {
             </div>
 
             <!-- Row 2: Update Password, Update Email, Add Perspective API (3 columns) -->
-            <div class="columns" style="align-items: stretch;">
-                <div class="column is-4" style="display: flex;">
+            <div class="columns is-multiline" style="align-items: stretch;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update Password</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -295,7 +265,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update Email</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -333,7 +303,7 @@ input:checked + .slider:before {
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -366,16 +336,72 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <!-- Row 3: Experiment Participation and Add to Experiment (2 columns) -->
-            <div class="columns" style="align-items: stretch;">
-                <div class="column is-6" style="display: flex;">
+            <!-- Row 3: Telemetry, System Updates, Experiment Participation and Add to Experiment (4 columns) -->
+            <div class="columns is-multiline" style="align-items: stretch;">
+                {% if current_user_role == "admin" %}
+                <!-- Telemetry Settings (admin only) -->
+                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">Telemetry Settings</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Control anonymous usage data collection.
+                        </p>
+                        <div class="box-content" style="flex: 1;">
+                            <form action="/admin/update_telemetry_preference" method="POST">
+                                <div class="box-lines">
+                                    <div class="box-line">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span style="font-size: 0.9em;">Telemetry Data</span>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" name="telemetry_enabled" value="1" 
+                                                       {% if user.telemetry_enabled %}checked{% endif %}
+                                                       onchange="this.form.submit()">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                            <p style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                                Enable/disable anonymous usage data collection for improving YSocial.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Updates (admin only) -->
+                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">System Updates</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Check for new YSocial releases.
+                        </p>
+                        <div class="box-content" style="flex: 1;">
+                            <form action="/admin/check_for_updates" method="POST">
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                        <i class="mdi mdi-update"></i> Check for Updates
+                                    </button>
+                                </div>
+                            </form>
+                            <p style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                                Check if a newer version of YSocial is available.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Experiment Participation -->
+                <div class="column is-12-mobile {% if current_user_role == 'admin' %}is-6-tablet is-3-desktop{% else %}is-6-tablet{% endif %}" style="display: flex;">
                     <!--Box-->
                      <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Experiments this user owns or participates in.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <div class="box-lines">
                                 <div style="margin-bottom: 15px;">
                                     <b style="display: block; margin-bottom: 8px;">Owned Experiments</b>
@@ -416,13 +442,13 @@ input:checked + .slider:before {
 
                 {% if current_user_role == "admin" %}
                 <!-- Add to Experiment section (admin only) -->
-                <div class="column is-6" style="display: flex;">
+                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Grant this user access to participate in an experiment.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">
