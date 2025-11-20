@@ -20,11 +20,13 @@ def test_admin_user_model_has_telemetry_fields():
     app = Flask(__name__)
     db_fd, db_path = tempfile.mkstemp()
 
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     db = SQLAlchemy(app)
 
@@ -48,7 +50,7 @@ def test_admin_user_model_has_telemetry_fields():
             email="admin@test.com",
             password=generate_password_hash("TestPass123!"),
             role="admin",
-            last_seen=""
+            last_seen="",
         )
         db.session.add(user)
         db.session.commit()
@@ -72,11 +74,13 @@ def test_telemetry_enabled_default_value():
     app = Flask(__name__)
     db_fd, db_path = tempfile.mkstemp()
 
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     db = SQLAlchemy(app)
 
@@ -99,7 +103,7 @@ def test_telemetry_enabled_default_value():
             email="newuser@test.com",
             password=generate_password_hash("TestPass123!"),
             role="admin",
-            last_seen=""
+            last_seen="",
         )
         db.session.add(user)
         db.session.commit()
@@ -118,11 +122,13 @@ def test_telemetry_notice_shown_default_value():
     app = Flask(__name__)
     db_fd, db_path = tempfile.mkstemp()
 
-    app.config.update({
-        "TESTING": True,
-        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
-        "SQLALCHEMY_TRACK_MODIFICATIONS": False,
-    })
+    app.config.update(
+        {
+            "TESTING": True,
+            "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}",
+            "SQLALCHEMY_TRACK_MODIFICATIONS": False,
+        }
+    )
 
     db = SQLAlchemy(app)
 
@@ -145,7 +151,7 @@ def test_telemetry_notice_shown_default_value():
             email="newuser@test.com",
             password=generate_password_hash("TestPass123!"),
             role="admin",
-            last_seen=""
+            last_seen="",
         )
         db.session.add(user)
         db.session.commit()
@@ -161,6 +167,7 @@ def test_telemetry_notice_shown_default_value():
 
 def test_telemetry_class_checks_user_preference_enabled():
     """Test that Telemetry class respects enabled preference."""
+
     # Create a simple mock user object
     class MockUser:
         def __init__(self):
@@ -174,6 +181,7 @@ def test_telemetry_class_checks_user_preference_enabled():
 
 def test_telemetry_class_checks_user_preference_disabled():
     """Test that Telemetry class respects disabled preference."""
+
     # Create a simple mock user object
     class MockUser:
         def __init__(self):
@@ -193,6 +201,7 @@ def test_telemetry_class_defaults_to_enabled_no_user():
 
 def test_telemetry_does_not_send_when_disabled():
     """Test that Telemetry does not send data when disabled."""
+
     # Create a simple mock user object
     class MockUser:
         def __init__(self):
@@ -212,6 +221,7 @@ def test_telemetry_does_not_send_when_disabled():
 
 def test_telemetry_user_attribute_handling():
     """Test that Telemetry handles users without telemetry_enabled attribute."""
+
     # Create a mock user without telemetry_enabled
     class MockUserWithoutAttr:
         def __init__(self):
@@ -225,6 +235,7 @@ def test_telemetry_user_attribute_handling():
 
 def test_telemetry_anonymous_user_handling():
     """Test that Telemetry handles anonymous/unauthenticated users."""
+
     # Create a mock anonymous user
     class MockAnonymousUser:
         def __init__(self):
@@ -234,4 +245,3 @@ def test_telemetry_anonymous_user_handling():
     telemetry = Telemetry(user=user)
     # Should default to enabled for anonymous users
     assert telemetry.enabled is True
-

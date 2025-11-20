@@ -871,7 +871,9 @@ def update_telemetry_preference():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
-        flash("Access denied. Only administrators can modify telemetry settings.", "error")
+        flash(
+            "Access denied. Only administrators can modify telemetry settings.", "error"
+        )
         return redirect(url_for("admin.dashboard"))
 
     # Only allow admins to update their own telemetry settings
@@ -893,7 +895,7 @@ def update_telemetry_preference():
 
     flash(
         f"Telemetry {'enabled' if telemetry_enabled else 'disabled'} successfully.",
-        "success"
+        "success",
     )
     return redirect(url_for("users.user_details", uid=user_id_int))
 
