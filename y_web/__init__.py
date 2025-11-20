@@ -247,8 +247,8 @@ def cleanup_db_jupyter_with_new_app():
                         print(
                             "Database session committed and closed successfully (new context)"
                         )
-                except Exception as e1:
-                    print(f"Error during DB cleanup with {dbms} app:", e1)
+                except Exception:  # as e1:
+                    # print(f"Error during DB cleanup with {dbms} app:", e1)
                     pass
 
     except Exception as e:
