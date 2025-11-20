@@ -106,6 +106,19 @@
                                     <span class="left">Perspective API</span>
                                     <span class="right">{% if user.perspective_api is none %} Not {% endif %} Configured </span>
                                 </div>
+                                
+                                {% if current_user_role == 'admin' %}
+                                <hr>
+                                <b>System Updates</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Check for new YSocial releases.</p>
+                                <div class="box-line">
+                                    <form action="/admin/check_for_updates" method="POST" style="margin: 0;">
+                                        <button type="submit" class="button is-solid primary-button" style="width: 100%;">
+                                            <i class="mdi mdi-update"></i> Check for Updates
+                                        </button>
+                                    </form>
+                                </div>
+                                {% endif %}
                             </div>
 
                             <div class="buttons" style="display: flex; justify-content: right">
