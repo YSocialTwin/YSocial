@@ -548,7 +548,6 @@ def create_client():
     config = {
         "servers": {
             "llm": llm,
-            #    "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),
@@ -1004,7 +1003,7 @@ def create_client():
                     "vote": vote,
                     "share_link": share_link,
                 },
-                "llm": llm,
+                "llm": ag_type,
                 "probability_of_secondary_follow": probability_of_secondary_follow,
                 "crecsys": crecsys,
                 "frecsys": frecsys,
