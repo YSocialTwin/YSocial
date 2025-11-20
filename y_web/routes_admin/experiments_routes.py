@@ -1228,7 +1228,7 @@ def create_experiment():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
             "action": "create_experiment",

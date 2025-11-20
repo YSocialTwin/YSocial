@@ -1,5 +1,59 @@
 {% include "admin/head.html" %}
 
+<style>
+/* Toggle switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #039be5;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -108,6 +162,23 @@
                                 </div>
                                 
                                 {% if current_user_role == 'admin' %}
+                                <hr>
+                                <b>Telemetry Settings</b>
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Control anonymous usage data collection for improving YSocial.</p>
+                                <div class="box-line">
+                                    <form action="/admin/update_telemetry_preference" method="POST" style="margin: 0;">
+                                        <input type="hidden" name="user_id" value="{{ user.id }}">
+                                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                                            <span style="font-size: 0.9em;">Telemetry Data Collection</span>
+                                            <label class="switch" style="margin: 0;">
+                                                <input type="checkbox" name="telemetry_enabled" value="1" 
+                                                       {% if user.telemetry_enabled %}checked{% endif %}
+                                                       onchange="this.form.submit()">
+                                                <span class="slider round"></span>
+                                            </label>
+                                        </div>
+                                    </form>
+                                </div>
                                 <hr>
                                 <b>System Updates</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Check for new YSocial releases.</p>

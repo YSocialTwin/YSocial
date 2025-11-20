@@ -194,6 +194,12 @@ def dashboard():
 
     has_jupyter_sessions = len(jupyter_instances) > 0
 
+    # Check if admin needs to see telemetry notice (first login)
+    show_telemetry_notice = (
+        user.role == "admin" 
+        and not user.telemetry_notice_shown
+    )
+
     return render_template(
         "admin/dashboard.html",
         experiments=res,
@@ -213,6 +219,8 @@ def dashboard():
         per_page=per_page,
         total_experiments=total_experiments,
         total_pages=total_pages,
+        # Telemetry notice
+        show_telemetry_notice=show_telemetry_notice,
     )
 
 
@@ -387,3 +395,25 @@ def about():
     """
     check_privileges(current_user.username)
     return render_template("admin/about.html")
+
+
+@admin.route("/admin/dismiss_telemetry_notice", methods=["POST"])
+@login_required
+def dismiss_telemetry_notice():
+    """
+    Mark telemetry notice as shown for the current admin user.
+
+    Returns:
+        JSON response with success status
+    """
+    from . import db
+    
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    if not user or user.role != "admin":
+        return jsonify({"success": False, "message": "Access denied"}), 403
+    
+    user.telemetry_notice_shown = True
+    db.session.commit()
+    
+    return jsonify({"success": True})

@@ -201,6 +201,7 @@ def user_details(uid):
         none=None,
         llm_backend=llm_backend,
         models=models,
+        current_user_role=current_admin_user.role,
     )
 
 
@@ -844,6 +845,57 @@ def bulk_assign_users():
         flash(f"Error during bulk assignment: {str(e)}", "error")
 
     return redirect(url_for("users.user_data"))
+
+
+@users.route("/admin/update_telemetry_preference", methods=["POST"])
+@login_required
+def update_telemetry_preference():
+    """
+    Update user's telemetry preference (admin only).
+
+    Returns:
+        Redirect to user details page
+    """
+    user_id = request.form.get("user_id")
+
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        flash("Access denied. Only administrators can modify telemetry settings.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    # Only allow admins to update their own telemetry settings
+    if current_admin_user.id != user_id_int:
+        flash("You can only modify your own telemetry settings.", "error")
+        return redirect(url_for("users.user_details", uid=user_id_int))
+
+    # Get telemetry preference from form
+    telemetry_enabled = request.form.get("telemetry_enabled") == "1"
+
+    # Update user's telemetry preference
+    user = Admin_users.query.filter_by(id=user_id_int).first()
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("users.user_data"))
+
+    user.telemetry_enabled = telemetry_enabled
+    db.session.commit()
+
+    flash(
+        f"Telemetry {'enabled' if telemetry_enabled else 'disabled'} successfully.",
+        "success"
+    )
+    return redirect(url_for("users.user_details", uid=user_id_int))
 
 
 @users.route("/admin/check_for_updates", methods=["POST"])

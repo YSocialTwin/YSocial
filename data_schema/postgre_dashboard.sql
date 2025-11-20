@@ -7,16 +7,18 @@
 -- Admin users
 -- -----------------------------
 CREATE TABLE admin_users (
-    id              SERIAL PRIMARY KEY,
-    username        TEXT,
-    email           TEXT,
-    password        TEXT,
-    last_seen       TEXT,
-    role            TEXT,
-    llm             TEXT DEFAULT '',
-    profile_pic     TEXT DEFAULT '',
-    perspective_api TEXT DEFAULT NULL,
-    llm_url         TEXT DEFAULT ''
+    id                    SERIAL PRIMARY KEY,
+    username              TEXT,
+    email                 TEXT,
+    password              TEXT,
+    last_seen             TEXT,
+    role                  TEXT,
+    llm                   TEXT DEFAULT '',
+    profile_pic           TEXT DEFAULT '',
+    perspective_api       TEXT DEFAULT NULL,
+    llm_url               TEXT DEFAULT '',
+    telemetry_enabled     BOOLEAN DEFAULT TRUE,
+    telemetry_notice_shown BOOLEAN DEFAULT FALSE
 );
 
 -- -----------------------------

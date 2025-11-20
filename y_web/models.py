@@ -363,6 +363,8 @@ class Admin_users(UserMixin, db.Model):
     llm_url = db.Column(db.String(200), default="")
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
+    telemetry_enabled = db.Column(db.Boolean, default=True)
+    telemetry_notice_shown = db.Column(db.Boolean, default=False)
 
     def get_id(self):
         """Return user ID with 'admin_' prefix for Flask-Login."""

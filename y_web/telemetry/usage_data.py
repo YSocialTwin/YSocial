@@ -11,10 +11,12 @@ from y_web.pyinstaller_utils import installation_id
 
 class Telemetry(object):
 
-    def __init__(self, host="telemetry.y-not.social", port=9000):
+    def __init__(self, host="telemetry.y-not.social", port=9000, user=None):
         self.host = host
         self.port = port
         self.uuid = None
+        self.user = user
+        self.enabled = self._check_telemetry_enabled()
 
         config_dir = installation_id.get_installation_config_dir()
 
@@ -30,6 +32,26 @@ class Telemetry(object):
         else:
             self.uuid = None
 
+    def _check_telemetry_enabled(self):
+        """
+        Check if telemetry is enabled for the current user.
+        
+        Returns:
+            bool: True if telemetry is enabled, False otherwise
+        """
+        if self.user is None:
+            return True  # Default to enabled if no user context
+        
+        # Check if user is authenticated
+        if not hasattr(self.user, 'is_authenticated') or not self.user.is_authenticated:
+            return True  # Default to enabled for anonymous users
+        
+        # Check if user has telemetry_enabled attribute (Admin_users)
+        if hasattr(self.user, 'telemetry_enabled'):
+            return bool(self.user.telemetry_enabled)
+        
+        return True  # Default to enabled if attribute doesn't exist
+
     def register_update_app(self, data, action="register"):
         """
         Register or update app installation on telemetry server using endpoints
@@ -37,6 +59,8 @@ class Telemetry(object):
         :param action:
         :return:
         """
+        if not self.enabled:
+            return False
 
         try:
             config_dir = installation_id.get_installation_config_dir()
@@ -64,6 +88,8 @@ class Telemetry(object):
         :param data:
         :return:
         """
+        if not self.enabled:
+            return False
 
         data["uiid"] = self.uuid
         data["timestamp"] = (
@@ -84,6 +110,8 @@ class Telemetry(object):
         :param data:
         :return:
         """
+        if not self.enabled:
+            return False
 
         stacktrace = data["stacktrace"]
         safe_trace = self.__anonymize_traceback(stacktrace)

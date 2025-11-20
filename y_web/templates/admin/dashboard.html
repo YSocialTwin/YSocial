@@ -643,4 +643,80 @@
     }
 </script>
 
+{% if show_telemetry_notice %}
+<!-- Telemetry Information Overlay -->
+<div id="telemetry-overlay" style="
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    max-width: 500px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 10000;
+    padding: 20px;
+    font-family: 'Roboto', sans-serif;
+">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+        <h3 style="margin: 0; font-size: 1.1em; color: #333;">
+            <i class="mdi mdi-information" style="color: #039be5;"></i> 
+            Telemetry Information
+        </h3>
+        <button onclick="dismissTelemetryNotice()" style="
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            line-height: 1;
+        ">&times;</button>
+    </div>
+    
+    <div style="color: #555; font-size: 0.95em; line-height: 1.6;">
+        <p style="margin: 0 0 10px 0;">
+            <strong>What is collected:</strong> YSocial collects anonymous usage data to help us improve the platform. 
+            This includes feature usage patterns and error reports, but <strong>never includes</strong> your experiment data, 
+            personal information, or any sensitive content.
+        </p>
+        
+        <p style="margin: 0 0 10px 0;">
+            <strong>GDPR Compliance:</strong> All telemetry data is anonymized and stored securely. 
+            You have the right to disable telemetry at any time from your 
+            <a href="/admin/user_details/{{ current_user.id }}" style="color: #039be5; text-decoration: underline;">user details page</a>.
+        </p>
+        
+        <p style="margin: 0; font-size: 0.9em; color: #777;">
+            Telemetry is currently <strong>enabled</strong> by default. You can change this preference in your settings.
+        </p>
+    </div>
+    
+    <div style="margin-top: 15px; text-align: right;">
+        <button onclick="dismissTelemetryNotice()" style="
+            background: #039be5;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.95em;
+        ">Got it</button>
+    </div>
+</div>
+
+<script>
+function dismissTelemetryNotice() {
+    fetch('/admin/dismiss_telemetry_notice', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(() => {
+        document.getElementById('telemetry-overlay').style.display = 'none';
+    });
+}
+</script>
+{% endif %}
+
 {% include "admin/footer.html" %}

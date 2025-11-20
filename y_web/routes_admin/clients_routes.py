@@ -979,7 +979,7 @@ def create_client():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         data={
             "action": "create_client",
