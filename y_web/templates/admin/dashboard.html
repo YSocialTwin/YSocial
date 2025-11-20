@@ -647,61 +647,57 @@
 <!-- Telemetry Information Overlay -->
 <div id="telemetry-overlay" style="
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    max-width: 500px;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 600px;
     background: white;
     border: 1px solid #ddd;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.12);
     z-index: 10000;
-    padding: 20px;
+    padding: 12px 16px;
     font-family: 'Roboto', sans-serif;
 ">
-    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
-        <h3 style="margin: 0; font-size: 1.1em; color: #333;">
-            <i class="mdi mdi-information" style="color: #039be5;"></i> 
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <h4 style="margin: 0; font-size: 0.85em; color: #666; font-weight: 600;">
+            <i class="mdi mdi-information" style="color: #039be5; font-size: 1em;"></i> 
             Telemetry Information
-        </h3>
+        </h4>
         <button onclick="dismissTelemetryNotice()" style="
             background: none;
             border: none;
-            font-size: 1.5em;
+            font-size: 1.3em;
             color: #999;
             cursor: pointer;
             padding: 0;
             line-height: 1;
+            margin-left: 10px;
         ">&times;</button>
     </div>
     
-    <div style="color: #555; font-size: 0.95em; line-height: 1.6;">
-        <p style="margin: 0 0 10px 0;">
-            <strong>What is collected:</strong> YSocial collects anonymous usage data to help us improve the platform. 
-            This includes feature usage patterns and error reports, but <strong>never includes</strong> your experiment data, 
-            personal information, or any sensitive content.
+    <div style="color: #777; font-size: 0.8em; line-height: 1.4;">
+        <p style="margin: 0 0 6px 0;">
+            YSocial collects anonymous usage data to improve the platform. This includes feature usage patterns and error reports, but <strong>never</strong> your experiment data, personal information, or sensitive content.
         </p>
         
-        <p style="margin: 0 0 10px 0;">
-            <strong>GDPR Compliance:</strong> All telemetry data is anonymized and stored securely. 
-            You have the right to disable telemetry at any time from your 
-            <a href="/admin/user_details/{{ current_user.id }}" style="color: #039be5; text-decoration: underline;">user details page</a>.
+        <p style="margin: 0 0 6px 0;">
+            All telemetry data is anonymized and GDPR compliant. You can disable it anytime from your 
+            <a href="/admin/user_details/{{ current_user.id }}" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">user settings</a>.
         </p>
         
-        <p style="margin: 0; font-size: 0.9em; color: #777;">
-            Telemetry is currently <strong>enabled</strong> by default. You can change this preference in your settings.
-        </p>
-    </div>
-    
-    <div style="margin-top: 15px; text-align: right;">
-        <button onclick="dismissTelemetryNotice()" style="
-            background: #039be5;
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.95em;
-        ">Got it</button>
+        <div style="margin-top: 8px; text-align: right;">
+            <button onclick="dismissTelemetryNotice()" style="
+                background: #039be5;
+                color: white;
+                border: none;
+                padding: 5px 14px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.8em;
+                font-weight: 500;
+            ">Got it</button>
+        </div>
     </div>
 </div>
 
