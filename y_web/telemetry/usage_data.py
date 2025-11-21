@@ -10,7 +10,7 @@ from y_web.pyinstaller_utils import installation_id
 
 
 class Telemetry(object):
-#telemetry.y-not.social
+    # telemetry.y-not.social
     def __init__(self, host="localhost", port=9000, user=None):
         self.host = host
         self.port = port

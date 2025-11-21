@@ -59,10 +59,7 @@ def login_post():
         from y_web.telemetry import Telemetry
 
         telemetry = Telemetry()
-        telemetry.log_event({
-            "action": "login",
-            "data": {"role": user.role}
-        })
+        telemetry.log_event({"action": "login", "data": {"role": user.role}})
     except Exception as e:
         print(f"Failed to log start event: {e}")
 
@@ -230,14 +227,12 @@ def logout():
     """
 
     try:
-        from y_web.telemetry import Telemetry
         from flask_login import current_user
 
+        from y_web.telemetry import Telemetry
+
         telemetry = Telemetry()
-        telemetry.log_event({
-            "action": "logout",
-            "data": {"role": current_user.role}
-        })
+        telemetry.log_event({"action": "logout", "data": {"role": current_user.role}})
     except Exception as e:
         print(f"Failed to log start event: {e}")
 
