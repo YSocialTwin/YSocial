@@ -1003,7 +1003,7 @@ def create_client():
                     "vote": vote,
                     "share_link": share_link,
                 },
-                "llm": ag_type,
+                "llm": user_type,
                 "probability_of_secondary_follow": probability_of_secondary_follow,
                 "crecsys": crecsys,
                 "frecsys": frecsys,
