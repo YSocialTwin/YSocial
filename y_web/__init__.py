@@ -201,6 +201,7 @@ def cleanup_db_jupyter_with_new_app():
     # Log service stop event
     try:
         from y_web.telemetry import Telemetry
+        
         telemetry = Telemetry()
         telemetry.log_event({
             "action": "stop"
@@ -526,6 +527,15 @@ def create_app(db_type="sqlite", desktop_mode=False):
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
     
-
+    # Log service start event
+    try:
+        from y_web.telemetry import Telemetry
+        
+        telemetry = Telemetry()
+        telemetry.log_event({
+            "action": "start"
+        })
+    except Exception as e:
+        print(f"Failed to log start event: {e}")
 
     return app
