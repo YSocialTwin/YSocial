@@ -47,38 +47,43 @@ def get_language():
         import locale
         import os
 
-        # Try environment variables first (most reliable for system locale)
+        # Try locale.getdefaultlocale() first (most reliable)
+        try:
+            default_locale = locale.getdefaultlocale()
+            if default_locale and default_locale[0] and "_" in default_locale[0]:
+                language = default_locale[0].split("_")[0]
+                if language and len(language) >= 2 and not language.startswith("C"):
+                    return language[:2].lower()
+        except Exception:
+            pass
+
+        # Try environment variables
         for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']:
             env_locale = os.environ.get(env_var)
             if env_locale:
                 # Handle format like "en_US.UTF-8" or "en_US"
                 if "_" in env_locale:
                     language = env_locale.split("_")[0]
-                    if language and len(language) >= 2:
+                    if language and len(language) >= 2 and not language.startswith("C"):
                         return language[:2].lower()
-                # Handle format like "C.UTF-8" or "C" (default to en)
-                elif env_locale.startswith("C"):
-                    continue
 
-        # Try locale.getdefaultlocale()
+        # Try locale.getlocale() as fallback
         try:
-            default_locale = locale.getdefaultlocale()
-            if default_locale and default_locale[0]:
-                if "_" in default_locale[0]:
-                    language = default_locale[0].split("_")[0]
-                    if language and len(language) >= 2:
-                        return language[:2].lower()
+            current_locale = locale.getlocale()[0]
+            if current_locale and current_locale != 'C' and "_" in current_locale:
+                language = current_locale.split("_")[0]
+                if language and len(language) >= 2:
+                    return language[:2].lower()
         except Exception:
             pass
 
-        # Fallback to getlocale
+        # Try locale.getlocale(locale.LC_ALL) as final fallback
         try:
-            current_locale = locale.getlocale()[0]
-            if current_locale and current_locale != 'C':
-                if "_" in current_locale:
-                    language = current_locale.split("_")[0]
-                    if language and len(language) >= 2:
-                        return language[:2].lower()
+            loc = locale.getlocale(locale.LC_ALL)
+            if loc and loc[0] and loc[0] != 'C' and "_" in loc[0]:
+                language = loc[0].split("_")[0]
+                if language and len(language) >= 2:
+                    return language[:2].lower()
         except Exception:
             pass
 
@@ -100,38 +105,46 @@ def estimate_country_code():
         import locale
         import os
 
-        # Try environment variables first (most reliable for system locale)
+        # Try locale.getdefaultlocale() first (most reliable)
+        try:
+            default_locale = locale.getdefaultlocale()
+            if default_locale and default_locale[0] and "_" in default_locale[0]:
+                country = default_locale[0].split("_")[1].split(".")[0]
+                if country and len(country) == 2:
+                    return country.upper()
+        except Exception:
+            pass
+
+        # Try environment variables
         for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']:
             env_locale = os.environ.get(env_var)
             if env_locale:
                 # Handle format like "en_US.UTF-8" or "en_US"
-                if "_" in env_locale:
-                    parts = env_locale.split("_")[1].split(".")[0]
-                    if parts and len(parts) == 2:
-                        return parts.upper()
-                # Handle format like "C.UTF-8" or "C" (skip)
-                elif env_locale.startswith("C"):
-                    continue
+                if "_" in env_locale and not env_locale.startswith("C"):
+                    try:
+                        country = env_locale.split("_")[1].split(".")[0]
+                        if country and len(country) == 2:
+                            return country.upper()
+                    except (IndexError, AttributeError):
+                        continue
 
-        # Try locale.getdefaultlocale()
+        # Try locale.getlocale() as fallback
         try:
-            default_locale = locale.getdefaultlocale()
-            if default_locale and default_locale[0]:
-                if "_" in default_locale[0]:
-                    country = default_locale[0].split("_")[1].split(".")[0]
-                    if country and len(country) == 2:
-                        return country.upper()
+            current_locale = locale.getlocale()[0]
+            if current_locale and current_locale != 'C' and "_" in current_locale:
+                country = current_locale.split("_")[1].split(".")[0]
+                if country and len(country) == 2:
+                    return country.upper()
         except Exception:
             pass
 
-        # Fallback to getlocale
+        # Try locale.getlocale(locale.LC_ALL) as final fallback
         try:
-            current_locale = locale.getlocale()[0]
-            if current_locale and current_locale != 'C':
-                if "_" in current_locale:
-                    country = current_locale.split("_")[1].split(".")[0]
-                    if country and len(country) == 2:
-                        return country.upper()
+            loc = locale.getlocale(locale.LC_ALL)
+            if loc and loc[0] and loc[0] != 'C' and "_" in loc[0]:
+                country = loc[0].split("_")[1].split(".")[0]
+                if country and len(country) == 2:
+                    return country.upper()
         except Exception:
             pass
 
