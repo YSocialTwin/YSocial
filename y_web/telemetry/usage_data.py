@@ -10,8 +10,8 @@ from y_web.pyinstaller_utils import installation_id
 
 
 class Telemetry(object):
-
-    def __init__(self, host="telemetry.y-not.social", port=9000, user=None):
+#telemetry.y-not.social
+    def __init__(self, host="localhost", port=9000, user=None):
         self.host = host
         self.port = port
         self.uuid = None
@@ -95,6 +95,9 @@ class Telemetry(object):
         data["timestamp"] = (
             datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         )
+
+        if "data" not in data:
+            data["data"] = {}
 
         try:
             response = requests.post(

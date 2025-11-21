@@ -54,6 +54,18 @@ def login_post():
         flash("Please check your login details and try again.")
         return redirect(url_for("auth.login"))
 
+        # Log service start event
+    try:
+        from y_web.telemetry import Telemetry
+
+        telemetry = Telemetry()
+        telemetry.log_event({
+            "action": "login",
+            "data": {"role": user.role}
+        })
+    except Exception as e:
+        print(f"Failed to log start event: {e}")
+
     # Handle different roles
     if user.role == "user":
         # Regular users: need to select experiment
@@ -216,5 +228,19 @@ def logout():
     Returns:
         Rendered login template after logout
     """
+
+    try:
+        from y_web.telemetry import Telemetry
+        from flask_login import current_user
+
+        telemetry = Telemetry()
+        telemetry.log_event({
+            "action": "logout",
+            "data": {"role": current_user.role}
+        })
+    except Exception as e:
+        print(f"Failed to log start event: {e}")
+
     logout_user()
+
     return render_template("login.html")
