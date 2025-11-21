@@ -431,15 +431,13 @@ def get_or_create_installation_id():
         print(f"  OS Version: {installation_info['os_version']}")
         print(f"  Installation Type: {installation_info['installation_type']}")
         print(f"  Python Version: {installation_info['python_version']}")
-        print(f"  Version: {installation_info['version']}")
+        print(f"  YSocial Version: {installation_info['version']}")
         print(f"  Config saved to: {id_file}")
     except Exception as e:
         print(f"Warning: Could not save installation ID: {e}")
 
     telemetry = Telemetry()
     telemetry.register_update_app(installation_info, action="register")
-
-    print(installation_info)
 
     return installation_info
 
