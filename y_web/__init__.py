@@ -352,6 +352,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     db.init_app(app)
     login_manager.init_app(app)
 
+    app.config['SESSION_COOKIE_NAME'] = 'YSocial_session'
+
     from .models import Admin_users, User_mgmt
 
     @login_manager.user_loader
