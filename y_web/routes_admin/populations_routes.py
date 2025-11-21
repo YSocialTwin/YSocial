@@ -224,8 +224,7 @@ def create_population():
         {
             "event": "create_population",
             "data": {
-                "n_agents": n_agents,
-                "interests": interests,
+                "n_agents": n_agents
             },
         }
     )
