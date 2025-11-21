@@ -47,7 +47,28 @@ def get_language():
         import locale
         import os
 
-        # Try locale.getdefaultlocale() first (most reliable)
+        # Try locale.setlocale to get actual system locale (works on macOS)
+        try:
+            # Save current locale
+            saved_locale = locale.getlocale(locale.LC_CTYPE)
+            try:
+                # Set to user's default locale
+                locale.setlocale(locale.LC_CTYPE, '')
+                current = locale.getlocale(locale.LC_CTYPE)
+                if current and current[0] and current[0] != 'C' and "_" in current[0]:
+                    language = current[0].split("_")[0]
+                    if language and len(language) >= 2:
+                        return language[:2].lower()
+            finally:
+                # Restore original locale
+                try:
+                    locale.setlocale(locale.LC_CTYPE, saved_locale)
+                except:
+                    pass
+        except Exception:
+            pass
+
+        # Try locale.getdefaultlocale()
         try:
             default_locale = locale.getdefaultlocale()
             if default_locale and default_locale[0] and "_" in default_locale[0]:
@@ -58,7 +79,7 @@ def get_language():
             pass
 
         # Try environment variables
-        for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']:
+        for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LC_CTYPE']:
             env_locale = os.environ.get(env_var)
             if env_locale:
                 # Handle format like "en_US.UTF-8" or "en_US"
@@ -105,7 +126,28 @@ def estimate_country_code():
         import locale
         import os
 
-        # Try locale.getdefaultlocale() first (most reliable)
+        # Try locale.setlocale to get actual system locale (works on macOS)
+        try:
+            # Save current locale
+            saved_locale = locale.getlocale(locale.LC_CTYPE)
+            try:
+                # Set to user's default locale
+                locale.setlocale(locale.LC_CTYPE, '')
+                current = locale.getlocale(locale.LC_CTYPE)
+                if current and current[0] and current[0] != 'C' and "_" in current[0]:
+                    country = current[0].split("_")[1].split(".")[0]
+                    if country and len(country) == 2:
+                        return country.upper()
+            finally:
+                # Restore original locale
+                try:
+                    locale.setlocale(locale.LC_CTYPE, saved_locale)
+                except:
+                    pass
+        except Exception:
+            pass
+
+        # Try locale.getdefaultlocale()
         try:
             default_locale = locale.getdefaultlocale()
             if default_locale and default_locale[0] and "_" in default_locale[0]:
@@ -116,7 +158,7 @@ def estimate_country_code():
             pass
 
         # Try environment variables
-        for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES']:
+        for env_var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LC_CTYPE']:
             env_locale = os.environ.get(env_var)
             if env_locale:
                 # Handle format like "en_US.UTF-8" or "en_US"
@@ -399,14 +441,55 @@ def get_or_create_installation_id():
 
     return installation_info
 
-    telemetry = Telemetry()
-    telemetry.register_update_app(installation_info, action="register")
-
-    return installation_info
-
 
 if __name__ == "__main__":
+    import locale as locale_module
+    import os as os_module
+    
+    # Debug locale detection
+    print("=" * 70)
+    print("LOCALE DETECTION DEBUG")
+    print("=" * 70)
+    
+    # Check environment variables
+    print("\nEnvironment Variables:")
+    for var in ['LANG', 'LANGUAGE', 'LC_ALL', 'LC_MESSAGES', 'LC_CTYPE']:
+        value = os_module.environ.get(var, '(not set)')
+        print(f"  {var}: {value}")
+    
+    # Check locale module methods
+    print("\nLocale Module Methods:")
+    
+    try:
+        dl = locale_module.getdefaultlocale()
+        print(f"  locale.getdefaultlocale(): {dl}")
+    except Exception as e:
+        print(f"  locale.getdefaultlocale(): Error - {e}")
+    
+    try:
+        gl = locale_module.getlocale()
+        print(f"  locale.getlocale(): {gl}")
+    except Exception as e:
+        print(f"  locale.getlocale(): Error - {e}")
+    
+    try:
+        saved = locale_module.getlocale(locale_module.LC_CTYPE)
+        locale_module.setlocale(locale_module.LC_CTYPE, '')
+        sl = locale_module.getlocale(locale_module.LC_CTYPE)
+        print(f"  locale.setlocale(LC_CTYPE, ''): {sl}")
+        locale_module.setlocale(locale_module.LC_CTYPE, saved)
+    except Exception as e:
+        print(f"  locale.setlocale(LC_CTYPE, ''): Error - {e}")
+    
+    # Test detection functions
+    print("\nDetected Values:")
+    print(f"  Language: {get_language()}")
+    print(f"  Country: {estimate_country_code()}")
+    
+    print("\n" + "=" * 70)
+    
     # Test the installation ID generation
+    print("\nGenerating Installation ID...")
     info = get_or_create_installation_id()
     print("\nInstallation Information:")
     print(json.dumps(info, indent=2))
