@@ -439,6 +439,8 @@ def get_or_create_installation_id():
     telemetry = Telemetry()
     telemetry.register_update_app(installation_info, action="register")
 
+    print(installation_info)
+
     return installation_info
 
 
