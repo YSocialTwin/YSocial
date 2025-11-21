@@ -197,18 +197,16 @@ def cleanup_db_jupyter_with_new_app():
     Call this from the main runner's shutdown handler or as final step in atexit.
     """
     print("Cleaning up db...")
-    
+
     # Log service stop event
     try:
         from y_web.telemetry import Telemetry
-        
+
         telemetry = Telemetry()
-        telemetry.log_event({
-            "action": "stop"
-        })
+        telemetry.log_event({"action": "stop"})
     except Exception as e:
         print(f"Failed to log stop event: {e}")
-    
+
     try:
         # Try to use existing app context first
         from flask import current_app
@@ -528,15 +526,13 @@ def create_app(db_type="sqlite", desktop_mode=False):
             update_release_info_in_db()
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
-    
+
     # Log service start event
     try:
         from y_web.telemetry import Telemetry
-        
+
         telemetry = Telemetry()
-        telemetry.log_event({
-            "action": "start"
-        })
+        telemetry.log_event({"action": "start"})
     except Exception as e:
         print(f"Failed to log start event: {e}")
 
