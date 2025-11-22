@@ -77,101 +77,7 @@
                         </div>
                     </div>
 
-                    {% if len(users) > 0 %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Registered Users</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Users with access to participate in this experiment.
-                        </p>
 
-                        <div class="box-content">
-                            <div class="box-lines">
-                                <div class="box-line">
-
-                                    <span class="left">
-                                        {% for user, user_exp in users %}
-                                            <a href="/admin/user_details/{{ user.id }}"
-                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ user.username }}</a>
-                                        {% endfor %}
-                                    </span>
-
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    {% endif %}
-
-                    {% if current_user.telemetry_enabled %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Something went wrong?</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Help us improve YSocial: submit the experiment log!
-                        </p>
-
-                        <div class="box-content">
-                            <div class="box-lines">
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
-                                    This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
-                                </p>
-                                <button 
-                                    id="submit-logs-btn-{{ experiment.idexp }}"
-                                    class="button is-info is-small" 
-                                    onclick="submitExperimentLogs({{ experiment.idexp }})"
-                                    style="width: 100%;">
-                                    <span class="icon"><i class="mdi mdi-upload"></i></span>
-                                    <span>Submit Logs</span>
-                                </button>
-                                <div id="submit-logs-message-{{ experiment.idexp }}" style="margin-top: 0.5em; font-size: 0.85em; display: none;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <script>
-                        function submitExperimentLogs(expId) {
-                            const btn = document.getElementById(`submit-logs-btn-${expId}`);
-                            const messageDiv = document.getElementById(`submit-logs-message-${expId}`);
-                            
-                            // Disable button and show loading
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
-                            messageDiv.style.display = 'none';
-                            
-                            // Submit logs
-                            fetch(`/admin/submit_experiment_logs/${expId}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                }
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                // Show message
-                                messageDiv.style.display = 'block';
-                                if (data.success) {
-                                    messageDiv.style.color = '#28a745';
-                                    messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
-                                } else {
-                                    messageDiv.style.color = '#dc3545';
-                                    messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
-                                }
-                                
-                                // Re-enable button
-                                btn.disabled = false;
-                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
-                            })
-                            .catch(error => {
-                                messageDiv.style.display = 'block';
-                                messageDiv.style.color = '#dc3545';
-                                messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
-                                
-                                // Re-enable button
-                                btn.disabled = false;
-                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
-                            });
-                        }
-                    </script>
-                    {% endif %}
 
                 </div>
 
@@ -426,6 +332,106 @@
 
                 </div>
 
+            </div>
+
+            <!-- Additional Row for Registered Users and Error Reporting -->
+            <div class="columns is-multiline" style="display: flex; align-items: stretch;">
+                {% if len(users) > 0 %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop" style="display: flex; flex-direction: column;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">Registered Users</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Users with access to participate in this experiment.
+                        </p>
+
+                        <div class="box-content" style="flex: 1;">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">
+                                        {% for user, user_exp in users %}
+                                            <a href="/admin/user_details/{{ user.id }}"
+                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ user.username }}</a>
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if current_user.telemetry_enabled %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop" style="display: flex; flex-direction: column;">
+                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                        <h3 class="title is-5 is-thin">Something went wrong?</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Help us improve YSocial: submit the experiment log!
+                        </p>
+
+                        <div class="box-content" style="flex: 1;">
+                            <div class="box-lines">
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
+                                    This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
+                                </p>
+                                <button 
+                                    id="submit-logs-btn-{{ experiment.idexp }}"
+                                    class="button is-info is-small" 
+                                    onclick="submitExperimentLogs({{ experiment.idexp }})"
+                                    style="width: 100%;">
+                                    <span class="icon"><i class="mdi mdi-upload"></i></span>
+                                    <span>Submit Logs</span>
+                                </button>
+                                <div id="submit-logs-message-{{ experiment.idexp }}" style="margin-top: 0.5em; font-size: 0.85em; display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function submitExperimentLogs(expId) {
+                            const btn = document.getElementById(`submit-logs-btn-${expId}`);
+                            const messageDiv = document.getElementById(`submit-logs-message-${expId}`);
+                            
+                            // Disable button and show loading
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
+                            messageDiv.style.display = 'none';
+                            
+                            // Submit logs
+                            fetch(`/admin/submit_experiment_logs/${expId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                // Show message
+                                messageDiv.style.display = 'block';
+                                if (data.success) {
+                                    messageDiv.style.color = '#28a745';
+                                    messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
+                                } else {
+                                    messageDiv.style.color = '#dc3545';
+                                    messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
+                                }
+                                
+                                // Re-enable button
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+                            })
+                            .catch(error => {
+                                messageDiv.style.display = 'block';
+                                messageDiv.style.color = '#dc3545';
+                                messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
+                                
+                                // Re-enable button
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+                            });
+                        }
+                    </script>
+                </div>
+                {% endif %}
             </div>
 
             <!-- Server Trends Visualization Section -->
