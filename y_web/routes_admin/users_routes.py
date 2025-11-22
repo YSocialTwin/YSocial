@@ -956,18 +956,14 @@ def mark_blog_post_read(post_id):
 
     from y_web.models import BlogPost
 
-    # Check if user is admin
-    user = Admin_users.query.filter_by(username=current_user.username).first()
-    if user.role != "admin":
+    # Check if user is admin using existing check_privileges helper
+    if not check_privileges(current_user.username):
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        blog_post = BlogPost.query.get(post_id)
-        if blog_post:
-            blog_post.is_read = True
-            db.session.commit()
-            return jsonify({"success": True})
-        else:
-            return jsonify({"error": "Blog post not found"}), 404
+        blog_post = BlogPost.query.get_or_404(post_id)
+        blog_post.is_read = True
+        db.session.commit()
+        return jsonify({"success": True})
     except Exception as e:
         return jsonify({"error": str(e)}), 500

@@ -21,26 +21,20 @@ def fetch_latest_blog_post():
               - link: URL to the blog post
               Returns None if unable to fetch or parse the feed.
     """
+    # Default fallback date for when publication date is not available
+    default_date = datetime.utcnow().isoformat()
+    
     try:
-        # Try multiple possible RSS feed URLs
-        feed_urls = [
-            "https://y-not.social/blog/rss.xml",
-            "https://y-not.social/rss.xml",
-            "https://y-not.social/blog/feed",
-            "https://y-not.social/blog/atom.xml",
-        ]
+        # Primary RSS feed URL
+        feed_url = "https://y-not.social/feed.xml"
 
-        response = None
-        for url in feed_urls:
-            try:
-                response = requests.get(url, timeout=10)
-                if response.status_code == 200:
-                    break
-            except Exception:
-                continue
-
-        if not response or response.status_code != 200:
-            print(f"Failed to fetch blog feed. Status: {response.status_code if response else 'No response'}")
+        try:
+            response = requests.get(feed_url, timeout=10, verify=True)
+            if response.status_code != 200:
+                print(f"Failed to fetch blog feed. Status: {response.status_code}")
+                return None
+        except Exception as e:
+            print(f"Error fetching blog feed: {e}")
             return None
 
         # Parse the RSS/Atom feed
@@ -59,7 +53,7 @@ def fetch_latest_blog_post():
                 return {
                     "title": title_elem.text,
                     "link": link_elem.text,
-                    "published_at": pub_date_elem.text if pub_date_elem is not None else datetime.utcnow().isoformat(),
+                    "published_at": pub_date_elem.text if pub_date_elem is not None else default_date,
                 }
 
         # Try Atom format
@@ -80,7 +74,7 @@ def fetch_latest_blog_post():
                 return {
                     "title": title_elem.text,
                     "link": link,
-                    "published_at": published_elem.text if published_elem is not None else datetime.utcnow().isoformat(),
+                    "published_at": published_elem.text if published_elem is not None else default_date,
                 }
 
         print("Could not parse blog feed - no valid item/entry found")
