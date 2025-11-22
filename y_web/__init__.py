@@ -478,16 +478,18 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     username=current_user.username
                 ).first()
                 if admin_user and admin_user.role == "admin":
-                    # Get unread blog posts
+                    # Get unread blog posts (is_read = 0 for SQLite, False for PostgreSQL)
                     latest_post = (
-                        BlogPost.query.filter_by(is_read=False)
+                        BlogPost.query.filter(
+                            (BlogPost.is_read == False) | (BlogPost.is_read == 0)
+                        )
                         .order_by(BlogPost.id.desc())
                         .first()
                     )
                     if latest_post:
                         return dict(new_blog_post_available=True, blog_post=latest_post)
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Error injecting blog post info: {e}")
         return dict(new_blog_post_available=False, blog_post=None)
 
     # Initialize database bindings for all active experiments

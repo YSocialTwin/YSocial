@@ -958,12 +958,25 @@ def mark_blog_post_read(post_id):
 
     # Check if user is admin using existing check_privileges helper
     if not check_privileges(current_user.username):
+        print(f"Access denied for user {current_user.username} marking blog post {post_id} as read")
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        blog_post = BlogPost.query.get_or_404(post_id)
+        blog_post = BlogPost.query.get(post_id)
+        if not blog_post:
+            print(f"Blog post {post_id} not found")
+            return jsonify({"error": "Blog post not found"}), 404
+            
+        print(f"Marking blog post {post_id} as read by {current_user.username}")
+        print(f"Current is_read value: {blog_post.is_read}")
+        # SQLAlchemy will handle boolean to integer conversion for SQLite
         blog_post.is_read = True
         db.session.commit()
-        return jsonify({"success": True})
+        # Verify the change
+        db.session.refresh(blog_post)
+        print(f"Blog post {post_id} successfully marked as read. New value: {blog_post.is_read}")
+        return jsonify({"success": True}), 200
     except Exception as e:
+        print(f"Error marking blog post {post_id} as read: {e}")
+        db.session.rollback()
         return jsonify({"error": str(e)}), 500

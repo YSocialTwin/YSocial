@@ -52,7 +52,7 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <a href="{{ blog_post.link }}" target="_blank" onclick="markBlogPostAsRead({{ blog_post.id }})" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+            <a href="{{ blog_post.link }}" target="_blank" onclick="markBlogPostAsRead(event, {{ blog_post.id }}, '{{ blog_post.link }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
                 <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
                 <span>Read Article</span>
             </a>
@@ -64,17 +64,32 @@
 </div>
 
 <script>
-function markBlogPostAsRead(postId) {
+function markBlogPostAsRead(event, postId, link) {
+    // Prevent default link behavior
+    event.preventDefault();
+    
     // Mark blog post as read when link is clicked
     fetch('/admin/mark_blog_post_read/' + postId, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    }).then(response => {
+        if (response.ok) {
+            // Hide the banner
+            document.getElementById('blog-banner').style.display = 'none';
+            // Open the link after marking as read
+            window.open(link, '_blank');
+        } else {
+            console.error('Failed to mark blog post as read:', response.status);
+            // Still open the link even if marking failed
+            window.open(link, '_blank');
         }
-    }).then(() => {
-        document.getElementById('blog-banner').style.display = 'none';
     }).catch(error => {
         console.error('Error marking blog post as read:', error);
+        // Still open the link even if marking failed
+        window.open(link, '_blank');
     });
 }
 
@@ -84,9 +99,14 @@ function dismissBlogPost(postId) {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin'
+    }).then(response => {
+        if (response.ok) {
+            document.getElementById('blog-banner').style.display = 'none';
+        } else {
+            console.error('Failed to dismiss blog post:', response.status);
         }
-    }).then(() => {
-        document.getElementById('blog-banner').style.display = 'none';
     }).catch(error => {
         console.error('Error dismissing blog post:', error);
     });
