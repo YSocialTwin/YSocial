@@ -100,7 +100,7 @@ def create_page():
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
-            "event": "create_page",
+            "action": "create_page",
             "data": {
                 "page_name": name,
                 "feed": feed,

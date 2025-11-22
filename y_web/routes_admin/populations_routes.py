@@ -222,7 +222,7 @@ def create_population():
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
-            "event": "create_population",
+            "action": "create_population",
             "data": {
                 "n_agents": n_agents
             },
