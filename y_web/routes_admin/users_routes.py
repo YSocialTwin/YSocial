@@ -956,8 +956,9 @@ def mark_blog_post_read(post_id):
 
     from y_web.models import BlogPost
 
-    # Check if user is admin using existing check_privileges helper
-    if not check_privileges(current_user.username):
+    # Check if user is admin/researcher using existing check_privileges helper
+    privilege_check = check_privileges(current_user.username)
+    if privilege_check:
         print(f"Access denied for user {current_user.username} marking blog post {post_id} as read")
         return jsonify({"error": "Access denied"}), 403
 
