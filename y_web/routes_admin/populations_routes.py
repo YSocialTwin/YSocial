@@ -223,9 +223,7 @@ def create_population():
     telemetry.log_event(
         {
             "action": "create_population",
-            "data": {
-                "n_agents": n_agents
-            },
+            "data": {"n_agents": n_agents},
         }
     )
 
