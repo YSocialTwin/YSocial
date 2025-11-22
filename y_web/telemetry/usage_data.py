@@ -142,84 +142,105 @@ class Telemetry(object):
     def submit_experiment_logs(self, experiment_id, experiment_folder_path):
         """
         Compress and send experiment log files and configuration to telemetry server.
-        
+
         :param experiment_id: ID of the experiment
         :param experiment_folder_path: Path to the experiment folder containing logs and configs
         :return: tuple (success: bool, message: str)
         """
         if not self.enabled:
-            return False, "Telemetry is disabled. Please enable it in your user settings."
-        
+            return (
+                False,
+                "Telemetry is disabled. Please enable it in your user settings.",
+            )
+
         temp_zip_path = None
         try:
             experiment_path = Path(experiment_folder_path)
-            
+
             if not experiment_path.exists():
                 return False, f"Experiment folder not found: {experiment_folder_path}"
-            
+
             # Create a temporary zip file
-            with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as temp_zip:
+            with tempfile.NamedTemporaryFile(suffix=".zip", delete=False) as temp_zip:
                 temp_zip_path = temp_zip.name
-            
+
             # Compress log files and JSON configuration files
-            with zipfile.ZipFile(temp_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            with zipfile.ZipFile(temp_zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
                 files_added = 0
-                for file_path in experiment_path.rglob('*'):
+                for file_path in experiment_path.rglob("*"):
                     if file_path.is_file():
                         # Include .log files and .json configuration files
-                        if file_path.suffix.lower() in ['.log', '.json']:
+                        if file_path.suffix.lower() in [".log", ".json"]:
                             # Add file to zip with relative path
                             arcname = file_path.relative_to(experiment_path)
                             zipf.write(file_path, arcname)
                             files_added += 1
-                
+
                 if files_added == 0:
                     os.unlink(temp_zip_path)
-                    return False, "No log or configuration files found in experiment folder."
-            
+                    return (
+                        False,
+                        "No log or configuration files found in experiment folder.",
+                    )
+
             # Check file size (10MB limit)
             file_size = os.path.getsize(temp_zip_path)
             max_size = 10 * 1024 * 1024  # 10MB in bytes
-            
+
             if file_size > max_size:
                 os.unlink(temp_zip_path)
                 size_mb = file_size / (1024 * 1024)
-                return False, f"Compressed file is too large ({size_mb:.1f}MB). Maximum allowed size is 10MB. Please contact the YSocial team for further support at {SUPPORT_EMAIL}"
-            
+                return (
+                    False,
+                    f"Compressed file is too large ({size_mb:.1f}MB). Maximum allowed size is 10MB. Please contact the YSocial team for further support at {SUPPORT_EMAIL}",
+                )
+
             # Prepare multipart form data
             timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-            
-            with open(temp_zip_path, 'rb') as f:
-                files = {'file': (f'experiment_{experiment_id}_logs.zip', f, 'application/zip')}
-                data = {
-                    'uiid': self.uuid,
-                    'timestamp': timestamp,
-                    'experiment_id': str(experiment_id)
+
+            with open(temp_zip_path, "rb") as f:
+                files = {
+                    "file": (
+                        f"experiment_{experiment_id}_logs.zip",
+                        f,
+                        "application/zip",
+                    )
                 }
-                
+                data = {
+                    "uiid": self.uuid,
+                    "timestamp": timestamp,
+                    "experiment_id": str(experiment_id),
+                }
+
                 try:
                     response = requests.post(
                         f"http://{self.host}:{self.port}/api/errors",
                         files=files,
                         data=data,
-                        timeout=30
+                        timeout=30,
                     )
-                    
+
                     # Clean up temp file
                     os.unlink(temp_zip_path)
-                    
+
                     if response.status_code == 200:
-                        return True, "Experiment logs submitted successfully. Thank you for helping improve YSocial!"
+                        return (
+                            True,
+                            "Experiment logs submitted successfully. Thank you for helping improve YSocial!",
+                        )
                     else:
-                        return False, f"Telemetry server returned error: {response.status_code}. Please check your telemetry configuration or contact support at {SUPPORT_EMAIL}"
-                        
+                        return (
+                            False,
+                            f"Telemetry server returned error: {response.status_code}. Please check your telemetry configuration or contact support at {SUPPORT_EMAIL}",
+                        )
+
                 except requests.exceptions.RequestException as e:
                     try:
                         os.unlink(temp_zip_path)
                     except OSError:
                         pass
                     return False, f"Failed to send logs: {str(e)}"
-                    
+
         except Exception as e:
             # Clean up temp file if it exists
             if temp_zip_path and os.path.exists(temp_zip_path):

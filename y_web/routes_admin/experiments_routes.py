@@ -1532,41 +1532,44 @@ def experiment_details(uid):
 def submit_experiment_logs(exp_id):
     """Submit experiment logs to telemetry server for troubleshooting."""
     check_privileges(current_user.username)
-    
+
     from y_web.telemetry import Telemetry
     from y_web.utils.path_utils import get_writable_path
-    
+
     # Get experiment details
     experiment = Exps.query.filter_by(idexp=exp_id).first()
     if not experiment:
         return jsonify({"success": False, "message": "Experiment not found"}), 404
-    
+
     # Check if telemetry is enabled for current user
     if not current_user.telemetry_enabled:
-        return jsonify({
-            "success": False, 
-            "message": "Telemetry is disabled. Please enable it in your user settings to submit logs."
-        })
-    
+        return jsonify(
+            {
+                "success": False,
+                "message": "Telemetry is disabled. Please enable it in your user settings to submit logs.",
+            }
+        )
+
     # Get experiment folder path
     BASE_DIR = get_writable_path()
-    
+
     # Extract experiment folder name from db_name
     # db_name format: "experiments{sep}{folder}{sep}database_server.db"
     db_name_parts = experiment.db_name.split(os.sep)
     if len(db_name_parts) < 2:
-        return jsonify({
-            "success": False, 
-            "message": "Invalid experiment database path format."
-        })
-    
+        return jsonify(
+            {"success": False, "message": "Invalid experiment database path format."}
+        )
+
     experiment_folder_name = db_name_parts[1]
-    experiment_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment_folder_name}"
-    
+    experiment_folder = (
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment_folder_name}"
+    )
+
     # Initialize telemetry and submit logs
     telemetry = Telemetry(user=current_user)
     success, message = telemetry.submit_experiment_logs(exp_id, experiment_folder)
-    
+
     return jsonify({"success": success, "message": message})
 
 
