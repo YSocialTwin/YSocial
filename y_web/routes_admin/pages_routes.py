@@ -97,10 +97,10 @@ def create_page():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
-            "event": "create_page",
+            "action": "create_page",
             "data": {
                 "page_name": name,
                 "feed": feed,

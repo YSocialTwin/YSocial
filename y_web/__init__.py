@@ -197,6 +197,16 @@ def cleanup_db_jupyter_with_new_app():
     Call this from the main runner's shutdown handler or as final step in atexit.
     """
     print("Cleaning up db...")
+
+    # Log service stop event
+    try:
+        from y_web.telemetry import Telemetry
+
+        telemetry = Telemetry()
+        telemetry.log_event({"action": "stop"})
+    except Exception as e:
+        print(f"Failed to log stop event: {e}")
+
     try:
         # Try to use existing app context first
         from flask import current_app
@@ -247,8 +257,8 @@ def cleanup_db_jupyter_with_new_app():
                         print(
                             "Database session committed and closed successfully (new context)"
                         )
-                except Exception as e1:
-                    print(f"Error during DB cleanup with {dbms} app:", e1)
+                except Exception:  # as e1:
+                    # print(f"Error during DB cleanup with {dbms} app:", e1)
                     pass
 
     except Exception as e:
@@ -339,6 +349,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     db.init_app(app)
     login_manager.init_app(app)
+
+    app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
     from .models import Admin_users, User_mgmt
 
@@ -514,5 +526,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
             update_release_info_in_db()
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
+
+    # Log service start event
+    try:
+        from y_web.telemetry import Telemetry
+
+        telemetry = Telemetry()
+        telemetry.log_event({"action": "start"})
+    except Exception as e:
+        print(f"Failed to log start event: {e}")
 
     return app

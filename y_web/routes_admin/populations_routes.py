@@ -219,14 +219,11 @@ def create_population():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
-            "event": "create_population",
-            "data": {
-                "n_agents": n_agents,
-                "interests": interests,
-            },
+            "action": "create_population",
+            "data": {"n_agents": n_agents},
         }
     )
 
