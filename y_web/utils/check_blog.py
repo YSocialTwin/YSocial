@@ -5,9 +5,10 @@ This module fetches the latest blog posts from the blog's RSS feed and
 stores them in the database for display in the admin dashboard.
 """
 
-import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime
+
+import requests
 
 
 def fetch_latest_blog_post():
@@ -23,7 +24,7 @@ def fetch_latest_blog_post():
     """
     # Default fallback date for when publication date is not available
     default_date = datetime.utcnow().isoformat()
-    
+
     try:
         # Primary RSS feed URL
         feed_url = "https://y-not.social/feed.xml"
@@ -53,7 +54,11 @@ def fetch_latest_blog_post():
                 return {
                     "title": title_elem.text,
                     "link": link_elem.text,
-                    "published_at": pub_date_elem.text if pub_date_elem is not None else default_date,
+                    "published_at": (
+                        pub_date_elem.text
+                        if pub_date_elem is not None
+                        else default_date
+                    ),
                 }
 
         # Try Atom format
@@ -70,11 +75,17 @@ def fetch_latest_blog_post():
                 published_elem = entry.find("atom:updated", ns)
 
             if title_elem is not None and link_elem is not None:
-                link = link_elem.get("href") if link_elem.get("href") else link_elem.text
+                link = (
+                    link_elem.get("href") if link_elem.get("href") else link_elem.text
+                )
                 return {
                     "title": title_elem.text,
                     "link": link,
-                    "published_at": published_elem.text if published_elem is not None else default_date,
+                    "published_at": (
+                        published_elem.text
+                        if published_elem is not None
+                        else default_date
+                    ),
                 }
 
         print("Could not parse blog feed - no valid item/entry found")
@@ -119,7 +130,7 @@ def update_blog_info_in_db():
                 latest_in_db.latest_check_on = check_time
                 db.session.commit()
                 print(f"No new blog post (latest: {blog_post.get('title')})")
-                
+
                 # Return the unread post if it exists
                 if not latest_in_db.is_read:
                     return True, {
@@ -160,5 +171,6 @@ def update_blog_info_in_db():
     except Exception as e:
         print(f"Error checking for blog posts: {e}")
         import traceback
+
         traceback.print_exc()
         return False, None
