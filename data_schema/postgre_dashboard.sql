@@ -325,6 +325,18 @@ CREATE TABLE release_info (
     latest_check_on     TEXT
 );
 
+-- -----------------------------
+-- Blog Posts
+-- -----------------------------
+CREATE TABLE blog_posts (
+    id                  SERIAL PRIMARY KEY,
+    title               TEXT,
+    published_at        TEXT,
+    link                TEXT,
+    is_read             BOOLEAN DEFAULT FALSE,
+    latest_check_on     TEXT
+);
+
 -- ================================================
 -- DATA INSERTIONS
 -- ================================================

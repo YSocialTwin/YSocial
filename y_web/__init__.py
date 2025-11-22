@@ -465,6 +465,33 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 pass
         return dict(new_release_available=False, release_info=None)
 
+    @app.context_processor
+    def inject_blog_post_info():
+        """Inject latest blog post information for admin users."""
+        from flask_login import current_user
+
+        from .models import Admin_users, BlogPost
+
+        if current_user.is_authenticated:
+            try:
+                admin_user = Admin_users.query.filter_by(
+                    username=current_user.username
+                ).first()
+                if admin_user and admin_user.role == "admin":
+                    # Get unread blog posts (is_read = 0 for SQLite, False for PostgreSQL)
+                    latest_post = (
+                        BlogPost.query.filter(
+                            (BlogPost.is_read == False) | (BlogPost.is_read == 0)
+                        )
+                        .order_by(BlogPost.id.desc())
+                        .first()
+                    )
+                    if latest_post:
+                        return dict(new_blog_post_available=True, blog_post=latest_post)
+            except Exception as e:
+                print(f"Error injecting blog post info: {e}")
+        return dict(new_blog_post_available=False, blog_post=None)
+
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)
 
@@ -518,6 +545,18 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
+    # Run database migrations at startup
+    with app.app_context():
+        try:
+            # Run migration to add blog_posts table if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_blog_posts_table import migrate_dashboard_db
+
+                migrate_dashboard_db()
+            # For PostgreSQL, the table is created via the schema file
+        except Exception as e:
+            print(f"Failed to run database migrations: {e}")
+
     # Check for updates at startup
     with app.app_context():
         try:
@@ -526,6 +565,13 @@ def create_app(db_type="sqlite", desktop_mode=False):
             update_release_info_in_db()
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
+
+        try:
+            from y_web.utils.check_blog import update_blog_info_in_db
+
+            update_blog_info_in_db()
+        except Exception as e:
+            print(f"Failed to check for blog posts at startup: {e}")
 
     # Log service start event
     try:

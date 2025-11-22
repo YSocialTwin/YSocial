@@ -841,3 +841,21 @@ class ReleaseInfo(db.Model):
     size = db.Column(db.String(50), nullable=True)
     sha256 = db.Column(db.String(100), nullable=True)
     latest_check_on = db.Column(db.String(50), nullable=True)
+
+
+class BlogPost(db.Model):
+    """
+    Latest blog post information.
+
+    Stores information about the latest blog post from y-not.social/blog
+    for announcement notifications. Tracks read status per post.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "blog_posts"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500), nullable=True)
+    published_at = db.Column(db.String(50), nullable=True)
+    link = db.Column(db.String(500), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    latest_check_on = db.Column(db.String(50), nullable=True)

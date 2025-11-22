@@ -935,3 +935,49 @@ def check_for_updates_route():
 
     # Redirect back to the user details page
     return redirect(url_for("users.user_details", uid=current_admin_user.id))
+
+
+@users.route("/admin/mark_blog_post_read/<int:post_id>", methods=["POST"])
+@login_required
+def mark_blog_post_read(post_id):
+    """
+    Mark a blog post as read.
+
+    This endpoint is called when a user dismisses a blog post banner
+    or clicks on the blog post link.
+
+    Args:
+        post_id: ID of the blog post to mark as read
+
+    Returns:
+        JSON response indicating success or error
+    """
+    from flask import jsonify
+
+    from y_web.models import BlogPost
+
+    # Check if user is admin/researcher using existing check_privileges helper
+    privilege_check = check_privileges(current_user.username)
+    if privilege_check:
+        print(f"Access denied for user {current_user.username} marking blog post {post_id} as read")
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        blog_post = BlogPost.query.get(post_id)
+        if not blog_post:
+            print(f"Blog post {post_id} not found")
+            return jsonify({"error": "Blog post not found"}), 404
+            
+        print(f"Marking blog post {post_id} as read by {current_user.username}")
+        print(f"Current is_read value: {blog_post.is_read}")
+        # SQLAlchemy will handle boolean to integer conversion for SQLite
+        blog_post.is_read = True
+        db.session.commit()
+        # Verify the change
+        db.session.refresh(blog_post)
+        print(f"Blog post {post_id} successfully marked as read. New value: {blog_post.is_read}")
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"Error marking blog post {post_id} as read: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
