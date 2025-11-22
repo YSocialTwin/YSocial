@@ -211,7 +211,7 @@ class Telemetry(object):
                     if response.status_code == 200:
                         return True, "Experiment logs submitted successfully. Thank you for helping improve YSocial!"
                     else:
-                        return False, f"Server returned error: {response.status_code}"
+                        return False, f"Telemetry server returned error: {response.status_code}. Please check your telemetry configuration or contact support at {SUPPORT_EMAIL}"
                         
                 except requests.exceptions.RequestException as e:
                     try:
