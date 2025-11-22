@@ -543,6 +543,18 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
 
+    # Run database migrations at startup
+    with app.app_context():
+        try:
+            # Run migration to add blog_posts table if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_blog_posts_table import migrate_dashboard_db
+
+                migrate_dashboard_db()
+            # For PostgreSQL, the table is created via the schema file
+        except Exception as e:
+            print(f"Failed to run database migrations: {e}")
+
     # Check for updates at startup
     with app.app_context():
         try:
