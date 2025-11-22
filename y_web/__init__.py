@@ -197,6 +197,16 @@ def cleanup_db_jupyter_with_new_app():
     Call this from the main runner's shutdown handler or as final step in atexit.
     """
     print("Cleaning up db...")
+
+    # Log service stop event
+    try:
+        from y_web.telemetry import Telemetry
+
+        telemetry = Telemetry()
+        telemetry.log_event({"action": "stop"})
+    except Exception as e:
+        print(f"Failed to log stop event: {e}")
+
     try:
         # Try to use existing app context first
         from flask import current_app
@@ -247,8 +257,8 @@ def cleanup_db_jupyter_with_new_app():
                         print(
                             "Database session committed and closed successfully (new context)"
                         )
-                except Exception as e1:
-                    print(f"Error during DB cleanup with {dbms} app:", e1)
+                except Exception:  # as e1:
+                    # print(f"Error during DB cleanup with {dbms} app:", e1)
                     pass
 
     except Exception as e:
@@ -340,6 +350,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     db.init_app(app)
     login_manager.init_app(app)
 
+    app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
+
     from .models import Admin_users, User_mgmt
 
     @login_manager.user_loader
@@ -430,6 +442,56 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 pass
         return dict(current_user_role=None, current_user_id=None)
 
+    @app.context_processor
+    def inject_release_info():
+        """Inject release update information for admin users."""
+        from flask_login import current_user
+
+        from .models import Admin_users, ReleaseInfo
+
+        if current_user.is_authenticated:
+            try:
+                admin_user = Admin_users.query.filter_by(
+                    username=current_user.username
+                ).first()
+                if admin_user and admin_user.role == "admin":
+                    # Get release info
+                    release_info = ReleaseInfo.query.first()
+                    if release_info and release_info.latest_version_tag:
+                        return dict(
+                            new_release_available=True, release_info=release_info
+                        )
+            except Exception:
+                pass
+        return dict(new_release_available=False, release_info=None)
+
+    @app.context_processor
+    def inject_blog_post_info():
+        """Inject latest blog post information for admin users."""
+        from flask_login import current_user
+
+        from .models import Admin_users, BlogPost
+
+        if current_user.is_authenticated:
+            try:
+                admin_user = Admin_users.query.filter_by(
+                    username=current_user.username
+                ).first()
+                if admin_user and admin_user.role == "admin":
+                    # Get unread blog posts (is_read = 0 for SQLite, False for PostgreSQL)
+                    latest_post = (
+                        BlogPost.query.filter(
+                            (BlogPost.is_read == False) | (BlogPost.is_read == 0)
+                        )
+                        .order_by(BlogPost.id.desc())
+                        .first()
+                    )
+                    if latest_post:
+                        return dict(new_blog_post_available=True, blog_post=latest_post)
+            except Exception as e:
+                print(f"Error injecting blog post info: {e}")
+        return dict(new_blog_post_available=False, blog_post=None)
+
     # Initialize database bindings for all active experiments
     initialize_active_experiment_databases(app)
 
@@ -482,5 +544,42 @@ def create_app(db_type="sqlite", desktop_mode=False):
         import sys
 
         return dict(is_pyinstaller=getattr(sys, "frozen", False))
+
+    # Run database migrations at startup
+    with app.app_context():
+        try:
+            # Run migration to add blog_posts table if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_blog_posts_table import migrate_dashboard_db
+
+                migrate_dashboard_db()
+            # For PostgreSQL, the table is created via the schema file
+        except Exception as e:
+            print(f"Failed to run database migrations: {e}")
+
+    # Check for updates at startup
+    with app.app_context():
+        try:
+            from y_web.utils.check_release import update_release_info_in_db
+
+            update_release_info_in_db()
+        except Exception as e:
+            print(f"Failed to check for updates at startup: {e}")
+
+        try:
+            from y_web.utils.check_blog import update_blog_info_in_db
+
+            update_blog_info_in_db()
+        except Exception as e:
+            print(f"Failed to check for blog posts at startup: {e}")
+
+    # Log service start event
+    try:
+        from y_web.telemetry import Telemetry
+
+        telemetry = Telemetry()
+        telemetry.log_event({"action": "start"})
+    except Exception as e:
+        print(f"Failed to log start event: {e}")
 
     return app

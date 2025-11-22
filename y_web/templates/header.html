@@ -68,6 +68,43 @@
 
 <div class="app-overlay"></div>
 
+<!-- Release Update Banner (Admin Only) -->
+{% if new_release_available and release_info %}
+<div id="release-banner" style="background: linear-gradient(to right, #e3f2fd 0%, #f5f5f5 100%); border-bottom: 2px solid #039be5; position: relative; z-index: 1000;">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #039be5; border-radius: 50%; flex-shrink: 0;">
+                <i class="mdi mdi-arrow-up-bold" style="color: white; font-size: 18px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 2px;">Update Available</div>
+                <div style="font-size: 14px; color: #363636; font-weight: 500;">
+                    {{ release_info.release_name }} <span style="color: #039be5; font-weight: 600;">v{{ release_info.latest_version_tag }}</span>
+                    <span style="color: #999; font-size: 12px; margin-left: 8px;">{{ release_info.published_at[:10] if release_info.published_at else '' }}</span>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            {% if release_info.download_url %}
+            {% set is_github_page = 'github.com' in release_info.download_url and '/releases/tag/' in release_info.download_url %}
+            <a href="{{ release_info.download_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #039be5; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+                {% if is_github_page %}
+                <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
+                <span>View Release</span>
+                {% else %}
+                <i class="mdi mdi-download" style="font-size: 16px;"></i>
+                <span>Download</span>
+                {% endif %}
+            </a>
+            {% endif %}
+            <button onclick="document.getElementById('release-banner').style.display='none';" style="background: transparent; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.borderColor='#039be5'; this.style.color='#039be5';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
+                <i class="mdi mdi-close" style="font-size: 14px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <div
         id="main-navbar"
         class="navbar navbar-v1 is-inline-flex is-transparent no-shadow is-hidden-mobile"

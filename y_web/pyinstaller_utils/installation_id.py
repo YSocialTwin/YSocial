@@ -36,6 +36,85 @@ def get_installation_config_dir():
     return config_dir
 
 
+def get_language():
+    """
+    Get the language from system locale.
+
+    Returns:
+        str: Two-letter language code (ISO 639-1) or "en" if unknown
+    """
+    try:
+        import locale
+        import os
+
+        # Try locale.setlocale to get actual system locale (works on macOS)
+        try:
+            # Save current locale
+            saved_locale = locale.getlocale(locale.LC_CTYPE)
+            try:
+                # Set to user's default locale
+                locale.setlocale(locale.LC_CTYPE, "")
+                current = locale.getlocale(locale.LC_CTYPE)
+                if current and current[0] and current[0] != "C" and "_" in current[0]:
+                    language = current[0].split("_")[0]
+                    if language and len(language) >= 2:
+                        return language[:2].lower()
+            finally:
+                # Restore original locale
+                try:
+                    locale.setlocale(locale.LC_CTYPE, saved_locale)
+                except:
+                    pass
+        except Exception:
+            pass
+
+        # Try locale.getdefaultlocale()
+        try:
+            default_locale = locale.getdefaultlocale()
+            if default_locale and default_locale[0] and "_" in default_locale[0]:
+                language = default_locale[0].split("_")[0]
+                if language and len(language) >= 2 and not language.startswith("C"):
+                    return language[:2].lower()
+        except Exception:
+            pass
+
+        # Try environment variables
+        for env_var in ["LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LC_CTYPE"]:
+            env_locale = os.environ.get(env_var)
+            if env_locale:
+                # Handle format like "en_US.UTF-8" or "en_US"
+                if "_" in env_locale:
+                    language = env_locale.split("_")[0]
+                    if language and len(language) >= 2 and not language.startswith("C"):
+                        return language[:2].lower()
+
+        # Try locale.getlocale() as fallback
+        try:
+            current_locale = locale.getlocale()[0]
+            if current_locale and current_locale != "C" and "_" in current_locale:
+                language = current_locale.split("_")[0]
+                if language and len(language) >= 2:
+                    return language[:2].lower()
+        except Exception:
+            pass
+
+        # Try locale.getlocale(locale.LC_ALL) as final fallback
+        try:
+            loc = locale.getlocale(locale.LC_ALL)
+            if loc and loc[0] and loc[0] != "C" and "_" in loc[0]:
+                language = loc[0].split("_")[0]
+                if language and len(language) >= 2:
+                    return language[:2].lower()
+        except Exception:
+            pass
+
+    except Exception:
+        pass
+
+    # Default to English
+    return "en"
+
+
 def estimate_country_code():
     """
     Estimate the country code based on system locale.
@@ -45,25 +124,68 @@ def estimate_country_code():
     """
     try:
         import locale
+        import os
 
-        # Try to get locale
+        # Try locale.setlocale to get actual system locale (works on macOS)
         try:
-            # Get current locale
-            current_locale = locale.getlocale()[0]
-            if current_locale and "_" in current_locale:
-                # Locale format is typically "language_COUNTRY"
-                country = current_locale.split("_")[1].split(".")[0]
-                if len(country) == 2:
+            # Save current locale
+            saved_locale = locale.getlocale(locale.LC_CTYPE)
+            try:
+                # Set to user's default locale
+                locale.setlocale(locale.LC_CTYPE, "")
+                current = locale.getlocale(locale.LC_CTYPE)
+                if current and current[0] and current[0] != "C" and "_" in current[0]:
+                    country = current[0].split("_")[1].split(".")[0]
+                    if country and len(country) == 2:
+                        return country.upper()
+            finally:
+                # Restore original locale
+                try:
+                    locale.setlocale(locale.LC_CTYPE, saved_locale)
+                except:
+                    pass
+        except Exception:
+            pass
+
+        # Try locale.getdefaultlocale()
+        try:
+            default_locale = locale.getdefaultlocale()
+            if default_locale and default_locale[0] and "_" in default_locale[0]:
+                country = default_locale[0].split("_")[1].split(".")[0]
+                if country and len(country) == 2:
                     return country.upper()
         except Exception:
             pass
 
-        # Try locale.getlocale() with LC_ALL
+        # Try environment variables
+        for env_var in ["LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LC_CTYPE"]:
+            env_locale = os.environ.get(env_var)
+            if env_locale:
+                # Handle format like "en_US.UTF-8" or "en_US"
+                if "_" in env_locale and not env_locale.startswith("C"):
+                    try:
+                        country = env_locale.split("_")[1].split(".")[0]
+                        if country and len(country) == 2:
+                            return country.upper()
+                    except (IndexError, AttributeError):
+                        continue
+
+        # Try locale.getlocale() as fallback
+        try:
+            current_locale = locale.getlocale()[0]
+            if current_locale and current_locale != "C" and "_" in current_locale:
+                country = current_locale.split("_")[1].split(".")[0]
+                if country and len(country) == 2:
+                    return country.upper()
+        except Exception:
+            pass
+
+        # Try locale.getlocale(locale.LC_ALL) as final fallback
         try:
             loc = locale.getlocale(locale.LC_ALL)
-            if loc and loc[0] and "_" in loc[0]:
+            if loc and loc[0] and loc[0] != "C" and "_" in loc[0]:
                 country = loc[0].split("_")[1].split(".")[0]
-                if len(country) == 2:
+                if country and len(country) == 2:
                     return country.upper()
         except Exception:
             pass
@@ -75,19 +197,73 @@ def estimate_country_code():
     return "XX"
 
 
-def get_os_info():
+def get_os_type():
     """
-    Get operating system information.
+    Get operating system type in simple format.
 
     Returns:
-        str: Operating system name and version
+        str: Operating system type: "windows", "macos", "linux", or "other"
     """
     try:
-        system = platform.system()
+        system = platform.system().lower()
+
+        if system == "windows":
+            return "windows"
+        elif system == "darwin":
+            return "macos"
+        elif system == "linux":
+            return "linux"
+        else:
+            return "other"
+    except Exception:
+        return "other"
+
+
+def get_os_version():
+    """
+    Get operating system version with full details.
+
+    Returns:
+        str: Operating system version details
+    """
+    try:
         release = platform.release()
-        return f"{system} {release}"
+        version = platform.version()
+
+        # Construct full OS version info
+        if version and version != release:
+            return f"{release} ({version})"
+        else:
+            return release
     except Exception:
         return "Unknown"
+
+
+def get_installation_type():
+    """
+    Determine the type of YSocial installation.
+
+    Returns:
+        str: "app" for PyInstaller bundle, "source" for running from code
+    """
+    # Check if running from PyInstaller bundle
+    if getattr(sys, "frozen", False):
+        return "app"
+    else:
+        return "source"
+
+
+def get_python_version():
+    """
+    Get the Python version.
+
+    Returns:
+        str: Python version (e.g., "3.9.7")
+    """
+    try:
+        return platform.python_version()
+    except Exception:
+        return f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
 
 
 def get_version():
@@ -131,7 +307,11 @@ def get_or_create_installation_id():
             - installation_id: Unique UUID for this installation
             - timestamp: ISO format timestamp of first installation (or last version update)
             - country: Estimated two-letter country code
-            - os: Operating system information
+            - language: Two-letter language code from locale
+            - os: Operating system type (windows, macos, linux, other)
+            - os_version: Operating system version details
+            - installation_type: "app" (PyInstaller) or "source" (code)
+            - python_version: Python version string
             - version: YSocial version at time of installation/update
     """
     from y_web.telemetry import Telemetry
@@ -145,22 +325,46 @@ def get_or_create_installation_id():
             with open(id_file, "r") as f:
                 installation_info = json.load(f)
                 # Validate that it has the required fields
-                if all(
-                    key in installation_info
-                    for key in ["installation_id", "timestamp", "country", "os"]
-                ):
+                if "installation_id" in installation_info:
+                    # Update with new fields if missing (backward compatibility)
+                    needs_update = False
+
+                    if "language" not in installation_info:
+                        installation_info["language"] = get_language()
+                        needs_update = True
+
+                    if "installation_type" not in installation_info:
+                        installation_info["installation_type"] = get_installation_type()
+                        needs_update = True
+
+                    if "python_version" not in installation_info:
+                        installation_info["python_version"] = get_python_version()
+                        needs_update = True
+
+                    # Check if we need to split old "os" field into "os" and "os_version"
+                    # Old format was like "Linux 6.11.0-1018-azure (#18~24.04.1-Ubuntu SMP...)"
+                    # New format: os="linux", os_version="6.11.0-1018-azure (#18~24.04.1-Ubuntu SMP...)"
+                    current_os_type = get_os_type()
+                    current_os_version = get_os_version()
+
+                    if "os_version" not in installation_info:
+                        # Need to migrate from old format
+                        installation_info["os"] = current_os_type
+                        installation_info["os_version"] = current_os_version
+                        needs_update = True
+                    else:
+                        # Already has new format, just update if needed
+                        if installation_info.get("os") != current_os_type:
+                            installation_info["os"] = current_os_type
+                            needs_update = True
+                        if installation_info.get("os_version") != current_os_version:
+                            installation_info["os_version"] = current_os_version
+                            needs_update = True
+
                     # Add version if it's missing (for backward compatibility)
                     if "version" not in installation_info:
                         installation_info["version"] = get_version()
-                        # Save updated info
-                        try:
-                            with open(id_file, "w") as f_out:
-                                json.dump(installation_info, f_out, indent=2)
-                            print(
-                                f"✓ Added version to installation info: {installation_info['version']}"
-                            )
-                        except Exception as e:
-                            print(f"Warning: Could not update installation ID: {e}")
+                        needs_update = True
                     else:
                         # Check if version has changed
                         current_version = get_version()
@@ -174,24 +378,26 @@ def get_or_create_installation_id():
                                 .isoformat()
                                 .replace("+00:00", "Z")
                             )
-                            # Save updated info
-                            try:
-                                with open(id_file, "w") as f_out:
-                                    json.dump(installation_info, f_out, indent=2)
-                                print(
-                                    f"✓ Updated version from {installation_info.get('version', 'Unknown')} to {current_version}"
-                                )
-                                print(
-                                    f"  New timestamp: {installation_info['timestamp']}"
-                                )
+                            needs_update = True
+                            print(
+                                f"✓ Updated version from {installation_info.get('version', 'Unknown')} to {current_version}"
+                            )
+                            print(f"  New timestamp: {installation_info['timestamp']}")
 
-                                telemetry = Telemetry()
-                                telemetry.register_update_app(
-                                    installation_info, action="update"
-                                )
+                            telemetry = Telemetry()
+                            telemetry.register_update_app(
+                                installation_info, action="update"
+                            )
 
-                            except Exception as e:
-                                print(f"Warning: Could not update installation ID: {e}")
+                    # Save updated info if needed
+                    if needs_update:
+                        try:
+                            with open(id_file, "w") as f_out:
+                                json.dump(installation_info, f_out, indent=2)
+                            print("✓ Updated installation info with new fields")
+                        except Exception as e:
+                            print(f"Warning: Could not update installation ID: {e}")
+
                     return installation_info
         except Exception as e:
             print(f"Warning: Could not read installation ID: {e}")
@@ -203,7 +409,11 @@ def get_or_create_installation_id():
         "installation_id": str(uuid.uuid4()),
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "country": estimate_country_code(),
-        "os": get_os_info(),
+        "language": get_language(),
+        "os": get_os_type(),
+        "os_version": get_os_version(),
+        "installation_type": get_installation_type(),
+        "python_version": get_python_version(),
         "version": get_version(),
     }
 
@@ -214,8 +424,12 @@ def get_or_create_installation_id():
         print(f"✓ Created new installation ID: {installation_info['installation_id']}")
         print(f"  Timestamp: {installation_info['timestamp']}")
         print(f"  Country: {installation_info['country']}")
+        print(f"  Language: {installation_info['language']}")
         print(f"  OS: {installation_info['os']}")
-        print(f"  Version: {installation_info['version']}")
+        print(f"  OS Version: {installation_info['os_version']}")
+        print(f"  Installation Type: {installation_info['installation_type']}")
+        print(f"  Python Version: {installation_info['python_version']}")
+        print(f"  YSocial Version: {installation_info['version']}")
         print(f"  Config saved to: {id_file}")
     except Exception as e:
         print(f"Warning: Could not save installation ID: {e}")
@@ -227,7 +441,53 @@ def get_or_create_installation_id():
 
 
 if __name__ == "__main__":
+    import locale as locale_module
+    import os as os_module
+
+    # Debug locale detection
+    print("=" * 70)
+    print("LOCALE DETECTION DEBUG")
+    print("=" * 70)
+
+    # Check environment variables
+    print("\nEnvironment Variables:")
+    for var in ["LANG", "LANGUAGE", "LC_ALL", "LC_MESSAGES", "LC_CTYPE"]:
+        value = os_module.environ.get(var, "(not set)")
+        print(f"  {var}: {value}")
+
+    # Check locale module methods
+    print("\nLocale Module Methods:")
+
+    try:
+        dl = locale_module.getdefaultlocale()
+        print(f"  locale.getdefaultlocale(): {dl}")
+    except Exception as e:
+        print(f"  locale.getdefaultlocale(): Error - {e}")
+
+    try:
+        gl = locale_module.getlocale()
+        print(f"  locale.getlocale(): {gl}")
+    except Exception as e:
+        print(f"  locale.getlocale(): Error - {e}")
+
+    try:
+        saved = locale_module.getlocale(locale_module.LC_CTYPE)
+        locale_module.setlocale(locale_module.LC_CTYPE, "")
+        sl = locale_module.getlocale(locale_module.LC_CTYPE)
+        print(f"  locale.setlocale(LC_CTYPE, ''): {sl}")
+        locale_module.setlocale(locale_module.LC_CTYPE, saved)
+    except Exception as e:
+        print(f"  locale.setlocale(LC_CTYPE, ''): Error - {e}")
+
+    # Test detection functions
+    print("\nDetected Values:")
+    print(f"  Language: {get_language()}")
+    print(f"  Country: {estimate_country_code()}")
+
+    print("\n" + "=" * 70)
+
     # Test the installation ID generation
+    print("\nGenerating Installation ID...")
     info = get_or_create_installation_id()
     print("\nInstallation Information:")
     print(json.dumps(info, indent=2))

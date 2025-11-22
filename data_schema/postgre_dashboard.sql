@@ -7,16 +7,18 @@
 -- Admin users
 -- -----------------------------
 CREATE TABLE admin_users (
-    id              SERIAL PRIMARY KEY,
-    username        TEXT,
-    email           TEXT,
-    password        TEXT,
-    last_seen       TEXT,
-    role            TEXT,
-    llm             TEXT DEFAULT '',
-    profile_pic     TEXT DEFAULT '',
-    perspective_api TEXT DEFAULT NULL,
-    llm_url         TEXT DEFAULT ''
+    id                    SERIAL PRIMARY KEY,
+    username              TEXT,
+    email                 TEXT,
+    password              TEXT,
+    last_seen             TEXT,
+    role                  TEXT,
+    llm                   TEXT DEFAULT '',
+    profile_pic           TEXT DEFAULT '',
+    perspective_api       TEXT DEFAULT NULL,
+    llm_url               TEXT DEFAULT '',
+    telemetry_enabled     BOOLEAN DEFAULT TRUE,
+    telemetry_notice_shown BOOLEAN DEFAULT FALSE
 );
 
 -- -----------------------------
@@ -307,6 +309,32 @@ CREATE TABLE jupyter_instances (
     notebook_dir VARCHAR(300) NOT NULL,
     process      INTEGER,
     status       VARCHAR(10) NOT NULL DEFAULT 'active'
+);
+
+-- -----------------------------
+-- Release Information
+-- -----------------------------
+CREATE TABLE release_info (
+    id                  SERIAL PRIMARY KEY,
+    latest_version_tag  TEXT,
+    release_name        TEXT,
+    published_at        TEXT,
+    download_url        TEXT,
+    size                TEXT,
+    sha256              TEXT,
+    latest_check_on     TEXT
+);
+
+-- -----------------------------
+-- Blog Posts
+-- -----------------------------
+CREATE TABLE blog_posts (
+    id                  SERIAL PRIMARY KEY,
+    title               TEXT,
+    published_at        TEXT,
+    link                TEXT,
+    is_read             BOOLEAN DEFAULT FALSE,
+    latest_check_on     TEXT
 );
 
 -- ================================================

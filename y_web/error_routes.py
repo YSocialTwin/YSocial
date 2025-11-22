@@ -8,6 +8,7 @@ including custom error pages for common HTTP errors (400, 403, 404, 500).
 import traceback
 
 from flask import Blueprint, render_template, request
+from flask_login import current_user
 
 errors = Blueprint("errors", __name__)
 
@@ -38,7 +39,7 @@ def bad_request(e):
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
 
     # Capture full traceback as string
     full_trace = traceback.format_exc()
@@ -80,7 +81,7 @@ def forbidden(e):
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
 
     # Capture full traceback as string
     full_trace = traceback.format_exc()
@@ -122,7 +123,7 @@ def not_found(e):
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
 
     # Capture full traceback as string
     full_trace = traceback.format_exc()
@@ -164,7 +165,7 @@ def internal_server_error(e):
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
 
     # Capture full traceback as string
     full_trace = traceback.format_exc()

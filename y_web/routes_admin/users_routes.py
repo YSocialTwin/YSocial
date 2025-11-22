@@ -201,6 +201,7 @@ def user_details(uid):
         none=None,
         llm_backend=llm_backend,
         models=models,
+        current_user_role=current_admin_user.role,
     )
 
 
@@ -844,3 +845,143 @@ def bulk_assign_users():
         flash(f"Error during bulk assignment: {str(e)}", "error")
 
     return redirect(url_for("users.user_data"))
+
+
+@users.route("/admin/update_telemetry_preference", methods=["POST"])
+@login_required
+def update_telemetry_preference():
+    """
+    Update user's telemetry preference (admin only).
+
+    Returns:
+        Redirect to user details page
+    """
+    user_id = request.form.get("user_id")
+
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        flash(
+            "Access denied. Only administrators can modify telemetry settings.", "error"
+        )
+        return redirect(url_for("admin.dashboard"))
+
+    # Only allow admins to update their own telemetry settings
+    if current_admin_user.id != user_id_int:
+        flash("You can only modify your own telemetry settings.", "error")
+        return redirect(url_for("users.user_details", uid=user_id_int))
+
+    # Get telemetry preference from form
+    telemetry_enabled = request.form.get("telemetry_enabled") == "1"
+
+    # Update user's telemetry preference
+    user = Admin_users.query.filter_by(id=user_id_int).first()
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for("users.user_data"))
+
+    user.telemetry_enabled = telemetry_enabled
+    db.session.commit()
+
+    flash(
+        f"Telemetry {'enabled' if telemetry_enabled else 'disabled'} successfully.",
+        "success",
+    )
+    return redirect(url_for("users.user_details", uid=user_id_int))
+
+
+@users.route("/admin/check_for_updates", methods=["POST"])
+@login_required
+def check_for_updates_route():
+    """
+    Manually trigger a check for YSocial updates (admin only).
+
+    Returns:
+        Redirect to user details page with status message
+    """
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        flash("Access denied. Only administrators can check for updates.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    try:
+        from y_web.utils.check_release import update_release_info_in_db
+
+        has_update, release_info = update_release_info_in_db()
+
+        if has_update:
+            flash(
+                f"New version available: {release_info.get('release_name')} (v{release_info.get('latest_version')})",
+                "success",
+            )
+        else:
+            flash("Your YSocial installation is up to date.", "info")
+    except Exception as e:
+        flash(f"Error checking for updates: {str(e)}", "error")
+
+    # Redirect back to the user details page
+    return redirect(url_for("users.user_details", uid=current_admin_user.id))
+
+
+@users.route("/admin/mark_blog_post_read/<int:post_id>", methods=["POST"])
+@login_required
+def mark_blog_post_read(post_id):
+    """
+    Mark a blog post as read.
+
+    This endpoint is called when a user dismisses a blog post banner
+    or clicks on the blog post link.
+
+    Args:
+        post_id: ID of the blog post to mark as read
+
+    Returns:
+        JSON response indicating success or error
+    """
+    from flask import jsonify
+
+    from y_web.models import BlogPost
+
+    # Check if user is admin/researcher using existing check_privileges helper
+    privilege_check = check_privileges(current_user.username)
+    if privilege_check:
+        print(
+            f"Access denied for user {current_user.username} marking blog post {post_id} as read"
+        )
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        blog_post = BlogPost.query.get(post_id)
+        if not blog_post:
+            print(f"Blog post {post_id} not found")
+            return jsonify({"error": "Blog post not found"}), 404
+
+        print(f"Marking blog post {post_id} as read by {current_user.username}")
+        print(f"Current is_read value: {blog_post.is_read}")
+        # SQLAlchemy will handle boolean to integer conversion for SQLite
+        blog_post.is_read = True
+        db.session.commit()
+        # Verify the change
+        db.session.refresh(blog_post)
+        print(
+            f"Blog post {post_id} successfully marked as read. New value: {blog_post.is_read}"
+        )
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"Error marking blog post {post_id} as read: {e}")
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500

@@ -363,6 +363,8 @@ class Admin_users(UserMixin, db.Model):
     llm_url = db.Column(db.String(200), default="")
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
+    telemetry_enabled = db.Column(db.Boolean, default=True)
+    telemetry_notice_shown = db.Column(db.Boolean, default=False)
 
     def get_id(self):
         """Return user ID with 'admin_' prefix for Flask-Login."""
@@ -819,3 +821,41 @@ class Jupyter_instances(db.Model):
     notebook_dir = db.Column(db.String(300), nullable=False)
     process = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(10), nullable=False, default="stopped")
+
+
+class ReleaseInfo(db.Model):
+    """
+    Latest YSocial release information.
+
+    Stores information about the latest available YSocial release for
+    update notifications. Single-row table updated on each application startup.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "release_info"
+    id = db.Column(db.Integer, primary_key=True)
+    latest_version_tag = db.Column(db.String(50), nullable=True)
+    release_name = db.Column(db.String(200), nullable=True)
+    published_at = db.Column(db.String(50), nullable=True)
+    download_url = db.Column(db.String(500), nullable=True)
+    size = db.Column(db.String(50), nullable=True)
+    sha256 = db.Column(db.String(100), nullable=True)
+    latest_check_on = db.Column(db.String(50), nullable=True)
+
+
+class BlogPost(db.Model):
+    """
+    Latest blog post information.
+
+    Stores information about the latest blog post from y-not.social/blog
+    for announcement notifications. Tracks read status per post.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "blog_posts"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500), nullable=True)
+    published_at = db.Column(db.String(50), nullable=True)
+    link = db.Column(db.String(500), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    latest_check_on = db.Column(db.String(50), nullable=True)
