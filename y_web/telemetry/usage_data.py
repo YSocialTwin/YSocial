@@ -1,12 +1,19 @@
 import json
+import os
 import re
 import sys
+import tempfile
 import traceback
+import zipfile
 from datetime import datetime, timezone
+from pathlib import Path
 
 import requests
 
 from y_web.pyinstaller_utils import installation_id
+
+# Support contact email for telemetry issues
+SUPPORT_EMAIL = "support@y-not.social"
 
 
 class Telemetry(object):
@@ -143,11 +150,7 @@ class Telemetry(object):
         if not self.enabled:
             return False, "Telemetry is disabled. Please enable it in your user settings."
         
-        import os
-        import tempfile
-        import zipfile
-        from pathlib import Path
-        
+        temp_zip_path = None
         try:
             experiment_path = Path(experiment_folder_path)
             
@@ -181,7 +184,7 @@ class Telemetry(object):
             if file_size > max_size:
                 os.unlink(temp_zip_path)
                 size_mb = file_size / (1024 * 1024)
-                return False, f"Compressed file is too large ({size_mb:.1f}MB). Maximum allowed size is 10MB. Please contact the YSocial team for further support at support@y-not.social"
+                return False, f"Compressed file is too large ({size_mb:.1f}MB). Maximum allowed size is 10MB. Please contact the YSocial team for further support at {SUPPORT_EMAIL}"
             
             # Prepare multipart form data
             timestamp = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
@@ -211,13 +214,19 @@ class Telemetry(object):
                         return False, f"Server returned error: {response.status_code}"
                         
                 except requests.exceptions.RequestException as e:
-                    os.unlink(temp_zip_path)
+                    try:
+                        os.unlink(temp_zip_path)
+                    except OSError:
+                        pass
                     return False, f"Failed to send logs: {str(e)}"
                     
         except Exception as e:
             # Clean up temp file if it exists
-            if 'temp_zip_path' in locals() and os.path.exists(temp_zip_path):
-                os.unlink(temp_zip_path)
+            if temp_zip_path and os.path.exists(temp_zip_path):
+                try:
+                    os.unlink(temp_zip_path)
+                except OSError:
+                    pass
             return False, f"Error preparing logs: {str(e)}"
 
     def __anonymize_traceback(self, exc) -> str:

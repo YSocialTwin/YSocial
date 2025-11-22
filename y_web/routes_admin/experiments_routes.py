@@ -1550,7 +1550,18 @@ def submit_experiment_logs(exp_id):
     
     # Get experiment folder path
     BASE_DIR = get_writable_path()
-    experiment_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+    
+    # Extract experiment folder name from db_name
+    # db_name format: "experiments{sep}{folder}{sep}database_server.db"
+    db_name_parts = experiment.db_name.split(os.sep)
+    if len(db_name_parts) < 2:
+        return jsonify({
+            "success": False, 
+            "message": "Invalid experiment database path format."
+        })
+    
+    experiment_folder_name = db_name_parts[1]
+    experiment_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment_folder_name}"
     
     # Initialize telemetry and submit logs
     telemetry = Telemetry(user=current_user)
