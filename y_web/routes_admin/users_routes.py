@@ -935,3 +935,39 @@ def check_for_updates_route():
 
     # Redirect back to the user details page
     return redirect(url_for("users.user_details", uid=current_admin_user.id))
+
+
+@users.route("/admin/mark_blog_post_read/<int:post_id>", methods=["POST"])
+@login_required
+def mark_blog_post_read(post_id):
+    """
+    Mark a blog post as read.
+
+    This endpoint is called when a user dismisses a blog post banner
+    or clicks on the blog post link.
+
+    Args:
+        post_id: ID of the blog post to mark as read
+
+    Returns:
+        JSON response indicating success or error
+    """
+    from flask import jsonify
+
+    from y_web.models import BlogPost
+
+    # Check if user is admin
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        blog_post = BlogPost.query.get(post_id)
+        if blog_post:
+            blog_post.is_read = True
+            db.session.commit()
+            return jsonify({"success": True})
+        else:
+            return jsonify({"error": "Blog post not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

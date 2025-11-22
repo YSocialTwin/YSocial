@@ -35,6 +35,65 @@
 </div>
 {% endif %}
 
+<!-- Blog Post Banner (Admin Only) -->
+{% if new_blog_post_available and blog_post %}
+<div id="blog-banner" style="background: linear-gradient(to right, #fff3e0 0%, #f5f5f5 100%); border-left: 4px solid #ff9800; border-radius: 4px; margin-bottom: 20px; position: relative; z-index: 999;">
+    <div style="padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #ff9800; border-radius: 50%; flex-shrink: 0;">
+                <i class="mdi mdi-post" style="color: white; font-size: 18px;"></i>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-size: 13px; color: #666; margin-bottom: 2px;">New Blog Post!</div>
+                <div style="font-size: 14px; color: #363636; font-weight: 500;">
+                    {{ blog_post.title }}
+                    <span style="color: #999; font-size: 12px; margin-left: 8px;">{{ blog_post.published_at[:10] if blog_post.published_at else '' }}</span>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="{{ blog_post.link }}" target="_blank" onclick="markBlogPostAsRead({{ blog_post.id }})" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+                <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
+                <span>Read Article</span>
+            </a>
+            <button onclick="dismissBlogPost({{ blog_post.id }})" style="background: transparent; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.borderColor='#ff9800'; this.style.color='#ff9800';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
+                <i class="mdi mdi-close" style="font-size: 14px;"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function markBlogPostAsRead(postId) {
+    // Mark blog post as read when link is clicked
+    fetch('/admin/mark_blog_post_read/' + postId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(() => {
+        document.getElementById('blog-banner').style.display = 'none';
+    }).catch(error => {
+        console.error('Error marking blog post as read:', error);
+    });
+}
+
+function dismissBlogPost(postId) {
+    // Mark blog post as read when dismissed
+    fetch('/admin/mark_blog_post_read/' + postId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(() => {
+        document.getElementById('blog-banner').style.display = 'none';
+    }).catch(error => {
+        console.error('Error dismissing blog post:', error);
+    });
+}
+</script>
+{% endif %}
+
 <div class="dashboard-toolbar">
     <h1 class="title is-4"></h1>
     <div class="actions">
