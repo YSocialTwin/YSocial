@@ -1527,6 +1527,38 @@ def experiment_details(uid):
     )
 
 
+@experiments.route("/admin/submit_experiment_logs/<int:exp_id>", methods=["POST"])
+@login_required
+def submit_experiment_logs(exp_id):
+    """Submit experiment logs to telemetry server for troubleshooting."""
+    check_privileges(current_user.username)
+    
+    from y_web.telemetry import Telemetry
+    from y_web.utils.path_utils import get_writable_path
+    
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        return jsonify({"success": False, "message": "Experiment not found"}), 404
+    
+    # Check if telemetry is enabled for current user
+    if not current_user.telemetry_enabled:
+        return jsonify({
+            "success": False, 
+            "message": "Telemetry is disabled. Please enable it in your user settings to submit logs."
+        })
+    
+    # Get experiment folder path
+    BASE_DIR = get_writable_path()
+    experiment_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}"
+    
+    # Initialize telemetry and submit logs
+    telemetry = Telemetry(user=current_user)
+    success, message = telemetry.submit_experiment_logs(exp_id, experiment_folder)
+    
+    return jsonify({"success": success, "message": message})
+
+
 @experiments.route("/admin/experiment_logs/<int:exp_id>")
 @login_required
 def experiment_logs(exp_id):
