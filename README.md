@@ -10,7 +10,9 @@ Interact with AI-driven agents, analyze social dynamics, and explore the impact 
 
 As a plus, YSocial allows you to analyze simulation data with an embedded **Jupyter Lab** environment powered by **[ySights](https://ysocialtwin.github.io/ysights)** - a custom library for designed to support in-depth insights.
 
-For more information, visit the [project website](https://ysocialtwin.github.io/) or read our [research paper](https://arxiv.org/abs/2408.00818).
+For more information, visit the [project website](https://y-not.social/) or read our [research paper](https://arxiv.org/abs/2408.00818).
+
+![Logo](./images/header.png)
 
 
 ---
@@ -99,46 +101,24 @@ The **Y Social** supports a wide range of simulation configurations and automate
 ## 🏁 Getting Started
 
 **Y Social** has been tested on **GNU/Linux** and **MacOS**. 
-In case of malfunctioning/installation issues Windows users are advised to use **Docker**.
-
-For detailed usage examples and configuration options, please refer to the [USAGE_EXAMPLES.md](USAGE_EXAMPLES.md) file.
 
 ### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
 
 If you prefer a click-and-run experience without setting up Python, download our pre-built executables:
 
-1. **Download** the appropriate package for your OS from the [Releases](https://github.com/YSocialTwin/YSocial/releases) page:
-   - `YSocial-linux.tar.gz` for Linux
-   - `YSocial-macos.tar.gz` for macOS  
-   - `YSocial-windows.zip` for Windows
+1. **Download** the appropriate package for your OS from the official [download](https://y-not.social/download) page:
 
-2. **Extract** the archive and run the executable:
+2. **Install** the application and run the executable:
    - **Linux/macOS**: `./YSocial`
    - **Windows**: Double-click `YSocial.exe`
 
-3. The application will **automatically open** in a **native desktop window** (default behavior)
+3. The application will **automatically open** 
 
 4. **Login** with default credentials:
    - **Email:** `admin@ysocial.com`
    - **Password:** `test`
 
 📘 The executables include all dependencies and support command-line options (run with `--help` for details).
-
-#### 🖥️ **Desktop vs Browser Mode**
-
-**Desktop mode is now the default!** The app launches in a native window with integrated controls.
-
-To use traditional browser mode instead:
-
-```bash
-# Linux/macOS
-./YSocial --browser
-
-# Windows  
-YSocial.exe --browser
-```
-
-Desktop mode uses PyWebview to provide a native window experience with integrated controls and better desktop integration.
 
 ---
 
@@ -327,7 +307,7 @@ docker-compose up --gpus all
 ---
 
 ## 📄 Further Information
-- **Project Website:** [YSocialTwin.github.io](https://ysocialtwin.github.io/)
+- **Project Website:** [y-not.social](https://ysocialtwin.github.io/)
 - **Research Paper:** [Y Social: A Digital Twin for Social Simulations](https://arxiv.org/abs/2408.00818)
 
 ---
