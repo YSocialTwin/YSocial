@@ -461,9 +461,15 @@
                     <div class="dashboard-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
                             <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Trends Analysis</h3>
-                            <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                            <div style="display: flex; gap: 0.5em; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshTrends" checked style="cursor: pointer;">
+                                    <span>Auto-refresh (30s)</span>
+                                </label>
+                                <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Trend analysis of server compute time and simulation time progression.
@@ -541,6 +547,7 @@
                                 client_daily_compute: {},
                                 client_hourly_compute: {}
                             };
+                            let trendsAutoRefreshInterval = null;
 
                             // Function to detect and remove outliers from simulation time data
                             function removeOutliers(data) {
@@ -872,6 +879,35 @@
                             // Load trends data on page load
                             loadTrendsData();
 
+                            // Auto-refresh functionality
+                            function startTrendsAutoRefresh() {
+                                if (trendsAutoRefreshInterval) {
+                                    clearInterval(trendsAutoRefreshInterval);
+                                }
+                                trendsAutoRefreshInterval = setInterval(loadTrendsData, 30000); // 30 seconds
+                            }
+
+                            function stopTrendsAutoRefresh() {
+                                if (trendsAutoRefreshInterval) {
+                                    clearInterval(trendsAutoRefreshInterval);
+                                    trendsAutoRefreshInterval = null;
+                                }
+                            }
+
+                            // Auto-refresh checkbox handler
+                            document.getElementById('autoRefreshTrends').addEventListener('change', function() {
+                                if (this.checked) {
+                                    startTrendsAutoRefresh();
+                                } else {
+                                    stopTrendsAutoRefresh();
+                                }
+                            });
+
+                            // Start auto-refresh if checkbox is checked
+                            if (document.getElementById('autoRefreshTrends').checked) {
+                                startTrendsAutoRefresh();
+                            }
+
                             // Refresh button click handler
                             document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
 
@@ -890,9 +926,15 @@
                     <div class="dashboard-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
                             <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Logs Analysis</h3>
-                            <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                            <div style="display: flex; gap: 0.5em; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshLogs" checked style="cursor: pointer;">
+                                    <span>Auto-refresh (30s)</span>
+                                </label>
+                                <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Real-time analysis of server API calls from _server.log file.
@@ -994,6 +1036,7 @@
                     callVolume: {},
                     meanDuration: {}
                 };
+                let logsAutoRefreshInterval = null;
 
                 // Function to update charts based on selected paths
                 function updateCharts() {
@@ -1218,6 +1261,35 @@
                 // Load server logs data on page load
                 loadServerLogsData();
 
+                // Auto-refresh functionality
+                function startLogsAutoRefresh() {
+                    if (logsAutoRefreshInterval) {
+                        clearInterval(logsAutoRefreshInterval);
+                    }
+                    logsAutoRefreshInterval = setInterval(loadServerLogsData, 30000); // 30 seconds
+                }
+
+                function stopLogsAutoRefresh() {
+                    if (logsAutoRefreshInterval) {
+                        clearInterval(logsAutoRefreshInterval);
+                        logsAutoRefreshInterval = null;
+                    }
+                }
+
+                // Auto-refresh checkbox handler
+                document.getElementById('autoRefreshLogs').addEventListener('change', function() {
+                    if (this.checked) {
+                        startLogsAutoRefresh();
+                    } else {
+                        stopLogsAutoRefresh();
+                    }
+                });
+
+                // Start auto-refresh if checkbox is checked
+                if (document.getElementById('autoRefreshLogs').checked) {
+                    startLogsAutoRefresh();
+                }
+
                 // Refresh button click handler
                 document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
             </script>
@@ -1229,9 +1301,15 @@
                     <div class="dashboard-box">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
                             <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Client Logs Analysis</h3>
-                            <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                            <div style="display: flex; gap: 0.5em; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshClientLogs" checked style="cursor: pointer;">
+                                    <span>Auto-refresh (30s)</span>
+                                </label>
+                                <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Analysis of client method execution from {client_name}_client.log files.
@@ -1348,6 +1426,7 @@
                     callVolume: {},
                     meanExecutionTime: {}
                 };
+                let clientLogsAutoRefreshInterval = null;
 
                 // Function to update client charts based on selected methods
                 function updateClientCharts() {
@@ -1605,6 +1684,40 @@
 
                 // Initialize button state on page load
                 updateClientRefreshButtonState();
+
+                // Auto-refresh functionality for client logs
+                function startClientLogsAutoRefresh() {
+                    if (clientLogsAutoRefreshInterval) {
+                        clearInterval(clientLogsAutoRefreshInterval);
+                    }
+                    clientLogsAutoRefreshInterval = setInterval(function() {
+                        const clientId = document.getElementById('clientSelector').value;
+                        if (clientId) {
+                            loadClientLogs(clientId);
+                        }
+                    }, 30000); // 30 seconds
+                }
+
+                function stopClientLogsAutoRefresh() {
+                    if (clientLogsAutoRefreshInterval) {
+                        clearInterval(clientLogsAutoRefreshInterval);
+                        clientLogsAutoRefreshInterval = null;
+                    }
+                }
+
+                // Auto-refresh checkbox handler
+                document.getElementById('autoRefreshClientLogs').addEventListener('change', function() {
+                    if (this.checked) {
+                        startClientLogsAutoRefresh();
+                    } else {
+                        stopClientLogsAutoRefresh();
+                    }
+                });
+
+                // Start auto-refresh if checkbox is checked and client is selected
+                if (document.getElementById('autoRefreshClientLogs').checked) {
+                    startClientLogsAutoRefresh();
+                }
 
                 // Select All button handler for methods
                 document.getElementById('selectAllMethods').addEventListener('click', function() {
