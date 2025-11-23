@@ -1661,7 +1661,7 @@
             <!-- Additional Row for Registered Users and Error Reporting -->
             <div class="columns is-multiline">
                 {% if len(users) > 0 %}
-                <div class="column is-12-mobile {% if current_user.telemetry_enabled %}is-6-tablet is-6-desktop{% else %}is-12-tablet is-12-desktop{% endif %}">
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
                     <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -1685,7 +1685,7 @@
                 {% endif %}
 
                 {% if current_user.telemetry_enabled %}
-                <div class="column is-12-mobile {% if len(users) > 0 %}is-6-tablet is-6-desktop{% else %}is-12-tablet is-12-desktop{% endif %}">
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
                     <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Something went wrong?</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
