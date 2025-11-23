@@ -1522,10 +1522,10 @@ def experiment_details(uid):
     # get jupyter instance for this experiment if exists
 
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
-    
+
     # Pass telemetry flag independently to avoid issues with current_user object
     # User is already authenticated due to @login_required decorator
-    telemetry_enabled = getattr(current_user, 'telemetry_enabled', True)
+    telemetry_enabled = getattr(current_user, "telemetry_enabled", True)
 
     return render_template(
         "admin/experiment_details.html",
@@ -1609,8 +1609,8 @@ def experiment_logs(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.path_utils import get_writable_path
         from y_web.utils.log_metrics import update_server_log_metrics
+        from y_web.utils.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -1629,7 +1629,9 @@ def experiment_logs(exp_id):
         elif db_name.startswith("experiments_"):
             # PostgreSQL format - UUID is after the underscore
             uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1646,15 +1648,14 @@ def experiment_logs(exp_id):
             update_server_log_metrics(exp_id, log_file)
         except Exception as e:
             # Log the error but continue with existing data
-            current_app.logger.error(f"Error updating server log metrics: {e}", exc_info=True)
+            current_app.logger.error(
+                f"Error updating server log metrics: {e}", exc_info=True
+            )
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
-        metrics = (
-            ServerLogMetrics.query.filter_by(
-                exp_id=exp_id, aggregation_level="daily"
-            )
-            .all()
-        )
+        metrics = ServerLogMetrics.query.filter_by(
+            exp_id=exp_id, aggregation_level="daily"
+        ).all()
 
         # Aggregate by path across all days
         path_counts = defaultdict(int)
@@ -1672,12 +1673,25 @@ def experiment_logs(exp_id):
             else:
                 mean_durations[path] = 0
 
-        return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
-    
+        return jsonify(
+            {"call_volume": dict(path_counts), "mean_duration": mean_durations}
+        )
+
     except Exception as e:
         # Catch any unhandled exceptions and return JSON error
-        current_app.logger.error(f"Error in experiment_logs endpoint: {e}", exc_info=True)
-        return jsonify({"error": f"Internal server error: {str(e)}", "call_volume": {}, "mean_duration": {}}), 500
+        current_app.logger.error(
+            f"Error in experiment_logs endpoint: {e}", exc_info=True
+        )
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "call_volume": {},
+                    "mean_duration": {},
+                }
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/experiment_trends/<int:exp_id>")
@@ -1692,8 +1706,11 @@ def experiment_trends(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
+        from y_web.utils.log_metrics import (
+            update_client_log_metrics,
+            update_server_log_metrics,
+        )
         from y_web.utils.path_utils import get_writable_path
-        from y_web.utils.log_metrics import update_server_log_metrics, update_client_log_metrics
 
         BASE_DIR = get_writable_path()
 
@@ -1709,7 +1726,9 @@ def experiment_trends(exp_id):
                 return jsonify({"error": "Invalid experiment path"}), 400
         elif db_name.startswith("experiments_"):
             uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1731,16 +1750,15 @@ def experiment_trends(exp_id):
         try:
             update_server_log_metrics(exp_id, log_file)
         except Exception as e:
-            current_app.logger.error(f"Error updating server log metrics: {e}", exc_info=True)
+            current_app.logger.error(
+                f"Error updating server log metrics: {e}", exc_info=True
+            )
 
         # Retrieve aggregated metrics from database
         # Get daily metrics
-        daily_metrics = (
-            ServerLogMetrics.query.filter_by(
-                exp_id=exp_id, aggregation_level="daily"
-            )
-            .all()
-        )
+        daily_metrics = ServerLogMetrics.query.filter_by(
+            exp_id=exp_id, aggregation_level="daily"
+        ).all()
 
         daily_durations = defaultdict(float)
         daily_simulation = {}
@@ -1751,17 +1769,16 @@ def experiment_trends(exp_id):
             if metric.min_time and metric.max_time:
                 sim_time = (metric.max_time - metric.min_time).total_seconds()
                 if metric.day in daily_simulation:
-                    daily_simulation[metric.day] = max(daily_simulation[metric.day], sim_time)
+                    daily_simulation[metric.day] = max(
+                        daily_simulation[metric.day], sim_time
+                    )
                 else:
                     daily_simulation[metric.day] = sim_time
 
         # Get hourly metrics
-        hourly_metrics = (
-            ServerLogMetrics.query.filter_by(
-                exp_id=exp_id, aggregation_level="hourly"
-            )
-            .all()
-        )
+        hourly_metrics = ServerLogMetrics.query.filter_by(
+            exp_id=exp_id, aggregation_level="hourly"
+        ).all()
 
         hourly_durations = defaultdict(float)
         hourly_simulation = {}
@@ -1807,7 +1824,9 @@ def experiment_trends(exp_id):
 
         # Convert rounds to days
         total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
-        max_remaining_days = max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
+        max_remaining_days = (
+            max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
+        )
 
         # Update and retrieve client log metrics
         client_daily_compute = {}
@@ -1821,22 +1840,19 @@ def experiment_trends(exp_id):
                 try:
                     update_client_log_metrics(exp_id, client.id, client_log_file)
                 except Exception as e:
-                    current_app.logger.error(f"Error updating client {client.id} log metrics: {e}", exc_info=True)
+                    current_app.logger.error(
+                        f"Error updating client {client.id} log metrics: {e}",
+                        exc_info=True,
+                    )
 
             # Retrieve aggregated client metrics from database
-            client_daily_metrics = (
-                ClientLogMetrics.query.filter_by(
-                    exp_id=exp_id, client_id=client.id, aggregation_level="daily"
-                )
-                .all()
-            )
+            client_daily_metrics = ClientLogMetrics.query.filter_by(
+                exp_id=exp_id, client_id=client.id, aggregation_level="daily"
+            ).all()
 
-            client_hourly_metrics = (
-                ClientLogMetrics.query.filter_by(
-                    exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
-                )
-                .all()
-            )
+            client_hourly_metrics = ClientLogMetrics.query.filter_by(
+                exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
+            ).all()
 
             # Aggregate by day
             if client_daily_metrics:
@@ -1868,24 +1884,31 @@ def experiment_trends(exp_id):
                 "client_progress": client_progress,
             }
         )
-    
+
     except Exception as e:
         # Catch any unhandled exceptions and return JSON error
-        current_app.logger.error(f"Error in experiment_trends endpoint: {e}", exc_info=True)
-        return jsonify({
-            "error": f"Internal server error: {str(e)}",
-            "daily_compute": {},
-            "daily_simulation": {},
-            "hourly_compute": {},
-            "hourly_simulation": {},
-            "total_expected_days": 0,
-            "total_expected_rounds": 0,
-            "max_remaining_rounds": 0,
-            "max_remaining_days": 0,
-            "client_daily_compute": {},
-            "client_hourly_compute": {},
-            "client_progress": {},
-        }), 500
+        current_app.logger.error(
+            f"Error in experiment_trends endpoint: {e}", exc_info=True
+        )
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "daily_compute": {},
+                    "daily_simulation": {},
+                    "hourly_compute": {},
+                    "hourly_simulation": {},
+                    "total_expected_days": 0,
+                    "total_expected_rounds": 0,
+                    "max_remaining_rounds": 0,
+                    "max_remaining_days": 0,
+                    "client_daily_compute": {},
+                    "client_hourly_compute": {},
+                    "client_progress": {},
+                }
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/client_logs/<int:client_id>")
@@ -1905,8 +1928,8 @@ def client_logs(client_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.path_utils import get_writable_path
         from y_web.utils.log_metrics import update_client_log_metrics
+        from y_web.utils.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -1924,7 +1947,9 @@ def client_logs(client_id):
         elif db_name.startswith("experiments_"):
             # PostgreSQL format - UUID is after the underscore
             uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
+            exp_folder = os.path.join(
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
+            )
         else:
             return jsonify({"error": "Invalid experiment path format"}), 400
 
@@ -1945,15 +1970,14 @@ def client_logs(client_id):
         try:
             update_client_log_metrics(experiment.idexp, client_id, log_file)
         except Exception as e:
-            current_app.logger.error(f"Error updating client log metrics: {e}", exc_info=True)
+            current_app.logger.error(
+                f"Error updating client log metrics: {e}", exc_info=True
+            )
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
-        metrics = (
-            ClientLogMetrics.query.filter_by(
-                exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
-            )
-            .all()
-        )
+        metrics = ClientLogMetrics.query.filter_by(
+            exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
+        ).all()
 
         # Aggregate by method across all days
         method_counts = defaultdict(int)
@@ -1967,7 +1991,9 @@ def client_logs(client_id):
         mean_execution_times = {}
         for method in method_counts.keys():
             if method_counts[method] > 0:
-                mean_execution_times[method] = method_total_times[method] / method_counts[method]
+                mean_execution_times[method] = (
+                    method_total_times[method] / method_counts[method]
+                )
             else:
                 mean_execution_times[method] = 0
 
@@ -1977,15 +2003,20 @@ def client_logs(client_id):
                 "mean_execution_time": mean_execution_times,
             }
         )
-    
+
     except Exception as e:
         # Catch any unhandled exceptions and return JSON error
         current_app.logger.error(f"Error in client_logs endpoint: {e}", exc_info=True)
-        return jsonify({
-            "error": f"Internal server error: {str(e)}",
-            "call_volume": {},
-            "mean_execution_time": {},
-        }), 500
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "call_volume": {},
+                    "mean_execution_time": {},
+                }
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")

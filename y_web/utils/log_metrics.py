@@ -8,10 +8,10 @@ This module provides functionality to:
 """
 
 import json
+import logging
 import os
 from collections import defaultdict
 from datetime import datetime
-import logging
 
 from sqlalchemy import and_
 
@@ -39,22 +39,21 @@ def get_log_file_offset(exp_id, log_file_type, file_path, client_id=None):
     Returns:
         int: Last read offset in bytes (0 if not found)
     """
-    offset_record = (
-        LogFileOffset.query.filter_by(
-            exp_id=exp_id,
-            log_file_type=log_file_type,
-            file_path=file_path,
-            client_id=client_id,
-        )
-        .first()
-    )
+    offset_record = LogFileOffset.query.filter_by(
+        exp_id=exp_id,
+        log_file_type=log_file_type,
+        file_path=file_path,
+        client_id=client_id,
+    ).first()
 
     if offset_record:
         return offset_record.last_offset
     return 0
 
 
-def update_log_file_offset(exp_id, log_file_type, file_path, new_offset, client_id=None):
+def update_log_file_offset(
+    exp_id, log_file_type, file_path, new_offset, client_id=None
+):
     """
     Update the last read offset for a log file.
 
@@ -65,15 +64,12 @@ def update_log_file_offset(exp_id, log_file_type, file_path, new_offset, client_
         new_offset: New offset in bytes
         client_id: Client ID (only for client logs)
     """
-    offset_record = (
-        LogFileOffset.query.filter_by(
-            exp_id=exp_id,
-            log_file_type=log_file_type,
-            file_path=file_path,
-            client_id=client_id,
-        )
-        .first()
-    )
+    offset_record = LogFileOffset.query.filter_by(
+        exp_id=exp_id,
+        log_file_type=log_file_type,
+        file_path=file_path,
+        client_id=client_id,
+    ).first()
 
     if offset_record:
         offset_record.last_offset = new_offset
@@ -110,8 +106,12 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0):
         return start_offset, {}
 
     # Data structures for aggregation
-    daily_data = defaultdict(lambda: defaultdict(lambda: {"count": 0, "duration": 0.0, "times": []}))
-    hourly_data = defaultdict(lambda: defaultdict(lambda: {"count": 0, "duration": 0.0, "times": []}))
+    daily_data = defaultdict(
+        lambda: defaultdict(lambda: {"count": 0, "duration": 0.0, "times": []})
+    )
+    hourly_data = defaultdict(
+        lambda: defaultdict(lambda: {"count": 0, "duration": 0.0, "times": []})
+    )
 
     try:
         with open(log_file_path, "r") as f:
@@ -262,8 +262,12 @@ def parse_client_log_incremental(log_file_path, exp_id, client_id, start_offset=
         return start_offset, {}
 
     # Data structures for aggregation
-    daily_data = defaultdict(lambda: defaultdict(lambda: {"count": 0, "execution_time": 0.0}))
-    hourly_data = defaultdict(lambda: defaultdict(lambda: {"count": 0, "execution_time": 0.0}))
+    daily_data = defaultdict(
+        lambda: defaultdict(lambda: {"count": 0, "execution_time": 0.0})
+    )
+    hourly_data = defaultdict(
+        lambda: defaultdict(lambda: {"count": 0, "execution_time": 0.0})
+    )
 
     try:
         with open(log_file_path, "r") as f:
@@ -292,7 +296,9 @@ def parse_client_log_incremental(log_file_path, exp_id, client_id, start_offset=
                     if day is not None and hour is not None:
                         key = f"{day}-{hour}"
                         hourly_data[key][method_name]["count"] += 1
-                        hourly_data[key][method_name]["execution_time"] += execution_time
+                        hourly_data[key][method_name][
+                            "execution_time"
+                        ] += execution_time
 
                 except json.JSONDecodeError:
                     # Skip invalid JSON lines

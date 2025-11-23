@@ -47,7 +47,8 @@ def migrate_sqlite(db_path):
 
         # Create log_file_offsets table if it doesn't exist
         if "log_file_offsets" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE log_file_offsets (
                     id            INTEGER PRIMARY KEY AUTOINCREMENT,
                     exp_id        INTEGER NOT NULL,
@@ -59,7 +60,8 @@ def migrate_sqlite(db_path):
                     FOREIGN KEY (exp_id) REFERENCES exps(idexp) ON DELETE CASCADE,
                     FOREIGN KEY (client_id) REFERENCES client(id) ON DELETE CASCADE
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_log_file_offset_lookup ON log_file_offsets(exp_id, log_file_type, client_id)"
             )
@@ -69,7 +71,8 @@ def migrate_sqlite(db_path):
 
         # Create server_log_metrics table if it doesn't exist
         if "server_log_metrics" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE server_log_metrics (
                     id                INTEGER PRIMARY KEY AUTOINCREMENT,
                     exp_id            INTEGER NOT NULL,
@@ -83,7 +86,8 @@ def migrate_sqlite(db_path):
                     max_time          TEXT,
                     FOREIGN KEY (exp_id) REFERENCES exps(idexp) ON DELETE CASCADE
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_server_log_metrics_lookup ON server_log_metrics(exp_id, aggregation_level, day, hour, path)"
             )
@@ -93,7 +97,8 @@ def migrate_sqlite(db_path):
 
         # Create client_log_metrics table if it doesn't exist
         if "client_log_metrics" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE client_log_metrics (
                     id                   INTEGER PRIMARY KEY AUTOINCREMENT,
                     exp_id               INTEGER NOT NULL,
@@ -107,7 +112,8 @@ def migrate_sqlite(db_path):
                     FOREIGN KEY (exp_id) REFERENCES exps(idexp) ON DELETE CASCADE,
                     FOREIGN KEY (client_id) REFERENCES client(id) ON DELETE CASCADE
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_client_log_metrics_lookup ON client_log_metrics(exp_id, client_id, aggregation_level, day, hour, method_name)"
             )
@@ -162,7 +168,8 @@ def migrate_postgresql(host, port, database, user, password):
 
         # Create log_file_offsets table if it doesn't exist
         if "log_file_offsets" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE log_file_offsets (
                     id            SERIAL PRIMARY KEY,
                     exp_id        INTEGER NOT NULL REFERENCES exps(idexp) ON DELETE CASCADE,
@@ -172,7 +179,8 @@ def migrate_postgresql(host, port, database, user, password):
                     last_offset   BIGINT NOT NULL DEFAULT 0,
                     last_updated  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_log_file_offset_lookup ON log_file_offsets(exp_id, log_file_type, client_id)"
             )
@@ -182,7 +190,8 @@ def migrate_postgresql(host, port, database, user, password):
 
         # Create server_log_metrics table if it doesn't exist
         if "server_log_metrics" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE server_log_metrics (
                     id                SERIAL PRIMARY KEY,
                     exp_id            INTEGER NOT NULL REFERENCES exps(idexp) ON DELETE CASCADE,
@@ -195,7 +204,8 @@ def migrate_postgresql(host, port, database, user, password):
                     min_time          TIMESTAMP,
                     max_time          TIMESTAMP
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_server_log_metrics_lookup ON server_log_metrics(exp_id, aggregation_level, day, hour, path)"
             )
@@ -205,7 +215,8 @@ def migrate_postgresql(host, port, database, user, password):
 
         # Create client_log_metrics table if it doesn't exist
         if "client_log_metrics" not in existing_tables:
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE client_log_metrics (
                     id                   SERIAL PRIMARY KEY,
                     exp_id               INTEGER NOT NULL REFERENCES exps(idexp) ON DELETE CASCADE,
@@ -217,7 +228,8 @@ def migrate_postgresql(host, port, database, user, password):
                     call_count           INTEGER NOT NULL DEFAULT 0,
                     total_execution_time DOUBLE PRECISION NOT NULL DEFAULT 0.0
                 )
-            """)
+            """
+            )
             cursor.execute(
                 "CREATE INDEX idx_client_log_metrics_lookup ON client_log_metrics(exp_id, client_id, aggregation_level, day, hour, method_name)"
             )

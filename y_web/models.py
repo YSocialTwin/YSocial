@@ -873,11 +873,19 @@ class LogFileOffset(db.Model):
     __bind_key__ = "db_admin"
     __tablename__ = "log_file_offsets"
     id = db.Column(db.Integer, primary_key=True)
-    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
     log_file_type = db.Column(db.String(50), nullable=False)  # 'server', 'client'
-    client_id = db.Column(db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=True)  # NULL for server logs
-    file_path = db.Column(db.String(500), nullable=False)  # relative path from experiment folder
-    last_offset = db.Column(db.BigInteger, nullable=False, default=0)  # byte offset in file
+    client_id = db.Column(
+        db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=True
+    )  # NULL for server logs
+    file_path = db.Column(
+        db.String(500), nullable=False
+    )  # relative path from experiment folder
+    last_offset = db.Column(
+        db.BigInteger, nullable=False, default=0
+    )  # byte offset in file
     last_updated = db.Column(db.DateTime, nullable=False)  # timestamp of last update
 
 
@@ -893,13 +901,17 @@ class ServerLogMetrics(db.Model):
     __bind_key__ = "db_admin"
     __tablename__ = "server_log_metrics"
     id = db.Column(db.Integer, primary_key=True)
-    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
     aggregation_level = db.Column(db.String(10), nullable=False)  # 'daily' or 'hourly'
     day = db.Column(db.Integer, nullable=False)
     hour = db.Column(db.Integer, nullable=True)  # NULL for daily aggregation
     path = db.Column(db.String(200), nullable=False)  # API path
     call_count = db.Column(db.Integer, nullable=False, default=0)
-    total_duration = db.Column(db.Float, nullable=False, default=0.0)  # sum of all durations
+    total_duration = db.Column(
+        db.Float, nullable=False, default=0.0
+    )  # sum of all durations
     min_time = db.Column(db.DateTime, nullable=True)  # earliest timestamp
     max_time = db.Column(db.DateTime, nullable=True)  # latest timestamp
 
@@ -916,28 +928,49 @@ class ClientLogMetrics(db.Model):
     __bind_key__ = "db_admin"
     __tablename__ = "client_log_metrics"
     id = db.Column(db.Integer, primary_key=True)
-    exp_id = db.Column(db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False)
-    client_id = db.Column(db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=False)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
+    client_id = db.Column(
+        db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=False
+    )
     aggregation_level = db.Column(db.String(10), nullable=False)  # 'daily' or 'hourly'
     day = db.Column(db.Integer, nullable=False)
     hour = db.Column(db.Integer, nullable=True)  # NULL for daily aggregation
     method_name = db.Column(db.String(200), nullable=False)
     call_count = db.Column(db.Integer, nullable=False, default=0)
-    total_execution_time = db.Column(db.Float, nullable=False, default=0.0)  # sum of all execution times
+    total_execution_time = db.Column(
+        db.Float, nullable=False, default=0.0
+    )  # sum of all execution times
     __table_args__ = (
-        db.Index('idx_client_log_metrics_lookup', 'exp_id', 'client_id', 'aggregation_level', 'day', 'hour', 'method_name'),
-        {'extend_existing': True}
+        db.Index(
+            "idx_client_log_metrics_lookup",
+            "exp_id",
+            "client_id",
+            "aggregation_level",
+            "day",
+            "hour",
+            "method_name",
+        ),
+        {"extend_existing": True},
     )
 
 
 # Add indexes to ServerLogMetrics as well
 ServerLogMetrics.__table_args__ = (
-    db.Index('idx_server_log_metrics_lookup', 'exp_id', 'aggregation_level', 'day', 'hour', 'path'),
-    {'extend_existing': True}
+    db.Index(
+        "idx_server_log_metrics_lookup",
+        "exp_id",
+        "aggregation_level",
+        "day",
+        "hour",
+        "path",
+    ),
+    {"extend_existing": True},
 )
 
 # Add index to LogFileOffset
 LogFileOffset.__table_args__ = (
-    db.Index('idx_log_file_offset_lookup', 'exp_id', 'log_file_type', 'client_id'),
-    {'extend_existing': True}
+    db.Index("idx_log_file_offset_lookup", "exp_id", "log_file_type", "client_id"),
+    {"extend_existing": True},
 )
