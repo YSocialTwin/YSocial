@@ -1524,7 +1524,8 @@ def experiment_details(uid):
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
     
     # Pass telemetry flag independently to avoid issues with current_user object
-    telemetry_enabled = current_user.is_authenticated and getattr(current_user, 'telemetry_enabled', False)
+    # User is already authenticated due to @login_required decorator
+    telemetry_enabled = getattr(current_user, 'telemetry_enabled', True)
 
     return render_template(
         "admin/experiment_details.html",
