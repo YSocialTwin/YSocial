@@ -1659,16 +1659,16 @@
             {% endif %}
 
             <!-- Additional Row for Registered Users and Error Reporting -->
-            <div class="columns is-multiline" style="display: flex; align-items: stretch;">
+            <div class="columns is-multiline">
                 {% if len(users) > 0 %}
-                <div class="column is-12-mobile is-6-tablet is-6-desktop" style="display: flex; flex-direction: column;">
-                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="column is-12-mobile {% if current_user.telemetry_enabled %}is-6-tablet is-6-desktop{% else %}is-12-tablet is-12-desktop{% endif %}">
+                    <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Users with access to participate in this experiment.
                         </p>
 
-                        <div class="box-content" style="flex: 1;">
+                        <div class="box-content">
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">
@@ -1685,14 +1685,14 @@
                 {% endif %}
 
                 {% if current_user.telemetry_enabled %}
-                <div class="column is-12-mobile is-6-tablet is-6-desktop" style="display: flex; flex-direction: column;">
-                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
+                <div class="column is-12-mobile {% if len(users) > 0 %}is-6-tablet is-6-desktop{% else %}is-12-tablet is-12-desktop{% endif %}">
+                    <div class="dashboard-box" style="height: 100%;">
                         <h3 class="title is-5 is-thin">Something went wrong?</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Help us improve YSocial: submit the experiment log!
                         </p>
 
-                        <div class="box-content" style="flex: 1;">
+                        <div class="box-content">
                             <div class="box-lines">
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
                                     This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
