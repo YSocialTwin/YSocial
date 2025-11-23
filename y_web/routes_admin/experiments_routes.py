@@ -1522,6 +1522,9 @@ def experiment_details(uid):
     # get jupyter instance for this experiment if exists
 
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
+    
+    # Pass telemetry flag independently to avoid issues with current_user object
+    telemetry_enabled = current_user.is_authenticated and getattr(current_user, 'telemetry_enabled', False)
 
     return render_template(
         "admin/experiment_details.html",
@@ -1533,6 +1536,7 @@ def experiment_details(uid):
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
+        telemetry_enabled=telemetry_enabled,
     )
 
 
