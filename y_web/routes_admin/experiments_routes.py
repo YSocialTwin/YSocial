@@ -36,6 +36,7 @@ from y_web.models import (
     Agent_Profile,
     Client,
     Client_Execution,
+    ClientLogMetrics,
     Education,
     Exp_stats,
     Exp_Topic,
@@ -43,6 +44,7 @@ from y_web.models import (
     Jupyter_instances,
     Languages,
     Leanings,
+    LogFileOffset,
     Nationalities,
     Page,
     Page_Population,
@@ -50,6 +52,7 @@ from y_web.models import (
     Population_Experiment,
     Profession,
     Rounds,
+    ServerLogMetrics,
     Topic_List,
     Toxicity_Levels,
     User_Experiment,
@@ -1325,6 +1328,12 @@ def delete_simulation(exp_id):
         db.session.delete(exp)
         db.session.commit()
 
+        # Delete log metrics and offsets (should cascade but we do it explicitly for safety)
+        db.session.query(LogFileOffset).filter_by(exp_id=exp_id).delete()
+        db.session.query(ServerLogMetrics).filter_by(exp_id=exp_id).delete()
+        db.session.query(ClientLogMetrics).filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+
         # remove populaiton_experiment
         db.session.query(Population_Experiment).filter_by(id_exp=exp_id).delete()
         db.session.commit()
@@ -1634,8 +1643,6 @@ def experiment_logs(exp_id):
         current_app.logger.error(f"Error updating server log metrics: {e}")
 
     # Retrieve aggregated metrics from database (daily aggregation for overview)
-    from y_web.models import ServerLogMetrics
-
     metrics = (
         ServerLogMetrics.query.filter_by(
             exp_id=exp_id, aggregation_level="daily"
@@ -1715,8 +1722,6 @@ def experiment_trends(exp_id):
         current_app.logger.error(f"Error updating server log metrics: {e}")
 
     # Retrieve aggregated metrics from database
-    from y_web.models import ServerLogMetrics, ClientLogMetrics
-
     # Get daily metrics
     daily_metrics = (
         ServerLogMetrics.query.filter_by(
@@ -1912,8 +1917,6 @@ def client_logs(client_id):
         current_app.logger.error(f"Error updating client log metrics: {e}")
 
     # Retrieve aggregated metrics from database (daily aggregation for overview)
-    from y_web.models import ClientLogMetrics
-
     metrics = (
         ClientLogMetrics.query.filter_by(
             exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
