@@ -464,8 +464,12 @@
                             <div style="display: flex; gap: 0.5em; align-items: center;">
                                 <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
                                     <input type="checkbox" id="autoRefreshTrends" checked style="cursor: pointer;">
-                                    <span>Auto-refresh (30s)</span>
+                                    <span>Auto-refresh</span>
                                 </label>
+                                <input type="number" id="refreshIntervalTrends" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
                                 <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
@@ -884,7 +888,9 @@
                                 if (trendsAutoRefreshInterval) {
                                     clearInterval(trendsAutoRefreshInterval);
                                 }
-                                trendsAutoRefreshInterval = setInterval(loadTrendsData, 30000); // 30 seconds
+                                const intervalSeconds = parseInt(document.getElementById('refreshIntervalTrends').value) || 30;
+                                const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
+                                trendsAutoRefreshInterval = setInterval(loadTrendsData, intervalMs);
                             }
 
                             function stopTrendsAutoRefresh() {
@@ -900,6 +906,14 @@
                                     startTrendsAutoRefresh();
                                 } else {
                                     stopTrendsAutoRefresh();
+                                }
+                            });
+
+                            // Refresh interval input handler
+                            document.getElementById('refreshIntervalTrends').addEventListener('change', function() {
+                                // Restart auto-refresh with new interval if currently enabled
+                                if (document.getElementById('autoRefreshTrends').checked) {
+                                    startTrendsAutoRefresh();
                                 }
                             });
 
@@ -929,8 +943,12 @@
                             <div style="display: flex; gap: 0.5em; align-items: center;">
                                 <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
                                     <input type="checkbox" id="autoRefreshLogs" checked style="cursor: pointer;">
-                                    <span>Auto-refresh (30s)</span>
+                                    <span>Auto-refresh</span>
                                 </label>
+                                <input type="number" id="refreshIntervalLogs" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
                                 <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
@@ -1266,7 +1284,9 @@
                     if (logsAutoRefreshInterval) {
                         clearInterval(logsAutoRefreshInterval);
                     }
-                    logsAutoRefreshInterval = setInterval(loadServerLogsData, 30000); // 30 seconds
+                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalLogs').value) || 30;
+                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
+                    logsAutoRefreshInterval = setInterval(loadServerLogsData, intervalMs);
                 }
 
                 function stopLogsAutoRefresh() {
@@ -1282,6 +1302,14 @@
                         startLogsAutoRefresh();
                     } else {
                         stopLogsAutoRefresh();
+                    }
+                });
+
+                // Refresh interval input handler
+                document.getElementById('refreshIntervalLogs').addEventListener('change', function() {
+                    // Restart auto-refresh with new interval if currently enabled
+                    if (document.getElementById('autoRefreshLogs').checked) {
+                        startLogsAutoRefresh();
                     }
                 });
 
@@ -1304,8 +1332,12 @@
                             <div style="display: flex; gap: 0.5em; align-items: center;">
                                 <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
                                     <input type="checkbox" id="autoRefreshClientLogs" checked style="cursor: pointer;">
-                                    <span>Auto-refresh (30s)</span>
+                                    <span>Auto-refresh</span>
                                 </label>
+                                <input type="number" id="refreshIntervalClientLogs" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
                                 <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
@@ -1690,12 +1722,14 @@
                     if (clientLogsAutoRefreshInterval) {
                         clearInterval(clientLogsAutoRefreshInterval);
                     }
+                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalClientLogs').value) || 30;
+                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
                     clientLogsAutoRefreshInterval = setInterval(function() {
                         const clientId = document.getElementById('clientSelector').value;
                         if (clientId) {
                             loadClientLogs(clientId);
                         }
-                    }, 30000); // 30 seconds
+                    }, intervalMs);
                 }
 
                 function stopClientLogsAutoRefresh() {
@@ -1711,6 +1745,14 @@
                         startClientLogsAutoRefresh();
                     } else {
                         stopClientLogsAutoRefresh();
+                    }
+                });
+
+                // Refresh interval input handler
+                document.getElementById('refreshIntervalClientLogs').addEventListener('change', function() {
+                    // Restart auto-refresh with new interval if currently enabled
+                    if (document.getElementById('autoRefreshClientLogs').checked) {
+                        startClientLogsAutoRefresh();
                     }
                 });
 
