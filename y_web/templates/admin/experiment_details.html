@@ -1672,9 +1672,9 @@
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">
-                                        {% for user, user_exp in users %}
-                                            <a href="/admin/user_details/{{ user.id }}"
-                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ user.username }}</a>
+                                        {% for reg_user, user_exp in users %}
+                                            <a href="/admin/user_details/{{ reg_user.id }}"
+                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ reg_user.username }}</a>
                                         {% endfor %}
                                     </span>
                                 </div>
