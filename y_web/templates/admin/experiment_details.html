@@ -373,6 +373,18 @@
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
                                     This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
                                 </p>
+                                <div class="field" style="margin-bottom: 1em;">
+                                    <label class="label" style="font-size: 0.9em;">Describe the problem (optional):</label>
+                                    <div class="control">
+                                        <textarea 
+                                            id="problem-description-{{ experiment.idexp }}"
+                                            class="textarea" 
+                                            placeholder="What issue did you encounter? What were you trying to do when the error occurred?"
+                                            rows="3"
+                                            style="font-size: 0.85em;"></textarea>
+                                    </div>
+                                    <p class="help" style="font-size: 0.8em;">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
+                                </div>
                                 <button 
                                     id="submit-logs-btn-{{ experiment.idexp }}"
                                     class="button is-info is-small" 
@@ -390,18 +402,25 @@
                         function submitExperimentLogs(expId) {
                             const btn = document.getElementById(`submit-logs-btn-${expId}`);
                             const messageDiv = document.getElementById(`submit-logs-message-${expId}`);
+                            const descriptionTextarea = document.getElementById(`problem-description-${expId}`);
                             
                             // Disable button and show loading
                             btn.disabled = true;
                             btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
                             messageDiv.style.display = 'none';
                             
-                            // Submit logs
+                            // Get the problem description
+                            const problemDescription = descriptionTextarea.value.trim();
+                            
+                            // Submit logs with description
                             fetch(`/admin/submit_experiment_logs/${expId}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
-                                }
+                                },
+                                body: JSON.stringify({
+                                    problem_description: problemDescription
+                                })
                             })
                             .then(response => response.json())
                             .then(data => {
@@ -410,6 +429,8 @@
                                 if (data.success) {
                                     messageDiv.style.color = '#28a745';
                                     messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
+                                    // Clear the textarea on success
+                                    descriptionTextarea.value = '';
                                 } else {
                                     messageDiv.style.color = '#dc3545';
                                     messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;

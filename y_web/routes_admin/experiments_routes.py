@@ -1550,6 +1550,14 @@ def submit_experiment_logs(exp_id):
             }
         )
 
+    # Get problem description from request body
+    problem_description = None
+    if request.is_json:
+        data = request.get_json()
+        problem_description = data.get("problem_description", "").strip()
+        if not problem_description:
+            problem_description = None
+
     # Get experiment folder path
     BASE_DIR = get_writable_path()
 
@@ -1566,9 +1574,11 @@ def submit_experiment_logs(exp_id):
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment_folder_name}"
     )
 
-    # Initialize telemetry and submit logs
+    # Initialize telemetry and submit logs with problem description
     telemetry = Telemetry(user=current_user)
-    success, message = telemetry.submit_experiment_logs(exp_id, experiment_folder)
+    success, message = telemetry.submit_experiment_logs(
+        exp_id, experiment_folder, problem_description=problem_description
+    )
 
     return jsonify({"success": success, "message": message})
 
