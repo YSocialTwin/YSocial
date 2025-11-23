@@ -1596,356 +1596,391 @@ def submit_experiment_logs(exp_id):
 @login_required
 def experiment_logs(exp_id):
     """Get experiment server logs analysis using database-backed metrics."""
-    check_privileges(current_user.username)
-
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
-
-    from y_web.utils.path_utils import get_writable_path
-    from y_web.utils.log_metrics import update_server_log_metrics
-
-    BASE_DIR = get_writable_path()
-
-    # Construct path to _server.log
-    # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        # Extract the UUID folder
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-            )
-        else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        # PostgreSQL format - UUID is after the underscore
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
-
-    log_file = os.path.join(exp_folder, "_server.log")
-
-    # Check if log file exists
-    if not os.path.exists(log_file):
-        return jsonify(
-            {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
-        )
-
-    # Update metrics incrementally from log file
     try:
-        update_server_log_metrics(exp_id, log_file)
-    except Exception as e:
-        # Log the error but continue with existing data
-        current_app.logger.error(f"Error updating server log metrics: {e}")
+        check_privileges(current_user.username)
 
-    # Retrieve aggregated metrics from database (daily aggregation for overview)
-    metrics = (
-        ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="daily"
-        )
-        .all()
-    )
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    # Aggregate by path across all days
-    path_counts = defaultdict(int)
-    path_total_durations = defaultdict(float)
+        from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import update_server_log_metrics
 
-    for metric in metrics:
-        path_counts[metric.path] += metric.call_count
-        path_total_durations[metric.path] += metric.total_duration
+        BASE_DIR = get_writable_path()
 
-    # Calculate mean durations
-    mean_durations = {}
-    for path in path_counts.keys():
-        if path_counts[path] > 0:
-            mean_durations[path] = path_total_durations[path] / path_counts[path]
+        # Construct path to _server.log
+        # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            # Extract the UUID folder
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            # PostgreSQL format - UUID is after the underscore
+            uid = db_name.replace("experiments_", "")
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
         else:
-            mean_durations[path] = 0
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
+        log_file = os.path.join(exp_folder, "_server.log")
+
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify(
+                {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
+            )
+
+        # Update metrics incrementally from log file
+        try:
+            update_server_log_metrics(exp_id, log_file)
+        except Exception as e:
+            # Log the error but continue with existing data
+            current_app.logger.error(f"Error updating server log metrics: {e}", exc_info=True)
+
+        # Retrieve aggregated metrics from database (daily aggregation for overview)
+        metrics = (
+            ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            )
+            .all()
+        )
+
+        # Aggregate by path across all days
+        path_counts = defaultdict(int)
+        path_total_durations = defaultdict(float)
+
+        for metric in metrics:
+            path_counts[metric.path] += metric.call_count
+            path_total_durations[metric.path] += metric.total_duration
+
+        # Calculate mean durations
+        mean_durations = {}
+        for path in path_counts.keys():
+            if path_counts[path] > 0:
+                mean_durations[path] = path_total_durations[path] / path_counts[path]
+            else:
+                mean_durations[path] = 0
+
+        return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
+    
+    except Exception as e:
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(f"Error in experiment_logs endpoint: {e}", exc_info=True)
+        return jsonify({"error": f"Internal server error: {str(e)}", "call_volume": {}, "mean_duration": {}}), 500
 
 
 @experiments.route("/admin/experiment_trends/<int:exp_id>")
 @login_required
 def experiment_trends(exp_id):
     """Get experiment server trends analysis using database-backed metrics."""
-    check_privileges(current_user.username)
+    try:
+        check_privileges(current_user.username)
 
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    from y_web.utils.path_utils import get_writable_path
-    from y_web.utils.log_metrics import update_server_log_metrics, update_client_log_metrics
+        from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import update_server_log_metrics, update_client_log_metrics
 
-    BASE_DIR = get_writable_path()
+        BASE_DIR = get_writable_path()
 
-    # Construct path to _server.log
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-            )
+        # Construct path to _server.log
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            uid = db_name.replace("experiments_", "")
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
         else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    log_file = os.path.join(exp_folder, "_server.log")
+        log_file = os.path.join(exp_folder, "_server.log")
 
-    # Check if log file exists
-    if not os.path.exists(log_file):
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify(
+                {
+                    "daily_compute": {},
+                    "daily_simulation": {},
+                    "hourly_compute": {},
+                    "hourly_simulation": {},
+                    "error": "Log file not found",
+                }
+            )
+
+        # Update server metrics incrementally
+        try:
+            update_server_log_metrics(exp_id, log_file)
+        except Exception as e:
+            current_app.logger.error(f"Error updating server log metrics: {e}", exc_info=True)
+
+        # Retrieve aggregated metrics from database
+        # Get daily metrics
+        daily_metrics = (
+            ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            )
+            .all()
+        )
+
+        daily_durations = defaultdict(float)
+        daily_simulation = {}
+
+        for metric in daily_metrics:
+            daily_durations[metric.day] += metric.total_duration
+            # Calculate simulation time from min_time and max_time
+            if metric.min_time and metric.max_time:
+                sim_time = (metric.max_time - metric.min_time).total_seconds()
+                if metric.day in daily_simulation:
+                    daily_simulation[metric.day] = max(daily_simulation[metric.day], sim_time)
+                else:
+                    daily_simulation[metric.day] = sim_time
+
+        # Get hourly metrics
+        hourly_metrics = (
+            ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="hourly"
+            )
+            .all()
+        )
+
+        hourly_durations = defaultdict(float)
+        hourly_simulation = {}
+
+        for metric in hourly_metrics:
+            key = f"{metric.day}-{metric.hour}"
+            hourly_durations[key] += metric.total_duration
+            # Calculate simulation time from min_time and max_time
+            if metric.min_time and metric.max_time:
+                sim_time = (metric.max_time - metric.min_time).total_seconds()
+                if key in hourly_simulation:
+                    hourly_simulation[key] = max(hourly_simulation[key], sim_time)
+                else:
+                    hourly_simulation[key] = sim_time
+
+        # Get total expected duration from client_execution table
+        clients = Client.query.filter_by(id_exp=exp_id).all()
+        client_ids = [c.id for c in clients]
+
+        max_expected_rounds = 0
+        max_remaining_rounds = 0
+        client_progress = {}
+
+        if client_ids:
+            client_executions = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            if client_executions:
+                max_expected_rounds = max(
+                    ce.expected_duration_rounds for ce in client_executions
+                )
+
+                # Calculate remaining rounds for each client
+                for ce in client_executions:
+                    current_round = ce.last_active_day * 24 + ce.last_active_hour
+                    remaining = ce.expected_duration_rounds - current_round
+                    client_progress[ce.client_id] = {
+                        "expected_rounds": ce.expected_duration_rounds,
+                        "current_round": current_round,
+                        "remaining_rounds": max(0, remaining),
+                    }
+                    max_remaining_rounds = max(max_remaining_rounds, remaining)
+
+        # Convert rounds to days
+        total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
+        max_remaining_days = max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
+
+        # Update and retrieve client log metrics
+        client_daily_compute = {}
+        client_hourly_compute = {}
+
+        for client in clients:
+            client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+            # Update client metrics if log file exists
+            if os.path.exists(client_log_file):
+                try:
+                    update_client_log_metrics(exp_id, client.id, client_log_file)
+                except Exception as e:
+                    current_app.logger.error(f"Error updating client {client.id} log metrics: {e}", exc_info=True)
+
+            # Retrieve aggregated client metrics from database
+            client_daily_metrics = (
+                ClientLogMetrics.query.filter_by(
+                    exp_id=exp_id, client_id=client.id, aggregation_level="daily"
+                )
+                .all()
+            )
+
+            client_hourly_metrics = (
+                ClientLogMetrics.query.filter_by(
+                    exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
+                )
+                .all()
+            )
+
+            # Aggregate by day
+            if client_daily_metrics:
+                client_daily = defaultdict(float)
+                for metric in client_daily_metrics:
+                    client_daily[metric.day] += metric.total_execution_time
+                client_daily_compute[client.name] = dict(client_daily)
+
+            # Aggregate by hour
+            if client_hourly_metrics:
+                client_hourly = defaultdict(float)
+                for metric in client_hourly_metrics:
+                    key = f"{metric.day}-{metric.hour}"
+                    client_hourly[key] += metric.total_execution_time
+                client_hourly_compute[client.name] = dict(client_hourly)
+
         return jsonify(
             {
-                "daily_compute": {},
-                "daily_simulation": {},
-                "hourly_compute": {},
-                "hourly_simulation": {},
-                "error": "Log file not found",
+                "daily_compute": dict(daily_durations),
+                "daily_simulation": daily_simulation,
+                "hourly_compute": dict(hourly_durations),
+                "hourly_simulation": hourly_simulation,
+                "total_expected_days": total_days,
+                "total_expected_rounds": max_expected_rounds,
+                "max_remaining_rounds": max(0, max_remaining_rounds),
+                "max_remaining_days": max_remaining_days,
+                "client_daily_compute": client_daily_compute,
+                "client_hourly_compute": client_hourly_compute,
+                "client_progress": client_progress,
             }
         )
-
-    # Update server metrics incrementally
-    try:
-        update_server_log_metrics(exp_id, log_file)
+    
     except Exception as e:
-        current_app.logger.error(f"Error updating server log metrics: {e}")
-
-    # Retrieve aggregated metrics from database
-    # Get daily metrics
-    daily_metrics = (
-        ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="daily"
-        )
-        .all()
-    )
-
-    daily_durations = defaultdict(float)
-    daily_simulation = {}
-
-    for metric in daily_metrics:
-        daily_durations[metric.day] += metric.total_duration
-        # Calculate simulation time from min_time and max_time
-        if metric.min_time and metric.max_time:
-            sim_time = (metric.max_time - metric.min_time).total_seconds()
-            if metric.day in daily_simulation:
-                daily_simulation[metric.day] = max(daily_simulation[metric.day], sim_time)
-            else:
-                daily_simulation[metric.day] = sim_time
-
-    # Get hourly metrics
-    hourly_metrics = (
-        ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="hourly"
-        )
-        .all()
-    )
-
-    hourly_durations = defaultdict(float)
-    hourly_simulation = {}
-
-    for metric in hourly_metrics:
-        key = f"{metric.day}-{metric.hour}"
-        hourly_durations[key] += metric.total_duration
-        # Calculate simulation time from min_time and max_time
-        if metric.min_time and metric.max_time:
-            sim_time = (metric.max_time - metric.min_time).total_seconds()
-            if key in hourly_simulation:
-                hourly_simulation[key] = max(hourly_simulation[key], sim_time)
-            else:
-                hourly_simulation[key] = sim_time
-
-    # Get total expected duration from client_execution table
-    clients = Client.query.filter_by(id_exp=exp_id).all()
-    client_ids = [c.id for c in clients]
-
-    max_expected_rounds = 0
-    max_remaining_rounds = 0
-    client_progress = {}
-
-    if client_ids:
-        client_executions = Client_Execution.query.filter(
-            Client_Execution.client_id.in_(client_ids)
-        ).all()
-        if client_executions:
-            max_expected_rounds = max(
-                ce.expected_duration_rounds for ce in client_executions
-            )
-
-            # Calculate remaining rounds for each client
-            for ce in client_executions:
-                current_round = ce.last_active_day * 24 + ce.last_active_hour
-                remaining = ce.expected_duration_rounds - current_round
-                client_progress[ce.client_id] = {
-                    "expected_rounds": ce.expected_duration_rounds,
-                    "current_round": current_round,
-                    "remaining_rounds": max(0, remaining),
-                }
-                max_remaining_rounds = max(max_remaining_rounds, remaining)
-
-    # Convert rounds to days
-    total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
-    max_remaining_days = max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
-
-    # Update and retrieve client log metrics
-    client_daily_compute = {}
-    client_hourly_compute = {}
-
-    for client in clients:
-        client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
-
-        # Update client metrics if log file exists
-        if os.path.exists(client_log_file):
-            try:
-                update_client_log_metrics(exp_id, client.id, client_log_file)
-            except Exception as e:
-                current_app.logger.error(f"Error updating client {client.id} log metrics: {e}")
-
-        # Retrieve aggregated client metrics from database
-        client_daily_metrics = (
-            ClientLogMetrics.query.filter_by(
-                exp_id=exp_id, client_id=client.id, aggregation_level="daily"
-            )
-            .all()
-        )
-
-        client_hourly_metrics = (
-            ClientLogMetrics.query.filter_by(
-                exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
-            )
-            .all()
-        )
-
-        # Aggregate by day
-        if client_daily_metrics:
-            client_daily = defaultdict(float)
-            for metric in client_daily_metrics:
-                client_daily[metric.day] += metric.total_execution_time
-            client_daily_compute[client.name] = dict(client_daily)
-
-        # Aggregate by hour
-        if client_hourly_metrics:
-            client_hourly = defaultdict(float)
-            for metric in client_hourly_metrics:
-                key = f"{metric.day}-{metric.hour}"
-                client_hourly[key] += metric.total_execution_time
-            client_hourly_compute[client.name] = dict(client_hourly)
-
-    return jsonify(
-        {
-            "daily_compute": dict(daily_durations),
-            "daily_simulation": daily_simulation,
-            "hourly_compute": dict(hourly_durations),
-            "hourly_simulation": hourly_simulation,
-            "total_expected_days": total_days,
-            "total_expected_rounds": max_expected_rounds,
-            "max_remaining_rounds": max(0, max_remaining_rounds),
-            "max_remaining_days": max_remaining_days,
-            "client_daily_compute": client_daily_compute,
-            "client_hourly_compute": client_hourly_compute,
-            "client_progress": client_progress,
-        }
-    )
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(f"Error in experiment_trends endpoint: {e}", exc_info=True)
+        return jsonify({
+            "error": f"Internal server error: {str(e)}",
+            "daily_compute": {},
+            "daily_simulation": {},
+            "hourly_compute": {},
+            "hourly_simulation": {},
+            "total_expected_days": 0,
+            "total_expected_rounds": 0,
+            "max_remaining_rounds": 0,
+            "max_remaining_days": 0,
+            "client_daily_compute": {},
+            "client_hourly_compute": {},
+            "client_progress": {},
+        }), 500
 
 
 @experiments.route("/admin/client_logs/<int:client_id>")
 @login_required
 def client_logs(client_id):
     """Get client logs analysis for a specific client."""
-    check_privileges(current_user.username)
+    try:
+        check_privileges(current_user.username)
 
-    # Get client details
-    client = Client.query.filter_by(id=client_id).first()
-    if not client:
-        return jsonify({"error": "Client not found"}), 404
+        # Get client details
+        client = Client.query.filter_by(id=client_id).first()
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
 
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    from y_web.utils.path_utils import get_writable_path
-    from y_web.utils.log_metrics import update_client_log_metrics
+        from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import update_client_log_metrics
 
-    BASE_DIR = get_writable_path()
+        BASE_DIR = get_writable_path()
 
-    # Construct path to client log file
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        # Extract the UUID folder
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-            )
+        # Construct path to client log file
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            # Extract the UUID folder
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            # PostgreSQL format - UUID is after the underscore
+            uid = db_name.replace("experiments_", "")
+            exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
         else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        # PostgreSQL format - UUID is after the underscore
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    # Client log file name format: {client_name}_client.log
-    log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+        # Client log file name format: {client_name}_client.log
+        log_file = os.path.join(exp_folder, f"{client.name}_client.log")
 
-    # Check if log file exists
-    if not os.path.exists(log_file):
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify(
+                {
+                    "call_volume": {},
+                    "mean_execution_time": {},
+                    "error": "Log file not found",
+                }
+            )
+
+        # Update client metrics incrementally
+        try:
+            update_client_log_metrics(experiment.idexp, client_id, log_file)
+        except Exception as e:
+            current_app.logger.error(f"Error updating client log metrics: {e}", exc_info=True)
+
+        # Retrieve aggregated metrics from database (daily aggregation for overview)
+        metrics = (
+            ClientLogMetrics.query.filter_by(
+                exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
+            )
+            .all()
+        )
+
+        # Aggregate by method across all days
+        method_counts = defaultdict(int)
+        method_total_times = defaultdict(float)
+
+        for metric in metrics:
+            method_counts[metric.method_name] += metric.call_count
+            method_total_times[metric.method_name] += metric.total_execution_time
+
+        # Calculate mean execution times
+        mean_execution_times = {}
+        for method in method_counts.keys():
+            if method_counts[method] > 0:
+                mean_execution_times[method] = method_total_times[method] / method_counts[method]
+            else:
+                mean_execution_times[method] = 0
+
         return jsonify(
             {
-                "call_volume": {},
-                "mean_execution_time": {},
-                "error": "Log file not found",
+                "call_volume": dict(method_counts),
+                "mean_execution_time": mean_execution_times,
             }
         )
-
-    # Update client metrics incrementally
-    try:
-        update_client_log_metrics(experiment.idexp, client_id, log_file)
+    
     except Exception as e:
-        current_app.logger.error(f"Error updating client log metrics: {e}")
-
-    # Retrieve aggregated metrics from database (daily aggregation for overview)
-    metrics = (
-        ClientLogMetrics.query.filter_by(
-            exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
-        )
-        .all()
-    )
-
-    # Aggregate by method across all days
-    method_counts = defaultdict(int)
-    method_total_times = defaultdict(float)
-
-    for metric in metrics:
-        method_counts[metric.method_name] += metric.call_count
-        method_total_times[metric.method_name] += metric.total_execution_time
-
-    # Calculate mean execution times
-    mean_execution_times = {}
-    for method in method_counts.keys():
-        if method_counts[method] > 0:
-            mean_execution_times[method] = method_total_times[method] / method_counts[method]
-        else:
-            mean_execution_times[method] = 0
-
-    return jsonify(
-        {
-            "call_volume": dict(method_counts),
-            "mean_execution_time": mean_execution_times,
-        }
-    )
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(f"Error in client_logs endpoint: {e}", exc_info=True)
+        return jsonify({
+            "error": f"Internal server error: {str(e)}",
+            "call_volume": {},
+            "mean_execution_time": {},
+        }), 500
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")

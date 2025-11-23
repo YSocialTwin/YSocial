@@ -11,6 +11,7 @@ import json
 import os
 from collections import defaultdict
 from datetime import datetime
+import logging
 
 from sqlalchemy import and_
 
@@ -20,6 +21,9 @@ from y_web.models import (
     LogFileOffset,
     ServerLogMetrics,
 )
+
+# Set up logger
+logger = logging.getLogger(__name__)
 
 
 def get_log_file_offset(exp_id, log_file_type, file_path, client_id=None):
@@ -120,8 +124,7 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0):
                     continue
 
                 try:
-                    # Replace single quotes with double quotes for valid JSON
-                    line = line.replace("'", '"')
+                    # Parse JSON - log entries should already be properly formatted
                     log_entry = json.loads(line)
 
                     path = log_entry.get("path", "unknown")
@@ -161,7 +164,7 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0):
             new_offset = f.tell()
 
     except Exception as e:
-        print(f"Error reading server log file: {e}")
+        logger.error(f"Error reading server log file: {e}", exc_info=True)
         return start_offset, {}
 
     # Update database with new metrics
@@ -299,7 +302,7 @@ def parse_client_log_incremental(log_file_path, exp_id, client_id, start_offset=
             new_offset = f.tell()
 
     except Exception as e:
-        print(f"Error reading client log file: {e}")
+        logger.error(f"Error reading client log file: {e}", exc_info=True)
         return start_offset, {}
 
     # Update database with new metrics
@@ -402,7 +405,7 @@ def update_server_log_metrics(exp_id, log_file_path):
         return True
 
     except Exception as e:
-        print(f"Error updating server log metrics: {e}")
+        logger.error(f"Error updating server log metrics: {e}", exc_info=True)
         return False
 
 
@@ -437,5 +440,5 @@ def update_client_log_metrics(exp_id, client_id, log_file_path):
         return True
 
     except Exception as e:
-        print(f"Error updating client log metrics: {e}")
+        logger.error(f"Error updating client log metrics: {e}", exc_info=True)
         return False
