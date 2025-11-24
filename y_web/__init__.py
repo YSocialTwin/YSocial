@@ -334,6 +334,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
             "connect_args": {"check_same_thread": False}
         }
+        # Store the database paths for migrations
+        app.config["DASHBOARD_DB_PATH"] = dashboard_db_path
+        app.config["DUMMY_DB_PATH"] = dummy_db_path
 
     elif db_type == "postgresql":
         create_postgresql_db(app)
@@ -564,11 +567,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
             if db_type == "sqlite":
                 from y_web.migrations.add_telemetry_columns import migrate_sqlite
 
-                dashboard_db_path = os.path.join(
-                    app.config.get("DATABASE_PATH", "data_schema"),
-                    "database_dashboard.db",
-                )
-                migrate_sqlite(dashboard_db_path)
+                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
+                if dashboard_db_path:
+                    migrate_sqlite(dashboard_db_path)
             elif db_type == "postgresql":
                 from y_web.migrations.add_telemetry_columns import migrate_postgresql
 
@@ -587,6 +588,41 @@ def create_app(db_type="sqlite", desktop_mode=False):
                         )
         except Exception as e:
             print(f"Failed to run telemetry columns migration: {e}")
+
+        try:
+            # Run migration to add log metrics tables if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_log_metrics_tables import migrate_sqlite
+
+                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
+                if dashboard_db_path:
+                    migrate_sqlite(dashboard_db_path)
+            elif db_type == "postgresql":
+                from y_web.migrations.add_log_metrics_tables import migrate_postgresql
+
+                # Get PostgreSQL connection details from app config
+                pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
+                if pg_config:
+                    # Parse connection string or use environment variables
+                    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+                    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+                    pg_database = os.environ.get("POSTGRES_DB", "ysocial")
+                    pg_user = os.environ.get("POSTGRES_USER", "postgres")
+                    pg_password = os.environ.get("POSTGRES_PASSWORD", "")
+                    if pg_password:
+                        migrate_postgresql(
+                            pg_host, pg_port, pg_database, pg_user, pg_password
+                        )
+        except Exception as e:
+            print(f"Failed to run log metrics tables migration: {e}")
+
+        # Ensure all tables defined in models exist (including release_info)
+        # This creates any missing tables that are defined in models.py
+        try:
+            db.create_all()
+            print("✓ Database tables verified/created")
+        except Exception as e:
+            print(f"Failed to create database tables: {e}")
 
     # Check for updates at startup
     with app.app_context():
