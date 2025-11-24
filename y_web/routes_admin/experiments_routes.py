@@ -553,7 +553,7 @@ def upload_experiment():
                         raise
 
                     # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
                     stmt = text(
                         """
@@ -569,8 +569,8 @@ def upload_experiment():
                     dummy_conn.execute(
                         stmt,
                         {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
+                            "username": "Admin",
+                            "email": "admin@y-not.social",
                             "password": hashed_pw,
                             "user_type": "user",
                             "leaning": "none",
@@ -1099,7 +1099,7 @@ def create_experiment():
                         dummy_conn.execute(text(schema_sql))
 
                     # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
                     stmt = text(
                         """
@@ -1115,8 +1115,8 @@ def create_experiment():
                     dummy_conn.execute(
                         stmt,
                         {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
+                            "username": "Admin",
+                            "email": "admin@y-not.social",
                             "password": hashed_pw,
                             "user_type": "user",
                             "leaning": "none",
@@ -3299,7 +3299,7 @@ def copy_experiment():
                         conn.execute(text(schema_sql))
 
                     # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
                     stmt = text(
                         """
@@ -3315,8 +3315,8 @@ def copy_experiment():
                     conn.execute(
                         stmt,
                         {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
+                            "username": "Admin",
+                            "email": "admin@y-not.social",
                             "password": hashed_pw,
                             "user_type": "user",
                             "leaning": "none",

@@ -108,7 +108,7 @@ def create_postgresql_db(app):
             db_conn.execute(text(schema_sql))
 
             # Generate hashed password
-            hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+            hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
             # Insert initial admin user
             db_conn.execute(
@@ -119,8 +119,8 @@ def create_postgresql_db(app):
                      """
                 ),
                 {
-                    "username": "admin",
-                    "email": "admin@ysocial.com",
+                    "username": "Admin",
+                    "email": "admin@y-not.social",
                     "password": hashed_pw,
                     "role": "admin",
                 },
@@ -152,7 +152,7 @@ def create_postgresql_db(app):
             dummy_conn.execute(text(schema_sql))
 
             # Generate hashed password
-            hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+            hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
             # Insert initial admin user
             stmt = text(
@@ -169,8 +169,8 @@ def create_postgresql_db(app):
             dummy_conn.execute(
                 stmt,
                 {
-                    "username": "admin",
-                    "email": "admin@ysocial.com",
+                    "username": "Admin",
+                    "email": "admin@y-not.social",
                     "password": hashed_pw,
                     "user_type": "user",
                     "leaning": "none",

@@ -100,7 +100,9 @@ The **Y Social** supports a wide range of simulation configurations and automate
 
 ## 🏁 Getting Started
 
-**Y Social** has been tested on **GNU/Linux** and **MacOS**. 
+**Y Social** has been tested on **GNU/Linux**, **MacOS** and **Windows**. 
+
+[![os](./images/os_support.png)](https://y-not.social/download)
 
 ### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
 
@@ -109,14 +111,15 @@ If you prefer a click-and-run experience without setting up Python, download our
 1. **Download** the appropriate package for your OS from the official [download](https://y-not.social/download) page:
 
 2. **Install** the application and run the executable:
-   - **Linux/macOS**: `./YSocial`
+   - **Linux:** `./YSocial`
+   - **MacOS**: Install the `.dmg` file, then double-click to run.
    - **Windows**: Double-click `YSocial.exe`
 
 3. The application will **automatically open** 
 
 4. **Login** with default credentials:
-   - **Email:** `admin@ysocial.com`
-   - **Password:** `test`
+   - **Email:** `admin@y-not.social`
+   - **Password:** `admin`
 
 📘 The executables include all dependencies and support command-line options (run with `--help` for details).
 
@@ -167,8 +170,8 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 💡 **YSocial** will launch in a **native desktop window by default** when using the launcher. Use `--browser` flag to open in a web browser instead.
 To access the **admin panel**, use the default credentials:
 
-- **Email:** `admin@ysocial.com`
-- **Password:** `test`
+- **Email:** `admin@y-not.social`
+- **Password:** `admin`
 
 🔴 **Note 2:** Ensure to run the application in a dedicated conda/miniconda/pipenv environment to avoid dependency conflicts. Homebrew installations of Python may lead to execution issues.
 
@@ -224,7 +227,7 @@ YSocial includes integrated **Jupyter Lab** support with the **ySights** library
 
 #### What is ySights?
 
-[ySights](https://ysocialtwin.github.io/ysights/) is a Python library specifically designed for analyzing YSocial simulation data. It provides:
+[ySights](https://y-not.social/ysights/) is a Python library specifically designed for analyzing YSocial simulation data. It provides:
 
 - **YDataHandler**: Main interface to query simulation databases
 - **Agent Analysis**: Filter and analyze agent properties (demographics, interests, behavior)
@@ -259,7 +262,7 @@ Each experiment gets its own isolated Jupyter Lab instance with:
 - Sample notebook (`start_here.ipynb`) with common analysis patterns
 - Full access to ySights library for data exploration
 
-📚 **See the [ySights documentation](https://ysocialtwin.github.io/ysights/) for detailed tutorials and API reference**
+📚 **See the [ySights documentation](https://y-not.social/ysights/) for detailed tutorials and API reference**
 
 ---
 
