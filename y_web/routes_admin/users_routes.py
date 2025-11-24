@@ -14,6 +14,7 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -1001,8 +1002,6 @@ def open_external_url():
     Returns:
         JSON response indicating success or error
     """
-    from flask import jsonify
-
     # Check if user is admin/researcher using existing check_privileges helper
     privilege_check = check_privileges(current_user.username)
     if privilege_check:
