@@ -288,6 +288,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
     Raises:
         ValueError: If unsupported db_type is provided
     """
+    import os
     app = Flask(__name__, static_url_path="/static")
 
     app.config["SECRET_KEY"] = "4323432nldsf"
