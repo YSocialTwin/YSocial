@@ -342,17 +342,27 @@ def start_desktop_app(
 
     # Create a PyWebview window with API
     api = DesktopAPI()
-    window = webview.create_window(
-        title=window_title,
-        url=url,
-        width=window_width,
-        height=window_height,
-        resizable=True,
-        fullscreen=use_fullscreen,
-        min_size=(800, 600),
-        confirm_close=True,
-        js_api=api,  # Expose API to JavaScript
-    )
+    
+    # Prepare window creation parameters
+    window_params = {
+        "title": window_title,
+        "url": url,
+        "width": window_width,
+        "height": window_height,
+        "resizable": True,
+        "fullscreen": use_fullscreen,
+        "js_api": api,
+    }
+    
+    # On macOS, min_size can cause issues with PyWebview, so only set it on other platforms
+    if not sys.platform.startswith("darwin"):
+        window_params["min_size"] = (800, 600)
+    
+    # confirm_close can also be problematic on macOS with certain PyWebview versions
+    if not sys.platform.startswith("darwin"):
+        window_params["confirm_close"] = True
+    
+    window = webview.create_window(**window_params)
 
     # Store window reference globally for Flask app access
     set_desktop_window(window)
