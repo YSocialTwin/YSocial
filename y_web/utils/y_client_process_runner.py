@@ -46,9 +46,6 @@ def main():
 
     args = parser.parse_args()
 
-    # Import the start_client_process function
-    # from y_web.utils.external_processes import start_client_process
-
     # Create minimal objects with just the IDs needed by start_client_process
     # The function will re-fetch the full objects from the database
     class MinimalObject:
@@ -262,8 +259,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 
-    from y_web import create_app, db  # only to reuse URI config
-    from y_web.models import Client, Client_Execution, Exps, Population
+    from y_web import create_app  # only to reuse URI config
+    from y_web.models import Client_Execution
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app("sqlite")
@@ -327,8 +324,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
             # shuffle agents
             random.shuffle(sagents)
 
-            ################# PARALLELIZED SECTION #################
-            # def agent_task(g, tid):
             for g in sagents:
                 acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
 
@@ -339,7 +334,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 if g.is_page == 1:
                     rounds = 0
                 else:
-                    rounds = random.randint(1, int(g.round_actions))
+                    lower = max(int(g.round_actions)-2, 1)
+                    rounds = random.randint(lower, int(g.round_actions))
+                    # Round_actions max is set for each agent by sampling from a user defined distribution.
+                    # Execute at least "lower" actions per user (to guarantee the activity level distribution).
 
                 for _ in range(rounds):
                     # sample two elements from a list with replacement
@@ -366,11 +364,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                         print(f"Error ({g.name}): {e}")
                         print(traceback.format_exc())
                         pass
-
-            # Run agent tasks in parallel
-            # with concurrent.futures.ThreadPoolExecutor() as executor:
-            #    executor.map(agent_task, sagents)
-            ################# END OF PARALLELIZATION #################
 
             # increment slot
             cl.sim_clock.increment_slot()

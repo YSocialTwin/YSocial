@@ -343,7 +343,9 @@ def build_screen_command(script_path, config_path, screen_name=None):
     return screen_cmd
 
 
-#############
+##############
+# Process termination utilities
+###############
 
 
 def terminate_process_on_port(port):
@@ -882,17 +884,6 @@ def start_server(exp):
                 if attempt == max_retries - 1:
                     print("Warning: Server may not be fully started, proceeding anyway")
 
-        # Now call change_db endpoint with retry logic
-        # data = {"path": f"{db_uri}"}
-        # headers = {"Content-Type": "application/json"}
-        # ns = f"http://{exp.server}:{exp.port}/change_db"
-        # time.sleep(20)
-        # response = post(f"{ns}", headers=headers, data=json.dumps(data), timeout=30)
-        # if response.status_code == 200:
-        #    print("Database configuration successful")
-        # else:
-        #    print(f"Database configuration returned status {response.status_code}: {response.text}")
-
     else:
         # For standard Python (SQLite), use simple wait and single call
         time.sleep(20)
@@ -998,6 +989,10 @@ def start_server_screen(exp):
     headers = {"Content-Type": "application/json"}
     ns = f"http://{exp.server}:{exp.port}/change_db"
     post(f"{ns}", headers=headers, data=json.dumps(data))
+
+##############
+# Ollama Functions
+##############
 
 
 def is_ollama_installed():
@@ -1274,6 +1269,10 @@ def get_llm_models(llm_url=None):
     except requests.exceptions.RequestException as e:
         print(f"LLM server at {models_url} is not accessible: {e}")
         return []
+
+##############
+# Client Process Management
+##############
 
 
 def terminate_client(cli, pause=False):
