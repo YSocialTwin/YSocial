@@ -555,7 +555,38 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 migrate_dashboard_db()
             # For PostgreSQL, the table is created via the schema file
         except Exception as e:
-            print(f"Failed to run database migrations: {e}")
+            print(f"Failed to run blog_posts table migration: {e}")
+
+        try:
+            # Run migration to add telemetry columns if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_telemetry_columns import migrate_sqlite
+
+                dashboard_db_path = os.path.join(
+                    app.config.get("DATABASE_PATH", "data_schema"),
+                    "database_dashboard.db",
+                )
+                migrate_sqlite(dashboard_db_path)
+            elif db_type == "postgresql":
+                from y_web.migrations.add_telemetry_columns import migrate_postgresql
+
+                # Get PostgreSQL connection details from app config
+                pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
+                if pg_config:
+                    # Parse connection string or use environment variables
+                    import os
+
+                    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+                    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+                    pg_database = os.environ.get("POSTGRES_DB", "ysocial")
+                    pg_user = os.environ.get("POSTGRES_USER", "postgres")
+                    pg_password = os.environ.get("POSTGRES_PASSWORD", "")
+                    if pg_password:
+                        migrate_postgresql(
+                            pg_host, pg_port, pg_database, pg_user, pg_password
+                        )
+        except Exception as e:
+            print(f"Failed to run telemetry columns migration: {e}")
 
     # Check for updates at startup
     with app.app_context():
