@@ -115,8 +115,8 @@ If you prefer a click-and-run experience without setting up Python, download our
 3. The application will **automatically open** 
 
 4. **Login** with default credentials:
-   - **Email:** `admin@ysocial.com`
-   - **Password:** `test`
+   - **Email:** `admin@y-not.social`
+   - **Password:** `admin`
 
 📘 The executables include all dependencies and support command-line options (run with `--help` for details).
 
@@ -167,8 +167,8 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
 💡 **YSocial** will launch in a **native desktop window by default** when using the launcher. Use `--browser` flag to open in a web browser instead.
 To access the **admin panel**, use the default credentials:
 
-- **Email:** `admin@ysocial.com`
-- **Password:** `test`
+- **Email:** `admin@y-not.social`
+- **Password:** `admin`
 
 🔴 **Note 2:** Ensure to run the application in a dedicated conda/miniconda/pipenv environment to avoid dependency conflicts. Homebrew installations of Python may lead to execution issues.
 

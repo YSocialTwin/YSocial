@@ -17,7 +17,7 @@ Welcome to YSocial! This guide will help you get started with using the applicat
 YSocial runs as a local web application. When you launch it:
 - A web interface will open automatically (desktop mode)
 - Or your default browser will open to http://localhost:8080 (browser mode)
-- Default login: `admin@ysocial.com` / `test` (change this after first login!)
+- Default login: `admin@y-not.social` / `admin` (change this after first login!)
 
 ## Command Line Options
 
