@@ -7,6 +7,7 @@ creating new users, and updating user permissions and settings.
 
 import os
 import re
+import webbrowser
 
 from flask import (
     Blueprint,
@@ -984,4 +985,45 @@ def mark_blog_post_read(post_id):
     except Exception as e:
         print(f"Error marking blog post {post_id} as read: {e}")
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@users.route("/admin/open_external_url", methods=["POST"])
+@login_required
+def open_external_url():
+    """
+    Open an external URL in the system's default browser.
+
+    This endpoint is used to open external links (like release pages and blog posts)
+    in the system browser when running as a PyInstaller app. This is necessary because
+    in desktop mode with PyWebView, window.open() and target="_blank" don't work properly.
+
+    Returns:
+        JSON response indicating success or error
+    """
+    from flask import jsonify
+
+    # Check if user is admin/researcher using existing check_privileges helper
+    privilege_check = check_privileges(current_user.username)
+    if privilege_check:
+        print(f"Access denied for user {current_user.username} opening external URL")
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        url = request.json.get("url")
+        if not url:
+            return jsonify({"error": "URL is required"}), 400
+
+        # Basic URL validation - ensure it starts with http:// or https://
+        if not url.startswith(("http://", "https://")):
+            return jsonify({"error": "Invalid URL format"}), 400
+
+        print(f"Opening external URL in system browser: {url}")
+        # Open the URL in the system's default browser
+        # This works reliably in PyInstaller mode on all platforms
+        webbrowser.open(url)
+
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        print(f"Error opening external URL: {e}")
         return jsonify({"error": str(e)}), 500
