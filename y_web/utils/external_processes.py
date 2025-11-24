@@ -990,6 +990,7 @@ def start_server_screen(exp):
     ns = f"http://{exp.server}:{exp.port}/change_db"
     post(f"{ns}", headers=headers, data=json.dumps(data))
 
+
 ##############
 # Ollama Functions
 ##############
@@ -1269,6 +1270,7 @@ def get_llm_models(llm_url=None):
     except requests.exceptions.RequestException as e:
         print(f"LLM server at {models_url} is not accessible: {e}")
         return []
+
 
 ##############
 # Client Process Management

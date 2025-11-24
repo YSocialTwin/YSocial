@@ -334,7 +334,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 if g.is_page == 1:
                     rounds = 0
                 else:
-                    lower = max(int(g.round_actions)-2, 1)
+                    lower = max(int(g.round_actions) - 2, 1)
                     rounds = random.randint(lower, int(g.round_actions))
                     # Round_actions max is set for each agent by sampling from a user defined distribution.
                     # Execute at least "lower" actions per user (to guarantee the activity level distribution).
