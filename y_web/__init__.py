@@ -574,8 +574,6 @@ def create_app(db_type="sqlite", desktop_mode=False):
                 pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
                 if pg_config:
                     # Parse connection string or use environment variables
-                    import os
-
                     pg_host = os.environ.get("POSTGRES_HOST", "localhost")
                     pg_port = os.environ.get("POSTGRES_PORT", "5432")
                     pg_database = os.environ.get("POSTGRES_DB", "ysocial")
