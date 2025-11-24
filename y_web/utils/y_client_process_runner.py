@@ -201,7 +201,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if not os.path.exists(filename):
             cl.save_agents(filename)
 
-        run_simulation(cl, cli.id, filename, exp, population)
+        run_simulation(cl, cli.id, filename, exp, population, db_type)
 
     finally:
         session.close()
@@ -252,7 +252,7 @@ def sample_agents(agents, expected_active_users):
     return sagents
 
 
-def run_simulation(cl, cli_id, agent_file, exp, population):
+def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     """
     Run the simulation
     """
@@ -263,7 +263,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
     from y_web.models import Client_Execution
 
     # Create app only to get DB URI, but don't push its context
-    app2 = create_app("sqlite")
+    app2 = create_app(db_type)
     db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
 
     # Build an independent SQLAlchemy engine/session
