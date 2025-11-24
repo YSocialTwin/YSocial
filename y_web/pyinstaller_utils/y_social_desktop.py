@@ -241,8 +241,8 @@ def start_desktop_app(
     llm_backend=None,
     notebook=False,
     window_title="YSocial - Social Media Digital Twin",
-    window_width=0,  # 0 means fullscreen
-    window_height=0,  # 0 means fullscreen
+    window_width=1280,  # Default window width (0 for fullscreen)
+    window_height=800,  # Default window height (0 for fullscreen)
 ):
     """
     Start YSocial in desktop mode with PyWebview.
@@ -255,8 +255,8 @@ def start_desktop_app(
         llm_backend: LLM backend to use
         notebook: Enable Jupyter notebook support
         window_title: Title for the desktop window
-        window_width: Width of the desktop window (0 for fullscreen)
-        window_height: Height of the desktop window (0 for fullscreen)
+        window_width: Width of the desktop window (default: 1280, use 0 for fullscreen)
+        window_height: Height of the desktop window (default: 800, use 0 for fullscreen)
 
     Raises:
         RuntimeError: If webview backend is not compatible with the system

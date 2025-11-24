@@ -281,14 +281,14 @@ def main():
     parser.add_argument(
         "--window-width",
         type=int,
-        default=0,  # 0 means fullscreen
-        help="Desktop window width in pixels (default: 0 for fullscreen)",
+        default=1280,  # Default window width
+        help="Desktop window width in pixels (default: 1280, use 0 for fullscreen)",
     )
     parser.add_argument(
         "--window-height",
         type=int,
-        default=0,  # 0 means fullscreen
-        help="Desktop window height in pixels (default: 0 for fullscreen)",
+        default=800,  # Default window height
+        help="Desktop window height in pixels (default: 800, use 0 for fullscreen)",
     )
 
     args = parser.parse_args()
