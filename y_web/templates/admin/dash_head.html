@@ -17,7 +17,7 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             {% if release_info.download_url %}
             {% set is_github_page = 'github.com' in release_info.download_url and '/releases/tag/' in release_info.download_url %}
-            <a href="{{ release_info.download_url }}" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; background: #039be5; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+            <a href="#" onclick="openExternalUrl(event, '{{ release_info.download_url }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #039be5; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
                 {% if is_github_page %}
                 <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
                 <span>View Release</span>
@@ -52,7 +52,7 @@
             </div>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <a href="{{ blog_post.link }}" target="_blank" onclick="markBlogPostAsRead(event, {{ blog_post.id }}, '{{ blog_post.link }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+            <a href="#" onclick="markBlogPostAsRead(event, {{ blog_post.id }}, '{{ blog_post.link }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
                 <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
                 <span>Read Article</span>
             </a>
@@ -64,6 +64,37 @@
 </div>
 
 <script>
+/**
+ * Open an external URL in the system's default browser.
+ * This function works in both regular browser mode and PyInstaller desktop mode.
+ * 
+ * @param {Event} event - The click event (to prevent default link behavior)
+ * @param {string} url - The URL to open
+ */
+function openExternalUrl(event, url) {
+    event.preventDefault();
+    
+    // Try using the backend endpoint first (works in PyInstaller mode)
+    fetch('/admin/open_external_url', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({ url: url })
+    }).then(response => {
+        if (!response.ok) {
+            // Fallback to window.open if backend fails (e.g., in regular browser mode)
+            console.log('Backend open_external_url failed, falling back to window.open');
+            window.open(url, '_blank');
+        }
+    }).catch(error => {
+        console.error('Error opening external URL:', error);
+        // Fallback to window.open on network error
+        window.open(url, '_blank');
+    });
+}
+
 function markBlogPostAsRead(event, postId, link) {
     // Prevent default link behavior
     event.preventDefault();
@@ -79,17 +110,15 @@ function markBlogPostAsRead(event, postId, link) {
         if (response.ok) {
             // Hide the banner
             document.getElementById('blog-banner').style.display = 'none';
-            // Open the link after marking as read
-            window.open(link, '_blank');
         } else {
             console.error('Failed to mark blog post as read:', response.status);
-            // Still open the link even if marking failed
-            window.open(link, '_blank');
         }
+        // Open the link after marking as read (or even if marking failed)
+        openExternalUrl(event, link);
     }).catch(error => {
         console.error('Error marking blog post as read:', error);
         // Still open the link even if marking failed
-        window.open(link, '_blank');
+        openExternalUrl(event, link);
     });
 }
 
