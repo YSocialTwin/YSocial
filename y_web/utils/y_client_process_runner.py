@@ -211,6 +211,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         log_file = f"{data_base_path}{cli.name}_client.log"
 
         print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
+        print(f"Data base path: {data_base_path}", file=sys.stderr)
 
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
@@ -231,7 +232,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
-            print(f"Resume", file=sys.stderr)
+            print(f"First run", file=sys.stderr)
 
         if resume:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
@@ -245,6 +246,8 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         cl.read_agents()
         cl.add_feeds()
+
+        print(f"Loaded {len(cl.agents.agents)} agents.", file=sys.stderr)
 
         if first_run and cli.network_type:
             cl.add_network()
@@ -369,7 +372,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             try:
                 sagents = sample_agents(hour_to_users[h], expected_active_users)
             except Exception as e:
-                # case of no active agents at this hour
+                print(f"Error sampling agents: {e}", file=sys.stderr)
                 sagents = []
 
             # shuffle agents
