@@ -423,7 +423,10 @@ def upload_experiment():
         flash(
             "Error: No available port found in range 5000-6000. Cannot upload experiment."
         )
-        shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
         return redirect(request.referrer)
 
     # create the experiment in the database from the config_server.json file
@@ -445,7 +448,10 @@ def upload_experiment():
             flash(
                 "The experiment already exists. Please check the experiment name and try again."
             )
-            shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return settings()
 
         # Check client configuration files for llm_agents setting
@@ -453,15 +459,15 @@ def upload_experiment():
         llm_agents_enabled = 1
         client_files = [
             f
-            for f in os.listdir(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}")
+            for f in os.listdir(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+            )
             if f.endswith(".json") and f.startswith("client")
         ]
 
         for client_file in client_files:
             try:
-                client_config_path = (
-                    f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client_file}"
-                )
+                client_config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client_file}"
                 with open(client_config_path, "r") as f:
                     client_config = json.load(f)
 
@@ -604,7 +610,9 @@ def upload_experiment():
             json.dump(experiment_config, f, indent=4)
 
         # Update all client configuration files with new port
-        for item in os.listdir(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"):
+        for item in os.listdir(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+        ):
             if item.startswith("client") and item.endswith(".json"):
                 client_config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{item}"
                 try:
@@ -673,7 +681,10 @@ def upload_experiment():
     except Exception as e:
         flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
-        shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
         return redirect(request.referrer)
 
     # get the json files that do not start with "client"
@@ -689,7 +700,9 @@ def upload_experiment():
     for population_file in populations:
         original_name = population_file.split(".")[0]
         pop = json.load(
-            open(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{population_file}")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{population_file}"
+            )
         )
 
         # check if the population already exists
@@ -851,16 +864,23 @@ def upload_experiment():
         # get the json file that start with "client" and contains "population"
         client = [
             f
-            for f in os.listdir(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}")
+            for f in os.listdir(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+            )
             if f.endswith(".json") and f.startswith("client") and original_name in f
         ]
         if len(client) == 0:
             flash("No client file found for the population")
-            shutil.rmtree(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return redirect(request.referrer)
 
         client = json.load(
-            open(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client[0]}")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client[0]}"
+            )
         )
 
         # add client to the database
