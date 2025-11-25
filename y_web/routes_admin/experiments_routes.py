@@ -871,6 +871,26 @@ def upload_experiment():
 
                 # add agent to the database
                 else:
+                    # Handle activity_profile - look up by name or create default
+                    activity_profile_id = None
+                    activity_profile_name = agent.get("activity_profile", "default")
+                    if activity_profile_name:
+                        existing_profile = ActivityProfile.query.filter_by(
+                            name=activity_profile_name
+                        ).first()
+                        if existing_profile:
+                            activity_profile_id = existing_profile.id
+                        else:
+                            # Create a default activity profile if it doesn't exist
+                            # Default hours: 9am-5pm working hours
+                            new_profile = ActivityProfile(
+                                name=activity_profile_name,
+                                hours="9,10,11,12,13,14,15,16,17",
+                            )
+                            db.session.add(new_profile)
+                            db.session.commit()
+                            activity_profile_id = new_profile.id
+
                     ag = Agent(
                         name=agent["name"],
                         age=agent["age"],
@@ -892,6 +912,7 @@ def upload_experiment():
                         profile_pic="",
                         daily_activity_level=agent["daily_activity_level"],
                         profession=agent["profession"] if "profession" in agent else "",
+                        activity_profile=activity_profile_id,
                     )
                     db.session.add(ag)
                     db.session.commit()
