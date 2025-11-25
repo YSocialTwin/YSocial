@@ -90,7 +90,9 @@ class TestSendFileDesktop(unittest.TestCase):
         # In desktop mode with attachment, should return HTML response
         self.assertEqual(response.mimetype, "text/html")
         # HTML should contain the filename
-        self.assertIn(os.path.basename(self.temp_file.name), response.get_data(as_text=True))
+        self.assertIn(
+            os.path.basename(self.temp_file.name), response.get_data(as_text=True)
+        )
 
     def test_send_file_desktop_with_download_name_in_html(self):
         """Test that send_file_desktop includes download_name in HTML response."""

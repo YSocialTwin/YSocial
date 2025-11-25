@@ -191,7 +191,9 @@ class TestIncrementalLogReading:
 
                 assert feed_metric is not None
                 assert feed_metric.call_count == 2  # 1 initial + 1 appended
-                assert feed_metric.total_duration == pytest.approx(1.2, rel=1e-4)  # 0.5 + 0.7
+                assert feed_metric.total_duration == pytest.approx(
+                    1.2, rel=1e-4
+                )  # 0.5 + 0.7
 
             finally:
                 # Cleanup

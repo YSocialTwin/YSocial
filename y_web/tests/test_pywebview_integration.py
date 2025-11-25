@@ -17,7 +17,9 @@ class TestDesktopModeImport(unittest.TestCase):
         try:
             import webview
         except ImportError:
-            self.skipTest("pywebview is not installed - skipping desktop module import test")
+            self.skipTest(
+                "pywebview is not installed - skipping desktop module import test"
+            )
 
         try:
             from y_web.pyinstaller_utils.y_social_desktop import start_desktop_app
@@ -52,8 +54,13 @@ class TestLauncherDesktopModeSupport(unittest.TestCase):
     def test_desktop_launcher_exists(self):
         """Test that y_social_desktop.py exists in pyinstaller_utils."""
         from pathlib import Path
-        desktop_path = Path(__file__).parent.parent / "pyinstaller_utils" / "y_social_desktop.py"
-        self.assertTrue(desktop_path.exists(), f"y_social_desktop.py not found at {desktop_path}")
+
+        desktop_path = (
+            Path(__file__).parent.parent / "pyinstaller_utils" / "y_social_desktop.py"
+        )
+        self.assertTrue(
+            desktop_path.exists(), f"y_social_desktop.py not found at {desktop_path}"
+        )
 
 
 class TestDesktopModeFunction(unittest.TestCase):
@@ -91,6 +98,7 @@ class TestPyInstallerSpecUpdated(unittest.TestCase):
     def test_spec_includes_webview(self):
         """Test that y_social.spec includes webview in hidden imports."""
         from pathlib import Path
+
         project_root = Path(__file__).parent.parent.parent
         spec_path = project_root / "y_social.spec"
 
@@ -102,6 +110,7 @@ class TestPyInstallerSpecUpdated(unittest.TestCase):
     def test_spec_includes_pywebview_metadata(self):
         """Test that y_social.spec includes pywebview metadata."""
         from pathlib import Path
+
         project_root = Path(__file__).parent.parent.parent
         spec_path = project_root / "y_social.spec"
 
@@ -116,6 +125,7 @@ class TestRequirementsTxt(unittest.TestCase):
     def test_requirements_includes_pywebview(self):
         """Test that pywebview is in requirements.txt."""
         from pathlib import Path
+
         project_root = Path(__file__).parent.parent.parent
         req_path = project_root / "requirements.txt"
 
@@ -130,7 +140,13 @@ class TestPyInstallerHooks(unittest.TestCase):
     def test_hook_webview_exists(self):
         """Test that hook-webview.py exists in pyinstaller_hooks/."""
         from pathlib import Path
-        hook_path = Path(__file__).parent.parent / "pyinstaller_utils" / "pyinstaller_hooks" / "hook-webview.py"
+
+        hook_path = (
+            Path(__file__).parent.parent
+            / "pyinstaller_utils"
+            / "pyinstaller_hooks"
+            / "hook-webview.py"
+        )
         self.assertTrue(
             hook_path.exists(), f"PyInstaller hook not found at {hook_path}"
         )
@@ -138,7 +154,13 @@ class TestPyInstallerHooks(unittest.TestCase):
     def test_hook_webview_content(self):
         """Test that hook-webview.py has correct content."""
         from pathlib import Path
-        hook_path = Path(__file__).parent.parent / "pyinstaller_utils" / "pyinstaller_hooks" / "hook-webview.py"
+
+        hook_path = (
+            Path(__file__).parent.parent
+            / "pyinstaller_utils"
+            / "pyinstaller_hooks"
+            / "hook-webview.py"
+        )
         with open(hook_path, "r") as f:
             content = f.read()
             self.assertIn("collect_data_files", content)

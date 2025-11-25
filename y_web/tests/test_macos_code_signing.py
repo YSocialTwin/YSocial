@@ -154,6 +154,7 @@ def test_github_workflow_has_macos_signing_step():
     # Skip if workflow doesn't exist (e.g., in minimal testing setup)
     if not workflow_path.exists():
         import pytest
+
         pytest.skip("GitHub workflow file not found - skipping workflow test")
 
     with open(workflow_path, "r") as f:
