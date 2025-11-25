@@ -141,18 +141,26 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             # Fallback: search for a matching population file
             # Population files don't start with "client_" and end with ".json"
             filename = None
-            pop_name_base = population.name.replace(' ', '')
+            pop_name_base = population.name.replace(" ", "")
             # Remove any _N suffix to find the base name
             import re
-            base_match = re.match(r'^(.+?)(?:_\d+)?$', pop_name_base)
+
+            base_match = re.match(r"^(.+?)(?:_\d+)?$", pop_name_base)
             if base_match:
                 base_name = base_match.group(1)
                 for f in os.listdir(data_base_path):
-                    if (f.endswith(".json") and not f.startswith("client_") 
-                        and not f.startswith("config_") and not f.startswith("prompts")
-                        and f.startswith(base_name)):
+                    if (
+                        f.endswith(".json")
+                        and not f.startswith("client_")
+                        and not f.startswith("config_")
+                        and not f.startswith("prompts")
+                        and f.startswith(base_name)
+                    ):
                         filename = os.path.join(data_base_path, f)
-                        print(f"Warning: Expected population file not found. Using fallback: {f}", file=sys.stderr)
+                        print(
+                            f"Warning: Expected population file not found. Using fallback: {f}",
+                            file=sys.stderr,
+                        )
                         break
 
             if filename is None:
@@ -167,7 +175,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             data_base_path, f"client_{cli.name}-{population.name}.json"
         )
 
-        print(f"Looking for client config file at: {expected_client_file}", file=sys.stderr)
+        print(
+            f"Looking for client config file at: {expected_client_file}",
+            file=sys.stderr,
+        )
 
         if os.path.exists(expected_client_file):
             client_config_path = expected_client_file
@@ -178,7 +189,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             for f in os.listdir(data_base_path):
                 if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
                     client_config_path = os.path.join(data_base_path, f)
-                    print(f"Warning: Expected file not found. Using fallback: {f}", file=sys.stderr)
+                    print(
+                        f"Warning: Expected file not found. Using fallback: {f}",
+                        file=sys.stderr,
+                    )
                     break
 
             if client_config_path is None:
@@ -238,7 +252,8 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
                 print(
-                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})", file=sys.stderr
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                    file=sys.stderr,
                 )
                 return
             cl.days = int(remaining_rounds / 24)
@@ -431,7 +446,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 # Check if we've reached 100% completion
                 if ce.elapsed_time >= ce.expected_duration_rounds:
                     print(
-                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})", file=sys.stderr
+                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                        file=sys.stderr,
                     )
                     # Clean up and exit
                     session.close()

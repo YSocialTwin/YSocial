@@ -363,7 +363,9 @@ def test_population_file_rename_on_suffix():
                 expected_suffix = f"-{original_name}.json"
                 if f.endswith(expected_suffix):
                     old_client_file = os.path.join(tmpdir, f)
-                    new_client_filename = f[:-len(expected_suffix)] + f"-{new_name}.json"
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
                     new_client_file = os.path.join(tmpdir, new_client_filename)
                     os.rename(old_client_file, new_client_file)
 
@@ -373,7 +375,9 @@ def test_population_file_rename_on_suffix():
 
         expected_client_file = f"client_TestClient-{new_name}.json"
         assert os.path.exists(os.path.join(tmpdir, expected_client_file))
-        assert not os.path.exists(os.path.join(tmpdir, f"client_TestClient-{original_name}.json"))
+        assert not os.path.exists(
+            os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        )
 
 
 def test_population_file_rename_preserves_similar_names():
@@ -416,7 +420,9 @@ def test_population_file_rename_preserves_similar_names():
                 expected_suffix = f"-{original_name}.json"
                 if f.endswith(expected_suffix):
                     old_client_file = os.path.join(tmpdir, f)
-                    new_client_filename = f[:-len(expected_suffix)] + f"-{new_name}.json"
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
                     new_client_file = os.path.join(tmpdir, new_client_filename)
                     os.rename(old_client_file, new_client_file)
 
