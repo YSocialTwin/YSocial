@@ -757,6 +757,23 @@ def upload_experiment():
                     counter += 1
                     new_name = f"{original_name}_{counter}"
 
+                # Rename population and client JSON files to match the new population name
+                exp_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+
+                # Rename population JSON file
+                old_pop_file = os.path.join(exp_folder, f"{original_name}.json")
+                new_pop_file = os.path.join(exp_folder, f"{new_name}.json")
+                if os.path.exists(old_pop_file):
+                    os.rename(old_pop_file, new_pop_file)
+
+                # Rename client JSON file(s) that contain the original population name
+                for f in os.listdir(exp_folder):
+                    if f.startswith("client") and f.endswith(".json") and original_name in f:
+                        old_client_file = os.path.join(exp_folder, f)
+                        new_client_filename = f.replace(original_name, new_name)
+                        new_client_file = os.path.join(exp_folder, new_client_filename)
+                        os.rename(old_client_file, new_client_file)
+
                 # Create new population with unique name
                 population = Population(name=new_name, descr="")
                 db.session.add(population)

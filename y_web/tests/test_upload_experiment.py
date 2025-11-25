@@ -327,3 +327,47 @@ def test_uid_format_consistency():
     # Extract the UID part from db_name (same way as in experiments_routes.py)
     pg_uid_from_db_name = pg_db_name.replace("experiments_", "")
     assert pg_uid_from_db_name == uid, "PostgreSQL: folder UID should match db_name UID"
+
+
+def test_population_file_rename_on_suffix():
+    """Test that population and client files are renamed when population gets a suffix.
+
+    When a population with the same name but different agents exists, a new population
+    is created with a suffix (e.g., _2). The corresponding JSON files should be renamed
+    to match the new population name so the client can find them.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Setup: create original files
+        original_name = "test_population"
+        new_name = "test_population_2"
+
+        # Create population JSON file
+        pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        with open(pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        # Create client JSON file
+        client_file = os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        with open(client_file, "w") as f:
+            json.dump({"simulation": {"name": "TestClient"}}, f)
+
+        # Simulate the rename logic from upload_experiment
+        old_pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        new_pop_file = os.path.join(tmpdir, f"{new_name}.json")
+        if os.path.exists(old_pop_file):
+            os.rename(old_pop_file, new_pop_file)
+
+        for f in os.listdir(tmpdir):
+            if f.startswith("client") and f.endswith(".json") and original_name in f:
+                old_client_file = os.path.join(tmpdir, f)
+                new_client_filename = f.replace(original_name, new_name)
+                new_client_file = os.path.join(tmpdir, new_client_filename)
+                os.rename(old_client_file, new_client_file)
+
+        # Verify files were renamed correctly
+        assert os.path.exists(os.path.join(tmpdir, f"{new_name}.json"))
+        assert not os.path.exists(os.path.join(tmpdir, f"{original_name}.json"))
+
+        expected_client_file = f"client_TestClient-{new_name}.json"
+        assert os.path.exists(os.path.join(tmpdir, expected_client_file))
+        assert not os.path.exists(os.path.join(tmpdir, f"client_TestClient-{original_name}.json"))
