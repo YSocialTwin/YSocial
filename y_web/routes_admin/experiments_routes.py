@@ -162,9 +162,13 @@ def settings():
     if user.role == "admin":
         # Admin sees all experiments (limit 5 for initial display)
         experiments = Exps.query.limit(5).all()
+        # All experiments for copy dropdown (no limit)
+        all_experiments = Exps.query.all()
     elif user.role == "researcher":
         # Researcher sees only experiments they own (limit 5 for initial display)
         experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
+        # All experiments owned by researcher for copy dropdown (no limit)
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
@@ -188,6 +192,7 @@ def settings():
     return render_template(
         "admin/settings.html",
         experiments=experiments,
+        all_experiments=all_experiments,
         users=users,
         dbtype=dbtype,
         suggested_port=suggested_port,

@@ -856,7 +856,7 @@
                                 <div class="select" style="width: 100%;">
                                     <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
                                         <option value="">Select experiment...</option>
-                                        {% for exp in experiments %}
+                                        {% for exp in all_experiments %}
                                         <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
                                         {% endfor %}
                                     </select>
