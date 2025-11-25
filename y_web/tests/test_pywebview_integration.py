@@ -13,13 +13,17 @@ class TestDesktopModeImport(unittest.TestCase):
 
     def test_import_y_social_desktop(self):
         """Test that y_social_desktop module can be imported from pyinstaller_utils."""
+        # First check if pywebview is available
+        try:
+            import webview
+        except ImportError:
+            self.skipTest("pywebview is not installed - skipping desktop module import test")
+
         try:
             from y_web.pyinstaller_utils.y_social_desktop import start_desktop_app
 
             self.assertTrue(callable(start_desktop_app))
         except ImportError as e:
-            if "webview" in str(e).lower():
-                self.skipTest("pywebview is not installed - skipping desktop module import test")
             self.fail(f"Failed to import y_social_desktop: {e}")
 
     def test_pywebview_available(self):
