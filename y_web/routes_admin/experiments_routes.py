@@ -391,7 +391,7 @@ def upload_experiment():
     experiment = request.files["experiment"]
     # Get experiment name from form, fallback to name from config if not provided
     exp_name_override = request.form.get("exp_name", "").strip()
-    uid = uuid.uuid4()
+    uid = str(uuid.uuid4()).replace("-", "_")
 
     from y_web.utils.path_utils import get_writable_path
 
@@ -517,7 +517,7 @@ def upload_experiment():
             port_db = parsed_uri.port or 5432
 
             # New database name - sanitize to ensure PostgreSQL compatibility
-            dbname = f"experiments_{str(uid).replace('-', '_')}"
+            dbname = f"experiments_{uid}"
             # Validate database name (only alphanumeric and underscore)
             if not dbname.replace("_", "").isalnum():
                 raise ValueError(f"Invalid database name: {dbname}")
@@ -678,6 +678,27 @@ def upload_experiment():
         db.session.add(jupyter_instance)
         db.session.commit()
 
+        # Reconstruct exp_topic entries from config_server.json
+        # If no topics in config, add a generic "Topic 1"
+        topics = experiment_config.get("topics", [])
+        if not topics:
+            topics = ["Topic 1"]
+
+        for topic_name in topics:
+            topic_name = topic_name.strip()
+            if topic_name:
+                # Check if topic already exists in Topic_List
+                existing_topic = Topic_List.query.filter_by(name=topic_name).first()
+                if not existing_topic:
+                    existing_topic = Topic_List(name=topic_name)
+                    db.session.add(existing_topic)
+                    db.session.commit()
+
+                # Add topic to experiment
+                exp_topic = Exp_Topic(exp_id=exp.idexp, topic_id=existing_topic.id)
+                db.session.add(exp_topic)
+                db.session.commit()
+
     except Exception as e:
         flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
@@ -757,6 +778,32 @@ def upload_experiment():
                     counter += 1
                     new_name = f"{original_name}_{counter}"
 
+                # Rename population and client JSON files to match the new population name
+                exp_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+
+                # Rename population JSON file
+                old_pop_file = os.path.join(exp_folder, f"{original_name}.json")
+                new_pop_file = os.path.join(exp_folder, f"{new_name}.json")
+                if os.path.exists(old_pop_file):
+                    os.rename(old_pop_file, new_pop_file)
+
+                # Rename client JSON file(s) that contain the original population name
+                # Client files follow the pattern: client_{client_name}-{population_name}.json
+                for f in os.listdir(exp_folder):
+                    if f.startswith("client") and f.endswith(".json"):
+                        # Check if the filename ends with -{original_name}.json
+                        expected_suffix = f"-{original_name}.json"
+                        if f.endswith(expected_suffix):
+                            old_client_file = os.path.join(exp_folder, f)
+                            # Replace only the population name at the end
+                            new_client_filename = (
+                                f[: -len(expected_suffix)] + f"-{new_name}.json"
+                            )
+                            new_client_file = os.path.join(
+                                exp_folder, new_client_filename
+                            )
+                            os.rename(old_client_file, new_client_file)
+
                 # Create new population with unique name
                 population = Population(name=new_name, descr="")
                 db.session.add(population)
@@ -824,6 +871,26 @@ def upload_experiment():
 
                 # add agent to the database
                 else:
+                    # Handle activity_profile - look up by name or create default
+                    activity_profile_id = None
+                    activity_profile_name = agent.get("activity_profile", "default")
+                    if activity_profile_name:
+                        existing_profile = ActivityProfile.query.filter_by(
+                            name=activity_profile_name
+                        ).first()
+                        if existing_profile:
+                            activity_profile_id = existing_profile.id
+                        else:
+                            # Create a default activity profile if it doesn't exist
+                            # Default hours: 9am-5pm working hours
+                            new_profile = ActivityProfile(
+                                name=activity_profile_name,
+                                hours="9,10,11,12,13,14,15,16,17",
+                            )
+                            db.session.add(new_profile)
+                            db.session.commit()
+                            activity_profile_id = new_profile.id
+
                     ag = Agent(
                         name=agent["name"],
                         age=agent["age"],
@@ -845,6 +912,7 @@ def upload_experiment():
                         profile_pic="",
                         daily_activity_level=agent["daily_activity_level"],
                         profession=agent["profession"] if "profession" in agent else "",
+                        activity_profile=activity_profile_id,
                     )
                     db.session.add(ag)
                     db.session.commit()
@@ -1179,6 +1247,7 @@ def create_experiment():
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "database_uri": db_uri,
+        "topics": [t.strip() for t in topics if t.strip()],
     }
 
     with open(
@@ -3407,10 +3476,13 @@ def copy_experiment():
                     if "servers" in client_config and "api" in client_config["servers"]:
                         # Update the port in the API URL
                         old_api = client_config["servers"]["api"]
-                        # Replace the port in the URL (format: http://host:port/)
+                        # Replace port in URL - handles both with and without trailing slash
+                        # Pattern matches :port/ or :port at end of string
                         import re
 
-                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
+                        new_api = re.sub(
+                            r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
+                        )
                         client_config["servers"]["api"] = new_api
 
                         with open(client_config_path, "w") as f:

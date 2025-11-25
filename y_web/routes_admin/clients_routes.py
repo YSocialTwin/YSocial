@@ -762,6 +762,13 @@ def create_client():
 
         ints = [interests, len(interests)]
 
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
+
         res["agents"].append(
             {
                 "name": a.name,
@@ -789,10 +796,7 @@ def create_client():
                 "prompts": custom_prompt if custom_prompt else None,
                 "daily_activity_level": a.daily_activity_level,
                 "profession": a.profession,
-                "activity_profile": db.session.query(ActivityProfile)
-                .filter_by(id=a.activity_profile)
-                .first()
-                .name,
+                "activity_profile": activity_profile_name,
             }
         )
 
@@ -810,6 +814,13 @@ def create_client():
         )
         page_topics = [t[1].name for t in page_topics]
         page_topics = list(set(page_topics) & set(topics))
+
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=p.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
 
         res["agents"].append(
             {
@@ -836,10 +847,7 @@ def create_client():
                 "toxicity": "none",
                 "is_page": 1,
                 "feed_url": p.feed,
-                "activity_profile": db.session.query(ActivityProfile)
-                .filter_by(id=p.activity_profile)
-                .first()
-                .name,
+                "activity_profile": activity_profile_name,
             }
         )
 

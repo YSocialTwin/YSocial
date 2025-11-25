@@ -297,3 +297,139 @@ def test_config_file_updates_integration():
         assert updated_config["port"] == 5500
         assert updated_config["database_uri"] == "/new/path"
         assert updated_config["host"] == "127.0.0.1"  # Unchanged
+
+
+def test_uid_format_consistency():
+    """Test that UUID format is consistent between folder and db_name.
+
+    This test ensures that the UID used for the experiment folder matches
+    the UID format used in db_name for both SQLite and PostgreSQL.
+    The fix ensures that dashes are replaced with underscores in the UID
+    to maintain consistency.
+    """
+    import uuid
+
+    # Simulate the UID generation as it should be done in upload_experiment
+    uid = str(uuid.uuid4()).replace("-", "_")
+
+    # Verify no dashes in UID (they should all be underscores)
+    assert "-" not in uid
+    assert "_" in uid
+
+    # SQLite format: experiments/<uid>/database_server.db
+    sqlite_db_name = f"experiments/{uid}/database_server.db"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    sqlite_uid_from_db_name = sqlite_db_name.split("/")[1]
+    assert sqlite_uid_from_db_name == uid, "SQLite: folder UID should match db_name UID"
+
+    # PostgreSQL format: experiments_<uid>
+    pg_db_name = f"experiments_{uid}"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    pg_uid_from_db_name = pg_db_name.replace("experiments_", "")
+    assert pg_uid_from_db_name == uid, "PostgreSQL: folder UID should match db_name UID"
+
+
+def test_population_file_rename_on_suffix():
+    """Test that population and client files are renamed when population gets a suffix.
+
+    When a population with the same name but different agents exists, a new population
+    is created with a suffix (e.g., _2). The corresponding JSON files should be renamed
+    to match the new population name so the client can find them.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Setup: create original files
+        original_name = "test_population"
+        new_name = "test_population_2"
+
+        # Create population JSON file
+        pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        with open(pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        # Create client JSON file following the pattern: client_{name}-{population}.json
+        client_file = os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        with open(client_file, "w") as f:
+            json.dump({"simulation": {"name": "TestClient"}}, f)
+
+        # Simulate the rename logic from upload_experiment
+        old_pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        new_pop_file = os.path.join(tmpdir, f"{new_name}.json")
+        if os.path.exists(old_pop_file):
+            os.rename(old_pop_file, new_pop_file)
+
+        # Rename client files using the precise suffix matching
+        for f in os.listdir(tmpdir):
+            if f.startswith("client") and f.endswith(".json"):
+                expected_suffix = f"-{original_name}.json"
+                if f.endswith(expected_suffix):
+                    old_client_file = os.path.join(tmpdir, f)
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
+                    new_client_file = os.path.join(tmpdir, new_client_filename)
+                    os.rename(old_client_file, new_client_file)
+
+        # Verify files were renamed correctly
+        assert os.path.exists(os.path.join(tmpdir, f"{new_name}.json"))
+        assert not os.path.exists(os.path.join(tmpdir, f"{original_name}.json"))
+
+        expected_client_file = f"client_TestClient-{new_name}.json"
+        assert os.path.exists(os.path.join(tmpdir, expected_client_file))
+        assert not os.path.exists(
+            os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        )
+
+
+def test_population_file_rename_preserves_similar_names():
+    """Test that renaming only affects the exact population name, not similar ones.
+
+    If there are files with similar names (e.g., 'pop' and 'pop_extended'),
+    only files with the exact population name should be renamed.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        original_name = "pop"
+        new_name = "pop_2"
+        similar_name = "pop_extended"
+
+        # Create files for both populations
+        pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        with open(pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        similar_pop_file = os.path.join(tmpdir, f"{similar_name}.json")
+        with open(similar_pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        # Create client files for both
+        client_file = os.path.join(tmpdir, f"client_Test-{original_name}.json")
+        with open(client_file, "w") as f:
+            json.dump({}, f)
+
+        similar_client_file = os.path.join(tmpdir, f"client_Test-{similar_name}.json")
+        with open(similar_client_file, "w") as f:
+            json.dump({}, f)
+
+        # Apply rename logic
+        old_pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        new_pop_file = os.path.join(tmpdir, f"{new_name}.json")
+        if os.path.exists(old_pop_file):
+            os.rename(old_pop_file, new_pop_file)
+
+        for f in os.listdir(tmpdir):
+            if f.startswith("client") and f.endswith(".json"):
+                expected_suffix = f"-{original_name}.json"
+                if f.endswith(expected_suffix):
+                    old_client_file = os.path.join(tmpdir, f)
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
+                    new_client_file = os.path.join(tmpdir, new_client_filename)
+                    os.rename(old_client_file, new_client_file)
+
+        # Verify: original 'pop' files renamed to 'pop_2'
+        assert os.path.exists(os.path.join(tmpdir, f"{new_name}.json"))
+        assert os.path.exists(os.path.join(tmpdir, f"client_Test-{new_name}.json"))
+
+        # Verify: 'pop_extended' files should NOT be renamed
+        assert os.path.exists(os.path.join(tmpdir, f"{similar_name}.json"))
+        assert os.path.exists(os.path.join(tmpdir, f"client_Test-{similar_name}.json"))

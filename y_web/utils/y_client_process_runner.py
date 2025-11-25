@@ -122,30 +122,98 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = os.path.join(
-                BASE_DIR, "experiments", uid, f"{population.name.replace(' ', '')}.json"
-            )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = os.path.join(
-                BASE_DIR,
-                exp.db_name.split("database_server.db")[0],
-                f"{population.name.replace(' ', '')}.json",
-            )
 
         data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
-        config_file = json.load(
-            open(
-                os.path.join(
-                    data_base_path, f"client_{cli.name}-{population.name}.json"
-                )
-            )
+
+        # Try to find the population file
+        # The expected filename is {population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_pop_file = os.path.join(
+            data_base_path, f"{population.name.replace(' ', '')}.json"
         )
 
-        print("Starting client process...")
+        if os.path.exists(expected_pop_file):
+            filename = expected_pop_file
+        else:
+            # Fallback: search for a matching population file
+            # Population files don't start with "client_" and end with ".json"
+            filename = None
+            pop_name_base = population.name.replace(" ", "")
+            # Remove any _N suffix to find the base name
+            import re
 
+            base_match = re.match(r"^(.+?)(?:_\d+)?$", pop_name_base)
+            if base_match:
+                base_name = base_match.group(1)
+                for f in os.listdir(data_base_path):
+                    if (
+                        f.endswith(".json")
+                        and not f.startswith("client_")
+                        and not f.startswith("config_")
+                        and not f.startswith("prompts")
+                        and f.startswith(base_name)
+                    ):
+                        filename = os.path.join(data_base_path, f)
+                        print(
+                            f"Warning: Expected population file not found. Using fallback: {f}",
+                            file=sys.stderr,
+                        )
+                        break
+
+            if filename is None:
+                # Use the expected path (will fail when saving if not exists)
+                filename = expected_pop_file
+
+        # Try to find the client config file
+        # The expected filename is client_{cli.name}-{population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_client_file = os.path.join(
+            data_base_path, f"client_{cli.name}-{population.name}.json"
+        )
+
+        print(
+            f"Looking for client config file at: {expected_client_file}",
+            file=sys.stderr,
+        )
+
+        if os.path.exists(expected_client_file):
+            client_config_path = expected_client_file
+        else:
+            # Fallback: search for a matching client file by client name
+            # This handles cases where population was renamed but files weren't
+            client_config_path = None
+            for f in os.listdir(data_base_path):
+                if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
+                    client_config_path = os.path.join(data_base_path, f)
+                    print(
+                        f"Warning: Expected file not found. Using fallback: {f}",
+                        file=sys.stderr,
+                    )
+                    break
+
+            if client_config_path is None:
+                raise FileNotFoundError(
+                    f"No client config file found for client '{cli.name}' in {data_base_path}, file=sys.stderr"
+                )
+
+        config_file = json.load(open(client_config_path))
+
+        print("Starting client process...", file=sys.stderr)
+
+        print(f"Looking up Client_Execution for client_id={cli.id}", file=sys.stderr)
         ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} execution record: {ce}")
+        print(
+            f"Client {cli.name} (id={cli.id}) execution record: {ce}", file=sys.stderr
+        )
+        if ce:
+            print(
+                f"  Execution record details: elapsed_time={ce.elapsed_time}, expected_duration={ce.expected_duration_rounds}",
+                file=sys.stderr,
+            )
 
         if ce:
             first_run = False
@@ -163,6 +231,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             session.commit()
 
         log_file = f"{data_base_path}{cli.name}_client.log"
+
+        print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
+        print(f"Data base path: {data_base_path}", file=sys.stderr)
+
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
             cl = YClientWeb(
@@ -173,6 +245,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            print(f"First run", file=sys.stderr)
         else:
             cl = YClientWeb(
                 config_file,
@@ -181,19 +254,23 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            print(f"First run", file=sys.stderr)
 
         if resume:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
                 print(
-                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                    file=sys.stderr,
                 )
                 return
             cl.days = int(remaining_rounds / 24)
 
         cl.read_agents()
         cl.add_feeds()
+
+        print(f"Loaded {len(cl.agents.agents)} agents.", file=sys.stderr)
 
         if first_run and cli.network_type:
             cl.add_network()
@@ -318,7 +395,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             try:
                 sagents = sample_agents(hour_to_users[h], expected_active_users)
             except Exception as e:
-                # case of no active agents at this hour
+                print(f"Error sampling agents: {e}", file=sys.stderr)
                 sagents = []
 
             # shuffle agents
@@ -380,7 +457,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 # Check if we've reached 100% completion
                 if ce.elapsed_time >= ce.expected_duration_rounds:
                     print(
-                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                        file=sys.stderr,
                     )
                     # Clean up and exit
                     session.close()
