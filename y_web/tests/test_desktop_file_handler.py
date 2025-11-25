@@ -81,33 +81,29 @@ class TestSendFileDesktop(unittest.TestCase):
             pass
         self.ctx.pop()
 
-    @patch("y_web.utils.desktop_file_handler.send_file")
-    def test_send_file_desktop_calls_send_file(self, mock_send_file):
-        """Test that send_file_desktop calls Flask's send_file."""
+    def test_send_file_desktop_returns_html_in_desktop_mode(self):
+        """Test that send_file_desktop returns HTML download page in desktop mode."""
         self.app.config["DESKTOP_MODE"] = True
-        mock_send_file.return_value = Mock()
 
         response = send_file_desktop(self.temp_file.name, as_attachment=True)
 
-        # Verify send_file was called with correct arguments
-        mock_send_file.assert_called_once()
-        call_args = mock_send_file.call_args
-        self.assertEqual(call_args[0][0], self.temp_file.name)
-        self.assertTrue(call_args[1]["as_attachment"])
+        # In desktop mode with attachment, should return HTML response
+        self.assertEqual(response.mimetype, "text/html")
+        # HTML should contain the filename
+        self.assertIn(os.path.basename(self.temp_file.name), response.get_data(as_text=True))
 
-    @patch("y_web.utils.desktop_file_handler.send_file")
-    def test_send_file_desktop_with_download_name(self, mock_send_file):
-        """Test that send_file_desktop passes download_name correctly."""
+    def test_send_file_desktop_with_download_name_in_html(self):
+        """Test that send_file_desktop includes download_name in HTML response."""
         self.app.config["DESKTOP_MODE"] = True
-        mock_send_file.return_value = Mock()
 
         response = send_file_desktop(
             self.temp_file.name, as_attachment=True, download_name="custom_name.json"
         )
 
-        mock_send_file.assert_called_once()
-        call_args = mock_send_file.call_args
-        self.assertEqual(call_args[1]["download_name"], "custom_name.json")
+        # In desktop mode, should return HTML with custom filename
+        self.assertEqual(response.mimetype, "text/html")
+        html_content = response.get_data(as_text=True)
+        self.assertIn("custom_name.json", html_content)
 
     @patch("y_web.utils.desktop_file_handler.send_file")
     def test_send_file_desktop_browser_mode(self, mock_send_file):

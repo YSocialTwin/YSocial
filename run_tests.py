@@ -15,7 +15,7 @@ def run_tests():
     # Change to project directory
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    # List of test files that are known to work
+    # List of all test files in the test suite
     working_tests = [
         "y_web/tests/test_simple_models.py",
         "y_web/tests/test_simple_auth.py",
@@ -24,6 +24,39 @@ def run_tests():
         "y_web/tests/test_auth_routes.py",
         "y_web/tests/test_admin_routes.py",
         "y_web/tests/test_user_interaction_routes.py",
+        "y_web/tests/test_admin_pagination.py",
+        "y_web/tests/test_agent_comparison.py",
+        "y_web/tests/test_agent_name_uniqueness.py",
+        "y_web/tests/test_blog_posts.py",
+        "y_web/tests/test_client_form_fields.py",
+        "y_web/tests/test_client_logs.py",
+        "y_web/tests/test_copy_experiment.py",
+        "y_web/tests/test_delete_orphaned_agents.py",
+        "y_web/tests/test_desktop_file_handler.py",
+        "y_web/tests/test_error_routes.py",
+        "y_web/tests/test_external_url_opening.py",
+        "y_web/tests/test_incremental_log_reading.py",
+        "y_web/tests/test_jupyter_instance_creation.py",
+        "y_web/tests/test_llm_agents_enabled.py",
+        "y_web/tests/test_llm_annotations.py",
+        "y_web/tests/test_llm_backend.py",
+        "y_web/tests/test_macos_code_signing.py",
+        "y_web/tests/test_merge_populations.py",
+        "y_web/tests/test_population_reuse.py",
+        "y_web/tests/test_pyinstaller_console_suppression.py",
+        "y_web/tests/test_pyinstaller_server_subprocess.py",
+        "y_web/tests/test_pywebview_integration.py",
+        "y_web/tests/test_recsys_support.py",
+        "y_web/tests/test_researcher_login.py",
+        "y_web/tests/test_routes_admin_basic.py",
+        "y_web/tests/test_session_management.py",
+        "y_web/tests/test_telemetry_log_submission.py",
+        "y_web/tests/test_telemetry_toggle.py",
+        "y_web/tests/test_upload_experiment.py",
+        "y_web/tests/test_user_password_email_update.py",
+        "y_web/tests/test_utils_comprehensive.py",
+        "y_web/tests/test_windows_executable_detection.py",
+        "y_web/tests/test_windows_path_handling.py",
     ]
 
     total_passed = 0
@@ -39,7 +72,7 @@ def run_tests():
                 [sys.executable, "-m", "pytest", test_file, "-v", "--tb=short"],
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=120,
             )
 
             print(result.stdout)

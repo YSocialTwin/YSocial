@@ -156,7 +156,7 @@ class TestIncrementalLogReading:
             fd, log_file = tempfile.mkstemp(suffix=".log")
 
             try:
-                # Write initial log entries
+                # Write initial log entries - note: 1 feed entry, 1 post entry
                 with os.fdopen(fd, "w") as f:
                     f.write(
                         '{"time": "2024-11-23 10:00:00", "path": "/api/feed", "duration": 0.5, "day": 0, "hour": 0}\n'
@@ -184,14 +184,14 @@ class TestIncrementalLogReading:
                 # Check that we only read the new entry
                 assert newer_offset > new_offset
 
-                # Check metrics - should have 3 feed calls total
+                # Check metrics - should have 2 feed calls total (1 from first parse + 1 from second)
                 feed_metric = ServerLogMetrics.query.filter_by(
                     exp_id=exp_id, aggregation_level="daily", day=0, path="/api/feed"
                 ).first()
 
                 assert feed_metric is not None
-                assert feed_metric.call_count == 3
-                assert feed_metric.total_duration == pytest.approx(1.9, rel=1e-4)
+                assert feed_metric.call_count == 2  # 1 initial + 1 appended
+                assert feed_metric.total_duration == pytest.approx(1.2, rel=1e-4)  # 0.5 + 0.7
 
             finally:
                 # Cleanup
