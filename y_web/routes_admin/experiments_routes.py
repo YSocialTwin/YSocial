@@ -816,7 +816,6 @@ def upload_experiment():
                         age=agent["age"],
                         ag_type=agent["type"],
                         leaning=agent["leaning"],
-                        interests=",".join(agent["interests"][0]),
                         oe=agent["oe"],
                         co=agent["co"],
                         ne=agent["ne"],
