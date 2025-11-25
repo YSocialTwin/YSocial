@@ -3429,10 +3429,11 @@ def copy_experiment():
                     if "servers" in client_config and "api" in client_config["servers"]:
                         # Update the port in the API URL
                         old_api = client_config["servers"]["api"]
-                        # Replace the port in the URL (format: http://host:port/)
+                        # Replace port in URL - handles both with and without trailing slash
+                        # Pattern matches :port/ or :port at end of string
                         import re
 
-                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
+                        new_api = re.sub(r":(\d+)(/|$)", f":{suggested_port}\\2", old_api)
                         client_config["servers"]["api"] = new_api
 
                         with open(client_config_path, "w") as f:
