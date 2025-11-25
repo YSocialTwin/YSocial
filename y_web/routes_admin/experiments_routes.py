@@ -775,8 +775,12 @@ def upload_experiment():
                         if f.endswith(expected_suffix):
                             old_client_file = os.path.join(exp_folder, f)
                             # Replace only the population name at the end
-                            new_client_filename = f[:-len(expected_suffix)] + f"-{new_name}.json"
-                            new_client_file = os.path.join(exp_folder, new_client_filename)
+                            new_client_filename = (
+                                f[: -len(expected_suffix)] + f"-{new_name}.json"
+                            )
+                            new_client_file = os.path.join(
+                                exp_folder, new_client_filename
+                            )
                             os.rename(old_client_file, new_client_file)
 
                 # Create new population with unique name
@@ -3433,7 +3437,9 @@ def copy_experiment():
                         # Pattern matches :port/ or :port at end of string
                         import re
 
-                        new_api = re.sub(r":(\d+)(/|$)", f":{suggested_port}\\2", old_api)
+                        new_api = re.sub(
+                            r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
+                        )
                         client_config["servers"]["api"] = new_api
 
                         with open(client_config_path, "w") as f:
