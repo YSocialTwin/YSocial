@@ -349,7 +349,7 @@ def upload_page_collection():
             # Handle name duplicates by adding incremental suffix
             base_name = page_data["name"]
             page_name = base_name
-            suffix = 1
+            suffix = 0
             while Page.query.filter_by(name=page_name).first():
                 suffix += 1
                 page_name = f"{base_name}_{suffix}"

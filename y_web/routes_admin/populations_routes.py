@@ -849,7 +849,7 @@ def upload_population():
     # Handle population name duplicates by adding incremental suffix
     base_name = data["population_data"]["name"]
     population_name = base_name
-    suffix = 1
+    suffix = 0
     while Population.query.filter_by(name=population_name).first():
         suffix += 1
         population_name = f"{base_name}_{suffix}"
