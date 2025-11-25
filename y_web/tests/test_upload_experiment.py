@@ -178,6 +178,80 @@ def test_zip_file_structure():
         assert extracted_config["port"] == 8080
 
 
+def test_nested_zip_file_extraction():
+    """Test extracting a zip file with nested directory structure.
+
+    This tests the fix for uploading zip files where experiment files
+    are inside a subdirectory rather than at the root of the archive.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a minimal experiment structure
+        config = {
+            "name": "Nested Experiment",
+            "host": "127.0.0.1",
+            "port": 8080,
+            "platform_type": "microblogging",
+            "database_uri": "test.db",
+        }
+
+        # Create zip file with files inside a subdirectory
+        zip_path = os.path.join(tmpdir, "experiment.zip")
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            # Create files inside a "my_experiment" subdirectory
+            zf.writestr(
+                "my_experiment/config_server.json", json.dumps(config, indent=4)
+            )
+            zf.writestr("my_experiment/prompts.json", json.dumps({}, indent=4))
+            zf.writestr(
+                "my_experiment/client_test.json",
+                json.dumps({"servers": {"api": "http://127.0.0.1:8080/"}}, indent=4),
+            )
+
+        # Extract to a directory
+        extract_dir = os.path.join(tmpdir, "extracted")
+        os.makedirs(extract_dir)
+        shutil.unpack_archive(zip_path, extract_dir)
+
+        # Verify files are in subdirectory after extraction
+        assert not os.path.exists(os.path.join(extract_dir, "config_server.json"))
+        assert os.path.exists(
+            os.path.join(extract_dir, "my_experiment", "config_server.json")
+        )
+
+        # Now apply the fix logic: move files from subdirectory to parent
+        expected_config = os.path.join(extract_dir, "config_server.json")
+        if not os.path.exists(expected_config):
+            for item in os.listdir(extract_dir):
+                subdir = os.path.join(extract_dir, item)
+                if os.path.isdir(subdir):
+                    nested_config = os.path.join(subdir, "config_server.json")
+                    if os.path.exists(nested_config):
+                        # Found config_server.json in a subdirectory - move all files up
+                        for nested_item in os.listdir(subdir):
+                            src = os.path.join(subdir, nested_item)
+                            dst = os.path.join(extract_dir, nested_item)
+                            # Skip if destination already exists to avoid conflicts
+                            if not os.path.exists(dst):
+                                shutil.move(src, dst)
+                        # Remove the subdirectory (will fail if not empty, which is ok)
+                        shutil.rmtree(subdir, ignore_errors=True)
+                        break
+
+        # Verify files are now at the expected location
+        assert os.path.exists(os.path.join(extract_dir, "config_server.json"))
+        assert os.path.exists(os.path.join(extract_dir, "prompts.json"))
+        assert os.path.exists(os.path.join(extract_dir, "client_test.json"))
+
+        # Verify the subdirectory no longer exists
+        assert not os.path.exists(os.path.join(extract_dir, "my_experiment"))
+
+        # Verify config content
+        with open(os.path.join(extract_dir, "config_server.json")) as f:
+            extracted_config = json.load(f)
+        assert extracted_config["name"] == "Nested Experiment"
+        assert extracted_config["port"] == 8080
+
+
 def test_postgresql_db_name_sanitization():
     """Test that PostgreSQL database names are properly sanitized."""
     import uuid

@@ -412,6 +412,29 @@ def upload_experiment():
     # remove the zip file
     os.remove(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
 
+    # Handle ZIP files with nested directory structure
+    # If config_server.json is not at the expected location, look for it in subdirectories
+    exp_dir = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+    expected_config = os.path.join(exp_dir, "config_server.json")
+
+    if not os.path.exists(expected_config):
+        # Look for config_server.json in subdirectories
+        for item in os.listdir(exp_dir):
+            subdir = os.path.join(exp_dir, item)
+            if os.path.isdir(subdir):
+                nested_config = os.path.join(subdir, "config_server.json")
+                if os.path.exists(nested_config):
+                    # Found config_server.json in a subdirectory - move all files up
+                    for nested_item in os.listdir(subdir):
+                        src = os.path.join(subdir, nested_item)
+                        dst = os.path.join(exp_dir, nested_item)
+                        # Skip if destination already exists to avoid conflicts
+                        if not os.path.exists(dst):
+                            shutil.move(src, dst)
+                    # Remove the subdirectory (will fail if not empty, which is ok)
+                    shutil.rmtree(subdir, ignore_errors=True)
+                    break
+
     # Determine database type
     db_type = "sqlite"
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
