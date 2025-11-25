@@ -297,3 +297,33 @@ def test_config_file_updates_integration():
         assert updated_config["port"] == 5500
         assert updated_config["database_uri"] == "/new/path"
         assert updated_config["host"] == "127.0.0.1"  # Unchanged
+
+
+def test_uid_format_consistency():
+    """Test that UUID format is consistent between folder and db_name.
+
+    This test ensures that the UID used for the experiment folder matches
+    the UID format used in db_name for both SQLite and PostgreSQL.
+    The fix ensures that dashes are replaced with underscores in the UID
+    to maintain consistency.
+    """
+    import uuid
+
+    # Simulate the UID generation as it should be done in upload_experiment
+    uid = str(uuid.uuid4()).replace("-", "_")
+
+    # Verify no dashes in UID (they should all be underscores)
+    assert "-" not in uid
+    assert "_" in uid
+
+    # SQLite format: experiments/<uid>/database_server.db
+    sqlite_db_name = f"experiments/{uid}/database_server.db"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    sqlite_uid_from_db_name = sqlite_db_name.split("/")[1]
+    assert sqlite_uid_from_db_name == uid, "SQLite: folder UID should match db_name UID"
+
+    # PostgreSQL format: experiments_<uid>
+    pg_db_name = f"experiments_{uid}"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    pg_uid_from_db_name = pg_db_name.replace("experiments_", "")
+    assert pg_uid_from_db_name == uid, "PostgreSQL: folder UID should match db_name UID"

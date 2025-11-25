@@ -391,7 +391,7 @@ def upload_experiment():
     experiment = request.files["experiment"]
     # Get experiment name from form, fallback to name from config if not provided
     exp_name_override = request.form.get("exp_name", "").strip()
-    uid = uuid.uuid4()
+    uid = str(uuid.uuid4()).replace("-", "_")
 
     from y_web.utils.path_utils import get_writable_path
 
@@ -517,7 +517,7 @@ def upload_experiment():
             port_db = parsed_uri.port or 5432
 
             # New database name - sanitize to ensure PostgreSQL compatibility
-            dbname = f"experiments_{str(uid).replace('-', '_')}"
+            dbname = f"experiments_{uid}"
             # Validate database name (only alphanumeric and underscore)
             if not dbname.replace("_", "").isalnum():
                 raise ValueError(f"Invalid database name: {dbname}")
