@@ -152,7 +152,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                         and not f.startswith("config_") and not f.startswith("prompts")
                         and f.startswith(base_name)):
                         filename = os.path.join(data_base_path, f)
-                        print(f"Warning: Expected population file not found. Using fallback: {f}")
+                        print(f"Warning: Expected population file not found. Using fallback: {f}", file=sys.stderr)
                         break
 
             if filename is None:
@@ -167,6 +167,8 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             data_base_path, f"client_{cli.name}-{population.name}.json"
         )
 
+        print(f"Looking for client config file at: {expected_client_file}", file=sys.stderr)
+
         if os.path.exists(expected_client_file):
             client_config_path = expected_client_file
         else:
@@ -176,20 +178,20 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             for f in os.listdir(data_base_path):
                 if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
                     client_config_path = os.path.join(data_base_path, f)
-                    print(f"Warning: Expected file not found. Using fallback: {f}")
+                    print(f"Warning: Expected file not found. Using fallback: {f}", file=sys.stderr)
                     break
 
             if client_config_path is None:
                 raise FileNotFoundError(
-                    f"No client config file found for client '{cli.name}' in {data_base_path}"
+                    f"No client config file found for client '{cli.name}' in {data_base_path}, file=sys.stderr"
                 )
 
         config_file = json.load(open(client_config_path))
 
-        print("Starting client process...")
+        print("Starting client process...", file=sys.stderr)
 
         ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} execution record: {ce}")
+        print(f"Client {cli.name} execution record: {ce}", file=sys.stderr)
 
         if ce:
             first_run = False
@@ -207,6 +209,9 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             session.commit()
 
         log_file = f"{data_base_path}{cli.name}_client.log"
+
+        print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
+
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
             cl = YClientWeb(
@@ -217,6 +222,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            print(f"First run", file=sys.stderr)
         else:
             cl = YClientWeb(
                 config_file,
@@ -225,13 +231,14 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            print(f"Resume", file=sys.stderr)
 
         if resume:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
                 print(
-                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})", file=sys.stderr
                 )
                 return
             cl.days = int(remaining_rounds / 24)
@@ -424,7 +431,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 # Check if we've reached 100% completion
                 if ce.elapsed_time >= ce.expected_duration_rounds:
                     print(
-                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})", file=sys.stderr
                     )
                     # Clean up and exit
                     session.close()
