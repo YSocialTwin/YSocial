@@ -331,9 +331,17 @@ def create_app(db_type="sqlite", desktop_mode=False):
             "db_admin": f"sqlite:///{dashboard_db_path}",
             "db_exp": f"sqlite:///{dummy_db_path}",
         }
+
+        # Use NullPool for SQLite to avoid connection pooling issues
+        # This ensures each request gets a fresh connection and prevents hangs
+        from sqlalchemy.pool import NullPool
+
         app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-            "connect_args": {"check_same_thread": False}
+            "connect_args": {"check_same_thread": False, "timeout": 10},
+            "pool_pre_ping": True,
+            "poolclass": NullPool,
         }
+
         # Store the database paths for migrations
         app.config["DASHBOARD_DB_PATH"] = dashboard_db_path
         app.config["DUMMY_DB_PATH"] = dummy_db_path
@@ -408,7 +416,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     @app.teardown_request
     def teardown_request_handler(exception=None):
-        """Restore experiment context after each request."""
+        """Clean up database session and restore experiment context after each request."""
+        # Explicitly remove the database session to ensure proper cleanup
+        # This prevents session leaks and connection hangs, especially with SQLite
+        db.session.remove()
         teardown_experiment_context(exception)
 
     @app.context_processor
