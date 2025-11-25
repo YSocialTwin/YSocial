@@ -678,6 +678,27 @@ def upload_experiment():
         db.session.add(jupyter_instance)
         db.session.commit()
 
+        # Reconstruct exp_topic entries from config_server.json
+        # If no topics in config, add a generic "Topic 1"
+        topics = experiment_config.get("topics", [])
+        if not topics:
+            topics = ["Topic 1"]
+
+        for topic_name in topics:
+            topic_name = topic_name.strip()
+            if topic_name:
+                # Check if topic already exists in Topic_List
+                existing_topic = Topic_List.query.filter_by(name=topic_name).first()
+                if not existing_topic:
+                    existing_topic = Topic_List(name=topic_name)
+                    db.session.add(existing_topic)
+                    db.session.commit()
+
+                # Add topic to experiment
+                exp_topic = Exp_Topic(exp_id=exp.idexp, topic_id=existing_topic.id)
+                db.session.add(exp_topic)
+                db.session.commit()
+
     except Exception as e:
         flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
@@ -1205,6 +1226,7 @@ def create_experiment():
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "database_uri": db_uri,
+        "topics": [t.strip() for t in topics if t.strip()],
     }
 
     with open(
