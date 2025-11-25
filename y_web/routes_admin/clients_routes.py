@@ -762,8 +762,12 @@ def create_client():
 
         ints = [interests, len(interests)]
 
-        activity_profile_obj = db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
-        activity_profile_name = activity_profile_obj.name if activity_profile_obj else "Always On"
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
 
         res["agents"].append(
             {
@@ -811,8 +815,12 @@ def create_client():
         page_topics = [t[1].name for t in page_topics]
         page_topics = list(set(page_topics) & set(topics))
 
-        activity_profile_obj = db.session.query(ActivityProfile).filter_by(id=p.activity_profile).first()
-        activity_profile_name = activity_profile_obj.name if activity_profile_obj else "Always On"
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=p.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
 
         res["agents"].append(
             {

@@ -206,9 +206,14 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         print(f"Looking up Client_Execution for client_id={cli.id}", file=sys.stderr)
         ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} (id={cli.id}) execution record: {ce}", file=sys.stderr)
+        print(
+            f"Client {cli.name} (id={cli.id}) execution record: {ce}", file=sys.stderr
+        )
         if ce:
-            print(f"  Execution record details: elapsed_time={ce.elapsed_time}, expected_duration={ce.expected_duration_rounds}", file=sys.stderr)
+            print(
+                f"  Execution record details: elapsed_time={ce.elapsed_time}, expected_duration={ce.expected_duration_rounds}",
+                file=sys.stderr,
+            )
 
         if ce:
             first_run = False
