@@ -767,12 +767,17 @@ def upload_experiment():
                     os.rename(old_pop_file, new_pop_file)
 
                 # Rename client JSON file(s) that contain the original population name
+                # Client files follow the pattern: client_{client_name}-{population_name}.json
                 for f in os.listdir(exp_folder):
-                    if f.startswith("client") and f.endswith(".json") and original_name in f:
-                        old_client_file = os.path.join(exp_folder, f)
-                        new_client_filename = f.replace(original_name, new_name)
-                        new_client_file = os.path.join(exp_folder, new_client_filename)
-                        os.rename(old_client_file, new_client_file)
+                    if f.startswith("client") and f.endswith(".json"):
+                        # Check if the filename ends with -{original_name}.json
+                        expected_suffix = f"-{original_name}.json"
+                        if f.endswith(expected_suffix):
+                            old_client_file = os.path.join(exp_folder, f)
+                            # Replace only the population name at the end
+                            new_client_filename = f[:-len(expected_suffix)] + f"-{new_name}.json"
+                            new_client_file = os.path.join(exp_folder, new_client_filename)
+                            os.rename(old_client_file, new_client_file)
 
                 # Create new population with unique name
                 population = Population(name=new_name, descr="")
