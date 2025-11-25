@@ -19,7 +19,7 @@ SUPPORT_EMAIL = "support@y-not.social"
 
 class Telemetry(object):
     # telemetry.y-not.social
-    def __init__(self, host="localhost", port=9000, user=None):
+    def __init__(self, host="telemetry.y-not.social", port=9000, user=None):
         self.host = host
         self.port = port
         self.uuid = None
