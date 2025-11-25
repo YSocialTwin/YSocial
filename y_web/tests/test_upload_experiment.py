@@ -230,9 +230,11 @@ def test_nested_zip_file_extraction():
                         for nested_item in os.listdir(subdir):
                             src = os.path.join(subdir, nested_item)
                             dst = os.path.join(extract_dir, nested_item)
-                            shutil.move(src, dst)
-                        # Remove the now-empty subdirectory
-                        os.rmdir(subdir)
+                            # Skip if destination already exists to avoid conflicts
+                            if not os.path.exists(dst):
+                                shutil.move(src, dst)
+                        # Remove the subdirectory (will fail if not empty, which is ok)
+                        shutil.rmtree(subdir, ignore_errors=True)
                         break
 
         # Verify files are now at the expected location
