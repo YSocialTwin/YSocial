@@ -122,25 +122,69 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = os.path.join(
-                BASE_DIR, "experiments", uid, f"{population.name.replace(' ', '')}.json"
-            )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = os.path.join(
-                BASE_DIR,
-                exp.db_name.split("database_server.db")[0],
-                f"{population.name.replace(' ', '')}.json",
-            )
 
         data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
-        config_file = json.load(
-            open(
-                os.path.join(
-                    data_base_path, f"client_{cli.name}-{population.name}.json"
-                )
-            )
+
+        # Try to find the population file
+        # The expected filename is {population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_pop_file = os.path.join(
+            data_base_path, f"{population.name.replace(' ', '')}.json"
         )
+
+        if os.path.exists(expected_pop_file):
+            filename = expected_pop_file
+        else:
+            # Fallback: search for a matching population file
+            # Population files don't start with "client_" and end with ".json"
+            filename = None
+            pop_name_base = population.name.replace(' ', '')
+            # Remove any _N suffix to find the base name
+            import re
+            base_match = re.match(r'^(.+?)(?:_\d+)?$', pop_name_base)
+            if base_match:
+                base_name = base_match.group(1)
+                for f in os.listdir(data_base_path):
+                    if (f.endswith(".json") and not f.startswith("client_") 
+                        and not f.startswith("config_") and not f.startswith("prompts")
+                        and f.startswith(base_name)):
+                        filename = os.path.join(data_base_path, f)
+                        print(f"Warning: Expected population file not found. Using fallback: {f}")
+                        break
+
+            if filename is None:
+                # Use the expected path (will fail when saving if not exists)
+                filename = expected_pop_file
+
+        # Try to find the client config file
+        # The expected filename is client_{cli.name}-{population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_client_file = os.path.join(
+            data_base_path, f"client_{cli.name}-{population.name}.json"
+        )
+
+        if os.path.exists(expected_client_file):
+            client_config_path = expected_client_file
+        else:
+            # Fallback: search for a matching client file by client name
+            # This handles cases where population was renamed but files weren't
+            client_config_path = None
+            for f in os.listdir(data_base_path):
+                if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
+                    client_config_path = os.path.join(data_base_path, f)
+                    print(f"Warning: Expected file not found. Using fallback: {f}")
+                    break
+
+            if client_config_path is None:
+                raise FileNotFoundError(
+                    f"No client config file found for client '{cli.name}' in {data_base_path}"
+                )
+
+        config_file = json.load(open(client_config_path))
 
         print("Starting client process...")
 
