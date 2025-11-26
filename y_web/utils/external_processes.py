@@ -649,17 +649,22 @@ def _get_ports_allocated_to_experiments(exclude_exp_id=None):
         return set()
 
 
-def _find_new_available_port(exclude_exp_id=None, min_port=None, max_port=None):
+def _find_new_available_port(
+    exclude_exp_id=None, exclude_current_port=None, min_port=None, max_port=None
+):
     """
     Find a new available port that is:
     1. Not currently in use (socket check)
     2. Not allocated to any other experiment in the database
+    3. Not the same as the current experiment's port (to force a fresh port)
 
     This is the robust version used for server starts to ensure
     complete port isolation between experiments.
 
     Args:
         exclude_exp_id: experiment ID to exclude when checking allocated ports
+        exclude_current_port: the current port of this experiment to exclude
+                             (ensures we always get a NEW port)
         min_port: minimum port number (default: SERVER_PORT_MIN)
         max_port: maximum port number (default: SERVER_PORT_MAX)
 
@@ -674,13 +679,17 @@ def _find_new_available_port(exclude_exp_id=None, min_port=None, max_port=None):
 
     # Get all ports allocated to other experiments
     allocated_ports = _get_ports_allocated_to_experiments(exclude_exp_id)
-    print(
-        f"Ports allocated to other experiments: {sorted(allocated_ports) if allocated_ports else 'none'}"
-    )
+
+    # Also exclude the current experiment's port to ensure we get a fresh port
+    if exclude_current_port is not None:
+        allocated_ports.add(exclude_current_port)
+
+    print(f"Ports to avoid: {sorted(allocated_ports) if allocated_ports else 'none'}")
 
     # Search entire allowed range for a port that is:
     # 1. Not in use by a running process
     # 2. Not allocated to another experiment
+    # 3. Not the current experiment's port
     for port in range(min_port, max_port + 1):
         if port not in allocated_ports and _is_port_available(port):
             return port
@@ -962,12 +971,14 @@ def start_server(exp):
     # Step 2: Find a new available port that is:
     # - Not currently in use by any process (socket check)
     # - Not allocated to any other experiment in the database
+    # - Not the same as the current experiment's port (always get a fresh port)
     print(
         f"Step 2: Finding new available port in range "
-        f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
+        f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX} (excluding current port {old_port})..."
     )
     new_port = _find_new_available_port(
         exclude_exp_id=exp.idexp,
+        exclude_current_port=old_port,
         min_port=SERVER_PORT_MIN,
         max_port=SERVER_PORT_MAX,
     )
@@ -976,21 +987,17 @@ def start_server(exp):
         print(f"Found available port: {new_port}")
 
         # Step 3: Update config files and database with the new port
-        if new_port != old_port:
-            print(
-                f"Step 3: Updating configurations from port {old_port} to {new_port}..."
-            )
-            if _update_server_port_in_configs(exp, new_port):
-                print(f"Successfully updated port to {new_port}")
-                # Refresh the experiment object to get updated port
-                db.session.refresh(exp)
-            else:
-                print(
-                    f"Warning: Some config updates failed. "
-                    f"Server may fail to start on port {new_port}"
-                )
+        # (always update since we're guaranteed a different port)
+        print(f"Step 3: Updating configurations from port {old_port} to {new_port}...")
+        if _update_server_port_in_configs(exp, new_port):
+            print(f"Successfully updated port to {new_port}")
+            # Refresh the experiment object to get updated port
+            db.session.refresh(exp)
         else:
-            print(f"Port {new_port} is same as current, no config update needed.")
+            print(
+                f"Warning: Some config updates failed. "
+                f"Server may fail to start on port {new_port}"
+            )
     else:
         # No port found - this is a serious error
         raise RuntimeError(
