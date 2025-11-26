@@ -351,6 +351,70 @@ class TestProcessWatchdog:
         finally:
             os.unlink(temp_path)
 
+    def test_servers_checked_before_clients(self):
+        """Test that servers are checked and restarted before clients."""
+        from y_web.utils.process_watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(restart_cooldown=0)
+        check_order = []
+
+        def make_callback(process_id):
+            def callback():
+                check_order.append(process_id)
+                return 12345
+
+            return callback
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("log entry\n")
+            temp_path = f.name
+
+        try:
+            # Register in mixed order: client, server, client, server
+            watchdog.register_process(
+                process_id="client_1",
+                pid=999999999,
+                log_file=temp_path,
+                restart_callback=make_callback("client_1"),
+                process_type="client",
+            )
+            watchdog.register_process(
+                process_id="server_1",
+                pid=999999999,
+                log_file=temp_path,
+                restart_callback=make_callback("server_1"),
+                process_type="server",
+            )
+            watchdog.register_process(
+                process_id="client_2",
+                pid=999999999,
+                log_file=temp_path,
+                restart_callback=make_callback("client_2"),
+                process_type="client",
+            )
+            watchdog.register_process(
+                process_id="server_2",
+                pid=999999999,
+                log_file=temp_path,
+                restart_callback=make_callback("server_2"),
+                process_type="server",
+            )
+
+            # Check all processes
+            watchdog._check_all_processes()
+
+            # Servers should be restarted before clients
+            assert len(check_order) == 4
+            # First two should be servers
+            assert check_order[0] in ["server_1", "server_2"]
+            assert check_order[1] in ["server_1", "server_2"]
+            # Last two should be clients
+            assert check_order[2] in ["client_1", "client_2"]
+            assert check_order[3] in ["client_1", "client_2"]
+
+        finally:
+            os.unlink(temp_path)
+
 
 class TestGlobalWatchdog:
     """Tests for global watchdog functions."""

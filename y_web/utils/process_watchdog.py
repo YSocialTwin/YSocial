@@ -152,9 +152,26 @@ class ProcessWatchdog:
                 time.sleep(1)
 
     def _check_all_processes(self) -> None:
-        """Check all registered processes."""
+        """Check all registered processes.
+
+        Servers are checked and restarted before clients to ensure proper
+        dependency order - if all clients attached to a server hung, the
+        issue is likely in the server, so restart the server first.
+        """
         with self._lock:
-            process_ids = list(self._processes.keys())
+            # Separate processes by type and sort: servers first, then clients
+            server_ids = [
+                pid
+                for pid, info in self._processes.items()
+                if info.process_type == "server"
+            ]
+            client_ids = [
+                pid
+                for pid, info in self._processes.items()
+                if info.process_type == "client"
+            ]
+            # Process servers first, then clients
+            process_ids = server_ids + client_ids
 
         for process_id in process_ids:
             with self._lock:
