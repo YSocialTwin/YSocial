@@ -494,11 +494,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     username=current_user.username
                 ).first()
                 if admin_user and admin_user.role == "admin":
-                    # Get unread blog posts (is_read = 0 for SQLite, False for PostgreSQL)
+                    # Get unread blog posts
                     latest_post = (
-                        BlogPost.query.filter(
-                            (BlogPost.is_read == False) | (BlogPost.is_read == 0)
-                        )
+                        BlogPost.query.filter(BlogPost.is_read == False)
                         .order_by(BlogPost.id.desc())
                         .first()
                     )
