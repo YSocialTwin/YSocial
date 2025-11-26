@@ -36,6 +36,9 @@ from y_web.utils.path_utils import get_base_path, get_resource_path, get_writabl
 # Dictionary to track Ollama model download processes
 ollama_processes = {}
 
+# Flag to enable/disable watchdog monitoring
+WATCHDOG_ENABLED = True
+
 
 def cleanup_server_processes_from_db():
     """
@@ -122,6 +125,15 @@ def cleanup_client_processes_from_db():
 def stop_all_exps():
     """Stop all experiments and terminate server and client processes"""
     try:
+        # Stop watchdog first to prevent auto-restarts during shutdown
+        if WATCHDOG_ENABLED:
+            try:
+                from y_web.utils.process_watchdog import stop_watchdog
+
+                stop_watchdog()
+            except Exception as e:
+                print(f"Warning: Could not stop watchdog: {e}")
+
         # Terminate all running server processes
         cleanup_server_processes_from_db()
 
@@ -394,6 +406,16 @@ def terminate_server_process(exp_id):
         bool: True if process was found and terminated, False otherwise
     """
     try:
+        # Unregister from watchdog first
+        if WATCHDOG_ENABLED:
+            try:
+                from y_web.utils.process_watchdog import get_watchdog
+
+                watchdog = get_watchdog()
+                watchdog.unregister_process(f"server_{exp_id}")
+            except Exception as e:
+                print(f"Warning: Could not unregister server from watchdog: {e}")
+
         # Get experiment from database
         exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
         if not exp or not exp.server_pid:
@@ -900,7 +922,67 @@ def start_server(exp):
         except Exception as e:
             print(f"Warning: Could not configure database: {e}")
 
+    # Register with watchdog for automatic restart on hang/death
+    if WATCHDOG_ENABLED:
+        try:
+            _register_server_with_watchdog(exp, process.pid, log_dir)
+        except Exception as e:
+            print(f"Warning: Could not register server with watchdog: {e}")
+
     return process
+
+
+def _register_server_with_watchdog(exp, pid, log_dir):
+    """
+    Register a server process with the watchdog for monitoring.
+
+    Args:
+        exp: the experiment object
+        pid: the process ID
+        log_dir: directory containing log files
+    """
+    from y_web.utils.process_watchdog import get_watchdog
+
+    # Use _server.log as the heartbeat file (this is the main server log)
+    log_file = os.path.join(log_dir, "_server.log")
+
+    # Create restart callback
+    def restart_callback():
+        """Callback to restart the server process."""
+        try:
+            # Re-fetch experiment from database to get fresh state
+            fresh_exp = db.session.query(Exps).filter_by(idexp=exp.idexp).first()
+            if fresh_exp:
+                # Terminate any existing process first
+                if fresh_exp.server_pid:
+                    try:
+                        os.kill(fresh_exp.server_pid, signal.SIGTERM)
+                        time.sleep(1)
+                    except OSError:
+                        pass
+
+                # Start new server process
+                new_process = start_server(fresh_exp)
+                return new_process.pid if new_process else None
+        except Exception as e:
+            print(f"Error in server restart callback: {e}")
+        return None
+
+    # Get or create watchdog and register process
+    watchdog = get_watchdog()
+    process_id = f"server_{exp.idexp}"
+
+    watchdog.register_process(
+        process_id=process_id,
+        pid=pid,
+        log_file=log_file,
+        restart_callback=restart_callback,
+        process_type="server",
+    )
+
+    # Start watchdog if not already running
+    if not watchdog.is_running:
+        watchdog.start()
 
 
 @deprecated
@@ -1282,7 +1364,18 @@ def terminate_client(cli, pause=False):
 
     Args:
         cli: the client object
+        pause: whether this is a pause (may be resumed) or full stop
     """
+    # Unregister from watchdog first
+    if WATCHDOG_ENABLED:
+        try:
+            from y_web.utils.process_watchdog import get_watchdog
+
+            watchdog = get_watchdog()
+            watchdog.unregister_process(f"client_{cli.id}")
+        except Exception as e:
+            print(f"Warning: Could not unregister client from watchdog: {e}")
+
     if not cli.pid:
         print(f"No PID found for client {cli.name}")
         return
@@ -1489,4 +1582,71 @@ def start_client(exp, cli, population, resume=True):
     cli.pid = process.pid
     db.session.commit()
 
+    # Register with watchdog for automatic restart on hang/death
+    if WATCHDOG_ENABLED:
+        try:
+            _register_client_with_watchdog(exp, cli, population, process.pid, log_dir)
+        except Exception as e:
+            print(f"Warning: Could not register client with watchdog: {e}")
+
     return process
+
+
+def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
+    """
+    Register a client process with the watchdog for monitoring.
+
+    Args:
+        exp: the experiment object
+        cli: the client object
+        population: the population object
+        pid: the process ID
+        log_dir: directory containing log files
+    """
+    from y_web.utils.process_watchdog import get_watchdog
+
+    # Use {client_name}_client.log as the heartbeat file
+    log_file = os.path.join(log_dir, f"{cli.name}_client.log")
+
+    # Create restart callback
+    def restart_callback():
+        """Callback to restart the client process."""
+        try:
+            # Re-fetch objects from database to get fresh state
+            fresh_exp = db.session.query(Exps).filter_by(idexp=exp.idexp).first()
+            fresh_cli = db.session.query(Client).filter_by(id=cli.id).first()
+            from y_web.models import Population
+
+            fresh_pop = db.session.query(Population).filter_by(id=population.id).first()
+
+            if fresh_exp and fresh_cli and fresh_pop:
+                # Terminate any existing process first
+                if fresh_cli.pid:
+                    try:
+                        os.kill(fresh_cli.pid, signal.SIGTERM)
+                        time.sleep(1)
+                    except OSError:
+                        pass
+
+                # Start new client process (resume=True to continue from last state)
+                new_process = start_client(fresh_exp, fresh_cli, fresh_pop, resume=True)
+                return new_process.pid if new_process else None
+        except Exception as e:
+            print(f"Error in client restart callback: {e}")
+        return None
+
+    # Get or create watchdog and register process
+    watchdog = get_watchdog()
+    process_id = f"client_{cli.id}"
+
+    watchdog.register_process(
+        process_id=process_id,
+        pid=pid,
+        log_file=log_file,
+        restart_callback=restart_callback,
+        process_type="client",
+    )
+
+    # Start watchdog if not already running
+    if not watchdog.is_running:
+        watchdog.start()
