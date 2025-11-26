@@ -41,6 +41,55 @@ ollama_processes = {}
 # Flag to enable/disable watchdog monitoring
 WATCHDOG_ENABLED = True
 
+# Registry to keep references to subprocess.Popen objects and their log file handles.
+# This prevents garbage collection of running processes and their log files.
+# Key: process_id (e.g., "server_1", "client_5")
+# Value: dict with 'process', 'stdout_file', 'stderr_file'
+_process_registry = {}
+
+
+def _register_process(process_id, process, stdout_file=None, stderr_file=None):
+    """
+    Register a subprocess.Popen object to prevent garbage collection.
+
+    This keeps the process object and its log file handles alive for the
+    lifetime of the application, preventing potential issues with:
+    - Process becoming zombie due to GC of Popen object
+    - Log file handles being closed prematurely
+
+    Args:
+        process_id: Unique identifier for the process (e.g., "server_1", "client_5")
+        process: The subprocess.Popen object
+        stdout_file: The stdout log file handle (optional)
+        stderr_file: The stderr log file handle (optional)
+    """
+    global _process_registry
+    _process_registry[process_id] = {
+        "process": process,
+        "stdout_file": stdout_file,
+        "stderr_file": stderr_file,
+    }
+
+
+def _unregister_process(process_id):
+    """
+    Unregister a subprocess.Popen object and close its log file handles.
+
+    Args:
+        process_id: The unique identifier for the process
+    """
+    global _process_registry
+    if process_id in _process_registry:
+        entry = _process_registry.pop(process_id)
+        # Close log file handles if they exist
+        for key in ("stdout_file", "stderr_file"):
+            fh = entry.get(key)
+            if fh and fh != subprocess.DEVNULL:
+                try:
+                    fh.close()
+                except Exception:
+                    pass
+
 
 def cleanup_server_processes_from_db():
     """
@@ -417,6 +466,9 @@ def terminate_server_process(exp_id):
                 watchdog.unregister_process(f"server_{exp_id}")
             except Exception as e:
                 print(f"Warning: Could not unregister server from watchdog: {e}")
+
+        # Unregister from process registry (closes log file handles)
+        _unregister_process(f"server_{exp_id}")
 
         # Get experiment from database
         exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
@@ -1507,6 +1559,9 @@ def start_server(exp):
         except Exception as e:
             print(f"Warning: Could not register server with watchdog: {e}")
 
+    # Register process to prevent garbage collection and keep log file handles open
+    _register_process(f"server_{exp.idexp}", process, out_file, err_file)
+
     return process
 
 
@@ -1977,6 +2032,9 @@ def terminate_client(cli, pause=False):
         except Exception as e:
             print(f"Warning: Could not unregister client from watchdog: {e}")
 
+    # Unregister from process registry (closes log file handles)
+    _unregister_process(f"client_{cli.id}")
+
     if not cli.pid:
         print(f"No PID found for client {cli.name}")
         return
@@ -2189,6 +2247,9 @@ def start_client(exp, cli, population, resume=True):
             _register_client_with_watchdog(exp, cli, population, process.pid, log_dir)
         except Exception as e:
             print(f"Warning: Could not register client with watchdog: {e}")
+
+    # Register process to prevent garbage collection and keep log file handles open
+    _register_process(f"client_{cli.id}", process, out_file, err_file)
 
     return process
 
