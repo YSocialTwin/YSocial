@@ -14,9 +14,10 @@ import os
 import threading
 import time
 from datetime import datetime, timedelta
-from typing import Callable, Dict, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 import psutil
+import requests
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +30,75 @@ DEFAULT_RESTART_COOLDOWN = 60  # seconds
 SERVER_RESTART_DELAY = (
     30  # seconds to wait after restarting servers before restarting clients
 )
+SERVER_STATUS_CHECK_TIMEOUT = 5  # seconds for each status check attempt
+SERVER_STATUS_MAX_RETRIES = 6  # number of retries to check server status
+SERVER_STATUS_RETRY_DELAY = 5  # seconds between status check retries
+
+
+def check_server_status(server_url: str) -> bool:
+    """
+    Check if a server is ready by calling its /status endpoint.
+
+    Args:
+        server_url: The base URL of the server (e.g., "http://localhost:5000")
+
+    Returns:
+        True if the server is ready (status 200), False otherwise
+    """
+    try:
+        response = requests.get(
+            f"{server_url}/status", timeout=SERVER_STATUS_CHECK_TIMEOUT
+        )
+        if response.status_code == 200:
+            data = response.json()
+            # Check if the response indicates the server is running
+            if data.get("status") == 200:
+                return True
+            else:
+                logger.warning(
+                    f"Server at {server_url} returned error: {data.get('message')}"
+                )
+                return False
+        return False
+    except requests.exceptions.RequestException as e:
+        logger.debug(f"Server status check failed for {server_url}: {e}")
+        return False
+
+
+def wait_for_servers_ready(server_urls: List[str]) -> bool:
+    """
+    Wait for all servers to become ready by polling their /status endpoints.
+
+    Args:
+        server_urls: List of server base URLs to check
+
+    Returns:
+        True if all servers are ready, False if timeout reached
+    """
+    if not server_urls:
+        return True
+
+    for attempt in range(SERVER_STATUS_MAX_RETRIES):
+        all_ready = True
+        for url in server_urls:
+            if not check_server_status(url):
+                all_ready = False
+                break
+
+        if all_ready:
+            logger.info(f"Watchdog: All {len(server_urls)} server(s) are ready")
+            return True
+
+        if attempt < SERVER_STATUS_MAX_RETRIES - 1:
+            logger.info(
+                f"Watchdog: Waiting for servers... (attempt {attempt + 1}/{SERVER_STATUS_MAX_RETRIES})"
+            )
+            time.sleep(SERVER_STATUS_RETRY_DELAY)
+
+    logger.warning(
+        f"Watchdog: Timeout waiting for servers after {SERVER_STATUS_MAX_RETRIES} attempts"
+    )
+    return False
 
 
 class ProcessWatchdog:
@@ -103,6 +173,7 @@ class ProcessWatchdog:
         log_file: str,
         restart_callback: Callable[[], Optional[int]],
         process_type: str = "unknown",
+        server_url: Optional[str] = None,
     ) -> None:
         """
         Register a process for monitoring.
@@ -113,6 +184,7 @@ class ProcessWatchdog:
             log_file: Path to the log file used as heartbeat indicator
             restart_callback: Callback function to restart the process, returns new PID
             process_type: Type of process ("server" or "client")
+            server_url: For server processes, the base URL for status checks (e.g., "http://localhost:5000")
         """
         with self._lock:
             self._processes[process_id] = ProcessInfo(
@@ -125,6 +197,7 @@ class ProcessWatchdog:
                 last_heartbeat=datetime.now(),
                 restart_count=0,
                 last_restart_at=None,
+                server_url=server_url,
             )
             logger.info(
                 f"Watchdog: Registered {process_type} process {process_id} (PID: {pid})"
@@ -259,8 +332,9 @@ class ProcessWatchdog:
         dependency order - if all clients attached to a server hung, the
         issue is likely in the server, so restart the server first.
 
-        After restarting any servers, waits SERVER_RESTART_DELAY seconds
-        before restarting clients to allow servers to become responsive.
+        After restarting any servers, polls their /status endpoints to verify
+        they are ready before proceeding to restart clients. Falls back to
+        a fixed delay if status checks are not available.
         """
         with self._lock:
             # Separate processes by type and sort: servers first, then clients
@@ -275,8 +349,10 @@ class ProcessWatchdog:
                 if info.process_type == "client"
             ]
 
-        # Process servers first
+        # Process servers first and collect URLs of restarted servers
         servers_restarted = 0
+        restarted_server_urls: List[str] = []
+
         for process_id in server_ids:
             with self._lock:
                 if process_id not in self._processes:
@@ -286,17 +362,35 @@ class ProcessWatchdog:
             restarted = self._check_process(process_info, results)
             if restarted:
                 servers_restarted += 1
+                # Collect server URL for status checking
+                if process_info.server_url:
+                    restarted_server_urls.append(process_info.server_url)
 
-        # If any servers were restarted, wait before restarting clients
-        # to allow servers to become responsive to requests
+        # If any servers were restarted, wait for them to become ready
+        # before restarting clients
         if servers_restarted > 0 and len(client_ids) > 0:
-            logger.info(
-                f"Watchdog: Waiting {SERVER_RESTART_DELAY}s after restarting "
-                f"{servers_restarted} server(s) before checking clients..."
-            )
-            time.sleep(SERVER_RESTART_DELAY)
+            if restarted_server_urls:
+                # Use status endpoint to check if servers are ready
+                logger.info(
+                    f"Watchdog: Waiting for {len(restarted_server_urls)} restarted "
+                    f"server(s) to become ready..."
+                )
+                if not wait_for_servers_ready(restarted_server_urls):
+                    # Status check failed, fall back to fixed delay
+                    logger.warning(
+                        f"Watchdog: Server status checks failed, waiting "
+                        f"{SERVER_RESTART_DELAY}s before checking clients..."
+                    )
+                    time.sleep(SERVER_RESTART_DELAY)
+            else:
+                # No server URLs available, use fixed delay
+                logger.info(
+                    f"Watchdog: Waiting {SERVER_RESTART_DELAY}s after restarting "
+                    f"{servers_restarted} server(s) before checking clients..."
+                )
+                time.sleep(SERVER_RESTART_DELAY)
 
-        # Process clients after the delay
+        # Process clients after servers are ready
         for process_id in client_ids:
             with self._lock:
                 if process_id not in self._processes:
@@ -541,6 +635,7 @@ class ProcessInfo:
         last_heartbeat: datetime,
         restart_count: int,
         last_restart_at: Optional[datetime],
+        server_url: Optional[str] = None,
     ):
         self.process_id = process_id
         self.pid = pid
@@ -551,6 +646,7 @@ class ProcessInfo:
         self.last_heartbeat = last_heartbeat
         self.restart_count = restart_count
         self.last_restart_at = last_restart_at
+        self.server_url = server_url
 
 
 # Global watchdog instance

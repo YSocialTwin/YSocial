@@ -951,6 +951,9 @@ def _register_server_with_watchdog(exp, pid, log_dir):
     # Store only the ID to avoid detached SQLAlchemy instance issues
     exp_id = exp.idexp
 
+    # Build server URL for status checks
+    server_url = f"http://{exp.server}:{exp.port}"
+
     # Create restart callback
     def restart_callback():
         """Callback to restart the server process."""
@@ -1015,6 +1018,7 @@ def _register_server_with_watchdog(exp, pid, log_dir):
         log_file=log_file,
         restart_callback=restart_callback,
         process_type="server",
+        server_url=server_url,
     )
 
     # Start watchdog if not already running
