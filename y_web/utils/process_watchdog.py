@@ -27,7 +27,7 @@ DEFAULT_HEARTBEAT_TIMEOUT = 300  # seconds
 DEFAULT_MAX_RESTART_ATTEMPTS = 3
 DEFAULT_RESTART_COOLDOWN = 60  # seconds
 SERVER_RESTART_DELAY = (
-    20  # seconds to wait after restarting servers before restarting clients
+    30  # seconds to wait after restarting servers before restarting clients
 )
 
 
