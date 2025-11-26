@@ -30,6 +30,7 @@ from y_web.models import (
     Client,
     Exps,
     Ollama_Pull,
+    Population,
 )
 from y_web.utils.path_utils import get_base_path, get_resource_path, get_writable_path
 
@@ -1615,8 +1616,6 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
             # Re-fetch objects from database to get fresh state
             fresh_exp = db.session.query(Exps).filter_by(idexp=exp.idexp).first()
             fresh_cli = db.session.query(Client).filter_by(id=cli.id).first()
-            from y_web.models import Population
-
             fresh_pop = db.session.query(Population).filter_by(id=population.id).first()
 
             if fresh_exp and fresh_cli and fresh_pop:
