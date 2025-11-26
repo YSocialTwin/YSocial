@@ -26,6 +26,9 @@ MAX_RUN_INTERVAL_MINUTES = 1440  # 24 hours
 DEFAULT_HEARTBEAT_TIMEOUT = 300  # seconds
 DEFAULT_MAX_RESTART_ATTEMPTS = 3
 DEFAULT_RESTART_COOLDOWN = 60  # seconds
+SERVER_RESTART_DELAY = (
+    20  # seconds to wait after restarting servers before restarting clients
+)
 
 
 class ProcessWatchdog:
@@ -255,6 +258,9 @@ class ProcessWatchdog:
         Servers are checked and restarted before clients to ensure proper
         dependency order - if all clients attached to a server hung, the
         issue is likely in the server, so restart the server first.
+
+        After restarting any servers, waits SERVER_RESTART_DELAY seconds
+        before restarting clients to allow servers to become responsive.
         """
         with self._lock:
             # Separate processes by type and sort: servers first, then clients
@@ -268,10 +274,30 @@ class ProcessWatchdog:
                 for pid, info in self._processes.items()
                 if info.process_type == "client"
             ]
-            # Process servers first, then clients
-            process_ids = server_ids + client_ids
 
-        for process_id in process_ids:
+        # Process servers first
+        servers_restarted = 0
+        for process_id in server_ids:
+            with self._lock:
+                if process_id not in self._processes:
+                    continue
+                process_info = self._processes[process_id]
+
+            restarted = self._check_process(process_info, results)
+            if restarted:
+                servers_restarted += 1
+
+        # If any servers were restarted, wait before restarting clients
+        # to allow servers to become responsive to requests
+        if servers_restarted > 0 and len(client_ids) > 0:
+            logger.info(
+                f"Watchdog: Waiting {SERVER_RESTART_DELAY}s after restarting "
+                f"{servers_restarted} server(s) before checking clients..."
+            )
+            time.sleep(SERVER_RESTART_DELAY)
+
+        # Process clients after the delay
+        for process_id in client_ids:
             with self._lock:
                 if process_id not in self._processes:
                     continue
@@ -279,13 +305,16 @@ class ProcessWatchdog:
 
             self._check_process(process_info, results)
 
-    def _check_process(self, process_info: "ProcessInfo", results: Dict) -> None:
+    def _check_process(self, process_info: "ProcessInfo", results: Dict) -> bool:
         """
         Check a single process and restart if needed.
 
         Args:
             process_info: Information about the process to check
             results: Results dictionary to update
+
+        Returns:
+            True if the process was restarted, False otherwise
         """
         results["processes_checked"] += 1
         pid = process_info.pid
@@ -328,6 +357,7 @@ class ProcessWatchdog:
             "restarted": False,
         }
 
+        restarted = False
         if needs_restart:
             restarted = self._handle_restart(process_info, reason)
             process_detail["restarted"] = restarted
@@ -338,6 +368,7 @@ class ProcessWatchdog:
             results["processes_healthy"] += 1
 
         results["details"].append(process_detail)
+        return restarted
 
     def _is_process_running(self, pid: int) -> bool:
         """
