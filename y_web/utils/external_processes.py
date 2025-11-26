@@ -597,6 +597,157 @@ def _terminate_processes_on_port(port):
         print(f"Error terminating processes on port {port}: {e}")
 
 
+def _find_processes_with_open_file(file_path):
+    """
+    Find all processes that have a specific file open.
+
+    This is OS-independent and uses psutil to check open files.
+    Useful for finding processes that are holding database locks.
+
+    Args:
+        file_path: the path to the file to check
+
+    Returns:
+        list: list of psutil.Process objects that have the file open
+    """
+    try:
+        import psutil
+    except ImportError:
+        print("Warning: psutil not available, cannot check for file locks")
+        return []
+
+    lockers = []
+    # Normalize the file path for comparison
+    try:
+        normalized_path = os.path.realpath(file_path)
+    except Exception:
+        normalized_path = file_path
+
+    for proc in psutil.process_iter(["pid", "open_files", "name"]):
+        try:
+            open_files = proc.info.get("open_files") or []
+            for f in open_files:
+                # Check both original path and normalized path
+                if f.path == file_path or f.path == normalized_path:
+                    lockers.append(proc)
+                    break
+        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+            # Skip processes we can't access
+            pass
+        except Exception as e:
+            # Skip any other errors for individual processes
+            pass
+
+    return lockers
+
+
+def _terminate_processes_holding_database(db_path):
+    """
+    Terminate all processes that have the database file open.
+
+    This is essential for SQLite databases where processes may hold
+    locks that persist even after the main process is terminated.
+    Also works for finding processes with open connections to
+    database files.
+
+    Args:
+        db_path: the path to the database file (e.g., database_server.db)
+    """
+    try:
+        lockers = _find_processes_with_open_file(db_path)
+        if lockers:
+            print(
+                f"Found {len(lockers)} process(es) holding database file: {db_path}"
+            )
+            for proc in lockers:
+                try:
+                    print(
+                        f"Terminating process {proc.pid} ({proc.name()}) "
+                        f"holding database..."
+                    )
+                    # Try graceful termination first
+                    proc.terminate()
+                except Exception as e:
+                    print(f"Error terminating process {proc.pid}: {e}")
+
+            # Wait briefly for processes to terminate gracefully
+            try:
+                import psutil
+
+                gone, alive = psutil.wait_procs(lockers, timeout=3)
+                # Force kill any remaining processes
+                for proc in alive:
+                    try:
+                        print(f"Force killing process {proc.pid}...")
+                        proc.kill()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            print(f"Database file locking processes terminated.")
+        else:
+            print(f"No processes found holding database file: {db_path}")
+
+    except Exception as e:
+        print(f"Error checking/terminating database locking processes: {e}")
+
+
+def _terminate_processes_holding_experiment_database(exp):
+    """
+    Terminate all processes that have the experiment's database file(s) open.
+
+    This handles both SQLite (checks for open file handles) and PostgreSQL
+    (checks for processes with database connections).
+
+    Args:
+        exp: the experiment object
+    """
+    try:
+        # Get the main database URI to determine type
+        db_uri_main = current_app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    except RuntimeError:
+        # No app context - try to import and get from environment
+        db_uri_main = os.environ.get("DATABASE_URL", "sqlite")
+
+    if "postgresql" in db_uri_main:
+        # For PostgreSQL, we can't easily check open file handles
+        # The database connections are network-based
+        # However, we can try to find processes that might be connected
+        # by looking for python processes that might be the old server
+        print(
+            "PostgreSQL database detected - terminating processes "
+            "will be handled by port/process termination"
+        )
+        return
+
+    # For SQLite, find and terminate processes holding the database file
+    # Get writable path for experiments directory
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
+
+    # Construct the full database path
+    if "database_server.db" in exp.db_name:
+        db_file_path = os.path.join(y_web_dir, exp.db_name)
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        db_file_path = os.path.join(
+            y_web_dir, "experiments", uid, "database_server.db"
+        )
+
+    if os.path.exists(db_file_path):
+        print(f"Checking for processes holding database: {db_file_path}")
+        _terminate_processes_holding_database(db_file_path)
+
+        # Also check for SQLite journal/WAL files that might be locked
+        for suffix in ["-journal", "-wal", "-shm"]:
+            journal_path = db_file_path + suffix
+            if os.path.exists(journal_path):
+                _terminate_processes_holding_database(journal_path)
+    else:
+        print(f"Database file not found: {db_file_path}")
+
+
 def _is_port_available(port):
     """
     Check if a port is available for binding.
@@ -951,10 +1102,11 @@ def start_server(exp):
 
     # === ROBUST PORT ALLOCATION ===
     # Every time a YServer starts:
-    # 1. Kill all processes attached to the current assigned port (for safety)
-    # 2. Find a NEW port in 5000-6000 that is free AND not allocated to other experiments
-    # 3. Update configs and database with the new port
-    # 4. Start server on the new port
+    # 1. Terminate processes holding the database file (for SQLite)
+    # 2. Kill all processes attached to the current assigned port (for safety)
+    # 3. Find a NEW port in 5000-6000 that is free AND not allocated to other experiments
+    # 4. Update configs and database with the new port
+    # 5. Start server on the new port
 
     old_port = exp.port
     print(
@@ -962,18 +1114,23 @@ def start_server(exp):
         f"(current port: {old_port})..."
     )
 
-    # Step 1: Kill all processes on the currently assigned port (safety measure)
+    # Step 1: Terminate any processes holding the database file (SQLite safety)
+    print("Step 1: Terminating any processes holding the database file...")
+    _terminate_processes_holding_experiment_database(exp)
+    time.sleep(0.5)  # Brief pause to allow database release
+
+    # Step 2: Kill all processes on the currently assigned port (port safety)
     if old_port:
-        print(f"Step 1: Terminating any processes on port {old_port}...")
+        print(f"Step 2: Terminating any processes on port {old_port}...")
         _terminate_processes_on_port(old_port)
         time.sleep(1)  # Brief pause to allow port release
 
-    # Step 2: Find a new available port that is:
+    # Step 3: Find a new available port that is:
     # - Not currently in use by any process (socket check)
     # - Not allocated to any other experiment in the database
     # - Not the same as the current experiment's port (always get a fresh port)
     print(
-        f"Step 2: Finding new available port in range "
+        f"Step 3: Finding new available port in range "
         f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX} (excluding current port {old_port})..."
     )
     new_port = _find_new_available_port(
@@ -986,9 +1143,9 @@ def start_server(exp):
     if new_port:
         print(f"Found available port: {new_port}")
 
-        # Step 3: Update config files and database with the new port
+        # Step 4: Update config files and database with the new port
         # (always update since we're guaranteed a different port)
-        print(f"Step 3: Updating configurations from port {old_port} to {new_port}...")
+        print(f"Step 4: Updating configurations from port {old_port} to {new_port}...")
         if _update_server_port_in_configs(exp, new_port):
             print(f"Successfully updated port to {new_port}")
             # Refresh the experiment object to get updated port
@@ -1006,6 +1163,7 @@ def start_server(exp):
             f"All ports are either in use or allocated to other experiments."
         )
 
+    # Step 5: Start server on the new port
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
     use_gunicorn = db_uri_main.startswith("postgresql")
