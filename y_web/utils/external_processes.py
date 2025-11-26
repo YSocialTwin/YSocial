@@ -625,9 +625,75 @@ SERVER_PORT_MIN = 5000
 SERVER_PORT_MAX = 6000
 
 
+def _get_ports_allocated_to_experiments(exclude_exp_id=None):
+    """
+    Get all ports allocated to experiments in the database.
+
+    This includes both active and inactive experiments to ensure
+    no port conflicts when restarting servers.
+
+    Args:
+        exclude_exp_id: optional experiment ID to exclude from the list
+
+    Returns:
+        set: Set of port numbers allocated to experiments
+    """
+    try:
+        query = db.session.query(Exps.port).filter(Exps.port.isnot(None))
+        if exclude_exp_id is not None:
+            query = query.filter(Exps.idexp != exclude_exp_id)
+        result = query.all()
+        return {row[0] for row in result if row[0] is not None}
+    except Exception as e:
+        print(f"Warning: Could not query allocated ports: {e}")
+        return set()
+
+
+def _find_new_available_port(exclude_exp_id=None, min_port=None, max_port=None):
+    """
+    Find a new available port that is:
+    1. Not currently in use (socket check)
+    2. Not allocated to any other experiment in the database
+
+    This is the robust version used for server starts to ensure
+    complete port isolation between experiments.
+
+    Args:
+        exclude_exp_id: experiment ID to exclude when checking allocated ports
+        min_port: minimum port number (default: SERVER_PORT_MIN)
+        max_port: maximum port number (default: SERVER_PORT_MAX)
+
+    Returns:
+        int: an available port number, or None if none found
+    """
+    # Set defaults
+    if min_port is None:
+        min_port = SERVER_PORT_MIN
+    if max_port is None:
+        max_port = SERVER_PORT_MAX
+
+    # Get all ports allocated to other experiments
+    allocated_ports = _get_ports_allocated_to_experiments(exclude_exp_id)
+    print(
+        f"Ports allocated to other experiments: {sorted(allocated_ports) if allocated_ports else 'none'}"
+    )
+
+    # Search entire allowed range for a port that is:
+    # 1. Not in use by a running process
+    # 2. Not allocated to another experiment
+    for port in range(min_port, max_port + 1):
+        if port not in allocated_ports and _is_port_available(port):
+            return port
+
+    return None
+
+
 def _find_available_port(original_port, port_range=100, min_port=None, max_port=None):
     """
     Find an available port near the original port.
+
+    NOTE: This is the legacy function. For server starts, use
+    _find_new_available_port() which also checks database allocations.
 
     Searches for a free port starting from original_port, then tries
     ports in the specified range. For servers, use min_port=5000, max_port=6000.
@@ -874,28 +940,48 @@ def start_server(exp):
             f"Please ensure the experiment is properly configured."
         )
 
-    # Check if the configured port is available before starting
-    # If not, find an alternative port in the server range (5000-6000)
-    server_port = exp.port
-    if not _is_port_available(server_port):
-        print(
-            f"Port {server_port} is not available, searching for alternative "
-            f"in range {SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
-        )
+    # === ROBUST PORT ALLOCATION ===
+    # Every time a YServer starts:
+    # 1. Kill all processes attached to the current assigned port (for safety)
+    # 2. Find a NEW port in 5000-6000 that is free AND not allocated to other experiments
+    # 3. Update configs and database with the new port
+    # 4. Start server on the new port
 
-        new_port = _find_available_port(
-            server_port,
-            port_range=100,
-            min_port=SERVER_PORT_MIN,
-            max_port=SERVER_PORT_MAX,
-        )
+    old_port = exp.port
+    print(
+        f"Starting robust port allocation for experiment {exp.idexp} "
+        f"(current port: {old_port})..."
+    )
 
-        if new_port and new_port != server_port:
-            print(f"Found available port {new_port}, updating configurations...")
+    # Step 1: Kill all processes on the currently assigned port (safety measure)
+    if old_port:
+        print(f"Step 1: Terminating any processes on port {old_port}...")
+        _terminate_processes_on_port(old_port)
+        time.sleep(1)  # Brief pause to allow port release
 
-            # Update config files and database with new port
+    # Step 2: Find a new available port that is:
+    # - Not currently in use by any process (socket check)
+    # - Not allocated to any other experiment in the database
+    print(
+        f"Step 2: Finding new available port in range "
+        f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
+    )
+    new_port = _find_new_available_port(
+        exclude_exp_id=exp.idexp,
+        min_port=SERVER_PORT_MIN,
+        max_port=SERVER_PORT_MAX,
+    )
+
+    if new_port:
+        print(f"Found available port: {new_port}")
+
+        # Step 3: Update config files and database with the new port
+        if new_port != old_port:
+            print(
+                f"Step 3: Updating configurations from port {old_port} to {new_port}..."
+            )
             if _update_server_port_in_configs(exp, new_port):
-                print(f"Successfully updated port from {server_port} to {new_port}")
+                print(f"Successfully updated port to {new_port}")
                 # Refresh the experiment object to get updated port
                 db.session.refresh(exp)
             else:
@@ -903,14 +989,15 @@ def start_server(exp):
                     f"Warning: Some config updates failed. "
                     f"Server may fail to start on port {new_port}"
                 )
-        elif not new_port:
-            print(
-                f"Warning: Could not find available port in range "
-                f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}. "
-                f"Server startup may fail."
-            )
+        else:
+            print(f"Port {new_port} is same as current, no config update needed.")
     else:
-        print(f"Port {server_port} is available.")
+        # No port found - this is a serious error
+        raise RuntimeError(
+            f"Could not find available port in range "
+            f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}. "
+            f"All ports are either in use or allocated to other experiments."
+        )
 
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
@@ -1291,15 +1378,12 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                 # Re-fetch experiment from database to get fresh state
                 fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
                 if fresh_exp:
-                    # Get port for cleanup
-                    server_port = fresh_exp.port
-
                     # Terminate any existing process using robust termination
                     # This ensures proper cleanup of hung processes
                     if fresh_exp.server_pid:
                         pid_to_kill = fresh_exp.server_pid
                         print(
-                            f"Watchdog: Terminating server process with PID {pid_to_kill}..."
+                            f"Watchdog: Terminating server process tree (PID {pid_to_kill})..."
                         )
                         _force_terminate_process_tree(pid_to_kill)
 
@@ -1307,59 +1391,12 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                         fresh_exp.server_pid = None
                         db.session.commit()
 
-                    # Additionally, try to clean up any processes on the port
-                    if server_port:
-                        print(f"Watchdog: Attempting to free port {server_port}...")
-                        _terminate_processes_on_port(server_port)
-
-                        # Wait briefly for port to be released
-                        time.sleep(2)
-
-                    # Check if the original port is available
-                    # If not, find an alternative port and update configs
-                    if server_port and not _is_port_available(server_port):
-                        print(
-                            f"Watchdog: Port {server_port} is still in use, "
-                            f"searching for alternative port in range "
-                            f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
-                        )
-
-                        # Find an available port in the server range
-                        new_port = _find_available_port(
-                            server_port,
-                            port_range=100,
-                            min_port=SERVER_PORT_MIN,
-                            max_port=SERVER_PORT_MAX,
-                        )
-
-                        if new_port and new_port != server_port:
-                            print(
-                                f"Watchdog: Found available port {new_port}, "
-                                f"updating configurations..."
-                            )
-
-                            # Update config files and database with new port
-                            if _update_server_port_in_configs(fresh_exp, new_port):
-                                print(
-                                    f"Watchdog: Successfully updated port from "
-                                    f"{server_port} to {new_port}"
-                                )
-                                # Refresh the experiment object to get updated port
-                                db.session.refresh(fresh_exp)
-                            else:
-                                print(
-                                    f"Watchdog: Warning - some config updates failed, "
-                                    f"proceeding with restart anyway"
-                                )
-                        elif not new_port:
-                            print(
-                                f"Watchdog: Could not find available port in range "
-                                f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}, restart may fail"
-                            )
-                    else:
-                        print(f"Watchdog: Port {server_port} is available.")
-
-                    # Start new server process
+                    # start_server() will handle:
+                    # 1. Killing any processes on the old port
+                    # 2. Finding a new port not allocated to any experiment
+                    # 3. Updating configs and database
+                    # 4. Starting the server
+                    print(f"Watchdog: Starting new server process...")
                     new_process = start_server(fresh_exp)
                     return new_process.pid if new_process else None
         except Exception as e:
