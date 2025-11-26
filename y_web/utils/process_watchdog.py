@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 # Default watchdog settings
 DEFAULT_RUN_INTERVAL_MINUTES = 15
+MAX_RUN_INTERVAL_MINUTES = 1440  # 24 hours
 DEFAULT_HEARTBEAT_TIMEOUT = 300  # seconds
 DEFAULT_MAX_RESTART_ATTEMPTS = 3
 DEFAULT_RESTART_COOLDOWN = 60  # seconds
@@ -69,6 +70,7 @@ class ProcessWatchdog:
         # Scheduler thread
         self._scheduler_running = False
         self._scheduler_thread: Optional[threading.Thread] = None
+        self._shutdown_event = threading.Event()
         self._last_run: Optional[datetime] = None
         self._next_run: Optional[datetime] = None
 
@@ -82,9 +84,13 @@ class ProcessWatchdog:
         """Set the run interval in minutes."""
         if value < 1:
             value = 1
+        if value > MAX_RUN_INTERVAL_MINUTES:
+            value = MAX_RUN_INTERVAL_MINUTES
         self._run_interval_minutes = value
-        # Update next run time
-        if self._last_run:
+        # Update next run time based on now if scheduler is running
+        if self._scheduler_running:
+            self._next_run = datetime.now() + timedelta(minutes=value)
+        elif self._last_run:
             self._next_run = self._last_run + timedelta(minutes=value)
 
     def register_process(
@@ -153,6 +159,7 @@ class ProcessWatchdog:
                 return
 
             self._scheduler_running = True
+            self._shutdown_event.clear()
             self._scheduler_thread = threading.Thread(
                 target=self._scheduler_loop, daemon=True
             )
@@ -165,6 +172,7 @@ class ProcessWatchdog:
         """Stop the watchdog scheduler."""
         with self._lock:
             self._scheduler_running = False
+            self._shutdown_event.set()  # Signal shutdown
             if self._scheduler_thread:
                 self._scheduler_thread.join(timeout=10)
                 self._scheduler_thread = None
@@ -203,11 +211,10 @@ class ProcessWatchdog:
                     minutes=self._run_interval_minutes
                 )
 
-            # Sleep for a short time to allow checking for shutdown
-            for _ in range(10):  # Check every second for 10 seconds
-                if not self._scheduler_running:
-                    break
-                time.sleep(1)
+            # Wait for shutdown signal or timeout (10 seconds)
+            # Using Event.wait() is more efficient than polling with sleep
+            if self._shutdown_event.wait(timeout=10):
+                break  # Shutdown was signaled
 
     def run_once(self) -> Dict:
         """

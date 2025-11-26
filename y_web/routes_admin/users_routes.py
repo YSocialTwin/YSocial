@@ -1128,11 +1128,13 @@ def watchdog_set_interval():
 
     # Get interval from form
     try:
+        from y_web.utils.process_watchdog import MAX_RUN_INTERVAL_MINUTES
+
         interval_minutes = int(request.form.get("watchdog_interval", 15))
         if interval_minutes < 1:
             interval_minutes = 1
-        elif interval_minutes > 1440:  # Max 24 hours
-            interval_minutes = 1440
+        elif interval_minutes > MAX_RUN_INTERVAL_MINUTES:
+            interval_minutes = MAX_RUN_INTERVAL_MINUTES
     except (ValueError, TypeError):
         interval_minutes = 15
 
