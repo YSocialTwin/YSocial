@@ -28,6 +28,7 @@ from sklearn.utils import deprecated
 from y_web import db
 from y_web.models import (
     Client,
+    Client_Execution,
     Exps,
     Ollama_Pull,
     Population,
@@ -963,13 +964,39 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                 # Re-fetch experiment from database to get fresh state
                 fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
                 if fresh_exp:
-                    # Terminate any existing process first
+                    # Terminate any existing process using the standard method
+                    # This ensures proper database consistency (clears PID, etc.)
                     if fresh_exp.server_pid:
+                        # Don't unregister from watchdog since we're about to restart
+                        # Use inline termination logic similar to terminate_server_process
+                        pid_to_kill = fresh_exp.server_pid
+                        print(
+                            f"Watchdog: Terminating server process with PID {pid_to_kill}..."
+                        )
                         try:
-                            os.kill(fresh_exp.server_pid, signal.SIGTERM)
-                            time.sleep(1)
-                        except OSError:
-                            pass
+                            os.kill(pid_to_kill, signal.SIGTERM)
+                            # Wait up to 5 seconds for graceful shutdown
+                            for _ in range(50):
+                                try:
+                                    os.kill(pid_to_kill, 0)
+                                    time.sleep(0.1)
+                                except OSError:
+                                    print(
+                                        f"Server process {pid_to_kill} terminated gracefully."
+                                    )
+                                    break
+                            else:
+                                print(
+                                    f"Server process {pid_to_kill} did not terminate gracefully, forcing kill..."
+                                )
+                                __terminate_process(pid_to_kill)
+                                time.sleep(0.5)
+                        except OSError as e:
+                            print(f"Server process {pid_to_kill} no longer exists: {e}")
+
+                        # Clear PID from database for consistency
+                        fresh_exp.server_pid = None
+                        db.session.commit()
 
                     # Start new server process
                     new_process = start_server(fresh_exp)
@@ -1639,13 +1666,74 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
                 fresh_pop = db.session.query(Population).filter_by(id=pop_id).first()
 
                 if fresh_exp and fresh_cli and fresh_pop:
-                    # Terminate any existing process first
+                    # Check if client has naturally completed its expected duration
+                    client_exec = (
+                        db.session.query(Client_Execution)
+                        .filter_by(client_id=cli_id)
+                        .first()
+                    )
+                    if client_exec:
+                        if (
+                            client_exec.expected_duration_rounds > 0
+                            and client_exec.elapsed_time
+                            >= client_exec.expected_duration_rounds
+                        ):
+                            # Client has completed - terminate properly instead of restarting
+                            print(
+                                f"Watchdog: Client {fresh_cli.name} has completed "
+                                f"(elapsed: {client_exec.elapsed_time}, "
+                                f"expected: {client_exec.expected_duration_rounds}). "
+                                f"Terminating instead of restarting."
+                            )
+                            # Use standard terminate_client to properly update all DB statuses
+                            # First, unregister from watchdog
+                            try:
+                                watchdog = get_watchdog()
+                                watchdog.unregister_process(f"client_{cli_id}")
+                            except Exception:
+                                pass
+
+                            # Update client status to stopped
+                            fresh_cli.status = 0
+                            fresh_cli.pid = None
+                            db.session.commit()
+
+                            # Return None to indicate no restart
+                            return None
+
+                    # Terminate any existing process using the standard method
+                    # This ensures proper database consistency (clears PID, etc.)
                     if fresh_cli.pid:
+                        # Don't unregister from watchdog since we're about to restart
+                        # Use inline termination logic similar to terminate_client
+                        pid_to_kill = fresh_cli.pid
+                        print(
+                            f"Watchdog: Terminating client process with PID {pid_to_kill}..."
+                        )
                         try:
-                            os.kill(fresh_cli.pid, signal.SIGTERM)
-                            time.sleep(1)
-                        except OSError:
-                            pass
+                            os.kill(pid_to_kill, signal.SIGTERM)
+                            # Wait up to 5 seconds for graceful shutdown
+                            for _ in range(50):
+                                try:
+                                    os.kill(pid_to_kill, 0)
+                                    time.sleep(0.1)
+                                except OSError:
+                                    print(
+                                        f"Client process {pid_to_kill} terminated gracefully."
+                                    )
+                                    break
+                            else:
+                                print(
+                                    f"Client process {pid_to_kill} did not terminate gracefully, forcing kill..."
+                                )
+                                __terminate_process(pid_to_kill)
+                                time.sleep(0.5)
+                        except OSError as e:
+                            print(f"Client process {pid_to_kill} no longer exists: {e}")
+
+                        # Clear PID from database for consistency
+                        fresh_cli.pid = None
+                        db.session.commit()
 
                     # Start new client process (resume=True to continue from last state)
                     new_process = start_client(
