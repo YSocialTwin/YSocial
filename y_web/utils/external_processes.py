@@ -484,6 +484,142 @@ def __terminate_process(pid):
         print(f"Error terminating process {pid}: {e}")
 
 
+def _force_terminate_process_tree(pid):
+    """
+    Forcefully terminate a process and all its children.
+
+    This is essential for hung gunicorn servers where the parent process
+    and its workers may be unresponsive. We use psutil to find and kill
+    all child processes, then kill the parent.
+
+    Args:
+        pid: the process ID to terminate
+    """
+    try:
+        import psutil
+
+        try:
+            parent = psutil.Process(pid)
+        except psutil.NoSuchProcess:
+            print(f"Process {pid} no longer exists.")
+            return
+
+        # Get all children before killing anything
+        children = []
+        try:
+            children = parent.children(recursive=True)
+        except psutil.NoSuchProcess:
+            pass
+
+        # Try graceful termination first (SIGTERM)
+        try:
+            parent.terminate()
+        except psutil.NoSuchProcess:
+            pass
+
+        # Terminate children
+        for child in children:
+            try:
+                child.terminate()
+            except psutil.NoSuchProcess:
+                pass
+
+        # Wait briefly for graceful shutdown
+        gone, alive = psutil.wait_procs([parent] + children, timeout=3)
+
+        # Force kill any remaining processes
+        for p in alive:
+            try:
+                print(f"Force killing process {p.pid}...")
+                p.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+        # Final wait to ensure they're dead
+        psutil.wait_procs(alive, timeout=2)
+
+        print(f"Terminated process tree for PID {pid} ({len(children)} children).")
+
+    except ImportError:
+        # Fallback if psutil is not available
+        print("psutil not available, using basic termination...")
+        try:
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(1)
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+    except Exception as e:
+        print(f"Error terminating process tree for {pid}: {e}")
+
+
+def _terminate_processes_on_port(port):
+    """
+    Terminate all processes using a specific port.
+
+    This is a safety net to ensure the port is freed even if the main
+    process termination didn't work properly (e.g., zombie workers).
+
+    Args:
+        port: the port number
+    """
+    import platform
+
+    try:
+        if platform.system() == "Windows":
+            # Windows: use netstat to find PIDs
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True,
+                text=True,
+            )
+            for line in result.stdout.split("\n"):
+                if f":{port}" in line and "LISTENING" in line:
+                    parts = line.split()
+                    if parts:
+                        pid = int(parts[-1])
+                        print(f"Found process {pid} using port {port}, terminating...")
+                        _force_terminate_process_tree(pid)
+        else:
+            # Unix: use lsof to find PIDs
+            result = subprocess.run(
+                ["lsof", "-t", "-i", f":{port}"],
+                capture_output=True,
+                text=True,
+            )
+            pids = result.stdout.strip().split("\n")
+            for pid_str in pids:
+                if pid_str:
+                    pid = int(pid_str)
+                    print(f"Found process {pid} using port {port}, terminating...")
+                    _force_terminate_process_tree(pid)
+    except Exception as e:
+        print(f"Error terminating processes on port {port}: {e}")
+
+
+def _is_port_available(port):
+    """
+    Check if a port is available for binding.
+
+    Args:
+        port: the port number to check
+
+    Returns:
+        bool: True if the port is available, False otherwise
+    """
+    import socket
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            result = s.connect_ex(("127.0.0.1", port))
+            # If connect_ex returns non-zero, the port is not in use
+            return result != 0
+    except Exception:
+        # If we can't check, assume it's available
+        return True
+
+
 def get_server_process_status(exp_id):
     """
     Get the status of a server process using the PID from the database.
@@ -967,39 +1103,38 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                 # Re-fetch experiment from database to get fresh state
                 fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
                 if fresh_exp:
-                    # Terminate any existing process using the standard method
-                    # This ensures proper database consistency (clears PID, etc.)
+                    # Get port for cleanup
+                    server_port = fresh_exp.port
+
+                    # Terminate any existing process using robust termination
+                    # This ensures proper cleanup of hung processes
                     if fresh_exp.server_pid:
-                        # Don't unregister from watchdog since we're about to restart
-                        # Use inline termination logic similar to terminate_server_process
                         pid_to_kill = fresh_exp.server_pid
                         print(
                             f"Watchdog: Terminating server process with PID {pid_to_kill}..."
                         )
-                        try:
-                            os.kill(pid_to_kill, signal.SIGTERM)
-                            # Wait up to 5 seconds for graceful shutdown
-                            for _ in range(50):
-                                try:
-                                    os.kill(pid_to_kill, 0)
-                                    time.sleep(0.1)
-                                except OSError:
-                                    print(
-                                        f"Server process {pid_to_kill} terminated gracefully."
-                                    )
-                                    break
-                            else:
-                                print(
-                                    f"Server process {pid_to_kill} did not terminate gracefully, forcing kill..."
-                                )
-                                __terminate_process(pid_to_kill)
-                                time.sleep(0.5)
-                        except OSError as e:
-                            print(f"Server process {pid_to_kill} no longer exists: {e}")
+                        _force_terminate_process_tree(pid_to_kill)
 
                         # Clear PID from database for consistency
                         fresh_exp.server_pid = None
                         db.session.commit()
+
+                    # Additionally, ensure the port is free
+                    # Hung processes or zombie workers may still hold the port
+                    if server_port:
+                        print(f"Watchdog: Ensuring port {server_port} is free...")
+                        _terminate_processes_on_port(server_port)
+
+                        # Wait for port to be released (up to 10 seconds)
+                        for i in range(20):
+                            if _is_port_available(server_port):
+                                print(f"Watchdog: Port {server_port} is now available.")
+                                break
+                            time.sleep(0.5)
+                        else:
+                            print(
+                                f"Watchdog: Warning - port {server_port} still in use after 10s"
+                            )
 
                     # Start new server process
                     new_process = start_server(fresh_exp)
@@ -1705,35 +1840,14 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
                             # Return None to indicate no restart
                             return None
 
-                    # Terminate any existing process using the standard method
-                    # This ensures proper database consistency (clears PID, etc.)
+                    # Terminate any existing process using robust termination
+                    # This ensures proper cleanup of hung processes
                     if fresh_cli.pid:
-                        # Don't unregister from watchdog since we're about to restart
-                        # Use inline termination logic similar to terminate_client
                         pid_to_kill = fresh_cli.pid
                         print(
                             f"Watchdog: Terminating client process with PID {pid_to_kill}..."
                         )
-                        try:
-                            os.kill(pid_to_kill, signal.SIGTERM)
-                            # Wait up to 5 seconds for graceful shutdown
-                            for _ in range(50):
-                                try:
-                                    os.kill(pid_to_kill, 0)
-                                    time.sleep(0.1)
-                                except OSError:
-                                    print(
-                                        f"Client process {pid_to_kill} terminated gracefully."
-                                    )
-                                    break
-                            else:
-                                print(
-                                    f"Client process {pid_to_kill} did not terminate gracefully, forcing kill..."
-                                )
-                                __terminate_process(pid_to_kill)
-                                time.sleep(0.5)
-                        except OSError as e:
-                            print(f"Client process {pid_to_kill} no longer exists: {e}")
+                        _force_terminate_process_tree(pid_to_kill)
 
                         # Clear PID from database for consistency
                         fresh_cli.pid = None
