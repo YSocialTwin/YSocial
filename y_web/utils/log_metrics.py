@@ -10,10 +10,12 @@ This module provides functionality to:
 import json
 import logging
 import os
+import time
 from collections import defaultdict
 from datetime import datetime
 
 from sqlalchemy import and_
+from sqlalchemy.exc import OperationalError
 
 from y_web import db
 from y_web.models import (
@@ -24,6 +26,48 @@ from y_web.models import (
 
 # Set up logger
 logger = logging.getLogger(__name__)
+
+# Retry configuration for database deadlocks
+MAX_RETRIES = 3
+RETRY_DELAY = 0.5  # seconds
+
+
+def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
+    """
+    Commit a database session with retry logic for deadlock handling.
+
+    Args:
+        session: SQLAlchemy session to commit
+        max_retries: Maximum number of retry attempts
+        delay: Delay between retries in seconds
+
+    Returns:
+        bool: True if commit succeeded, False otherwise
+    """
+    for attempt in range(max_retries):
+        try:
+            session.commit()
+            return True
+        except OperationalError as e:
+            session.rollback()
+            error_msg = str(e).lower()
+            if "deadlock" in error_msg or "lock" in error_msg:
+                if attempt < max_retries - 1:
+                    logger.warning(
+                        f"Database deadlock detected, retrying ({attempt + 1}/{max_retries})..."
+                    )
+                    time.sleep(delay * (attempt + 1))  # Exponential backoff
+                else:
+                    logger.error(f"Database deadlock persisted after {max_retries} retries")
+                    return False
+            else:
+                logger.error(f"Database error during commit: {e}")
+                return False
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Unexpected error during commit: {e}")
+            return False
+    return False
 
 
 def get_log_file_offset(exp_id, log_file_type, file_path, client_id=None):
@@ -85,7 +129,7 @@ def update_log_file_offset(
         )
         db.session.add(offset_record)
 
-    db.session.commit()
+    _commit_with_retry(db.session)
 
 
 def parse_server_log_incremental(log_file_path, exp_id, start_offset=0):
@@ -238,7 +282,7 @@ def parse_server_log_incremental(log_file_path, exp_id, start_offset=0):
                 )
                 db.session.add(metric)
 
-    db.session.commit()
+    _commit_with_retry(db.session)
 
     return new_offset, {"daily": daily_data, "hourly": hourly_data}
 
@@ -376,7 +420,7 @@ def parse_client_log_incremental(log_file_path, exp_id, client_id, start_offset=
                 )
                 db.session.add(metric)
 
-    db.session.commit()
+    _commit_with_retry(db.session)
 
     return new_offset, {"daily": daily_data, "hourly": hourly_data}
 
