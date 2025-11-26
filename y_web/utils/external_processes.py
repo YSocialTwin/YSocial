@@ -947,31 +947,40 @@ def _register_server_with_watchdog(exp, pid, log_dir):
     # Use _server.log as the heartbeat file (this is the main server log)
     log_file = os.path.join(log_dir, "_server.log")
 
+    # Store only the ID to avoid detached SQLAlchemy instance issues
+    exp_id = exp.idexp
+
     # Create restart callback
     def restart_callback():
         """Callback to restart the server process."""
         try:
-            # Re-fetch experiment from database to get fresh state
-            fresh_exp = db.session.query(Exps).filter_by(idexp=exp.idexp).first()
-            if fresh_exp:
-                # Terminate any existing process first
-                if fresh_exp.server_pid:
-                    try:
-                        os.kill(fresh_exp.server_pid, signal.SIGTERM)
-                        time.sleep(1)
-                    except OSError:
-                        pass
+            # Import here to avoid circular imports
+            from y_web import create_app
 
-                # Start new server process
-                new_process = start_server(fresh_exp)
-                return new_process.pid if new_process else None
+            # Create app context for database operations
+            app = create_app()
+            with app.app_context():
+                # Re-fetch experiment from database to get fresh state
+                fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+                if fresh_exp:
+                    # Terminate any existing process first
+                    if fresh_exp.server_pid:
+                        try:
+                            os.kill(fresh_exp.server_pid, signal.SIGTERM)
+                            time.sleep(1)
+                        except OSError:
+                            pass
+
+                    # Start new server process
+                    new_process = start_server(fresh_exp)
+                    return new_process.pid if new_process else None
         except Exception as e:
             print(f"Error in server restart callback: {e}")
         return None
 
     # Get or create watchdog and register process
     watchdog = get_watchdog()
-    process_id = f"server_{exp.idexp}"
+    process_id = f"server_{exp_id}"
 
     watchdog.register_process(
         process_id=process_id,
@@ -1609,34 +1618,47 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
     # Use {client_name}_client.log as the heartbeat file
     log_file = os.path.join(log_dir, f"{cli.name}_client.log")
 
+    # Store only the IDs to avoid detached SQLAlchemy instance issues
+    exp_id = exp.idexp
+    cli_id = cli.id
+    pop_id = population.id
+
     # Create restart callback
     def restart_callback():
         """Callback to restart the client process."""
         try:
-            # Re-fetch objects from database to get fresh state
-            fresh_exp = db.session.query(Exps).filter_by(idexp=exp.idexp).first()
-            fresh_cli = db.session.query(Client).filter_by(id=cli.id).first()
-            fresh_pop = db.session.query(Population).filter_by(id=population.id).first()
+            # Import here to avoid circular imports
+            from y_web import create_app
 
-            if fresh_exp and fresh_cli and fresh_pop:
-                # Terminate any existing process first
-                if fresh_cli.pid:
-                    try:
-                        os.kill(fresh_cli.pid, signal.SIGTERM)
-                        time.sleep(1)
-                    except OSError:
-                        pass
+            # Create app context for database operations
+            app = create_app()
+            with app.app_context():
+                # Re-fetch objects from database to get fresh state
+                fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+                fresh_cli = db.session.query(Client).filter_by(id=cli_id).first()
+                fresh_pop = db.session.query(Population).filter_by(id=pop_id).first()
 
-                # Start new client process (resume=True to continue from last state)
-                new_process = start_client(fresh_exp, fresh_cli, fresh_pop, resume=True)
-                return new_process.pid if new_process else None
+                if fresh_exp and fresh_cli and fresh_pop:
+                    # Terminate any existing process first
+                    if fresh_cli.pid:
+                        try:
+                            os.kill(fresh_cli.pid, signal.SIGTERM)
+                            time.sleep(1)
+                        except OSError:
+                            pass
+
+                    # Start new client process (resume=True to continue from last state)
+                    new_process = start_client(
+                        fresh_exp, fresh_cli, fresh_pop, resume=True
+                    )
+                    return new_process.pid if new_process else None
         except Exception as e:
             print(f"Error in client restart callback: {e}")
         return None
 
     # Get or create watchdog and register process
     watchdog = get_watchdog()
-    process_id = f"client_{cli.id}"
+    process_id = f"client_{cli_id}"
 
     watchdog.register_process(
         process_id=process_id,
