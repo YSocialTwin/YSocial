@@ -620,6 +620,138 @@ def _is_port_available(port):
         return True
 
 
+def _find_available_port(original_port, port_range=100):
+    """
+    Find an available port near the original port.
+
+    Searches for a free port starting from original_port, then tries
+    ports in the range [original_port - port_range/2, original_port + port_range/2].
+
+    Args:
+        original_port: the preferred port number
+        port_range: the range of ports to search (default 100)
+
+    Returns:
+        int: an available port number, or None if none found
+    """
+    # First try the original port
+    if _is_port_available(original_port):
+        return original_port
+
+    # Search in range around original port
+    half_range = port_range // 2
+    start_port = max(1024, original_port - half_range)  # Stay above privileged ports
+    end_port = min(65535, original_port + half_range)
+
+    for port in range(start_port, end_port + 1):
+        if port != original_port and _is_port_available(port):
+            return port
+
+    return None
+
+
+def _update_server_port_in_configs(exp, new_port):
+    """
+    Update the server port in all configuration files and database.
+
+    This updates:
+    1. The experiment's config_server.json
+    2. All client config files (client_*.json) in the experiment folder
+    3. The database entry for the experiment
+
+    Args:
+        exp: the experiment object
+        new_port: the new port number
+
+    Returns:
+        bool: True if all updates succeeded, False otherwise
+    """
+    import re
+
+    old_port = exp.port
+
+    if old_port == new_port:
+        return True  # No change needed
+
+    print(f"Watchdog: Updating port from {old_port} to {new_port} in configs...")
+
+    # Get experiment directory
+    y_web_dir = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+
+    if "database_server.db" in exp.db_name:
+        exp_dir = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip(os.sep)
+        )
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        exp_dir = os.path.join(y_web_dir, "experiments", uid)
+
+    success = True
+
+    # 1. Update config_server.json
+    server_config_path = os.path.join(exp_dir, "config_server.json")
+    try:
+        if os.path.exists(server_config_path):
+            with open(server_config_path, "r") as f:
+                server_config = json.load(f)
+
+            server_config["port"] = new_port
+
+            with open(server_config_path, "w") as f:
+                json.dump(server_config, f, indent=4)
+
+            print(f"Watchdog: Updated config_server.json with port {new_port}")
+        else:
+            print(
+                f"Watchdog: Warning - config_server.json not found at {server_config_path}"
+            )
+    except Exception as e:
+        print(f"Watchdog: Error updating config_server.json: {e}")
+        success = False
+
+    # 2. Update all client config files
+    try:
+        if os.path.isdir(exp_dir):
+            for item in os.listdir(exp_dir):
+                if item.startswith("client") and item.endswith(".json"):
+                    client_config_path = os.path.join(exp_dir, item)
+                    try:
+                        with open(client_config_path, "r") as f:
+                            client_config = json.load(f)
+
+                        # Update the API endpoint in servers section
+                        if (
+                            "servers" in client_config
+                            and "api" in client_config["servers"]
+                        ):
+                            old_api = client_config["servers"]["api"]
+                            # Replace port in URL - handles both with and without trailing slash
+                            new_api = re.sub(r":(\d+)(/|$)", f":{new_port}\\2", old_api)
+                            client_config["servers"]["api"] = new_api
+
+                            with open(client_config_path, "w") as f:
+                                json.dump(client_config, f, indent=4)
+
+                            print(f"Watchdog: Updated {item} with new port")
+                    except Exception as e:
+                        print(f"Watchdog: Error updating {item}: {e}")
+                        success = False
+    except Exception as e:
+        print(f"Watchdog: Error listing experiment directory: {e}")
+        success = False
+
+    # 3. Update database entry
+    try:
+        exp.port = new_port
+        db.session.commit()
+        print(f"Watchdog: Updated database with new port {new_port}")
+    except Exception as e:
+        print(f"Watchdog: Error updating database: {e}")
+        success = False
+
+    return success
+
+
 def get_server_process_status(exp_id):
     """
     Get the status of a server process using the PID from the database.
@@ -1119,22 +1251,51 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                         fresh_exp.server_pid = None
                         db.session.commit()
 
-                    # Additionally, ensure the port is free
-                    # Hung processes or zombie workers may still hold the port
+                    # Additionally, try to clean up any processes on the port
                     if server_port:
-                        print(f"Watchdog: Ensuring port {server_port} is free...")
+                        print(f"Watchdog: Attempting to free port {server_port}...")
                         _terminate_processes_on_port(server_port)
 
-                        # Wait for port to be released (up to 10 seconds)
-                        for i in range(20):
-                            if _is_port_available(server_port):
-                                print(f"Watchdog: Port {server_port} is now available.")
-                                break
-                            time.sleep(0.5)
-                        else:
+                        # Wait briefly for port to be released
+                        time.sleep(2)
+
+                    # Check if the original port is available
+                    # If not, find an alternative port and update configs
+                    if server_port and not _is_port_available(server_port):
+                        print(
+                            f"Watchdog: Port {server_port} is still in use, "
+                            f"searching for alternative port..."
+                        )
+
+                        # Find an available port in the same range
+                        new_port = _find_available_port(server_port, port_range=100)
+
+                        if new_port and new_port != server_port:
                             print(
-                                f"Watchdog: Warning - port {server_port} still in use after 10s"
+                                f"Watchdog: Found available port {new_port}, "
+                                f"updating configurations..."
                             )
+
+                            # Update config files and database with new port
+                            if _update_server_port_in_configs(fresh_exp, new_port):
+                                print(
+                                    f"Watchdog: Successfully updated port from "
+                                    f"{server_port} to {new_port}"
+                                )
+                                # Refresh the experiment object to get updated port
+                                db.session.refresh(fresh_exp)
+                            else:
+                                print(
+                                    f"Watchdog: Warning - some config updates failed, "
+                                    f"proceeding with restart anyway"
+                                )
+                        elif not new_port:
+                            print(
+                                f"Watchdog: Could not find available port near "
+                                f"{server_port}, restart may fail"
+                            )
+                    else:
+                        print(f"Watchdog: Port {server_port} is available.")
 
                     # Start new server process
                     new_process = start_server(fresh_exp)
