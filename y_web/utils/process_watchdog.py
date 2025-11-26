@@ -489,16 +489,38 @@ class ProcessWatchdog:
         """
         Get the last modification time of a log file.
 
+        Supports rotating log files (e.g., _server.log, _server.log.1, _server.log.2).
+        Returns the most recent mtime across all rotating log files.
+
         Args:
-            log_file: Path to the log file
+            log_file: Path to the main log file
 
         Returns:
-            Last modification time, or None if file doesn't exist
+            Last modification time, or None if no files exist
         """
         try:
-            if os.path.exists(log_file):
-                mtime = os.path.getmtime(log_file)
-                return datetime.fromtimestamp(mtime)
+            # Get the most recent mtime from all rotating log files
+            log_dir = os.path.dirname(log_file)
+            base_name = os.path.basename(log_file)
+            most_recent_mtime = None
+
+            if os.path.exists(log_dir):
+                for filename in os.listdir(log_dir):
+                    # Check main file and rotated files (e.g., _server.log, _server.log.1)
+                    if filename == base_name or (
+                        filename.startswith(base_name + ".")
+                        and filename[len(base_name) + 1 :].isdigit()
+                    ):
+                        file_path = os.path.join(log_dir, filename)
+                        try:
+                            mtime = os.path.getmtime(file_path)
+                            if most_recent_mtime is None or mtime > most_recent_mtime:
+                                most_recent_mtime = mtime
+                        except OSError:
+                            pass
+
+            if most_recent_mtime is not None:
+                return datetime.fromtimestamp(most_recent_mtime)
         except OSError:
             pass
         return None

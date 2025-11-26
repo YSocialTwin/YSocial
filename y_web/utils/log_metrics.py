@@ -381,32 +381,111 @@ def parse_client_log_incremental(log_file_path, exp_id, client_id, start_offset=
     return new_offset, {"daily": daily_data, "hourly": hourly_data}
 
 
+def get_rotating_log_files(base_log_path):
+    """
+    Get all rotating log files for a given base log path.
+
+    Rotating logs are named like: _server.log, _server.log.1, _server.log.2, etc.
+    Higher numbers are older files. We return them sorted oldest to newest
+    so they are processed in chronological order.
+
+    Args:
+        base_log_path: Full path to the main log file (e.g., /path/to/_server.log)
+
+    Returns:
+        list: List of log file paths sorted oldest to newest
+    """
+    log_files = []
+    log_dir = os.path.dirname(base_log_path)
+    base_name = os.path.basename(base_log_path)
+
+    if not os.path.exists(log_dir):
+        return log_files
+
+    # Find all rotating log files
+    for filename in os.listdir(log_dir):
+        if filename == base_name:
+            # Main log file (newest)
+            log_files.append((0, os.path.join(log_dir, filename)))
+        elif filename.startswith(base_name + "."):
+            # Rotating log file (e.g., _server.log.1, _server.log.2)
+            try:
+                suffix = filename[len(base_name) + 1 :]
+                if suffix.isdigit():
+                    log_files.append((int(suffix), os.path.join(log_dir, filename)))
+            except (ValueError, IndexError):
+                pass
+
+    # Sort by suffix number descending (highest = oldest first)
+    # This ensures we process logs in chronological order (oldest to newest)
+    log_files.sort(key=lambda x: x[0], reverse=True)
+
+    return [path for _, path in log_files]
+
+
+def has_server_log_files(base_log_path):
+    """
+    Check if any server log files exist (main or rotated).
+
+    Args:
+        base_log_path: Full path to the main log file (e.g., /path/to/_server.log)
+
+    Returns:
+        bool: True if any log files exist, False otherwise
+    """
+    return len(get_rotating_log_files(base_log_path)) > 0
+
+
 def update_server_log_metrics(exp_id, log_file_path):
     """
     Update server log metrics by reading new log entries.
 
+    Supports rotating log files (e.g., _server.log, _server.log.1, _server.log.2).
+    Rotating logs are processed oldest to newest to maintain chronological order.
+
     Args:
         exp_id: Experiment ID
-        log_file_path: Full path to the server log file
+        log_file_path: Full path to the main server log file
 
     Returns:
         bool: True if successful, False otherwise
     """
     try:
-        # Get relative file path (for storage in database)
-        file_name = os.path.basename(log_file_path)
+        # Get all rotating log files (oldest to newest)
+        log_files = get_rotating_log_files(log_file_path)
 
-        # Get last offset
-        last_offset = get_log_file_offset(exp_id, "server", file_name)
+        if not log_files:
+            logger.warning(f"No log files found for: {log_file_path}")
+            return True
 
-        # Parse log file incrementally
-        new_offset, metrics = parse_server_log_incremental(
-            log_file_path, exp_id, last_offset
-        )
+        # Process each log file
+        for current_log_path in log_files:
+            if not os.path.exists(current_log_path):
+                continue
 
-        # Update offset
-        if new_offset > last_offset:
-            update_log_file_offset(exp_id, "server", file_name, new_offset)
+            # Get relative file name (for storage in database)
+            file_name = os.path.basename(current_log_path)
+
+            # Get last offset for this specific file
+            last_offset = get_log_file_offset(exp_id, "server", file_name)
+
+            # Check if file has been rotated (size is smaller than offset)
+            file_size = os.path.getsize(current_log_path)
+            if file_size < last_offset:
+                # File was rotated, reset offset to read from beginning
+                logger.info(
+                    f"Log file {file_name} was rotated (size {file_size} < offset {last_offset}), resetting offset"
+                )
+                last_offset = 0
+
+            # Parse log file incrementally
+            new_offset, metrics = parse_server_log_incremental(
+                current_log_path, exp_id, last_offset
+            )
+
+            # Update offset
+            if new_offset > last_offset:
+                update_log_file_offset(exp_id, "server", file_name, new_offset)
 
         return True
 

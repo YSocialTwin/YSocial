@@ -1725,7 +1725,7 @@ def experiment_logs(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import update_server_log_metrics
+        from y_web.utils.log_metrics import has_server_log_files, update_server_log_metrics
         from y_web.utils.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
@@ -1753,8 +1753,8 @@ def experiment_logs(exp_id):
 
         log_file = os.path.join(exp_folder, "_server.log")
 
-        # Check if log file exists
-        if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
             return jsonify(
                 {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
             )
@@ -1823,6 +1823,7 @@ def experiment_trends(exp_id):
             return jsonify({"error": "Experiment not found"}), 404
 
         from y_web.utils.log_metrics import (
+            has_server_log_files,
             update_client_log_metrics,
             update_server_log_metrics,
         )
@@ -1850,8 +1851,8 @@ def experiment_trends(exp_id):
 
         log_file = os.path.join(exp_folder, "_server.log")
 
-        # Check if log file exists
-        if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
             return jsonify(
                 {
                     "daily_compute": {},
