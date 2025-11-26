@@ -4,6 +4,9 @@ Process watchdog for monitoring and restarting hung/dead processes.
 This module provides a lightweight watchdog that monitors server and client
 processes using log file modifications as heartbeat indicators. When a process
 appears hung (no log activity) or dead, it can be automatically restarted.
+
+The watchdog runs periodically (default every 15 minutes), performs its check,
+restarts any hung/dead processes, and terminates until the next scheduled run.
 """
 
 import logging
@@ -17,6 +20,12 @@ import psutil
 
 logger = logging.getLogger(__name__)
 
+# Default watchdog settings
+DEFAULT_RUN_INTERVAL_MINUTES = 15
+DEFAULT_HEARTBEAT_TIMEOUT = 300  # seconds
+DEFAULT_MAX_RESTART_ATTEMPTS = 3
+DEFAULT_RESTART_COOLDOWN = 60  # seconds
+
 
 class ProcessWatchdog:
     """
@@ -27,25 +36,28 @@ class ProcessWatchdog:
     2. If the log file has been modified recently (heartbeat check)
 
     If a process is detected as hung or dead, it calls a restart callback.
+
+    The watchdog runs on a schedule (default every 15 minutes), performs its
+    check/restart cycle, and terminates until the next scheduled run.
     """
 
     def __init__(
         self,
-        check_interval: int = 60,
-        heartbeat_timeout: int = 300,
-        max_restart_attempts: int = 3,
-        restart_cooldown: int = 60,
+        run_interval_minutes: int = DEFAULT_RUN_INTERVAL_MINUTES,
+        heartbeat_timeout: int = DEFAULT_HEARTBEAT_TIMEOUT,
+        max_restart_attempts: int = DEFAULT_MAX_RESTART_ATTEMPTS,
+        restart_cooldown: int = DEFAULT_RESTART_COOLDOWN,
     ):
         """
         Initialize the watchdog.
 
         Args:
-            check_interval: How often to check processes (in seconds)
+            run_interval_minutes: How often to run the watchdog check (in minutes)
             heartbeat_timeout: Max time without log activity before considering hung (seconds)
             max_restart_attempts: Maximum restart attempts before giving up
             restart_cooldown: Minimum time between restart attempts (seconds)
         """
-        self._check_interval = check_interval
+        self._run_interval_minutes = run_interval_minutes
         self._heartbeat_timeout = heartbeat_timeout
         self._max_restart_attempts = max_restart_attempts
         self._restart_cooldown = restart_cooldown
@@ -54,9 +66,26 @@ class ProcessWatchdog:
         self._processes: Dict[str, "ProcessInfo"] = {}
         self._lock = threading.RLock()
 
-        # Watchdog thread
-        self._running = False
-        self._thread: Optional[threading.Thread] = None
+        # Scheduler thread
+        self._scheduler_running = False
+        self._scheduler_thread: Optional[threading.Thread] = None
+        self._last_run: Optional[datetime] = None
+        self._next_run: Optional[datetime] = None
+
+    @property
+    def run_interval_minutes(self) -> int:
+        """Get the current run interval in minutes."""
+        return self._run_interval_minutes
+
+    @run_interval_minutes.setter
+    def run_interval_minutes(self, value: int) -> None:
+        """Set the run interval in minutes."""
+        if value < 1:
+            value = 1
+        self._run_interval_minutes = value
+        # Update next run time
+        if self._last_run:
+            self._next_run = self._last_run + timedelta(minutes=value)
 
     def register_process(
         self,
@@ -117,41 +146,103 @@ class ProcessWatchdog:
                 self._processes[process_id].pid = new_pid
                 self._processes[process_id].last_heartbeat = datetime.now()
 
-    def start(self) -> None:
-        """Start the watchdog monitoring thread."""
+    def start_scheduler(self) -> None:
+        """Start the watchdog scheduler that runs periodically."""
         with self._lock:
-            if self._running:
+            if self._scheduler_running:
                 return
 
-            self._running = True
-            self._thread = threading.Thread(target=self._monitor_loop, daemon=True)
-            self._thread.start()
-            logger.info("Watchdog: Started monitoring")
+            self._scheduler_running = True
+            self._scheduler_thread = threading.Thread(
+                target=self._scheduler_loop, daemon=True
+            )
+            self._scheduler_thread.start()
+            logger.info(
+                f"Watchdog: Started scheduler (runs every {self._run_interval_minutes} minutes)"
+            )
+
+    def stop_scheduler(self) -> None:
+        """Stop the watchdog scheduler."""
+        with self._lock:
+            self._scheduler_running = False
+            if self._scheduler_thread:
+                self._scheduler_thread.join(timeout=10)
+                self._scheduler_thread = None
+            logger.info("Watchdog: Stopped scheduler")
+
+    # Backward compatibility aliases
+    def start(self) -> None:
+        """Start the watchdog scheduler (alias for start_scheduler)."""
+        self.start_scheduler()
 
     def stop(self) -> None:
-        """Stop the watchdog monitoring thread."""
-        with self._lock:
-            self._running = False
-            if self._thread:
-                self._thread.join(timeout=self._check_interval + 5)
-                self._thread = None
-            logger.info("Watchdog: Stopped monitoring")
+        """Stop the watchdog scheduler (alias for stop_scheduler)."""
+        self.stop_scheduler()
 
-    def _monitor_loop(self) -> None:
-        """Main monitoring loop running in background thread."""
-        while self._running:
-            try:
-                self._check_all_processes()
-            except Exception as e:
-                logger.error(f"Watchdog: Error in monitor loop: {e}")
+    def _scheduler_loop(self) -> None:
+        """Scheduler loop that triggers watchdog runs at the configured interval."""
+        while self._scheduler_running:
+            now = datetime.now()
 
-            # Sleep in small increments to allow faster shutdown
-            for _ in range(self._check_interval):
-                if not self._running:
+            # Determine if it's time to run
+            should_run = False
+            if self._next_run is None:
+                # First run - schedule for interval from now
+                self._next_run = now + timedelta(minutes=self._run_interval_minutes)
+            elif now >= self._next_run:
+                should_run = True
+
+            if should_run:
+                try:
+                    self.run_once()
+                except Exception as e:
+                    logger.error(f"Watchdog: Error in scheduled run: {e}")
+
+                self._last_run = datetime.now()
+                self._next_run = self._last_run + timedelta(
+                    minutes=self._run_interval_minutes
+                )
+
+            # Sleep for a short time to allow checking for shutdown
+            for _ in range(10):  # Check every second for 10 seconds
+                if not self._scheduler_running:
                     break
                 time.sleep(1)
 
-    def _check_all_processes(self) -> None:
+    def run_once(self) -> Dict:
+        """
+        Run the watchdog check once and return results.
+
+        This method checks all registered processes, restarts any that are
+        hung or dead, and returns a summary of the results.
+
+        Returns:
+            Dictionary with results of the watchdog run
+        """
+        logger.info("Watchdog: Running process check...")
+        results = {
+            "run_time": datetime.now().isoformat(),
+            "processes_checked": 0,
+            "processes_restarted": 0,
+            "processes_healthy": 0,
+            "details": [],
+        }
+
+        try:
+            self._check_all_processes(results)
+        except Exception as e:
+            logger.error(f"Watchdog: Error during check: {e}")
+            results["error"] = str(e)
+
+        logger.info(
+            f"Watchdog: Check complete - {results['processes_checked']} checked, "
+            f"{results['processes_restarted']} restarted, "
+            f"{results['processes_healthy']} healthy"
+        )
+
+        return results
+
+    def _check_all_processes(self, results: Dict) -> None:
         """Check all registered processes.
 
         Servers are checked and restarted before clients to ensure proper
@@ -179,15 +270,17 @@ class ProcessWatchdog:
                     continue
                 process_info = self._processes[process_id]
 
-            self._check_process(process_info)
+            self._check_process(process_info, results)
 
-    def _check_process(self, process_info: "ProcessInfo") -> None:
+    def _check_process(self, process_info: "ProcessInfo", results: Dict) -> None:
         """
         Check a single process and restart if needed.
 
         Args:
             process_info: Information about the process to check
+            results: Results dictionary to update
         """
+        results["processes_checked"] += 1
         pid = process_info.pid
         log_file = process_info.log_file
 
@@ -218,8 +311,26 @@ class ProcessWatchdog:
             needs_restart = True
             reason = f"no heartbeat for {time_since_heartbeat.total_seconds():.0f}s"
 
+        process_detail = {
+            "process_id": process_info.process_id,
+            "process_type": process_info.process_type,
+            "pid": pid,
+            "is_running": is_running,
+            "needs_restart": needs_restart,
+            "reason": reason,
+            "restarted": False,
+        }
+
         if needs_restart:
-            self._handle_restart(process_info, reason)
+            restarted = self._handle_restart(process_info, reason)
+            process_detail["restarted"] = restarted
+            if restarted:
+                results["processes_restarted"] += 1
+                process_detail["new_pid"] = process_info.pid
+        else:
+            results["processes_healthy"] += 1
+
+        results["details"].append(process_detail)
 
     def _is_process_running(self, pid: int) -> bool:
         """
@@ -260,13 +371,16 @@ class ProcessWatchdog:
             pass
         return None
 
-    def _handle_restart(self, process_info: "ProcessInfo", reason: str) -> None:
+    def _handle_restart(self, process_info: "ProcessInfo", reason: str) -> bool:
         """
         Handle restarting a process.
 
         Args:
             process_info: Information about the process to restart
             reason: Reason for restart
+
+        Returns:
+            True if restart was successful, False otherwise
         """
         now = datetime.now()
 
@@ -278,7 +392,7 @@ class ProcessWatchdog:
                     f"Watchdog: Skipping restart for {process_info.process_id}, "
                     f"cooldown not elapsed ({time_since_restart:.0f}s < {self._restart_cooldown}s)"
                 )
-                return
+                return False
 
         # Check max restart attempts
         if process_info.restart_count >= self._max_restart_attempts:
@@ -286,7 +400,7 @@ class ProcessWatchdog:
                 f"Watchdog: Max restart attempts ({self._max_restart_attempts}) "
                 f"reached for {process_info.process_id}, giving up"
             )
-            return
+            return False
 
         logger.warning(
             f"Watchdog: Restarting {process_info.process_type} "
@@ -308,6 +422,7 @@ class ProcessWatchdog:
                     f"Watchdog: Successfully restarted {process_info.process_id} "
                     f"(new PID: {new_pid}, attempt {process_info.restart_count})"
                 )
+                return True
             else:
                 logger.error(
                     f"Watchdog: Failed to restart {process_info.process_id} "
@@ -316,27 +431,29 @@ class ProcessWatchdog:
                 with self._lock:
                     process_info.restart_count += 1
                     process_info.last_restart_at = now
+                return False
 
         except Exception as e:
             logger.error(f"Watchdog: Error restarting {process_info.process_id}: {e}")
             with self._lock:
                 process_info.restart_count += 1
                 process_info.last_restart_at = now
+            return False
 
     def get_status(self) -> Dict:
         """
-        Get the current status of all monitored processes.
+        Get the current status of all monitored processes and watchdog.
 
         Returns:
-            Dictionary with status information for each process
+            Dictionary with status information
         """
         with self._lock:
-            status = {}
+            processes = {}
             for process_id, info in self._processes.items():
                 is_running = self._is_process_running(info.pid)
                 last_modified = self._get_log_mtime(info.log_file)
 
-                status[process_id] = {
+                processes[process_id] = {
                     "pid": info.pid,
                     "process_type": info.process_type,
                     "is_running": is_running,
@@ -354,12 +471,22 @@ class ProcessWatchdog:
                         else None
                     ),
                 }
-            return status
+
+            return {
+                "scheduler_running": self._scheduler_running,
+                "run_interval_minutes": self._run_interval_minutes,
+                "last_run": self._last_run.isoformat() if self._last_run else None,
+                "next_run": self._next_run.isoformat() if self._next_run else None,
+                "heartbeat_timeout": self._heartbeat_timeout,
+                "max_restart_attempts": self._max_restart_attempts,
+                "restart_cooldown": self._restart_cooldown,
+                "processes": processes,
+            }
 
     @property
     def is_running(self) -> bool:
-        """Check if the watchdog is running."""
-        return self._running
+        """Check if the watchdog scheduler is running."""
+        return self._scheduler_running
 
 
 class ProcessInfo:
@@ -394,16 +521,16 @@ _watchdog_lock = threading.Lock()
 
 
 def get_watchdog(
-    check_interval: int = 60,
-    heartbeat_timeout: int = 300,
-    max_restart_attempts: int = 3,
-    restart_cooldown: int = 60,
+    run_interval_minutes: int = DEFAULT_RUN_INTERVAL_MINUTES,
+    heartbeat_timeout: int = DEFAULT_HEARTBEAT_TIMEOUT,
+    max_restart_attempts: int = DEFAULT_MAX_RESTART_ATTEMPTS,
+    restart_cooldown: int = DEFAULT_RESTART_COOLDOWN,
 ) -> ProcessWatchdog:
     """
     Get or create the global watchdog instance.
 
     Args:
-        check_interval: How often to check processes (in seconds)
+        run_interval_minutes: How often to run the watchdog check (in minutes)
         heartbeat_timeout: Max time without log activity before considering hung (seconds)
         max_restart_attempts: Maximum restart attempts before giving up
         restart_cooldown: Minimum time between restart attempts (seconds)
@@ -416,7 +543,7 @@ def get_watchdog(
     with _watchdog_lock:
         if _watchdog is None:
             _watchdog = ProcessWatchdog(
-                check_interval=check_interval,
+                run_interval_minutes=run_interval_minutes,
                 heartbeat_timeout=heartbeat_timeout,
                 max_restart_attempts=max_restart_attempts,
                 restart_cooldown=restart_cooldown,
@@ -432,3 +559,36 @@ def stop_watchdog() -> None:
         if _watchdog is not None:
             _watchdog.stop()
             _watchdog = None
+
+
+def run_watchdog_once() -> Dict:
+    """
+    Run the watchdog check once immediately.
+
+    Returns:
+        Dictionary with results of the watchdog run
+    """
+    watchdog = get_watchdog()
+    return watchdog.run_once()
+
+
+def set_watchdog_interval(minutes: int) -> None:
+    """
+    Set the watchdog run interval.
+
+    Args:
+        minutes: Interval in minutes between watchdog runs
+    """
+    watchdog = get_watchdog()
+    watchdog.run_interval_minutes = minutes
+
+
+def get_watchdog_status() -> Dict:
+    """
+    Get the current watchdog status.
+
+    Returns:
+        Dictionary with watchdog status information
+    """
+    watchdog = get_watchdog()
+    return watchdog.get_status()

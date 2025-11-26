@@ -194,6 +194,17 @@ def user_details(uid):
     llm_backend = llm_backend_status()
     models = get_llm_models(llm_backend["url"]) if llm_backend["url"] else []
 
+    # Get watchdog interval for admin users
+    watchdog_interval = 15  # Default
+    if current_admin_user.role == "admin":
+        try:
+            from y_web.utils.process_watchdog import get_watchdog
+
+            watchdog = get_watchdog()
+            watchdog_interval = watchdog.run_interval_minutes
+        except Exception:
+            pass
+
     return render_template(
         "admin/user_details.html",
         user=user,
@@ -204,6 +215,7 @@ def user_details(uid):
         llm_backend=llm_backend,
         models=models,
         current_user_role=current_admin_user.role,
+        watchdog_interval=watchdog_interval,
     )
 
 
@@ -1026,3 +1038,110 @@ def open_external_url():
     except Exception as e:
         print(f"Error opening external URL: {e}")
         return jsonify({"error": str(e)}), 500
+
+
+@users.route("/admin/watchdog_status", methods=["GET"])
+@login_required
+def watchdog_status():
+    """
+    Get the current watchdog status (admin only).
+
+    Returns:
+        JSON response with watchdog status
+    """
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        from y_web.utils.process_watchdog import get_watchdog_status
+
+        status = get_watchdog_status()
+        return jsonify(status), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@users.route("/admin/watchdog_run_now", methods=["POST"])
+@login_required
+def watchdog_run_now():
+    """
+    Trigger an immediate watchdog run (admin only).
+
+    Returns:
+        JSON response with the results of the watchdog run
+    """
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        return jsonify({"error": "Access denied"}), 403
+
+    try:
+        from y_web.utils.process_watchdog import run_watchdog_once
+
+        results = run_watchdog_once()
+        flash(
+            f"Watchdog check complete: {results['processes_checked']} checked, "
+            f"{results['processes_restarted']} restarted",
+            "success",
+        )
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@users.route("/admin/watchdog_set_interval", methods=["POST"])
+@login_required
+def watchdog_set_interval():
+    """
+    Set the watchdog run interval (admin only).
+
+    Returns:
+        Redirect to user details page
+    """
+    user_id = request.form.get("user_id")
+
+    # Validate user_id
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        flash(
+            "Access denied. Only administrators can modify watchdog settings.", "error"
+        )
+        return redirect(url_for("admin.dashboard"))
+
+    # Get interval from form
+    try:
+        interval_minutes = int(request.form.get("watchdog_interval", 15))
+        if interval_minutes < 1:
+            interval_minutes = 1
+        elif interval_minutes > 1440:  # Max 24 hours
+            interval_minutes = 1440
+    except (ValueError, TypeError):
+        interval_minutes = 15
+
+    try:
+        from y_web.utils.process_watchdog import set_watchdog_interval
+
+        set_watchdog_interval(interval_minutes)
+        flash(f"Watchdog interval set to {interval_minutes} minutes.", "success")
+    except Exception as e:
+        flash(f"Error setting watchdog interval: {str(e)}", "error")
+
+    return redirect(url_for("users.user_details", uid=user_id_int))

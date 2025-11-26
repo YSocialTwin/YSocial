@@ -26,7 +26,7 @@ class TestProcessWatchdog:
 
         watchdog = ProcessWatchdog()
 
-        assert watchdog._check_interval == 60
+        assert watchdog._run_interval_minutes == 15
         assert watchdog._heartbeat_timeout == 300
         assert watchdog._max_restart_attempts == 3
         assert watchdog._restart_cooldown == 60
@@ -37,13 +37,13 @@ class TestProcessWatchdog:
         from y_web.utils.process_watchdog import ProcessWatchdog
 
         watchdog = ProcessWatchdog(
-            check_interval=30,
+            run_interval_minutes=30,
             heartbeat_timeout=120,
             max_restart_attempts=5,
             restart_cooldown=30,
         )
 
-        assert watchdog._check_interval == 30
+        assert watchdog._run_interval_minutes == 30
         assert watchdog._heartbeat_timeout == 120
         assert watchdog._max_restart_attempts == 5
         assert watchdog._restart_cooldown == 30
@@ -111,18 +111,18 @@ class TestProcessWatchdog:
         assert watchdog._processes["test_process_1"].pid == 5678
 
     def test_start_stop_watchdog(self):
-        """Test starting and stopping the watchdog thread."""
+        """Test starting and stopping the watchdog scheduler."""
         from y_web.utils.process_watchdog import ProcessWatchdog
 
-        # Use short check interval for faster test
-        watchdog = ProcessWatchdog(check_interval=1)
+        # Use short run interval for faster test
+        watchdog = ProcessWatchdog(run_interval_minutes=1)
 
         assert not watchdog.is_running
 
         watchdog.start()
         assert watchdog.is_running
-        assert watchdog._thread is not None
-        assert watchdog._thread.is_alive()
+        assert watchdog._scheduler_thread is not None
+        assert watchdog._scheduler_thread.is_alive()
 
         watchdog.stop()
         assert not watchdog.is_running
@@ -134,7 +134,11 @@ class TestProcessWatchdog:
         watchdog = ProcessWatchdog()
         status = watchdog.get_status()
 
-        assert status == {}
+        # Status now includes watchdog info, check processes is empty
+        assert "processes" in status
+        assert status["processes"] == {}
+        assert "scheduler_running" in status
+        assert "run_interval_minutes" in status
 
     def test_get_status_with_processes(self):
         """Test getting status with registered processes."""
@@ -153,11 +157,12 @@ class TestProcessWatchdog:
 
         status = watchdog.get_status()
 
-        assert "server_1" in status
-        assert status["server_1"]["pid"] == 1234
-        assert status["server_1"]["process_type"] == "server"
-        assert status["server_1"]["log_file"] == "/tmp/server.log"
-        assert status["server_1"]["restart_count"] == 0
+        assert "processes" in status
+        assert "server_1" in status["processes"]
+        assert status["processes"]["server_1"]["pid"] == 1234
+        assert status["processes"]["server_1"]["process_type"] == "server"
+        assert status["processes"]["server_1"]["log_file"] == "/tmp/server.log"
+        assert status["processes"]["server_1"]["restart_count"] == 0
 
     def test_is_process_running_with_valid_pid(self):
         """Test checking if a process is running with the current process."""
@@ -234,7 +239,13 @@ class TestProcessWatchdog:
 
             # Check process - should be healthy (running and recent log)
             process_info = watchdog._processes["test_process"]
-            watchdog._check_process(process_info)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+            watchdog._check_process(process_info, results)
 
             # Restart should not have been called
             restart_callback.assert_not_called()
@@ -266,7 +277,13 @@ class TestProcessWatchdog:
 
             # Check process - should trigger restart
             process_info = watchdog._processes["dead_process"]
-            watchdog._check_process(process_info)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+            watchdog._check_process(process_info, results)
 
             # Restart callback should have been called
             restart_callback.assert_called_once()
@@ -299,19 +316,25 @@ class TestProcessWatchdog:
             )
 
             process_info = watchdog._processes["failing_process"]
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
 
             # First restart attempt
-            watchdog._check_process(process_info)
+            watchdog._check_process(process_info, results)
             assert restart_callback.call_count == 1
             assert process_info.restart_count == 1
 
             # Second restart attempt
-            watchdog._check_process(process_info)
+            watchdog._check_process(process_info, results)
             assert restart_callback.call_count == 2
             assert process_info.restart_count == 2
 
             # Third attempt should be skipped (max attempts reached)
-            watchdog._check_process(process_info)
+            watchdog._check_process(process_info, results)
             assert restart_callback.call_count == 2  # Not called again
 
         finally:
@@ -338,14 +361,20 @@ class TestProcessWatchdog:
             )
 
             process_info = watchdog._processes["cooldown_process"]
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
 
             # First restart
-            watchdog._check_process(process_info)
+            watchdog._check_process(process_info, results)
             assert restart_callback.call_count == 1
 
             # Immediate second check - should skip due to cooldown
             process_info.pid = 999999999  # Reset to dead PID
-            watchdog._check_process(process_info)
+            watchdog._check_process(process_info, results)
             assert restart_callback.call_count == 1  # Not called again
 
         finally:
@@ -400,8 +429,8 @@ class TestProcessWatchdog:
                 process_type="server",
             )
 
-            # Check all processes
-            watchdog._check_all_processes()
+            # Check all processes using run_once which internally uses _check_all_processes
+            results = watchdog.run_once()
 
             # Servers should be restarted before clients
             assert len(check_order) == 4
@@ -487,3 +516,123 @@ class TestProcessInfo:
         assert info.process_type == "server"
         assert info.restart_count == 0
         assert info.last_restart_at is None
+
+
+class TestWatchdogRunOnce:
+    """Tests for run_once functionality."""
+
+    def test_run_once_returns_results(self):
+        """Test that run_once returns a results dictionary."""
+        from y_web.utils.process_watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog()
+
+        results = watchdog.run_once()
+
+        assert "run_time" in results
+        assert "processes_checked" in results
+        assert "processes_restarted" in results
+        assert "processes_healthy" in results
+        assert "details" in results
+        assert results["processes_checked"] == 0
+
+    def test_run_once_checks_registered_processes(self):
+        """Test that run_once checks all registered processes."""
+        from y_web.utils.process_watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog()
+        restart_callback = MagicMock(return_value=None)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("log entry\n")
+            temp_path = f.name
+
+        try:
+            # Register a running process (use current process)
+            watchdog.register_process(
+                process_id="test_process",
+                pid=os.getpid(),
+                log_file=temp_path,
+                restart_callback=restart_callback,
+                process_type="server",
+            )
+
+            results = watchdog.run_once()
+
+            assert results["processes_checked"] == 1
+            assert results["processes_healthy"] == 1
+            assert results["processes_restarted"] == 0
+
+        finally:
+            os.unlink(temp_path)
+
+    def test_run_interval_property(self):
+        """Test that run_interval_minutes can be get and set."""
+        from y_web.utils.process_watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(run_interval_minutes=15)
+
+        assert watchdog.run_interval_minutes == 15
+
+        watchdog.run_interval_minutes = 30
+        assert watchdog.run_interval_minutes == 30
+
+        # Test minimum value enforcement
+        watchdog.run_interval_minutes = 0
+        assert watchdog.run_interval_minutes == 1
+
+
+class TestGlobalWatchdogFunctions:
+    """Tests for global watchdog utility functions."""
+
+    def test_run_watchdog_once(self):
+        """Test run_watchdog_once function."""
+        from y_web.utils.process_watchdog import run_watchdog_once, stop_watchdog
+
+        # Clean up first
+        stop_watchdog()
+
+        results = run_watchdog_once()
+
+        assert "run_time" in results
+        assert "processes_checked" in results
+
+        # Cleanup
+        stop_watchdog()
+
+    def test_set_watchdog_interval(self):
+        """Test set_watchdog_interval function."""
+        from y_web.utils.process_watchdog import (
+            get_watchdog,
+            set_watchdog_interval,
+            stop_watchdog,
+        )
+
+        # Clean up first
+        stop_watchdog()
+
+        set_watchdog_interval(20)
+        watchdog = get_watchdog()
+
+        assert watchdog.run_interval_minutes == 20
+
+        # Cleanup
+        stop_watchdog()
+
+    def test_get_watchdog_status(self):
+        """Test get_watchdog_status function."""
+        from y_web.utils.process_watchdog import get_watchdog_status, stop_watchdog
+
+        # Clean up first
+        stop_watchdog()
+
+        status = get_watchdog_status()
+
+        assert "scheduler_running" in status
+        assert "run_interval_minutes" in status
+        assert "last_run" in status
+        assert "next_run" in status
+        assert "processes" in status
+
+        # Cleanup
+        stop_watchdog()
