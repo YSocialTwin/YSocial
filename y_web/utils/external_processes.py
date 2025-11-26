@@ -620,30 +620,48 @@ def _is_port_available(port):
         return True
 
 
-def _find_available_port(original_port, port_range=100):
+# Server port range constants
+SERVER_PORT_MIN = 5000
+SERVER_PORT_MAX = 6000
+
+
+def _find_available_port(original_port, port_range=100, min_port=None, max_port=None):
     """
     Find an available port near the original port.
 
     Searches for a free port starting from original_port, then tries
-    ports in the range [original_port - port_range/2, original_port + port_range/2].
+    ports in the specified range. For servers, use min_port=5000, max_port=6000.
 
     Args:
         original_port: the preferred port number
         port_range: the range of ports to search (default 100)
+        min_port: minimum port number (default: 1024)
+        max_port: maximum port number (default: 65535)
 
     Returns:
         int: an available port number, or None if none found
     """
+    # Set defaults
+    if min_port is None:
+        min_port = 1024
+    if max_port is None:
+        max_port = 65535
+
     # First try the original port
     if _is_port_available(original_port):
         return original_port
 
-    # Search in range around original port
+    # Search in range around original port, respecting min/max bounds
     half_range = port_range // 2
-    start_port = max(1024, original_port - half_range)  # Stay above privileged ports
-    end_port = min(65535, original_port + half_range)
+    start_port = max(min_port, original_port - half_range)
+    end_port = min(max_port, original_port + half_range)
 
     for port in range(start_port, end_port + 1):
+        if port != original_port and _is_port_available(port):
+            return port
+
+    # If not found in preferred range, search entire allowed range
+    for port in range(min_port, max_port + 1):
         if port != original_port and _is_port_available(port):
             return port
 
@@ -855,6 +873,44 @@ def start_server(exp):
             f"Configuration file not found: {config}\n"
             f"Please ensure the experiment is properly configured."
         )
+
+    # Check if the configured port is available before starting
+    # If not, find an alternative port in the server range (5000-6000)
+    server_port = exp.port
+    if not _is_port_available(server_port):
+        print(
+            f"Port {server_port} is not available, searching for alternative "
+            f"in range {SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
+        )
+
+        new_port = _find_available_port(
+            server_port,
+            port_range=100,
+            min_port=SERVER_PORT_MIN,
+            max_port=SERVER_PORT_MAX,
+        )
+
+        if new_port and new_port != server_port:
+            print(f"Found available port {new_port}, updating configurations...")
+
+            # Update config files and database with new port
+            if _update_server_port_in_configs(exp, new_port):
+                print(f"Successfully updated port from {server_port} to {new_port}")
+                # Refresh the experiment object to get updated port
+                db.session.refresh(exp)
+            else:
+                print(
+                    f"Warning: Some config updates failed. "
+                    f"Server may fail to start on port {new_port}"
+                )
+        elif not new_port:
+            print(
+                f"Warning: Could not find available port in range "
+                f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}. "
+                f"Server startup may fail."
+            )
+    else:
+        print(f"Port {server_port} is available.")
 
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
@@ -1264,11 +1320,17 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                     if server_port and not _is_port_available(server_port):
                         print(
                             f"Watchdog: Port {server_port} is still in use, "
-                            f"searching for alternative port..."
+                            f"searching for alternative port in range "
+                            f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}..."
                         )
 
-                        # Find an available port in the same range
-                        new_port = _find_available_port(server_port, port_range=100)
+                        # Find an available port in the server range
+                        new_port = _find_available_port(
+                            server_port,
+                            port_range=100,
+                            min_port=SERVER_PORT_MIN,
+                            max_port=SERVER_PORT_MAX,
+                        )
 
                         if new_port and new_port != server_port:
                             print(
@@ -1291,8 +1353,8 @@ def _register_server_with_watchdog(exp, pid, log_dir):
                                 )
                         elif not new_port:
                             print(
-                                f"Watchdog: Could not find available port near "
-                                f"{server_port}, restart may fail"
+                                f"Watchdog: Could not find available port in range "
+                                f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}, restart may fail"
                             )
                     else:
                         print(f"Watchdog: Port {server_port} is available.")
