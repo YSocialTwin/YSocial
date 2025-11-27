@@ -80,9 +80,12 @@ class LogSyncScheduler:
                         # Check if enough time has passed since last sync
                         should_sync = True
                         if settings.last_sync:
+                            # Handle both naive and timezone-aware datetimes
+                            last_sync = settings.last_sync
+                            if last_sync.tzinfo is None:
+                                last_sync = last_sync.replace(tzinfo=timezone.utc)
                             time_since_sync = (
-                                datetime.now(timezone.utc)
-                                - settings.last_sync.replace(tzinfo=timezone.utc)
+                                datetime.now(timezone.utc) - last_sync
                             ).total_seconds()
                             should_sync = time_since_sync >= interval_seconds
 
@@ -105,16 +108,23 @@ class LogSyncScheduler:
                 self._stop_event.wait(60)
 
     def _get_settings(self):
-        """Get log sync settings from database."""
+        """Get log sync settings from database with proper error handling."""
+        from sqlalchemy.exc import IntegrityError
+
         from y_web import db
         from y_web.models import LogSyncSettings
 
         settings = LogSyncSettings.query.first()
         if not settings:
-            # Create default settings if they don't exist
-            settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
-            db.session.add(settings)
-            db.session.commit()
+            # Use get_or_create pattern with proper exception handling
+            try:
+                settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+                db.session.add(settings)
+                db.session.commit()
+            except IntegrityError:
+                # Another thread created settings, rollback and fetch
+                db.session.rollback()
+                settings = LogSyncSettings.query.first()
         return settings
 
     def _update_last_sync(self):
@@ -122,10 +132,14 @@ class LogSyncScheduler:
         from y_web import db
         from y_web.models import LogSyncSettings
 
-        settings = LogSyncSettings.query.first()
-        if settings:
-            settings.last_sync = datetime.now(timezone.utc)
-            db.session.commit()
+        try:
+            settings = LogSyncSettings.query.first()
+            if settings:
+                settings.last_sync = datetime.now(timezone.utc)
+                db.session.commit()
+        except Exception as e:
+            logger.warning(f"Failed to update last_sync timestamp: {e}")
+            db.session.rollback()
 
     def _sync_all_active_experiments(self):
         """Sync logs for all running experiments."""

@@ -1818,10 +1818,12 @@
                             // Save log sync settings
                             document.getElementById('save-log-sync-settings').addEventListener('click', async function() {
                                 const enabled = document.getElementById('log_sync_enabled').checked;
-                                const interval = parseInt(document.getElementById('sync_interval_minutes').value);
+                                const intervalValue = document.getElementById('sync_interval_minutes').value;
+                                const interval = Number(intervalValue);
                                 
-                                if (interval < 1 || interval > 1440) {
-                                    showLogSyncMessage('Sync interval must be between 1 and 1440 minutes', true);
+                                // Check for NaN or invalid values
+                                if (isNaN(interval) || interval < 1 || interval > 1440) {
+                                    showLogSyncMessage('Sync interval must be a valid number between 1 and 1440 minutes', true);
                                     return;
                                 }
                                 
@@ -1882,8 +1884,16 @@
                                 updateSyncStatusIndicator(this.checked);
                             });
 
-                            // Load settings on page load
-                            document.addEventListener('DOMContentLoaded', loadLogSyncSettings);
+                            // Load settings on page load - use conditional to avoid duplicate listeners
+                            if (!window.logSyncSettingsInitialized) {
+                                window.logSyncSettingsInitialized = true;
+                                if (document.readyState === 'loading') {
+                                    document.addEventListener('DOMContentLoaded', loadLogSyncSettings);
+                                } else {
+                                    // DOM is already loaded
+                                    loadLogSyncSettings();
+                                }
+                            }
                         </script>
                     </div>
 
