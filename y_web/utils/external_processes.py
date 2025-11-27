@@ -537,11 +537,13 @@ def _is_client_process(pid):
         cmdline = proc.cmdline()
         cmdline_str = " ".join(cmdline).lower()
 
-        # Check for client process identifiers
+        # Check for YSocial client process identifiers
+        # These patterns are specific to how client processes are started
         is_client = (
             "y_client_process_runner" in cmdline_str
             or "--run-client-subprocess" in cmdline_str
-            or "_client" in cmdline_str
+            # Check for client log file pattern which indicates a YSocial client
+            or "_client.log" in cmdline_str
         )
 
         if not is_client:
