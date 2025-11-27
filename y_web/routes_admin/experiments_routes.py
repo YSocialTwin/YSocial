@@ -1725,7 +1725,10 @@ def experiment_logs(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import has_server_log_files, update_server_log_metrics
+        from y_web.utils.log_metrics import (
+            has_server_log_files,
+            update_server_log_metrics,
+        )
         from y_web.utils.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()

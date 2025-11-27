@@ -58,7 +58,9 @@ def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
                     )
                     time.sleep(delay * (attempt + 1))  # Exponential backoff
                 else:
-                    logger.error(f"Database deadlock persisted after {max_retries} retries")
+                    logger.error(
+                        f"Database deadlock persisted after {max_retries} retries"
+                    )
                     return False
             else:
                 logger.error(f"Database error during commit: {e}")

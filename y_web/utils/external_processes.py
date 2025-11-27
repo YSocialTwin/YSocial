@@ -708,9 +708,7 @@ def _terminate_processes_holding_database(db_path):
     try:
         lockers = _find_processes_with_open_file(db_path)
         if lockers:
-            print(
-                f"Found {len(lockers)} process(es) holding database file: {db_path}"
-            )
+            print(f"Found {len(lockers)} process(es) holding database file: {db_path}")
             for proc in lockers:
                 try:
                     print(
@@ -783,9 +781,7 @@ def _terminate_processes_holding_experiment_database(exp):
         db_file_path = os.path.join(y_web_dir, exp.db_name)
     else:
         uid = exp.db_name.removeprefix("experiments_")
-        db_file_path = os.path.join(
-            y_web_dir, "experiments", uid, "database_server.db"
-        )
+        db_file_path = os.path.join(y_web_dir, "experiments", uid, "database_server.db")
 
     if os.path.exists(db_file_path):
         print(f"Checking for processes holding database: {db_file_path}")
