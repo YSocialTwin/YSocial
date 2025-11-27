@@ -516,6 +516,55 @@ def terminate_server_process(exp_id):
         return False
 
 
+def _is_client_process(pid):
+    """
+    Validate that the given PID is actually a client process.
+
+    This prevents terminating the wrong process if PIDs have been recycled.
+    The check looks for 'y_client_process_runner' or '--run-client-subprocess'
+    in the command line of the process.
+
+    Args:
+        pid: Process ID to validate
+
+    Returns:
+        bool: True if the process is a client process, False otherwise
+    """
+    try:
+        import psutil
+
+        proc = psutil.Process(pid)
+        cmdline = proc.cmdline()
+        cmdline_str = " ".join(cmdline).lower()
+
+        # Check for client process identifiers
+        is_client = (
+            "y_client_process_runner" in cmdline_str
+            or "--run-client-subprocess" in cmdline_str
+            or "_client" in cmdline_str
+        )
+
+        if not is_client:
+            print(
+                f"Warning: PID {pid} is not a client process. "
+                f"Command: {cmdline_str[:100]}..."
+            )
+
+        return is_client
+
+    except psutil.NoSuchProcess:
+        # Process doesn't exist, safe to skip
+        return False
+    except psutil.AccessDenied:
+        # Can't access process info, assume it's valid to be safe
+        print(f"Warning: Cannot access process {pid} info, assuming it's valid")
+        return True
+    except Exception as e:
+        print(f"Warning: Error checking process {pid}: {e}")
+        # In case of error, be conservative and don't terminate
+        return False
+
+
 def __terminate_process(pid):
     import platform
 
@@ -2039,6 +2088,17 @@ def terminate_client(cli, pause=False):
         pid = cli.pid
         print(f"Terminating client process with PID {pid}...")
 
+        # Validate that this PID is actually a client process
+        # This prevents terminating wrong processes if PIDs have been recycled
+        if not _is_client_process(pid):
+            print(
+                f"Warning: PID {pid} is not a client process (may have been recycled). "
+                f"Skipping termination and clearing stale PID from database."
+            )
+            cli.pid = None
+            db.session.commit()
+            return
+
         # Try graceful termination first
         os.kill(pid, signal.SIGTERM)
 
@@ -2326,10 +2386,18 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
                     # This ensures proper cleanup of hung processes
                     if fresh_cli.pid:
                         pid_to_kill = fresh_cli.pid
-                        print(
-                            f"Watchdog: Terminating client process with PID {pid_to_kill}..."
-                        )
-                        _force_terminate_process_tree(pid_to_kill)
+                        # Validate that this PID is actually a client process
+                        # to prevent terminating wrong processes if PIDs were recycled
+                        if _is_client_process(pid_to_kill):
+                            print(
+                                f"Watchdog: Terminating client process with PID {pid_to_kill}..."
+                            )
+                            _force_terminate_process_tree(pid_to_kill)
+                        else:
+                            print(
+                                f"Watchdog: PID {pid_to_kill} is not a client process "
+                                f"(may have been recycled). Skipping termination."
+                            )
 
                         # Clear PID from database for consistency
                         fresh_cli.pid = None
