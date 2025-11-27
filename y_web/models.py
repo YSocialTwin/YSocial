@@ -974,3 +974,22 @@ LogFileOffset.__table_args__ = (
     db.Index("idx_log_file_offset_lookup", "exp_id", "log_file_type", "client_id"),
     {"extend_existing": True},
 )
+
+
+class LogSyncSettings(db.Model):
+    """
+    Settings for automatic periodic log synchronization.
+
+    Stores configuration for the background log sync scheduler including
+    whether it's enabled and the sync frequency in minutes.
+    Single-row table that is created on first access if it doesn't exist.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "log_sync_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    sync_interval_minutes = db.Column(
+        db.Integer, nullable=False, default=10
+    )  # Default 10 minutes
+    last_sync = db.Column(db.DateTime, nullable=True)  # Last time sync was performed

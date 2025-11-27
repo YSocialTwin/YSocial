@@ -56,6 +56,7 @@
             <div class="misc-tabs">
                 <button class="misc-tab active" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
                 <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
+                <button class="misc-tab" onclick="switchMiscTab('system-settings')">System Settings</button>
             </div>
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
@@ -1717,6 +1718,195 @@
                 </div>
             </div>
             <!-- End Content & Behavior Tab -->
+
+            <!-- System Settings Tab -->
+            <div id="tab-system-settings" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>System Settings:</strong> Configure system-level settings for the YSocial platform, including automatic log synchronization for running experiments.
+                </div>
+
+                <div class="misc-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <div class="misc-compact-box">
+                        <h3>Automatic Log Synchronization</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Configure automatic periodic reading of logs from running experiments. This helps ensure plot data is continuously updated even when log files rotate, preventing data points from being lost during long-running simulations.</p>
+                        </div>
+
+                        <div id="log-sync-settings-container">
+                            <div class="box-lines">
+                                <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Enable Automatic Sync</span>
+                                    <span class="right" style="flex: 1;">
+                                        <label class="switch-small">
+                                            <input type="checkbox" id="log_sync_enabled" checked>
+                                            <span class="slider-small round"></span>
+                                        </label>
+                                        <span id="sync-status-indicator" style="margin-left: 10px; font-size: 0.85em; color: #6b7280;"></span>
+                                    </span>
+                                </div>
+                                <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Sync Interval</span>
+                                    <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                                        <input type="number" id="sync_interval_minutes" class="input" style="width: 80px;" min="1" max="1440" value="10">
+                                        <span style="font-size: 0.9em; color: #6b7280;">minutes (1-1440)</span>
+                                    </span>
+                                </div>
+                                <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Last Sync</span>
+                                    <span class="right" style="flex: 1;">
+                                        <span id="last-sync-time" style="font-size: 0.9em; color: #6b7280;">Never</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                <button id="save-log-sync-settings" class="button is-solid primary-button" style="flex: 1;">
+                                    Save Settings
+                                </button>
+                                <button id="trigger-log-sync" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white;">
+                                    Sync Now
+                                </button>
+                            </div>
+
+                            <div id="log-sync-message" style="margin-top: 10px; padding: 8px 12px; border-radius: 4px; display: none;"></div>
+                        </div>
+
+                        <script>
+                            // Load current log sync settings
+                            async function loadLogSyncSettings() {
+                                try {
+                                    const response = await fetch('/admin/log_sync_settings');
+                                    const data = await response.json();
+                                    
+                                    document.getElementById('log_sync_enabled').checked = data.enabled;
+                                    document.getElementById('sync_interval_minutes').value = data.sync_interval_minutes;
+                                    
+                                    updateSyncStatusIndicator(data.enabled);
+                                    
+                                    if (data.last_sync) {
+                                        const lastSync = new Date(data.last_sync);
+                                        document.getElementById('last-sync-time').textContent = lastSync.toLocaleString();
+                                    } else {
+                                        document.getElementById('last-sync-time').textContent = 'Never';
+                                    }
+                                } catch (error) {
+                                    console.error('Error loading log sync settings:', error);
+                                }
+                            }
+
+                            function updateSyncStatusIndicator(enabled) {
+                                const indicator = document.getElementById('sync-status-indicator');
+                                if (enabled) {
+                                    indicator.innerHTML = '<span style="color: #22c55e;">● Active</span>';
+                                } else {
+                                    indicator.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+                                }
+                            }
+
+                            function showLogSyncMessage(message, isError) {
+                                const msgDiv = document.getElementById('log-sync-message');
+                                msgDiv.textContent = message;
+                                msgDiv.style.display = 'block';
+                                msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
+                                msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
+                                
+                                setTimeout(() => {
+                                    msgDiv.style.display = 'none';
+                                }, 5000);
+                            }
+
+                            // Save log sync settings
+                            document.getElementById('save-log-sync-settings').addEventListener('click', async function() {
+                                const enabled = document.getElementById('log_sync_enabled').checked;
+                                const interval = parseInt(document.getElementById('sync_interval_minutes').value);
+                                
+                                if (interval < 1 || interval > 1440) {
+                                    showLogSyncMessage('Sync interval must be between 1 and 1440 minutes', true);
+                                    return;
+                                }
+                                
+                                try {
+                                    const response = await fetch('/admin/log_sync_settings', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            enabled: enabled,
+                                            sync_interval_minutes: interval
+                                        })
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (data.success) {
+                                        updateSyncStatusIndicator(enabled);
+                                        showLogSyncMessage('Settings saved successfully', false);
+                                    } else {
+                                        showLogSyncMessage(data.message || 'Failed to save settings', true);
+                                    }
+                                } catch (error) {
+                                    console.error('Error saving log sync settings:', error);
+                                    showLogSyncMessage('Error saving settings', true);
+                                }
+                            });
+
+                            // Trigger manual sync
+                            document.getElementById('trigger-log-sync').addEventListener('click', async function() {
+                                this.disabled = true;
+                                this.textContent = 'Syncing...';
+                                
+                                try {
+                                    const response = await fetch('/admin/log_sync_trigger', {
+                                        method: 'POST'
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (data.success) {
+                                        showLogSyncMessage('Log sync completed successfully', false);
+                                        // Reload settings to update last sync time
+                                        await loadLogSyncSettings();
+                                    } else {
+                                        showLogSyncMessage(data.message || 'Failed to trigger sync', true);
+                                    }
+                                } catch (error) {
+                                    console.error('Error triggering log sync:', error);
+                                    showLogSyncMessage('Error triggering sync', true);
+                                } finally {
+                                    this.disabled = false;
+                                    this.textContent = 'Sync Now';
+                                }
+                            });
+
+                            // Update status indicator when toggle changes
+                            document.getElementById('log_sync_enabled').addEventListener('change', function() {
+                                updateSyncStatusIndicator(this.checked);
+                            });
+
+                            // Load settings on page load
+                            document.addEventListener('DOMContentLoaded', loadLogSyncSettings);
+                        </script>
+                    </div>
+
+                    <div class="misc-compact-box">
+                        <h3>About Log Synchronization</h3>
+                        <div class="help-block">
+                            <p><strong>Why is this needed?</strong></p>
+                            <p>Long-running simulations generate rotating log files. If there's a gap between log reads that spans a log rotation, some data points can be lost from the execution trend plots and remaining time estimates.</p>
+                            <br>
+                            <p><strong>How does it work?</strong></p>
+                            <p>The automatic sync periodically reads logs from all running experiments in the background, ensuring that the database metrics tables are kept up to date even during log rotations.</p>
+                            <br>
+                            <p><strong>Recommended Settings:</strong></p>
+                            <ul style="margin: 8px 0 0 20px; color: #6b7280;">
+                                <li>For most simulations: 10-15 minutes</li>
+                                <li>For fast simulations: 5 minutes</li>
+                                <li>For slow simulations: 30-60 minutes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- End System Settings Tab -->
 
             <script>
                 function switchMiscTab(tabName) {

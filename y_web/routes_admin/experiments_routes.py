@@ -45,6 +45,7 @@ from y_web.models import (
     Languages,
     Leanings,
     LogFileOffset,
+    LogSyncSettings,
     Nationalities,
     Page,
     Page_Population,
@@ -3664,3 +3665,134 @@ def copy_experiment():
         current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
 
     return redirect(url_for("experiments.settings"))
+
+
+@experiments.route("/admin/log_sync_settings", methods=["GET"])
+@login_required
+def get_log_sync_settings():
+    """
+    Get current log sync settings.
+
+    Returns:
+        JSON with log sync settings
+    """
+    check_privileges(current_user.username)
+
+    # Get or create default settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+        db.session.commit()
+
+    return jsonify(
+        {
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+            "last_sync": (
+                settings.last_sync.isoformat() if settings.last_sync else None
+            ),
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_settings", methods=["POST"])
+@login_required
+def update_log_sync_settings():
+    """
+    Update log sync settings.
+
+    Expects JSON body with:
+    - enabled (bool): Whether automatic log sync is enabled
+    - sync_interval_minutes (int): Sync frequency in minutes (1-1440)
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    # Get or create settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+
+    # Update enabled if provided
+    if "enabled" in data:
+        settings.enabled = bool(data["enabled"])
+
+    # Update sync interval if provided
+    if "sync_interval_minutes" in data:
+        try:
+            interval = int(data["sync_interval_minutes"])
+            # Validate range: 1 minute to 24 hours
+            if interval < 1 or interval > 1440:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Sync interval must be between 1 and 1440 minutes",
+                        }
+                    ),
+                    400,
+                )
+            settings.sync_interval_minutes = interval
+        except (ValueError, TypeError):
+            return (
+                jsonify(
+                    {"success": False, "message": "Invalid sync interval value"}
+                ),
+                400,
+            )
+
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_trigger", methods=["POST"])
+@login_required
+def trigger_log_sync():
+    """
+    Manually trigger a log sync for all running experiments.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    try:
+        from y_web.utils.log_sync_scheduler import get_scheduler
+
+        scheduler = get_scheduler()
+        if scheduler:
+            success = scheduler.trigger_sync()
+            if success:
+                return jsonify(
+                    {"success": True, "message": "Log sync triggered successfully"}
+                )
+            else:
+                return (
+                    jsonify({"success": False, "message": "Log sync failed"}),
+                    500,
+                )
+        else:
+            return (
+                jsonify(
+                    {"success": False, "message": "Log sync scheduler not running"}
+                ),
+                503,
+            )
+    except Exception as e:
+        current_app.logger.error(f"Error triggering log sync: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)}), 500
