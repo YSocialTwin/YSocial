@@ -35,7 +35,7 @@ RETRY_DELAY = 0.5  # seconds
 def _ensure_session_clean(session):
     """
     Ensure the database session is in a clean state.
-    
+
     This is needed to handle PendingRollbackError which can occur
     when a previous database operation failed.
     """
@@ -72,9 +72,7 @@ def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
                 )
                 time.sleep(delay * (attempt + 1))
             else:
-                logger.error(
-                    f"Session rollback persisted after {max_retries} retries"
-                )
+                logger.error(f"Session rollback persisted after {max_retries} retries")
                 return False
         except OperationalError as e:
             session.rollback()

@@ -219,4 +219,3 @@ class TestLogSyncValidation:
 
             retrieved = LogSyncSettings.query.first()
             assert retrieved.enabled is True
-

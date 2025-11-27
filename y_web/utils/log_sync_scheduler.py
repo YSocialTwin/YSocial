@@ -144,7 +144,7 @@ class LogSyncScheduler:
     def _safe_rollback(self, db):
         """
         Safely rollback the database session.
-        
+
         Catches and logs any exceptions to prevent rollback failures
         from masking the original error.
         """
@@ -222,7 +222,9 @@ class LogSyncScheduler:
                 try:
                     clients = Client.query.filter_by(id_exp=exp.idexp, status=1).all()
                 except Exception as e:
-                    logger.warning(f"Error querying clients for experiment {exp.exp_name}: {e}")
+                    logger.warning(
+                        f"Error querying clients for experiment {exp.exp_name}: {e}"
+                    )
                     self._safe_rollback(db)
                     continue
 

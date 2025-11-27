@@ -1784,7 +1784,9 @@ def experiment_logs(exp_id):
             ).all()
         except Exception as e:
             # Handle PendingRollbackError by rolling back and retrying
-            current_app.logger.warning(f"Session error during metrics query, retrying: {e}")
+            current_app.logger.warning(
+                f"Session error during metrics query, retrying: {e}"
+            )
             db.session.rollback()
             metrics = ServerLogMetrics.query.filter_by(
                 exp_id=exp_id, aggregation_level="daily"
@@ -2459,14 +2461,15 @@ def miscellanea():
     check_privileges(current_user.username)
 
     # Get telemetry and watchdog settings for the current admin user
-    telemetry_enabled = getattr(user, 'telemetry_enabled', True)
+    telemetry_enabled = getattr(user, "telemetry_enabled", True)
     watchdog_interval = 15  # Default watchdog interval
 
     # Try to get watchdog interval from the watchdog status
     try:
         from y_web.utils.process_watchdog import get_watchdog_status
+
         status = get_watchdog_status()
-        watchdog_interval = status.get('run_interval_minutes', 15)
+        watchdog_interval = status.get("run_interval_minutes", 15)
     except ImportError:
         # process_watchdog module not available
         pass
@@ -3352,8 +3355,11 @@ def copy_experiment():
 
         # Copy all files from source to new folder, excluding log files
         import re
-        log_pattern = re.compile(r'\.log(\.\d+)?$')  # Matches .log, .log.1, .log.2, etc.
-        
+
+        log_pattern = re.compile(
+            r"\.log(\.\d+)?$"
+        )  # Matches .log, .log.1, .log.2, etc.
+
         for item in os.listdir(source_folder):
             # Skip log files (server logs and client logs) including rotated logs
             if log_pattern.search(item):
@@ -3779,9 +3785,7 @@ def update_log_sync_settings():
             settings.sync_interval_minutes = interval
         except (ValueError, TypeError):
             return (
-                jsonify(
-                    {"success": False, "message": "Invalid sync interval value"}
-                ),
+                jsonify({"success": False, "message": "Invalid sync interval value"}),
                 400,
             )
 
