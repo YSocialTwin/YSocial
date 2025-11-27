@@ -2445,7 +2445,23 @@ def miscellanea():
 
     check_privileges(current_user.username)
 
-    return render_template("admin/miscellanea.html")
+    # Get telemetry and watchdog settings for the current admin user
+    telemetry_enabled = user.telemetry_enabled if hasattr(user, 'telemetry_enabled') else True
+    watchdog_interval = 15  # Default watchdog interval
+
+    # Try to get watchdog interval from the watchdog status
+    try:
+        from y_web.utils.process_watchdog import get_watchdog_status
+        status = get_watchdog_status()
+        watchdog_interval = status.get('run_interval_minutes', 15)
+    except (ImportError, Exception):
+        pass
+
+    return render_template(
+        "admin/miscellanea.html",
+        telemetry_enabled=telemetry_enabled,
+        watchdog_interval=watchdog_interval,
+    )
 
 
 @experiments.route("/admin/languages_data")

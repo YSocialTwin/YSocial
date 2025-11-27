@@ -914,6 +914,36 @@ def update_telemetry_preference():
     return redirect(url_for("users.user_details", uid=user_id_int))
 
 
+@users.route("/admin/update_telemetry_preference_ajax", methods=["POST"])
+@login_required
+def update_telemetry_preference_ajax():
+    """
+    Update user's telemetry preference via AJAX (admin only).
+
+    Returns:
+        JSON response with success status
+    """
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        return jsonify({"success": False, "message": "Access denied"}), 403
+
+    data = request.get_json()
+    if data is None:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    telemetry_enabled = data.get("telemetry_enabled", False)
+
+    # Update current admin user's telemetry preference
+    current_admin_user.telemetry_enabled = telemetry_enabled
+    db.session.commit()
+
+    return jsonify({"success": True, "enabled": telemetry_enabled})
+
+
 @users.route("/admin/check_for_updates", methods=["POST"])
 @login_required
 def check_for_updates_route():

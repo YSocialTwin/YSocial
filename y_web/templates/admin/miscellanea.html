@@ -1721,22 +1721,275 @@
 
             <!-- System Settings Tab -->
             <div id="tab-system-settings" class="misc-tab-content">
+                <style>
+                    /* Toggle switch styles for System Settings */
+                    .switch-small {
+                        position: relative;
+                        display: inline-block;
+                        width: 44px;
+                        height: 22px;
+                    }
+                    .switch-small input {
+                        opacity: 0;
+                        width: 0;
+                        height: 0;
+                    }
+                    .slider-small {
+                        position: absolute;
+                        cursor: pointer;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-color: #ccc;
+                        transition: .4s;
+                    }
+                    .slider-small:before {
+                        position: absolute;
+                        content: "";
+                        height: 16px;
+                        width: 16px;
+                        left: 3px;
+                        bottom: 3px;
+                        background-color: white;
+                        transition: .4s;
+                    }
+                    input:checked + .slider-small {
+                        background-color: #22c55e;
+                    }
+                    input:checked + .slider-small:before {
+                        transform: translateX(22px);
+                    }
+                    .slider-small.round {
+                        border-radius: 22px;
+                    }
+                    .slider-small.round:before {
+                        border-radius: 50%;
+                    }
+                </style>
+
                 <div class="misc-section-description">
-                    <strong>System Settings:</strong> Configure system-level settings for the YSocial platform, including automatic log synchronization for running experiments.
+                    <strong>System Settings:</strong> Configure system-level settings for the YSocial platform, including telemetry, automatic log synchronization, process monitoring, and system updates.
                 </div>
 
-                <div class="misc-grid" style="grid-template-columns: repeat(2, 1fr);">
+                <div class="misc-grid">
+                    <!-- Telemetry Settings -->
+                    <div class="misc-compact-box">
+                        <h3>Telemetry Settings</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Control anonymous usage data collection to help improve YSocial.</p>
+                        </div>
+                        <div class="box-lines">
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">Telemetry Data</span>
+                                <span class="right" style="flex: 1; display: flex; align-items: center;">
+                                    <label class="switch-small">
+                                        <input type="checkbox" id="telemetry_enabled" {% if telemetry_enabled %}checked{% endif %}>
+                                        <span class="slider-small round"></span>
+                                    </label>
+                                    <span id="telemetry-status" style="margin-left: 10px; font-size: 0.85em; color: #6b7280;"></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div id="telemetry-message" style="margin-top: 10px; padding: 8px 12px; border-radius: 4px; display: none;"></div>
+                        <p style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                            Enable/disable anonymous usage data collection for improving YSocial.
+                        </p>
+                        <script>
+                            function updateTelemetryStatus(enabled) {
+                                const status = document.getElementById('telemetry-status');
+                                if (enabled) {
+                                    status.innerHTML = '<span style="color: #22c55e;">● Enabled</span>';
+                                } else {
+                                    status.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+                                }
+                            }
+                            
+                            function showTelemetryMessage(message, isError) {
+                                const msgDiv = document.getElementById('telemetry-message');
+                                msgDiv.textContent = message;
+                                msgDiv.style.display = 'block';
+                                msgDiv.style.backgroundColor = isError ? '#fee2e2' : '#dcfce7';
+                                msgDiv.style.color = isError ? '#dc3545' : '#16a34a';
+                                setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
+                            }
+                            
+                            document.getElementById('telemetry_enabled').addEventListener('change', function() {
+                                const enabled = this.checked;
+                                updateTelemetryStatus(enabled);
+                                
+                                fetch('/admin/update_telemetry_preference_ajax', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ telemetry_enabled: enabled })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        showTelemetryMessage('Telemetry setting updated', false);
+                                    } else {
+                                        showTelemetryMessage(data.message || 'Failed to update', true);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    showTelemetryMessage('Error updating setting', true);
+                                });
+                            });
+                            
+                            // Initialize status on load
+                            if (!window.telemetryInitialized) {
+                                window.telemetryInitialized = true;
+                                updateTelemetryStatus(document.getElementById('telemetry_enabled').checked);
+                            }
+                        </script>
+                    </div>
+
+                    <!-- Process Watchdog -->
+                    <div class="misc-compact-box">
+                        <h3>Process Watchdog</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Monitor and auto-restart hung server/client processes.</p>
+                        </div>
+                        <div class="box-lines">
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">Check Interval</span>
+                                <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="watchdog_interval" class="input" style="width: 80px;" 
+                                           value="{{ watchdog_interval | default(15) }}" min="1" max="1440">
+                                    <span style="font-size: 0.9em; color: #6b7280;">minutes</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="save-watchdog-interval" class="button is-solid primary-button" style="flex: 1;">
+                                Save Interval
+                            </button>
+                            <button id="run-watchdog-now" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white;">
+                                <i class="mdi mdi-refresh"></i> Run Now
+                            </button>
+                        </div>
+                        <div id="watchdog-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                            Monitors server/client processes for hangs and auto-restarts them.
+                        </div>
+                        <script>
+                            document.getElementById('save-watchdog-interval').addEventListener('click', function() {
+                                const interval = document.getElementById('watchdog_interval').value;
+                                const statusDiv = document.getElementById('watchdog-status');
+                                
+                                fetch('/admin/watchdog_set_interval', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: `watchdog_interval=${interval}`
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Interval updated successfully</span>';
+                                    } else {
+                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Failed to update interval</span>';
+                                    }
+                                    setTimeout(() => {
+                                        statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
+                                    }, 3000);
+                                })
+                                .catch(error => {
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + error.message + '</span>';
+                                });
+                            });
+                            
+                            document.getElementById('run-watchdog-now').addEventListener('click', function() {
+                                const btn = this;
+                                const statusDiv = document.getElementById('watchdog-status');
+                                
+                                btn.disabled = true;
+                                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Running...';
+                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Running watchdog check...</span>';
+                                
+                                fetch('/admin/watchdog_run_now', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
+                                    
+                                    if (data.error) {
+                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + data.error + '</span>';
+                                    } else {
+                                        const msg = 'Checked: ' + data.processes_checked + 
+                                                   ', Restarted: ' + data.processes_restarted + 
+                                                   ', Healthy: ' + data.processes_healthy;
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
+                                    }
+                                })
+                                .catch(error => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error running watchdog</span>';
+                                });
+                            });
+                        </script>
+                    </div>
+
+                    <!-- System Updates -->
+                    <div class="misc-compact-box">
+                        <h3>System Updates</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Check for new YSocial releases and stay up to date.</p>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button id="check-updates-btn" class="button is-solid primary-button" style="width: 100%;">
+                                <i class="mdi mdi-update"></i> Check for Updates
+                            </button>
+                        </div>
+                        <div id="update-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                            Click to check if a newer version of YSocial is available.
+                        </div>
+                        <script>
+                            document.getElementById('check-updates-btn').addEventListener('click', function() {
+                                const btn = this;
+                                const statusDiv = document.getElementById('update-status');
+                                
+                                btn.disabled = true;
+                                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Checking...';
+                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Checking for updates...</span>';
+                                
+                                fetch('/admin/check_for_updates', { method: 'POST' })
+                                .then(response => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
+                                    
+                                    if (response.redirected) {
+                                        window.location.href = response.url;
+                                    } else {
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Check complete</span>';
+                                        setTimeout(() => {
+                                            statusDiv.innerHTML = 'Click to check if a newer version of YSocial is available.';
+                                        }, 3000);
+                                    }
+                                })
+                                .catch(error => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error checking for updates</span>';
+                                });
+                            });
+                        </script>
+                    </div>
+
+                    <!-- Automatic Log Synchronization -->
                     <div class="misc-compact-box">
                         <h3>Automatic Log Synchronization</h3>
                         <div class="help-block" style="margin-bottom: 15px;">
-                            <p>Configure automatic periodic reading of logs from running experiments. This helps ensure plot data is continuously updated even when log files rotate, preventing data points from being lost during long-running simulations.</p>
+                            <p>Periodic reading of logs from running experiments to keep plot data updated.</p>
                         </div>
 
                         <div id="log-sync-settings-container">
                             <div class="box-lines">
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Enable Automatic Sync</span>
-                                    <span class="right" style="flex: 1;">
+                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Enable Auto Sync</span>
+                                    <span class="right" style="flex: 1; display: flex; align-items: center;">
                                         <label class="switch-small">
                                             <input type="checkbox" id="log_sync_enabled" checked>
                                             <span class="slider-small round"></span>
@@ -1745,14 +1998,14 @@
                                     </span>
                                 </div>
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Sync Interval</span>
+                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Sync Interval</span>
                                     <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
                                         <input type="number" id="sync_interval_minutes" class="input" style="width: 80px;" min="1" max="1440" value="10">
-                                        <span style="font-size: 0.9em; color: #6b7280;">minutes (1-1440)</span>
+                                        <span style="font-size: 0.9em; color: #6b7280;">minutes</span>
                                     </span>
                                 </div>
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
-                                    <span class="left" style="flex: 0 0 200px; font-weight: 500;">Last Sync</span>
+                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Last Sync</span>
                                     <span class="right" style="flex: 1;">
                                         <span id="last-sync-time" style="font-size: 0.9em; color: #6b7280;">Never</span>
                                     </span>
@@ -1897,21 +2150,17 @@
                         </script>
                     </div>
 
+                    <!-- About System Settings -->
                     <div class="misc-compact-box">
-                        <h3>About Log Synchronization</h3>
+                        <h3>About System Settings</h3>
                         <div class="help-block">
-                            <p><strong>Why is this needed?</strong></p>
-                            <p>Long-running simulations generate rotating log files. If there's a gap between log reads that spans a log rotation, some data points can be lost from the execution trend plots and remaining time estimates.</p>
+                            <p><strong>Telemetry:</strong> Anonymous usage data helps improve YSocial. No personal data is collected.</p>
                             <br>
-                            <p><strong>How does it work?</strong></p>
-                            <p>The automatic sync periodically reads logs from all running experiments in the background, ensuring that the database metrics tables are kept up to date even during log rotations.</p>
+                            <p><strong>Process Watchdog:</strong> Monitors running experiments and automatically restarts hung processes to ensure continuous operation.</p>
                             <br>
-                            <p><strong>Recommended Settings:</strong></p>
-                            <ul style="margin: 8px 0 0 20px; color: #6b7280;">
-                                <li>For most simulations: 10-15 minutes</li>
-                                <li>For fast simulations: 5 minutes</li>
-                                <li>For slow simulations: 30-60 minutes</li>
-                            </ul>
+                            <p><strong>Log Synchronization:</strong> Prevents data loss during log rotation by periodically reading logs from active experiments.</p>
+                            <br>
+                            <p><strong>System Updates:</strong> Check for new YSocial releases to access the latest features and improvements.</p>
                         </div>
                     </div>
                 </div>
