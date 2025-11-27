@@ -3726,7 +3726,7 @@ def get_log_sync_settings():
             "enabled": settings.enabled,
             "sync_interval_minutes": settings.sync_interval_minutes,
             "last_sync": (
-                settings.last_sync.isoformat() if settings.last_sync else None
+                settings.last_sync.isoformat() + "Z" if settings.last_sync else None
             ),
         }
     )
