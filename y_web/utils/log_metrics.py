@@ -568,6 +568,10 @@ def update_client_log_metrics(exp_id, client_id, log_file_path):
     """
     Update client log metrics by reading new log entries.
 
+    Only processes the main log file ({client_name}_client.log) for incremental updates.
+    Rotated log files (.log.1, .log.2, etc.) are skipped because their content
+    was already processed when they were the main log file.
+
     Args:
         exp_id: Experiment ID
         client_id: Client ID
@@ -580,11 +584,26 @@ def update_client_log_metrics(exp_id, client_id, log_file_path):
     _ensure_session_clean(db.session)
 
     try:
+        # Only process the main log file, not rotated ones
+        # Rotated logs contain data we already processed when they were the main log
+        if not os.path.exists(log_file_path):
+            logger.warning(f"Client log file not found: {log_file_path}")
+            return True
+
         # Get relative file path (for storage in database)
         file_name = os.path.basename(log_file_path)
 
-        # Get last offset
+        # Get last offset for this specific file
         last_offset = get_log_file_offset(exp_id, "client", file_name, client_id)
+
+        # Check if file has been rotated (size is smaller than offset)
+        file_size = os.path.getsize(log_file_path)
+        if file_size < last_offset:
+            # File was rotated, reset offset to read from beginning
+            logger.info(
+                f"Client log file {file_name} was rotated (size {file_size} < offset {last_offset}), resetting offset"
+            )
+            last_offset = 0
 
         # Parse log file incrementally
         new_offset, metrics = parse_client_log_incremental(

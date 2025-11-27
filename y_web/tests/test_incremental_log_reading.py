@@ -294,3 +294,81 @@ class TestIncrementalLogReading:
                 # Cleanup
                 if os.path.exists(log_file):
                     os.remove(log_file)
+
+    def test_client_log_rotation_resets_offset(self, app, db):
+        """Test that client log rotation is detected and offset is reset."""
+        from y_web.utils.log_metrics import update_client_log_metrics
+
+        with app.app_context():
+            # Create a temporary log file
+            fd, log_file = tempfile.mkstemp(suffix=".log")
+
+            try:
+                # Write initial log entries (larger content)
+                with os.fdopen(fd, "w") as f:
+                    f.write(
+                        '{"method_name": "post", "execution_time_seconds": 1.5, "day": 0, "hour": 0}\n'
+                    )
+                    f.write(
+                        '{"method_name": "comment", "execution_time_seconds": 0.8, "day": 0, "hour": 0}\n'
+                    )
+                    f.write(
+                        '{"method_name": "post", "execution_time_seconds": 1.2, "day": 0, "hour": 0}\n'
+                    )
+                    f.write(
+                        '{"method_name": "share", "execution_time_seconds": 0.5, "day": 0, "hour": 0}\n'
+                    )
+
+                exp_id = 1
+                client_id = 1
+
+                # First sync - process all entries
+                result = update_client_log_metrics(exp_id, client_id, log_file)
+                assert result is True
+
+                # Verify initial metrics
+                post_metric = ClientLogMetrics.query.filter_by(
+                    exp_id=exp_id,
+                    client_id=client_id,
+                    aggregation_level="daily",
+                    day=0,
+                    method_name="post",
+                ).first()
+                assert post_metric is not None
+                assert post_metric.call_count == 2
+
+                # Get the stored offset
+                file_name = os.path.basename(log_file)
+                stored_offset = get_log_file_offset(exp_id, "client", file_name, client_id)
+                assert stored_offset > 0
+
+                # Simulate log rotation - truncate file with smaller content (new entries)
+                with open(log_file, "w") as f:
+                    f.write(
+                        '{"method_name": "read", "execution_time_seconds": 0.3, "day": 1, "hour": 0}\n'
+                    )
+
+                # Verify file is now smaller than stored offset
+                file_size = os.path.getsize(log_file)
+                assert file_size < stored_offset
+
+                # Second sync - should detect rotation and reset offset
+                result = update_client_log_metrics(exp_id, client_id, log_file)
+                assert result is True
+
+                # Verify the new entry was processed (day 1 metric should exist)
+                read_metric = ClientLogMetrics.query.filter_by(
+                    exp_id=exp_id,
+                    client_id=client_id,
+                    aggregation_level="daily",
+                    day=1,
+                    method_name="read",
+                ).first()
+                assert read_metric is not None
+                assert read_metric.call_count == 1
+                assert read_metric.total_execution_time == pytest.approx(0.3, rel=1e-4)
+
+            finally:
+                # Cleanup
+                if os.path.exists(log_file):
+                    os.remove(log_file)
