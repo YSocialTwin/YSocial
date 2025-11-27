@@ -65,14 +65,24 @@ def check_for_updates():
 
 
 def __get_os():
-    name = platform.system()
-    if name == "Darwin":
+    system = platform.system()
+    machine = platform.machine().lower()
+
+    if system == "Darwin":
         return "macos"
-    elif name == "Windows":
-        return "windows"
-    elif name == "Linux":
+
+    elif system == "Windows":
+        # Detect Windows ARM (e.g., Snapdragon PCs)
+        # Common machine values: AMD64, x86, ARM64
+        if "arm" in machine:
+            return "windows-arm"
+        else:
+            return "windows-x86"
+
+    elif system == "Linux":
         return "linux"
-    return "unknown"
+
+    return "source"
 
 
 def version_tuple(v):
