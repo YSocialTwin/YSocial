@@ -3351,9 +3351,12 @@ def copy_experiment():
         pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
 
         # Copy all files from source to new folder, excluding log files
+        import re
+        log_pattern = re.compile(r'\.log(\.\d+)?$')  # Matches .log, .log.1, .log.2, etc.
+        
         for item in os.listdir(source_folder):
-            # Skip log files (server logs and client logs)
-            if item.endswith(".log"):
+            # Skip log files (server logs and client logs) including rotated logs
+            if log_pattern.search(item):
                 continue
 
             source_item = os.path.join(source_folder, item)
