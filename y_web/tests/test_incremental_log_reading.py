@@ -339,7 +339,9 @@ class TestIncrementalLogReading:
 
                 # Get the stored offset
                 file_name = os.path.basename(log_file)
-                stored_offset = get_log_file_offset(exp_id, "client", file_name, client_id)
+                stored_offset = get_log_file_offset(
+                    exp_id, "client", file_name, client_id
+                )
                 assert stored_offset > 0
 
                 # Simulate log rotation - truncate file with smaller content (new entries)
