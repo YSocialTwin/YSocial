@@ -28,13 +28,67 @@ from sklearn.utils import deprecated
 from y_web import db
 from y_web.models import (
     Client,
+    Client_Execution,
     Exps,
     Ollama_Pull,
+    Population,
 )
 from y_web.utils.path_utils import get_base_path, get_resource_path, get_writable_path
 
 # Dictionary to track Ollama model download processes
 ollama_processes = {}
+
+# Flag to enable/disable watchdog monitoring
+WATCHDOG_ENABLED = True
+
+# Registry to keep references to subprocess.Popen objects and their log file handles.
+# This prevents garbage collection of running processes and their log files.
+# Key: process_id (e.g., "server_1", "client_5")
+# Value: dict with 'process', 'stdout_file', 'stderr_file'
+_process_registry = {}
+
+
+def _register_process(process_id, process, stdout_file=None, stderr_file=None):
+    """
+    Register a subprocess.Popen object to prevent garbage collection.
+
+    This keeps the process object and its log file handles alive for the
+    lifetime of the application, preventing potential issues with:
+    - Process becoming zombie due to GC of Popen object
+    - Log file handles being closed prematurely
+
+    Args:
+        process_id: Unique identifier for the process (e.g., "server_1", "client_5")
+        process: The subprocess.Popen object
+        stdout_file: The stdout log file handle (optional)
+        stderr_file: The stderr log file handle (optional)
+    """
+    global _process_registry
+    _process_registry[process_id] = {
+        "process": process,
+        "stdout_file": stdout_file,
+        "stderr_file": stderr_file,
+    }
+
+
+def _unregister_process(process_id):
+    """
+    Unregister a subprocess.Popen object and close its log file handles.
+
+    Args:
+        process_id: The unique identifier for the process
+    """
+    global _process_registry
+    if process_id in _process_registry:
+        entry = _process_registry.pop(process_id)
+        # Close log file handles if they exist
+        for key in ("stdout_file", "stderr_file"):
+            fh = entry.get(key)
+            if fh and fh != subprocess.DEVNULL:
+                try:
+                    fh.close()
+                except Exception:
+                    pass
 
 
 def cleanup_server_processes_from_db():
@@ -122,6 +176,15 @@ def cleanup_client_processes_from_db():
 def stop_all_exps():
     """Stop all experiments and terminate server and client processes"""
     try:
+        # Stop watchdog first to prevent auto-restarts during shutdown
+        if WATCHDOG_ENABLED:
+            try:
+                from y_web.utils.process_watchdog import stop_watchdog
+
+                stop_watchdog()
+            except Exception as e:
+                print(f"Warning: Could not stop watchdog: {e}")
+
         # Terminate all running server processes
         cleanup_server_processes_from_db()
 
@@ -394,6 +457,19 @@ def terminate_server_process(exp_id):
         bool: True if process was found and terminated, False otherwise
     """
     try:
+        # Unregister from watchdog first
+        if WATCHDOG_ENABLED:
+            try:
+                from y_web.utils.process_watchdog import get_watchdog
+
+                watchdog = get_watchdog()
+                watchdog.unregister_process(f"server_{exp_id}")
+            except Exception as e:
+                print(f"Warning: Could not unregister server from watchdog: {e}")
+
+        # Unregister from process registry (closes log file handles)
+        _unregister_process(f"server_{exp_id}")
+
         # Get experiment from database
         exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
         if not exp or not exp.server_pid:
@@ -458,6 +534,514 @@ def __terminate_process(pid):
             os.kill(pid, signal.SIGKILL)
     except Exception as e:
         print(f"Error terminating process {pid}: {e}")
+
+
+def _force_terminate_process_tree(pid):
+    """
+    Forcefully terminate a process and all its children.
+
+    This is essential for hung gunicorn servers where the parent process
+    and its workers may be unresponsive. We use psutil to find and kill
+    all child processes, then kill the parent.
+
+    Args:
+        pid: the process ID to terminate
+    """
+    try:
+        import psutil
+
+        try:
+            parent = psutil.Process(pid)
+        except psutil.NoSuchProcess:
+            print(f"Process {pid} no longer exists.")
+            return
+
+        # Get all children before killing anything
+        children = []
+        try:
+            children = parent.children(recursive=True)
+        except psutil.NoSuchProcess:
+            pass
+
+        # Try graceful termination first (SIGTERM)
+        try:
+            parent.terminate()
+        except psutil.NoSuchProcess:
+            pass
+
+        # Terminate children
+        for child in children:
+            try:
+                child.terminate()
+            except psutil.NoSuchProcess:
+                pass
+
+        # Wait briefly for graceful shutdown
+        gone, alive = psutil.wait_procs([parent] + children, timeout=3)
+
+        # Force kill any remaining processes
+        for p in alive:
+            try:
+                print(f"Force killing process {p.pid}...")
+                p.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+        # Final wait to ensure they're dead
+        psutil.wait_procs(alive, timeout=2)
+
+        print(f"Terminated process tree for PID {pid} ({len(children)} children).")
+
+    except ImportError:
+        # Fallback if psutil is not available
+        print("psutil not available, using basic termination...")
+        try:
+            os.kill(pid, signal.SIGTERM)
+            time.sleep(1)
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+    except Exception as e:
+        print(f"Error terminating process tree for {pid}: {e}")
+
+
+def _terminate_processes_on_port(port):
+    """
+    Terminate all processes using a specific port.
+
+    This is a safety net to ensure the port is freed even if the main
+    process termination didn't work properly (e.g., zombie workers).
+
+    Args:
+        port: the port number
+    """
+    import platform
+
+    try:
+        if platform.system() == "Windows":
+            # Windows: use netstat to find PIDs
+            result = subprocess.run(
+                ["netstat", "-ano"],
+                capture_output=True,
+                text=True,
+            )
+            for line in result.stdout.split("\n"):
+                if f":{port}" in line and "LISTENING" in line:
+                    parts = line.split()
+                    if parts:
+                        pid = int(parts[-1])
+                        print(f"Found process {pid} using port {port}, terminating...")
+                        _force_terminate_process_tree(pid)
+        else:
+            # Unix: use lsof to find PIDs
+            result = subprocess.run(
+                ["lsof", "-t", "-i", f":{port}"],
+                capture_output=True,
+                text=True,
+            )
+            pids = result.stdout.strip().split("\n")
+            for pid_str in pids:
+                if pid_str:
+                    pid = int(pid_str)
+                    print(f"Found process {pid} using port {port}, terminating...")
+                    _force_terminate_process_tree(pid)
+    except Exception as e:
+        print(f"Error terminating processes on port {port}: {e}")
+
+
+def _find_processes_with_open_file(file_path):
+    """
+    Find all processes that have a specific file open.
+
+    This is OS-independent and uses psutil to check open files.
+    Useful for finding processes that are holding database locks.
+
+    Args:
+        file_path: the path to the file to check
+
+    Returns:
+        list: list of psutil.Process objects that have the file open
+    """
+    try:
+        import psutil
+    except ImportError:
+        print("Warning: psutil not available, cannot check for file locks")
+        return []
+
+    lockers = []
+    # Normalize the file path for comparison
+    try:
+        normalized_path = os.path.realpath(file_path)
+    except Exception:
+        normalized_path = file_path
+
+    for proc in psutil.process_iter(["pid", "open_files", "name"]):
+        try:
+            open_files = proc.info.get("open_files") or []
+            for f in open_files:
+                # Check both original path and normalized path
+                if f.path == file_path or f.path == normalized_path:
+                    lockers.append(proc)
+                    break
+        except (psutil.AccessDenied, psutil.NoSuchProcess, psutil.ZombieProcess):
+            # Skip processes we can't access
+            pass
+        except Exception as e:
+            # Skip any other errors for individual processes
+            pass
+
+    return lockers
+
+
+def _terminate_processes_holding_database(db_path):
+    """
+    Terminate all processes that have the database file open.
+
+    This is essential for SQLite databases where processes may hold
+    locks that persist even after the main process is terminated.
+    Also works for finding processes with open connections to
+    database files.
+
+    Args:
+        db_path: the path to the database file (e.g., database_server.db)
+    """
+    try:
+        lockers = _find_processes_with_open_file(db_path)
+        if lockers:
+            print(f"Found {len(lockers)} process(es) holding database file: {db_path}")
+            for proc in lockers:
+                try:
+                    print(
+                        f"Terminating process {proc.pid} ({proc.name()}) "
+                        f"holding database..."
+                    )
+                    # Try graceful termination first
+                    proc.terminate()
+                except Exception as e:
+                    print(f"Error terminating process {proc.pid}: {e}")
+
+            # Wait briefly for processes to terminate gracefully
+            try:
+                import psutil
+
+                gone, alive = psutil.wait_procs(lockers, timeout=3)
+                # Force kill any remaining processes
+                for proc in alive:
+                    try:
+                        print(f"Force killing process {proc.pid}...")
+                        proc.kill()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+            print(f"Database file locking processes terminated.")
+        else:
+            print(f"No processes found holding database file: {db_path}")
+
+    except Exception as e:
+        print(f"Error checking/terminating database locking processes: {e}")
+
+
+def _terminate_processes_holding_experiment_database(exp):
+    """
+    Terminate all processes that have the experiment's database file(s) open.
+
+    This handles both SQLite (checks for open file handles) and PostgreSQL
+    (checks for processes with database connections).
+
+    Args:
+        exp: the experiment object
+    """
+    try:
+        # Get the main database URI to determine type
+        db_uri_main = current_app.config.get("SQLALCHEMY_DATABASE_URI", "")
+    except RuntimeError:
+        # No app context - try to import and get from environment
+        db_uri_main = os.environ.get("DATABASE_URL", "sqlite")
+
+    if "postgresql" in db_uri_main:
+        # For PostgreSQL, we can't easily check open file handles
+        # The database connections are network-based
+        # However, we can try to find processes that might be connected
+        # by looking for python processes that might be the old server
+        print(
+            "PostgreSQL database detected - terminating processes "
+            "will be handled by port/process termination"
+        )
+        return
+
+    # For SQLite, find and terminate processes holding the database file
+    # Get writable path for experiments directory
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
+
+    # Construct the full database path
+    if "database_server.db" in exp.db_name:
+        db_file_path = os.path.join(y_web_dir, exp.db_name)
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        db_file_path = os.path.join(y_web_dir, "experiments", uid, "database_server.db")
+
+    if os.path.exists(db_file_path):
+        print(f"Checking for processes holding database: {db_file_path}")
+        _terminate_processes_holding_database(db_file_path)
+
+        # Also check for SQLite journal/WAL files that might be locked
+        for suffix in ["-journal", "-wal", "-shm"]:
+            journal_path = db_file_path + suffix
+            if os.path.exists(journal_path):
+                _terminate_processes_holding_database(journal_path)
+    else:
+        print(f"Database file not found: {db_file_path}")
+
+
+def _is_port_available(port):
+    """
+    Check if a port is available for binding.
+
+    Args:
+        port: the port number to check
+
+    Returns:
+        bool: True if the port is available, False otherwise
+    """
+    import socket
+
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.settimeout(1)
+            result = s.connect_ex(("127.0.0.1", port))
+            # If connect_ex returns non-zero, the port is not in use
+            return result != 0
+    except Exception:
+        # If we can't check, assume it's available
+        return True
+
+
+# Server port range constants
+SERVER_PORT_MIN = 5000
+SERVER_PORT_MAX = 6000
+
+
+def _get_ports_allocated_to_experiments(exclude_exp_id=None):
+    """
+    Get all ports allocated to experiments in the database.
+
+    This includes both active and inactive experiments to ensure
+    no port conflicts when restarting servers.
+
+    Args:
+        exclude_exp_id: optional experiment ID to exclude from the list
+
+    Returns:
+        set: Set of port numbers allocated to experiments
+    """
+    try:
+        query = db.session.query(Exps.port).filter(Exps.port.isnot(None))
+        if exclude_exp_id is not None:
+            query = query.filter(Exps.idexp != exclude_exp_id)
+        result = query.all()
+        return {row[0] for row in result if row[0] is not None}
+    except Exception as e:
+        print(f"Warning: Could not query allocated ports: {e}")
+        return set()
+
+
+def _find_new_available_port(
+    exclude_exp_id=None, exclude_current_port=None, min_port=None, max_port=None
+):
+    """
+    Find a new available port that is:
+    1. Not currently in use (socket check)
+    2. Not allocated to any other experiment in the database
+    3. Not the same as the current experiment's port (to force a fresh port)
+
+    This is the robust version used for server starts to ensure
+    complete port isolation between experiments.
+
+    Args:
+        exclude_exp_id: experiment ID to exclude when checking allocated ports
+        exclude_current_port: the current port of this experiment to exclude
+                             (ensures we always get a NEW port)
+        min_port: minimum port number (default: SERVER_PORT_MIN)
+        max_port: maximum port number (default: SERVER_PORT_MAX)
+
+    Returns:
+        int: an available port number, or None if none found
+    """
+    # Set defaults
+    if min_port is None:
+        min_port = SERVER_PORT_MIN
+    if max_port is None:
+        max_port = SERVER_PORT_MAX
+
+    # Get all ports allocated to other experiments
+    allocated_ports = _get_ports_allocated_to_experiments(exclude_exp_id)
+
+    # Also exclude the current experiment's port to ensure we get a fresh port
+    if exclude_current_port is not None:
+        allocated_ports.add(exclude_current_port)
+
+    print(f"Ports to avoid: {sorted(allocated_ports) if allocated_ports else 'none'}")
+
+    # Search entire allowed range for a port that is:
+    # 1. Not in use by a running process
+    # 2. Not allocated to another experiment
+    # 3. Not the current experiment's port
+    for port in range(min_port, max_port + 1):
+        if port not in allocated_ports and _is_port_available(port):
+            return port
+
+    return None
+
+
+def _find_available_port(original_port, port_range=100, min_port=None, max_port=None):
+    """
+    Find an available port near the original port.
+
+    NOTE: This is the legacy function. For server starts, use
+    _find_new_available_port() which also checks database allocations.
+
+    Searches for a free port starting from original_port, then tries
+    ports in the specified range. For servers, use min_port=5000, max_port=6000.
+
+    Args:
+        original_port: the preferred port number
+        port_range: the range of ports to search (default 100)
+        min_port: minimum port number (default: 1024)
+        max_port: maximum port number (default: 65535)
+
+    Returns:
+        int: an available port number, or None if none found
+    """
+    # Set defaults
+    if min_port is None:
+        min_port = 1024
+    if max_port is None:
+        max_port = 65535
+
+    # First try the original port
+    if _is_port_available(original_port):
+        return original_port
+
+    # Search in range around original port, respecting min/max bounds
+    half_range = port_range // 2
+    start_port = max(min_port, original_port - half_range)
+    end_port = min(max_port, original_port + half_range)
+
+    for port in range(start_port, end_port + 1):
+        if port != original_port and _is_port_available(port):
+            return port
+
+    # If not found in preferred range, search entire allowed range
+    for port in range(min_port, max_port + 1):
+        if port != original_port and _is_port_available(port):
+            return port
+
+    return None
+
+
+def _update_server_port_in_configs(exp, new_port):
+    """
+    Update the server port in all configuration files and database.
+
+    This updates:
+    1. The experiment's config_server.json
+    2. All client config files (client_*.json) in the experiment folder
+    3. The database entry for the experiment
+
+    Args:
+        exp: the experiment object
+        new_port: the new port number
+
+    Returns:
+        bool: True if all updates succeeded, False otherwise
+    """
+    import re
+
+    old_port = exp.port
+
+    if old_port == new_port:
+        return True  # No change needed
+
+    print(f"Watchdog: Updating port from {old_port} to {new_port} in configs...")
+
+    # Get experiment directory
+    y_web_dir = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+
+    if "database_server.db" in exp.db_name:
+        exp_dir = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip(os.sep)
+        )
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        exp_dir = os.path.join(y_web_dir, "experiments", uid)
+
+    success = True
+
+    # 1. Update config_server.json
+    server_config_path = os.path.join(exp_dir, "config_server.json")
+    try:
+        if os.path.exists(server_config_path):
+            with open(server_config_path, "r") as f:
+                server_config = json.load(f)
+
+            server_config["port"] = new_port
+
+            with open(server_config_path, "w") as f:
+                json.dump(server_config, f, indent=4)
+
+            print(f"Watchdog: Updated config_server.json with port {new_port}")
+        else:
+            print(
+                f"Watchdog: Warning - config_server.json not found at {server_config_path}"
+            )
+    except Exception as e:
+        print(f"Watchdog: Error updating config_server.json: {e}")
+        success = False
+
+    # 2. Update all client config files
+    try:
+        if os.path.isdir(exp_dir):
+            for item in os.listdir(exp_dir):
+                if item.startswith("client") and item.endswith(".json"):
+                    client_config_path = os.path.join(exp_dir, item)
+                    try:
+                        with open(client_config_path, "r") as f:
+                            client_config = json.load(f)
+
+                        # Update the API endpoint in servers section
+                        if (
+                            "servers" in client_config
+                            and "api" in client_config["servers"]
+                        ):
+                            old_api = client_config["servers"]["api"]
+                            # Replace port in URL - handles both with and without trailing slash
+                            new_api = re.sub(r":(\d+)(/|$)", f":{new_port}\\2", old_api)
+                            client_config["servers"]["api"] = new_api
+
+                            with open(client_config_path, "w") as f:
+                                json.dump(client_config, f, indent=4)
+
+                            print(f"Watchdog: Updated {item} with new port")
+                    except Exception as e:
+                        print(f"Watchdog: Error updating {item}: {e}")
+                        success = False
+    except Exception as e:
+        print(f"Watchdog: Error listing experiment directory: {e}")
+        success = False
+
+    # 3. Update database entry
+    try:
+        exp.port = new_port
+        db.session.commit()
+        print(f"Watchdog: Updated database with new port {new_port}")
+    except Exception as e:
+        print(f"Watchdog: Error updating database: {e}")
+        success = False
+
+    return success
 
 
 def get_server_process_status(exp_id):
@@ -564,6 +1148,70 @@ def start_server(exp):
             f"Please ensure the experiment is properly configured."
         )
 
+    # === ROBUST PORT ALLOCATION ===
+    # Every time a YServer starts:
+    # 1. Terminate processes holding the database file (for SQLite)
+    # 2. Kill all processes attached to the current assigned port (for safety)
+    # 3. Find a NEW port in 5000-6000 that is free AND not allocated to other experiments
+    # 4. Update configs and database with the new port
+    # 5. Start server on the new port
+
+    old_port = exp.port
+    print(
+        f"Starting robust port allocation for experiment {exp.idexp} "
+        f"(current port: {old_port})..."
+    )
+
+    # Step 1: Terminate any processes holding the database file (SQLite safety)
+    print("Step 1: Terminating any processes holding the database file...")
+    _terminate_processes_holding_experiment_database(exp)
+    time.sleep(0.5)  # Brief pause to allow database release
+
+    # Step 2: Kill all processes on the currently assigned port (port safety)
+    if old_port:
+        print(f"Step 2: Terminating any processes on port {old_port}...")
+        _terminate_processes_on_port(old_port)
+        time.sleep(1)  # Brief pause to allow port release
+
+    # Step 3: Find a new available port that is:
+    # - Not currently in use by any process (socket check)
+    # - Not allocated to any other experiment in the database
+    # - Not the same as the current experiment's port (always get a fresh port)
+    print(
+        f"Step 3: Finding new available port in range "
+        f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX} (excluding current port {old_port})..."
+    )
+    new_port = _find_new_available_port(
+        exclude_exp_id=exp.idexp,
+        exclude_current_port=old_port,
+        min_port=SERVER_PORT_MIN,
+        max_port=SERVER_PORT_MAX,
+    )
+
+    if new_port:
+        print(f"Found available port: {new_port}")
+
+        # Step 4: Update config files and database with the new port
+        # (always update since we're guaranteed a different port)
+        print(f"Step 4: Updating configurations from port {old_port} to {new_port}...")
+        if _update_server_port_in_configs(exp, new_port):
+            print(f"Successfully updated port to {new_port}")
+            # Refresh the experiment object to get updated port
+            db.session.refresh(exp)
+        else:
+            print(
+                f"Warning: Some config updates failed. "
+                f"Server may fail to start on port {new_port}"
+            )
+    else:
+        # No port found - this is a serious error
+        raise RuntimeError(
+            f"Could not find available port in range "
+            f"{SERVER_PORT_MIN}-{SERVER_PORT_MAX}. "
+            f"All ports are either in use or allocated to other experiments."
+        )
+
+    # Step 5: Start server on the new port
     # Check database type to decide whether to use gunicorn or direct Python
     db_uri_main = current_app.config["SQLALCHEMY_DATABASE_URI"]
     use_gunicorn = db_uri_main.startswith("postgresql")
@@ -900,7 +1548,93 @@ def start_server(exp):
         except Exception as e:
             print(f"Warning: Could not configure database: {e}")
 
+    # Register with watchdog for automatic restart on hang/death
+    if WATCHDOG_ENABLED:
+        try:
+            _register_server_with_watchdog(exp, process.pid, log_dir)
+        except Exception as e:
+            print(f"Warning: Could not register server with watchdog: {e}")
+
+    # Register process to prevent garbage collection and keep log file handles open
+    _register_process(f"server_{exp.idexp}", process, out_file, err_file)
+
     return process
+
+
+def _register_server_with_watchdog(exp, pid, log_dir):
+    """
+    Register a server process with the watchdog for monitoring.
+
+    Args:
+        exp: the experiment object
+        pid: the process ID
+        log_dir: directory containing log files
+    """
+    from y_web.utils.process_watchdog import get_watchdog
+
+    # Use _server.log as the heartbeat file (this is the main server log)
+    log_file = os.path.join(log_dir, "_server.log")
+
+    # Store only the ID to avoid detached SQLAlchemy instance issues
+    exp_id = exp.idexp
+
+    # Build server URL for status checks
+    server_url = f"http://{exp.server}:{exp.port}"
+
+    # Create restart callback
+    def restart_callback():
+        """Callback to restart the server process."""
+        try:
+            # Import here to avoid circular imports
+            from y_web import create_app
+
+            # Create app context for database operations
+            app = create_app()
+            with app.app_context():
+                # Re-fetch experiment from database to get fresh state
+                fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+                if fresh_exp:
+                    # Terminate any existing process using robust termination
+                    # This ensures proper cleanup of hung processes
+                    if fresh_exp.server_pid:
+                        pid_to_kill = fresh_exp.server_pid
+                        print(
+                            f"Watchdog: Terminating server process tree (PID {pid_to_kill})..."
+                        )
+                        _force_terminate_process_tree(pid_to_kill)
+
+                        # Clear PID from database for consistency
+                        fresh_exp.server_pid = None
+                        db.session.commit()
+
+                    # start_server() will handle:
+                    # 1. Killing any processes on the old port
+                    # 2. Finding a new port not allocated to any experiment
+                    # 3. Updating configs and database
+                    # 4. Starting the server
+                    print(f"Watchdog: Starting new server process...")
+                    new_process = start_server(fresh_exp)
+                    return new_process.pid if new_process else None
+        except Exception as e:
+            print(f"Error in server restart callback: {e}")
+        return None
+
+    # Get or create watchdog and register process
+    watchdog = get_watchdog()
+    process_id = f"server_{exp_id}"
+
+    watchdog.register_process(
+        process_id=process_id,
+        pid=pid,
+        log_file=log_file,
+        restart_callback=restart_callback,
+        process_type="server",
+        server_url=server_url,
+    )
+
+    # Start watchdog if not already running
+    if not watchdog.is_running:
+        watchdog.start()
 
 
 @deprecated
@@ -1282,7 +2016,21 @@ def terminate_client(cli, pause=False):
 
     Args:
         cli: the client object
+        pause: whether this is a pause (may be resumed) or full stop
     """
+    # Unregister from watchdog first
+    if WATCHDOG_ENABLED:
+        try:
+            from y_web.utils.process_watchdog import get_watchdog
+
+            watchdog = get_watchdog()
+            watchdog.unregister_process(f"client_{cli.id}")
+        except Exception as e:
+            print(f"Warning: Could not unregister client from watchdog: {e}")
+
+    # Unregister from process registry (closes log file handles)
+    _unregister_process(f"client_{cli.id}")
+
     if not cli.pid:
         print(f"No PID found for client {cli.name}")
         return
@@ -1489,4 +2237,125 @@ def start_client(exp, cli, population, resume=True):
     cli.pid = process.pid
     db.session.commit()
 
+    # Register with watchdog for automatic restart on hang/death
+    if WATCHDOG_ENABLED:
+        try:
+            _register_client_with_watchdog(exp, cli, population, process.pid, log_dir)
+        except Exception as e:
+            print(f"Warning: Could not register client with watchdog: {e}")
+
+    # Register process to prevent garbage collection and keep log file handles open
+    _register_process(f"client_{cli.id}", process, out_file, err_file)
+
     return process
+
+
+def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
+    """
+    Register a client process with the watchdog for monitoring.
+
+    Args:
+        exp: the experiment object
+        cli: the client object
+        population: the population object
+        pid: the process ID
+        log_dir: directory containing log files
+    """
+    from y_web.utils.process_watchdog import get_watchdog
+
+    # Use {client_name}_client.log as the heartbeat file
+    log_file = os.path.join(log_dir, f"{cli.name}_client.log")
+
+    # Store only the IDs to avoid detached SQLAlchemy instance issues
+    exp_id = exp.idexp
+    cli_id = cli.id
+    pop_id = population.id
+
+    # Create restart callback
+    def restart_callback():
+        """Callback to restart the client process."""
+        try:
+            # Import here to avoid circular imports
+            from y_web import create_app
+
+            # Create app context for database operations
+            app = create_app()
+            with app.app_context():
+                # Re-fetch objects from database to get fresh state
+                fresh_exp = db.session.query(Exps).filter_by(idexp=exp_id).first()
+                fresh_cli = db.session.query(Client).filter_by(id=cli_id).first()
+                fresh_pop = db.session.query(Population).filter_by(id=pop_id).first()
+
+                if fresh_exp and fresh_cli and fresh_pop:
+                    # Check if client has naturally completed its expected duration
+                    client_exec = (
+                        db.session.query(Client_Execution)
+                        .filter_by(client_id=cli_id)
+                        .first()
+                    )
+                    if client_exec:
+                        if (
+                            client_exec.expected_duration_rounds > 0
+                            and client_exec.elapsed_time
+                            >= client_exec.expected_duration_rounds
+                        ):
+                            # Client has completed - terminate properly instead of restarting
+                            print(
+                                f"Watchdog: Client {fresh_cli.name} has completed "
+                                f"(elapsed: {client_exec.elapsed_time}, "
+                                f"expected: {client_exec.expected_duration_rounds}). "
+                                f"Terminating instead of restarting."
+                            )
+                            # Use standard terminate_client to properly update all DB statuses
+                            # First, unregister from watchdog
+                            try:
+                                watchdog = get_watchdog()
+                                watchdog.unregister_process(f"client_{cli_id}")
+                            except Exception:
+                                pass
+
+                            # Update client status to stopped
+                            fresh_cli.status = 0
+                            fresh_cli.pid = None
+                            db.session.commit()
+
+                            # Return None to indicate no restart
+                            return None
+
+                    # Terminate any existing process using robust termination
+                    # This ensures proper cleanup of hung processes
+                    if fresh_cli.pid:
+                        pid_to_kill = fresh_cli.pid
+                        print(
+                            f"Watchdog: Terminating client process with PID {pid_to_kill}..."
+                        )
+                        _force_terminate_process_tree(pid_to_kill)
+
+                        # Clear PID from database for consistency
+                        fresh_cli.pid = None
+                        db.session.commit()
+
+                    # Start new client process (resume=True to continue from last state)
+                    new_process = start_client(
+                        fresh_exp, fresh_cli, fresh_pop, resume=True
+                    )
+                    return new_process.pid if new_process else None
+        except Exception as e:
+            print(f"Error in client restart callback: {e}")
+        return None
+
+    # Get or create watchdog and register process
+    watchdog = get_watchdog()
+    process_id = f"client_{cli_id}"
+
+    watchdog.register_process(
+        process_id=process_id,
+        pid=pid,
+        log_file=log_file,
+        restart_callback=restart_callback,
+        process_type="client",
+    )
+
+    # Start watchdog if not already running
+    if not watchdog.is_running:
+        watchdog.start()

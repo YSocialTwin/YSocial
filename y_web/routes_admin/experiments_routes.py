@@ -45,6 +45,7 @@ from y_web.models import (
     Languages,
     Leanings,
     LogFileOffset,
+    LogSyncSettings,
     Nationalities,
     Page,
     Page_Population,
@@ -1725,7 +1726,10 @@ def experiment_logs(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import update_server_log_metrics
+        from y_web.utils.log_metrics import (
+            has_server_log_files,
+            update_server_log_metrics,
+        )
         from y_web.utils.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
@@ -1753,8 +1757,8 @@ def experiment_logs(exp_id):
 
         log_file = os.path.join(exp_folder, "_server.log")
 
-        # Check if log file exists
-        if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
             return jsonify(
                 {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
             )
@@ -1767,11 +1771,26 @@ def experiment_logs(exp_id):
             current_app.logger.error(
                 f"Error updating server log metrics: {e}", exc_info=True
             )
+            # Ensure session is in clean state after error
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
-        metrics = ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="daily"
-        ).all()
+        try:
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
+        except Exception as e:
+            # Handle PendingRollbackError by rolling back and retrying
+            current_app.logger.warning(
+                f"Session error during metrics query, retrying: {e}"
+            )
+            db.session.rollback()
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
 
         # Aggregate by path across all days
         path_counts = defaultdict(int)
@@ -1823,6 +1842,7 @@ def experiment_trends(exp_id):
             return jsonify({"error": "Experiment not found"}), 404
 
         from y_web.utils.log_metrics import (
+            has_server_log_files,
             update_client_log_metrics,
             update_server_log_metrics,
         )
@@ -1850,8 +1870,8 @@ def experiment_trends(exp_id):
 
         log_file = os.path.join(exp_folder, "_server.log")
 
-        # Check if log file exists
-        if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
             return jsonify(
                 {
                     "daily_compute": {},
@@ -2440,7 +2460,28 @@ def miscellanea():
 
     check_privileges(current_user.username)
 
-    return render_template("admin/miscellanea.html")
+    # Get telemetry and watchdog settings for the current admin user
+    telemetry_enabled = getattr(user, "telemetry_enabled", True)
+    watchdog_interval = 15  # Default watchdog interval
+
+    # Try to get watchdog interval from the watchdog status
+    try:
+        from y_web.utils.process_watchdog import get_watchdog_status
+
+        status = get_watchdog_status()
+        watchdog_interval = status.get("run_interval_minutes", 15)
+    except ImportError:
+        # process_watchdog module not available
+        pass
+    except (KeyError, TypeError, AttributeError):
+        # Status returned unexpected format
+        pass
+
+    return render_template(
+        "admin/miscellanea.html",
+        telemetry_enabled=telemetry_enabled,
+        watchdog_interval=watchdog_interval,
+    )
 
 
 @experiments.route("/admin/languages_data")
@@ -3313,9 +3354,15 @@ def copy_experiment():
         pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
 
         # Copy all files from source to new folder, excluding log files
+        import re
+
+        log_pattern = re.compile(
+            r"\.log(\.\d+)?$"
+        )  # Matches .log, .log.1, .log.2, etc.
+
         for item in os.listdir(source_folder):
-            # Skip log files (server logs and client logs)
-            if item.endswith(".log"):
+            # Skip log files (server logs and client logs) including rotated logs
+            if log_pattern.search(item):
                 continue
 
             source_item = os.path.join(source_folder, item)
@@ -3660,3 +3707,132 @@ def copy_experiment():
         current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
 
     return redirect(url_for("experiments.settings"))
+
+
+@experiments.route("/admin/log_sync_settings", methods=["GET"])
+@login_required
+def get_log_sync_settings():
+    """
+    Get current log sync settings.
+
+    Returns:
+        JSON with log sync settings
+    """
+    check_privileges(current_user.username)
+
+    # Get or create default settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+        db.session.commit()
+
+    return jsonify(
+        {
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+            "last_sync": (
+                settings.last_sync.isoformat() + "Z" if settings.last_sync else None
+            ),
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_settings", methods=["POST"])
+@login_required
+def update_log_sync_settings():
+    """
+    Update log sync settings.
+
+    Expects JSON body with:
+    - enabled (bool): Whether automatic log sync is enabled
+    - sync_interval_minutes (int): Sync frequency in minutes (1-1440)
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    # Get or create settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+
+    # Update enabled if provided
+    if "enabled" in data:
+        settings.enabled = bool(data["enabled"])
+
+    # Update sync interval if provided
+    if "sync_interval_minutes" in data:
+        try:
+            interval = int(data["sync_interval_minutes"])
+            # Validate range: 1 minute to 24 hours
+            if interval < 1 or interval > 1440:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Sync interval must be between 1 and 1440 minutes",
+                        }
+                    ),
+                    400,
+                )
+            settings.sync_interval_minutes = interval
+        except (ValueError, TypeError):
+            return (
+                jsonify({"success": False, "message": "Invalid sync interval value"}),
+                400,
+            )
+
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_trigger", methods=["POST"])
+@login_required
+def trigger_log_sync():
+    """
+    Manually trigger a log sync for all running experiments.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    try:
+        from y_web.utils.log_sync_scheduler import get_scheduler
+
+        scheduler = get_scheduler()
+        if scheduler:
+            success = scheduler.trigger_sync()
+            if success:
+                return jsonify(
+                    {"success": True, "message": "Log sync triggered successfully"}
+                )
+            else:
+                return (
+                    jsonify({"success": False, "message": "Log sync failed"}),
+                    500,
+                )
+        else:
+            return (
+                jsonify(
+                    {"success": False, "message": "Log sync scheduler not running"}
+                ),
+                503,
+            )
+    except Exception as e:
+        current_app.logger.error(f"Error triggering log sync: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)}), 500

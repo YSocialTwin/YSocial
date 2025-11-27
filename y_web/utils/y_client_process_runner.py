@@ -245,7 +245,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
-            print(f"First run", file=sys.stderr)
+            print(f"First run (with network)", file=sys.stderr)
         else:
             cl = YClientWeb(
                 config_file,
@@ -254,7 +254,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
-            print(f"First run", file=sys.stderr)
+            if first_run:
+                print(f"First run (without network)", file=sys.stderr)
+            else:
+                print(f"Resuming run", file=sys.stderr)
 
         if resume:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
