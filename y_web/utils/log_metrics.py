@@ -15,7 +15,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from sqlalchemy import and_
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
 from y_web.models import (
@@ -30,6 +30,21 @@ logger = logging.getLogger(__name__)
 # Retry configuration for database deadlocks
 MAX_RETRIES = 3
 RETRY_DELAY = 0.5  # seconds
+
+
+def _ensure_session_clean(session):
+    """
+    Ensure the database session is in a clean state.
+    
+    This is needed to handle PendingRollbackError which can occur
+    when a previous database operation failed.
+    """
+    try:
+        # Check if session needs rollback
+        if session.is_active:
+            session.rollback()
+    except Exception as e:
+        logger.debug(f"Session cleanup exception (can be safely ignored): {e}")
 
 
 def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
@@ -48,6 +63,19 @@ def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
         try:
             session.commit()
             return True
+        except PendingRollbackError:
+            # Session was in bad state, rollback and retry
+            session.rollback()
+            if attempt < max_retries - 1:
+                logger.warning(
+                    f"Session rollback needed, retrying ({attempt + 1}/{max_retries})..."
+                )
+                time.sleep(delay * (attempt + 1))
+            else:
+                logger.error(
+                    f"Session rollback persisted after {max_retries} retries"
+                )
+                return False
         except OperationalError as e:
             session.rollback()
             error_msg = str(e).lower()
@@ -486,8 +514,9 @@ def update_server_log_metrics(exp_id, log_file_path):
     """
     Update server log metrics by reading new log entries.
 
-    Supports rotating log files (e.g., _server.log, _server.log.1, _server.log.2).
-    Rotating logs are processed oldest to newest to maintain chronological order.
+    Only processes the main log file (_server.log) for incremental updates.
+    Rotated log files (.log.1, .log.2, etc.) are skipped because their content
+    was already processed when they were the main log file.
 
     Args:
         exp_id: Experiment ID
@@ -496,42 +525,39 @@ def update_server_log_metrics(exp_id, log_file_path):
     Returns:
         bool: True if successful, False otherwise
     """
-    try:
-        # Get all rotating log files (oldest to newest)
-        log_files = get_rotating_log_files(log_file_path)
+    # Ensure session is in clean state before starting
+    _ensure_session_clean(db.session)
 
-        if not log_files:
-            logger.warning(f"No log files found for: {log_file_path}")
+    try:
+        # Only process the main log file, not rotated ones
+        # Rotated logs contain data we already processed when they were the main log
+        if not os.path.exists(log_file_path):
+            logger.warning(f"Log file not found: {log_file_path}")
             return True
 
-        # Process each log file
-        for current_log_path in log_files:
-            if not os.path.exists(current_log_path):
-                continue
+        # Get relative file name (for storage in database)
+        file_name = os.path.basename(log_file_path)
 
-            # Get relative file name (for storage in database)
-            file_name = os.path.basename(current_log_path)
+        # Get last offset for this specific file
+        last_offset = get_log_file_offset(exp_id, "server", file_name)
 
-            # Get last offset for this specific file
-            last_offset = get_log_file_offset(exp_id, "server", file_name)
-
-            # Check if file has been rotated (size is smaller than offset)
-            file_size = os.path.getsize(current_log_path)
-            if file_size < last_offset:
-                # File was rotated, reset offset to read from beginning
-                logger.info(
-                    f"Log file {file_name} was rotated (size {file_size} < offset {last_offset}), resetting offset"
-                )
-                last_offset = 0
-
-            # Parse log file incrementally
-            new_offset, metrics = parse_server_log_incremental(
-                current_log_path, exp_id, last_offset
+        # Check if file has been rotated (size is smaller than offset)
+        file_size = os.path.getsize(log_file_path)
+        if file_size < last_offset:
+            # File was rotated, reset offset to read from beginning
+            logger.info(
+                f"Log file {file_name} was rotated (size {file_size} < offset {last_offset}), resetting offset"
             )
+            last_offset = 0
 
-            # Update offset
-            if new_offset > last_offset:
-                update_log_file_offset(exp_id, "server", file_name, new_offset)
+        # Parse log file incrementally
+        new_offset, metrics = parse_server_log_incremental(
+            log_file_path, exp_id, last_offset
+        )
+
+        # Update offset
+        if new_offset > last_offset:
+            update_log_file_offset(exp_id, "server", file_name, new_offset)
 
         return True
 
@@ -552,6 +578,9 @@ def update_client_log_metrics(exp_id, client_id, log_file_path):
     Returns:
         bool: True if successful, False otherwise
     """
+    # Ensure session is in clean state before starting
+    _ensure_session_clean(db.session)
+
     try:
         # Get relative file path (for storage in database)
         file_name = os.path.basename(log_file_path)

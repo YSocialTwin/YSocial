@@ -336,102 +336,10 @@ input:checked + .slider:before {
                 </div>
             </div>
 
-            <!-- Row 3: Telemetry, System Updates, Process Watchdog, Experiment Participation and Add to Experiment -->
+            <!-- Row 3: Experiment Participation and Add to Experiment -->
             <div class="columns is-multiline" style="align-items: stretch;">
-                {% if current_user_role == "admin" %}
-                <!-- Telemetry Settings (admin only) -->
-                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
-                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
-                        <h3 class="title is-5 is-thin">Telemetry Settings</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Control anonymous usage data collection.
-                        </p>
-                        <div class="box-content" style="flex: 1;">
-                            <form action="/admin/update_telemetry_preference" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <div style="display: flex; align-items: center; justify-content: space-between;">
-                                            <span style="font-size: 0.9em;">Telemetry Data</span>
-                                            <label class="switch" style="margin: 0;">
-                                                <input type="checkbox" name="telemetry_enabled" value="1" 
-                                                       {% if user.telemetry_enabled %}checked{% endif %}
-                                                       onchange="this.form.submit()">
-                                                <span class="slider round"></span>
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
-                            <p style="font-size: 0.8em; color: #777; margin-top: 10px;">
-                                Enable/disable anonymous usage data collection for improving YSocial.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- System Updates (admin only) -->
-                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
-                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
-                        <h3 class="title is-5 is-thin">System Updates</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Check for new YSocial releases.
-                        </p>
-                        <div class="box-content" style="flex: 1;">
-                            <form action="/admin/check_for_updates" method="POST">
-                                <div class="button-wrap">
-                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                        <i class="mdi mdi-update"></i> Check for Updates
-                                    </button>
-                                </div>
-                            </form>
-                            <p style="font-size: 0.8em; color: #777; margin-top: 10px;">
-                                Check if a newer version of YSocial is available.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Process Watchdog Settings (admin only) -->
-                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
-                    <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
-                        <h3 class="title is-5 is-thin">Process Watchdog</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Monitor and auto-restart hung processes.
-                        </p>
-                        <div class="box-content" style="flex: 1;">
-                            <form action="/admin/watchdog_set_interval" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <label class="label">Check Interval (minutes)</label>
-                                        <input type="number" name="watchdog_interval" class="input" 
-                                               value="{{ watchdog_interval | default(15) }}" min="1" max="1440"
-                                               style="width: 100%;">
-                                    </div>
-                                </div>
-                                <div class="button-wrap" style="margin-top: 10px;">
-                                    <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                        Update Interval
-                                    </button>
-                                </div>
-                            </form>
-                            <div class="button-wrap" style="margin-top: 10px;">
-                                <button type="button" class="button is-solid primary-button is-fullwidth" 
-                                        onclick="runWatchdogNow()" id="run-watchdog-btn">
-                                    <i class="mdi mdi-refresh"></i> Run Now
-                                </button>
-                            </div>
-                            <div id="watchdog-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
-                                Monitors server/client processes for hangs and auto-restarts them.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-
                 <!-- Experiment Participation -->
-                <div class="column is-12-mobile {% if current_user_role == 'admin' %}is-6-tablet is-3-desktop{% else %}is-6-tablet{% endif %}" style="display: flex;">
+                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
                     <!--Box-->
                      <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
@@ -479,7 +387,7 @@ input:checked + .slider:before {
 
                 {% if current_user_role == "admin" %}
                 <!-- Add to Experiment section (admin only) -->
-                <div class="column is-12-mobile is-6-tablet is-3-desktop" style="display: flex;">
+                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -558,42 +466,6 @@ function fetchModelsForUser() {
             console.error('Error:', error);
             statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
         });
-}
-
-function runWatchdogNow() {
-    const btn = document.getElementById('run-watchdog-btn');
-    const statusDiv = document.getElementById('watchdog-status');
-    
-    btn.disabled = true;
-    btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Running...';
-    statusDiv.innerHTML = '<span style="color: #4a90e2;">Running watchdog check...</span>';
-    
-    fetch('/admin/watchdog_run_now', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
-        
-        if (data.error) {
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: ' + data.error + '</span>';
-        } else {
-            const msg = 'Checked: ' + data.processes_checked + 
-                       ', Restarted: ' + data.processes_restarted + 
-                       ', Healthy: ' + data.processes_healthy;
-            statusDiv.innerHTML = '<span style="color: #28a745;">✓ ' + msg + '</span>';
-        }
-    })
-    .catch(error => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
-        statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error running watchdog</span>';
-        console.error('Error:', error);
-    });
 }
 </script>
 

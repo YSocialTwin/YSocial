@@ -198,6 +198,15 @@ def cleanup_db_jupyter_with_new_app():
     """
     print("Cleaning up db...")
 
+    # Stop the log sync scheduler
+    try:
+        from y_web.utils.log_sync_scheduler import stop_log_sync_scheduler
+
+        stop_log_sync_scheduler()
+        print("Log sync scheduler stopped")
+    except Exception as e:
+        print(f"Failed to stop log sync scheduler: {e}")
+
     # Log service stop event
     try:
         from y_web.telemetry import Telemetry
@@ -625,6 +634,37 @@ def create_app(db_type="sqlite", desktop_mode=False):
         except Exception as e:
             print(f"Failed to run log metrics tables migration: {e}")
 
+        try:
+            # Run migration to add log sync settings table if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_log_sync_settings import (
+                    migrate_sqlite as migrate_log_sync_sqlite,
+                )
+
+                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
+                if dashboard_db_path:
+                    migrate_log_sync_sqlite(dashboard_db_path)
+            elif db_type == "postgresql":
+                from y_web.migrations.add_log_sync_settings import (
+                    migrate_postgresql as migrate_log_sync_postgresql,
+                )
+
+                # Get PostgreSQL connection details from app config
+                pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
+                if pg_config:
+                    # Parse connection string or use environment variables
+                    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+                    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+                    pg_database = os.environ.get("POSTGRES_DB", "ysocial")
+                    pg_user = os.environ.get("POSTGRES_USER", "postgres")
+                    pg_password = os.environ.get("POSTGRES_PASSWORD", "")
+                    if pg_password:
+                        migrate_log_sync_postgresql(
+                            pg_host, pg_port, pg_database, pg_user, pg_password
+                        )
+        except Exception as e:
+            print(f"Failed to run log sync settings migration: {e}")
+
         # Ensure all tables defined in models exist (including release_info)
         # This creates any missing tables that are defined in models.py
         try:
@@ -657,5 +697,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
         telemetry.log_event({"action": "start"})
     except Exception as e:
         print(f"Failed to log start event: {e}")
+
+    # Start the log sync scheduler for automatic periodic log reading
+    try:
+        from y_web.utils.log_sync_scheduler import init_log_sync_scheduler
+
+        init_log_sync_scheduler(app)
+        print("✓ Log sync scheduler started")
+    except Exception as e:
+        print(f"Failed to start log sync scheduler: {e}")
 
     return app
