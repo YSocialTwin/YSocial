@@ -15,7 +15,7 @@ from collections import defaultdict
 from datetime import datetime
 
 from sqlalchemy import and_
-from sqlalchemy.exc import OperationalError
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
 from y_web.models import (
@@ -30,6 +30,21 @@ logger = logging.getLogger(__name__)
 # Retry configuration for database deadlocks
 MAX_RETRIES = 3
 RETRY_DELAY = 0.5  # seconds
+
+
+def _ensure_session_clean(session):
+    """
+    Ensure the database session is in a clean state.
+    
+    This is needed to handle PendingRollbackError which can occur
+    when a previous database operation failed.
+    """
+    try:
+        # Check if session needs rollback
+        if session.is_active:
+            session.rollback()
+    except Exception as e:
+        logger.debug(f"Session cleanup exception (can be safely ignored): {e}")
 
 
 def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
@@ -48,6 +63,19 @@ def _commit_with_retry(session, max_retries=MAX_RETRIES, delay=RETRY_DELAY):
         try:
             session.commit()
             return True
+        except PendingRollbackError:
+            # Session was in bad state, rollback and retry
+            session.rollback()
+            if attempt < max_retries - 1:
+                logger.warning(
+                    f"Session rollback needed, retrying ({attempt + 1}/{max_retries})..."
+                )
+                time.sleep(delay * (attempt + 1))
+            else:
+                logger.error(
+                    f"Session rollback persisted after {max_retries} retries"
+                )
+                return False
         except OperationalError as e:
             session.rollback()
             error_msg = str(e).lower()
@@ -496,6 +524,9 @@ def update_server_log_metrics(exp_id, log_file_path):
     Returns:
         bool: True if successful, False otherwise
     """
+    # Ensure session is in clean state before starting
+    _ensure_session_clean(db.session)
+
     try:
         # Get all rotating log files (oldest to newest)
         log_files = get_rotating_log_files(log_file_path)
@@ -552,6 +583,9 @@ def update_client_log_metrics(exp_id, client_id, log_file_path):
     Returns:
         bool: True if successful, False otherwise
     """
+    # Ensure session is in clean state before starting
+    _ensure_session_clean(db.session)
+
     try:
         # Get relative file path (for storage in database)
         file_name = os.path.basename(log_file_path)

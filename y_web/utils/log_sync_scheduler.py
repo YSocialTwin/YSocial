@@ -141,8 +141,22 @@ class LogSyncScheduler:
             logger.warning(f"Failed to update last_sync timestamp: {e}")
             db.session.rollback()
 
+    def _safe_rollback(self, db):
+        """
+        Safely rollback the database session.
+        
+        Catches and logs any exceptions to prevent rollback failures
+        from masking the original error.
+        """
+        try:
+            if db.session.is_active:
+                db.session.rollback()
+        except Exception as e:
+            logger.debug(f"Rollback exception (can be safely ignored): {e}")
+
     def _sync_all_active_experiments(self):
         """Sync logs for all running experiments."""
+        from y_web import db
         from y_web.models import Client, Exps
         from y_web.utils.log_metrics import (
             has_server_log_files,
@@ -153,10 +167,21 @@ class LogSyncScheduler:
 
         BASE_DIR = get_writable_path()
 
+        # Ensure session is in clean state before starting
+        self._safe_rollback(db)
+
         # Get all running experiments
-        running_exps = Exps.query.filter_by(running=1).all()
+        try:
+            running_exps = Exps.query.filter_by(running=1).all()
+        except Exception as e:
+            logger.error(f"Error querying running experiments: {e}")
+            self._safe_rollback(db)
+            return
 
         for exp in running_exps:
+            # Clear session state before each experiment to prevent cascading failures
+            self._safe_rollback(db)
+
             try:
                 # Determine experiment folder path
                 db_name = exp.db_name
@@ -178,7 +203,7 @@ class LogSyncScheduler:
                 else:
                     continue
 
-                # Sync server logs
+                # Sync server logs with session cleanup
                 server_log_file = os.path.join(exp_folder, "_server.log")
                 if has_server_log_files(server_log_file):
                     try:
@@ -190,9 +215,17 @@ class LogSyncScheduler:
                         logger.warning(
                             f"Error syncing server logs for experiment {exp.exp_name}: {e}"
                         )
+                        # Ensure session is clean after error
+                        self._safe_rollback(db)
 
                 # Sync client logs for all running clients
-                clients = Client.query.filter_by(id_exp=exp.idexp, status=1).all()
+                try:
+                    clients = Client.query.filter_by(id_exp=exp.idexp, status=1).all()
+                except Exception as e:
+                    logger.warning(f"Error querying clients for experiment {exp.exp_name}: {e}")
+                    self._safe_rollback(db)
+                    continue
+
                 for client in clients:
                     client_log_file = os.path.join(
                         exp_folder, f"{client.name}_client.log"
@@ -209,12 +242,16 @@ class LogSyncScheduler:
                             logger.warning(
                                 f"Error syncing client logs for {client.name}: {e}"
                             )
+                            # Ensure session is clean after error
+                            self._safe_rollback(db)
 
             except Exception as e:
                 logger.error(
                     f"Error syncing logs for experiment {exp.exp_name}: {e}",
                     exc_info=True,
                 )
+                # Ensure session is clean after error
+                self._safe_rollback(db)
 
     def trigger_sync(self):
         """Manually trigger a log sync (called from API)."""

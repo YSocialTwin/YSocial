@@ -1771,11 +1771,24 @@ def experiment_logs(exp_id):
             current_app.logger.error(
                 f"Error updating server log metrics: {e}", exc_info=True
             )
+            # Ensure session is in clean state after error
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
 
         # Retrieve aggregated metrics from database (daily aggregation for overview)
-        metrics = ServerLogMetrics.query.filter_by(
-            exp_id=exp_id, aggregation_level="daily"
-        ).all()
+        try:
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
+        except Exception as e:
+            # Handle PendingRollbackError by rolling back and retrying
+            current_app.logger.warning(f"Session error during metrics query, retrying: {e}")
+            db.session.rollback()
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
 
         # Aggregate by path across all days
         path_counts = defaultdict(int)
