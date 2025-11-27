@@ -5,6 +5,7 @@ This script is invoked as a subprocess to run client simulations.
 It's designed to be called by start_client using subprocess.Popen.
 """
 import argparse
+import math
 import random
 import sys
 import traceback
@@ -268,7 +269,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                     file=sys.stderr,
                 )
                 return
-            cl.days = int(remaining_rounds / 24)
+            # Use math.ceil to ensure at least 1 day is processed when there are
+            # remaining rounds. Using int() would result in 0 days when remaining
+            # rounds < 24, causing the simulation to skip the final hours.
+            cl.days = max(1, math.ceil(remaining_rounds / 24))
 
         cl.read_agents()
         cl.add_feeds()
