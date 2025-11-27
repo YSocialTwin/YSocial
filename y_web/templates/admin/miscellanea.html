@@ -1837,11 +1837,14 @@
                                 });
                             });
                             
-                            // Initialize status on load
-                            if (!window.telemetryInitialized) {
-                                window.telemetryInitialized = true;
-                                updateTelemetryStatus(document.getElementById('telemetry_enabled').checked);
-                            }
+                            // Initialize status on load using data attribute to avoid duplicate initialization
+                            (function() {
+                                const telemetryCheckbox = document.getElementById('telemetry_enabled');
+                                if (telemetryCheckbox && !telemetryCheckbox.dataset.initialized) {
+                                    telemetryCheckbox.dataset.initialized = 'true';
+                                    updateTelemetryStatus(telemetryCheckbox.checked);
+                                }
+                            })();
                         </script>
                     </div>
 
@@ -2137,16 +2140,19 @@
                                 updateSyncStatusIndicator(this.checked);
                             });
 
-                            // Load settings on page load - use conditional to avoid duplicate listeners
-                            if (!window.logSyncSettingsInitialized) {
-                                window.logSyncSettingsInitialized = true;
-                                if (document.readyState === 'loading') {
-                                    document.addEventListener('DOMContentLoaded', loadLogSyncSettings);
-                                } else {
-                                    // DOM is already loaded
-                                    loadLogSyncSettings();
+                            // Load settings on page load using data attribute to avoid duplicate initialization
+                            (function() {
+                                const logSyncContainer = document.getElementById('log-sync-settings-container');
+                                if (logSyncContainer && !logSyncContainer.dataset.initialized) {
+                                    logSyncContainer.dataset.initialized = 'true';
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', loadLogSyncSettings);
+                                    } else {
+                                        // DOM is already loaded
+                                        loadLogSyncSettings();
+                                    }
                                 }
-                            }
+                            })();
                         </script>
                     </div>
 

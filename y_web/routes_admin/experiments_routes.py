@@ -2446,7 +2446,7 @@ def miscellanea():
     check_privileges(current_user.username)
 
     # Get telemetry and watchdog settings for the current admin user
-    telemetry_enabled = user.telemetry_enabled if hasattr(user, 'telemetry_enabled') else True
+    telemetry_enabled = getattr(user, 'telemetry_enabled', True)
     watchdog_interval = 15  # Default watchdog interval
 
     # Try to get watchdog interval from the watchdog status
@@ -2454,7 +2454,11 @@ def miscellanea():
         from y_web.utils.process_watchdog import get_watchdog_status
         status = get_watchdog_status()
         watchdog_interval = status.get('run_interval_minutes', 15)
-    except (ImportError, Exception):
+    except ImportError:
+        # process_watchdog module not available
+        pass
+    except (KeyError, TypeError, AttributeError):
+        # Status returned unexpected format
         pass
 
     return render_template(
