@@ -4459,21 +4459,12 @@ def check_schedule_progress():
     logs.append(msg)
     db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
 
-    # Mark current group as completed
+    # Mark current group as completed (don't delete yet - will clean up at end of schedule)
     current_group.is_completed = 1
     db.session.commit()
-    
-    # Save experiment IDs and group order_index before deleting items
-    experiment_ids = [item.experiment_id for item in items]
-    current_group_order_index = current_group.order_index
-    
-    # Delete the completed group and its items from the database
-    ExperimentScheduleItem.query.filter_by(group_id=current_group.id).delete()
-    db.session.delete(current_group)
-    db.session.commit()
 
-    for exp_id in experiment_ids:
-        exp = Exps.query.get(exp_id)
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 1:
             msg = f"Stopping experiment '{exp.exp_name}'..."
             logs.append(msg)
@@ -4498,7 +4489,7 @@ def check_schedule_progress():
     # Get next non-completed group
     next_group = (
         ExperimentScheduleGroup.query.filter(
-            ExperimentScheduleGroup.order_index > current_group_order_index,
+            ExperimentScheduleGroup.order_index > current_group.order_index,
             (ExperimentScheduleGroup.is_completed == 0)
             | (ExperimentScheduleGroup.is_completed == None),
         )

@@ -181,47 +181,96 @@
                     <!--Dashboard box-->
                     {% if total_experiments > 0 %}
                     
-                    <!-- Currently Running Experiments (Active) -->
+                    <!-- Currently Running Experiments (Active) - Full width -->
                     {% if len(running_experiments) > 0 %}
                     <div class="dashboard-box">
                          <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
                             Currently Running Experiments
+                            <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ len(running_experiments) }} of {{ total_running }})</span>
                          </h3>
                          <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Active experiments with their running clients and real-time progress monitoring.
                         </p>
-                        {{ render_experiment_box(running_experiments, '#28a745') }}
+                        <div id="running-experiments-container">
+                            {{ render_experiment_box(running_experiments, '#28a745') }}
+                        </div>
+                        {% if total_running > 5 %}
+                        <div style="display: flex; justify-content: center; gap: 10px; margin-top: 10px;">
+                            <button id="running-prev" class="button is-small is-light" disabled onclick="paginateRunning(-1)">
+                                <i class="mdi mdi-chevron-left"></i> Prev
+                            </button>
+                            <span id="running-page-info" style="font-size: 0.85em; color: #666; align-self: center;">Page 1 of {{ ((total_running - 1) // 5) + 1 }}</span>
+                            <button id="running-next" class="button is-small is-light" onclick="paginateRunning(1)">
+                                Next <i class="mdi mdi-chevron-right"></i>
+                            </button>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                     
-                    <!-- Completed Experiments -->
-                    {% if len(completed_experiments) > 0 %}
-                    <div class="dashboard-box">
-                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #17a2b8;"></span>
-                            Completed Experiments
-                         </h3>
-                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Experiments where all clients have reached their completion target.
-                        </p>
-                        {{ render_experiment_box(completed_experiments, '#17a2b8') }}
+                    <!-- Completed and Stopped/Scheduled on the same row -->
+                    <div class="columns is-multiline" style="margin-bottom: 0;">
+                        <!-- Completed Experiments - Half width on desktop -->
+                        {% if len(completed_experiments) > 0 %}
+                        <div class="column is-6-desktop is-12-tablet is-12-mobile">
+                            <div class="dashboard-box" style="height: 100%; margin-bottom: 0;">
+                                 <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+                                    Completed
+                                    <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ len(completed_experiments) }} of {{ total_completed }})</span>
+                                 </h3>
+                                 <p style="font-size: 0.8em; color: #666; margin-bottom: 0.8em;">
+                                    All clients have reached completion.
+                                </p>
+                                <div id="completed-experiments-container" style="max-height: 300px; overflow-y: auto;">
+                                    {{ render_experiment_box(completed_experiments, '#17a2b8') }}
+                                </div>
+                                {% if total_completed > 5 %}
+                                <div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">
+                                    <button id="completed-prev" class="button is-small is-light" disabled onclick="paginateCompleted(-1)">
+                                        <i class="mdi mdi-chevron-left"></i>
+                                    </button>
+                                    <span id="completed-page-info" style="font-size: 0.75em; color: #666; align-self: center;">1/{{ ((total_completed - 1) // 5) + 1 }}</span>
+                                    <button id="completed-next" class="button is-small is-light" onclick="paginateCompleted(1)">
+                                        <i class="mdi mdi-chevron-right"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Stopped/Scheduled Experiments - Half width on desktop -->
+                        {% if len(stopped_experiments) > 0 %}
+                        <div class="column is-6-desktop is-12-tablet is-12-mobile">
+                            <div class="dashboard-box" style="height: 100%; margin-bottom: 0;">
+                                 <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
+                                    Stopped / Scheduled
+                                    <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ len(stopped_experiments) }} of {{ total_stopped }})</span>
+                                 </h3>
+                                 <p style="font-size: 0.8em; color: #666; margin-bottom: 0.8em;">
+                                    Experiments stopped or scheduled to run.
+                                </p>
+                                <div id="stopped-experiments-container" style="max-height: 300px; overflow-y: auto;">
+                                    {{ render_experiment_box(stopped_experiments, '#6c757d') }}
+                                </div>
+                                {% if total_stopped > 5 %}
+                                <div style="display: flex; justify-content: center; gap: 8px; margin-top: 8px;">
+                                    <button id="stopped-prev" class="button is-small is-light" disabled onclick="paginateStopped(-1)">
+                                        <i class="mdi mdi-chevron-left"></i>
+                                    </button>
+                                    <span id="stopped-page-info" style="font-size: 0.75em; color: #666; align-self: center;">1/{{ ((total_stopped - 1) // 5) + 1 }}</span>
+                                    <button id="stopped-next" class="button is-small is-light" onclick="paginateStopped(1)">
+                                        <i class="mdi mdi-chevron-right"></i>
+                                    </button>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endif %}
-                    
-                    <!-- Stopped/Scheduled Experiments -->
-                    {% if len(stopped_experiments) > 0 %}
-                    <div class="dashboard-box">
-                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #6c757d;"></span>
-                            Stopped / Scheduled Experiments
-                         </h3>
-                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Experiments that are stopped or scheduled to run.
-                        </p>
-                        {{ render_experiment_box(stopped_experiments, '#6c757d') }}
-                    </div>
-                    {% endif %}
 
                     {% else %}
 
