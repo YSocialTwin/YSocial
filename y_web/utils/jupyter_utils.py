@@ -445,11 +445,15 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
     try:
         # Use proper process isolation similar to start_client
         if sys.platform.startswith("win"):
-            # On Windows, use creationflags to avoid console window and ensure proper isolation
+            # On Windows, use CREATE_NO_WINDOW to avoid console window
+            # and CREATE_NEW_PROCESS_GROUP to detach the process from the parent
+            # process group so it won't receive signals from the parent
             try:
-                creationflags = subprocess.CREATE_NO_WINDOW
+                creationflags = (
+                    subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
+                )
             except AttributeError:
-                creationflags = 0x08000000
+                creationflags = 0x08000000 | 0x00000200
             process = subprocess.Popen(
                 cmd,
                 env=env,
@@ -461,7 +465,9 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                 text=True,
             )
         else:
-            # On Unix, use start_new_session for proper detachment
+            # On Unix (Linux/macOS), use preexec_fn=os.setsid to create a new
+            # process group, so the child process won't be affected by signals
+            # sent to the parent process group
             process = subprocess.Popen(
                 cmd,
                 env=env,
@@ -469,7 +475,7 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 stdin=subprocess.DEVNULL,
-                start_new_session=True,
+                preexec_fn=os.setsid,
                 text=True,
             )
 

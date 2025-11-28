@@ -1364,10 +1364,15 @@ def start_server(exp):
             # On Windows, use creationflags instead of start_new_session to avoid console window
             # Redirect output to files instead of PIPE to avoid blocking
             if sys.platform.startswith("win"):
+                # On Windows, use CREATE_NEW_PROCESS_GROUP to detach the process
+                # from the parent process group so it won't receive signals from the parent
                 try:
-                    creationflags = subprocess.CREATE_NO_WINDOW
+                    creationflags = (
+                        subprocess.CREATE_NO_WINDOW
+                        | subprocess.CREATE_NEW_PROCESS_GROUP
+                    )
                 except AttributeError:
-                    creationflags = 0x08000000
+                    creationflags = 0x08000000 | 0x00000200
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
@@ -1377,12 +1382,15 @@ def start_server(exp):
                     env=env,
                 )
             else:
+                # On Unix (Linux/macOS), use preexec_fn=os.setsid to create a new
+                # process group, so the child process won't be affected by signals
+                # sent to the parent process group
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
-                    start_new_session=True,
+                    preexec_fn=os.setsid,
                     env=env,
                 )
             print(f"Server process started with PID: {process.pid}")
@@ -1394,10 +1402,15 @@ def start_server(exp):
             gunicorn_which = shutil.which("gunicorn")
             fallback_cmd = [gunicorn_which or "gunicorn"] + gunicorn_args
             if sys.platform.startswith("win"):
+                # On Windows, use CREATE_NEW_PROCESS_GROUP to detach the process
+                # from the parent process group so it won't receive signals from the parent
                 try:
-                    creationflags = subprocess.CREATE_NO_WINDOW
+                    creationflags = (
+                        subprocess.CREATE_NO_WINDOW
+                        | subprocess.CREATE_NEW_PROCESS_GROUP
+                    )
                 except AttributeError:
-                    creationflags = 0x08000000
+                    creationflags = 0x08000000 | 0x00000200
                 process = subprocess.Popen(
                     fallback_cmd,
                     stdout=out_file,
@@ -1407,12 +1420,15 @@ def start_server(exp):
                     env=env,
                 )
             else:
+                # On Unix (Linux/macOS), use preexec_fn=os.setsid to create a new
+                # process group, so the child process won't be affected by signals
+                # sent to the parent process group
                 process = subprocess.Popen(
                     fallback_cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
-                    start_new_session=True,
+                    preexec_fn=os.setsid,
                     env=env,
                 )
     else:
@@ -1474,13 +1490,17 @@ def start_server(exp):
             # On Windows, use creationflags instead of start_new_session to avoid console window
             # Redirect output to files instead of PIPE to avoid blocking
             if sys.platform.startswith("win"):
-                # DETACHED_PROCESS = 0x00000008 - creates process without console
                 # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
+                # CREATE_NEW_PROCESS_GROUP = 0x00000200 - detaches the process from the parent
+                # process group so it won't receive signals from the parent
                 try:
-                    creationflags = subprocess.CREATE_NO_WINDOW
+                    creationflags = (
+                        subprocess.CREATE_NO_WINDOW
+                        | subprocess.CREATE_NEW_PROCESS_GROUP
+                    )
                 except AttributeError:
                     # Fallback for older Python versions
-                    creationflags = 0x08000000
+                    creationflags = 0x08000000 | 0x00000200
 
                 # Don't use shell=True when passing special flags like --run-server-subprocess
                 # as the shell can interfere with argument parsing
@@ -1493,13 +1513,15 @@ def start_server(exp):
                     creationflags=creationflags,
                 )
             else:
-                # On Unix, use start_new_session for proper detachment
+                # On Unix (Linux/macOS), use preexec_fn=os.setsid to create a new
+                # process group, so the child process won't be affected by signals
+                # sent to the parent process group
                 process = subprocess.Popen(
                     cmd,
                     stdout=out_file,
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
-                    start_new_session=True,
+                    preexec_fn=os.setsid,
                 )
             print(f"Server process started with PID: {process.pid}")
             if out_file != subprocess.DEVNULL:
@@ -2261,11 +2283,15 @@ def start_client(exp, cli, population, resume=True):
     # Start the process with Popen
     try:
         if sys.platform.startswith("win"):
-            # On Windows, use creationflags to avoid console window
+            # On Windows, use CREATE_NO_WINDOW to avoid console window
+            # and CREATE_NEW_PROCESS_GROUP to detach the process from the parent
+            # process group so it won't receive signals from the parent
             try:
-                creationflags = subprocess.CREATE_NO_WINDOW
+                creationflags = (
+                    subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP
+                )
             except AttributeError:
-                creationflags = 0x08000000
+                creationflags = 0x08000000 | 0x00000200
             process = subprocess.Popen(
                 cmd,
                 stdout=out_file,
@@ -2276,13 +2302,15 @@ def start_client(exp, cli, population, resume=True):
                 cwd=cwd,
             )
         else:
-            # On Unix, use start_new_session for proper detachment
+            # On Unix (Linux/macOS), use preexec_fn=os.setsid to create a new
+            # process group, so the child process won't be affected by signals
+            # sent to the parent process group
             process = subprocess.Popen(
                 cmd,
                 stdout=out_file,
                 stderr=err_file,
                 stdin=subprocess.DEVNULL,
-                start_new_session=True,
+                preexec_fn=os.setsid,
                 env=env,
                 cwd=cwd,
             )
