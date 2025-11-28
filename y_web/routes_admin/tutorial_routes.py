@@ -25,6 +25,7 @@ from y_web import db
 from y_web.models import (
     ActivityProfile,
     Admin_users,
+    AgeClass,
     Agent,
     Agent_Population,
     Client,
@@ -228,11 +229,34 @@ def create_tutorial_experiment():
             pct = 100.0 / len(items)
             return {str(i): pct for i in items}
 
+        # Build age class percentages with default values matching the population form
+        # Default percentages based on typical age distribution
+        default_age_percentages = {
+            "Youth": 35.0,
+            "Adults": 42.0,
+            "Middle-aged": 18.0,
+            "Elderly": 5.0,
+        }
+        
+        # Query all age classes from database and build percentages
+        all_age_classes = AgeClass.query.all()
+        age_class_percentages = {}
+        for age_class in all_age_classes:
+            # Use default percentage if available, otherwise distribute evenly
+            pct = default_age_percentages.get(age_class.name, 25.0)
+            age_class_percentages[str(age_class.id)] = pct
+        
+        # Normalize to ensure they sum to 100
+        if age_class_percentages:
+            total = sum(age_class_percentages.values())
+            if total > 0:
+                age_class_percentages = {k: (v / total) * 100 for k, v in age_class_percentages.items()}
+
         percentages = {
             "education": build_percentages(education_levels),
             "political_leanings": build_percentages(political_leanings),
             "toxicity_levels": build_percentages(toxicity_levels),
-            "age_classes": {},  # Will use defaults
+            "age_classes": age_class_percentages,
             "gender": {"male": 50, "female": 50},
         }
 
