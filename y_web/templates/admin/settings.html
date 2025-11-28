@@ -433,444 +433,9 @@
 
             </div>
 
-            <!-- Experiment Schedule Section -->
-            <div class="columns">
-                <div class="column is-12">
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="display: flex; align-items: center; gap: 10px;">
-                                <i class="mdi mdi-calendar-clock" style="font-size: 20px; color: #6c757d;"></i>
-                                Experiment Schedule
-                            </span>
-                            <span id="schedule-status-badge" style="display: none; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500;"></span>
-                        </h3>
-                        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
-                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially.
-                        </p>
-
-                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
-                            <!-- Available Experiments -->
-                            <div style="flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 200px;">
-                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px; color: #333;">
-                                    <i class="mdi mdi-flask-outline"></i> Available Experiments
-                                </h4>
-                                <div id="available-experiments" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">Loading...</p>
-                                </div>
-                            </div>
-
-                            <!-- Schedule Groups -->
-                            <div style="flex: 2; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 200px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 5px;">
-                                    <h4 style="font-size: 0.9em; font-weight: 600; color: #333;">
-                                        <i class="mdi mdi-playlist-play"></i> Schedule Groups
-                                    </h4>
-                                    <div style="display: flex; gap: 5px;">
-                                        <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
-                                            <i class="mdi mdi-plus"></i> Add
-                                        </button>
-                                        <button onclick="autoCreateGroups()" style="background: #17a2b8; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
-                                            <i class="mdi mdi-auto-fix"></i> Auto
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="schedule-groups" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Execution Log -->
-                        <div id="schedule-log-container" style="margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                <h4 style="font-size: 0.9em; font-weight: 600; color: #333; margin: 0;">
-                                    <i class="mdi mdi-console"></i> Execution Log
-                                </h4>
-                                <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
-                                    <i class="mdi mdi-delete-sweep"></i> Clear
-                                </button>
-                            </div>
-                            <div id="schedule-log" style="max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8em; line-height: 1.6; color: #333; min-height: 50px;">
-                                <p style="color: #999; text-align: center; margin: 0;">No logs yet</p>
-                            </div>
-                        </div>
-
-                        <!-- Schedule Controls -->
-                        <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
-                            <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
-                                <i class="mdi mdi-play"></i> Start Schedule
-                            </button>
-                            <button id="stop-schedule-btn" onclick="stopSchedule()" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em; display: none;">
-                                <i class="mdi mdi-stop"></i> Stop Schedule
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Schedule JavaScript -->
-            <script>
-                let scheduleCheckInterval = null;
-                let currentRunningGroupId = null;
-
-                // Load schedule data on page load
-                document.addEventListener('DOMContentLoaded', function() {
-                    loadAvailableExperiments();
-                    loadScheduleGroups();
-                    loadPersistentLogs();
-                    checkScheduleStatus();
-                });
-
-                function loadPersistentLogs() {
-                    fetch('/admin/schedule/logs')
-                        .then(response => response.json())
-                        .then(data => {
-                            const logDiv = document.getElementById('schedule-log');
-                            if (data.logs && data.logs.length > 0) {
-                                logDiv.innerHTML = data.logs.map(log => {
-                                    const timestamp = log.created_at ? new Date(log.created_at).toLocaleTimeString() : '';
-                                    const colorClass = log.log_type === 'success' ? 'color: #28a745;' : 
-                                                       log.log_type === 'error' ? 'color: #dc3545;' :
-                                                       log.log_type === 'warning' ? 'color: #ffc107;' : '';
-                                    return `<div><span style="color: #6c757d;">[${timestamp}]</span> <span style="${colorClass}">${log.message}</span></div>`;
-                                }).join('');
-                                logDiv.scrollTop = logDiv.scrollHeight;
-                            } else {
-                                logDiv.innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
-                            }
-                        })
-                        .catch(err => console.error('Error loading logs:', err));
-                }
-
-                function clearLogs() {
-                    fetch('/admin/schedule/logs/clear', { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                document.getElementById('schedule-log').innerHTML = '<p style="color: #999; text-align: center; margin: 0;">No logs yet</p>';
-                            }
-                        })
-                        .catch(err => console.error('Error clearing logs:', err));
-                }
-
-                function autoCreateGroups() {
-                    const num = prompt('Enter number of experiments per group:', '2');
-                    if (!num) return;
-
-                    const experimentsPerGroup = parseInt(num);
-                    if (isNaN(experimentsPerGroup) || experimentsPerGroup < 1) {
-                        alert('Please enter a valid number (1 or more)');
-                        return;
-                    }
-
-                    fetch('/admin/schedule/auto_create_groups', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ experiments_per_group: experimentsPerGroup })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            loadScheduleGroups();
-                            loadAvailableExperiments();
-                            loadPersistentLogs();
-                            alert(data.message);
-                        } else {
-                            alert(data.message || 'Failed to create groups');
-                        }
-                    })
-                    .catch(err => alert('Error creating groups'));
-                }
-
-                function loadAvailableExperiments() {
-                    fetch('/admin/schedule/available_experiments')
-                        .then(response => response.json())
-                        .then(data => {
-                            const container = document.getElementById('available-experiments');
-                            if (data.experiments && data.experiments.length > 0) {
-                                container.innerHTML = data.experiments.map(exp => `
-                                    <div class="draggable-experiment" draggable="true" data-exp-id="${exp.id}" 
-                                         style="padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border: 1px solid #dee2e6; 
-                                                border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
-                                         ondragstart="handleDragStart(event)">
-                                         <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
-                                    </div>
-                                `).join('');
-                            } else {
-                                container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No available experiments</p>';
-                            }
-                        })
-                        .catch(err => console.error('Error loading experiments:', err));
-                }
-
-                function loadScheduleGroups() {
-                    fetch('/admin/schedule/groups')
-                        .then(response => response.json())
-                        .then(data => {
-                            const container = document.getElementById('schedule-groups');
-                            if (data.groups && data.groups.length > 0) {
-                                container.innerHTML = data.groups.map((group, idx) => {
-                                    const isRunning = currentRunningGroupId === group.id;
-                                    const headerBg = isRunning ? '#28a745' : '#e9ecef';
-                                    const headerColor = isRunning ? 'white' : 'inherit';
-                                    const borderColor = isRunning ? '#28a745' : '#dee2e6';
-                                    const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">RUNNING</span>' : '';
-                                    
-                                    return `
-                                    <div class="schedule-group" data-group-id="${group.id}" 
-                                         style="margin-bottom: 15px; border: 2px solid ${borderColor}; border-radius: 6px; background: #fff; ${isRunning ? 'box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);' : ''}">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: ${headerBg}; color: ${headerColor}; border-radius: 4px 4px 0 0;">
-                                            <span style="font-weight: 600; font-size: 0.85em; display: flex; align-items: center;">
-                                                <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: ${isRunning ? 'white' : '#6c757d'};"></i> 
-                                                ${group.name}
-                                                ${runningBadge}
-                                            </span>
-                                            <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="Cannot delete running group"' : ''}>
-                                                <i class="mdi mdi-delete"></i>
-                                            </button>
-                                        </div>
-                                        <div class="group-experiments" data-group-id="${group.id}" 
-                                             style="min-height: 50px; padding: 8px; background: ${isRunning ? '#f0fff4' : '#fafafa'}; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start;"
-                                             ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${group.id})">
-                                            ${group.experiments.length > 0 ? group.experiments.map(exp => `
-                                                <span class="experiment-tag" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: ${isRunning ? '#28a745' : '#6c757d'}; color: white; border-radius: 15px; font-size: 0.75em; white-space: nowrap;">
-                                                    <i class="mdi mdi-flask"></i>
-                                                    ${exp.name}
-                                                    ${!isRunning ? `<button onclick="removeExperimentFromGroup(${exp.item_id})" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 0; margin-left: 4px; font-size: 1.1em; line-height: 1;">
-                                                        <i class="mdi mdi-close-circle"></i>
-                                                    </button>` : ''}
-                                                </span>
-                                            `).join('') : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>'}
-                                        </div>
-                                    </div>
-                                `}).join('');
-                            } else {
-                                container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet. Click "Add Group" to start.</p>';
-                            }
-                        })
-                        .catch(err => console.error('Error loading groups:', err));
-                }
-
-                function addScheduleGroup() {
-                    const name = prompt('Enter group name:');
-                    if (!name) return;
-
-                    fetch('/admin/schedule/groups', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ name: name })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            loadScheduleGroups();
-                        } else {
-                            alert(data.message || 'Failed to create group');
-                        }
-                    })
-                    .catch(err => alert('Error creating group'));
-                }
-
-                function deleteScheduleGroup(groupId) {
-                    if (currentRunningGroupId === groupId) {
-                        alert('Cannot delete a running group. Stop the schedule first.');
-                        return;
-                    }
-                    if (!confirm('Delete this group and remove all experiments from it?')) return;
-
-                    fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                loadScheduleGroups();
-                                loadAvailableExperiments();
-                            } else {
-                                alert(data.message || 'Failed to delete group');
-                            }
-                        })
-                        .catch(err => console.error('Error deleting group:', err));
-                }
-
-                function handleDragStart(event) {
-                    event.dataTransfer.setData('text/plain', event.target.dataset.expId);
-                    event.target.style.opacity = '0.5';
-                }
-
-                function handleDragOver(event) {
-                    event.preventDefault();
-                    event.currentTarget.style.background = '#e8f4e8';
-                }
-
-                function handleDrop(event, groupId) {
-                    event.preventDefault();
-                    event.currentTarget.style.background = currentRunningGroupId === groupId ? '#f0fff4' : '#fafafa';
-                    
-                    const expId = event.dataTransfer.getData('text/plain');
-                    if (!expId) return;
-
-                    fetch(`/admin/schedule/groups/${groupId}/experiments`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ experiment_id: parseInt(expId) })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            loadScheduleGroups();
-                            loadAvailableExperiments();
-                        } else {
-                            alert(data.message || 'Failed to add experiment');
-                        }
-                    })
-                    .catch(err => alert('Error adding experiment to group'));
-                }
-
-                function removeExperimentFromGroup(itemId) {
-                    fetch(`/admin/schedule/items/${itemId}`, { method: 'DELETE' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                loadScheduleGroups();
-                                loadAvailableExperiments();
-                            } else {
-                                alert(data.message || 'Cannot remove experiment');
-                            }
-                        })
-                        .catch(err => console.error('Error removing experiment:', err));
-                }
-
-                function addLogMessage(message) {
-                    const logDiv = document.getElementById('schedule-log');
-                    // Clear "No logs yet" placeholder if present
-                    if (logDiv.querySelector('p')) {
-                        logDiv.innerHTML = '';
-                    }
-                    
-                    const timestamp = new Date().toLocaleTimeString();
-                    const msgDiv = document.createElement('div');
-                    msgDiv.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> ${message}`;
-                    logDiv.appendChild(msgDiv);
-                    logDiv.scrollTop = logDiv.scrollHeight;
-                }
-
-                function displayLogs(logs) {
-                    if (logs && logs.length > 0) {
-                        logs.forEach(log => addLogMessage(log));
-                    }
-                }
-
-                function startSchedule() {
-                    if (!confirm('Start the experiment schedule? This will run all groups sequentially.')) return;
-
-                    // Clear previous logs display
-                    const logDiv = document.getElementById('schedule-log');
-                    logDiv.innerHTML = '';
-                    addLogMessage('Starting schedule...');
-
-                    fetch('/admin/schedule/start', { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Reload persistent logs after start
-                                loadPersistentLogs();
-                                currentRunningGroupId = data.current_group_id;
-                                checkScheduleStatus();
-                                loadScheduleGroups();
-                                // Start polling for progress
-                                scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
-                            } else {
-                                addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
-                            }
-                        })
-                        .catch(err => {
-                            addLogMessage(`<strong style="color: #dc3545;">✗ Error starting schedule</strong>`);
-                        });
-                }
-
-                function stopSchedule() {
-                    if (!confirm('Stop the schedule? This will stop all running experiments.')) return;
-
-                    addLogMessage('Stopping schedule...');
-
-                    fetch('/admin/schedule/stop', { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                addLogMessage(`<strong style="color: #dc3545;">Schedule stopped</strong>`);
-                                currentRunningGroupId = null;
-                                checkScheduleStatus();
-                                loadScheduleGroups();
-                                if (scheduleCheckInterval) {
-                                    clearInterval(scheduleCheckInterval);
-                                }
-                            } else {
-                                addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
-                            }
-                        })
-                        .catch(err => addLogMessage('<strong style="color: #dc3545;">✗ Error stopping schedule</strong>'));
-                }
-
-                function checkScheduleStatus() {
-                    fetch('/admin/schedule/status')
-                        .then(response => response.json())
-                        .then(data => {
-                            const startBtn = document.getElementById('start-schedule-btn');
-                            const stopBtn = document.getElementById('stop-schedule-btn');
-                            const badge = document.getElementById('schedule-status-badge');
-
-                            if (data.is_running) {
-                                startBtn.style.display = 'none';
-                                stopBtn.style.display = 'inline-block';
-                                badge.style.display = 'inline-block';
-                                badge.style.background = '#28a745';
-                                badge.style.color = 'white';
-                                badge.textContent = 'Running';
-                                currentRunningGroupId = data.current_group_id;
-                                // Start progress check if not already running
-                                if (!scheduleCheckInterval) {
-                                    scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
-                                }
-                            } else {
-                                startBtn.style.display = 'inline-block';
-                                stopBtn.style.display = 'none';
-                                badge.style.display = 'none';
-                                currentRunningGroupId = null;
-                                if (scheduleCheckInterval) {
-                                    clearInterval(scheduleCheckInterval);
-                                    scheduleCheckInterval = null;
-                                }
-                            }
-                            loadScheduleGroups();
-                        })
-                        .catch(err => console.error('Error checking status:', err));
-                }
-
-                function checkScheduleProgress() {
-                    fetch('/admin/schedule/check_progress', { method: 'POST' })
-                        .then(response => response.json())
-                        .then(data => {
-                            // Reload persistent logs to get latest
-                            loadPersistentLogs();
-                            
-                            if (data.schedule_complete) {
-                                if (scheduleCheckInterval) {
-                                    clearInterval(scheduleCheckInterval);
-                                    scheduleCheckInterval = null;
-                                }
-                                currentRunningGroupId = null;
-                                checkScheduleStatus();
-                                loadScheduleGroups();
-                                loadAvailableExperiments();
-                            } else if (data.next_group) {
-                                currentRunningGroupId = data.next_group_id;
-                                loadScheduleGroups();
-                            }
-                        })
-                        .catch(err => console.error('Error checking progress:', err));
-                }
-            </script>
-
-            <div class="columns">
+            <!-- ROW 2: New Experiment + Guide -->
+            <div class="columns is-layout-row">
+                <!--Dashboard column-->
                 <!--Dashboard column-->
                 <div class="column is-8">
                     <!--Dashboard box-->
@@ -1291,25 +856,106 @@
                 </div>
             </div>
 
-            <!-- Upload and Copy Experiment Row -->
-            <div class="columns">
+            <!-- ROW 3: Experiment Schedule + Upload Experiment -->
+            <div class="columns is-layout-row">
                 <style>
-                    /* Force Upload and Copy Experiment boxes to have equal height */
-                    .columns .column .sidebar-box {
-                        height: 100%;
+                    /* Force boxes in the same row to have equal height */
+                    .columns.is-layout-row {
+                        align-items: stretch;
+                    }
+                    .columns.is-layout-row > .column {
+                        display: flex;
+                    }
+                    .columns.is-layout-row > .column > .dashboard-box,
+                    .columns.is-layout-row > .column > .sidebar-box {
+                        flex: 1;
                         display: flex;
                         flex-direction: column;
                     }
-                    .columns .column .sidebar-box form {
+                    .columns.is-layout-row > .column > .sidebar-box form {
                         flex-grow: 1;
                         display: flex;
                         flex-direction: column;
                     }
-                    .columns .column .sidebar-box .button-wrap {
+                    .columns.is-layout-row > .column > .sidebar-box .button-wrap {
                         margin-top: auto;
                     }
                 </style>
-                <!--Upload Experiment column-->
+                
+                <!-- Experiment Schedule Column (is-8) -->
+                <div class="column is-8">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <i class="mdi mdi-calendar-clock" style="font-size: 20px; color: #6c757d;"></i>
+                                Experiment Schedule
+                            </span>
+                            <span id="schedule-status-badge" style="display: none; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500;"></span>
+                        </h3>
+                        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
+                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially.
+                        </p>
+
+                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                            <!-- Available Experiments -->
+                            <div style="flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
+                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px; color: #333;">
+                                    <i class="mdi mdi-flask-outline"></i> Available
+                                </h4>
+                                <div id="available-experiments" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
+                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">Loading...</p>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Groups -->
+                            <div style="flex: 2; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 150px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 5px;">
+                                    <h4 style="font-size: 0.9em; font-weight: 600; color: #333;">
+                                        <i class="mdi mdi-playlist-play"></i> Groups
+                                    </h4>
+                                    <div style="display: flex; gap: 5px;">
+                                        <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
+                                            <i class="mdi mdi-plus"></i> Add
+                                        </button>
+                                        <button onclick="autoCreateGroups()" style="background: #17a2b8; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
+                                            <i class="mdi mdi-auto-fix"></i> Auto
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="schedule-groups" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
+                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Execution Log -->
+                        <div id="schedule-log-container" style="margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <h4 style="font-size: 0.9em; font-weight: 600; color: #333; margin: 0;">
+                                    <i class="mdi mdi-console"></i> Log
+                                </h4>
+                                <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
+                                    <i class="mdi mdi-delete-sweep"></i> Clear
+                                </button>
+                            </div>
+                            <div id="schedule-log" style="max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 0.8em; line-height: 1.6; color: #333; min-height: 40px;">
+                                <p style="color: #999; text-align: center; margin: 0;">No logs yet</p>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Controls -->
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
+                            <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                                <i class="mdi mdi-play"></i> Start
+                            </button>
+                            <button id="stop-schedule-btn" onclick="stopSchedule()" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em; display: none;">
+                                <i class="mdi mdi-stop"></i> Stop
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Upload Experiment Column (is-4) -->
                 <div class="column is-4">
                     <div class="sidebar-box">
                         <h3>Upload Experiment</h3>
@@ -1397,10 +1043,17 @@
                         </script>
                     </div>
                 </div>
+            </div>
 
-                <!--Copy Experiment column-->
+            <!-- ROW 4: Empty + Copy Experiment -->
+            <div class="columns is-layout-row">
+                <!-- Empty Column (is-8) -->
+                <div class="column is-8">
+                    <!-- Empty space under Experiment Schedule -->
+                </div>
+                
+                <!-- Copy Experiment Column (is-4) -->
                 <div class="column is-4">
-                    <!-- Copy Experiment Box -->
                     <div class="sidebar-box">
                         <h3>Copy Experiment</h3>
                         <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
@@ -1457,12 +1110,6 @@
                             </div>
                         </form>
                     </div>
-
-                </div>
-
-                <!--Empty column-->
-                <div class="column is-4">
-                    <!-- Empty column under Guide box -->
                 </div>
             </div>
         </div>
