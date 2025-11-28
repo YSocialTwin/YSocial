@@ -2234,6 +2234,10 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
+    
+    # Mark this as a client subprocess so the atexit handler doesn't run cleanup
+    # This prevents the subprocess from killing all other experiments when it exits
+    env["Y_CLIENT_SUBPROCESS"] = "1"
 
     if getattr(sys, "frozen", False):
         # Running from PyInstaller - modules are in the bundle

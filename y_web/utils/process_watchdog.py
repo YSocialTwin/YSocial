@@ -279,13 +279,14 @@ class ProcessWatchdog:
             if should_run:
                 try:
                     self.run_once()
+                    # run_once() already updates _last_run and _next_run
                 except Exception as e:
                     logger.error(f"Watchdog: Error in scheduled run: {e}")
-
-                self._last_run = datetime.now()
-                self._next_run = self._last_run + timedelta(
-                    minutes=self._run_interval_minutes
-                )
+                    # Update timestamps even on error
+                    self._last_run = datetime.now()
+                    self._next_run = self._last_run + timedelta(
+                        minutes=self._run_interval_minutes
+                    )
 
             # Wait for shutdown signal or timeout (10 seconds)
             # Using Event.wait() is more efficient than polling with sleep
@@ -316,6 +317,15 @@ class ProcessWatchdog:
         except Exception as e:
             logger.error(f"Watchdog: Error during check: {e}")
             results["error"] = str(e)
+
+        # Update last_run timestamp (for both manual and scheduled runs)
+        self._last_run = datetime.now()
+        
+        # Update next_run if scheduler is running
+        if self._scheduler_running:
+            self._next_run = self._last_run + timedelta(
+                minutes=self._run_interval_minutes
+            )
 
         logger.info(
             f"Watchdog: Check complete - {results['processes_checked']} checked, "

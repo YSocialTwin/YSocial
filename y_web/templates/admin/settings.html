@@ -541,6 +541,19 @@
                         const borderColor = isRunning ? '#28a745' : '#dee2e6';
                         const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">RUNNING</span>' : '';
                         
+                        // Filter out completed experiments from running group display
+                        const activeExperiments = isRunning 
+                            ? group.experiments.filter(exp => exp.exp_status !== 'completed')
+                            : group.experiments;
+                        
+                        // Count completed experiments for display
+                        const completedCount = isRunning 
+                            ? group.experiments.filter(exp => exp.exp_status === 'completed').length
+                            : 0;
+                        const completedBadge = completedCount > 0 
+                            ? `<span style="background: #17a2b8; color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 4px;">${completedCount} done</span>` 
+                            : '';
+                        
                         return `
                         <div class="schedule-group" data-group-id="${group.id}" 
                              style="margin-bottom: 15px; border: 2px solid ${borderColor}; border-radius: 6px; background: #fff; ${isRunning ? 'box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);' : ''}">
@@ -549,6 +562,7 @@
                                     <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: ${isRunning ? 'white' : '#6c757d'};"></i> 
                                     ${group.name}
                                     ${runningBadge}
+                                    ${completedBadge}
                                 </span>
                                 <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="Cannot delete running group"' : ''}>
                                     <i class="mdi mdi-delete"></i>
@@ -557,7 +571,7 @@
                             <div class="group-experiments" data-group-id="${group.id}" 
                                  style="min-height: 50px; padding: 8px; background: ${isRunning ? '#f0fff4' : '#fafafa'}; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start;"
                                  ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${group.id})">
-                                ${group.experiments.length > 0 ? group.experiments.map(exp => `
+                                ${activeExperiments.length > 0 ? activeExperiments.map(exp => `
                                     <span class="experiment-tag" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: ${isRunning ? '#28a745' : '#6c757d'}; color: white; border-radius: 15px; font-size: 0.75em; white-space: nowrap;">
                                         <i class="mdi mdi-flask"></i>
                                         ${exp.name}
@@ -565,7 +579,7 @@
                                             <i class="mdi mdi-close-circle"></i>
                                         </button>` : ''}
                                     </span>
-                                `).join('') : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>'}
+                                `).join('') : (isRunning && completedCount > 0 ? '<p style="color: #28a745; font-size: 0.8em; text-align: center; margin: 0; width: 100%;"><i class="mdi mdi-check-circle"></i> All experiments completed!</p>' : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>')}
                             </div>
                         </div>
                     `}).join('');
@@ -782,6 +796,9 @@
                 // Reload persistent logs to get latest
                 loadPersistentLogs();
                 
+                // Always reload schedule groups to update completed experiment tags
+                loadScheduleGroups();
+                
                 if (data.schedule_complete) {
                     if (scheduleCheckInterval) {
                         clearInterval(scheduleCheckInterval);
@@ -789,13 +806,11 @@
                     }
                     currentRunningGroupId = null;
                     checkScheduleStatus();
-                    loadScheduleGroups();
                     loadAvailableExperiments();
                     // Refresh DataTables to show updated statuses
                     refreshAllTables();
                 } else if (data.next_group) {
                     currentRunningGroupId = data.next_group_id;
-                    loadScheduleGroups();
                 }
             })
             .catch(err => console.error('Error checking progress:', err));
