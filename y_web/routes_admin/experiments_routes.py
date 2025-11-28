@@ -4145,6 +4145,41 @@ def get_schedule_status():
     )
 
 
+def _get_clients_to_start(exp):
+    """
+    Check which clients in an experiment need to be started.
+    
+    Args:
+        exp: Experiment object
+        
+    Returns:
+        tuple: (all_clients_completed, clients_to_start)
+            - all_clients_completed: True if all clients have finished
+            - clients_to_start: List of Client objects that still need to run
+    """
+    clients = Client.query.filter_by(id_exp=exp.idexp).all()
+    all_clients_completed = True
+    clients_to_start = []
+    
+    for client in clients:
+        # Check if client has completed
+        client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+        if client_exec:
+            if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                all_clients_completed = False
+                clients_to_start.append(client)
+        else:
+            # No execution record means client hasn't run yet
+            all_clients_completed = False
+            clients_to_start.append(client)
+    
+    # If no clients exist, consider it not completed (nothing to run)
+    if len(clients) == 0:
+        all_clients_completed = False
+    
+    return all_clients_completed, clients_to_start
+
+
 @experiments.route("/admin/schedule/start", methods=["POST"])
 @login_required
 def start_schedule():
@@ -4216,24 +4251,10 @@ def start_schedule():
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
             # Check if all clients have already completed before starting the server
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
-            all_clients_completed = True
-            clients_to_start = []
-            
-            for client in clients:
-                # Check if client has completed
-                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
-                if client_exec:
-                    if client_exec.elapsed_time < client_exec.expected_duration_rounds:
-                        all_clients_completed = False
-                        clients_to_start.append(client)
-                else:
-                    # No execution record means client hasn't run yet
-                    all_clients_completed = False
-                    clients_to_start.append(client)
+            all_clients_completed, clients_to_start = _get_clients_to_start(exp)
             
             # If all clients have completed, mark experiment as completed and skip
-            if all_clients_completed and len(clients) > 0:
+            if all_clients_completed:
                 msg = f"Experiment '{exp.exp_name}' already completed - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
@@ -4242,7 +4263,7 @@ def start_schedule():
                 continue
             
             # If no clients to start, skip
-            if len(clients_to_start) == 0 and len(clients) > 0:
+            if len(clients_to_start) == 0:
                 msg = f"No clients to start for '{exp.exp_name}' - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
@@ -4486,24 +4507,10 @@ def check_schedule_progress():
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
             # Check if all clients have already completed before starting the server
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
-            all_clients_completed = True
-            clients_to_start = []
-            
-            for client in clients:
-                # Check if client has completed
-                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
-                if client_exec:
-                    if client_exec.elapsed_time < client_exec.expected_duration_rounds:
-                        all_clients_completed = False
-                        clients_to_start.append(client)
-                else:
-                    # No execution record means client hasn't run yet
-                    all_clients_completed = False
-                    clients_to_start.append(client)
+            all_clients_completed, clients_to_start = _get_clients_to_start(exp)
             
             # If all clients have completed, mark experiment as completed and skip
-            if all_clients_completed and len(clients) > 0:
+            if all_clients_completed:
                 msg = f"Experiment '{exp.exp_name}' already completed - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
@@ -4512,7 +4519,7 @@ def check_schedule_progress():
                 continue
             
             # If no clients to start, skip
-            if len(clients_to_start) == 0 and len(clients) > 0:
+            if len(clients_to_start) == 0:
                 msg = f"No clients to start for '{exp.exp_name}' - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
