@@ -1613,7 +1613,7 @@ def experiments_data():
         # Check if any client has infinite duration (days = -1)
         clients = Client.query.filter_by(id_exp=exp.idexp).all()
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
-        
+
         if exp.running == 1 or exp.exp_status == "active":
             # Get all clients for this experiment
             if clients:
@@ -4893,16 +4893,22 @@ def auto_create_groups():
     # Filter out experiments with infinite clients (days = -1)
     exp_ids = [exp.idexp for exp in experiments_list]
     infinite_clients = (
-        Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
-        .with_entities(Client.id_exp)
-        .distinct()
-        .all()
-    ) if exp_ids else []
+        (
+            Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+            .with_entities(Client.id_exp)
+            .distinct()
+            .all()
+        )
+        if exp_ids
+        else []
+    )
     experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
 
     available_exps = [
-        exp for exp in experiments_list 
-        if exp.idexp not in scheduled_exp_ids and exp.idexp not in experiments_with_infinite_clients
+        exp
+        for exp in experiments_list
+        if exp.idexp not in scheduled_exp_ids
+        and exp.idexp not in experiments_with_infinite_clients
     ]
 
     if not available_exps:
