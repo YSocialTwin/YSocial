@@ -307,6 +307,34 @@
                                     location.reload();
                                 });
                         }
+                        
+                        // Dynamic dashboard refresh - update experiment status every 30 seconds
+                        const DASHBOARD_REFRESH_INTERVAL = 30000;
+                        
+                        function refreshDashboard() {
+                            // Fetch current experiment counts and update if changed
+                            fetch('/admin/dashboard/status')
+                                .then(response => response.json())
+                                .then(data => {
+                                    // Check if counts have changed
+                                    const currentRunning = {{ len(running_experiments) }};
+                                    const currentCompleted = {{ len(completed_experiments) }};
+                                    const currentStopped = {{ len(stopped_experiments) }};
+                                    
+                                    if (data.running !== currentRunning || 
+                                        data.completed !== currentCompleted || 
+                                        data.stopped !== currentStopped) {
+                                        // Counts changed, reload the page to get fresh data
+                                        location.reload();
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error refreshing dashboard:', error);
+                                });
+                        }
+                        
+                        // Start periodic refresh
+                        setInterval(refreshDashboard, DASHBOARD_REFRESH_INTERVAL);
                     </script>
                     {% endif %}
 

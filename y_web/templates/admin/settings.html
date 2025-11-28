@@ -1331,26 +1331,26 @@
                         <div class="help-block">
 
                             <p>
-                                <b>What is an Experiment?</b>
-                                An experiment is the core of the YSocial platform.
-                                It composes the YServer, the SQlite database, the YClient and the agents' populations.
-                            </p>
-                            <br>
-
-
-                            <p>
-                               <b>Uploading an Experiment.</b>
-                                To upload an experiment, load the zip file containing the experiment files (as exported from a YSocial experiment detail page).
+                                <b>Experiments Overview</b><br>
+                                View and manage your experiments organized by status: Running (active), Completed, and Stopped/Scheduled.
                             </p>
                             <br>
 
                             <p>
-                                <b>Creating an Experiment.</b>
-                                To create a new experiment, provide a name, description, owner, host, and port.
-                                <br><br>
-                                Once created the experiment it will be possible to: (i) configure it, (ii) allocate synthetic agents to it and, (ii) create clients to interact with it.
-                                <br><br>
-                                <b>Note:</b> Specify at least two simulation topics and to enable agent content generation.
+                               <b>Create New Experiment</b><br>
+                                Provide a name, description, owner, host, and port. Once created, configure it and add agents and clients.
+                            </p>
+                            <br>
+
+                            <p>
+                                <b>Experiment Schedule</b><br>
+                                Create groups to run experiments in batches. Experiments in a group run in parallel; groups run sequentially.
+                            </p>
+                            <br>
+
+                            <p>
+                                <b>Copy & Upload</b><br>
+                                Copy existing experiments (with optional multiple copies) or upload previously exported experiment zip files.
                             </p>
                         </div>
                     </div>
@@ -1359,31 +1359,7 @@
             </div>
 
             <!-- ROW 3: Experiment Schedule + Copy Experiment -->
-            <div class="columns is-layout-row">
-                <style>
-                    /* Force boxes in the same row to have equal height */
-                    .columns.is-layout-row {
-                        align-items: stretch;
-                    }
-                    .columns.is-layout-row > .column {
-                        display: flex;
-                    }
-                    .columns.is-layout-row > .column > .dashboard-box,
-                    .columns.is-layout-row > .column > .sidebar-box {
-                        flex: 1;
-                        display: flex;
-                        flex-direction: column;
-                    }
-                    .columns.is-layout-row > .column > .sidebar-box form {
-                        flex-grow: 1;
-                        display: flex;
-                        flex-direction: column;
-                    }
-                    .columns.is-layout-row > .column > .sidebar-box .button-wrap {
-                        margin-top: auto;
-                    }
-                </style>
-                
+            <div class="columns">
                 <!-- Experiment Schedule Column (is-8) -->
                 <div class="column is-8">
                     <div class="dashboard-box">

@@ -319,6 +319,50 @@ def dashboard_experiments_by_status(status):
     })
 
 
+@admin.route("/admin/dashboard/status")
+@login_required
+def dashboard_status():
+    """
+    API endpoint to get current experiment status counts for dashboard refresh.
+    
+    Returns:
+        JSON with counts of running, completed, and stopped experiments
+    """
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Filter experiments based on user role
+    if user.role == "admin":
+        all_experiments = Exps.query.all()
+    elif user.role == "researcher":
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    else:
+        return jsonify({"error": "Access denied"}), 403
+    
+    # Count experiments by status
+    running_count = 0
+    completed_count = 0
+    stopped_count = 0
+    
+    for exp in all_experiments:
+        exp_status = getattr(exp, "exp_status", None)
+        if exp_status is None:
+            exp_status = "active" if exp.running == 1 else "stopped"
+        
+        if exp_status == "active":
+            running_count += 1
+        elif exp_status == "completed":
+            completed_count += 1
+        else:
+            stopped_count += 1
+    
+    return jsonify({
+        "running": running_count,
+        "completed": completed_count,
+        "stopped": stopped_count
+    })
+
+
 @admin.route("/admin/models_data")
 @login_required
 def models_data():
