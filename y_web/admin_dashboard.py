@@ -203,7 +203,7 @@ def dashboard():
 
     return render_template(
         "admin/dashboard.html",
-        active_experiments=active_exps,
+        running_experiments=active_exps,
         completed_experiments=completed_exps,
         stopped_experiments=stopped_exps,
         llm_backend=llm_backend,

@@ -182,7 +182,7 @@
                     {% if total_experiments > 0 %}
                     
                     <!-- Currently Running Experiments (Active) -->
-                    {% if len(active_experiments) > 0 %}
+                    {% if len(running_experiments) > 0 %}
                     <div class="dashboard-box">
                          <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
@@ -191,7 +191,7 @@
                          <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Active experiments with their running clients and real-time progress monitoring.
                         </p>
-                        {{ render_experiment_box(active_experiments, '#28a745') }}
+                        {{ render_experiment_box(running_experiments, '#28a745') }}
                     </div>
                     {% endif %}
                     
