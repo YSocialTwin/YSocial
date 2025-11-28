@@ -1490,7 +1490,7 @@ def start_server(exp):
             # On Windows, use creationflags instead of start_new_session to avoid console window
             # Redirect output to files instead of PIPE to avoid blocking
             if sys.platform.startswith("win"):
-                # CREATE_NO_WINDOW = 0x08000000 - creates process with no window (Python 3.7+)
+                # CREATE_NO_WINDOW = 0x08000000 - creates process with no window
                 # CREATE_NEW_PROCESS_GROUP = 0x00000200 - detaches the process from the parent
                 # process group so it won't receive signals from the parent
                 try:
