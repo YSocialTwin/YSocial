@@ -81,7 +81,7 @@
                         </h3>
 
                         <div class="box-content">
-                            <div id="table-active"></div>
+                            <div id="table-active" class="experiment-table"></div>
                         </div>
                     </div>
 
@@ -93,7 +93,7 @@
                         </h3>
 
                         <div class="box-content">
-                            <div id="table-completed"></div>
+                            <div id="table-completed" class="experiment-table"></div>
                         </div>
                     </div>
 
@@ -105,19 +105,26 @@
                         </h3>
 
                         <div class="box-content">
-                            <div id="table-stopped"></div>
+                            <div id="table-stopped" class="experiment-table"></div>
                         </div>
                     </div>
 
                     <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
                     <style>
-                      #table-active td, #table-completed td, #table-stopped td {
+                      .experiment-table td {
                         vertical-align: middle !important;
                       }
                     </style>
 
 <script>
+    // Status configuration
+    const EXP_STATUS = {
+        ACTIVE: 'active',
+        COMPLETED: 'completed',
+        STOPPED_SCHEDULED: 'stopped_scheduled'
+    };
+
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
@@ -274,10 +281,10 @@
         }).render(tableDiv);
     }
 
-    // Create all three tables
-    createTable('table-active', 'active');
-    createTable('table-completed', 'completed');
-    createTable('table-stopped', 'stopped_scheduled');
+    // Create all three tables using status constants
+    createTable('table-active', EXP_STATUS.ACTIVE);
+    createTable('table-completed', EXP_STATUS.COMPLETED);
+    createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED);
 
     let savedValue;
 
