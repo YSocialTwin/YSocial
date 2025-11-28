@@ -3350,6 +3350,7 @@ def copy_experiment():
     Supports creating multiple copies with incremental naming (name_1, name_2, etc.)
     """
     check_privileges(current_user.username)
+    from y_web.telemetry import Telemetry
 
     # Get form data
     new_exp_name = request.form.get("new_exp_name")
@@ -3399,8 +3400,6 @@ def copy_experiment():
             success = _create_single_experiment_copy(source_exp, copy_name)
             if success:
                 created_count += 1
-
-                from y_web.telemetry import Telemetry
 
                 telemetry = Telemetry(user=current_user)
                 telemetry.log_event(
