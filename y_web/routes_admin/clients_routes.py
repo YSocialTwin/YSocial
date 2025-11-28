@@ -350,7 +350,9 @@ def create_client():
         days = int(days)
         # days = -1 means infinite/run-until-stopped
         if days != -1 and days < 1:
-            errors.append("Days must be at least 1, or use -1 for infinite duration (run until stopped)")
+            errors.append(
+                "Days must be at least 1, or use -1 for infinite duration (run until stopped)"
+            )
     except (ValueError, TypeError):
         errors.append("Days must be a valid integer")
     try:
@@ -1198,15 +1200,17 @@ def get_progress(client_id):
         elapsed_hours = client_execution.elapsed_time
         elapsed_days = elapsed_hours // 24
         remaining_hours = elapsed_hours % 24
-        return json.dumps({
-            "progress": -1,
-            "infinite": True,
-            "elapsed_time": client_execution.elapsed_time,
-            "elapsed_days": elapsed_days,
-            "elapsed_hours": remaining_hours,
-            "last_active_day": client_execution.last_active_day,
-            "last_active_hour": client_execution.last_active_hour,
-        })
+        return json.dumps(
+            {
+                "progress": -1,
+                "infinite": True,
+                "elapsed_time": client_execution.elapsed_time,
+                "elapsed_days": elapsed_days,
+                "elapsed_hours": remaining_hours,
+                "last_active_day": client_execution.last_active_day,
+                "last_active_hour": client_execution.last_active_hour,
+            }
+        )
 
     # Calculate progress and cap at 100%
     if client_execution.expected_duration_rounds > 0:

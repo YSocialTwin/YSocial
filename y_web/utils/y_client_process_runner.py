@@ -477,7 +477,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
                 # Check if we've reached 100% completion (skip for infinite clients)
                 # Infinite clients have expected_duration_rounds = -1
-                if ce.expected_duration_rounds > 0 and ce.elapsed_time >= ce.expected_duration_rounds:
+                if (
+                    ce.expected_duration_rounds > 0
+                    and ce.elapsed_time >= ce.expected_duration_rounds
+                ):
                     print(
                         f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
                         file=sys.stderr,
@@ -500,9 +503,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                             )
                             .filter(Client.id_exp == client.id_exp)
                             .filter(
-                                Client_Execution.expected_duration_rounds > 0,  # Exclude infinite clients
+                                Client_Execution.expected_duration_rounds
+                                > 0,  # Exclude infinite clients
                                 Client_Execution.elapsed_time
-                                < Client_Execution.expected_duration_rounds
+                                < Client_Execution.expected_duration_rounds,
                             )
                             .count()
                         )
@@ -532,7 +536,9 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                         )
 
                         all_completed = (
-                            incomplete_clients == 0 and clients_without_exec == 0 and infinite_clients == 0
+                            incomplete_clients == 0
+                            and clients_without_exec == 0
+                            and infinite_clients == 0
                         )
 
                         # If all clients are completed (no infinite clients), update experiment status to "completed"

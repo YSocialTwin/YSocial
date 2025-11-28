@@ -1021,7 +1021,9 @@ def upload_experiment():
         db.session.commit()
 
         # For infinite clients (days = -1), set expected_duration_rounds to -1
-        expected_rounds = -1 if cl.days == -1 else cl.days * client["simulation"]["slots"]
+        expected_rounds = (
+            -1 if cl.days == -1 else cl.days * client["simulation"]["slots"]
+        )
         client_exec = Client_Execution(
             client_id=cl.id,
             last_active_hour=-1,
@@ -4722,17 +4724,24 @@ def get_available_experiments_for_schedule():
     # Use a single query instead of nested loops for efficiency
     exp_ids = [exp.idexp for exp in experiments_list]
     infinite_clients = (
-        Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
-        .with_entities(Client.id_exp)
-        .distinct()
-        .all()
-    ) if exp_ids else []
+        (
+            Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+            .with_entities(Client.id_exp)
+            .distinct()
+            .all()
+        )
+        if exp_ids
+        else []
+    )
     experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
 
     result = []
     for exp in experiments_list:
         # Exclude experiments that are already scheduled or have infinite clients
-        if exp.idexp not in scheduled_exp_ids and exp.idexp not in experiments_with_infinite_clients:
+        if (
+            exp.idexp not in scheduled_exp_ids
+            and exp.idexp not in experiments_with_infinite_clients
+        ):
             result.append(
                 {
                     "id": exp.idexp,
