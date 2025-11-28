@@ -590,10 +590,9 @@
     }
 
     function autoCreateGroups() {
-        const num = prompt('Enter number of experiments per group:', '2');
-        if (!num) return;
-
-        const experimentsPerGroup = parseInt(num);
+        const inputField = document.getElementById('exps-per-group');
+        const experimentsPerGroup = parseInt(inputField ? inputField.value : 2);
+        
         if (isNaN(experimentsPerGroup) || experimentsPerGroup < 1) {
             alert('Please enter a valid number (1 or more)');
             return;
@@ -610,7 +609,6 @@
                 loadScheduleGroups();
                 loadAvailableExperiments();
                 loadPersistentLogs();
-                alert(data.message);
             } else {
                 alert(data.message || 'Failed to create groups');
             }
@@ -1391,10 +1389,11 @@
                                     <h4 style="font-size: 0.9em; font-weight: 600; color: #333;">
                                         <i class="mdi mdi-playlist-play"></i> Groups
                                     </h4>
-                                    <div style="display: flex; gap: 5px;">
+                                    <div style="display: flex; gap: 5px; align-items: center;">
                                         <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-plus"></i> Add
                                         </button>
+                                        <input type="number" id="exps-per-group" value="3" min="1" max="20" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
                                         <button onclick="autoCreateGroups()" style="background: #17a2b8; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-auto-fix"></i> Auto
                                         </button>
@@ -1406,29 +1405,27 @@
                             </div>
                         </div>
 
-                        <!-- Execution Log -->
-                        <div id="schedule-log-container" style="margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
+                        <!-- Execution Log with Start/Stop buttons on same row -->
+                        <div id="schedule-log-container" style="border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                 <h4 style="font-size: 0.9em; font-weight: 600; color: #333; margin: 0;">
                                     <i class="mdi mdi-console"></i> Log
                                 </h4>
-                                <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
-                                    <i class="mdi mdi-delete-sweep"></i> Clear
-                                </button>
+                                <div style="display: flex; gap: 8px; align-items: center;">
+                                    <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
+                                        <i class="mdi mdi-delete-sweep"></i> Clear
+                                    </button>
+                                    <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 0.85em;">
+                                        <i class="mdi mdi-play"></i> Start
+                                    </button>
+                                    <button id="stop-schedule-btn" onclick="stopSchedule()" style="background: #dc3545; color: white; border: none; padding: 5px 15px; border-radius: 4px; cursor: pointer; font-size: 0.85em; display: none;">
+                                        <i class="mdi mdi-stop"></i> Stop
+                                    </button>
+                                </div>
                             </div>
-                            <div id="schedule-log" style="max-height: 100px; overflow-y: auto; font-family: monospace; font-size: 0.8em; line-height: 1.6; color: #333; min-height: 40px;">
+                            <div id="schedule-log" style="max-height: 80px; overflow-y: auto; font-family: monospace; font-size: 0.8em; line-height: 1.6; color: #333; min-height: 30px;">
                                 <p style="color: #999; text-align: center; margin: 0;">No logs yet</p>
                             </div>
-                        </div>
-
-                        <!-- Schedule Controls -->
-                        <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
-                            <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
-                                <i class="mdi mdi-play"></i> Start
-                            </button>
-                            <button id="stop-schedule-btn" onclick="stopSchedule()" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em; display: none;">
-                                <i class="mdi mdi-stop"></i> Stop
-                            </button>
                         </div>
                     </div>
                 </div>
