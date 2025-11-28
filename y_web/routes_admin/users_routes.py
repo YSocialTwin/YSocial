@@ -1223,10 +1223,15 @@ def watchdog_toggle():
         else:
             watchdog.stop_scheduler()
 
-        return jsonify({
-            "success": True,
-            "enabled": watchdog.is_running,
-            "message": f"Watchdog {'enabled' if enabled else 'disabled'}"
-        }), 200
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "enabled": watchdog.is_running,
+                    "message": f"Watchdog {'enabled' if enabled else 'disabled'}",
+                }
+            ),
+            200,
+        )
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500

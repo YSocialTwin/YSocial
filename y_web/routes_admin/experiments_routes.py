@@ -1604,11 +1604,21 @@ def experiments_data():
                 total_progress = 0
                 count = 0
                 for client in clients:
-                    client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                    client_exec = Client_Execution.query.filter_by(
+                        client_id=client.id
+                    ).first()
                     if client_exec and client_exec.expected_duration_rounds > 0:
-                        progress = min(100, max(0, int(
-                            client_exec.elapsed_time / client_exec.expected_duration_rounds * 100
-                        )))
+                        progress = min(
+                            100,
+                            max(
+                                0,
+                                int(
+                                    client_exec.elapsed_time
+                                    / client_exec.expected_duration_rounds
+                                    * 100
+                                ),
+                            ),
+                        )
                         total_progress += progress
                         count += 1
                 if count > 0:
@@ -3390,14 +3400,20 @@ def copy_experiment():
             if success:
                 created_count += 1
         except Exception as e:
-            current_app.logger.error(f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True)
+            current_app.logger.error(
+                f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
+            )
             flash(f"Error creating copy '{copy_name}': {str(e)}")
 
     if created_count > 0:
         if created_count == 1:
-            flash(f"Experiment '{exp_names_to_create[0]}' successfully created as a copy of '{source_exp.exp_name}'.")
+            flash(
+                f"Experiment '{exp_names_to_create[0]}' successfully created as a copy of '{source_exp.exp_name}'."
+            )
         else:
-            flash(f"{created_count} experiment copies successfully created from '{source_exp.exp_name}'.")
+            flash(
+                f"{created_count} experiment copies successfully created from '{source_exp.exp_name}'."
+            )
 
     return redirect(url_for("experiments.settings"))
 
@@ -3405,11 +3421,11 @@ def copy_experiment():
 def _create_single_experiment_copy(source_exp, new_exp_name):
     """
     Helper function to create a single experiment copy.
-    
+
     Args:
         source_exp: Source experiment object
         new_exp_name: Name for the new experiment
-        
+
     Returns:
         bool: True if successful, False otherwise
     """
@@ -3440,9 +3456,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     source_folder = os.path.join(
         BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}"
     )
-    new_folder = os.path.join(
-        BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}"
-    )
+    new_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}")
 
     # Check if source folder exists
     if not os.path.exists(source_folder):
@@ -3454,9 +3468,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     # Copy all files from source to new folder, excluding log files
     import re
 
-    log_pattern = re.compile(
-        r"\.log(\.\d+)?$"
-    )  # Matches .log, .log.1, .log.2, etc.
+    log_pattern = re.compile(r"\.log(\.\d+)?$")  # Matches .log, .log.1, .log.2, etc.
 
     for item in os.listdir(source_folder):
         # Skip log files (server logs and client logs) including rotated logs
@@ -3475,7 +3487,9 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     suggested_port = get_suggested_port()
     if not suggested_port:
         # Cleanup and return
-        current_app.logger.warning(f"No available port found for experiment copy: {new_exp_name}")
+        current_app.logger.warning(
+            f"No available port found for experiment copy: {new_exp_name}"
+        )
         shutil.rmtree(new_folder, ignore_errors=True)
         return False
 
@@ -3643,16 +3657,16 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
                     # Pattern matches :port/ or :port at end of string
                     import re
 
-                    new_api = re.sub(
-                        r":(\d+)(/|$)", f":{suggested_port}\\2", old_api
-                    )
+                    new_api = re.sub(r":(\d+)(/|$)", f":{suggested_port}\\2", old_api)
                     client_config["servers"]["api"] = new_api
 
                     with open(client_config_path, "w") as f:
                         json.dump(client_config, f, indent=4)
             except Exception as e:
                 # Continue anyway - this is not critical enough to fail the entire copy
-                current_app.logger.warning(f"Failed to update client config {item}: {str(e)}")
+                current_app.logger.warning(
+                    f"Failed to update client config {item}: {str(e)}"
+                )
 
     # Create new experiment record in admin database
     new_exp = Exps(
@@ -4012,9 +4026,10 @@ def delete_schedule_group(group_id):
     # Check if the group is currently running
     status = ExperimentScheduleStatus.query.first()
     if status and status.is_running and status.current_group_id == group_id:
-        return jsonify(
-            {"success": False, "message": "Cannot delete a running group"}
-        ), 400
+        return (
+            jsonify({"success": False, "message": "Cannot delete a running group"}),
+            400,
+        )
 
     # Delete all items in the group first
     ExperimentScheduleItem.query.filter_by(group_id=group_id).delete()
@@ -4024,7 +4039,9 @@ def delete_schedule_group(group_id):
     return jsonify({"success": True})
 
 
-@experiments.route("/admin/schedule/groups/<int:group_id>/experiments", methods=["POST"])
+@experiments.route(
+    "/admin/schedule/groups/<int:group_id>/experiments", methods=["POST"]
+)
 @login_required
 def add_experiment_to_group(group_id):
     """
@@ -4058,7 +4075,10 @@ def add_experiment_to_group(group_id):
         group_id=group_id, experiment_id=data["experiment_id"]
     ).first()
     if existing:
-        return jsonify({"success": False, "message": "Experiment already in group"}), 400
+        return (
+            jsonify({"success": False, "message": "Experiment already in group"}),
+            400,
+        )
 
     # Get max order index for this group
     max_order = (
@@ -4069,7 +4089,9 @@ def add_experiment_to_group(group_id):
     )
 
     item = ExperimentScheduleItem(
-        group_id=group_id, experiment_id=data["experiment_id"], order_index=max_order + 1
+        group_id=group_id,
+        experiment_id=data["experiment_id"],
+        order_index=max_order + 1,
     )
     db.session.add(item)
     db.session.commit()
@@ -4107,9 +4129,15 @@ def remove_experiment_from_group(item_id):
     # Check if the group is currently running
     status = ExperimentScheduleStatus.query.first()
     if status and status.is_running and status.current_group_id == item.group_id:
-        return jsonify(
-            {"success": False, "message": "Cannot remove experiments from a running group"}
-        ), 400
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Cannot remove experiments from a running group",
+                }
+            ),
+            400,
+        )
 
     db.session.delete(item)
     db.session.commit()
@@ -4174,10 +4202,10 @@ def get_schedule_status():
 def _get_clients_to_start(exp):
     """
     Check which clients in an experiment need to be started.
-    
+
     Args:
         exp: Experiment object
-        
+
     Returns:
         tuple: (all_clients_completed, clients_to_start)
             - all_clients_completed: True if all clients have finished
@@ -4186,7 +4214,7 @@ def _get_clients_to_start(exp):
     clients = Client.query.filter_by(id_exp=exp.idexp).all()
     all_clients_completed = True
     clients_to_start = []
-    
+
     for client in clients:
         # Check if client has completed
         client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
@@ -4198,11 +4226,11 @@ def _get_clients_to_start(exp):
             # No execution record means client hasn't run yet
             all_clients_completed = False
             clients_to_start.append(client)
-    
+
     # If no clients exist, consider it not completed (nothing to run)
     if len(clients) == 0:
         all_clients_completed = False
-    
+
     return all_clients_completed, clients_to_start
 
 
@@ -4218,6 +4246,7 @@ def start_schedule():
         JSON with success status and execution logs
     """
     import time
+
     check_privileges(current_user.username)
 
     # Check if already running
@@ -4244,12 +4273,23 @@ def start_schedule():
         .first()
     )
     if not first_group:
-        return jsonify({"success": False, "message": "No groups defined or all groups completed"}), 400
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "No groups defined or all groups completed",
+                }
+            ),
+            400,
+        )
 
     # Start all experiments in first group
     items = ExperimentScheduleItem.query.filter_by(group_id=first_group.id).all()
     if not items:
-        return jsonify({"success": False, "message": "First group has no experiments"}), 400
+        return (
+            jsonify({"success": False, "message": "First group has no experiments"}),
+            400,
+        )
 
     from datetime import datetime
 
@@ -4278,7 +4318,7 @@ def start_schedule():
         if exp and exp.running == 0:
             # Check if all clients have already completed before starting the server
             all_clients_completed, clients_to_start = _get_clients_to_start(exp)
-            
+
             # If all clients have completed, mark experiment as completed and skip
             if all_clients_completed:
                 msg = f"Experiment '{exp.exp_name}' already completed - skipping"
@@ -4287,14 +4327,14 @@ def start_schedule():
                 exp.exp_status = "completed"
                 db.session.commit()
                 continue
-            
+
             # If no clients to start, skip
             if len(clients_to_start) == 0:
                 msg = f"No clients to start for '{exp.exp_name}' - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
                 continue
-            
+
             msg = f"Starting server for '{exp.exp_name}'..."
             logs.append(msg)
             db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
@@ -4320,7 +4360,9 @@ def start_schedule():
                     logs.append(msg)
                     db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
                     # Get population for client
-                    population = Population.query.filter_by(id=client.population_id).first()
+                    population = Population.query.filter_by(
+                        id=client.population_id
+                    ).first()
                     if population:
                         start_client(exp, client, population, resume=True)
                         # Mark client as running
@@ -4331,7 +4373,9 @@ def start_schedule():
                     else:
                         msg = f"Warning: No population found for client '{client.name}'"
                         logs.append(msg)
-                        db.session.add(ExperimentScheduleLog(message=msg, log_type="warning"))
+                        db.session.add(
+                            ExperimentScheduleLog(message=msg, log_type="warning")
+                        )
 
             msg = f"Experiment '{exp.exp_name}' started successfully"
             logs.append(msg)
@@ -4418,6 +4462,7 @@ def check_schedule_progress():
         JSON with progress status
     """
     import time
+
     check_privileges(current_user.username)
 
     status = ExperimentScheduleStatus.query.first()
@@ -4454,7 +4499,7 @@ def check_schedule_progress():
     # All completed - stop current group experiments and move to next group
     logs = []
     current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
-    
+
     msg = f"Group '{current_group.name}' completed!"
     logs.append(msg)
     db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
@@ -4506,18 +4551,18 @@ def check_schedule_progress():
         logs.append(msg)
         db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
         db.session.commit()
-        
+
         # Clean up all completed groups from the database
         completed_groups = ExperimentScheduleGroup.query.filter_by(is_completed=1).all()
         for group in completed_groups:
             ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
             db.session.delete(group)
         db.session.commit()
-        
+
         # Clear all schedule logs after successful completion
         ExperimentScheduleLog.query.delete()
         db.session.commit()
-        
+
         return jsonify(
             {
                 "success": True,
@@ -4541,7 +4586,7 @@ def check_schedule_progress():
         if exp and exp.running == 0:
             # Check if all clients have already completed before starting the server
             all_clients_completed, clients_to_start = _get_clients_to_start(exp)
-            
+
             # If all clients have completed, mark experiment as completed and skip
             if all_clients_completed:
                 msg = f"Experiment '{exp.exp_name}' already completed - skipping"
@@ -4550,16 +4595,20 @@ def check_schedule_progress():
                 exp.exp_status = "completed"
                 db.session.commit()
                 continue
-            
+
             # If no clients to start, skip
             if len(clients_to_start) == 0:
                 msg = f"No clients to start for '{exp.exp_name}' - skipping"
                 logs.append(msg)
                 db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
                 continue
-            
+
             logs.append(f"Starting server for '{exp.exp_name}'...")
-            db.session.add(ExperimentScheduleLog(message=f"Starting server for '{exp.exp_name}'...", log_type="info"))
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=f"Starting server for '{exp.exp_name}'...", log_type="info"
+                )
+            )
             exp.running = 1
             exp.exp_status = "active"
             db.session.commit()
@@ -4573,19 +4622,35 @@ def check_schedule_progress():
             for client in clients_to_start:
                 if client.status == 0:
                     logs.append(f"Starting client '{client.name}'...")
-                    db.session.add(ExperimentScheduleLog(message=f"Starting client '{client.name}'...", log_type="info"))
-                    population = Population.query.filter_by(id=client.population_id).first()
+                    db.session.add(
+                        ExperimentScheduleLog(
+                            message=f"Starting client '{client.name}'...",
+                            log_type="info",
+                        )
+                    )
+                    population = Population.query.filter_by(
+                        id=client.population_id
+                    ).first()
                     if population:
                         start_client(exp, client, population, resume=True)
                         client.status = 1
                         db.session.commit()
 
             logs.append(f"Experiment '{exp.exp_name}' started successfully")
-            db.session.add(ExperimentScheduleLog(message=f"Experiment '{exp.exp_name}' started successfully", log_type="success"))
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=f"Experiment '{exp.exp_name}' started successfully",
+                    log_type="success",
+                )
+            )
             db.session.commit()
 
     logs.append(f"Group '{next_group.name}' started!")
-    db.session.add(ExperimentScheduleLog(message=f"Group '{next_group.name}' started!", log_type="success"))
+    db.session.add(
+        ExperimentScheduleLog(
+            message=f"Group '{next_group.name}' started!", log_type="success"
+        )
+    )
     db.session.commit()
 
     return jsonify(
@@ -4688,7 +4753,9 @@ def get_schedule_logs():
                     "id": log.id,
                     "message": log.message,
                     "log_type": log.log_type,
-                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                    "created_at": (
+                        log.created_at.isoformat() if log.created_at else None
+                    ),
                 }
                 for log in logs
             ],
@@ -4740,7 +4807,9 @@ def auto_create_groups():
             raise ValueError("Must be at least 1")
     except (ValueError, TypeError):
         return (
-            jsonify({"success": False, "message": "Invalid experiments_per_group value"}),
+            jsonify(
+                {"success": False, "message": "Invalid experiments_per_group value"}
+            ),
             400,
         )
 
@@ -4761,10 +4830,17 @@ def auto_create_groups():
     scheduled_exp_ids = set(
         item.experiment_id for item in ExperimentScheduleItem.query.all()
     )
-    available_exps = [exp for exp in experiments_list if exp.idexp not in scheduled_exp_ids]
+    available_exps = [
+        exp for exp in experiments_list if exp.idexp not in scheduled_exp_ids
+    ]
 
     if not available_exps:
-        return jsonify({"success": False, "message": "No available experiments to assign"}), 400
+        return (
+            jsonify(
+                {"success": False, "message": "No available experiments to assign"}
+            ),
+            400,
+        )
 
     # Get current max order index
     max_order = (

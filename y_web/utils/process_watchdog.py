@@ -320,10 +320,10 @@ class ProcessWatchdog:
 
         # Update last_run timestamp (for both manual and scheduled runs)
         self._last_run = datetime.now()
-        
+
         # Persist last_run to database
         _save_watchdog_last_run(self._last_run)
-        
+
         # Update next_run if scheduler is running
         if self._scheduler_running:
             self._next_run = self._last_run + timedelta(
@@ -705,7 +705,9 @@ def _save_watchdog_last_run(last_run: datetime) -> None:
                 db.session.commit()
             else:
                 # Create settings row if it doesn't exist
-                settings = WatchdogSettings(enabled=True, run_interval_minutes=15, last_run=last_run)
+                settings = WatchdogSettings(
+                    enabled=True, run_interval_minutes=15, last_run=last_run
+                )
                 db.session.add(settings)
                 db.session.commit()
     except Exception as e:
@@ -742,7 +744,9 @@ def _load_watchdog_settings() -> Dict:
     }
 
 
-def _save_watchdog_settings(enabled: bool = None, run_interval_minutes: int = None) -> None:
+def _save_watchdog_settings(
+    enabled: bool = None, run_interval_minutes: int = None
+) -> None:
     """
     Save watchdog settings to the database.
 
@@ -768,7 +772,9 @@ def _save_watchdog_settings(enabled: bool = None, run_interval_minutes: int = No
                 # Create settings row if it doesn't exist
                 settings = WatchdogSettings(
                     enabled=enabled if enabled is not None else True,
-                    run_interval_minutes=run_interval_minutes if run_interval_minutes is not None else 15
+                    run_interval_minutes=(
+                        run_interval_minutes if run_interval_minutes is not None else 15
+                    ),
                 )
                 db.session.add(settings)
                 db.session.commit()
@@ -855,11 +861,15 @@ def get_watchdog_status() -> Dict:
     """
     watchdog = get_watchdog()
     status = watchdog.get_status()
-    
+
     # Try to load last_run from database if not set in memory
     if status.get("last_run") is None:
         db_settings = _load_watchdog_settings()
         if db_settings.get("last_run"):
-            status["last_run"] = db_settings["last_run"].isoformat() if hasattr(db_settings["last_run"], "isoformat") else db_settings["last_run"]
-    
+            status["last_run"] = (
+                db_settings["last_run"].isoformat()
+                if hasattr(db_settings["last_run"], "isoformat")
+                else db_settings["last_run"]
+            )
+
     return status

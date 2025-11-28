@@ -50,9 +50,7 @@ def migrate_sqlite(db_path):
             print("✓ Added exp_status column to SQLite database")
 
             # Update existing experiments based on their running status
-            cursor.execute(
-                "UPDATE exps SET exp_status = 'active' WHERE running = 1"
-            )
+            cursor.execute("UPDATE exps SET exp_status = 'active' WHERE running = 1")
             cursor.execute(
                 "UPDATE exps SET exp_status = 'stopped' WHERE running = 0 OR running IS NULL"
             )
@@ -115,9 +113,7 @@ def migrate_postgresql(host, port, database, user, password):
             print("✓ Added exp_status column to PostgreSQL database")
 
             # Update existing experiments based on their running status
-            cursor.execute(
-                "UPDATE exps SET exp_status = 'active' WHERE running = 1"
-            )
+            cursor.execute("UPDATE exps SET exp_status = 'active' WHERE running = 1")
             cursor.execute(
                 "UPDATE exps SET exp_status = 'stopped' WHERE running = 0 OR running IS NULL"
             )
