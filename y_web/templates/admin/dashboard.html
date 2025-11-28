@@ -15,6 +15,7 @@
             <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                 <span class="left" style="display: flex; align-items: center; gap: 10px;">
                     Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong>
+                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
                     {% if ns.has_infinite_client %}
                     <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
                     {% endif %}
