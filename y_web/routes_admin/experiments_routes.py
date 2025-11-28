@@ -3449,6 +3449,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     suggested_port = get_suggested_port()
     if not suggested_port:
         # Cleanup and return
+        current_app.logger.warning(f"No available port found for experiment copy: {new_exp_name}")
         shutil.rmtree(new_folder, ignore_errors=True)
         return False
 
@@ -3623,9 +3624,9 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
 
                     with open(client_config_path, "w") as f:
                         json.dump(client_config, f, indent=4)
-            except Exception:
+            except Exception as e:
                 # Continue anyway - this is not critical enough to fail the entire copy
-                pass
+                current_app.logger.warning(f"Failed to update client config {item}: {str(e)}")
 
     # Create new experiment record in admin database
     new_exp = Exps(
