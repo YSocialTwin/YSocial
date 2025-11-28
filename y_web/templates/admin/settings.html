@@ -125,26 +125,38 @@
                         min-width: 300px;
                         display: flex;
                         flex-direction: column;
-                        min-height: 400px;
+                        height: 450px;
+                      }
+                      .experiment-box .box-content {
+                        flex: 1;
+                        overflow: auto;
                       }
                       @media (max-width: 992px) {
                         .experiment-box {
                           flex: 1 1 100%;
                           min-width: 100%;
+                          height: auto;
+                          min-height: 400px;
                         }
                       }
                       .experiment-table td {
                         vertical-align: middle !important;
+                        text-align: center !important;
+                      }
+                      .experiment-table th {
+                        text-align: center !important;
                       }
                       .compact-table .gridjs-wrapper {
                         font-size: 0.85em;
                       }
                       .compact-table .gridjs-th {
-                        padding: 8px 6px !important;
+                        padding: 8px 4px !important;
                         font-size: 0.8em;
+                        text-align: center !important;
                       }
                       .compact-table .gridjs-td {
-                        padding: 6px 4px !important;
+                        padding: 6px 3px !important;
+                        text-align: center !important;
                       }
                       .compact-table .gridjs-search {
                         width: 100% !important;
@@ -196,13 +208,13 @@
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '80px' },
-            { id: 'owner', name: 'Owner', sort: false, width: '60px' },
+            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
             {
                 id: 'annotations',
                 name: 'Tags',
                 sort: false,
-                width: '80px',
+                width: '70px',
                 formatter: (cell) => {
                     if (!cell || cell === '') {
                         return gridjs.html('<div style="text-align: center;">-</div>');
