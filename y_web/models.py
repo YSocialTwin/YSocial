@@ -403,6 +403,56 @@ class Exps(db.Model):
     exp_status = db.Column(db.String(20), nullable=False, default="stopped")
 
 
+class ExperimentScheduleGroup(db.Model):
+    """
+    Experiment schedule group for batch execution.
+
+    Groups experiments together for sequential execution as part of a schedule.
+    Experiments in the same group run in parallel, groups run sequentially.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_groups"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
+class ExperimentScheduleItem(db.Model):
+    """
+    Links experiments to schedule groups.
+
+    Associates experiments with groups for scheduled batch execution.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_items"
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(
+        db.Integer,
+        db.ForeignKey("experiment_schedule_groups.id"),
+        nullable=False,
+    )
+    experiment_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ExperimentScheduleStatus(db.Model):
+    """
+    Tracks the status of scheduled experiment execution.
+
+    Monitors which group is currently running and overall schedule state.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_status"
+    id = db.Column(db.Integer, primary_key=True)
+    is_running = db.Column(db.Integer, nullable=False, default=0)
+    current_group_id = db.Column(db.Integer, nullable=True, default=None)
+    started_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
 class Exp_stats(db.Model):
     """
     Experiment statistics tracking.

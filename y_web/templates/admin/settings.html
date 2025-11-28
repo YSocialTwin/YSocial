@@ -403,6 +403,292 @@
 
             </div>
 
+            <!-- Experiment Schedule Section -->
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
+                            <span style="display: flex; align-items: center; gap: 10px;">
+                                <i class="mdi mdi-calendar-clock" style="font-size: 20px; color: #6c757d;"></i>
+                                Experiment Schedule
+                            </span>
+                            <span id="schedule-status-badge" style="display: none; padding: 4px 12px; border-radius: 12px; font-size: 0.8em; font-weight: 500;"></span>
+                        </h3>
+                        <p style="font-size: 0.85em; color: #666; margin-bottom: 15px;">
+                            Create experiment groups for sequential batch execution. Experiments within a group run in parallel; groups run sequentially.
+                        </p>
+
+                        <div style="display: flex; gap: 20px; margin-bottom: 15px;">
+                            <!-- Available Experiments -->
+                            <div style="flex: 1; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 200px;">
+                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px; color: #333;">
+                                    <i class="mdi mdi-flask-outline"></i> Available Experiments
+                                </h4>
+                                <div id="available-experiments" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
+                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">Loading...</p>
+                                </div>
+                            </div>
+
+                            <!-- Schedule Groups -->
+                            <div style="flex: 2; border: 1px solid #ddd; border-radius: 8px; padding: 10px; min-height: 200px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h4 style="font-size: 0.9em; font-weight: 600; color: #333;">
+                                        <i class="mdi mdi-playlist-play"></i> Schedule Groups
+                                    </h4>
+                                    <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
+                                        <i class="mdi mdi-plus"></i> Add Group
+                                    </button>
+                                </div>
+                                <div id="schedule-groups" style="min-height: 150px; max-height: 300px; overflow-y: auto;">
+                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Schedule Controls -->
+                        <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
+                            <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                                <i class="mdi mdi-play"></i> Start Schedule
+                            </button>
+                            <button id="stop-schedule-btn" onclick="stopSchedule()" style="background: #dc3545; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em; display: none;">
+                                <i class="mdi mdi-stop"></i> Stop Schedule
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule JavaScript -->
+            <script>
+                let scheduleCheckInterval = null;
+
+                // Load schedule data on page load
+                document.addEventListener('DOMContentLoaded', function() {
+                    loadAvailableExperiments();
+                    loadScheduleGroups();
+                    checkScheduleStatus();
+                });
+
+                function loadAvailableExperiments() {
+                    fetch('/admin/schedule/available_experiments')
+                        .then(response => response.json())
+                        .then(data => {
+                            const container = document.getElementById('available-experiments');
+                            if (data.experiments && data.experiments.length > 0) {
+                                container.innerHTML = data.experiments.map(exp => `
+                                    <div class="draggable-experiment" draggable="true" data-exp-id="${exp.id}" 
+                                         style="padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border: 1px solid #dee2e6; 
+                                                border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
+                                         ondragstart="handleDragStart(event)">
+                                        <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
+                                    </div>
+                                `).join('');
+                            } else {
+                                container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No available experiments</p>';
+                            }
+                        })
+                        .catch(err => console.error('Error loading experiments:', err));
+                }
+
+                function loadScheduleGroups() {
+                    fetch('/admin/schedule/groups')
+                        .then(response => response.json())
+                        .then(data => {
+                            const container = document.getElementById('schedule-groups');
+                            if (data.groups && data.groups.length > 0) {
+                                container.innerHTML = data.groups.map((group, idx) => `
+                                    <div class="schedule-group" data-group-id="${group.id}" 
+                                         style="margin-bottom: 15px; border: 1px solid #dee2e6; border-radius: 6px; background: #fff;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e9ecef; border-radius: 6px 6px 0 0;">
+                                            <span style="font-weight: 600; font-size: 0.85em;">
+                                                <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: #6c757d;"></i> 
+                                                ${group.name}
+                                            </span>
+                                            <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1em;">
+                                                <i class="mdi mdi-delete"></i>
+                                            </button>
+                                        </div>
+                                        <div class="group-experiments" data-group-id="${group.id}" 
+                                             style="min-height: 50px; padding: 8px; background: #fafafa;"
+                                             ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${group.id})">
+                                            ${group.experiments.length > 0 ? group.experiments.map(exp => `
+                                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 3px 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.8em;">
+                                                    <span><strong>${exp.name}</strong></span>
+                                                    <button onclick="removeExperimentFromGroup(${exp.item_id})" style="background: none; border: none; color: #dc3545; cursor: pointer;">
+                                                        <i class="mdi mdi-close"></i>
+                                                    </button>
+                                                </div>
+                                            `).join('') : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0;">Drag experiments here</p>'}
+                                        </div>
+                                    </div>
+                                `).join('');
+                            } else {
+                                container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet. Click "Add Group" to start.</p>';
+                            }
+                        })
+                        .catch(err => console.error('Error loading groups:', err));
+                }
+
+                function addScheduleGroup() {
+                    const name = prompt('Enter group name:');
+                    if (!name) return;
+
+                    fetch('/admin/schedule/groups', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: name })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadScheduleGroups();
+                        } else {
+                            alert(data.message || 'Failed to create group');
+                        }
+                    })
+                    .catch(err => alert('Error creating group'));
+                }
+
+                function deleteScheduleGroup(groupId) {
+                    if (!confirm('Delete this group and remove all experiments from it?')) return;
+
+                    fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                loadScheduleGroups();
+                                loadAvailableExperiments();
+                            }
+                        })
+                        .catch(err => console.error('Error deleting group:', err));
+                }
+
+                function handleDragStart(event) {
+                    event.dataTransfer.setData('text/plain', event.target.dataset.expId);
+                    event.target.style.opacity = '0.5';
+                }
+
+                function handleDragOver(event) {
+                    event.preventDefault();
+                    event.currentTarget.style.background = '#e8f4e8';
+                }
+
+                function handleDrop(event, groupId) {
+                    event.preventDefault();
+                    event.currentTarget.style.background = '#fafafa';
+                    
+                    const expId = event.dataTransfer.getData('text/plain');
+                    if (!expId) return;
+
+                    fetch(`/admin/schedule/groups/${groupId}/experiments`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ experiment_id: parseInt(expId) })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            loadScheduleGroups();
+                            loadAvailableExperiments();
+                        } else {
+                            alert(data.message || 'Failed to add experiment');
+                        }
+                    })
+                    .catch(err => alert('Error adding experiment to group'));
+                }
+
+                function removeExperimentFromGroup(itemId) {
+                    fetch(`/admin/schedule/items/${itemId}`, { method: 'DELETE' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                loadScheduleGroups();
+                                loadAvailableExperiments();
+                            }
+                        })
+                        .catch(err => console.error('Error removing experiment:', err));
+                }
+
+                function startSchedule() {
+                    if (!confirm('Start the experiment schedule? This will run all groups sequentially.')) return;
+
+                    fetch('/admin/schedule/start', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                checkScheduleStatus();
+                                // Start polling for progress
+                                scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
+                            } else {
+                                alert(data.message || 'Failed to start schedule');
+                            }
+                        })
+                        .catch(err => alert('Error starting schedule'));
+                }
+
+                function stopSchedule() {
+                    if (!confirm('Stop the schedule? This will stop all running experiments.')) return;
+
+                    fetch('/admin/schedule/stop', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert(data.message);
+                                checkScheduleStatus();
+                                if (scheduleCheckInterval) {
+                                    clearInterval(scheduleCheckInterval);
+                                }
+                            } else {
+                                alert(data.message || 'Failed to stop schedule');
+                            }
+                        })
+                        .catch(err => alert('Error stopping schedule'));
+                }
+
+                function checkScheduleStatus() {
+                    fetch('/admin/schedule/status')
+                        .then(response => response.json())
+                        .then(data => {
+                            const startBtn = document.getElementById('start-schedule-btn');
+                            const stopBtn = document.getElementById('stop-schedule-btn');
+                            const badge = document.getElementById('schedule-status-badge');
+
+                            if (data.is_running) {
+                                startBtn.style.display = 'none';
+                                stopBtn.style.display = 'inline-block';
+                                badge.style.display = 'inline-block';
+                                badge.style.background = '#28a745';
+                                badge.style.color = 'white';
+                                badge.textContent = 'Running';
+                            } else {
+                                startBtn.style.display = 'inline-block';
+                                stopBtn.style.display = 'none';
+                                badge.style.display = 'none';
+                            }
+                        })
+                        .catch(err => console.error('Error checking status:', err));
+                }
+
+                function checkScheduleProgress() {
+                    fetch('/admin/schedule/check_progress', { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.schedule_complete) {
+                                alert('Schedule completed!');
+                                if (scheduleCheckInterval) {
+                                    clearInterval(scheduleCheckInterval);
+                                }
+                                checkScheduleStatus();
+                                loadScheduleGroups();
+                            } else if (data.next_group) {
+                                console.log('Advanced to group:', data.next_group);
+                            }
+                        })
+                        .catch(err => console.error('Error checking progress:', err));
+                }
+            </script>
+
             <div class="columns">
                 <!--Dashboard column-->
                 <div class="column is-8">

@@ -40,6 +40,9 @@ from y_web.models import (
     Education,
     Exp_stats,
     Exp_Topic,
+    ExperimentScheduleGroup,
+    ExperimentScheduleItem,
+    ExperimentScheduleStatus,
     Exps,
     Jupyter_instances,
     Languages,
@@ -3854,3 +3857,553 @@ def trigger_log_sync():
     except Exception as e:
         current_app.logger.error(f"Error triggering log sync: {e}", exc_info=True)
         return jsonify({"success": False, "message": str(e)}), 500
+
+
+# =====================================================
+# Experiment Schedule Routes
+# =====================================================
+
+
+@experiments.route("/admin/schedule/groups", methods=["GET"])
+@login_required
+def get_schedule_groups():
+    """
+    Get all experiment schedule groups with their experiments.
+
+    Returns:
+        JSON with groups and their associated experiments
+    """
+    check_privileges(current_user.username)
+
+    groups = ExperimentScheduleGroup.query.order_by(
+        ExperimentScheduleGroup.order_index
+    ).all()
+
+    result = []
+    for group in groups:
+        items = (
+            ExperimentScheduleItem.query.filter_by(group_id=group.id)
+            .order_by(ExperimentScheduleItem.order_index)
+            .all()
+        )
+        experiments_list = []
+        for item in items:
+            exp = Exps.query.get(item.experiment_id)
+            if exp:
+                experiments_list.append(
+                    {
+                        "id": exp.idexp,
+                        "name": exp.exp_name,
+                        "owner": exp.owner,
+                        "exp_status": exp.exp_status,
+                        "item_id": item.id,
+                    }
+                )
+        result.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "order_index": group.order_index,
+                "experiments": experiments_list,
+            }
+        )
+
+    return jsonify({"success": True, "groups": result})
+
+
+@experiments.route("/admin/schedule/groups", methods=["POST"])
+@login_required
+def create_schedule_group():
+    """
+    Create a new experiment schedule group.
+
+    Expects JSON body with:
+    - name: Group name
+
+    Returns:
+        JSON with created group details
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "name" not in data:
+        return jsonify({"success": False, "message": "Name is required"}), 400
+
+    # Get max order index
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleGroup.order_index)).scalar() or 0
+    )
+
+    group = ExperimentScheduleGroup(name=data["name"], order_index=max_order + 1)
+    db.session.add(group)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "group": {
+                "id": group.id,
+                "name": group.name,
+                "order_index": group.order_index,
+                "experiments": [],
+            },
+        }
+    )
+
+
+@experiments.route("/admin/schedule/groups/<int:group_id>", methods=["DELETE"])
+@login_required
+def delete_schedule_group(group_id):
+    """
+    Delete an experiment schedule group.
+
+    Args:
+        group_id: ID of the group to delete
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    group = ExperimentScheduleGroup.query.get(group_id)
+    if not group:
+        return jsonify({"success": False, "message": "Group not found"}), 404
+
+    # Delete all items in the group first
+    ExperimentScheduleItem.query.filter_by(group_id=group_id).delete()
+    db.session.delete(group)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/groups/<int:group_id>/experiments", methods=["POST"])
+@login_required
+def add_experiment_to_group(group_id):
+    """
+    Add an experiment to a schedule group.
+
+    Args:
+        group_id: ID of the group
+
+    Expects JSON body with:
+    - experiment_id: ID of the experiment to add
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "experiment_id" not in data:
+        return jsonify({"success": False, "message": "experiment_id is required"}), 400
+
+    group = ExperimentScheduleGroup.query.get(group_id)
+    if not group:
+        return jsonify({"success": False, "message": "Group not found"}), 404
+
+    exp = Exps.query.get(data["experiment_id"])
+    if not exp:
+        return jsonify({"success": False, "message": "Experiment not found"}), 404
+
+    # Check if already in this group
+    existing = ExperimentScheduleItem.query.filter_by(
+        group_id=group_id, experiment_id=data["experiment_id"]
+    ).first()
+    if existing:
+        return jsonify({"success": False, "message": "Experiment already in group"}), 400
+
+    # Get max order index for this group
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleItem.order_index))
+        .filter(ExperimentScheduleItem.group_id == group_id)
+        .scalar()
+        or 0
+    )
+
+    item = ExperimentScheduleItem(
+        group_id=group_id, experiment_id=data["experiment_id"], order_index=max_order + 1
+    )
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "item": {
+                "id": item.id,
+                "experiment_id": exp.idexp,
+                "name": exp.exp_name,
+            },
+        }
+    )
+
+
+@experiments.route("/admin/schedule/items/<int:item_id>", methods=["DELETE"])
+@login_required
+def remove_experiment_from_group(item_id):
+    """
+    Remove an experiment from a schedule group.
+
+    Args:
+        item_id: ID of the schedule item to remove
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    item = ExperimentScheduleItem.query.get(item_id)
+    if not item:
+        return jsonify({"success": False, "message": "Item not found"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/groups/reorder", methods=["POST"])
+@login_required
+def reorder_schedule_groups():
+    """
+    Reorder schedule groups.
+
+    Expects JSON body with:
+    - group_ids: List of group IDs in new order
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "group_ids" not in data:
+        return jsonify({"success": False, "message": "group_ids is required"}), 400
+
+    for index, group_id in enumerate(data["group_ids"]):
+        group = ExperimentScheduleGroup.query.get(group_id)
+        if group:
+            group.order_index = index
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/status", methods=["GET"])
+@login_required
+def get_schedule_status():
+    """
+    Get current schedule execution status.
+
+    Returns:
+        JSON with schedule status
+    """
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status:
+        status = ExperimentScheduleStatus(is_running=0)
+        db.session.add(status)
+        db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "is_running": bool(status.is_running),
+            "current_group_id": status.current_group_id,
+            "started_at": status.started_at.isoformat() if status.started_at else None,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/start", methods=["POST"])
+@login_required
+def start_schedule():
+    """
+    Start executing the experiment schedule.
+
+    Starts all experiments in the first group and monitors for completion.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    # Check if already running
+    status = ExperimentScheduleStatus.query.first()
+    if not status:
+        status = ExperimentScheduleStatus(is_running=0)
+        db.session.add(status)
+        db.session.commit()
+
+    if status.is_running:
+        return jsonify({"success": False, "message": "Schedule already running"}), 400
+
+    # Get first group
+    first_group = ExperimentScheduleGroup.query.order_by(
+        ExperimentScheduleGroup.order_index
+    ).first()
+    if not first_group:
+        return jsonify({"success": False, "message": "No groups defined"}), 400
+
+    # Start all experiments in first group
+    items = ExperimentScheduleItem.query.filter_by(group_id=first_group.id).all()
+    if not items:
+        return jsonify({"success": False, "message": "First group has no experiments"}), 400
+
+    from datetime import datetime
+
+    # Update status
+    status.is_running = 1
+    status.current_group_id = first_group.id
+    status.started_at = datetime.utcnow()
+    db.session.commit()
+
+    # Start each experiment in the group
+    started_count = 0
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 0:
+            # Update experiment status
+            exp.running = 1
+            exp.exp_status = "active"
+            db.session.commit()
+
+            # Start the server
+            start_server(exp)
+            started_count += 1
+
+            # Start all clients for this experiment
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            for client in clients:
+                if client.status == 0:
+                    # Mark client as running
+                    client.status = 1
+                    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Started {started_count} experiments in group '{first_group.name}'",
+            "current_group": first_group.name,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/stop", methods=["POST"])
+@login_required
+def stop_schedule():
+    """
+    Stop the experiment schedule.
+
+    Stops all running experiments and resets schedule status.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status or not status.is_running:
+        return jsonify({"success": False, "message": "Schedule not running"}), 400
+
+    # Stop all experiments in current group
+    if status.current_group_id:
+        items = ExperimentScheduleItem.query.filter_by(
+            group_id=status.current_group_id
+        ).all()
+        for item in items:
+            exp = Exps.query.get(item.experiment_id)
+            if exp and exp.running == 1:
+                # Stop all clients first
+                clients = Client.query.filter_by(id_exp=exp.idexp).all()
+                for client in clients:
+                    if client.status == 1:
+                        if client.pid:
+                            terminate_client(client, pause=False)
+                        client.status = 0
+                        db.session.commit()
+
+                # Stop server
+                terminated = terminate_server_process(exp.idexp)
+                if not terminated:
+                    terminate_process_on_port(exp.port)
+
+                exp.running = 0
+                exp.exp_status = "stopped"
+                db.session.commit()
+
+    # Reset status
+    status.is_running = 0
+    status.current_group_id = None
+    status.started_at = None
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Schedule stopped"})
+
+
+@experiments.route("/admin/schedule/check_progress", methods=["POST"])
+@login_required
+def check_schedule_progress():
+    """
+    Check progress of scheduled experiments and advance to next group if needed.
+
+    Called periodically to check if current group is complete and start next group.
+
+    Returns:
+        JSON with progress status
+    """
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status or not status.is_running:
+        return jsonify({"success": True, "is_running": False})
+
+    if not status.current_group_id:
+        return jsonify({"success": True, "is_running": False})
+
+    # Check if all experiments in current group are completed
+    items = ExperimentScheduleItem.query.filter_by(
+        group_id=status.current_group_id
+    ).all()
+    all_completed = True
+
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp:
+            # Check if experiment is completed
+            if exp.exp_status != "completed":
+                all_completed = False
+                break
+
+    if not all_completed:
+        return jsonify(
+            {
+                "success": True,
+                "is_running": True,
+                "all_completed": False,
+                "current_group_id": status.current_group_id,
+            }
+        )
+
+    # All completed - stop current group experiments and move to next group
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 1:
+            # Stop clients
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            for client in clients:
+                if client.status == 1:
+                    if client.pid:
+                        terminate_client(client, pause=False)
+                    client.status = 0
+                    db.session.commit()
+
+            # Stop server
+            terminated = terminate_server_process(exp.idexp)
+            if not terminated:
+                terminate_process_on_port(exp.port)
+
+            exp.running = 0
+            db.session.commit()
+
+    # Get next group
+    current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
+    next_group = (
+        ExperimentScheduleGroup.query.filter(
+            ExperimentScheduleGroup.order_index > current_group.order_index
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .first()
+    )
+
+    if not next_group:
+        # Schedule complete
+        status.is_running = 0
+        status.current_group_id = None
+        db.session.commit()
+        return jsonify(
+            {
+                "success": True,
+                "is_running": False,
+                "all_completed": True,
+                "schedule_complete": True,
+            }
+        )
+
+    # Start next group
+    status.current_group_id = next_group.id
+    db.session.commit()
+
+    next_items = ExperimentScheduleItem.query.filter_by(group_id=next_group.id).all()
+    for item in next_items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 0:
+            exp.running = 1
+            exp.exp_status = "active"
+            db.session.commit()
+            start_server(exp)
+
+            # Start clients
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            for client in clients:
+                if client.status == 0:
+                    client.status = 1
+                    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "is_running": True,
+            "all_completed": True,
+            "next_group": next_group.name,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/available_experiments", methods=["GET"])
+@login_required
+def get_available_experiments_for_schedule():
+    """
+    Get experiments that can be added to schedule groups.
+
+    Returns experiments that are stopped and not already in any group.
+
+    Returns:
+        JSON with available experiments
+    """
+    check_privileges(current_user.username)
+
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Get experiments based on role
+    if user.role == "admin":
+        experiments_query = Exps.query
+    else:
+        experiments_query = Exps.query.filter_by(owner=user.username)
+
+    # Get experiments that are stopped
+    experiments_list = experiments_query.filter(
+        Exps.exp_status.in_(["stopped", "scheduled"])
+    ).all()
+
+    # Get experiments already in groups
+    scheduled_exp_ids = set(
+        item.experiment_id for item in ExperimentScheduleItem.query.all()
+    )
+
+    result = []
+    for exp in experiments_list:
+        if exp.idexp not in scheduled_exp_ids:
+            result.append(
+                {
+                    "id": exp.idexp,
+                    "name": exp.exp_name,
+                    "owner": exp.owner,
+                    "exp_status": exp.exp_status,
+                }
+            )
+
+    return jsonify({"success": True, "experiments": result})

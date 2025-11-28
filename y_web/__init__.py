@@ -696,6 +696,37 @@ def create_app(db_type="sqlite", desktop_mode=False):
         except Exception as e:
             print(f"Failed to run exp_status column migration: {e}")
 
+        try:
+            # Run migration to add experiment schedule tables if needed
+            if db_type == "sqlite":
+                from y_web.migrations.add_experiment_schedule_tables import (
+                    migrate_sqlite as migrate_schedule_sqlite,
+                )
+
+                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
+                if dashboard_db_path:
+                    migrate_schedule_sqlite(dashboard_db_path)
+            elif db_type == "postgresql":
+                from y_web.migrations.add_experiment_schedule_tables import (
+                    migrate_postgresql as migrate_schedule_postgresql,
+                )
+
+                # Get PostgreSQL connection details from app config
+                pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
+                if pg_config:
+                    # Parse connection string or use environment variables
+                    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+                    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+                    pg_database = os.environ.get("POSTGRES_DB", "ysocial")
+                    pg_user = os.environ.get("POSTGRES_USER", "postgres")
+                    pg_password = os.environ.get("POSTGRES_PASSWORD", "")
+                    if pg_password:
+                        migrate_schedule_postgresql(
+                            pg_host, pg_port, pg_database, pg_user, pg_password
+                        )
+        except Exception as e:
+            print(f"Failed to run experiment schedule tables migration: {e}")
+
         # Ensure all tables defined in models exist (including release_info)
         # This creates any missing tables that are defined in models.py
         try:
