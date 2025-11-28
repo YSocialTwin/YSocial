@@ -1365,7 +1365,8 @@ def create_experiment():
         },
     )
 
-    return settings()
+    # Redirect to the newly created experiment's details page
+    return redirect(url_for("experiments.experiment_details", uid=exp.idexp))
 
 
 @experiments.route("/admin/delete_simulation/<int:exp_id>")
@@ -1593,6 +1594,30 @@ def experiments_data():
                 pass
         jupyter_status[jupyter.exp_id] = is_running
 
+    # Calculate average progress for running experiments
+    exp_progress = {}
+    for exp in res:
+        if exp.running == 1 or exp.exp_status == "active":
+            # Get all clients for this experiment
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            if clients:
+                total_progress = 0
+                count = 0
+                for client in clients:
+                    client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                    if client_exec and client_exec.expected_duration_rounds > 0:
+                        progress = min(100, max(0, int(
+                            client_exec.elapsed_time / client_exec.expected_duration_rounds * 100
+                        )))
+                        total_progress += progress
+                        count += 1
+                if count > 0:
+                    exp_progress[exp.idexp] = int(total_progress / count)
+                else:
+                    exp_progress[exp.idexp] = 0
+            else:
+                exp_progress[exp.idexp] = 0
+
     return {
         "data": [
             {
@@ -1607,6 +1632,7 @@ def experiments_data():
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
+                "progress": exp_progress.get(exp.idexp, 0),
             }
             for exp in res
         ],

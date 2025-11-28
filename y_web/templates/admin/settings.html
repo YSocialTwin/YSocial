@@ -208,7 +208,96 @@
         }
     };
 
-    // Function to create compact table columns configuration
+    // Function to create compact table columns configuration for Running Experiments
+    function getRunningTableColumns() {
+        return [
+            { id: 'idexp', hidden: true },
+            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
+            {
+                id: 'progress',
+                name: 'Progress',
+                sort: false,
+                width: '100px',
+                formatter: (cell, row) => {
+                    const progress = cell || 0;
+                    const expId = row.cells[0].data;
+                    // Gradient colors based on progress
+                    let bgColor = 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)';
+                    let shadowColor = 'rgba(3,155,229,0.3)';
+                    if (progress >= 75) {
+                        bgColor = 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)';
+                        shadowColor = 'rgba(0,209,178,0.3)';
+                    } else if (progress >= 50) {
+                        bgColor = 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)';
+                        shadowColor = 'rgba(85,150,230,0.3)';
+                    }
+                    return gridjs.html(`
+                        <div style="position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 12px; height: 18px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);">
+                            <div class="exp-progress-bar" data-exp-id="${expId}" 
+                                 style="position: absolute; left: 0; top: 0; height: 100%; width: ${progress}%; background: ${bgColor}; border-radius: 12px; transition: width 0.4s ease-in-out; display: flex; align-items: center; justify-content: center; box-shadow: 0 1px 4px ${shadowColor};">
+                                <span style="font-size: 0.65em; font-weight: 600; color: white; text-shadow: 0 1px 1px rgba(0,0,0,0.2);">${progress}%</span>
+                            </div>
+                        </div>
+                    `);
+                }
+            },
+            {
+                id: 'status_combined',
+                name: 'Status',
+                sort: false,
+                width: '40px',
+                formatter: (cell, row) => {
+                    // Get the web value from hidden cell
+                    const web = row.cells[4].data;      // web is at index 4
+                    {% if enable_notebook %}
+                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
+                    {% endif %}
+                    
+                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
+                    {% if enable_notebook %}
+                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
+                    {% endif %}
+                    
+                    return gridjs.html(`
+                        <div class="status-indicators">
+                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
+                            {% if enable_notebook %}
+                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
+                            {% endif %}
+                        </div>
+                    `);
+                }
+            },
+            { id: 'web', hidden: true },
+            {% if enable_notebook %}
+            { id: 'jupyter_status', hidden: true },
+            {% endif %}
+            {
+                id: 'details',
+                name: '',
+                sort: false,
+                width: '45px',
+                formatter: (cell, row) => {
+                    const id = row.cells[0].data;
+                    return gridjs.html(`
+                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
+                            <a href="/admin/experiment_details/${id}"
+                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                View
+                            </a>
+                            <a href="/admin/delete_simulation/${id}"
+                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                Del
+                            </a>
+                        </div>
+                    `);
+                }
+            },
+        ];
+    }
+
+    // Function to create compact table columns configuration for non-running experiments
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
@@ -297,8 +386,11 @@
         const tableDiv = document.getElementById(tableId);
         const boxDiv = document.getElementById(boxId);
         
+        // Use progress bar columns for running experiments, tags for others
+        const columns = (statusFilter === EXP_STATUS.ACTIVE) ? getRunningTableColumns() : getTableColumns();
+        
         const grid = new gridjs.Grid({
-            columns: getTableColumns(),
+            columns: columns,
             server: {
                 url: `/admin/experiments_data?exp_status=${statusFilter}`,
                 then: results => {
@@ -1344,6 +1436,74 @@
                     </div>
                 </div>
                 
+                <!-- Copy Experiment Column (is-4) -->
+                <div class="column is-4">
+                    <div class="sidebar-box">
+                        <h3>Copy Experiment</h3>
+                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
+                            <div style="margin-bottom: 12px;">
+                                <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    New Experiment Name
+                                </label>
+                                <input type="text" 
+                                       id="new_exp_name" 
+                                       name="new_exp_name" 
+                                       class="input" 
+                                       placeholder="Enter new name..." 
+                                       required>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label for="source_exp_id" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Source Experiment
+                                </label>
+                                <div class="select" style="width: 100%;">
+                                    <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
+                                        <option value="">Select experiment...</option>
+                                        {% for exp in all_experiments %}
+                                        <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Number of Copies
+                                </label>
+                                <input type="number" 
+                                       id="num_copies" 
+                                       name="num_copies" 
+                                       class="input" 
+                                       value="1" 
+                                       min="1"
+                                       max="20"
+                                       style="width: 100%;">
+                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+                                    If &gt;1, creates copies named: name_1, name_2, etc.
+                                </p>
+                            </div>
+                            <div class="help-block" style="margin-bottom: 12px;">
+                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
+                                    Creates a complete copy with its own folder (UUID), configuration files, and database. 
+                                    The copy will be ready to start immediately.
+                                </p>
+                            </div>
+                            <div class="button-wrap">
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                    Copy Experiment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 4: Empty + Upload Experiment -->
+            <div class="columns">
+                <!-- Empty Column (is-8) -->
+                <div class="column is-8">
+                    <!-- Empty space under Experiment Schedule -->
+                </div>
+                
                 <!-- Upload Experiment Column (is-4) -->
                 <div class="column is-4">
                     <div class="sidebar-box">
@@ -1430,74 +1590,6 @@
                                 }
                             }
                         </script>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 4: Empty + Copy Experiment -->
-            <div class="columns">
-                <!-- Empty Column (is-8) -->
-                <div class="column is-8">
-                    <!-- Empty space under Experiment Schedule -->
-                </div>
-                
-                <!-- Copy Experiment Column (is-4) -->
-                <div class="column is-4">
-                    <div class="sidebar-box">
-                        <h3>Copy Experiment</h3>
-                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
-                            <div style="margin-bottom: 12px;">
-                                <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    New Experiment Name
-                                </label>
-                                <input type="text" 
-                                       id="new_exp_name" 
-                                       name="new_exp_name" 
-                                       class="input" 
-                                       placeholder="Enter new name..." 
-                                       required>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="source_exp_id" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Source Experiment
-                                </label>
-                                <div class="select" style="width: 100%;">
-                                    <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
-                                        <option value="">Select experiment...</option>
-                                        {% for exp in all_experiments %}
-                                        <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Number of Copies
-                                </label>
-                                <input type="number" 
-                                       id="num_copies" 
-                                       name="num_copies" 
-                                       class="input" 
-                                       value="1" 
-                                       min="1"
-                                       max="20"
-                                       style="width: 100%;">
-                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
-                                    If &gt;1, creates copies named: name_1, name_2, etc.
-                                </p>
-                            </div>
-                            <div class="help-block" style="margin-bottom: 12px;">
-                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Creates a complete copy with its own folder (UUID), configuration files, and database. 
-                                    The copy will be ready to start immediately.
-                                </p>
-                            </div>
-                            <div class="button-wrap">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                    Copy Experiment
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>
