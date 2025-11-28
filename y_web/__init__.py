@@ -563,6 +563,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     app.register_blueprint(lab_blueprint)
 
+    from .routes_admin.tutorial_routes import tutorial as tutorial_blueprint
+
+    app.register_blueprint(tutorial_blueprint)
+
     # Add context processor to detect PyInstaller mode
     @app.context_processor
     def inject_pyinstaller_mode():
@@ -759,6 +763,36 @@ def create_app(db_type="sqlite", desktop_mode=False):
                         )
         except Exception as e:
             print(f"Failed to run watchdog settings migration: {e}")
+
+        # Run tutorial_shown column migration
+        try:
+            if db_type == "sqlite":
+                from y_web.migrations.add_tutorial_shown_column import (
+                    migrate_sqlite as migrate_tutorial_sqlite,
+                )
+
+                dashboard_db_path = app.config.get("DASHBOARD_DB_PATH")
+                if dashboard_db_path:
+                    migrate_tutorial_sqlite(dashboard_db_path)
+            elif db_type == "postgresql":
+                from y_web.migrations.add_tutorial_shown_column import (
+                    migrate_postgresql as migrate_tutorial_postgresql,
+                )
+
+                # Get PostgreSQL connection details from app config
+                pg_config = app.config.get("SQLALCHEMY_BINDS", {}).get("db_admin", "")
+                if pg_config:
+                    pg_host = os.environ.get("POSTGRES_HOST", "localhost")
+                    pg_port = os.environ.get("POSTGRES_PORT", "5432")
+                    pg_database = os.environ.get("POSTGRES_DB", "ysocial")
+                    pg_user = os.environ.get("POSTGRES_USER", "postgres")
+                    pg_password = os.environ.get("POSTGRES_PASSWORD", "")
+                    if pg_password:
+                        migrate_tutorial_postgresql(
+                            pg_host, pg_port, pg_database, pg_user, pg_password
+                        )
+        except Exception as e:
+            print(f"Failed to run tutorial_shown column migration: {e}")
 
         # Ensure all tables defined in models exist (including release_info)
         # This creates any missing tables that are defined in models.py

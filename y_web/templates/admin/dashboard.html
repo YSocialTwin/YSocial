@@ -418,6 +418,24 @@
                                 <b>5. Run the Simulation</b><br>
                                 Start the experiment and run the clients to begin your simulation.
                             </p>
+                            <hr>
+                            <div style="text-align: center; padding-top: 5px;">
+                                <button onclick="showTutorialWizard()" style="
+                                    background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
+                                    border: none;
+                                    color: white;
+                                    padding: 10px 20px;
+                                    border-radius: 8px;
+                                    font-size: 0.9em;
+                                    font-weight: 500;
+                                    cursor: pointer;
+                                    transition: transform 0.2s, box-shadow 0.2s;
+                                    box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
+                                " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(3, 155, 229, 0.4)';"
+                                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(3, 155, 229, 0.3)';">
+                                    <i class="mdi mdi-school"></i> Show Tutorial
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -804,5 +822,7 @@ function dismissTelemetryNotice() {
 }
 </script>
 {% endif %}
+
+{% include "admin/tutorial_overlay.html" %}
 
 {% include "admin/footer.html" %}

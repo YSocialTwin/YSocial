@@ -1,0 +1,804 @@
+<!-- Tutorial Wizard Overlay -->
+<div id="tutorial-overlay" style="display: none;">
+    <!-- Backdrop -->
+    <div id="tutorial-backdrop" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        backdrop-filter: blur(3px);
+    "></div>
+    
+    <!-- Modal Container -->
+    <div id="tutorial-modal" style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        z-index: 10000;
+        max-width: 650px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+    ">
+        <!-- Header -->
+        <div style="
+            background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
+            padding: 24px 30px;
+            border-radius: 16px 16px 0 0;
+            position: relative;
+        ">
+            <button id="tutorial-close-btn" style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                font-size: 1.5em;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: background 0.2s;
+            " title="Skip Tutorial">&times;</button>
+            
+            <h2 style="color: white; margin: 0 0 8px 0; font-size: 1.6em; font-weight: 600;">
+                Welcome to YSocial! 🎉
+            </h2>
+            <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 0.95em;">
+                Let's create your first simulation in just 3 easy steps.
+            </p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div style="
+            display: flex;
+            justify-content: center;
+            padding: 20px 30px 10px;
+            gap: 10px;
+        ">
+            <div class="tutorial-step-indicator" id="step-indicator-1" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #039be5;
+                color: white;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>1</span> Population
+            </div>
+            <div class="tutorial-step-indicator" id="step-indicator-2" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>2</span> Experiment
+            </div>
+            <div class="tutorial-step-indicator" id="step-indicator-3" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>3</span> Client
+            </div>
+        </div>
+        
+        <!-- Step Content Container -->
+        <div id="tutorial-content" style="padding: 20px 30px;">
+            <!-- Step 1: Population -->
+            <div id="tutorial-step-1" class="tutorial-step">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-account-group" style="color: #039be5;"></i> Create Your Population
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    A population is a group of synthetic agents that will participate in your simulation.
+                    For more advanced options, visit the <a href="/admin/populations" style="color: #039be5;">Populations</a> page.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Population Name <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <input type="text" id="tut-pop-name" placeholder="e.g., My First Population" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            transition: border-color 0.2s;
+                            box-sizing: border-box;
+                        " required>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Population Size: <span id="tut-pop-size-value">50</span> agents
+                        </label>
+                        <input type="range" id="tut-pop-size" min="10" max="100" value="50" style="
+                            width: 100%;
+                            cursor: pointer;
+                        " oninput="document.getElementById('tut-pop-size-value').textContent = this.value">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #999; margin-top: 3px;">
+                            <span>10</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Education Levels <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <div id="tut-education-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Political Leanings <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <div id="tut-political-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Toxicity Levels <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <div id="tut-toxicity-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Experiment -->
+            <div id="tutorial-step-2" class="tutorial-step" style="display: none;">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-flask" style="color: #039be5;"></i> Create Your Experiment
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    An experiment defines the simulation environment.
+                    For more options, visit the <a href="/admin/experiments" style="color: #039be5;">Experiments</a> page.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Experiment Name <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <input type="text" id="tut-exp-name" placeholder="e.g., My First Experiment" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            transition: border-color 0.2s;
+                            box-sizing: border-box;
+                        " required>
+                    </div>
+                    
+                    <div style="
+                        background: #f5f5f5;
+                        padding: 15px;
+                        border-radius: 8px;
+                        border-left: 4px solid #039be5;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i class="mdi mdi-robot-off" style="font-size: 1.5em; color: #6c757d;"></i>
+                            <div>
+                                <strong style="color: #333;">LLM Agents</strong>
+                                <span style="
+                                    background: #6c757d;
+                                    color: white;
+                                    padding: 2px 8px;
+                                    border-radius: 10px;
+                                    font-size: 0.75em;
+                                    margin-left: 8px;
+                                ">Disabled</span>
+                                <p style="color: #666; font-size: 0.85em; margin: 5px 0 0 0;">
+                                    For this tutorial, LLM agents are disabled. You can enable them later in the experiment settings if you have a local LLM server configured.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Client -->
+            <div id="tutorial-step-3" class="tutorial-step" style="display: none;">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-cog" style="color: #039be5;"></i> Configure Your Client
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    A client runs the simulation with your population.
+                    For advanced settings, visit the client details page after creation.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Client Name <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <input type="text" id="tut-client-name" placeholder="e.g., Main Simulation" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            transition: border-color 0.2s;
+                            box-sizing: border-box;
+                        " required>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Simulation Length: <span id="tut-days-value">7</span> days
+                        </label>
+                        <input type="range" id="tut-sim-days" min="1" max="30" value="7" style="
+                            width: 100%;
+                            cursor: pointer;
+                        " oninput="document.getElementById('tut-days-value').textContent = this.value">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #999; margin-top: 3px;">
+                            <span>1 day</span>
+                            <span>30 days</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333; font-size: 0.9em;">
+                            Agents' Actions Relevance
+                        </label>
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="flex: 1; font-size: 0.85em; color: #555;">Post:</label>
+                                <input type="number" id="tut-post-prob" value="30" min="0" max="100" style="
+                                    width: 60px;
+                                    padding: 6px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    text-align: center;
+                                    font-size: 0.9em;
+                                ">
+                                <span style="color: #999; font-size: 0.8em;">%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="flex: 1; font-size: 0.85em; color: #555;">Share:</label>
+                                <input type="number" id="tut-share-prob" value="20" min="0" max="100" style="
+                                    width: 60px;
+                                    padding: 6px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    text-align: center;
+                                    font-size: 0.9em;
+                                ">
+                                <span style="color: #999; font-size: 0.8em;">%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="flex: 1; font-size: 0.85em; color: #555;">Comment:</label>
+                                <input type="number" id="tut-comment-prob" value="30" min="0" max="100" style="
+                                    width: 60px;
+                                    padding: 6px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    text-align: center;
+                                    font-size: 0.9em;
+                                ">
+                                <span style="color: #999; font-size: 0.8em;">%</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <label style="flex: 1; font-size: 0.85em; color: #555;">Read:</label>
+                                <input type="number" id="tut-read-prob" value="20" min="0" max="100" style="
+                                    width: 60px;
+                                    padding: 6px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    text-align: center;
+                                    font-size: 0.9em;
+                                ">
+                                <span style="color: #999; font-size: 0.8em;">%</span>
+                            </div>
+                        </div>
+                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                            Tip: These values represent relative likelihood of each action.
+                        </p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div>
+                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                                Content Recommendation
+                            </label>
+                            <select id="tut-content-recsys" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                                Follow Recommendation
+                            </label>
+                            <select id="tut-follow-recsys" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="tutorial-error" style="
+            display: none;
+            margin: 0 30px 15px;
+            padding: 10px 15px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 8px;
+            color: #c00;
+            font-size: 0.9em;
+        "></div>
+        
+        <!-- Footer -->
+        <div style="
+            padding: 15px 30px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+        ">
+            <button id="tutorial-prev-btn" style="
+                padding: 10px 20px;
+                background: #f5f5f5;
+                border: none;
+                border-radius: 8px;
+                color: #666;
+                font-size: 0.95em;
+                cursor: pointer;
+                transition: background 0.2s;
+                display: none;
+            ">
+                <i class="mdi mdi-arrow-left"></i> Back
+            </button>
+            
+            <div style="display: flex; gap: 10px; margin-left: auto;">
+                <button id="tutorial-skip-btn" style="
+                    padding: 10px 20px;
+                    background: none;
+                    border: none;
+                    color: #999;
+                    font-size: 0.9em;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                ">
+                    Skip Tutorial
+                </button>
+                
+                <button id="tutorial-next-btn" style="
+                    padding: 10px 25px;
+                    background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 0.95em;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
+                ">
+                    Next <i class="mdi mdi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Tag button styles */
+    .tutorial-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        background: white;
+        color: #666;
+        font-size: 0.85em;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    
+    .tutorial-tag:hover {
+        border-color: #039be5;
+        color: #039be5;
+    }
+    
+    .tutorial-tag.selected {
+        background: #039be5;
+        border-color: #039be5;
+        color: white;
+    }
+    
+    /* Input focus styles */
+    #tutorial-modal input:focus,
+    #tutorial-modal select:focus {
+        outline: none;
+        border-color: #039be5;
+        box-shadow: 0 0 0 3px rgba(3, 155, 229, 0.1);
+    }
+    
+    /* Button hover effects */
+    #tutorial-next-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(3, 155, 229, 0.4);
+    }
+    
+    #tutorial-prev-btn:hover {
+        background: #e8e8e8;
+    }
+    
+    #tutorial-skip-btn:hover {
+        color: #666;
+    }
+    
+    #tutorial-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<script>
+(function() {
+    // Tutorial state
+    let currentStep = 1;
+    let tutorialData = null;
+    let selectedEducation = [];
+    let selectedPolitical = [];
+    let selectedToxicity = [];
+    
+    // Check if tutorial should be shown
+    function checkTutorialStatus() {
+        fetch('/admin/tutorial/check_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.show_tutorial && (data.role === 'admin' || data.role === 'researcher')) {
+                    loadTutorialData();
+                }
+            })
+            .catch(error => console.error('Error checking tutorial status:', error));
+    }
+    
+    // Load tutorial form data
+    function loadTutorialData() {
+        fetch('/admin/tutorial/data')
+            .then(response => response.json())
+            .then(data => {
+                tutorialData = data;
+                populateFormOptions();
+                showTutorial();
+            })
+            .catch(error => console.error('Error loading tutorial data:', error));
+    }
+    
+    // Populate form options from API data
+    function populateFormOptions() {
+        // Education levels
+        const educationContainer = document.getElementById('tut-education-options');
+        educationContainer.innerHTML = tutorialData.education_levels.map(e => 
+            `<span class="tutorial-tag" data-id="${e.id}" onclick="toggleTag(this, 'education')">${e.name}</span>`
+        ).join('');
+        
+        // Political leanings
+        const politicalContainer = document.getElementById('tut-political-options');
+        politicalContainer.innerHTML = tutorialData.political_leanings.map(p => 
+            `<span class="tutorial-tag" data-id="${p.id}" onclick="toggleTag(this, 'political')">${p.name}</span>`
+        ).join('');
+        
+        // Toxicity levels
+        const toxicityContainer = document.getElementById('tut-toxicity-options');
+        toxicityContainer.innerHTML = tutorialData.toxicity_levels.map(t => 
+            `<span class="tutorial-tag" data-id="${t.id}" onclick="toggleTag(this, 'toxicity')">${t.name}</span>`
+        ).join('');
+        
+        // Content recommendation systems
+        const contentSelect = document.getElementById('tut-content-recsys');
+        contentSelect.innerHTML = tutorialData.content_recsys.map(c => 
+            `<option value="${c.value}">${c.name}</option>`
+        ).join('');
+        
+        // Follow recommendation systems
+        const followSelect = document.getElementById('tut-follow-recsys');
+        followSelect.innerHTML = tutorialData.follow_recsys.map(f => 
+            `<option value="${f.value}">${f.name}</option>`
+        ).join('');
+    }
+    
+    // Toggle tag selection
+    window.toggleTag = function(element, type) {
+        element.classList.toggle('selected');
+        const id = parseInt(element.dataset.id);
+        
+        let array;
+        if (type === 'education') array = selectedEducation;
+        else if (type === 'political') array = selectedPolitical;
+        else if (type === 'toxicity') array = selectedToxicity;
+        
+        const index = array.indexOf(id);
+        if (index === -1) {
+            array.push(id);
+        } else {
+            array.splice(index, 1);
+        }
+    };
+    
+    // Show the tutorial overlay
+    function showTutorial() {
+        document.getElementById('tutorial-overlay').style.display = 'block';
+        currentStep = 1;
+        updateStepDisplay();
+    }
+    
+    // Hide the tutorial overlay
+    function hideTutorial() {
+        document.getElementById('tutorial-overlay').style.display = 'none';
+    }
+    
+    // Update step display
+    function updateStepDisplay() {
+        // Hide all steps
+        document.querySelectorAll('.tutorial-step').forEach(el => el.style.display = 'none');
+        
+        // Show current step
+        document.getElementById(`tutorial-step-${currentStep}`).style.display = 'block';
+        
+        // Update indicators
+        for (let i = 1; i <= 3; i++) {
+            const indicator = document.getElementById(`step-indicator-${i}`);
+            if (i < currentStep) {
+                indicator.style.background = '#4caf50';
+                indicator.style.color = 'white';
+            } else if (i === currentStep) {
+                indicator.style.background = '#039be5';
+                indicator.style.color = 'white';
+            } else {
+                indicator.style.background = '#e0e0e0';
+                indicator.style.color = '#666';
+            }
+        }
+        
+        // Update buttons
+        document.getElementById('tutorial-prev-btn').style.display = currentStep > 1 ? 'block' : 'none';
+        
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        if (currentStep === 3) {
+            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+        } else {
+            nextBtn.innerHTML = 'Next <i class="mdi mdi-arrow-right"></i>';
+        }
+        
+        // Clear error
+        hideError();
+    }
+    
+    // Show error message
+    function showError(message) {
+        const errorEl = document.getElementById('tutorial-error');
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+    
+    // Hide error message
+    function hideError() {
+        document.getElementById('tutorial-error').style.display = 'none';
+    }
+    
+    // Validate current step
+    function validateStep() {
+        hideError();
+        
+        if (currentStep === 1) {
+            const name = document.getElementById('tut-pop-name').value.trim();
+            if (!name) {
+                showError('Please enter a population name.');
+                return false;
+            }
+            if (selectedEducation.length === 0) {
+                showError('Please select at least one education level.');
+                return false;
+            }
+            if (selectedPolitical.length === 0) {
+                showError('Please select at least one political leaning.');
+                return false;
+            }
+            if (selectedToxicity.length === 0) {
+                showError('Please select at least one toxicity level.');
+                return false;
+            }
+        } else if (currentStep === 2) {
+            const name = document.getElementById('tut-exp-name').value.trim();
+            if (!name) {
+                showError('Please enter an experiment name.');
+                return false;
+            }
+        } else if (currentStep === 3) {
+            const name = document.getElementById('tut-client-name').value.trim();
+            if (!name) {
+                showError('Please enter a client name.');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Handle next button click
+    function handleNext() {
+        if (!validateStep()) return;
+        
+        if (currentStep < 3) {
+            currentStep++;
+            updateStepDisplay();
+        } else {
+            // Submit the form
+            createExperiment();
+        }
+    }
+    
+    // Handle previous button click
+    function handlePrev() {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStepDisplay();
+        }
+    }
+    
+    // Create the experiment
+    function createExperiment() {
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Creating...';
+        
+        const data = {
+            // Population
+            population_name: document.getElementById('tut-pop-name').value.trim(),
+            population_size: parseInt(document.getElementById('tut-pop-size').value),
+            education_levels: selectedEducation,
+            political_leanings: selectedPolitical,
+            toxicity_levels: selectedToxicity,
+            
+            // Experiment
+            experiment_name: document.getElementById('tut-exp-name').value.trim(),
+            
+            // Client
+            client_name: document.getElementById('tut-client-name').value.trim(),
+            simulation_days: parseInt(document.getElementById('tut-sim-days').value),
+            post_probability: parseInt(document.getElementById('tut-post-prob').value) / 100,
+            share_probability: parseInt(document.getElementById('tut-share-prob').value) / 100,
+            comment_probability: parseInt(document.getElementById('tut-comment-prob').value) / 100,
+            read_probability: parseInt(document.getElementById('tut-read-prob').value) / 100,
+            content_recsys: document.getElementById('tut-content-recsys').value,
+            follow_recsys: document.getElementById('tut-follow-recsys').value,
+        };
+        
+        fetch('/admin/tutorial/create_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Redirect to experiment details page
+                window.location.href = `/admin/experiment_details/${result.experiment_id}`;
+            } else {
+                showError(result.message || 'An error occurred. Please try again.');
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+            }
+        })
+        .catch(error => {
+            console.error('Error creating experiment:', error);
+            showError('An error occurred. Please try again.');
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+        });
+    }
+    
+    // Dismiss tutorial
+    function dismissTutorial() {
+        fetch('/admin/tutorial/dismiss', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(() => {
+            hideTutorial();
+        })
+        .catch(error => {
+            console.error('Error dismissing tutorial:', error);
+            hideTutorial();
+        });
+    }
+    
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check tutorial status on page load
+        checkTutorialStatus();
+        
+        // Event listeners
+        document.getElementById('tutorial-next-btn').addEventListener('click', handleNext);
+        document.getElementById('tutorial-prev-btn').addEventListener('click', handlePrev);
+        document.getElementById('tutorial-skip-btn').addEventListener('click', dismissTutorial);
+        document.getElementById('tutorial-close-btn').addEventListener('click', dismissTutorial);
+    });
+    
+    // Expose function to manually show tutorial (for "Show Tutorial" button)
+    window.showTutorialWizard = function() {
+        if (tutorialData) {
+            // Reset selections
+            selectedEducation = [];
+            selectedPolitical = [];
+            selectedToxicity = [];
+            document.querySelectorAll('.tutorial-tag').forEach(el => el.classList.remove('selected'));
+            
+            // Reset form inputs
+            document.getElementById('tut-pop-name').value = '';
+            document.getElementById('tut-pop-size').value = 50;
+            document.getElementById('tut-pop-size-value').textContent = '50';
+            document.getElementById('tut-exp-name').value = '';
+            document.getElementById('tut-client-name').value = '';
+            document.getElementById('tut-sim-days').value = 7;
+            document.getElementById('tut-days-value').textContent = '7';
+            
+            currentStep = 1;
+            showTutorial();
+        } else {
+            loadTutorialData();
+        }
+    };
+})();
+</script>
