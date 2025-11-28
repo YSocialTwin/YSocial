@@ -73,39 +73,39 @@
                     </div>
                     {% endfor %}
 
-                    <!-- Active Experiments Section -->
-                    <div class="dashboard-box" style="margin-bottom: 20px;">
-                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
-                            Currently Running Experiments
-                        </h3>
-
-                        <div class="box-content">
-                            <div id="table-active" class="experiment-table"></div>
+                    <!-- Three experiment sections in a row -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <!-- Active Experiments Section -->
+                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745;"></span>
+                                Running
+                            </h3>
+                            <div class="box-content" style="flex: 1;">
+                                <div id="table-active" class="experiment-table compact-table"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Completed Experiments Section -->
-                    <div class="dashboard-box" style="margin-bottom: 20px;">
-                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #17a2b8;"></span>
-                            Completed Experiments
-                        </h3>
-
-                        <div class="box-content">
-                            <div id="table-completed" class="experiment-table"></div>
+                        <!-- Completed Experiments Section -->
+                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+                                Completed
+                            </h3>
+                            <div class="box-content" style="flex: 1;">
+                                <div id="table-completed" class="experiment-table compact-table"></div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Stopped/Scheduled Experiments Section -->
-                    <div class="dashboard-box" style="margin-bottom: 20px;">
-                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #6c757d;"></span>
-                            Stopped / Scheduled Experiments
-                        </h3>
-
-                        <div class="box-content">
-                            <div id="table-stopped" class="experiment-table"></div>
+                        <!-- Stopped/Scheduled Experiments Section -->
+                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
+                                Stopped / Scheduled
+                            </h3>
+                            <div class="box-content" style="flex: 1;">
+                                <div id="table-stopped" class="experiment-table compact-table"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -114,6 +114,36 @@
                     <style>
                       .experiment-table td {
                         vertical-align: middle !important;
+                      }
+                      .compact-table .gridjs-wrapper {
+                        font-size: 0.85em;
+                      }
+                      .compact-table .gridjs-th {
+                        padding: 8px 6px !important;
+                        font-size: 0.8em;
+                      }
+                      .compact-table .gridjs-td {
+                        padding: 6px 4px !important;
+                      }
+                      .compact-table .gridjs-search {
+                        width: 100% !important;
+                      }
+                      .compact-table .gridjs-search-input {
+                        width: 100% !important;
+                        font-size: 0.85em;
+                        padding: 6px 8px;
+                      }
+                      .status-indicators {
+                        display: flex;
+                        gap: 4px;
+                        justify-content: center;
+                        align-items: center;
+                      }
+                      .status-dot {
+                        width: 10px;
+                        height: 10px;
+                        border-radius: 50%;
+                        display: inline-block;
                       }
                     </style>
 
@@ -141,82 +171,48 @@
         }
     };
 
-    // Function to create table columns configuration
+    // Function to create compact table columns configuration
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
-            { id: 'owner', name: 'Owner', sort: false },
-            { id: 'platform_type', name: 'Platform Type', sort: true },
+            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '100px' },
+            { id: 'owner', name: 'Owner', sort: false, width: '70px' },
             {
-                id: 'annotations',
-                name: 'Annotations',
+                id: 'status_combined',
+                name: 'Status',
                 sort: false,
-                formatter: (cell) => {
-                    if (!cell || cell === '') {
-                        return gridjs.html('<div style="text-align: center;">-</div>');
-                    }
-                    const annotations = cell.split(',').filter(a => a.trim());
-                    const tags = annotations.map(annotation => {
-                        const colors = {
-                            'toxicity': '#dc3545',
-                            'sentiment': '#28a745',
-                            'emotion': '#17a2b8'
-                        };
-                        const color = colors[annotation.trim()] || '#6c757d';
-                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 2px 8px; margin: 2px; border-radius: 12px; font-size: 0.75rem;">${annotation.trim()}</span>`;
-                    }).join('');
-                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
-                }
-            },
-            { 
-                id: 'running', 
-                name: 'Simulation', 
-                sort: true,
-                formatter: (cell) => {
-                    const isRunning = cell === 'Running';
-                    const color = isRunning ? '#28a745' : '#dc3545';
+                width: '50px',
+                formatter: (cell, row) => {
+                    // Get the web value from hidden cell
+                    const web = row.cells[3].data;      // web is at index 3
+                    {% if enable_notebook %}
+                    const jupyter = row.cells[4].data;  // jupyter_status is at index 4
+                    {% endif %}
+                    
+                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
+                    {% if enable_notebook %}
+                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
+                    {% endif %}
+                    
                     return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
+                        <div class="status-indicators">
+                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
+                            {% if enable_notebook %}
+                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
+                            {% endif %}
                         </div>
                     `);
                 }
             },
-            { 
-                id: 'web', 
-                name: 'Web', 
-                sort: true,
-                formatter: (cell) => {
-                    const isLoaded = cell === 'Loaded';
-                    const color = isLoaded ? '#28a745' : '#6c757d';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
-                }
-            },
+            { id: 'web', hidden: true },
             {% if enable_notebook %}
-            { 
-                id: 'jupyter_status', 
-                name: 'Notebook', 
-                sort: true,
-                formatter: (cell) => {
-                    const isActive = cell === 'Active';
-                    const color = isActive ? '#28a745' : '#6c757d';
-                    return gridjs.html(`
-                        <div style="display: flex; justify-content: center; align-items: center;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background-color: ${color};" title="${cell}"></div>
-                        </div>
-                    `);
-                }
-            },
+            { id: 'jupyter_status', hidden: true },
             {% endif %}
             {
                 id: 'details',
-                name: 'Actions',
+                name: '',
                 sort: false,
+                width: '50px',
                 formatter: (cell, row) => {
                     const id = row.cells[0].data;
                     return gridjs.html(`
