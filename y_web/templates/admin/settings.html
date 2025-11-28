@@ -76,7 +76,7 @@
                     <!-- Three experiment sections in a row (responsive) -->
                     <div class="experiments-row">
                         <!-- Active Experiments Section -->
-                        <div class="dashboard-box experiment-box">
+                        <div id="box-active" class="dashboard-box experiment-box" style="display: none;">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745;"></span>
                                 Running
@@ -87,7 +87,7 @@
                         </div>
 
                         <!-- Completed Experiments Section -->
-                        <div class="dashboard-box experiment-box">
+                        <div id="box-completed" class="dashboard-box experiment-box" style="display: none;">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
                                 Completed
@@ -98,7 +98,7 @@
                         </div>
 
                         <!-- Stopped/Scheduled Experiments Section -->
-                        <div class="dashboard-box experiment-box">
+                        <div id="box-stopped" class="dashboard-box experiment-box" style="display: none;">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
                                 Stopped / Scheduled
@@ -187,6 +187,10 @@
         COMPLETED: 'completed',
         STOPPED_SCHEDULED: 'stopped_scheduled'
     };
+
+    // Store grid instances for refresh
+    const gridInstances = {};
+    const DATA_REFRESH_INTERVAL = 30000; // 30 seconds
 
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
@@ -289,14 +293,23 @@
     }
 
     // Create table for a specific status
-    function createTable(tableId, statusFilter) {
+    function createTable(tableId, statusFilter, boxId) {
         const tableDiv = document.getElementById(tableId);
+        const boxDiv = document.getElementById(boxId);
         
-        new gridjs.Grid({
+        const grid = new gridjs.Grid({
             columns: getTableColumns(),
             server: {
                 url: `/admin/experiments_data?exp_status=${statusFilter}`,
-                then: results => results.data,
+                then: results => {
+                    // Show/hide box based on whether there are results
+                    if (results.total > 0) {
+                        boxDiv.style.display = 'flex';
+                    } else {
+                        boxDiv.style.display = 'none';
+                    }
+                    return results.data;
+                },
                 total: results => results.total,
             },
             search: {
@@ -330,13 +343,30 @@
             language: {
                 noRecordsFound: 'No experiments in this category'
             }
-        }).render(tableDiv);
+        });
+        
+        grid.render(tableDiv);
+        gridInstances[statusFilter] = grid;
+        
+        return grid;
+    }
+
+    // Function to refresh all tables
+    function refreshAllTables() {
+        Object.values(gridInstances).forEach(grid => {
+            if (grid && typeof grid.forceRender === 'function') {
+                grid.forceRender();
+            }
+        });
     }
 
     // Create all three tables using status constants
-    createTable('table-active', EXP_STATUS.ACTIVE);
-    createTable('table-completed', EXP_STATUS.COMPLETED);
-    createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED);
+    createTable('table-active', EXP_STATUS.ACTIVE, 'box-active');
+    createTable('table-completed', EXP_STATUS.COMPLETED, 'box-completed');
+    createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED, 'box-stopped');
+
+    // Set up periodic refresh
+    setInterval(refreshAllTables, DATA_REFRESH_INTERVAL);
 
     let savedValue;
 
@@ -1397,6 +1427,22 @@
                                         {% endfor %}
                                     </select>
                                 </div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Number of Copies
+                                </label>
+                                <input type="number" 
+                                       id="num_copies" 
+                                       name="num_copies" 
+                                       class="input" 
+                                       value="1" 
+                                       min="1"
+                                       max="20"
+                                       style="width: 100%;">
+                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+                                    If &gt;1, creates copies named: name_1, name_2, etc.
+                                </p>
                             </div>
                             <div class="help-block" style="margin-bottom: 12px;">
                                 <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
