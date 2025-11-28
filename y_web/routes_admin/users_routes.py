@@ -1133,17 +1133,13 @@ def watchdog_set_interval():
     """
     Set the watchdog run interval (admin only).
 
+    Supports both form-based (with user_id for redirect) and AJAX calls.
+
     Returns:
-        Redirect to user details page
+        Redirect to user details page or JSON response for AJAX calls
     """
     user_id = request.form.get("user_id")
-
-    # Validate user_id
-    try:
-        user_id_int = int(user_id)
-    except (ValueError, TypeError):
-        flash("Invalid user ID.", "error")
-        return redirect(url_for("admin.dashboard"))
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or not user_id
 
     # Check if user is admin
     current_admin_user = Admin_users.query.filter_by(
@@ -1151,6 +1147,8 @@ def watchdog_set_interval():
     ).first()
 
     if not current_admin_user or current_admin_user.role != "admin":
+        if is_ajax:
+            return jsonify({"success": False, "message": "Access denied"}), 403
         flash(
             "Access denied. Only administrators can modify watchdog settings.", "error"
         )
@@ -1172,8 +1170,63 @@ def watchdog_set_interval():
         from y_web.utils.process_watchdog import set_watchdog_interval
 
         set_watchdog_interval(interval_minutes)
+
+        if is_ajax:
+            return jsonify({"success": True, "interval_minutes": interval_minutes}), 200
+
         flash(f"Watchdog interval set to {interval_minutes} minutes.", "success")
     except Exception as e:
+        if is_ajax:
+            return jsonify({"success": False, "message": str(e)}), 500
         flash(f"Error setting watchdog interval: {str(e)}", "error")
 
+    # Validate user_id for redirect
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        flash("Invalid user ID.", "error")
+        return redirect(url_for("admin.dashboard"))
+
     return redirect(url_for("users.user_details", uid=user_id_int))
+
+
+@users.route("/admin/watchdog_toggle", methods=["POST"])
+@login_required
+def watchdog_toggle():
+    """
+    Enable or disable the watchdog scheduler (admin only).
+
+    Expects JSON body with:
+    - enabled: boolean
+
+    Returns:
+        JSON response with success status
+    """
+    # Check if user is admin
+    current_admin_user = Admin_users.query.filter_by(
+        username=current_user.username
+    ).first()
+
+    if not current_admin_user or current_admin_user.role != "admin":
+        return jsonify({"success": False, "message": "Access denied"}), 403
+
+    try:
+        data = request.get_json()
+        enabled = data.get("enabled", True) if data else True
+
+        from y_web.utils.process_watchdog import get_watchdog
+
+        watchdog = get_watchdog()
+
+        if enabled:
+            watchdog.start_scheduler()
+        else:
+            watchdog.stop_scheduler()
+
+        return jsonify({
+            "success": True,
+            "enabled": watchdog.is_running,
+            "message": f"Watchdog {'enabled' if enabled else 'disabled'}"
+        }), 200
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500

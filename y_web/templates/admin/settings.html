@@ -702,8 +702,10 @@
     }
 
     function addScheduleGroup() {
-        const name = prompt('Enter group name:');
-        if (!name) return;
+        // Auto-generate incremental group name
+        const container = document.getElementById('schedule-groups-container');
+        const existingGroups = container ? container.querySelectorAll('.schedule-group').length : 0;
+        const name = 'Group ' + (existingGroups + 1);
 
         fetch('/admin/schedule/groups', {
             method: 'POST',

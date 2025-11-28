@@ -321,6 +321,9 @@ class ProcessWatchdog:
         # Update last_run timestamp (for both manual and scheduled runs)
         self._last_run = datetime.now()
         
+        # Persist last_run to database
+        _save_watchdog_last_run(self._last_run)
+        
         # Update next_run if scheduler is running
         if self._scheduler_running:
             self._next_run = self._last_run + timedelta(
@@ -681,6 +684,98 @@ class ProcessInfo:
         self.server_url = server_url
 
 
+def _save_watchdog_last_run(last_run: datetime) -> None:
+    """
+    Save the watchdog last_run timestamp to the database.
+
+    Args:
+        last_run: The timestamp of the last watchdog run
+    """
+    try:
+        from flask import current_app
+
+        # Only save if we're in an application context
+        if current_app:
+            from y_web import db
+            from y_web.models import WatchdogSettings
+
+            settings = WatchdogSettings.query.first()
+            if settings:
+                settings.last_run = last_run
+                db.session.commit()
+            else:
+                # Create settings row if it doesn't exist
+                settings = WatchdogSettings(enabled=True, run_interval_minutes=15, last_run=last_run)
+                db.session.add(settings)
+                db.session.commit()
+    except Exception as e:
+        logger.debug(f"Could not save watchdog last_run to database: {e}")
+
+
+def _load_watchdog_settings() -> Dict:
+    """
+    Load watchdog settings from the database.
+
+    Returns:
+        Dictionary with enabled, run_interval_minutes, and last_run
+    """
+    try:
+        from flask import current_app
+
+        if current_app:
+            from y_web.models import WatchdogSettings
+
+            settings = WatchdogSettings.query.first()
+            if settings:
+                return {
+                    "enabled": settings.enabled,
+                    "run_interval_minutes": settings.run_interval_minutes,
+                    "last_run": settings.last_run,
+                }
+    except Exception as e:
+        logger.debug(f"Could not load watchdog settings from database: {e}")
+
+    return {
+        "enabled": True,
+        "run_interval_minutes": DEFAULT_RUN_INTERVAL_MINUTES,
+        "last_run": None,
+    }
+
+
+def _save_watchdog_settings(enabled: bool = None, run_interval_minutes: int = None) -> None:
+    """
+    Save watchdog settings to the database.
+
+    Args:
+        enabled: Whether the watchdog is enabled
+        run_interval_minutes: The interval between watchdog runs
+    """
+    try:
+        from flask import current_app
+
+        if current_app:
+            from y_web import db
+            from y_web.models import WatchdogSettings
+
+            settings = WatchdogSettings.query.first()
+            if settings:
+                if enabled is not None:
+                    settings.enabled = enabled
+                if run_interval_minutes is not None:
+                    settings.run_interval_minutes = run_interval_minutes
+                db.session.commit()
+            else:
+                # Create settings row if it doesn't exist
+                settings = WatchdogSettings(
+                    enabled=enabled if enabled is not None else True,
+                    run_interval_minutes=run_interval_minutes if run_interval_minutes is not None else 15
+                )
+                db.session.add(settings)
+                db.session.commit()
+    except Exception as e:
+        logger.debug(f"Could not save watchdog settings to database: {e}")
+
+
 # Global watchdog instance
 _watchdog: Optional[ProcessWatchdog] = None
 _watchdog_lock = threading.Lock()
@@ -747,6 +842,8 @@ def set_watchdog_interval(minutes: int) -> None:
     """
     watchdog = get_watchdog()
     watchdog.run_interval_minutes = minutes
+    # Persist to database
+    _save_watchdog_settings(run_interval_minutes=minutes)
 
 
 def get_watchdog_status() -> Dict:
@@ -757,4 +854,12 @@ def get_watchdog_status() -> Dict:
         Dictionary with watchdog status information
     """
     watchdog = get_watchdog()
-    return watchdog.get_status()
+    status = watchdog.get_status()
+    
+    # Try to load last_run from database if not set in memory
+    if status.get("last_run") is None:
+        db_settings = _load_watchdog_settings()
+        if db_settings.get("last_run"):
+            status["last_run"] = db_settings["last_run"].isoformat() if hasattr(db_settings["last_run"], "isoformat") else db_settings["last_run"]
+    
+    return status

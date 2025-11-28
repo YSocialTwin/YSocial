@@ -1066,3 +1066,22 @@ class LogSyncSettings(db.Model):
         db.Integer, nullable=False, default=10
     )  # Default 10 minutes
     last_sync = db.Column(db.DateTime, nullable=True)  # Last time sync was performed
+
+
+class WatchdogSettings(db.Model):
+    """
+    Settings for the process watchdog that monitors server/client processes.
+
+    Stores configuration for the watchdog scheduler including whether it's
+    enabled, the check interval in minutes, and the last run timestamp.
+    Single-row table that is created on first access if it doesn't exist.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "watchdog_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    run_interval_minutes = db.Column(
+        db.Integer, nullable=False, default=15
+    )  # Default 15 minutes
+    last_run = db.Column(db.DateTime, nullable=True)  # Last time watchdog ran
