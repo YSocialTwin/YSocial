@@ -182,6 +182,12 @@ def settings():
 
     users = Admin_users.query.all()
 
+    # Check which experiments have infinite clients
+    exp_has_infinite = {}
+    for exp in experiments:
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+
     # check if current db is the same of the active experiment
     exp = Exps.query.filter_by(status=1).first()
     if exp:
@@ -203,6 +209,7 @@ def settings():
         dbtype=dbtype,
         suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
+        exp_has_infinite=exp_has_infinite,
     )
 
 
@@ -1600,10 +1607,15 @@ def experiments_data():
 
     # Calculate average progress for running experiments
     exp_progress = {}
+    # Track experiments with infinite clients
+    exp_has_infinite = {}
     for exp in res:
+        # Check if any client has infinite duration (days = -1)
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+        
         if exp.running == 1 or exp.exp_status == "active":
             # Get all clients for this experiment
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
             if clients:
                 total_progress = 0
                 count = 0
@@ -1647,6 +1659,7 @@ def experiments_data():
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
                 "progress": exp_progress.get(exp.idexp, 0),
+                "has_infinite_client": exp_has_infinite.get(exp.idexp, False),
             }
             for exp in res
         ],

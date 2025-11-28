@@ -212,7 +212,19 @@
     function getRunningTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'has_infinite_client', hidden: true },
+            { 
+                id: 'exp_name', 
+                name: 'Name', 
+                attributes: editableCellAttributes, 
+                width: '100px',
+                formatter: (cell, row) => {
+                    const hasInfinite = row.cells[1].data;
+                    const infiniteTag = hasInfinite ? 
+                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
+                }
+            },
             { id: 'owner', name: 'Owner', sort: false, width: '50px' },
             {
                 id: 'progress',
@@ -248,10 +260,10 @@
                 sort: false,
                 width: '40px',
                 formatter: (cell, row) => {
-                    // Get the web value from hidden cell
-                    const web = row.cells[4].data;      // web is at index 4
+                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
+                    const web = row.cells[5].data;      // web is at index 5
                     {% if enable_notebook %}
-                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
+                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
                     {% endif %}
                     
                     const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
@@ -301,7 +313,19 @@
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'has_infinite_client', hidden: true },
+            { 
+                id: 'exp_name', 
+                name: 'Name', 
+                attributes: editableCellAttributes, 
+                width: '100px',
+                formatter: (cell, row) => {
+                    const hasInfinite = row.cells[1].data;
+                    const infiniteTag = hasInfinite ? 
+                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
+                }
+            },
             { id: 'owner', name: 'Owner', sort: false, width: '50px' },
             {
                 id: 'annotations',
@@ -332,10 +356,10 @@
                 sort: false,
                 width: '40px',
                 formatter: (cell, row) => {
-                    // Get the web value from hidden cell
-                    const web = row.cells[4].data;      // web is at index 4
+                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
+                    const web = row.cells[5].data;      // web is at index 5
                     {% if enable_notebook %}
-                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
+                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
                     {% endif %}
                     
                     const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
@@ -1278,7 +1302,12 @@
                                          data-demo-src="{{ url_for('static', filename='assets/img/icons/emoji/robot.svg') }}"
                                          data-user-popover="10" alt=""/>
                                     <div class="subscriber-meta" style="width: 80%;">
-                                        <span class="meta-title">{{ exp.exp_name }}</span>
+                                        <span class="meta-title">
+                                            {{ exp.exp_name }}
+                                            {% if exp_has_infinite.get(exp.idexp, false) %}
+                                            <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+                                            {% endif %}
+                                        </span>
                                         <span class="meta-content">Description: {{ exp.exp_descr }}</span>
                                         <span class="meta-content">Owner: {{ exp.owner }} </span>
 
