@@ -106,6 +106,20 @@
             ">
                 <span>3</span> Client
             </div>
+            <div class="tutorial-step-indicator" id="step-indicator-4" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>4</span> Run
+            </div>
         </div>
         
         <!-- Step Content Container -->
@@ -367,6 +381,43 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Step 4: Congratulations -->
+            <div id="tutorial-step-4" class="tutorial-step" style="display: none;">
+                <div style="text-align: center; padding: 20px 0;">
+                    <div style="font-size: 4em; margin-bottom: 15px;">🎊</div>
+                    <h3 style="color: #333; margin: 0 0 15px 0; font-size: 1.5em;">
+                        Congratulations!
+                    </h3>
+                    <p style="color: #666; margin: 0 0 20px 0; font-size: 1em; line-height: 1.6;">
+                        You've successfully created your first YSocial experiment!
+                    </p>
+                    
+                    <div style="
+                        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin: 20px 0;
+                        text-align: left;
+                    ">
+                        <h4 style="color: #2e7d32; margin: 0 0 12px 0; font-size: 1em;">
+                            <i class="mdi mdi-lightbulb-on" style="margin-right: 8px;"></i>What's Next?
+                        </h4>
+                        <ul style="color: #555; margin: 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
+                            <li>Explore <strong>advanced population settings</strong> like personality traits and activity profiles</li>
+                            <li>Configure <strong>LLM agents</strong> for more realistic agent behavior</li>
+                            <li>Experiment with different <strong>recommendation algorithms</strong></li>
+                            <li>Create <strong>multiple clients</strong> to compare simulation scenarios</li>
+                            <li>Use <strong>JupyterLab</strong> to analyze your simulation results</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="color: #888; font-size: 0.85em; margin-top: 15px;">
+                        <i class="mdi mdi-information-outline"></i>
+                        Click "Run Simulation" to start both the experiment server and your client!
+                    </p>
+                </div>
+            </div>
         </div>
         
         <!-- Error Message -->
@@ -382,7 +433,7 @@
         "></div>
         
         <!-- Footer -->
-        <div style="
+        <div id="tutorial-footer" style="
             padding: 15px 30px 25px;
             display: flex;
             justify-content: space-between;
@@ -496,6 +547,8 @@
     let selectedEducation = [];
     let selectedPolitical = [];
     let selectedToxicity = [];
+    let createdExperimentId = null;
+    let createdClientId = null;
     
     // Check if tutorial should be shown
     function checkTutorialStatus() {
@@ -593,7 +646,7 @@
         document.getElementById(`tutorial-step-${currentStep}`).style.display = 'block';
         
         // Update indicators
-        for (let i = 1; i <= 3; i++) {
+        for (let i = 1; i <= 4; i++) {
             const indicator = document.getElementById(`step-indicator-${i}`);
             if (i < currentStep) {
                 indicator.style.background = '#4caf50';
@@ -608,13 +661,26 @@
         }
         
         // Update buttons
-        document.getElementById('tutorial-prev-btn').style.display = currentStep > 1 ? 'block' : 'none';
-        
+        const prevBtn = document.getElementById('tutorial-prev-btn');
         const nextBtn = document.getElementById('tutorial-next-btn');
+        const skipBtn = document.getElementById('tutorial-skip-btn');
+        
+        // Hide prev button on step 4 (congratulations)
+        prevBtn.style.display = (currentStep > 1 && currentStep < 4) ? 'block' : 'none';
+        
+        // Hide skip button on step 4
+        skipBtn.style.display = currentStep < 4 ? 'block' : 'none';
+        
         if (currentStep === 3) {
             nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+        } else if (currentStep === 4) {
+            nextBtn.innerHTML = '<i class="mdi mdi-play"></i> Run Simulation';
+            nextBtn.style.background = 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
         } else {
             nextBtn.innerHTML = 'Next <i class="mdi mdi-arrow-right"></i>';
+            nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(3, 155, 229, 0.3)';
         }
         
         // Clear error
@@ -679,15 +745,18 @@
         if (currentStep < 3) {
             currentStep++;
             updateStepDisplay();
-        } else {
-            // Submit the form
+        } else if (currentStep === 3) {
+            // Submit the form to create experiment
             createExperiment();
+        } else if (currentStep === 4) {
+            // Run the simulation
+            runSimulation();
         }
     }
     
     // Handle previous button click
     function handlePrev() {
-        if (currentStep > 1) {
+        if (currentStep > 1 && currentStep < 4) {
             currentStep--;
             updateStepDisplay();
         }
@@ -731,8 +800,17 @@
         .then(response => response.json())
         .then(result => {
             if (result.success) {
-                // Redirect to experiment details page
-                window.location.href = `/admin/experiment_details/${result.experiment_id}`;
+                // Store the created IDs for later use
+                createdExperimentId = result.experiment_id;
+                createdClientId = result.client_id;
+                
+                // Move to congratulations step
+                currentStep = 4;
+                updateStepDisplay();
+                
+                // Re-enable the button
+                const nextBtn = document.getElementById('tutorial-next-btn');
+                nextBtn.disabled = false;
             } else {
                 showError(result.message || 'An error occurred. Please try again.');
                 nextBtn.disabled = false;
@@ -745,6 +823,33 @@
             nextBtn.disabled = false;
             nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
         });
+    }
+    
+    // Run the simulation (start server and client)
+    function runSimulation() {
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Starting...';
+        
+        // First, start the experiment server
+        fetch(`/admin/start_experiment/${createdExperimentId}`)
+            .then(response => {
+                // Wait a moment for the server to start
+                return new Promise(resolve => setTimeout(resolve, 1500));
+            })
+            .then(() => {
+                // Then start the client
+                return fetch(`/admin/run_client/${createdClientId}/${createdExperimentId}`);
+            })
+            .then(() => {
+                // Redirect to experiment details page
+                window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+            })
+            .catch(error => {
+                console.error('Error starting simulation:', error);
+                // Still redirect even if there's an error - the user can start manually
+                window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+            });
     }
     
     // Dismiss tutorial
@@ -783,6 +888,8 @@
             selectedEducation = [];
             selectedPolitical = [];
             selectedToxicity = [];
+            createdExperimentId = null;
+            createdClientId = null;
             document.querySelectorAll('.tutorial-tag').forEach(el => el.classList.remove('selected'));
             
             // Reset form inputs
@@ -793,6 +900,11 @@
             document.getElementById('tut-client-name').value = '';
             document.getElementById('tut-sim-days').value = 7;
             document.getElementById('tut-days-value').textContent = '7';
+            
+            // Reset button styles
+            const nextBtn = document.getElementById('tutorial-next-btn');
+            nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(3, 155, 229, 0.3)';
             
             currentStep = 1;
             showTutorial();

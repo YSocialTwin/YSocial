@@ -730,6 +730,7 @@ def create_tutorial_experiment():
         return jsonify({
             "success": True,
             "experiment_id": exp.idexp,
+            "client_id": client.id,
             "message": "Experiment created successfully!"
         })
 
