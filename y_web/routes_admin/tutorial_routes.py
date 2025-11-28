@@ -10,9 +10,16 @@ users create their first simulation by guiding them through:
 
 import json
 import os
+import pathlib
+import shutil
+import uuid
+from urllib.parse import urlparse
 
+import faker
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import create_engine, text
+from werkzeug.security import generate_password_hash
 
 from y_web import db
 from y_web.models import (
@@ -37,8 +44,10 @@ from y_web.models import (
     Topic_List,
     Toxicity_Levels,
 )
+from y_web.routes_admin.experiments_routes import get_suggested_port
 from y_web.utils import generate_population
 from y_web.utils.miscellanea import check_privileges
+from y_web.utils.path_utils import get_resource_path, get_writable_path
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -158,10 +167,6 @@ def create_tutorial_experiment():
     Returns:
         JSON with success status and experiment_id
     """
-    import pathlib
-    import shutil
-    import uuid
-
     check_privileges(current_user.username)
 
     data = request.get_json()
@@ -281,9 +286,6 @@ def create_tutorial_experiment():
 
         # ============== STEP 2: Create Experiment ==============
 
-        from y_web.routes_admin.experiments_routes import get_suggested_port
-        from y_web.utils.path_utils import get_resource_path, get_writable_path
-
         BASE_DIR = get_writable_path()
 
         # Determine database type
@@ -314,11 +316,6 @@ def create_tutorial_experiment():
             db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
         else:
             # PostgreSQL setup
-            from urllib.parse import urlparse
-
-            from sqlalchemy import create_engine, text
-            from werkzeug.security import generate_password_hash
-
             current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
             parsed_uri = urlparse(current_uri)
 
@@ -526,8 +523,6 @@ def create_tutorial_experiment():
         db.session.commit()
 
         # Create client config file
-        import faker
-
         # Get agents in the population
         agents = Agent_Population.query.filter_by(population_id=pop.id).all()
         agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
@@ -705,8 +700,8 @@ def create_tutorial_experiment():
                     "simulation_days": simulation_days,
                 },
             })
-        except Exception:
-            pass
+        except Exception as telemetry_error:
+            current_app.logger.debug(f"Telemetry logging skipped: {str(telemetry_error)}")
 
         return jsonify({
             "success": True,
