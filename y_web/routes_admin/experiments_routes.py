@@ -63,6 +63,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.utils import (
+    start_client,
     start_server,
     terminate_client,
     terminate_process_on_port,
@@ -3969,6 +3970,13 @@ def delete_schedule_group(group_id):
     if not group:
         return jsonify({"success": False, "message": "Group not found"}), 404
 
+    # Check if the group is currently running
+    status = ExperimentScheduleStatus.query.first()
+    if status and status.is_running and status.current_group_id == group_id:
+        return jsonify(
+            {"success": False, "message": "Cannot delete a running group"}
+        ), 400
+
     # Delete all items in the group first
     ExperimentScheduleItem.query.filter_by(group_id=group_id).delete()
     db.session.delete(group)
@@ -4057,6 +4065,13 @@ def remove_experiment_from_group(item_id):
     if not item:
         return jsonify({"success": False, "message": "Item not found"}), 404
 
+    # Check if the group is currently running
+    status = ExperimentScheduleStatus.query.first()
+    if status and status.is_running and status.current_group_id == item.group_id:
+        return jsonify(
+            {"success": False, "message": "Cannot remove experiments from a running group"}
+        ), 400
+
     db.session.delete(item)
     db.session.commit()
 
@@ -4126,8 +4141,9 @@ def start_schedule():
     Starts all experiments in the first group and monitors for completion.
 
     Returns:
-        JSON with success status
+        JSON with success status and execution logs
     """
+    import time
     check_privileges(current_user.username)
 
     # Check if already running
@@ -4160,11 +4176,16 @@ def start_schedule():
     status.started_at = datetime.utcnow()
     db.session.commit()
 
+    # Collect execution logs
+    logs = []
+
     # Start each experiment in the group
     started_count = 0
     for item in items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
+            logs.append(f"Starting server for '{exp.exp_name}'...")
+
             # Update experiment status
             exp.running = 1
             exp.exp_status = "active"
@@ -4174,19 +4195,37 @@ def start_schedule():
             start_server(exp)
             started_count += 1
 
+            # Wait for server to be ready
+            logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
+            time.sleep(3)  # Give server time to start
+
             # Start all clients for this experiment
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
             for client in clients:
                 if client.status == 0:
-                    # Mark client as running
-                    client.status = 1
-                    db.session.commit()
+                    logs.append(f"Starting client '{client.name}' for '{exp.exp_name}'...")
+                    # Get population for client
+                    population = Population.query.filter_by(id=client.population_id).first()
+                    if population:
+                        start_client(exp, client, population, resume=True)
+                        # Mark client as running
+                        client.status = 1
+                        db.session.commit()
+                        logs.append(f"Client '{client.name}' started successfully")
+                    else:
+                        logs.append(f"Warning: No population found for client '{client.name}'")
+
+            logs.append(f"Experiment '{exp.exp_name}' started successfully")
+
+    logs.append(f"Group '{first_group.name}' started with {started_count} experiment(s)")
 
     return jsonify(
         {
             "success": True,
             "message": f"Started {started_count} experiments in group '{first_group.name}'",
             "current_group": first_group.name,
+            "current_group_id": first_group.id,
+            "logs": logs,
         }
     )
 
@@ -4254,6 +4293,7 @@ def check_schedule_progress():
     Returns:
         JSON with progress status
     """
+    import time
     check_privileges(current_user.username)
 
     status = ExperimentScheduleStatus.query.first()
@@ -4288,9 +4328,14 @@ def check_schedule_progress():
         )
 
     # All completed - stop current group experiments and move to next group
+    logs = []
+    current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
+    logs.append(f"Group '{current_group.name}' completed!")
+
     for item in items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 1:
+            logs.append(f"Stopping experiment '{exp.exp_name}'...")
             # Stop clients
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
             for client in clients:
@@ -4309,7 +4354,6 @@ def check_schedule_progress():
             db.session.commit()
 
     # Get next group
-    current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
     next_group = (
         ExperimentScheduleGroup.query.filter(
             ExperimentScheduleGroup.order_index > current_group.order_index
@@ -4323,16 +4367,19 @@ def check_schedule_progress():
         status.is_running = 0
         status.current_group_id = None
         db.session.commit()
+        logs.append("All groups completed! Schedule finished.")
         return jsonify(
             {
                 "success": True,
                 "is_running": False,
                 "all_completed": True,
                 "schedule_complete": True,
+                "logs": logs,
             }
         )
 
     # Start next group
+    logs.append(f"Starting next group: '{next_group.name}'...")
     status.current_group_id = next_group.id
     db.session.commit()
 
@@ -4340,17 +4387,30 @@ def check_schedule_progress():
     for item in next_items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
+            logs.append(f"Starting server for '{exp.exp_name}'...")
             exp.running = 1
             exp.exp_status = "active"
             db.session.commit()
             start_server(exp)
 
-            # Start clients
+            # Wait for server to be ready
+            logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
+            time.sleep(3)
+
+            # Start clients properly
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
             for client in clients:
                 if client.status == 0:
-                    client.status = 1
-                    db.session.commit()
+                    logs.append(f"Starting client '{client.name}'...")
+                    population = Population.query.filter_by(id=client.population_id).first()
+                    if population:
+                        start_client(exp, client, population, resume=True)
+                        client.status = 1
+                        db.session.commit()
+
+            logs.append(f"Experiment '{exp.exp_name}' started successfully")
+
+    logs.append(f"Group '{next_group.name}' started!")
 
     return jsonify(
         {
@@ -4358,6 +4418,8 @@ def check_schedule_progress():
             "is_running": True,
             "all_completed": True,
             "next_group": next_group.name,
+            "next_group_id": next_group.id,
+            "logs": logs,
         }
     )
 

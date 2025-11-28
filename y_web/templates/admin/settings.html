@@ -445,6 +445,15 @@
                             </div>
                         </div>
 
+                        <!-- Execution Log -->
+                        <div id="schedule-log-container" style="display: none; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; padding: 10px; background: #f8f9fa;">
+                            <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333;">
+                                <i class="mdi mdi-console"></i> Execution Log
+                            </h4>
+                            <div id="schedule-log" style="max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.8em; line-height: 1.6; color: #333;">
+                            </div>
+                        </div>
+
                         <!-- Schedule Controls -->
                         <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #eee; padding-top: 15px;">
                             <button id="start-schedule-btn" onclick="startSchedule()" style="background: #28a745; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
@@ -461,6 +470,7 @@
             <!-- Schedule JavaScript -->
             <script>
                 let scheduleCheckInterval = null;
+                let currentRunningGroupId = null;
 
                 // Load schedule data on page load
                 document.addEventListener('DOMContentLoaded', function() {
@@ -480,7 +490,7 @@
                                          style="padding: 8px 10px; margin: 4px 0; background: #f8f9fa; border: 1px solid #dee2e6; 
                                                 border-radius: 4px; cursor: grab; font-size: 0.85em; display: flex; justify-content: space-between; align-items: center;"
                                          ondragstart="handleDragStart(event)">
-                                        <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
+                                         <span><strong>${exp.name}</strong> <span style="color: #6c757d;">(${exp.owner})</span></span>
                                     </div>
                                 `).join('');
                             } else {
@@ -496,32 +506,41 @@
                         .then(data => {
                             const container = document.getElementById('schedule-groups');
                             if (data.groups && data.groups.length > 0) {
-                                container.innerHTML = data.groups.map((group, idx) => `
+                                container.innerHTML = data.groups.map((group, idx) => {
+                                    const isRunning = currentRunningGroupId === group.id;
+                                    const headerBg = isRunning ? '#28a745' : '#e9ecef';
+                                    const headerColor = isRunning ? 'white' : 'inherit';
+                                    const borderColor = isRunning ? '#28a745' : '#dee2e6';
+                                    const runningBadge = isRunning ? '<span style="background: white; color: #28a745; padding: 2px 8px; border-radius: 10px; font-size: 0.75em; margin-left: 8px;">RUNNING</span>' : '';
+                                    
+                                    return `
                                     <div class="schedule-group" data-group-id="${group.id}" 
-                                         style="margin-bottom: 15px; border: 1px solid #dee2e6; border-radius: 6px; background: #fff;">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #e9ecef; border-radius: 6px 6px 0 0;">
-                                            <span style="font-weight: 600; font-size: 0.85em;">
-                                                <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: #6c757d;"></i> 
+                                         style="margin-bottom: 15px; border: 2px solid ${borderColor}; border-radius: 6px; background: #fff; ${isRunning ? 'box-shadow: 0 0 10px rgba(40, 167, 69, 0.3);' : ''}">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: ${headerBg}; color: ${headerColor}; border-radius: 4px 4px 0 0;">
+                                            <span style="font-weight: 600; font-size: 0.85em; display: flex; align-items: center;">
+                                                <i class="mdi mdi-numeric-${idx + 1}-circle" style="color: ${isRunning ? 'white' : '#6c757d'};"></i> 
                                                 ${group.name}
+                                                ${runningBadge}
                                             </span>
-                                            <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1em;">
+                                            <button onclick="deleteScheduleGroup(${group.id})" style="background: none; border: none; color: ${isRunning ? 'rgba(255,255,255,0.7)' : '#dc3545'}; cursor: ${isRunning ? 'not-allowed' : 'pointer'}; font-size: 1em;" ${isRunning ? 'disabled title="Cannot delete running group"' : ''}>
                                                 <i class="mdi mdi-delete"></i>
                                             </button>
                                         </div>
                                         <div class="group-experiments" data-group-id="${group.id}" 
-                                             style="min-height: 50px; padding: 8px; background: #fafafa;"
+                                             style="min-height: 50px; padding: 8px; background: ${isRunning ? '#f0fff4' : '#fafafa'}; display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start;"
                                              ondragover="handleDragOver(event)" ondrop="handleDrop(event, ${group.id})">
                                             ${group.experiments.length > 0 ? group.experiments.map(exp => `
-                                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; margin: 3px 0; background: white; border: 1px solid #dee2e6; border-radius: 4px; font-size: 0.8em;">
-                                                    <span><strong>${exp.name}</strong></span>
-                                                    <button onclick="removeExperimentFromGroup(${exp.item_id})" style="background: none; border: none; color: #dc3545; cursor: pointer;">
-                                                        <i class="mdi mdi-close"></i>
-                                                    </button>
-                                                </div>
-                                            `).join('') : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0;">Drag experiments here</p>'}
+                                                <span class="experiment-tag" style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: ${isRunning ? '#28a745' : '#6c757d'}; color: white; border-radius: 15px; font-size: 0.75em; white-space: nowrap;">
+                                                    <i class="mdi mdi-flask"></i>
+                                                    ${exp.name}
+                                                    ${!isRunning ? `<button onclick="removeExperimentFromGroup(${exp.item_id})" style="background: none; border: none; color: rgba(255,255,255,0.8); cursor: pointer; padding: 0; margin-left: 4px; font-size: 1.1em; line-height: 1;">
+                                                        <i class="mdi mdi-close-circle"></i>
+                                                    </button>` : ''}
+                                                </span>
+                                            `).join('') : '<p style="color: #999; font-size: 0.8em; text-align: center; margin: 0; width: 100%;">Drag experiments here</p>'}
                                         </div>
                                     </div>
-                                `).join('');
+                                `}).join('');
                             } else {
                                 container.innerHTML = '<p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet. Click "Add Group" to start.</p>';
                             }
@@ -550,6 +569,10 @@
                 }
 
                 function deleteScheduleGroup(groupId) {
+                    if (currentRunningGroupId === groupId) {
+                        alert('Cannot delete a running group. Stop the schedule first.');
+                        return;
+                    }
                     if (!confirm('Delete this group and remove all experiments from it?')) return;
 
                     fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
@@ -558,6 +581,8 @@
                             if (data.success) {
                                 loadScheduleGroups();
                                 loadAvailableExperiments();
+                            } else {
+                                alert(data.message || 'Failed to delete group');
                             }
                         })
                         .catch(err => console.error('Error deleting group:', err));
@@ -575,7 +600,7 @@
 
                 function handleDrop(event, groupId) {
                     event.preventDefault();
-                    event.currentTarget.style.background = '#fafafa';
+                    event.currentTarget.style.background = currentRunningGroupId === groupId ? '#f0fff4' : '#fafafa';
                     
                     const expId = event.dataTransfer.getData('text/plain');
                     if (!expId) return;
@@ -604,46 +629,82 @@
                             if (data.success) {
                                 loadScheduleGroups();
                                 loadAvailableExperiments();
+                            } else {
+                                alert(data.message || 'Cannot remove experiment');
                             }
                         })
                         .catch(err => console.error('Error removing experiment:', err));
                 }
 
+                function addLogMessage(message) {
+                    const logContainer = document.getElementById('schedule-log-container');
+                    const logDiv = document.getElementById('schedule-log');
+                    logContainer.style.display = 'block';
+                    
+                    const timestamp = new Date().toLocaleTimeString();
+                    const msgDiv = document.createElement('div');
+                    msgDiv.innerHTML = `<span style="color: #6c757d;">[${timestamp}]</span> ${message}`;
+                    logDiv.appendChild(msgDiv);
+                    logDiv.scrollTop = logDiv.scrollHeight;
+                }
+
+                function displayLogs(logs) {
+                    if (logs && logs.length > 0) {
+                        logs.forEach(log => addLogMessage(log));
+                    }
+                }
+
                 function startSchedule() {
                     if (!confirm('Start the experiment schedule? This will run all groups sequentially.')) return;
+
+                    // Show log container and clear previous logs
+                    const logContainer = document.getElementById('schedule-log-container');
+                    const logDiv = document.getElementById('schedule-log');
+                    logContainer.style.display = 'block';
+                    logDiv.innerHTML = '';
+                    addLogMessage('Starting schedule...');
 
                     fetch('/admin/schedule/start', { method: 'POST' })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                alert(data.message);
+                                displayLogs(data.logs);
+                                addLogMessage(`<strong style="color: #28a745;">✓ ${data.message}</strong>`);
+                                currentRunningGroupId = data.current_group_id;
                                 checkScheduleStatus();
+                                loadScheduleGroups();
                                 // Start polling for progress
                                 scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
                             } else {
-                                alert(data.message || 'Failed to start schedule');
+                                addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
                             }
                         })
-                        .catch(err => alert('Error starting schedule'));
+                        .catch(err => {
+                            addLogMessage(`<strong style="color: #dc3545;">✗ Error starting schedule</strong>`);
+                        });
                 }
 
                 function stopSchedule() {
                     if (!confirm('Stop the schedule? This will stop all running experiments.')) return;
 
+                    addLogMessage('Stopping schedule...');
+
                     fetch('/admin/schedule/stop', { method: 'POST' })
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                alert(data.message);
+                                addLogMessage(`<strong style="color: #dc3545;">Schedule stopped</strong>`);
+                                currentRunningGroupId = null;
                                 checkScheduleStatus();
+                                loadScheduleGroups();
                                 if (scheduleCheckInterval) {
                                     clearInterval(scheduleCheckInterval);
                                 }
                             } else {
-                                alert(data.message || 'Failed to stop schedule');
+                                addLogMessage(`<strong style="color: #dc3545;">✗ ${data.message}</strong>`);
                             }
                         })
-                        .catch(err => alert('Error stopping schedule'));
+                        .catch(err => addLogMessage('<strong style="color: #dc3545;">✗ Error stopping schedule</strong>'));
                 }
 
                 function checkScheduleStatus() {
@@ -661,11 +722,22 @@
                                 badge.style.background = '#28a745';
                                 badge.style.color = 'white';
                                 badge.textContent = 'Running';
+                                currentRunningGroupId = data.current_group_id;
+                                // Start progress check if not already running
+                                if (!scheduleCheckInterval) {
+                                    scheduleCheckInterval = setInterval(checkScheduleProgress, 30000);
+                                }
                             } else {
                                 startBtn.style.display = 'inline-block';
                                 stopBtn.style.display = 'none';
                                 badge.style.display = 'none';
+                                currentRunningGroupId = null;
+                                if (scheduleCheckInterval) {
+                                    clearInterval(scheduleCheckInterval);
+                                    scheduleCheckInterval = null;
+                                }
                             }
+                            loadScheduleGroups();
                         })
                         .catch(err => console.error('Error checking status:', err));
                 }
@@ -674,15 +746,23 @@
                     fetch('/admin/schedule/check_progress', { method: 'POST' })
                         .then(response => response.json())
                         .then(data => {
+                            // Display any logs from the progress check
+                            if (data.logs) {
+                                displayLogs(data.logs);
+                            }
+                            
                             if (data.schedule_complete) {
-                                alert('Schedule completed!');
+                                addLogMessage('<strong style="color: #28a745;">✓ Schedule completed successfully!</strong>');
                                 if (scheduleCheckInterval) {
                                     clearInterval(scheduleCheckInterval);
+                                    scheduleCheckInterval = null;
                                 }
+                                currentRunningGroupId = null;
                                 checkScheduleStatus();
                                 loadScheduleGroups();
                             } else if (data.next_group) {
-                                console.log('Advanced to group:', data.next_group);
+                                currentRunningGroupId = data.next_group_id;
+                                loadScheduleGroups();
                             }
                         })
                         .catch(err => console.error('Error checking progress:', err));
