@@ -443,11 +443,32 @@
         return grid;
     }
 
-    // Function to refresh all tables
+    // Function to refresh all tables with fresh data from server
     function refreshAllTables() {
-        Object.values(gridInstances).forEach(grid => {
-            if (grid && typeof grid.forceRender === 'function') {
-                grid.forceRender();
+        // Refresh each grid by triggering a new server request
+        Object.entries(gridInstances).forEach(([statusFilter, grid]) => {
+            if (grid && typeof grid.updateConfig === 'function') {
+                // Get box visibility element
+                const boxId = statusFilter === EXP_STATUS.ACTIVE ? 'box-active' : 
+                              statusFilter === EXP_STATUS.COMPLETED ? 'box-completed' : 'box-stopped';
+                const boxDiv = document.getElementById(boxId);
+                
+                // Re-apply the same server config to trigger a fresh fetch
+                grid.updateConfig({
+                    server: {
+                        url: `/admin/experiments_data?exp_status=${statusFilter}`,
+                        then: results => {
+                            // Show/hide box based on whether there are results
+                            if (results.total > 0) {
+                                boxDiv.style.display = 'flex';
+                            } else {
+                                boxDiv.style.display = 'none';
+                            }
+                            return results.data;
+                        },
+                        total: results => results.total,
+                    }
+                }).forceRender();
             }
         });
     }
