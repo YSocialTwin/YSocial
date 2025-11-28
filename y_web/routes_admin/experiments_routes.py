@@ -4215,6 +4215,39 @@ def start_schedule():
     for item in items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
+            # Check if all clients have already completed before starting the server
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            all_clients_completed = True
+            clients_to_start = []
+            
+            for client in clients:
+                # Check if client has completed
+                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                if client_exec:
+                    if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                        all_clients_completed = False
+                        clients_to_start.append(client)
+                else:
+                    # No execution record means client hasn't run yet
+                    all_clients_completed = False
+                    clients_to_start.append(client)
+            
+            # If all clients have completed, mark experiment as completed and skip
+            if all_clients_completed and len(clients) > 0:
+                msg = f"Experiment '{exp.exp_name}' already completed - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                exp.exp_status = "completed"
+                db.session.commit()
+                continue
+            
+            # If no clients to start, skip
+            if len(clients_to_start) == 0 and len(clients) > 0:
+                msg = f"No clients to start for '{exp.exp_name}' - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                continue
+            
             msg = f"Starting server for '{exp.exp_name}'..."
             logs.append(msg)
             db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
@@ -4233,9 +4266,8 @@ def start_schedule():
             logs.append(msg)
             time.sleep(3)  # Give server time to start
 
-            # Start all clients for this experiment
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
-            for client in clients:
+            # Start only clients that haven't completed
+            for client in clients_to_start:
                 if client.status == 0:
                     msg = f"Starting client '{client.name}' for '{exp.exp_name}'..."
                     logs.append(msg)
@@ -4453,7 +4485,41 @@ def check_schedule_progress():
     for item in next_items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
+            # Check if all clients have already completed before starting the server
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            all_clients_completed = True
+            clients_to_start = []
+            
+            for client in clients:
+                # Check if client has completed
+                client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+                if client_exec:
+                    if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                        all_clients_completed = False
+                        clients_to_start.append(client)
+                else:
+                    # No execution record means client hasn't run yet
+                    all_clients_completed = False
+                    clients_to_start.append(client)
+            
+            # If all clients have completed, mark experiment as completed and skip
+            if all_clients_completed and len(clients) > 0:
+                msg = f"Experiment '{exp.exp_name}' already completed - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                exp.exp_status = "completed"
+                db.session.commit()
+                continue
+            
+            # If no clients to start, skip
+            if len(clients_to_start) == 0 and len(clients) > 0:
+                msg = f"No clients to start for '{exp.exp_name}' - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                continue
+            
             logs.append(f"Starting server for '{exp.exp_name}'...")
+            db.session.add(ExperimentScheduleLog(message=f"Starting server for '{exp.exp_name}'...", log_type="info"))
             exp.running = 1
             exp.exp_status = "active"
             db.session.commit()
@@ -4463,11 +4529,11 @@ def check_schedule_progress():
             logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
             time.sleep(3)
 
-            # Start clients properly
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
-            for client in clients:
+            # Start only clients that haven't completed
+            for client in clients_to_start:
                 if client.status == 0:
                     logs.append(f"Starting client '{client.name}'...")
+                    db.session.add(ExperimentScheduleLog(message=f"Starting client '{client.name}'...", log_type="info"))
                     population = Population.query.filter_by(id=client.population_id).first()
                     if population:
                         start_client(exp, client, population, resume=True)
@@ -4475,8 +4541,12 @@ def check_schedule_progress():
                         db.session.commit()
 
             logs.append(f"Experiment '{exp.exp_name}' started successfully")
+            db.session.add(ExperimentScheduleLog(message=f"Experiment '{exp.exp_name}' started successfully", log_type="success"))
+            db.session.commit()
 
     logs.append(f"Group '{next_group.name}' started!")
+    db.session.add(ExperimentScheduleLog(message=f"Group '{next_group.name}' started!", log_type="success"))
+    db.session.commit()
 
     return jsonify(
         {
