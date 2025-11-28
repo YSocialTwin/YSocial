@@ -3399,6 +3399,21 @@ def copy_experiment():
             success = _create_single_experiment_copy(source_exp, copy_name)
             if success:
                 created_count += 1
+
+                from y_web.telemetry import Telemetry
+
+                telemetry = Telemetry(user=current_user)
+                telemetry.log_event(
+                    {
+                        "action": "create_experiment",
+                        "data": {
+                            "platform_type": source_exp.platform_type,
+                            "annotations": source_exp.annotations,
+                            "llm_agents_enabled": source_exp.llm_agents_enabled,
+                            "copy_experiment": True
+                        },
+                    },
+                )
         except Exception as e:
             current_app.logger.error(
                 f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
