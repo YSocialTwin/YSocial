@@ -4,10 +4,10 @@
 {% macro render_experiment_box(experiments, section_color, show_run_buttons=true) %}
     {% for exp in experiments %}
     {# Check if any client in this experiment has infinite duration (days = -1) #}
-    {% set has_infinite_client = false %}
+    {% set ns = namespace(has_infinite_client=false) %}
     {% for client in experiments[exp]["clients"] %}
         {% if client[0].days == -1 %}
-            {% set has_infinite_client = true %}
+            {% set ns.has_infinite_client = true %}
         {% endif %}
     {% endfor %}
     <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid {{ section_color }}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
@@ -15,7 +15,7 @@
             <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                 <span class="left" style="display: flex; align-items: center; gap: 10px;">
                     Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong>
-                    {% if has_infinite_client %}
+                    {% if ns.has_infinite_client %}
                     <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
                     {% endif %}
                     <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
