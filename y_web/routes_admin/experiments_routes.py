@@ -1501,6 +1501,9 @@ def experiments_data():
     """
     Display paginated list of experiments.
 
+    Query params:
+        exp_status: Filter by experiment status ('active', 'completed', 'stopped', 'scheduled')
+
     Returns:
         Rendered experiments list template
     """
@@ -1516,6 +1519,15 @@ def experiments_data():
     else:
         # Regular users should not access this endpoint
         return {"data": [], "total": 0}
+
+    # Filter by exp_status if provided
+    exp_status_filter = request.args.get("exp_status")
+    if exp_status_filter:
+        if exp_status_filter == "stopped_scheduled":
+            # Include both 'stopped' and 'scheduled' statuses
+            query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
+        else:
+            query = query.filter(Exps.exp_status == exp_status_filter)
 
     # search filter
     search = request.args.get("search")
@@ -1536,6 +1548,7 @@ def experiments_data():
             "annotations": "annotations",
             "running": "running",
             "web": "status",  # web interface status
+            "exp_status": "exp_status",
         }
         for s in sort.split(","):
             direction = s[0]
@@ -1584,6 +1597,7 @@ def experiments_data():
                 "owner": exp.owner,
                 "web": "Loaded" if exp.status == 1 else "Not loaded",
                 "running": "Running" if exp.running == 1 else "Stopped",
+                "exp_status": getattr(exp, "exp_status", "stopped"),
                 "jupyter_status": (
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
@@ -2169,7 +2183,9 @@ def start_experiment(uid):
         return experiment_details(uid)
 
     # update the experiment status
-    db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 1})
+    db.session.query(Exps).filter_by(idexp=uid).update(
+        {Exps.running: 1, Exps.exp_status: "active"}
+    )
     db.session.commit()
 
     # start the yserver
@@ -2227,7 +2243,9 @@ def stop_experiment(uid):
         terminate_process_on_port(exp.port)
 
     # Step 4: Update the experiment status in database
-    db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 0})
+    db.session.query(Exps).filter_by(idexp=uid).update(
+        {Exps.running: 0, Exps.exp_status: "stopped"}
+    )
     db.session.commit()
 
     return experiment_details(uid)

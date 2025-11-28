@@ -377,6 +377,12 @@ class Exps(db.Model):
 
     Defines simulation experiments including platform type (microblogging/reddit),
     database connections, ownership, status tracking, and server configuration.
+
+    exp_status values:
+    - "stopped": Experiment is not running (default)
+    - "active": Experiment server is running
+    - "completed": All clients have finished execution
+    - "scheduled": Experiment is scheduled to run
     """
 
     __bind_key__ = "db_admin"
@@ -394,6 +400,7 @@ class Exps(db.Model):
     annotations = db.Column(db.String(500), nullable=False, default="")
     server_pid = db.Column(db.Integer, nullable=True, default=None)
     llm_agents_enabled = db.Column(db.Integer, nullable=False, default=1)
+    exp_status = db.Column(db.String(20), nullable=False, default="stopped")
 
 
 class Exp_stats(db.Model):

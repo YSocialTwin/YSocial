@@ -485,6 +485,11 @@ def create_client():
     db.session.add(client)
     db.session.commit()
 
+    # If experiment was completed, reset status to stopped since a new client was added
+    if exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
+
     # Get LLM URL from environment (set by y_social.py)
     import os
 

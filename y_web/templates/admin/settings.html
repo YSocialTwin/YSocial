@@ -73,26 +73,51 @@
                     </div>
                     {% endfor %}
 
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Available Experiments</h3>
+                    <!-- Active Experiments Section -->
+                    <div class="dashboard-box" style="margin-bottom: 20px;">
+                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
+                            Currently Running Experiments
+                        </h3>
 
                         <div class="box-content">
+                            <div id="table-active"></div>
+                        </div>
+                    </div>
 
+                    <!-- Completed Experiments Section -->
+                    <div class="dashboard-box" style="margin-bottom: 20px;">
+                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #17a2b8;"></span>
+                            Completed Experiments
+                        </h3>
 
-                            <div id="table"></div>
+                        <div class="box-content">
+                            <div id="table-completed"></div>
+                        </div>
+                    </div>
 
-                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                    <!-- Stopped/Scheduled Experiments Section -->
+                    <div class="dashboard-box" style="margin-bottom: 20px;">
+                        <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #6c757d;"></span>
+                            Stopped / Scheduled Experiments
+                        </h3>
 
-                            <style>
+                        <div class="box-content">
+                            <div id="table-stopped"></div>
+                        </div>
+                    </div>
 
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
+                    <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+
+                    <style>
+                      #table-active td, #table-completed td, #table-stopped td {
+                        vertical-align: middle !important;
+                      }
+                    </style>
 
 <script>
-    const tableDiv = document.getElementById('table');
-
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
@@ -109,8 +134,9 @@
         }
     };
 
-    new gridjs.Grid({
-        columns: [
+    // Function to create table columns configuration
+    function getTableColumns() {
+        return [
             { id: 'idexp', hidden: true },
             { id: 'exp_name', name: 'Name', attributes: editableCellAttributes },
             { id: 'owner', name: 'Owner', sort: false },
@@ -200,52 +226,70 @@
                     `);
                 }
             },
-        ],
-        server: {
-            url: '/admin/experiments_data',
-            then: results => results.data,
-            total: results => results.total,
-        },
-        search: {
-            enabled: true,
+        ];
+    }
+
+    // Create table for a specific status
+    function createTable(tableId, statusFilter) {
+        const tableDiv = document.getElementById(tableId);
+        
+        new gridjs.Grid({
+            columns: getTableColumns(),
             server: {
-                url: (prev, search) => {
-                    return updateUrl(prev, { search });
+                url: `/admin/experiments_data?exp_status=${statusFilter}`,
+                then: results => results.data,
+                total: results => results.total,
+            },
+            search: {
+                enabled: true,
+                server: {
+                    url: (prev, search) => {
+                        return updateUrl(prev, { search });
+                    },
                 },
             },
-        },
-        sort: {
-            enabled: true,
-            multiColumn: true,
-            server: {
-                url: (prev, columns) => {
-                    const columnIds = ['idexp', 'exp_name', 'platform_type', 'exp_descr', 'owner', 'web', 'running'];
-                    const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-                    return updateUrl(prev, { sort });
+            sort: {
+                enabled: true,
+                multiColumn: true,
+                server: {
+                    url: (prev, columns) => {
+                        const columnIds = ['idexp', 'exp_name', 'platform_type', 'exp_descr', 'owner', 'web', 'running'];
+                        const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                        return updateUrl(prev, { sort });
+                    },
                 },
             },
-        },
-        pagination: {
-            enabled: true,
-            server: {
-                url: (prev, page, limit) => {
-                    return updateUrl(prev, { start: page * limit, length: limit });
+            pagination: {
+                enabled: true,
+                limit: 5,
+                server: {
+                    url: (prev, page, limit) => {
+                        return updateUrl(prev, { start: page * limit, length: limit });
+                    },
                 },
             },
-        },
-    }).render(tableDiv);
+            language: {
+                noRecordsFound: 'No experiments in this category'
+            }
+        }).render(tableDiv);
+    }
+
+    // Create all three tables
+    createTable('table-active', 'active');
+    createTable('table-completed', 'completed');
+    createTable('table-stopped', 'stopped_scheduled');
 
     let savedValue;
 
-    // Inline editing support
-    tableDiv.addEventListener('focusin', ev => {
-        if (ev.target.tagName === 'TD') {
+    // Inline editing support for all tables (using document-level delegation)
+    document.addEventListener('focusin', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
             savedValue = ev.target.textContent;
         }
     });
 
-    tableDiv.addEventListener('focusout', ev => {
-        if (ev.target.tagName === 'TD') {
+    document.addEventListener('focusout', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
             if (savedValue !== ev.target.textContent) {
                 fetch('/admin/experiments_data', {
                     method: 'POST',
@@ -260,8 +304,8 @@
         }
     });
 
-    tableDiv.addEventListener('keydown', ev => {
-        if (ev.target.tagName === 'TD') {
+    document.addEventListener('keydown', ev => {
+        if (ev.target.tagName === 'TD' && ev.target.hasAttribute('data-element-id')) {
             if (ev.key === 'Escape') {
                 ev.target.textContent = savedValue;
                 ev.target.blur();
@@ -273,7 +317,7 @@
     });
 
     // Handle Delete Button
-    tableDiv.addEventListener('click', function (event) {
+    document.addEventListener('click', function (event) {
         const target = event.target;
         if (target.classList.contains('delete-button')) {
             const id = target.getAttribute('data-id');
@@ -295,10 +339,6 @@
     });
 </script>
 
-
-
-                        </div>
-                    </div>
 
                 </div>
 
