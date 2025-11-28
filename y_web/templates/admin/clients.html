@@ -69,13 +69,13 @@
                                         <span class="left">Simulation Length (days)</span>
                                         <span class="right" style="width: 70%; display: flex; align-items: center; gap: 10px;">
                                             <input type="number"
-                                                   name="days"
-                                                   id="days_input"
+                                                   id="days_display"
                                                    class="input"
                                                    min="1"
                                                    step="1"
                                                    value="30"
                                                    style="flex: 1;">
+                                            <input type="hidden" name="days" id="days_input" value="30">
                                             <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
                                                 <input type="checkbox" id="infinite_duration" name="infinite_duration" style="cursor: pointer;">
                                                 <span style="color: #039be5;">Run until stopped</span>
@@ -83,17 +83,32 @@
                                         </span>
                                     </div>
                                     <script>
+                                        // Sync display input with hidden input
+                                        document.getElementById('days_display').addEventListener('change', function() {
+                                            document.getElementById('days_input').value = this.value;
+                                        });
+                                        document.getElementById('days_display').addEventListener('input', function() {
+                                            document.getElementById('days_input').value = this.value;
+                                        });
+                                        
                                         // Toggle between finite and infinite duration
                                         document.getElementById('infinite_duration').addEventListener('change', function() {
+                                            const daysDisplay = document.getElementById('days_display');
                                             const daysInput = document.getElementById('days_input');
+                                            const defaultDays = '30';
                                             if (this.checked) {
+                                                // Store current value before switching to infinite
+                                                daysDisplay.dataset.previousValue = daysDisplay.value;
+                                                daysDisplay.value = '∞';
+                                                daysDisplay.disabled = true;
+                                                daysDisplay.style.opacity = '0.5';
                                                 daysInput.value = -1;
-                                                daysInput.disabled = true;
-                                                daysInput.style.opacity = '0.5';
                                             } else {
-                                                daysInput.value = 30;
-                                                daysInput.disabled = false;
-                                                daysInput.style.opacity = '1';
+                                                // Restore previous value or use default
+                                                daysDisplay.value = daysDisplay.dataset.previousValue || defaultDays;
+                                                daysDisplay.disabled = false;
+                                                daysDisplay.style.opacity = '1';
+                                                daysInput.value = daysDisplay.value;
                                             }
                                         });
                                     </script>

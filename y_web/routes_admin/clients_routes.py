@@ -350,7 +350,7 @@ def create_client():
         days = int(days)
         # days = -1 means infinite/run-until-stopped
         if days != -1 and days < 1:
-            errors.append("Days must be at least 1 (or -1 for infinite)")
+            errors.append("Days must be at least 1, or use -1 for infinite duration (run until stopped)")
     except (ValueError, TypeError):
         errors.append("Days must be a valid integer")
     try:
