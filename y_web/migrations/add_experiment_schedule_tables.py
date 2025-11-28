@@ -50,11 +50,21 @@ def migrate_sqlite(db_path):
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     order_index INTEGER NOT NULL DEFAULT 0,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    is_completed INTEGER NOT NULL DEFAULT 0
                 )
             """
             )
             print("✓ Created experiment_schedule_groups table")
+        else:
+            # Check if is_completed column exists, add if not
+            cursor.execute("PRAGMA table_info(experiment_schedule_groups)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "is_completed" not in columns:
+                cursor.execute(
+                    "ALTER TABLE experiment_schedule_groups ADD COLUMN is_completed INTEGER NOT NULL DEFAULT 0"
+                )
+                print("✓ Added is_completed column to experiment_schedule_groups")
 
         cursor.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='experiment_schedule_items'"
@@ -95,6 +105,23 @@ def migrate_sqlite(db_path):
                 "INSERT INTO experiment_schedule_status (is_running) VALUES (0)"
             )
             print("✓ Created experiment_schedule_status table")
+
+        # Create experiment_schedule_logs table
+        cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='experiment_schedule_logs'"
+        )
+        if cursor.fetchone() is None:
+            cursor.execute(
+                """
+                CREATE TABLE experiment_schedule_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    message TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    log_type TEXT NOT NULL DEFAULT 'info'
+                )
+            """
+            )
+            print("✓ Created experiment_schedule_logs table")
 
         conn.commit()
         conn.close()

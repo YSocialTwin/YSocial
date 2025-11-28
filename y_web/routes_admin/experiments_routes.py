@@ -42,6 +42,7 @@ from y_web.models import (
     Exp_Topic,
     ExperimentScheduleGroup,
     ExperimentScheduleItem,
+    ExperimentScheduleLog,
     ExperimentScheduleStatus,
     Exps,
     Jupyter_instances,
@@ -3876,9 +3877,15 @@ def get_schedule_groups():
     """
     check_privileges(current_user.username)
 
-    groups = ExperimentScheduleGroup.query.order_by(
-        ExperimentScheduleGroup.order_index
-    ).all()
+    # Only show non-completed groups
+    groups = (
+        ExperimentScheduleGroup.query.filter(
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None)
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .all()
+    )
 
     result = []
     for group in groups:
@@ -3905,6 +3912,7 @@ def get_schedule_groups():
                 "id": group.id,
                 "name": group.name,
                 "order_index": group.order_index,
+                "is_completed": group.is_completed or 0,
                 "experiments": experiments_list,
             }
         )
@@ -4156,12 +4164,21 @@ def start_schedule():
     if status.is_running:
         return jsonify({"success": False, "message": "Schedule already running"}), 400
 
-    # Get first group
-    first_group = ExperimentScheduleGroup.query.order_by(
-        ExperimentScheduleGroup.order_index
-    ).first()
+    # Clear old logs when starting a new schedule
+    ExperimentScheduleLog.query.delete()
+    db.session.commit()
+
+    # Get first non-completed group
+    first_group = (
+        ExperimentScheduleGroup.query.filter(
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None)
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .first()
+    )
     if not first_group:
-        return jsonify({"success": False, "message": "No groups defined"}), 400
+        return jsonify({"success": False, "message": "No groups defined or all groups completed"}), 400
 
     # Start all experiments in first group
     items = ExperimentScheduleItem.query.filter_by(group_id=first_group.id).all()
@@ -4169,6 +4186,15 @@ def start_schedule():
         return jsonify({"success": False, "message": "First group has no experiments"}), 400
 
     from datetime import datetime
+
+    # Add persistent log
+    log_entry = ExperimentScheduleLog(
+        message=f"Schedule started - beginning with group '{first_group.name}'",
+        log_type="info",
+        created_at=datetime.utcnow(),
+    )
+    db.session.add(log_entry)
+    db.session.commit()
 
     # Update status
     status.is_running = 1
@@ -4184,7 +4210,9 @@ def start_schedule():
     for item in items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 0:
-            logs.append(f"Starting server for '{exp.exp_name}'...")
+            msg = f"Starting server for '{exp.exp_name}'..."
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
 
             # Update experiment status
             exp.running = 1
@@ -4196,14 +4224,17 @@ def start_schedule():
             started_count += 1
 
             # Wait for server to be ready
-            logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
+            msg = f"Waiting for server '{exp.exp_name}' to be ready..."
+            logs.append(msg)
             time.sleep(3)  # Give server time to start
 
             # Start all clients for this experiment
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
             for client in clients:
                 if client.status == 0:
-                    logs.append(f"Starting client '{client.name}' for '{exp.exp_name}'...")
+                    msg = f"Starting client '{client.name}' for '{exp.exp_name}'..."
+                    logs.append(msg)
+                    db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
                     # Get population for client
                     population = Population.query.filter_by(id=client.population_id).first()
                     if population:
@@ -4211,13 +4242,22 @@ def start_schedule():
                         # Mark client as running
                         client.status = 1
                         db.session.commit()
-                        logs.append(f"Client '{client.name}' started successfully")
+                        msg = f"Client '{client.name}' started successfully"
+                        logs.append(msg)
                     else:
-                        logs.append(f"Warning: No population found for client '{client.name}'")
+                        msg = f"Warning: No population found for client '{client.name}'"
+                        logs.append(msg)
+                        db.session.add(ExperimentScheduleLog(message=msg, log_type="warning"))
 
-            logs.append(f"Experiment '{exp.exp_name}' started successfully")
+            msg = f"Experiment '{exp.exp_name}' started successfully"
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+            db.session.commit()
 
-    logs.append(f"Group '{first_group.name}' started with {started_count} experiment(s)")
+    msg = f"Group '{first_group.name}' started with {started_count} experiment(s)"
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+    db.session.commit()
 
     return jsonify(
         {
@@ -4330,12 +4370,21 @@ def check_schedule_progress():
     # All completed - stop current group experiments and move to next group
     logs = []
     current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
-    logs.append(f"Group '{current_group.name}' completed!")
+    
+    msg = f"Group '{current_group.name}' completed!"
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+
+    # Mark current group as completed
+    current_group.is_completed = 1
+    db.session.commit()
 
     for item in items:
         exp = Exps.query.get(item.experiment_id)
         if exp and exp.running == 1:
-            logs.append(f"Stopping experiment '{exp.exp_name}'...")
+            msg = f"Stopping experiment '{exp.exp_name}'..."
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
             # Stop clients
             clients = Client.query.filter_by(id_exp=exp.idexp).all()
             for client in clients:
@@ -4353,10 +4402,12 @@ def check_schedule_progress():
             exp.running = 0
             db.session.commit()
 
-    # Get next group
+    # Get next non-completed group
     next_group = (
         ExperimentScheduleGroup.query.filter(
-            ExperimentScheduleGroup.order_index > current_group.order_index
+            ExperimentScheduleGroup.order_index > current_group.order_index,
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None),
         )
         .order_by(ExperimentScheduleGroup.order_index)
         .first()
@@ -4367,7 +4418,10 @@ def check_schedule_progress():
         status.is_running = 0
         status.current_group_id = None
         db.session.commit()
-        logs.append("All groups completed! Schedule finished.")
+        msg = "All groups completed! Schedule finished."
+        logs.append(msg)
+        db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+        db.session.commit()
         return jsonify(
             {
                 "success": True,
@@ -4379,7 +4433,9 @@ def check_schedule_progress():
         )
 
     # Start next group
-    logs.append(f"Starting next group: '{next_group.name}'...")
+    msg = f"Starting next group: '{next_group.name}'..."
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
     status.current_group_id = next_group.id
     db.session.commit()
 
@@ -4469,3 +4525,203 @@ def get_available_experiments_for_schedule():
             )
 
     return jsonify({"success": True, "experiments": result})
+
+
+def add_schedule_log(message, log_type="info"):
+    """Helper function to add a log message to the database."""
+    from datetime import datetime
+
+    log = ExperimentScheduleLog(
+        message=message, log_type=log_type, created_at=datetime.utcnow()
+    )
+    db.session.add(log)
+    db.session.commit()
+    return log
+
+
+@experiments.route("/admin/schedule/logs", methods=["GET"])
+@login_required
+def get_schedule_logs():
+    """
+    Get persistent schedule execution logs.
+
+    Returns:
+        JSON with log entries
+    """
+    check_privileges(current_user.username)
+
+    # Get last 100 logs, ordered by most recent first
+    logs = (
+        ExperimentScheduleLog.query.order_by(ExperimentScheduleLog.created_at.desc())
+        .limit(100)
+        .all()
+    )
+
+    # Reverse to show oldest first in UI
+    logs = list(reversed(logs))
+
+    return jsonify(
+        {
+            "success": True,
+            "logs": [
+                {
+                    "id": log.id,
+                    "message": log.message,
+                    "log_type": log.log_type,
+                    "created_at": log.created_at.isoformat() if log.created_at else None,
+                }
+                for log in logs
+            ],
+        }
+    )
+
+
+@experiments.route("/admin/schedule/logs/clear", methods=["POST"])
+@login_required
+def clear_schedule_logs():
+    """
+    Clear all schedule execution logs.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    ExperimentScheduleLog.query.delete()
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/auto_create_groups", methods=["POST"])
+@login_required
+def auto_create_groups():
+    """
+    Automatically create groups and assign available experiments.
+
+    Expects JSON body with:
+    - experiments_per_group: Number of experiments per group
+
+    Returns:
+        JSON with created groups
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "experiments_per_group" not in data:
+        return (
+            jsonify({"success": False, "message": "experiments_per_group is required"}),
+            400,
+        )
+
+    try:
+        experiments_per_group = int(data["experiments_per_group"])
+        if experiments_per_group < 1:
+            raise ValueError("Must be at least 1")
+    except (ValueError, TypeError):
+        return (
+            jsonify({"success": False, "message": "Invalid experiments_per_group value"}),
+            400,
+        )
+
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Get available experiments (stopped, not in any group)
+    if user.role == "admin":
+        experiments_query = Exps.query
+    else:
+        experiments_query = Exps.query.filter_by(owner=user.username)
+
+    experiments_list = experiments_query.filter(
+        Exps.exp_status.in_(["stopped", "scheduled"])
+    ).all()
+
+    # Filter out experiments already in groups
+    scheduled_exp_ids = set(
+        item.experiment_id for item in ExperimentScheduleItem.query.all()
+    )
+    available_exps = [exp for exp in experiments_list if exp.idexp not in scheduled_exp_ids]
+
+    if not available_exps:
+        return jsonify({"success": False, "message": "No available experiments to assign"}), 400
+
+    # Get current max order index
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleGroup.order_index)).scalar() or 0
+    )
+
+    # Create groups and assign experiments
+    created_groups = []
+    group_num = 1
+
+    for i in range(0, len(available_exps), experiments_per_group):
+        group_exps = available_exps[i : i + experiments_per_group]
+
+        # Create group
+        group = ExperimentScheduleGroup(
+            name=f"Auto Group {max_order + group_num}",
+            order_index=max_order + group_num,
+            is_completed=0,
+        )
+        db.session.add(group)
+        db.session.commit()
+
+        # Add experiments to group
+        for idx, exp in enumerate(group_exps):
+            item = ExperimentScheduleItem(
+                group_id=group.id, experiment_id=exp.idexp, order_index=idx
+            )
+            db.session.add(item)
+
+        db.session.commit()
+
+        created_groups.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "experiment_count": len(group_exps),
+            }
+        )
+        group_num += 1
+
+    add_schedule_log(
+        f"Auto-created {len(created_groups)} group(s) with {len(available_exps)} experiment(s)",
+        "info",
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Created {len(created_groups)} groups",
+            "groups": created_groups,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/cleanup_completed", methods=["POST"])
+@login_required
+def cleanup_completed_groups():
+    """
+    Remove all completed groups from the schedule.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    # Find and delete completed groups
+    completed_groups = ExperimentScheduleGroup.query.filter_by(is_completed=1).all()
+    count = len(completed_groups)
+
+    for group in completed_groups:
+        # Delete items first
+        ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+        db.session.delete(group)
+
+    db.session.commit()
+
+    if count > 0:
+        add_schedule_log(f"Cleaned up {count} completed group(s)", "info")
+
+    return jsonify({"success": True, "removed_count": count})

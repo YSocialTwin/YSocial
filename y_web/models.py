@@ -417,6 +417,7 @@ class ExperimentScheduleGroup(db.Model):
     name = db.Column(db.String(100), nullable=False)
     order_index = db.Column(db.Integer, nullable=False, default=0)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    is_completed = db.Column(db.Integer, nullable=False, default=0)
 
 
 class ExperimentScheduleItem(db.Model):
@@ -451,6 +452,21 @@ class ExperimentScheduleStatus(db.Model):
     is_running = db.Column(db.Integer, nullable=False, default=0)
     current_group_id = db.Column(db.Integer, nullable=True, default=None)
     started_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
+class ExperimentScheduleLog(db.Model):
+    """
+    Stores execution logs for the experiment schedule.
+
+    Persists log messages so they are available across page navigations.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    log_type = db.Column(db.String(20), nullable=False, default="info")
 
 
 class Exp_stats(db.Model):
