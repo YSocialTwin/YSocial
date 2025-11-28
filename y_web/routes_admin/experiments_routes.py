@@ -1688,6 +1688,9 @@ def experiment_details(uid):
         # Client has been run at least once if execution exists and elapsed_time > 0
         client_executions[client.id] = execution and execution.elapsed_time > 0
 
+    # Check if any client has infinite duration (days = -1)
+    has_infinite_client = any(client.days == -1 for client in clients)
+
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1708,6 +1711,7 @@ def experiment_details(uid):
         experiment=experiment,
         clients=clients,
         client_executions=client_executions,
+        has_infinite_client=has_infinite_client,
         users=users,
         len=len,
         dbtype=dbtype,
