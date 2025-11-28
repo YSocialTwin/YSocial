@@ -4889,8 +4889,20 @@ def auto_create_groups():
     scheduled_exp_ids = set(
         item.experiment_id for item in ExperimentScheduleItem.query.all()
     )
+
+    # Filter out experiments with infinite clients (days = -1)
+    exp_ids = [exp.idexp for exp in experiments_list]
+    infinite_clients = (
+        Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+        .with_entities(Client.id_exp)
+        .distinct()
+        .all()
+    ) if exp_ids else []
+    experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
+
     available_exps = [
-        exp for exp in experiments_list if exp.idexp not in scheduled_exp_ids
+        exp for exp in experiments_list 
+        if exp.idexp not in scheduled_exp_ids and exp.idexp not in experiments_with_infinite_clients
     ]
 
     if not available_exps:
