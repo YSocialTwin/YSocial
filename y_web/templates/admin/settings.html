@@ -300,7 +300,7 @@
                             </a>
                             <a href="/admin/delete_simulation/${id}"
                                style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Del
+                                Delete
                             </a>
                         </div>
                     `);
@@ -396,7 +396,7 @@
                             </a>
                             <a href="/admin/delete_simulation/${id}"
                                style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Del
+                                Delete
                             </a>
                         </div>
                     `);
@@ -752,7 +752,6 @@
             alert('Cannot delete a running group. Stop the schedule first.');
             return;
         }
-        if (!confirm('Delete this group and remove all experiments from it?')) return;
 
         fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
             .then(response => response.json())
@@ -837,8 +836,6 @@
     }
 
     function startSchedule() {
-        if (!confirm('Start the experiment schedule? This will run all groups sequentially.')) return;
-
         // Clear previous logs display
         const logDiv = document.getElementById('schedule-log');
         if (logDiv) {
