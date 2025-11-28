@@ -131,6 +131,16 @@ def extend_simulation(id_client):
     client.days = int(client.days) + int(days)
     db.session.commit()
 
+    # Check if the experiment was completed, and reset to stopped if so
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if exp and exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
+        flash(
+            f"Experiment '{exp.exp_name}' moved from completed to stopped (client duration extended).",
+            "info",
+        )
+
     return redirect(request.referrer)
 
 
@@ -484,6 +494,11 @@ def create_client():
 
     db.session.add(client)
     db.session.commit()
+
+    # If experiment was completed, reset status to stopped since a new client was added
+    if exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
 
     # Get LLM URL from environment (set by y_social.py)
     import os

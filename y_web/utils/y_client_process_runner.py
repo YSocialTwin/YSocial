@@ -467,6 +467,61 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                         f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
                         file=sys.stderr,
                     )
+
+                    # Check if all clients in this experiment have completed
+                    # Import Client model to check other clients
+                    from y_web.models import Client, Exps
+
+                    # Get current client to find experiment ID
+                    client = session.query(Client).filter_by(id=cli_id).first()
+                    if client:
+                        # Use a single JOIN query to get all client execution records
+                        # for this experiment
+                        incomplete_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(
+                                Client_Execution.elapsed_time
+                                < Client_Execution.expected_duration_rounds
+                            )
+                            .count()
+                        )
+
+                        # Also check for clients without execution records
+                        clients_without_exec = (
+                            session.query(Client)
+                            .outerjoin(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.id == None)
+                            .count()
+                        )
+
+                        all_completed = (
+                            incomplete_clients == 0 and clients_without_exec == 0
+                        )
+
+                        # If all clients are completed, update experiment status to "completed"
+                        if all_completed:
+                            exp = (
+                                session.query(Exps)
+                                .filter_by(idexp=client.id_exp)
+                                .first()
+                            )
+                            if exp:
+                                exp.exp_status = "completed"
+                                session.commit()
+                                print(
+                                    f"Experiment {client.id_exp} marked as completed",
+                                    file=sys.stderr,
+                                )
+
                     # Clean up and exit
                     session.close()
                     engine.dispose()

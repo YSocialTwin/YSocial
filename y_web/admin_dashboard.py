@@ -88,12 +88,9 @@ def dashboard():
     """
     Display main administrative dashboard.
 
-    Shows experiments, clients, execution status, Ollama models,
-    and database connection information. Requires admin privileges.
-
-    Query params:
-        page: Page number (default=1)
-        per_page: Number of experiments per page (default=5)
+    Shows experiments categorized by status (active, completed, stopped/scheduled),
+    clients, execution status, Ollama models, and database connection information.
+    Requires admin privileges.
 
     Returns:
         Rendered dashboard template with system status information
@@ -103,54 +100,66 @@ def dashboard():
 
     llm_backend = llm_backend_status()
 
-    # Get pagination parameters
-    page = request.args.get("page", 1, type=int)
-    per_page = request.args.get("per_page", 5, type=int)
-
-    # Ensure valid values
-    page = max(1, page)
-    per_page = max(1, min(per_page, 100))  # Cap at 100
-
     # Filter experiments based on user role
     if user.role == "admin":
         # Admin sees all experiments
-        experiments = Exps.query.all()
+        all_experiments = Exps.query.all()
     elif user.role == "researcher":
         # Researcher sees only experiments they own
-        experiments = Exps.query.filter_by(owner=user.username).all()
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
         flash("Access denied. Please use the experiment feed.")
         return redirect(url_for("auth.login"))
 
-    total_experiments = len(experiments)
+    # Categorize experiments by status
+    active_experiments = []
+    completed_experiments = []
+    stopped_experiments = []  # includes both "stopped" and "scheduled"
 
-    # Calculate pagination
-    total_pages = max(1, (total_experiments + per_page - 1) // per_page)
-    page = min(page, total_pages)  # Ensure page doesn't exceed total pages
-    start_idx = (page - 1) * per_page
-    end_idx = start_idx + per_page
+    for exp in all_experiments:
+        # Get exp_status, default to determining from running field for backward compatibility
+        exp_status = getattr(exp, "exp_status", None)
+        if exp_status is None:
+            # Backward compatibility: determine status from running field
+            exp_status = "active" if exp.running == 1 else "stopped"
 
-    # Paginate experiments
-    paginated_experiments = experiments[start_idx:end_idx]
+        if exp_status == "active":
+            active_experiments.append(exp)
+        elif exp_status == "completed":
+            completed_experiments.append(exp)
+        else:  # "stopped" or "scheduled"
+            stopped_experiments.append(exp)
 
-    # get all clients for each experiment
-    exps = {}
-    for e in paginated_experiments:
-        exps[e.idexp] = {
-            "experiment": e,
-            "clients": Client.query.filter_by(id_exp=e.idexp).all(),
-        }
+    # Save total counts before limiting to 5
+    total_running = len(active_experiments)
+    total_completed = len(completed_experiments)
+    total_stopped = len(stopped_experiments)
+    
+    # Limit to 5 per section
+    active_experiments = active_experiments[:5]
+    completed_experiments = completed_experiments[:5]
+    stopped_experiments = stopped_experiments[:5]
 
-    res = {}
-    # get clients with client_execution information
-    for exp, data in exps.items():
-        res[exp] = {"experiment": data["experiment"], "clients": []}
-        for client in data["clients"]:
-            cl = Client_Execution.query.filter_by(client_id=client.id).first()
-            client_executions = cl if cl is not None else -1
-            res[exp]["clients"].append((client, client_executions))
+    # Helper function to build experiment data with clients
+    def build_experiment_data(experiments_list):
+        result = {}
+        for e in experiments_list:
+            clients = Client.query.filter_by(id_exp=e.idexp).all()
+            client_data = []
+            for client in clients:
+                cl = Client_Execution.query.filter_by(client_id=client.id).first()
+                client_executions = cl if cl is not None else -1
+                client_data.append((client, client_executions))
+            result[e.idexp] = {"experiment": e, "clients": client_data}
+        return result
+
+    active_exps = build_experiment_data(active_experiments)
+    completed_exps = build_experiment_data(completed_experiments)
+    stopped_exps = build_experiment_data(stopped_experiments)
+
+    total_experiments = len(all_experiments)
 
     # get installed LLM models from the configured server
     models = []
@@ -199,7 +208,12 @@ def dashboard():
 
     return render_template(
         "admin/dashboard.html",
-        experiments=res,
+        running_experiments=active_exps,
+        completed_experiments=completed_exps,
+        stopped_experiments=stopped_exps,
+        total_running=total_running,
+        total_completed=total_completed,
+        total_stopped=total_stopped,
         llm_backend=llm_backend,
         models=models,
         active_pulls=ollama_pulls,
@@ -211,14 +225,142 @@ def dashboard():
         has_jupyter_sessions=has_jupyter_sessions,
         jupyter_by_exp=jupyter_by_exp,
         notebook=current_app.config["ENABLE_NOTEBOOK"],
-        # Pagination parameters
-        page=page,
-        per_page=per_page,
         total_experiments=total_experiments,
-        total_pages=total_pages,
         # Telemetry notice
         show_telemetry_notice=show_telemetry_notice,
     )
+
+
+@admin.route("/admin/dashboard/experiments/<status>")
+@login_required
+def dashboard_experiments_by_status(status):
+    """
+    API endpoint to get experiments by status with pagination for dashboard.
+    
+    Args:
+        status: Experiment status ('running', 'completed', 'stopped')
+    
+    Query params:
+        page: Page number (1-based, default 1)
+        per_page: Items per page (default 5)
+    
+    Returns:
+        JSON with experiments data and pagination info
+    """
+    from flask import flash, redirect, url_for
+    
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 5, type=int)
+    
+    # Filter experiments based on user role
+    if user.role == "admin":
+        all_experiments = Exps.query.all()
+    elif user.role == "researcher":
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    else:
+        return jsonify({"error": "Access denied"}), 403
+    
+    # Categorize experiments by status
+    experiments = []
+    for exp in all_experiments:
+        exp_status = getattr(exp, "exp_status", None)
+        if exp_status is None:
+            exp_status = "active" if exp.running == 1 else "stopped"
+        
+        if status == "running" and exp_status == "active":
+            experiments.append(exp)
+        elif status == "completed" and exp_status == "completed":
+            experiments.append(exp)
+        elif status == "stopped" and exp_status in ("stopped", "scheduled"):
+            experiments.append(exp)
+    
+    total = len(experiments)
+    
+    # Apply pagination
+    start = (page - 1) * per_page
+    end = start + per_page
+    paginated_experiments = experiments[start:end]
+    
+    # Build experiment data with clients
+    result = []
+    for exp in paginated_experiments:
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        client_data = []
+        for client in clients:
+            cl = Client_Execution.query.filter_by(client_id=client.id).first()
+            elapsed = cl.elapsed_time if cl else 0
+            expected = cl.expected_duration_rounds if cl else 0
+            progress = min(100, int((elapsed / expected) * 100)) if expected > 0 else 0
+            client_data.append({
+                "id": client.id,
+                "name": client.name,
+                "status": client.status,
+                "progress": progress,
+                "elapsed": elapsed,
+                "expected": expected
+            })
+        result.append({
+            "idexp": exp.idexp,
+            "exp_name": exp.exp_name,
+            "running": exp.running,
+            "status": exp.status,
+            "clients": client_data
+        })
+    
+    return jsonify({
+        "experiments": result,
+        "total": total,
+        "page": page,
+        "per_page": per_page,
+        "total_pages": ((total - 1) // per_page) + 1 if total > 0 else 1
+    })
+
+
+@admin.route("/admin/dashboard/status")
+@login_required
+def dashboard_status():
+    """
+    API endpoint to get current experiment status counts for dashboard refresh.
+    
+    Returns:
+        JSON with counts of running, completed, and stopped experiments
+    """
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    
+    # Filter experiments based on user role
+    if user.role == "admin":
+        all_experiments = Exps.query.all()
+    elif user.role == "researcher":
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    else:
+        return jsonify({"error": "Access denied"}), 403
+    
+    # Count experiments by status
+    running_count = 0
+    completed_count = 0
+    stopped_count = 0
+    
+    for exp in all_experiments:
+        exp_status = getattr(exp, "exp_status", None)
+        if exp_status is None:
+            exp_status = "active" if exp.running == 1 else "stopped"
+        
+        if exp_status == "active":
+            running_count += 1
+        elif exp_status == "completed":
+            completed_count += 1
+        else:
+            stopped_count += 1
+    
+    return jsonify({
+        "running": running_count,
+        "completed": completed_count,
+        "stopped": stopped_count
+    })
 
 
 @admin.route("/admin/models_data")

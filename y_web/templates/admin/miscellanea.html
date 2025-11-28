@@ -1772,7 +1772,54 @@
                     <strong>System Settings:</strong> Configure system-level settings for the YSocial platform, including telemetry, automatic log synchronization, process monitoring, and system updates.
                 </div>
 
-                <div class="misc-grid">
+                <!-- Row 1: System Updates & Telemetry Settings -->
+                <div class="misc-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <!-- System Updates -->
+                    <div class="misc-compact-box">
+                        <h3>System Updates</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Check for new YSocial releases and stay up to date.</p>
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <button id="check-updates-btn" class="button is-solid primary-button" style="width: 100%;">
+                                <i class="mdi mdi-update"></i> Check for Updates
+                            </button>
+                        </div>
+                        <div id="update-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                            Click to check if a newer version of YSocial is available.
+                        </div>
+                        <script>
+                            document.getElementById('check-updates-btn').addEventListener('click', function() {
+                                const btn = this;
+                                const statusDiv = document.getElementById('update-status');
+                                
+                                btn.disabled = true;
+                                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Checking...';
+                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Checking for updates...</span>';
+                                
+                                fetch('/admin/check_for_updates', { method: 'POST' })
+                                .then(response => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
+                                    
+                                    if (response.redirected) {
+                                        window.location.href = response.url;
+                                    } else {
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Check complete</span>';
+                                        setTimeout(() => {
+                                            statusDiv.innerHTML = 'Click to check if a newer version of YSocial is available.';
+                                        }, 3000);
+                                    }
+                                })
+                                .catch(error => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error checking for updates</span>';
+                                });
+                            });
+                        </script>
+                    </div>
+
                     <!-- Telemetry Settings -->
                     <div class="misc-compact-box">
                         <h3>Telemetry Settings</h3>
@@ -1847,140 +1894,10 @@
                             })();
                         </script>
                     </div>
+                </div>
 
-                    <!-- Process Watchdog -->
-                    <div class="misc-compact-box">
-                        <h3>Process Watchdog</h3>
-                        <div class="help-block" style="margin-bottom: 15px;">
-                            <p>Monitor and auto-restart hung server/client processes.</p>
-                        </div>
-                        <div class="box-lines">
-                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">Check Interval</span>
-                                <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
-                                    <input type="number" id="watchdog_interval" class="input" style="width: 80px;" 
-                                           value="{{ watchdog_interval | default(15) }}" min="1" max="1440">
-                                    <span style="font-size: 0.9em; color: #6b7280;">minutes</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 10px; margin-top: 15px;">
-                            <button id="save-watchdog-interval" class="button is-solid primary-button" style="flex: 1;">
-                                Save Interval
-                            </button>
-                            <button id="run-watchdog-now" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white;">
-                                <i class="mdi mdi-refresh"></i> Run Now
-                            </button>
-                        </div>
-                        <div id="watchdog-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
-                            Monitors server/client processes for hangs and auto-restarts them.
-                        </div>
-                        <script>
-                            document.getElementById('save-watchdog-interval').addEventListener('click', function() {
-                                const interval = document.getElementById('watchdog_interval').value;
-                                const statusDiv = document.getElementById('watchdog-status');
-                                
-                                fetch('/admin/watchdog_set_interval', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                    body: `watchdog_interval=${interval}`
-                                })
-                                .then(response => {
-                                    if (response.ok) {
-                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Interval updated successfully</span>';
-                                    } else {
-                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Failed to update interval</span>';
-                                    }
-                                    setTimeout(() => {
-                                        statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
-                                    }, 3000);
-                                })
-                                .catch(error => {
-                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + error.message + '</span>';
-                                });
-                            });
-                            
-                            document.getElementById('run-watchdog-now').addEventListener('click', function() {
-                                const btn = this;
-                                const statusDiv = document.getElementById('watchdog-status');
-                                
-                                btn.disabled = true;
-                                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Running...';
-                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Running watchdog check...</span>';
-                                
-                                fetch('/admin/watchdog_run_now', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
-                                    
-                                    if (data.error) {
-                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + data.error + '</span>';
-                                    } else {
-                                        const msg = 'Checked: ' + data.processes_checked + 
-                                                   ', Restarted: ' + data.processes_restarted + 
-                                                   ', Healthy: ' + data.processes_healthy;
-                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
-                                    }
-                                })
-                                .catch(error => {
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="mdi mdi-refresh"></i> Run Now';
-                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error running watchdog</span>';
-                                });
-                            });
-                        </script>
-                    </div>
-
-                    <!-- System Updates -->
-                    <div class="misc-compact-box">
-                        <h3>System Updates</h3>
-                        <div class="help-block" style="margin-bottom: 15px;">
-                            <p>Check for new YSocial releases and stay up to date.</p>
-                        </div>
-                        <div style="margin-top: 15px;">
-                            <button id="check-updates-btn" class="button is-solid primary-button" style="width: 100%;">
-                                <i class="mdi mdi-update"></i> Check for Updates
-                            </button>
-                        </div>
-                        <div id="update-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
-                            Click to check if a newer version of YSocial is available.
-                        </div>
-                        <script>
-                            document.getElementById('check-updates-btn').addEventListener('click', function() {
-                                const btn = this;
-                                const statusDiv = document.getElementById('update-status');
-                                
-                                btn.disabled = true;
-                                btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Checking...';
-                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Checking for updates...</span>';
-                                
-                                fetch('/admin/check_for_updates', { method: 'POST' })
-                                .then(response => {
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
-                                    
-                                    if (response.redirected) {
-                                        window.location.href = response.url;
-                                    } else {
-                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Check complete</span>';
-                                        setTimeout(() => {
-                                            statusDiv.innerHTML = 'Click to check if a newer version of YSocial is available.';
-                                        }, 3000);
-                                    }
-                                })
-                                .catch(error => {
-                                    btn.disabled = false;
-                                    btn.innerHTML = '<i class="mdi mdi-update"></i> Check for Updates';
-                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error checking for updates</span>';
-                                });
-                            });
-                        </script>
-                    </div>
-
+                <!-- Row 2: Automatic Log Synchronization, Process Watchdog, About System Settings -->
+                <div class="misc-grid" style="grid-template-columns: repeat(3, 1fr); margin-top: 20px;">
                     <!-- Automatic Log Synchronization -->
                     <div class="misc-compact-box">
                         <h3>Automatic Log Synchronization</h3>
@@ -1991,7 +1908,7 @@
                         <div id="log-sync-settings-container">
                             <div class="box-lines">
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Enable Auto Sync</span>
+                                    <span class="left" style="flex: 0 0 100px; font-weight: 500;">Enable</span>
                                     <span class="right" style="flex: 1; display: flex; align-items: center;">
                                         <label class="switch-small">
                                             <input type="checkbox" id="log_sync_enabled" checked>
@@ -2001,14 +1918,14 @@
                                     </span>
                                 </div>
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
-                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Sync Interval</span>
+                                    <span class="left" style="flex: 0 0 100px; font-weight: 500;">Interval</span>
                                     <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
-                                        <input type="number" id="sync_interval_minutes" class="input" style="width: 80px;" min="1" max="1440" value="10">
-                                        <span style="font-size: 0.9em; color: #6b7280;">minutes</span>
+                                        <input type="number" id="sync_interval_minutes" class="input" style="width: 60px;" min="1" max="1440" value="10">
+                                        <span style="font-size: 0.9em; color: #6b7280;">min</span>
                                     </span>
                                 </div>
                                 <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
-                                    <span class="left" style="flex: 0 0 140px; font-weight: 500;">Last Sync</span>
+                                    <span class="left" style="flex: 0 0 100px; font-weight: 500;">Last Sync</span>
                                     <span class="right" style="flex: 1;">
                                         <span id="last-sync-time" style="font-size: 0.9em; color: #6b7280;">Never</span>
                                     </span>
@@ -2016,10 +1933,10 @@
                             </div>
 
                             <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <button id="save-log-sync-settings" class="button is-solid primary-button" style="flex: 1;">
-                                    Save Settings
+                                <button id="save-log-sync-settings" class="button is-solid primary-button" style="flex: 1; font-size: 0.85em; padding: 6px 10px;">
+                                    Save
                                 </button>
-                                <button id="trigger-log-sync" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white;">
+                                <button id="trigger-log-sync" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white; font-size: 0.85em; padding: 6px 10px;">
                                     Sync Now
                                 </button>
                             </div>
@@ -2150,6 +2067,189 @@
                                     } else {
                                         // DOM is already loaded
                                         loadLogSyncSettings();
+                                    }
+                                }
+                            })();
+                        </script>
+                    </div>
+
+                    <!-- Process Watchdog -->
+                    <div class="misc-compact-box">
+                        <h3>Process Watchdog</h3>
+                        <div class="help-block" style="margin-bottom: 15px;">
+                            <p>Monitor and auto-restart hung server/client processes.</p>
+                        </div>
+                        <div class="box-lines">
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span class="left" style="flex: 0 0 100px; font-weight: 500;">Enable</span>
+                                <span class="right" style="flex: 1; display: flex; align-items: center;">
+                                    <label class="switch-small">
+                                        <input type="checkbox" id="watchdog_enabled" checked>
+                                        <span class="slider-small round"></span>
+                                    </label>
+                                    <span id="watchdog-status-indicator" style="margin-left: 10px; font-size: 0.85em; color: #6b7280;"></span>
+                                </span>
+                            </div>
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #e5e7eb;">
+                                <span class="left" style="flex: 0 0 100px; font-weight: 500;">Interval</span>
+                                <span class="right" style="flex: 1; display: flex; align-items: center; gap: 8px;">
+                                    <input type="number" id="watchdog_interval" class="input" style="width: 60px;" 
+                                           value="{{ watchdog_interval | default(15) }}" min="1" max="1440">
+                                    <span style="font-size: 0.9em; color: #6b7280;">min</span>
+                                </span>
+                            </div>
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                                <span class="left" style="flex: 0 0 100px; font-weight: 500;">Last Run</span>
+                                <span class="right" style="flex: 1;">
+                                    <span id="watchdog-last-run" style="font-size: 0.9em; color: #6b7280;">Never</span>
+                                </span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 15px;">
+                            <button id="save-watchdog-interval" class="button is-solid primary-button" style="flex: 1; font-size: 0.85em; padding: 6px 10px;">
+                                Save
+                            </button>
+                            <button id="run-watchdog-now" class="button is-solid" style="flex: 1; background-color: #6b7280; color: white; font-size: 0.85em; padding: 6px 10px;">
+                                Run Now
+                            </button>
+                        </div>
+                        <div id="watchdog-status" style="font-size: 0.8em; color: #777; margin-top: 10px;">
+                            Monitors server/client processes for hangs and auto-restarts them.
+                        </div>
+                        <script>
+                            // Update watchdog status indicator
+                            function updateWatchdogStatusIndicator(enabled) {
+                                const indicator = document.getElementById('watchdog-status-indicator');
+                                if (enabled) {
+                                    indicator.innerHTML = '<span style="color: #22c55e;">● Active</span>';
+                                } else {
+                                    indicator.innerHTML = '<span style="color: #dc3545;">● Disabled</span>';
+                                }
+                            }
+
+                            // Load watchdog status on page load
+                            async function loadWatchdogStatus() {
+                                try {
+                                    const response = await fetch('/admin/watchdog_status');
+                                    const data = await response.json();
+                                    
+                                    if (data.last_run) {
+                                        const lastRun = new Date(data.last_run);
+                                        document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString();
+                                    } else {
+                                        document.getElementById('watchdog-last-run').textContent = 'Never';
+                                    }
+                                    
+                                    if (data.run_interval_minutes) {
+                                        document.getElementById('watchdog_interval').value = data.run_interval_minutes;
+                                    }
+                                    
+                                    // Update enabled status from scheduler_running
+                                    const isEnabled = data.scheduler_running !== false;
+                                    document.getElementById('watchdog_enabled').checked = isEnabled;
+                                    updateWatchdogStatusIndicator(isEnabled);
+                                } catch (error) {
+                                    console.error('Error loading watchdog status:', error);
+                                }
+                            }
+                            
+                            // Handle enable/disable toggle
+                            document.getElementById('watchdog_enabled').addEventListener('change', function() {
+                                const enabled = this.checked;
+                                const statusDiv = document.getElementById('watchdog-status');
+                                
+                                updateWatchdogStatusIndicator(enabled);
+                                
+                                fetch('/admin/watchdog_toggle', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ enabled: enabled })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Watchdog ' + (enabled ? 'enabled' : 'disabled') + '</span>';
+                                    } else {
+                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ ' + (data.message || 'Failed to update') + '</span>';
+                                    }
+                                    setTimeout(() => {
+                                        statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
+                                    }, 3000);
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error updating setting</span>';
+                                });
+                            });
+                            
+                            document.getElementById('save-watchdog-interval').addEventListener('click', function() {
+                                const interval = document.getElementById('watchdog_interval').value;
+                                const statusDiv = document.getElementById('watchdog-status');
+                                
+                                fetch('/admin/watchdog_set_interval', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                    body: `watchdog_interval=${interval}`
+                                })
+                                .then(response => {
+                                    if (response.ok) {
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ Interval updated successfully</span>';
+                                    } else {
+                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Failed to update interval</span>';
+                                    }
+                                    setTimeout(() => {
+                                        statusDiv.innerHTML = 'Monitors server/client processes for hangs and auto-restarts them.';
+                                    }, 3000);
+                                })
+                                .catch(error => {
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + error.message + '</span>';
+                                });
+                            });
+                            
+                            document.getElementById('run-watchdog-now').addEventListener('click', function() {
+                                const btn = this;
+                                const statusDiv = document.getElementById('watchdog-status');
+                                
+                                btn.disabled = true;
+                                btn.innerHTML = 'Running...';
+                                statusDiv.innerHTML = '<span style="color: #4a90e2;">Running watchdog check...</span>';
+                                
+                                fetch('/admin/watchdog_run_now', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = 'Run Now';
+                                    
+                                    if (data.error) {
+                                        statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error: ' + data.error + '</span>';
+                                    } else {
+                                        const msg = 'Checked: ' + data.processes_checked + 
+                                                   ', Restarted: ' + data.processes_restarted + 
+                                                   ', Healthy: ' + data.processes_healthy;
+                                        statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
+                                        // Update last run time
+                                        loadWatchdogStatus();
+                                    }
+                                })
+                                .catch(error => {
+                                    btn.disabled = false;
+                                    btn.innerHTML = 'Run Now';
+                                    statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error running watchdog</span>';
+                                });
+                            });
+                            
+                            // Initialize on page load using data attribute to avoid duplicate initialization
+                            (function() {
+                                const watchdogBox = document.getElementById('watchdog_interval');
+                                if (watchdogBox && !watchdogBox.dataset.initialized) {
+                                    watchdogBox.dataset.initialized = 'true';
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', loadWatchdogStatus);
+                                    } else {
+                                        loadWatchdogStatus();
                                     }
                                 }
                             })();

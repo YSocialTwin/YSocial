@@ -377,6 +377,12 @@ class Exps(db.Model):
 
     Defines simulation experiments including platform type (microblogging/reddit),
     database connections, ownership, status tracking, and server configuration.
+
+    exp_status values:
+    - "stopped": Experiment is not running (default)
+    - "active": Experiment server is running
+    - "completed": All clients have finished execution
+    - "scheduled": Experiment is scheduled to run
     """
 
     __bind_key__ = "db_admin"
@@ -394,6 +400,73 @@ class Exps(db.Model):
     annotations = db.Column(db.String(500), nullable=False, default="")
     server_pid = db.Column(db.Integer, nullable=True, default=None)
     llm_agents_enabled = db.Column(db.Integer, nullable=False, default=1)
+    exp_status = db.Column(db.String(20), nullable=False, default="stopped")
+
+
+class ExperimentScheduleGroup(db.Model):
+    """
+    Experiment schedule group for batch execution.
+
+    Groups experiments together for sequential execution as part of a schedule.
+    Experiments in the same group run in parallel, groups run sequentially.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_groups"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    is_completed = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ExperimentScheduleItem(db.Model):
+    """
+    Links experiments to schedule groups.
+
+    Associates experiments with groups for scheduled batch execution.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_items"
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(
+        db.Integer,
+        db.ForeignKey("experiment_schedule_groups.id"),
+        nullable=False,
+    )
+    experiment_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ExperimentScheduleStatus(db.Model):
+    """
+    Tracks the status of scheduled experiment execution.
+
+    Monitors which group is currently running and overall schedule state.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_status"
+    id = db.Column(db.Integer, primary_key=True)
+    is_running = db.Column(db.Integer, nullable=False, default=0)
+    current_group_id = db.Column(db.Integer, nullable=True, default=None)
+    started_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
+class ExperimentScheduleLog(db.Model):
+    """
+    Stores execution logs for the experiment schedule.
+
+    Persists log messages so they are available across page navigations.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    log_type = db.Column(db.String(20), nullable=False, default="info")
 
 
 class Exp_stats(db.Model):
@@ -993,3 +1066,22 @@ class LogSyncSettings(db.Model):
         db.Integer, nullable=False, default=10
     )  # Default 10 minutes
     last_sync = db.Column(db.DateTime, nullable=True)  # Last time sync was performed
+
+
+class WatchdogSettings(db.Model):
+    """
+    Settings for the process watchdog that monitors server/client processes.
+
+    Stores configuration for the watchdog scheduler including whether it's
+    enabled, the check interval in minutes, and the last run timestamp.
+    Single-row table that is created on first access if it doesn't exist.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "watchdog_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    run_interval_minutes = db.Column(
+        db.Integer, nullable=False, default=15
+    )  # Default 15 minutes
+    last_run = db.Column(db.DateTime, nullable=True)  # Last time watchdog ran
