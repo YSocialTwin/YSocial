@@ -4427,6 +4427,11 @@ def check_schedule_progress():
         logs.append(msg)
         db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
         db.session.commit()
+        
+        # Clear all schedule logs after successful completion
+        ExperimentScheduleLog.query.delete()
+        db.session.commit()
+        
         return jsonify(
             {
                 "success": True,

@@ -1230,7 +1230,7 @@
                 </div>
             </div>
 
-            <!-- ROW 3: Experiment Schedule + Upload Experiment -->
+            <!-- ROW 3: Experiment Schedule + Copy Experiment -->
             <div class="columns is-layout-row">
                 <style>
                     /* Force boxes in the same row to have equal height */
@@ -1329,6 +1329,74 @@
                     </div>
                 </div>
                 
+                <!-- Copy Experiment Column (is-4) -->
+                <div class="column is-4">
+                    <div class="sidebar-box">
+                        <h3>Copy Experiment</h3>
+                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
+                            <div style="margin-bottom: 12px;">
+                                <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    New Experiment Name
+                                </label>
+                                <input type="text" 
+                                       id="new_exp_name" 
+                                       name="new_exp_name" 
+                                       class="input" 
+                                       placeholder="Enter new name..." 
+                                       required>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label for="source_exp_id" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Source Experiment
+                                </label>
+                                <div class="select" style="width: 100%;">
+                                    <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
+                                        <option value="">Select experiment...</option>
+                                        {% for exp in all_experiments %}
+                                        <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
+                                    Number of Copies
+                                </label>
+                                <input type="number" 
+                                       id="num_copies" 
+                                       name="num_copies" 
+                                       class="input" 
+                                       value="1" 
+                                       min="1"
+                                       max="20"
+                                       style="width: 100%;">
+                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+                                    If &gt;1, creates copies named: name_1, name_2, etc.
+                                </p>
+                            </div>
+                            <div class="help-block" style="margin-bottom: 12px;">
+                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
+                                    Creates a complete copy with its own folder (UUID), configuration files, and database. 
+                                    The copy will be ready to start immediately.
+                                </p>
+                            </div>
+                            <div class="button-wrap">
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">
+                                    Copy Experiment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROW 4: Empty + Upload Experiment -->
+            <div class="columns is-layout-row">
+                <!-- Empty Column (is-8) -->
+                <div class="column is-8">
+                    <!-- Empty space under Experiment Schedule -->
+                </div>
+                
                 <!-- Upload Experiment Column (is-4) -->
                 <div class="column is-4">
                     <div class="sidebar-box">
@@ -1415,74 +1483,6 @@
                                 }
                             }
                         </script>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ROW 4: Empty + Copy Experiment -->
-            <div class="columns is-layout-row">
-                <!-- Empty Column (is-8) -->
-                <div class="column is-8">
-                    <!-- Empty space under Experiment Schedule -->
-                </div>
-                
-                <!-- Copy Experiment Column (is-4) -->
-                <div class="column is-4">
-                    <div class="sidebar-box">
-                        <h3>Copy Experiment</h3>
-                        <form action="/admin/copy_experiment" method="POST" onsubmit="showLoading('Copying experiment...');">
-                            <div style="margin-bottom: 12px;">
-                                <label for="new_exp_name" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    New Experiment Name
-                                </label>
-                                <input type="text" 
-                                       id="new_exp_name" 
-                                       name="new_exp_name" 
-                                       class="input" 
-                                       placeholder="Enter new name..." 
-                                       required>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="source_exp_id" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Source Experiment
-                                </label>
-                                <div class="select" style="width: 100%;">
-                                    <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
-                                        <option value="">Select experiment...</option>
-                                        {% for exp in all_experiments %}
-                                        <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div style="margin-bottom: 12px;">
-                                <label for="num_copies" style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 4px; font-weight: 500;">
-                                    Number of Copies
-                                </label>
-                                <input type="number" 
-                                       id="num_copies" 
-                                       name="num_copies" 
-                                       class="input" 
-                                       value="1" 
-                                       min="1"
-                                       max="20"
-                                       style="width: 100%;">
-                                <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
-                                    If &gt;1, creates copies named: name_1, name_2, etc.
-                                </p>
-                            </div>
-                            <div class="help-block" style="margin-bottom: 12px;">
-                                <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Creates a complete copy with its own folder (UUID), configuration files, and database. 
-                                    The copy will be ready to start immediately.
-                                </p>
-                            </div>
-                            <div class="button-wrap">
-                                <button type="submit" class="button is-solid primary-button is-fullwidth">
-                                    Copy Experiment
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
             </div>

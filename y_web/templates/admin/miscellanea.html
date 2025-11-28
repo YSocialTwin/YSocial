@@ -1863,6 +1863,12 @@
                                     <span style="font-size: 0.9em; color: #6b7280;">minutes</span>
                                 </span>
                             </div>
+                            <div class="box-line" style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                                <span class="left" style="flex: 0 0 140px; font-weight: 500;">Last Run</span>
+                                <span class="right" style="flex: 1;">
+                                    <span id="watchdog-last-run" style="font-size: 0.9em; color: #6b7280;">Never</span>
+                                </span>
+                            </div>
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 15px;">
                             <button id="save-watchdog-interval" class="button is-solid primary-button" style="flex: 1;">
@@ -1876,6 +1882,27 @@
                             Monitors server/client processes for hangs and auto-restarts them.
                         </div>
                         <script>
+                            // Load watchdog status on page load
+                            async function loadWatchdogStatus() {
+                                try {
+                                    const response = await fetch('/admin/watchdog_status');
+                                    const data = await response.json();
+                                    
+                                    if (data.last_run) {
+                                        const lastRun = new Date(data.last_run);
+                                        document.getElementById('watchdog-last-run').textContent = lastRun.toLocaleString();
+                                    } else {
+                                        document.getElementById('watchdog-last-run').textContent = 'Never';
+                                    }
+                                    
+                                    if (data.run_interval_minutes) {
+                                        document.getElementById('watchdog_interval').value = data.run_interval_minutes;
+                                    }
+                                } catch (error) {
+                                    console.error('Error loading watchdog status:', error);
+                                }
+                            }
+                            
                             document.getElementById('save-watchdog-interval').addEventListener('click', function() {
                                 const interval = document.getElementById('watchdog_interval').value;
                                 const statusDiv = document.getElementById('watchdog-status');
@@ -1924,6 +1951,8 @@
                                                    ', Restarted: ' + data.processes_restarted + 
                                                    ', Healthy: ' + data.processes_healthy;
                                         statusDiv.innerHTML = '<span style="color: #22c55e;">✓ ' + msg + '</span>';
+                                        // Update last run time
+                                        loadWatchdogStatus();
                                     }
                                 })
                                 .catch(error => {
@@ -1932,6 +1961,19 @@
                                     statusDiv.innerHTML = '<span style="color: #dc3545;">✗ Error running watchdog</span>';
                                 });
                             });
+                            
+                            // Initialize on page load using data attribute to avoid duplicate initialization
+                            (function() {
+                                const watchdogBox = document.getElementById('watchdog_interval');
+                                if (watchdogBox && !watchdogBox.dataset.initialized) {
+                                    watchdogBox.dataset.initialized = 'true';
+                                    if (document.readyState === 'loading') {
+                                        document.addEventListener('DOMContentLoaded', loadWatchdogStatus);
+                                    } else {
+                                        loadWatchdogStatus();
+                                    }
+                                }
+                            })();
                         </script>
                     </div>
 
