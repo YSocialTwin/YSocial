@@ -18,6 +18,10 @@ from y_web.models import (
     PopulationActivityProfile,
 )
 
+# Number of days to run an infinite client per iteration before checking for termination
+# Infinite clients run for this many days, then loop back to continue running
+INFINITE_CLIENT_ITERATION_DAYS = 365
+
 
 def main():
     """Main entry point for client process runner."""
@@ -279,10 +283,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             # rounds < 24, causing the simulation to skip the final hours.
             cl.days = max(1, math.ceil(remaining_rounds / 24))
         elif is_infinite:
-            # For infinite clients, run for a longer period (e.g., 365 days per iteration)
+            # For infinite clients, run for a longer period per iteration
             # The client will continue running until manually stopped
             print(f"Infinite client - running until manually stopped", file=sys.stderr)
-            cl.days = 365  # Run for 1 year at a time
+            cl.days = INFINITE_CLIENT_ITERATION_DAYS
 
         cl.read_agents()
         cl.add_feeds()
