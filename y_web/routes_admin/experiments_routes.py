@@ -1020,11 +1020,13 @@ def upload_experiment():
         db.session.add(cl)
         db.session.commit()
 
+        # For infinite clients (days = -1), set expected_duration_rounds to -1
+        expected_rounds = -1 if cl.days == -1 else cl.days * client["simulation"]["slots"]
         client_exec = Client_Execution(
             client_id=cl.id,
             last_active_hour=-1,
             last_active_day=-1,
-            expected_duration_rounds=cl.days * client["simulation"]["slots"],
+            expected_duration_rounds=expected_rounds,
         )
         db.session.add(client_exec)
         db.session.commit()
@@ -4233,7 +4235,11 @@ def _get_clients_to_start(exp):
         # Check if client has completed
         client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
         if client_exec:
-            if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+            # Infinite clients (expected_duration_rounds = -1) are never considered completed
+            if client_exec.expected_duration_rounds == -1:
+                all_clients_completed = False
+                clients_to_start.append(client)
+            elif client_exec.elapsed_time < client_exec.expected_duration_rounds:
                 all_clients_completed = False
                 clients_to_start.append(client)
         else:
@@ -4685,7 +4691,8 @@ def get_available_experiments_for_schedule():
     """
     Get experiments that can be added to schedule groups.
 
-    Returns experiments that are stopped and not already in any group.
+    Returns experiments that are stopped, not already in any group,
+    and do not have any infinite-duration clients.
 
     Returns:
         JSON with available experiments
@@ -4711,9 +4718,19 @@ def get_available_experiments_for_schedule():
         item.experiment_id for item in ExperimentScheduleItem.query.all()
     )
 
+    # Get experiment IDs that have infinite clients (clients with days = -1)
+    experiments_with_infinite_clients = set()
+    for exp in experiments_list:
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        for client in clients:
+            if client.days == -1:
+                experiments_with_infinite_clients.add(exp.idexp)
+                break
+
     result = []
     for exp in experiments_list:
-        if exp.idexp not in scheduled_exp_ids:
+        # Exclude experiments that are already scheduled or have infinite clients
+        if exp.idexp not in scheduled_exp_ids and exp.idexp not in experiments_with_infinite_clients:
             result.append(
                 {
                     "id": exp.idexp,

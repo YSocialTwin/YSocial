@@ -348,6 +348,9 @@ def create_client():
     # Validate numeric fields
     try:
         days = int(days)
+        # days = -1 means infinite/run-until-stopped
+        if days != -1 and days < 1:
+            errors.append("Days must be at least 1 (or -1 for infinite)")
     except (ValueError, TypeError):
         errors.append("Days must be a valid integer")
     try:
@@ -1178,12 +1181,32 @@ def client_details(uid):
 
 @clientsr.route("/admin/progress/<int:client_id>")
 def get_progress(client_id):
-    """Return the current progress as JSON."""
+    """Return the current progress as JSON.
+
+    For finite clients: returns progress percentage (0-100)
+    For infinite clients (expected_duration_rounds = -1): returns elapsed time info
+    """
     # get client_execution
     client_execution = Client_Execution.query.filter_by(client_id=client_id).first()
 
     if client_execution is None:
-        return json.dumps({"progress": 0})
+        return json.dumps({"progress": 0, "infinite": False})
+
+    # Check if this is an infinite client (expected_duration_rounds = -1)
+    if client_execution.expected_duration_rounds == -1:
+        # Return elapsed time info for infinite clients
+        elapsed_hours = client_execution.elapsed_time
+        elapsed_days = elapsed_hours // 24
+        remaining_hours = elapsed_hours % 24
+        return json.dumps({
+            "progress": -1,
+            "infinite": True,
+            "elapsed_time": client_execution.elapsed_time,
+            "elapsed_days": elapsed_days,
+            "elapsed_hours": remaining_hours,
+            "last_active_day": client_execution.last_active_day,
+            "last_active_hour": client_execution.last_active_hour,
+        })
 
     # Calculate progress and cap at 100%
     if client_execution.expected_duration_rounds > 0:
@@ -1197,7 +1220,7 @@ def get_progress(client_id):
     else:
         progress = 0
 
-    return json.dumps({"progress": progress})
+    return json.dumps({"progress": progress, "infinite": False})
 
 
 @clientsr.route("/admin/set_network/<int:uid>", methods=["POST"])

@@ -67,14 +67,36 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
-                                                                                       name="days"
-                                                                                       class="input"
-                                                                                       min="1"
-                                                                                       step="1"
-                                                                                       value="30"
-                                                                                       required></span>
+                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 10px;">
+                                            <input type="number"
+                                                   name="days"
+                                                   id="days_input"
+                                                   class="input"
+                                                   min="1"
+                                                   step="1"
+                                                   value="30"
+                                                   style="flex: 1;">
+                                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
+                                                <input type="checkbox" id="infinite_duration" name="infinite_duration" style="cursor: pointer;">
+                                                <span style="color: #039be5;">Run until stopped</span>
+                                            </label>
+                                        </span>
                                     </div>
+                                    <script>
+                                        // Toggle between finite and infinite duration
+                                        document.getElementById('infinite_duration').addEventListener('change', function() {
+                                            const daysInput = document.getElementById('days_input');
+                                            if (this.checked) {
+                                                daysInput.value = -1;
+                                                daysInput.disabled = true;
+                                                daysInput.style.opacity = '0.5';
+                                            } else {
+                                                daysInput.value = 30;
+                                                daysInput.disabled = false;
+                                                daysInput.style.opacity = '1';
+                                            }
+                                        });
+                                    </script>
                                     <div class="box-line">
                                         <span class="left">% New Agents (daily)</span>
                                         <span class="right" style="width: 70%;"><input type="number"
@@ -952,7 +974,7 @@
                             <p>
                                 <b>Simulation Parameters</b><br>
                                 Configure duration, agent behavior, and network dynamics.<br><br>
-                                <em>Simulation Length:</em> Number of days to run<br>
+                                <em>Simulation Length:</em> Number of days to run. Check "Run until stopped" to create an infinite-duration client that runs until manually stopped.<br>
                                 <em>New Agents/Churn:</em> Daily agent creation and removal rates<br>
                                 <em>Thread Context:</em> How much conversation history agents see<br>
                                 <em>Timeline Ratio:</em> Balance between follower and general content<br>
@@ -960,6 +982,10 @@
                                 <em>Probability Secondary Follow:</em> Probability that an agent is asked if he would like to follow the author of content he interacted with<br>
                                 <em>Agents' Memory (hours):</em> For how long an agent maintain his interest in a topic<br>
                                 <em>Content Visibility (hours)</em> For how long a content can be proposed by recommender systems
+                            </p>
+                            <p style="color: #f39c12; font-size: 0.9em; margin-top: 10px;">
+                                <i class="mdi mdi-alert" style="font-size: 14px;"></i>
+                                <strong>Note:</strong> Experiments with infinite-duration clients cannot be used in scheduled experiment groups.
                             </p>
                             <hr>
                             <p>
