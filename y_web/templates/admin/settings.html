@@ -73,10 +73,10 @@
                     </div>
                     {% endfor %}
 
-                    <!-- Three experiment sections in a row -->
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <!-- Three experiment sections in a row (responsive) -->
+                    <div class="experiments-row">
                         <!-- Active Experiments Section -->
-                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                        <div class="dashboard-box experiment-box">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745;"></span>
                                 Running
@@ -87,7 +87,7 @@
                         </div>
 
                         <!-- Completed Experiments Section -->
-                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                        <div class="dashboard-box experiment-box">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
                                 Completed
@@ -98,7 +98,7 @@
                         </div>
 
                         <!-- Stopped/Scheduled Experiments Section -->
-                        <div class="dashboard-box" style="flex: 1; min-width: 0; display: flex; flex-direction: column;">
+                        <div class="dashboard-box experiment-box">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
                                 Stopped / Scheduled
@@ -112,6 +112,27 @@
                     <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
                     <style>
+                      /* Responsive row layout for experiment boxes */
+                      .experiments-row {
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 15px;
+                        margin-bottom: 20px;
+                        align-items: stretch;
+                      }
+                      .experiment-box {
+                        flex: 1 1 300px;
+                        min-width: 300px;
+                        display: flex;
+                        flex-direction: column;
+                        min-height: 400px;
+                      }
+                      @media (max-width: 992px) {
+                        .experiment-box {
+                          flex: 1 1 100%;
+                          min-width: 100%;
+                        }
+                      }
                       .experiment-table td {
                         vertical-align: middle !important;
                       }
@@ -175,18 +196,41 @@
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '100px' },
-            { id: 'owner', name: 'Owner', sort: false, width: '70px' },
+            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '80px' },
+            { id: 'owner', name: 'Owner', sort: false, width: '60px' },
+            {
+                id: 'annotations',
+                name: 'Tags',
+                sort: false,
+                width: '80px',
+                formatter: (cell) => {
+                    if (!cell || cell === '') {
+                        return gridjs.html('<div style="text-align: center;">-</div>');
+                    }
+                    const annotations = cell.split(',').filter(a => a.trim());
+                    const tags = annotations.map(annotation => {
+                        const colors = {
+                            'toxicity': '#dc3545',
+                            'sentiment': '#28a745',
+                            'emotion': '#17a2b8'
+                        };
+                        const color = colors[annotation.trim()] || '#6c757d';
+                        const shortName = annotation.trim().substring(0, 3);
+                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 1px 4px; margin: 1px; border-radius: 8px; font-size: 0.65rem;" title="${annotation.trim()}">${shortName}</span>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
+                }
+            },
             {
                 id: 'status_combined',
                 name: 'Status',
                 sort: false,
-                width: '50px',
+                width: '40px',
                 formatter: (cell, row) => {
                     // Get the web value from hidden cell
-                    const web = row.cells[3].data;      // web is at index 3
+                    const web = row.cells[4].data;      // web is at index 4
                     {% if enable_notebook %}
-                    const jupyter = row.cells[4].data;  // jupyter_status is at index 4
+                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
                     {% endif %}
                     
                     const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
@@ -212,18 +256,18 @@
                 id: 'details',
                 name: '',
                 sort: false,
-                width: '50px',
+                width: '45px',
                 formatter: (cell, row) => {
                     const id = row.cells[0].data;
                     return gridjs.html(`
-                        <div style="display: flex; gap: 8px; justify-content: center;">
+                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
                             <a href="/admin/experiment_details/${id}"
-                               style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                Details
+                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                View
                             </a>
                             <a href="/admin/delete_simulation/${id}"
-                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                                Delete
+                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                Del
                             </a>
                         </div>
                     `);
