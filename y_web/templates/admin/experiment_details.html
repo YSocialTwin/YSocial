@@ -44,6 +44,9 @@
                 <div class="column is-12">
                     <div class="dashboard-box">
                         <a href="/admin/experiments">Experiments</a> > Simulation: {{ experiment.exp_name }}
+                        {% if has_infinite_client %}
+                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: 600; margin-left: 10px;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -69,7 +72,12 @@
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
-                                    <span class="right">{{ experiment.exp_name }}</span>
+                                    <span class="right">
+                                        {{ experiment.exp_name }}
+                                        {% if has_infinite_client %}
+                                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Platform Type</span>
@@ -295,23 +303,46 @@
                                                 method: 'GET',
                                                 dataType: 'json',
                                                 success: function (data) {
-                                                    // Cap percentage at 100 to prevent overflow
-                                                    const percentage = Math.min(100, Math.max(0, data.progress || 0));
                                                     const progressBar = $('#progress-bar-{{client.id}}');
-                                                    progressBar.css('width', percentage + '%');
-                                                    progressBar.find('span').text(percentage + '%');
                                                     
-                                                    // Update gradient based on progress
-                                                    if (percentage >= 75) {
-                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                                                        progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                                                    } else if (percentage >= 50) {
-                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                                                        progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                                                    }
-                                                    
-                                                    if (percentage < 100) {
-                                                        setTimeout(pollProgress, 500);
+                                                    // Check if this is an infinite client
+                                                    if (data.infinite) {
+                                                        // For infinite clients, show green bar with elapsed time
+                                                        progressBar.css('width', '100%');
+                                                        progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+                                                        
+                                                        // Format elapsed time display
+                                                        const days = data.elapsed_days || 0;
+                                                        const hours = data.elapsed_hours || 0;
+                                                        let timeText = '';
+                                                        if (days > 0) {
+                                                            timeText = days + 'd ' + hours + 'h';
+                                                        } else {
+                                                            timeText = hours + 'h elapsed';
+                                                        }
+                                                        progressBar.find('span').text('∞ ' + timeText);
+                                                        
+                                                        // Keep polling for infinite clients
+                                                        setTimeout(pollProgress, 1000);
+                                                    } else {
+                                                        // Cap percentage at 100 to prevent overflow
+                                                        const percentage = Math.min(100, Math.max(0, data.progress || 0));
+                                                        progressBar.css('width', percentage + '%');
+                                                        progressBar.find('span').text(percentage + '%');
+                                                        
+                                                        // Update gradient based on progress
+                                                        if (percentage >= 75) {
+                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+                                                            progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+                                                        } else if (percentage >= 50) {
+                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+                                                            progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+                                                        }
+                                                        
+                                                        if (percentage < 100) {
+                                                            setTimeout(pollProgress, 500);
+                                                        }
                                                     }
                                                 }
                                             });

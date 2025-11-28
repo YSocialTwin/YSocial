@@ -182,6 +182,12 @@ def settings():
 
     users = Admin_users.query.all()
 
+    # Check which experiments have infinite clients
+    exp_has_infinite = {}
+    for exp in experiments:
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+
     # check if current db is the same of the active experiment
     exp = Exps.query.filter_by(status=1).first()
     if exp:
@@ -203,6 +209,7 @@ def settings():
         dbtype=dbtype,
         suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
+        exp_has_infinite=exp_has_infinite,
     )
 
 
@@ -1020,11 +1027,15 @@ def upload_experiment():
         db.session.add(cl)
         db.session.commit()
 
+        # For infinite clients (days = -1), set expected_duration_rounds to -1
+        expected_rounds = (
+            -1 if cl.days == -1 else cl.days * client["simulation"]["slots"]
+        )
         client_exec = Client_Execution(
             client_id=cl.id,
             last_active_hour=-1,
             last_active_day=-1,
-            expected_duration_rounds=cl.days * client["simulation"]["slots"],
+            expected_duration_rounds=expected_rounds,
         )
         db.session.add(client_exec)
         db.session.commit()
@@ -1596,10 +1607,15 @@ def experiments_data():
 
     # Calculate average progress for running experiments
     exp_progress = {}
+    # Track experiments with infinite clients
+    exp_has_infinite = {}
     for exp in res:
+        # Check if any client has infinite duration (days = -1)
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+        
         if exp.running == 1 or exp.exp_status == "active":
             # Get all clients for this experiment
-            clients = Client.query.filter_by(id_exp=exp.idexp).all()
             if clients:
                 total_progress = 0
                 count = 0
@@ -1643,6 +1659,7 @@ def experiments_data():
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
                 "progress": exp_progress.get(exp.idexp, 0),
+                "has_infinite_client": exp_has_infinite.get(exp.idexp, False),
             }
             for exp in res
         ],
@@ -1684,6 +1701,9 @@ def experiment_details(uid):
         # Client has been run at least once if execution exists and elapsed_time > 0
         client_executions[client.id] = execution and execution.elapsed_time > 0
 
+    # Check if any client has infinite duration (days = -1)
+    has_infinite_client = any(client.days == -1 for client in clients)
+
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1704,6 +1724,7 @@ def experiment_details(uid):
         experiment=experiment,
         clients=clients,
         client_executions=client_executions,
+        has_infinite_client=has_infinite_client,
         users=users,
         len=len,
         dbtype=dbtype,
@@ -3350,6 +3371,7 @@ def copy_experiment():
     Supports creating multiple copies with incremental naming (name_1, name_2, etc.)
     """
     check_privileges(current_user.username)
+    from y_web.telemetry import Telemetry
 
     # Get form data
     new_exp_name = request.form.get("new_exp_name")
@@ -3399,6 +3421,19 @@ def copy_experiment():
             success = _create_single_experiment_copy(source_exp, copy_name)
             if success:
                 created_count += 1
+
+                telemetry = Telemetry(user=current_user)
+                telemetry.log_event(
+                    {
+                        "action": "create_experiment",
+                        "data": {
+                            "platform_type": source_exp.platform_type,
+                            "annotations": source_exp.annotations,
+                            "llm_agents_enabled": source_exp.llm_agents_enabled,
+                            "copy_experiment": "True",
+                        },
+                    },
+                )
         except Exception as e:
             current_app.logger.error(
                 f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
@@ -4219,7 +4254,11 @@ def _get_clients_to_start(exp):
         # Check if client has completed
         client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
         if client_exec:
-            if client_exec.elapsed_time < client_exec.expected_duration_rounds:
+            # Infinite clients (expected_duration_rounds = -1) are never considered completed
+            if client_exec.expected_duration_rounds == -1:
+                all_clients_completed = False
+                clients_to_start.append(client)
+            elif client_exec.elapsed_time < client_exec.expected_duration_rounds:
                 all_clients_completed = False
                 clients_to_start.append(client)
         else:
@@ -4671,7 +4710,8 @@ def get_available_experiments_for_schedule():
     """
     Get experiments that can be added to schedule groups.
 
-    Returns experiments that are stopped and not already in any group.
+    Returns experiments that are stopped, not already in any group,
+    and do not have any infinite-duration clients.
 
     Returns:
         JSON with available experiments
@@ -4697,9 +4737,28 @@ def get_available_experiments_for_schedule():
         item.experiment_id for item in ExperimentScheduleItem.query.all()
     )
 
+    # Get experiment IDs that have infinite clients (clients with days = -1)
+    # Use a single query instead of nested loops for efficiency
+    exp_ids = [exp.idexp for exp in experiments_list]
+    infinite_clients = (
+        (
+            Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+            .with_entities(Client.id_exp)
+            .distinct()
+            .all()
+        )
+        if exp_ids
+        else []
+    )
+    experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
+
     result = []
     for exp in experiments_list:
-        if exp.idexp not in scheduled_exp_ids:
+        # Exclude experiments that are already scheduled or have infinite clients
+        if (
+            exp.idexp not in scheduled_exp_ids
+            and exp.idexp not in experiments_with_infinite_clients
+        ):
             result.append(
                 {
                     "id": exp.idexp,
@@ -4830,8 +4889,20 @@ def auto_create_groups():
     scheduled_exp_ids = set(
         item.experiment_id for item in ExperimentScheduleItem.query.all()
     )
+
+    # Filter out experiments with infinite clients (days = -1)
+    exp_ids = [exp.idexp for exp in experiments_list]
+    infinite_clients = (
+        Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+        .with_entities(Client.id_exp)
+        .distinct()
+        .all()
+    ) if exp_ids else []
+    experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
+
     available_exps = [
-        exp for exp in experiments_list if exp.idexp not in scheduled_exp_ids
+        exp for exp in experiments_list 
+        if exp.idexp not in scheduled_exp_ids and exp.idexp not in experiments_with_infinite_clients
     ]
 
     if not available_exps:

@@ -3,11 +3,23 @@
 {# Macro for rendering an experiment box #}
 {% macro render_experiment_box(experiments, section_color, show_run_buttons=true) %}
     {% for exp in experiments %}
+    {# Check if any client in this experiment has infinite duration (days = -1) #}
+    {% set ns = namespace(has_infinite_client=false) %}
+    {% for client in experiments[exp]["clients"] %}
+        {% if client[0].days == -1 %}
+            {% set ns.has_infinite_client = true %}
+        {% endif %}
+    {% endfor %}
     <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid {{ section_color }}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
         <div class="box-lines">
             <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                 <span class="left" style="display: flex; align-items: center; gap: 10px;">
-                    Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong><a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
+                    Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong>
+                    <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
+                    {% if ns.has_infinite_client %}
+                    <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+                    {% endif %}
+                    <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
                         <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
                     </a>
                 </span>
@@ -87,6 +99,11 @@
                                 <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
                                     <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
                                 </a>
+                                {% elif client[1].expected_duration_rounds == -1 %}
+                                {# Infinite client - always show resume button if started #}
+                                <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
+                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                </a>
                                 {% elif client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %}
                                 <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
                                     <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
@@ -127,22 +144,45 @@
                             method: 'GET',
                             dataType: 'json',
                             success: function (data) {
-                                const percentage = data.progress;
                                 const progressBar = $('#progress-bar-{{client[0].id}}');
-                                progressBar.css('width', percentage + '%');
-                                progressBar.find('span').text(percentage + '%');
                                 
-                                // Update gradient based on progress - aligned with template colors
-                                if (percentage >= 75) {
-                                    progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                                    progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                                } else if (percentage >= 50) {
-                                    progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                                    progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                                }
-                                
-                                if (percentage < 100) {
-                                    setTimeout(pollProgress, 500);
+                                // Check if this is an infinite client
+                                if (data.infinite) {
+                                    // For infinite clients, show green bar with elapsed time
+                                    progressBar.css('width', '100%');
+                                    progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
+                                    progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+                                    
+                                    // Format elapsed time display
+                                    const days = data.elapsed_days || 0;
+                                    const hours = data.elapsed_hours || 0;
+                                    let timeText = '';
+                                    if (days > 0) {
+                                        timeText = days + 'd ' + hours + 'h';
+                                    } else {
+                                        timeText = hours + 'h elapsed';
+                                    }
+                                    progressBar.find('span').text('∞ ' + timeText);
+                                    
+                                    // Keep polling for infinite clients
+                                    setTimeout(pollProgress, 1000);
+                                } else {
+                                    const percentage = data.progress;
+                                    progressBar.css('width', percentage + '%');
+                                    progressBar.find('span').text(percentage + '%');
+                                    
+                                    // Update gradient based on progress - aligned with template colors
+                                    if (percentage >= 75) {
+                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+                                        progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+                                    } else if (percentage >= 50) {
+                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+                                        progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+                                    }
+                                    
+                                    if (percentage < 100) {
+                                        setTimeout(pollProgress, 500);
+                                    }
                                 }
                             }
                         });
@@ -732,8 +772,8 @@
         </p>
         
         <p style="margin: 0 0 6px 0;">
-            All telemetry data is GDPR compliant. You can disable it anytime from your
-            <a href="/admin/user_details/{{ current_user.id }}" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">user settings</a>.
+            All telemetry data is GDPR compliant. You can disable it anytime from the application
+            <a href="/admin/miscellanea" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">settings</a>.
         </p>
         
         <div style="margin-top: 8px; text-align: right;">

@@ -212,7 +212,19 @@
     function getRunningTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'has_infinite_client', hidden: true },
+            { 
+                id: 'exp_name', 
+                name: 'Name', 
+                attributes: editableCellAttributes, 
+                width: '100px',
+                formatter: (cell, row) => {
+                    const hasInfinite = row.cells[1].data;
+                    const infiniteTag = hasInfinite ? 
+                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
+                }
+            },
             { id: 'owner', name: 'Owner', sort: false, width: '50px' },
             {
                 id: 'progress',
@@ -248,10 +260,10 @@
                 sort: false,
                 width: '40px',
                 formatter: (cell, row) => {
-                    // Get the web value from hidden cell
-                    const web = row.cells[4].data;      // web is at index 4
+                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
+                    const web = row.cells[5].data;      // web is at index 5
                     {% if enable_notebook %}
-                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
+                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
                     {% endif %}
                     
                     const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
@@ -288,7 +300,7 @@
                             </a>
                             <a href="/admin/delete_simulation/${id}"
                                style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Del
+                                Delete
                             </a>
                         </div>
                     `);
@@ -301,7 +313,19 @@
     function getTableColumns() {
         return [
             { id: 'idexp', hidden: true },
-            { id: 'exp_name', name: 'Name', attributes: editableCellAttributes, width: '70px' },
+            { id: 'has_infinite_client', hidden: true },
+            { 
+                id: 'exp_name', 
+                name: 'Name', 
+                attributes: editableCellAttributes, 
+                width: '100px',
+                formatter: (cell, row) => {
+                    const hasInfinite = row.cells[1].data;
+                    const infiniteTag = hasInfinite ? 
+                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
+                }
+            },
             { id: 'owner', name: 'Owner', sort: false, width: '50px' },
             {
                 id: 'annotations',
@@ -332,10 +356,10 @@
                 sort: false,
                 width: '40px',
                 formatter: (cell, row) => {
-                    // Get the web value from hidden cell
-                    const web = row.cells[4].data;      // web is at index 4
+                    // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
+                    const web = row.cells[5].data;      // web is at index 5
                     {% if enable_notebook %}
-                    const jupyter = row.cells[5].data;  // jupyter_status is at index 5
+                    const jupyter = row.cells[6].data;  // jupyter_status is at index 6
                     {% endif %}
                     
                     const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
@@ -372,7 +396,7 @@
                             </a>
                             <a href="/admin/delete_simulation/${id}"
                                style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Del
+                                Delete
                             </a>
                         </div>
                     `);
@@ -728,7 +752,6 @@
             alert('Cannot delete a running group. Stop the schedule first.');
             return;
         }
-        if (!confirm('Delete this group and remove all experiments from it?')) return;
 
         fetch(`/admin/schedule/groups/${groupId}`, { method: 'DELETE' })
             .then(response => response.json())
@@ -813,8 +836,6 @@
     }
 
     function startSchedule() {
-        if (!confirm('Start the experiment schedule? This will run all groups sequentially.')) return;
-
         // Clear previous logs display
         const logDiv = document.getElementById('schedule-log');
         if (logDiv) {
@@ -1278,7 +1299,12 @@
                                          data-demo-src="{{ url_for('static', filename='assets/img/icons/emoji/robot.svg') }}"
                                          data-user-popover="10" alt=""/>
                                     <div class="subscriber-meta" style="width: 80%;">
-                                        <span class="meta-title">{{ exp.exp_name }}</span>
+                                        <span class="meta-title">
+                                            {{ exp.exp_name }}
+                                            {% if exp_has_infinite.get(exp.idexp, false) %}
+                                            <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+                                            {% endif %}
+                                        </span>
                                         <span class="meta-content">Description: {{ exp.exp_descr }}</span>
                                         <span class="meta-content">Owner: {{ exp.owner }} </span>
 
@@ -1338,7 +1364,7 @@
 
                             <p>
                                <b>Create New Experiment</b><br>
-                                Provide a name, description, owner, host, and port. Once created, configure it and add agents and clients.
+                                Decide whether to use LLM agent or standard ones, provide experiment name, description, simulation topics.
                             </p>
                             <br>
 
@@ -1350,7 +1376,8 @@
 
                             <p>
                                 <b>Copy & Upload</b><br>
-                                Copy existing experiments (with optional multiple copies) or upload previously exported experiment zip files.
+                                Copy existing experiments or upload previously exported experiment ones.
+                                Copied experiment start from scratch. Uploaded ones retain their status.
                             </p>
                         </div>
                     </div>
@@ -1395,10 +1422,10 @@
                                         <button id="add-group-btn" onclick="addScheduleGroup()" style="background: #28a745; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-plus"></i> Add
                                         </button>
-                                        <input type="number" id="exps-per-group" value="3" min="1" max="20" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
                                         <button onclick="autoCreateGroups()" style="background: #17a2b8; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">
                                             <i class="mdi mdi-auto-fix"></i> Auto
                                         </button>
+                                        <input type="number" id="exps-per-group" value="2" min="1" max="10" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
                                     </div>
                                 </div>
                                 <div id="schedule-groups" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
@@ -1479,8 +1506,7 @@
                             </div>
                             <div class="help-block" style="margin-bottom: 12px;">
                                 <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Creates a complete copy with its own folder (UUID), configuration files, and database. 
-                                    The copy will be ready to start immediately.
+                                    Creates a complete copy of an experiment that will be ready to start immediately.
                                 </p>
                             </div>
                             <div class="button-wrap">
@@ -1567,7 +1593,7 @@
                             </div>
                             <div class="help-block" style="margin-bottom: 12px;">
                                 <p style="font-size: 0.8em; color: #6b7280; line-height: 1.4;">
-                                    Upload a ZIP file containing experiment data. The system will automatically assign a free port (5000-6000) and configure the database.
+                                    Upload a ZIP file containing experiment data.
                                 </p>
                             </div>
                             <div class="button-wrap">

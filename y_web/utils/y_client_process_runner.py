@@ -18,6 +18,10 @@ from y_web.models import (
     PopulationActivityProfile,
 )
 
+# Number of days to run an infinite client per iteration before checking for termination
+# Infinite clients run for this many days, then loop back to continue running
+INFINITE_CLIENT_ITERATION_DAYS = 365
+
 
 def main():
     """Main entry point for client process runner."""
@@ -221,10 +225,12 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         else:
             print(f"Client {cli.name} first execution.")
             first_run = True
+            # For infinite clients (days = -1), set expected_duration_rounds to -1
+            expected_rounds = -1 if cli.days == -1 else cli.days * 24
             ce = Client_Execution(
                 client_id=cli.id,
                 elapsed_time=0,
-                expected_duration_rounds=cli.days * 24,
+                expected_duration_rounds=expected_rounds,
                 last_active_hour=-1,
                 last_active_day=-1,
             )
@@ -235,6 +241,9 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
         print(f"Data base path: {data_base_path}", file=sys.stderr)
+
+        # Check if this is an infinite client
+        is_infinite = cli.days == -1 or ce.expected_duration_rounds == -1
 
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
@@ -260,7 +269,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             else:
                 print(f"Resuming run", file=sys.stderr)
 
-        if resume:
+        if resume and not is_infinite:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
@@ -273,6 +282,11 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             # remaining rounds. Using int() would result in 0 days when remaining
             # rounds < 24, causing the simulation to skip the final hours.
             cl.days = max(1, math.ceil(remaining_rounds / 24))
+        elif is_infinite:
+            # For infinite clients, run for a longer period per iteration
+            # The client will continue running until manually stopped
+            print(f"Infinite client - running until manually stopped", file=sys.stderr)
+            cl.days = INFINITE_CLIENT_ITERATION_DAYS
 
         cl.read_agents()
         cl.add_feeds()
@@ -461,8 +475,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                 session.add(ce)  # Explicitly mark as modified for PostgreSQL
                 session.commit()
 
-                # Check if we've reached 100% completion
-                if ce.elapsed_time >= ce.expected_duration_rounds:
+                # Check if we've reached 100% completion (skip for infinite clients)
+                # Infinite clients have expected_duration_rounds = -1
+                if (
+                    ce.expected_duration_rounds > 0
+                    and ce.elapsed_time >= ce.expected_duration_rounds
+                ):
                     print(
                         f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
                         file=sys.stderr,
@@ -476,7 +494,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                     client = session.query(Client).filter_by(id=cli_id).first()
                     if client:
                         # Use a single JOIN query to get all client execution records
-                        # for this experiment
+                        # for this experiment. Exclude infinite clients (expected_duration_rounds = -1)
                         incomplete_clients = (
                             session.query(Client)
                             .join(
@@ -485,8 +503,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                             )
                             .filter(Client.id_exp == client.id_exp)
                             .filter(
+                                Client_Execution.expected_duration_rounds
+                                > 0,  # Exclude infinite clients
                                 Client_Execution.elapsed_time
-                                < Client_Execution.expected_duration_rounds
+                                < Client_Execution.expected_duration_rounds,
                             )
                             .count()
                         )
@@ -503,11 +523,25 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                             .count()
                         )
 
-                        all_completed = (
-                            incomplete_clients == 0 and clients_without_exec == 0
+                        # Check if there are any infinite clients still running
+                        infinite_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.expected_duration_rounds == -1)
+                            .count()
                         )
 
-                        # If all clients are completed, update experiment status to "completed"
+                        all_completed = (
+                            incomplete_clients == 0
+                            and clients_without_exec == 0
+                            and infinite_clients == 0
+                        )
+
+                        # If all clients are completed (no infinite clients), update experiment status to "completed"
                         if all_completed:
                             exp = (
                                 session.query(Exps)
