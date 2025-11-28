@@ -3411,7 +3411,7 @@ def copy_experiment():
                             "platform_type": source_exp.platform_type,
                             "annotations": source_exp.annotations,
                             "llm_agents_enabled": source_exp.llm_agents_enabled,
-                            "copy_experiment": True,
+                            "copy_experiment": "True",
                         },
                     },
                 )
