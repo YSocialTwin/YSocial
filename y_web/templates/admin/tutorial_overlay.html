@@ -594,16 +594,16 @@
             `<span class="tutorial-tag" data-id="${t.id}" onclick="toggleTag(this, 'toxicity')">${t.name}</span>`
         ).join('');
         
-        // Content recommendation systems
+        // Content recommendation systems - use 'name' as value (class name) and 'value' as display text
         const contentSelect = document.getElementById('tut-content-recsys');
         contentSelect.innerHTML = tutorialData.content_recsys.map(c => 
-            `<option value="${c.value}">${c.name}</option>`
+            `<option value="${c.name}">${c.value}</option>`
         ).join('');
         
-        // Follow recommendation systems
+        // Follow recommendation systems - use 'name' as value (class name) and 'value' as display text
         const followSelect = document.getElementById('tut-follow-recsys');
         followSelect.innerHTML = tutorialData.follow_recsys.map(f => 
-            `<option value="${f.value}">${f.name}</option>`
+            `<option value="${f.name}">${f.value}</option>`
         ).join('');
     }
     

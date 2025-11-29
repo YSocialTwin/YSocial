@@ -29,7 +29,6 @@ from y_web.models import (
     Agent,
     Agent_Population,
     Client,
-    Client_Execution,
     Content_Recsys,
     Education,
     Exp_stats,
@@ -695,16 +694,8 @@ def create_tutorial_experiment():
             f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}prompts.json",
         )
 
-        # Create client execution record
-        expected_rounds = simulation_days * 24
-        client_exec = Client_Execution(
-            client_id=client.id,
-            last_active_hour=-1,
-            last_active_day=-1,
-            expected_duration_rounds=expected_rounds,
-        )
-        db.session.add(client_exec)
-        db.session.commit()
+        # Note: Don't create Client_Execution here - let the client runner create it
+        # on first run so that first_run detection works correctly
 
         # Mark tutorial as shown
         user = Admin_users.query.filter_by(username=current_user.username).first()
