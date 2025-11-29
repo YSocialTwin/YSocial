@@ -27,6 +27,7 @@
         max-height: 85vh;
         display: flex;
         flex-direction: column;
+        overflow: hidden;
     ">
         <!-- Header -->
         <div style="
@@ -34,6 +35,7 @@
             padding: 24px 30px;
             border-radius: 16px 16px 0 0;
             position: relative;
+            flex-shrink: 0;
         ">
             <button id="tutorial-close-btn" style="
                 position: absolute;
@@ -64,6 +66,7 @@
             justify-content: center;
             padding: 20px 30px 10px;
             gap: 10px;
+            flex-shrink: 0;
         ">
             <div class="tutorial-step-indicator" id="step-indicator-1" style="
                 display: flex;
@@ -124,7 +127,7 @@
         </div>
         
         <!-- Step Content Container -->
-        <div id="tutorial-content" style="padding: 20px 30px; overflow-y: auto; flex: 1;">
+        <div id="tutorial-content" style="padding: 20px 30px; overflow-y: auto; flex: 1 1 auto; min-height: 0;">
             <!-- Step 1: Population -->
             <div id="tutorial-step-1" class="tutorial-step">
                 <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
@@ -631,6 +634,9 @@
             justify-content: space-between;
             align-items: center;
             border-top: 1px solid #eee;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 0 0 16px 16px;
         ">
             <button id="tutorial-prev-btn" style="
                 padding: 10px 20px;
