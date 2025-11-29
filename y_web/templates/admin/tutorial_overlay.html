@@ -24,8 +24,9 @@
         z-index: 10000;
         max-width: 650px;
         width: 90%;
-        max-height: 90vh;
-        overflow-y: auto;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
     ">
         <!-- Header -->
         <div style="
@@ -123,7 +124,7 @@
         </div>
         
         <!-- Step Content Container -->
-        <div id="tutorial-content" style="padding: 20px 30px;">
+        <div id="tutorial-content" style="padding: 20px 30px; overflow-y: auto; flex: 1;">
             <!-- Step 1: Population -->
             <div id="tutorial-step-1" class="tutorial-step">
                 <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
@@ -246,26 +247,29 @@
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
-                            Activity Pattern
-                        </span>
-                        <span class="right" style="width: 70%;">
-                            <div class="select" style="position: relative;">
-                                <select id="tut-activity-profile" style="
-                                    width: 100%;
-                                    padding: 8px 12px;
-                                    border: 1px solid #ddd;
-                                    border-radius: 4px;
-                                    font-size: 0.9em;
-                                    background: white;
-                                    cursor: pointer;
-                                    appearance: none;
-                                ">
-                                    <!-- Will be populated by JavaScript -->
-                                </select>
+                    <!-- Activity Pattern with Drag and Drop -->
+                    <div class="form-section-header" style="font-size: 0.95em; font-weight: 600; color: #333; margin: 15px 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #e0e0e0;">
+                        Activity Patterns
+                    </div>
+                    <div class="form-section-description" style="font-size: 0.85em; color: #666; margin-bottom: 12px; line-height: 1.4;">
+                        Drag activity profiles from available to assigned, then set the percentage for each. Percentages must total 100%.
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background-color: #fafafa;">
+                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Available Profiles (Drag to assign)</div>
+                            <div id="tut-available-profiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; min-height: 40px;">
+                                <!-- Will be populated by JavaScript -->
                             </div>
-                        </span>
+                        </div>
+                        
+                        <div style="border: 2px dashed #22c55e; border-radius: 6px; padding: 10px; background-color: #f0fdf4;">
+                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Assigned Profiles & Percentages</div>
+                            <div id="tut-assigned-profiles" style="min-height: 40px;">
+                                <div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>
+                            </div>
+                            <div id="tut-activity-validation" style="display: none; margin-top: 8px; padding: 8px; border-radius: 4px; font-size: 0.8em;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -738,6 +742,7 @@
     let createdClientId = null;
     let llmEnabled = false;
     let topicsList = [];
+    let tutAssignedProfiles = [];  // Activity profiles assigned with percentages
     
     // Check if tutorial should be shown
     function checkTutorialStatus() {
@@ -761,6 +766,7 @@
                 setupLLMToggle();
                 setupTopicsInput();
                 setupNumberScales();
+                setupActivityProfileDragDrop();
                 showTutorial();
             })
             .catch(error => console.error('Error loading tutorial data:', error));
@@ -780,11 +786,21 @@
             `<div class="multi-select-option" data-id="${p.id}" data-name="${p.name}" onclick="toggleTutOption('political', '${p.name}', ${p.id})" style="padding: 8px 12px; cursor: pointer; font-size: 0.9em; transition: background 0.15s;">${p.name}</div>`
         ).join('');
         
-        // Activity profiles
-        const activitySelect = document.getElementById('tut-activity-profile');
-        activitySelect.innerHTML = tutorialData.activity_profiles.map(a => 
-            `<option value="${a.id}" ${a.name === 'Always On' ? 'selected' : ''}>${a.name}</option>`
-        ).join('');
+        // Activity profiles - now rendered as draggable items
+        renderTutAvailableProfiles();
+        
+        // Set default activity profile ("Always On" at 100%)
+        const alwaysOnProfile = tutorialData.activity_profiles.find(p => p.name === 'Always On');
+        if (alwaysOnProfile) {
+            tutAssignedProfiles = [{
+                id: alwaysOnProfile.id,
+                name: alwaysOnProfile.name,
+                hours: alwaysOnProfile.hours || '',
+                percentage: 100
+            }];
+            renderTutAssignedProfiles();
+            validateTutActivityPercentages();
+        }
         
         // Content recommendation systems - use 'name' as value (class name) and 'value' as display text
         const contentSelect = document.getElementById('tut-content-recsys');
@@ -808,6 +824,202 @@
         
         // Update LLM section based on Ollama availability
         updateLLMAvailability();
+    }
+    
+    // Render available activity profiles
+    function renderTutAvailableProfiles() {
+        const container = document.getElementById('tut-available-profiles');
+        if (!container || !tutorialData.activity_profiles) return;
+        
+        // Filter out already assigned profiles
+        const available = tutorialData.activity_profiles.filter(p => 
+            !tutAssignedProfiles.find(ap => ap.id === p.id)
+        );
+        
+        if (available.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.8em; padding: 8px;">All profiles assigned</div>';
+            return;
+        }
+        
+        container.innerHTML = available.map(p => {
+            const hours = p.hours ? p.hours.split(',') : [];
+            return `
+            <div class="tut-profile-item" draggable="true" data-profile-id="${p.id}" data-profile-name="${p.name}" data-profile-hours="${p.hours || ''}" style="
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 6px 8px;
+                cursor: move;
+                transition: all 0.2s ease;
+                font-size: 0.8em;
+            ">
+                <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">${p.name}</div>
+                <div style="display: flex; gap: 1px; height: 8px; margin-top: 4px;">
+                    ${Array.from({length: 24}, (_, h) => `<div style="flex: 1; height: 100%; background: ${hours.includes(h.toString()) ? '#22c55e' : '#e5e7eb'}; border-radius: 1px;" title="Hour ${h}"></div>`).join('')}
+                </div>
+            </div>
+        `}).join('');
+        
+        // Add drag event listeners
+        container.querySelectorAll('.tut-profile-item').forEach(item => {
+            item.addEventListener('dragstart', handleTutProfileDragStart);
+            item.addEventListener('dragend', handleTutProfileDragEnd);
+        });
+    }
+    
+    // Render assigned activity profiles
+    function renderTutAssignedProfiles() {
+        const container = document.getElementById('tut-assigned-profiles');
+        if (!container) return;
+        
+        if (tutAssignedProfiles.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div style="display: flex; flex-wrap: wrap; gap: 8px;">' + tutAssignedProfiles.map(profile => `
+            <div class="tut-assigned-profile" style="
+                background: white;
+                border: 1px solid #22c55e;
+                border-radius: 4px;
+                padding: 6px 8px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.8em;
+            ">
+                <span style="font-weight: 500; color: #333;">${profile.name}</span>
+                <input type="number" 
+                       class="tut-percentage-input" 
+                       min="0" 
+                       max="100" 
+                       step="0.01"
+                       placeholder="%" 
+                       value="${profile.percentage || ''}"
+                       onchange="updateTutProfilePercentage('${profile.id}', this.value)"
+                       style="width: 55px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 0.85em;">
+                <span style="font-size: 0.75em; color: #666;">%</span>
+                <button type="button" onclick="removeTutProfile('${profile.id}')" style="
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 3px 6px;
+                    cursor: pointer;
+                    font-size: 0.75em;
+                ">×</button>
+            </div>
+        `).join('') + '</div>';
+        
+        // Re-render available to exclude assigned
+        renderTutAvailableProfiles();
+    }
+    
+    // Setup activity profile drag and drop
+    function setupActivityProfileDragDrop() {
+        const assignedContainer = document.getElementById('tut-assigned-profiles');
+        if (assignedContainer) {
+            assignedContainer.addEventListener('dragover', handleTutProfileDragOver);
+            assignedContainer.addEventListener('drop', handleTutProfileDrop);
+            assignedContainer.addEventListener('dragleave', handleTutProfileDragLeave);
+        }
+    }
+    
+    function handleTutProfileDragStart(e) {
+        e.currentTarget.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+            id: e.currentTarget.dataset.profileId,
+            name: e.currentTarget.dataset.profileName,
+            hours: e.currentTarget.dataset.profileHours
+        }));
+    }
+    
+    function handleTutProfileDragEnd(e) {
+        e.currentTarget.style.opacity = '1';
+    }
+    
+    function handleTutProfileDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        e.currentTarget.style.backgroundColor = '#dcfce7';
+        e.currentTarget.style.borderColor = '#22c55e';
+    }
+    
+    function handleTutProfileDragLeave(e) {
+        if (e.currentTarget === e.target) {
+            e.currentTarget.style.backgroundColor = '#f0fdf4';
+            e.currentTarget.style.borderColor = '';
+        }
+    }
+    
+    function handleTutProfileDrop(e) {
+        e.preventDefault();
+        e.currentTarget.style.backgroundColor = '#f0fdf4';
+        e.currentTarget.style.borderColor = '';
+        
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        
+        // Check if profile is already assigned
+        if (tutAssignedProfiles.find(p => p.id === data.id)) {
+            return;
+        }
+        
+        // Add to assigned profiles
+        tutAssignedProfiles.push({
+            id: data.id,
+            name: data.name,
+            hours: data.hours,
+            percentage: 0
+        });
+        
+        renderTutAssignedProfiles();
+        validateTutActivityPercentages();
+    }
+    
+    // Update profile percentage
+    window.updateTutProfilePercentage = function(profileId, value) {
+        const profile = tutAssignedProfiles.find(p => p.id === profileId);
+        if (profile) {
+            profile.percentage = parseFloat(value) || 0;
+            validateTutActivityPercentages();
+        }
+    };
+    
+    // Remove assigned profile
+    window.removeTutProfile = function(profileId) {
+        tutAssignedProfiles = tutAssignedProfiles.filter(p => p.id !== profileId);
+        renderTutAssignedProfiles();
+        validateTutActivityPercentages();
+    };
+    
+    // Validate activity profile percentages
+    function validateTutActivityPercentages() {
+        const validation = document.getElementById('tut-activity-validation');
+        if (!validation) return true;
+        
+        const total = tutAssignedProfiles.reduce((sum, p) => sum + (p.percentage || 0), 0);
+        
+        if (tutAssignedProfiles.length === 0) {
+            validation.style.display = 'none';
+            return true;
+        }
+        
+        validation.style.display = 'block';
+        
+        if (Math.abs(total - 100) < 0.01) {
+            validation.style.background = '#efe';
+            validation.style.border = '1px solid #cfc';
+            validation.style.color = '#0a0';
+            validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
+            return true;
+        } else {
+            validation.style.background = '#fee';
+            validation.style.border = '1px solid #fcc';
+            validation.style.color = '#c00';
+            validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
+            return false;
+        }
     }
     
     // Toggle multi-select dropdown visibility
@@ -1134,6 +1346,15 @@
                 showError('Please select at least one political leaning.');
                 return false;
             }
+            // Validate activity profiles
+            if (tutAssignedProfiles.length === 0) {
+                showError('Please assign at least one activity profile.');
+                return false;
+            }
+            if (!validateTutActivityPercentages()) {
+                showError('Activity profile percentages must sum to 100%.');
+                return false;
+            }
         } else if (currentStep === 2) {
             const name = document.getElementById('tut-exp-name').value.trim();
             if (!name) {
@@ -1207,13 +1428,20 @@
         const readProb = total > 0 ? readValue / total : 0.25;
         const shareProb = total > 0 ? shareValue / total : 0.25;
         
+        // Prepare activity profiles data (id -> percentage)
+        const activityProfilesData = tutAssignedProfiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            percentage: p.percentage || 0
+        }));
+        
         const data = {
             // Population - extract just the IDs from the objects
             population_name: document.getElementById('tut-pop-name').value.trim(),
             population_size: parseInt(document.getElementById('tut-pop-size').value),
             education_levels: selectedEducation.map(e => e.id),
             political_leanings: selectedPolitical.map(p => p.id),
-            activity_profile_id: parseInt(document.getElementById('tut-activity-profile').value),
+            activity_profiles_data: activityProfilesData,
             
             // Experiment
             experiment_name: document.getElementById('tut-exp-name').value.trim(),
@@ -1341,6 +1569,20 @@
             createdClientId = null;
             llmEnabled = false;
             topicsList = [];
+            
+            // Reset activity profiles to default ("Always On" at 100%)
+            tutAssignedProfiles = [];
+            const alwaysOnProfile = tutorialData.activity_profiles.find(p => p.name === 'Always On');
+            if (alwaysOnProfile) {
+                tutAssignedProfiles = [{
+                    id: alwaysOnProfile.id,
+                    name: alwaysOnProfile.name,
+                    hours: alwaysOnProfile.hours || '',
+                    percentage: 100
+                }];
+            }
+            renderTutAssignedProfiles();
+            validateTutActivityPercentages();
             
             // Reset multi-select displays
             updateTutMultiSelectDisplay('education');

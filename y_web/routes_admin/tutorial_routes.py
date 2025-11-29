@@ -209,7 +209,7 @@ def create_tutorial_experiment():
         population_size = int(data.get("population_size", 50))
         education_levels = data.get("education_levels", [])
         political_leanings = data.get("political_leanings", [])
-        activity_profile_id = data.get("activity_profile_id")  # Single activity profile
+        activity_profiles_data = data.get("activity_profiles_data", [])  # List of {id, name, percentage}
 
         # Extract experiment data
         experiment_name = data.get("experiment_name", "").strip()
@@ -361,22 +361,32 @@ def create_tutorial_experiment():
         db.session.add(pop)
         db.session.commit()
 
-        # Assign activity profile (use the selected one or default to "Always On")
-        if activity_profile_id:
-            selected_profile = ActivityProfile.query.filter_by(
-                id=activity_profile_id
-            ).first()
-        else:
-            selected_profile = ActivityProfile.query.filter_by(name="Always On").first()
-
-        if selected_profile:
-            profile_assoc = PopulationActivityProfile(
-                population=pop.id,
-                activity_profile=selected_profile.id,
-                percentage=100.0,
-            )
-            db.session.add(profile_assoc)
+        # Assign activity profiles with their percentages
+        if activity_profiles_data:
+            for profile_data in activity_profiles_data:
+                profile_id = profile_data.get("id")
+                percentage = float(profile_data.get("percentage", 0))
+                if profile_id and percentage > 0:
+                    profile = ActivityProfile.query.filter_by(id=profile_id).first()
+                    if profile:
+                        profile_assoc = PopulationActivityProfile(
+                            population=pop.id,
+                            activity_profile=profile.id,
+                            percentage=percentage,
+                        )
+                        db.session.add(profile_assoc)
             db.session.commit()
+        else:
+            # Default to "Always On" at 100% if no profiles specified
+            selected_profile = ActivityProfile.query.filter_by(name="Always On").first()
+            if selected_profile:
+                profile_assoc = PopulationActivityProfile(
+                    population=pop.id,
+                    activity_profile=selected_profile.id,
+                    percentage=100.0,
+                )
+                db.session.add(profile_assoc)
+                db.session.commit()
 
         # Get all profession backgrounds for population generation
         all_backgrounds = db.session.query(Profession.background).distinct().all()
