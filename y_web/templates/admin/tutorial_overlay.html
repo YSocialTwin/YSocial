@@ -164,42 +164,108 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
                             Education Levels <span style="color: #e74c3c;">*</span>
-                        </label>
-                        <div id="tut-education-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <div class="multi-select-wrapper" style="position: relative;">
+                                <div class="multi-select-display" id="tut-education-display-wrapper" onclick="toggleTutDropdown('education')" style="
+                                    min-height: 38px;
+                                    padding: 6px 10px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    background: white;
+                                    cursor: pointer;
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 5px;
+                                    align-items: center;
+                                ">
+                                    <span id="tut-education-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select education levels...</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="tut-education-dropdown" style="
+                                    position: absolute;
+                                    top: 100%;
+                                    left: 0;
+                                    right: 0;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    background: white;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    z-index: 1000;
+                                    display: none;
+                                    margin-top: 2px;
+                                ">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </span>
                     </div>
                     
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
                             Political Leanings <span style="color: #e74c3c;">*</span>
-                        </label>
-                        <div id="tut-political-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
-                            <!-- Will be populated by JavaScript -->
-                        </div>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <div class="multi-select-wrapper" style="position: relative;">
+                                <div class="multi-select-display" id="tut-political-display-wrapper" onclick="toggleTutDropdown('political')" style="
+                                    min-height: 38px;
+                                    padding: 6px 10px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    background: white;
+                                    cursor: pointer;
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 5px;
+                                    align-items: center;
+                                ">
+                                    <span id="tut-political-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select political leanings...</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="tut-political-dropdown" style="
+                                    position: absolute;
+                                    top: 100%;
+                                    left: 0;
+                                    right: 0;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    background: white;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    z-index: 1000;
+                                    display: none;
+                                    margin-top: 2px;
+                                ">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </span>
                     </div>
                     
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
                             Activity Pattern
-                        </label>
-                        <select id="tut-activity-profile" style="
-                            width: 100%;
-                            padding: 10px 14px;
-                            border: 1px solid #ddd;
-                            border-radius: 8px;
-                            font-size: 0.95em;
-                            background: white;
-                            cursor: pointer;
-                        ">
-                            <!-- Will be populated by JavaScript -->
-                        </select>
-                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
-                            Defines when agents are active during the day.
-                        </p>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <div class="select" style="position: relative;">
+                                <select id="tut-activity-profile" style="
+                                    width: 100%;
+                                    padding: 8px 12px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    font-size: 0.9em;
+                                    background: white;
+                                    cursor: pointer;
+                                    appearance: none;
+                                ">
+                                    <!-- Will be populated by JavaScript -->
+                                </select>
+                            </div>
+                        </span>
                     </div>
                 </div>
             </div>
@@ -311,92 +377,131 @@
                 </p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
                             Client Name <span style="color: #e74c3c;">*</span>
-                        </label>
-                        <input type="text" id="tut-client-name" placeholder="e.g., Main Simulation" style="
-                            width: 100%;
-                            padding: 10px 14px;
-                            border: 1px solid #ddd;
-                            border-radius: 8px;
-                            font-size: 0.95em;
-                            transition: border-color 0.2s;
-                            box-sizing: border-box;
-                        " required>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <input type="text" id="tut-client-name" placeholder="e.g., Main Simulation" class="input" style="
+                                width: 100%;
+                                padding: 8px 12px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                box-sizing: border-box;
+                            " required>
+                        </span>
                     </div>
                     
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
-                            Simulation Length: <span id="tut-days-value">7</span> days
-                        </label>
-                        <input type="range" id="tut-sim-days" min="1" max="30" value="7" style="
-                            width: 100%;
-                            cursor: pointer;
-                        " oninput="document.getElementById('tut-days-value').textContent = this.value">
-                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #999; margin-top: 3px;">
-                            <span>1 day</span>
-                            <span>30 days</span>
-                        </div>
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
+                            Simulation Days
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <input type="number" id="tut-sim-days" min="1" max="30" value="7" class="input" style="
+                                width: 80px;
+                                padding: 8px 12px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                            ">
+                        </span>
                     </div>
                     
-                    <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333; font-size: 0.9em;">
-                            Agents' Actions Relevance
-                        </label>
-                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="flex: 1; font-size: 0.85em; color: #555;">Post:</label>
-                                <input type="number" id="tut-post-prob" value="30" min="0" max="100" style="
-                                    width: 60px;
-                                    padding: 6px;
-                                    border: 1px solid #ddd;
-                                    border-radius: 4px;
-                                    text-align: center;
-                                    font-size: 0.9em;
-                                ">
-                                <span style="color: #999; font-size: 0.8em;">%</span>
+                    <div class="form-section-header" style="font-size: 0.95em; font-weight: 600; color: #333; margin: 10px 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #e0e0e0;">
+                        Agents' Actions Relevance
+                    </div>
+                    <div class="form-section-description" style="font-size: 0.85em; color: #666; margin-bottom: 15px; line-height: 1.4;">
+                        All actions are scored from 0 to 10, where 0 means the action is never performed. Scores greater than 0 are relative to each other.
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Post new content</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-post-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box selected" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-post-prob" value="3">
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="flex: 1; font-size: 0.85em; color: #555;">Share:</label>
-                                <input type="number" id="tut-share-prob" value="20" min="0" max="100" style="
-                                    width: 60px;
-                                    padding: 6px;
-                                    border: 1px solid #ddd;
-                                    border-radius: 4px;
-                                    text-align: center;
-                                    font-size: 0.9em;
-                                ">
-                                <span style="color: #999; font-size: 0.8em;">%</span>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Comment a Post</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-comment-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box selected" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-comment-prob" value="5">
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="flex: 1; font-size: 0.85em; color: #555;">Comment:</label>
-                                <input type="number" id="tut-comment-prob" value="30" min="0" max="100" style="
-                                    width: 60px;
-                                    padding: 6px;
-                                    border: 1px solid #ddd;
-                                    border-radius: 4px;
-                                    text-align: center;
-                                    font-size: 0.9em;
-                                ">
-                                <span style="color: #999; font-size: 0.8em;">%</span>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Read a content</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-read-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box selected" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-read-prob" value="2">
                             </div>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <label style="flex: 1; font-size: 0.85em; color: #555;">Read:</label>
-                                <input type="number" id="tut-read-prob" value="20" min="0" max="100" style="
-                                    width: 60px;
-                                    padding: 6px;
-                                    border: 1px solid #ddd;
-                                    border-radius: 4px;
-                                    text-align: center;
-                                    font-size: 0.9em;
-                                ">
-                                <span style="color: #999; font-size: 0.8em;">%</span>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Share News</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-share-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box selected" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-share-prob" value="0">
                             </div>
-                        </div>
-                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
-                            Tip: These values represent relative likelihood of each action.
-                        </p>
+                        </span>
+                    </div>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
@@ -655,6 +760,7 @@
                 populateFormOptions();
                 setupLLMToggle();
                 setupTopicsInput();
+                setupNumberScales();
                 showTutorial();
             })
             .catch(error => console.error('Error loading tutorial data:', error));
@@ -662,16 +768,16 @@
     
     // Populate form options from API data
     function populateFormOptions() {
-        // Education levels
-        const educationContainer = document.getElementById('tut-education-options');
-        educationContainer.innerHTML = tutorialData.education_levels.map(e => 
-            `<span class="tutorial-tag" data-id="${e.id}" onclick="toggleTag(this, 'education')">${e.name}</span>`
+        // Education levels - multi-select dropdown
+        const educationDropdown = document.getElementById('tut-education-dropdown');
+        educationDropdown.innerHTML = tutorialData.education_levels.map(e => 
+            `<div class="multi-select-option" data-id="${e.id}" data-name="${e.name}" onclick="toggleTutOption('education', '${e.name}', ${e.id})" style="padding: 8px 12px; cursor: pointer; font-size: 0.9em; transition: background 0.15s;">${e.name}</div>`
         ).join('');
         
-        // Political leanings
-        const politicalContainer = document.getElementById('tut-political-options');
-        politicalContainer.innerHTML = tutorialData.political_leanings.map(p => 
-            `<span class="tutorial-tag" data-id="${p.id}" onclick="toggleTag(this, 'political')">${p.name}</span>`
+        // Political leanings - multi-select dropdown
+        const politicalDropdown = document.getElementById('tut-political-dropdown');
+        politicalDropdown.innerHTML = tutorialData.political_leanings.map(p => 
+            `<div class="multi-select-option" data-id="${p.id}" data-name="${p.name}" onclick="toggleTutOption('political', '${p.name}', ${p.id})" style="padding: 8px 12px; cursor: pointer; font-size: 0.9em; transition: background 0.15s;">${p.name}</div>`
         ).join('');
         
         // Activity profiles
@@ -702,6 +808,117 @@
         
         // Update LLM section based on Ollama availability
         updateLLMAvailability();
+    }
+    
+    // Toggle multi-select dropdown visibility
+    window.toggleTutDropdown = function(type) {
+        const dropdown = document.getElementById(`tut-${type}-dropdown`);
+        const isActive = dropdown.style.display === 'block';
+        
+        // Close all dropdowns first
+        document.querySelectorAll('.multi-select-dropdown').forEach(d => d.style.display = 'none');
+        
+        // Toggle the clicked one
+        if (!isActive) {
+            dropdown.style.display = 'block';
+        }
+    };
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.multi-select-wrapper')) {
+            document.querySelectorAll('.multi-select-dropdown').forEach(d => d.style.display = 'none');
+        }
+    });
+    
+    // Toggle option selection in multi-select
+    window.toggleTutOption = function(type, name, id) {
+        let array = type === 'education' ? selectedEducation : selectedPolitical;
+        const option = document.querySelector(`#tut-${type}-dropdown .multi-select-option[data-id="${id}"]`);
+        
+        const existingIndex = array.findIndex(item => item.id === id);
+        if (existingIndex > -1) {
+            // Remove
+            array.splice(existingIndex, 1);
+            option.style.background = '';
+            option.style.color = '';
+            option.style.fontWeight = '';
+        } else {
+            // Add
+            array.push({ id: id, name: name });
+            option.style.background = '#e8f5e9';
+            option.style.color = '#22c55e';
+            option.style.fontWeight = '500';
+        }
+        
+        updateTutMultiSelectDisplay(type);
+    };
+    
+    // Update the display of selected items
+    function updateTutMultiSelectDisplay(type) {
+        const array = type === 'education' ? selectedEducation : selectedPolitical;
+        const display = document.getElementById(`tut-${type}-display`);
+        const wrapper = document.getElementById(`tut-${type}-display-wrapper`);
+        
+        if (array.length === 0) {
+            wrapper.innerHTML = `<span id="tut-${type}-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select ${type === 'education' ? 'education levels' : 'political leanings'}...</span>`;
+        } else {
+            wrapper.innerHTML = array.map(item => 
+                `<span class="multi-select-tag" style="background: #22c55e; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-flex; align-items: center; gap: 5px;">
+                    ${item.name}
+                    <span class="multi-select-tag-remove" onclick="event.stopPropagation(); toggleTutOption('${type}', '${item.name}', ${item.id})" style="cursor: pointer; font-weight: bold;">×</span>
+                </span>`
+            ).join('');
+        }
+    }
+    
+    // Setup number scale interactions
+    function setupNumberScales() {
+        const scales = ['tut-post-scale', 'tut-comment-scale', 'tut-read-scale', 'tut-share-scale'];
+        
+        scales.forEach(scaleId => {
+            const scale = document.getElementById(scaleId);
+            if (!scale) return;
+            
+            const boxes = scale.querySelectorAll('.number-box');
+            const hiddenInput = scale.parentElement.querySelector('input[type="hidden"]');
+            
+            boxes.forEach(box => {
+                box.addEventListener('click', function() {
+                    // Remove selected from all boxes in this scale
+                    boxes.forEach(b => {
+                        b.classList.remove('selected');
+                        b.style.backgroundColor = '';
+                        b.style.color = '';
+                        b.style.borderColor = '#ccc';
+                    });
+                    
+                    // Add selected to clicked box
+                    this.classList.add('selected');
+                    this.style.backgroundColor = '#C1E0E6';
+                    this.style.color = '#888';
+                    this.style.borderColor = '#888';
+                    
+                    // Update hidden input
+                    if (hiddenInput) {
+                        hiddenInput.value = this.dataset.value;
+                    }
+                });
+                
+                // Hover effects
+                box.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('selected')) {
+                        this.style.borderColor = '#888';
+                    }
+                });
+                
+                box.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('selected')) {
+                        this.style.borderColor = '#ccc';
+                    }
+                });
+            });
+        });
     }
     
     // Setup LLM toggle behavior
@@ -823,25 +1040,6 @@
     window.removeTopic = function(index) {
         topicsList.splice(index, 1);
         renderTopicTags();
-    };
-    
-    // Toggle tag selection
-    window.toggleTag = function(element, type) {
-        element.classList.toggle('selected');
-        const id = parseInt(element.dataset.id);
-        
-        let array;
-        if (type === 'education') array = selectedEducation;
-        else if (type === 'political') array = selectedPolitical;
-        
-        if (array) {
-            const index = array.indexOf(id);
-            if (index === -1) {
-                array.push(id);
-            } else {
-                array.splice(index, 1);
-            }
-        }
     };
     
     // Show the tutorial overlay
@@ -996,12 +1194,25 @@
         nextBtn.disabled = true;
         nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Creating...';
         
+        // Get the action relevance values (0-10 scale, convert to probability 0-1)
+        const postValue = parseInt(document.getElementById('tut-post-prob').value);
+        const commentValue = parseInt(document.getElementById('tut-comment-prob').value);
+        const readValue = parseInt(document.getElementById('tut-read-prob').value);
+        const shareValue = parseInt(document.getElementById('tut-share-prob').value);
+        
+        // Normalize to probabilities (sum should be 1 for meaningful distribution)
+        const total = postValue + commentValue + readValue + shareValue;
+        const postProb = total > 0 ? postValue / total : 0.25;
+        const commentProb = total > 0 ? commentValue / total : 0.25;
+        const readProb = total > 0 ? readValue / total : 0.25;
+        const shareProb = total > 0 ? shareValue / total : 0.25;
+        
         const data = {
-            // Population
+            // Population - extract just the IDs from the objects
             population_name: document.getElementById('tut-pop-name').value.trim(),
             population_size: parseInt(document.getElementById('tut-pop-size').value),
-            education_levels: selectedEducation,
-            political_leanings: selectedPolitical,
+            education_levels: selectedEducation.map(e => e.id),
+            political_leanings: selectedPolitical.map(p => p.id),
             activity_profile_id: parseInt(document.getElementById('tut-activity-profile').value),
             
             // Experiment
@@ -1012,10 +1223,10 @@
             // Client
             client_name: document.getElementById('tut-client-name').value.trim(),
             simulation_days: parseInt(document.getElementById('tut-sim-days').value),
-            post_probability: parseInt(document.getElementById('tut-post-prob').value) / 100,
-            share_probability: parseInt(document.getElementById('tut-share-prob').value) / 100,
-            comment_probability: parseInt(document.getElementById('tut-comment-prob').value) / 100,
-            read_probability: parseInt(document.getElementById('tut-read-prob').value) / 100,
+            post_probability: postProb,
+            share_probability: shareProb,
+            comment_probability: commentProb,
+            read_probability: readProb,
             content_recsys: document.getElementById('tut-content-recsys').value,
             follow_recsys: document.getElementById('tut-follow-recsys').value,
             llm_model: llmEnabled ? document.getElementById('tut-llm-model').value : '',
@@ -1130,7 +1341,17 @@
             createdClientId = null;
             llmEnabled = false;
             topicsList = [];
-            document.querySelectorAll('.tutorial-tag').forEach(el => el.classList.remove('selected'));
+            
+            // Reset multi-select displays
+            updateTutMultiSelectDisplay('education');
+            updateTutMultiSelectDisplay('political');
+            
+            // Reset multi-select dropdown options styling
+            document.querySelectorAll('.multi-select-option').forEach(el => {
+                el.style.background = '';
+                el.style.color = '';
+                el.style.fontWeight = '';
+            });
             
             // Reset form inputs
             document.getElementById('tut-pop-name').value = '';
@@ -1139,7 +1360,12 @@
             document.getElementById('tut-exp-name').value = '';
             document.getElementById('tut-client-name').value = '';
             document.getElementById('tut-sim-days').value = 7;
-            document.getElementById('tut-days-value').textContent = '7';
+            
+            // Reset number scales to default values
+            resetNumberScale('tut-post-scale', 3);
+            resetNumberScale('tut-comment-scale', 5);
+            resetNumberScale('tut-read-scale', 2);
+            resetNumberScale('tut-share-scale', 0);
             
             // Reset LLM toggle
             document.getElementById('tut-llm-toggle').checked = false;
@@ -1160,5 +1386,33 @@
             loadTutorialData();
         }
     };
+    
+    // Helper function to reset number scale to a specific value
+    function resetNumberScale(scaleId, value) {
+        const scale = document.getElementById(scaleId);
+        if (!scale) return;
+        
+        const boxes = scale.querySelectorAll('.number-box');
+        const hiddenInput = scale.parentElement.querySelector('input[type="hidden"]');
+        
+        boxes.forEach(box => {
+            const boxValue = parseInt(box.dataset.value);
+            if (boxValue === value) {
+                box.classList.add('selected');
+                box.style.backgroundColor = '#C1E0E6';
+                box.style.color = '#888';
+                box.style.borderColor = '#888';
+            } else {
+                box.classList.remove('selected');
+                box.style.backgroundColor = '';
+                box.style.color = '';
+                box.style.borderColor = '#ccc';
+            }
+        });
+        
+        if (hiddenInput) {
+            hiddenInput.value = value;
+        }
+    }
 })();
 </script>
