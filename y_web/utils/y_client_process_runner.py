@@ -7,6 +7,7 @@ It's designed to be called by start_client using subprocess.Popen.
 import argparse
 import math
 import random
+import re
 import sys
 import traceback
 from collections import defaultdict
@@ -128,7 +129,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
         else:
-            uid = exp.db_name.split(os.sep)[1]
+            # db_name format: "experiments/uid/database_server.db" or with backslashes
+            # Split on both / and \ to handle cross-platform path separators
+            parts = re.split(r"[/\\]", exp.db_name)
+            if len(parts) >= 2:
+                uid = parts[1]  # Extract UID from path: experiments/{uid}/...
+            else:
+                raise ValueError(f"Invalid db_name format: {exp.db_name}")
 
         data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
 

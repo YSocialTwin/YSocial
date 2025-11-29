@@ -671,10 +671,13 @@ def upload_experiment():
 
             admin_engine.dispose()
 
-        # Update config_server.json with new port, name, and database_uri
+        # Update config_server.json with new port, name, database_uri, and data_path
         experiment_config["name"] = name
         experiment_config["port"] = suggested_port
         experiment_config["database_uri"] = db_uri
+        # Add data_path so YServer knows where to write logs (e.g., _server.log)
+        exp_data_path = os.path.join(BASE_DIR, "y_web", "experiments", uid) + os.sep
+        experiment_config["data_path"] = exp_data_path
 
         with open(config_path, "w") as f:
             json.dump(experiment_config, f, indent=4)
@@ -3675,6 +3678,8 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     config["name"] = new_exp_name
     config["port"] = suggested_port
     config["database_uri"] = new_db_uri
+    # Add data_path so YServer knows where to write logs (e.g., _server.log)
+    config["data_path"] = new_folder + os.sep
 
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)
