@@ -54,16 +54,16 @@
             </style>
 
             <div class="misc-tabs">
-                <button class="misc-tab active" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
-                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
-                <button class="misc-tab" onclick="switchMiscTab('system-settings')">System Settings</button>
+                <button class="misc-tab active" onclick="switchMiscTab('system-settings')">System Settings</button>
                 {% if llm_backend['backend'] is not none %}
                 <button class="misc-tab" onclick="switchMiscTab('llm-management')">LLM Management</button>
                 {% endif %}
+                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
+                <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
             </div>
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
-            <div id="tab-demographics" class="misc-tab-content active">
+            <div id="tab-demographics" class="misc-tab-content">
                 <div class="misc-section-description">
                     <strong>Demographics & Attributes:</strong> Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.
                 </div>
@@ -1723,7 +1723,7 @@
             <!-- End Content & Behavior Tab -->
 
             <!-- System Settings Tab -->
-            <div id="tab-system-settings" class="misc-tab-content">
+            <div id="tab-system-settings" class="misc-tab-content active">
                 <style>
                     /* Toggle switch styles for System Settings */
                     .switch-small {
