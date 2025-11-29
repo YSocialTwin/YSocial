@@ -51,6 +51,7 @@ from y_web.models import (
     LogFileOffset,
     LogSyncSettings,
     Nationalities,
+    Ollama_Pull,
     Page,
     Page_Population,
     Population,
@@ -72,7 +73,7 @@ from y_web.utils import (
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.jupyter_utils import stop_process
-from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status, reload_current_user
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
@@ -2532,6 +2533,8 @@ def miscellanea():
     Returns:
         Rendered miscellaneous settings template
     """
+    from y_web.utils.external_processes import get_llm_models
+
     # Check if user is admin (researchers should not access this page)
     user = Admin_users.query.filter_by(username=current_user.username).first()
     if user.role != "admin":
@@ -2557,10 +2560,28 @@ def miscellanea():
         # Status returned unexpected format
         pass
 
+    # Get LLM backend status for the LLM Management tab
+    llm_backend = llm_backend_status()
+
+    # Get installed LLM models
+    models = []
+    try:
+        models = get_llm_models()
+    except Exception:
+        pass
+
+    # Get active Ollama pulls
+    ollama_pulls = Ollama_Pull.query.all()
+    ollama_pulls = [(pull.model_name, float(pull.status)) for pull in ollama_pulls]
+
     return render_template(
         "admin/miscellanea.html",
         telemetry_enabled=telemetry_enabled,
         watchdog_interval=watchdog_interval,
+        llm_backend=llm_backend,
+        models=models,
+        active_pulls=ollama_pulls,
+        len=len,
     )
 
 
