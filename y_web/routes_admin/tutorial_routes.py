@@ -209,7 +209,9 @@ def create_tutorial_experiment():
         population_size = int(data.get("population_size", 50))
         education_levels = data.get("education_levels", [])
         political_leanings = data.get("political_leanings", [])
-        activity_profiles_data = data.get("activity_profiles_data", [])  # List of {id, name, percentage}
+        activity_profiles_data = data.get(
+            "activity_profiles_data", []
+        )  # List of {id, name, percentage}
 
         # Extract experiment data
         experiment_name = data.get("experiment_name", "").strip()
