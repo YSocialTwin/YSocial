@@ -131,6 +131,16 @@ def extend_simulation(id_client):
     client.days = int(client.days) + int(days)
     db.session.commit()
 
+    # Check if the experiment was completed, and reset to stopped if so
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if exp and exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
+        flash(
+            f"Experiment '{exp.exp_name}' moved from completed to stopped (client duration extended).",
+            "info",
+        )
+
     return redirect(request.referrer)
 
 
@@ -338,6 +348,11 @@ def create_client():
     # Validate numeric fields
     try:
         days = int(days)
+        # days = -1 means infinite/run-until-stopped
+        if days != -1 and days < 1:
+            errors.append(
+                "Days must be at least 1, or use -1 for infinite duration (run until stopped)"
+            )
     except (ValueError, TypeError):
         errors.append("Days must be a valid integer")
     try:
@@ -485,6 +500,11 @@ def create_client():
     db.session.add(client)
     db.session.commit()
 
+    # If experiment was completed, reset status to stopped since a new client was added
+    if exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
+
     # Get LLM URL from environment (set by y_social.py)
     import os
 
@@ -548,7 +568,6 @@ def create_client():
     config = {
         "servers": {
             "llm": llm,
-            #    "llm_url": llm_url,
             "llm_api_key": llm_api_key,
             "llm_max_tokens": int(llm_max_tokens),
             "llm_temperature": float(llm_temperature),
@@ -763,6 +782,13 @@ def create_client():
 
         ints = [interests, len(interests)]
 
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
+
         res["agents"].append(
             {
                 "name": a.name,
@@ -790,10 +816,7 @@ def create_client():
                 "prompts": custom_prompt if custom_prompt else None,
                 "daily_activity_level": a.daily_activity_level,
                 "profession": a.profession,
-                "activity_profile": db.session.query(ActivityProfile)
-                .filter_by(id=a.activity_profile)
-                .first()
-                .name,
+                "activity_profile": activity_profile_name,
             }
         )
 
@@ -811,6 +834,13 @@ def create_client():
         )
         page_topics = [t[1].name for t in page_topics]
         page_topics = list(set(page_topics) & set(topics))
+
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=p.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
 
         res["agents"].append(
             {
@@ -837,10 +867,7 @@ def create_client():
                 "toxicity": "none",
                 "is_page": 1,
                 "feed_url": p.feed,
-                "activity_profile": db.session.query(ActivityProfile)
-                .filter_by(id=p.activity_profile)
-                .first()
-                .name,
+                "activity_profile": activity_profile_name,
             }
         )
 
@@ -979,7 +1006,7 @@ def create_client():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         data={
             "action": "create_client",
@@ -1004,7 +1031,7 @@ def create_client():
                     "vote": vote,
                     "share_link": share_link,
                 },
-                "llm": llm,
+                "llm": user_type,
                 "probability_of_secondary_follow": probability_of_secondary_follow,
                 "crecsys": crecsys,
                 "frecsys": frecsys,
@@ -1156,12 +1183,34 @@ def client_details(uid):
 
 @clientsr.route("/admin/progress/<int:client_id>")
 def get_progress(client_id):
-    """Return the current progress as JSON."""
+    """Return the current progress as JSON.
+
+    For finite clients: returns progress percentage (0-100)
+    For infinite clients (expected_duration_rounds = -1): returns elapsed time info
+    """
     # get client_execution
     client_execution = Client_Execution.query.filter_by(client_id=client_id).first()
 
     if client_execution is None:
-        return json.dumps({"progress": 0})
+        return json.dumps({"progress": 0, "infinite": False})
+
+    # Check if this is an infinite client (expected_duration_rounds = -1)
+    if client_execution.expected_duration_rounds == -1:
+        # Return elapsed time info for infinite clients
+        elapsed_hours = client_execution.elapsed_time
+        elapsed_days = elapsed_hours // 24
+        remaining_hours = elapsed_hours % 24
+        return json.dumps(
+            {
+                "progress": -1,
+                "infinite": True,
+                "elapsed_time": client_execution.elapsed_time,
+                "elapsed_days": elapsed_days,
+                "elapsed_hours": remaining_hours,
+                "last_active_day": client_execution.last_active_day,
+                "last_active_hour": client_execution.last_active_hour,
+            }
+        )
 
     # Calculate progress and cap at 100%
     if client_execution.expected_duration_rounds > 0:
@@ -1175,7 +1224,7 @@ def get_progress(client_id):
     else:
         progress = 0
 
-    return json.dumps({"progress": progress})
+    return json.dumps({"progress": progress, "infinite": False})
 
 
 @clientsr.route("/admin/set_network/<int:uid>", methods=["POST"])

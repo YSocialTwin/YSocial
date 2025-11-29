@@ -1,5 +1,37 @@
 {% include "admin/head.html" %}
 
+<style>
+/* Responsive styles for plot section headings */
+.plot-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5em;
+    flex-wrap: wrap;
+    gap: 0.75em;
+}
+.plot-section-header h3 {
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+.plot-section-controls {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+    flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+    .plot-section-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .plot-section-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -12,13 +44,16 @@
                 <div class="column is-12">
                     <div class="dashboard-box">
                         <a href="/admin/experiments">Experiments</a> > Simulation: {{ experiment.exp_name }}
+                        {% if has_infinite_client %}
+                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: 600; margin-left: 10px;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+                        {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="columns" style="display: flex; align-items: stretch;">
+            <div class="columns is-multiline" style="display: flex; align-items: stretch;">
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
 
                     {% for message in get_flashed_messages() %}
                     <div class="alert alert-warning">
@@ -37,7 +72,12 @@
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
-                                    <span class="right">{{ experiment.exp_name }}</span>
+                                    <span class="right">
+                                        {{ experiment.exp_name }}
+                                        {% if has_infinite_client %}
+                                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Platform Type</span>
@@ -68,8 +108,7 @@
                                 </div>
                             <div class="box-line">
                                     <span class="left">Delete Experiment</span>
-                                    <span class="right"> <a class="link-tooltip" href="javascript:void(0);" 
-                                                            onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiment.idexp }}'; }" 
+                                    <span class="right"> <a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
                                                             title="Delete"><i
                                      class="mdi mdi-delete" style="font-size: 24px;"></i></a></span>
                                 </div>
@@ -77,37 +116,14 @@
                         </div>
                     </div>
 
-                    {% if len(users) > 0 %}
-                    <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Registered Users</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Users with access to participate in this experiment.
-                        </p>
 
-                        <div class="box-content">
-                            <div class="box-lines">
-                                <div class="box-line">
-
-                                    <span class="left">
-                                        {% for user, user_exp in users %}
-                                            <a href="/admin/user_details/{{ user.id }}"
-                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ user.username }}</a>
-                                        {% endfor %}
-                                    </span>
-
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    {% endif %}
 
                 </div>
 
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
                     <!--Box-->
 
                     <div class="dashboard-box">
@@ -264,8 +280,8 @@
                                             </a>
                                             {% endif %}
                                             {% if client.status == 0 %}
-                                            <a class="link-tooltip" href="javascript:void(0);" 
-                                               onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { showLoading('Deleting client...'); setTimeout(() => { window.location.href='/admin/delete_client/{{ client.id }}'; }, 100); }" 
+                                            <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" 
+                                               onclick="showLoading('Deleting client...');" 
                                                title="Delete Client">
                                                 <i class="mdi mdi-delete" style="font-size: 20px;"></i>
                                             </a>
@@ -287,23 +303,46 @@
                                                 method: 'GET',
                                                 dataType: 'json',
                                                 success: function (data) {
-                                                    // Cap percentage at 100 to prevent overflow
-                                                    const percentage = Math.min(100, Math.max(0, data.progress || 0));
                                                     const progressBar = $('#progress-bar-{{client.id}}');
-                                                    progressBar.css('width', percentage + '%');
-                                                    progressBar.find('span').text(percentage + '%');
                                                     
-                                                    // Update gradient based on progress
-                                                    if (percentage >= 75) {
-                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                                                        progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                                                    } else if (percentage >= 50) {
-                                                        progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                                                        progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                                                    }
-                                                    
-                                                    if (percentage < 100) {
-                                                        setTimeout(pollProgress, 500);
+                                                    // Check if this is an infinite client
+                                                    if (data.infinite) {
+                                                        // For infinite clients, show green bar with elapsed time
+                                                        progressBar.css('width', '100%');
+                                                        progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
+                                                        progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+                                                        
+                                                        // Format elapsed time display
+                                                        const days = data.elapsed_days || 0;
+                                                        const hours = data.elapsed_hours || 0;
+                                                        let timeText = '';
+                                                        if (days > 0) {
+                                                            timeText = days + 'd ' + hours + 'h';
+                                                        } else {
+                                                            timeText = hours + 'h elapsed';
+                                                        }
+                                                        progressBar.find('span').text('∞ ' + timeText);
+                                                        
+                                                        // Keep polling for infinite clients
+                                                        setTimeout(pollProgress, 1000);
+                                                    } else {
+                                                        // Cap percentage at 100 to prevent overflow
+                                                        const percentage = Math.min(100, Math.max(0, data.progress || 0));
+                                                        progressBar.css('width', percentage + '%');
+                                                        progressBar.find('span').text(percentage + '%');
+                                                        
+                                                        // Update gradient based on progress
+                                                        if (percentage >= 75) {
+                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+                                                            progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+                                                        } else if (percentage >= 50) {
+                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+                                                            progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+                                                        }
+                                                        
+                                                        if (percentage < 100) {
+                                                            setTimeout(pollProgress, 500);
+                                                        }
                                                     }
                                                 }
                                             });
@@ -325,7 +364,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex; flex-direction: column;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
                     <!--Box-->
                     <div class="dashboard-box is-compact" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
@@ -338,8 +377,9 @@
                                 <i class="mdi mdi-stop" style="font-size: 16px;"></i> Stop the experiment server<br>
                                 <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
                                 <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
-                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis
-                                <br>
+                                {% if notebooks %}
+                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis<br>
+                                {% endif %}
                             </p>
                             <hr>
                             <p>
@@ -360,11 +400,21 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
-                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Trends Analysis</h3>
-                            <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
+                            <div class="plot-section-controls">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshTrends" checked style="cursor: pointer;">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalTrends" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
+                                <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Trend analysis of server compute time and simulation time progression.
@@ -442,6 +492,7 @@
                                 client_daily_compute: {},
                                 client_hourly_compute: {}
                             };
+                            let trendsAutoRefreshInterval = null;
 
                             // Function to detect and remove outliers from simulation time data
                             function removeOutliers(data) {
@@ -773,6 +824,45 @@
                             // Load trends data on page load
                             loadTrendsData();
 
+                            // Auto-refresh functionality
+                            function startTrendsAutoRefresh() {
+                                if (trendsAutoRefreshInterval) {
+                                    clearInterval(trendsAutoRefreshInterval);
+                                }
+                                const intervalSeconds = parseInt(document.getElementById('refreshIntervalTrends').value) || 30;
+                                const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
+                                trendsAutoRefreshInterval = setInterval(loadTrendsData, intervalMs);
+                            }
+
+                            function stopTrendsAutoRefresh() {
+                                if (trendsAutoRefreshInterval) {
+                                    clearInterval(trendsAutoRefreshInterval);
+                                    trendsAutoRefreshInterval = null;
+                                }
+                            }
+
+                            // Auto-refresh checkbox handler
+                            document.getElementById('autoRefreshTrends').addEventListener('change', function() {
+                                if (this.checked) {
+                                    startTrendsAutoRefresh();
+                                } else {
+                                    stopTrendsAutoRefresh();
+                                }
+                            });
+
+                            // Refresh interval input handler
+                            document.getElementById('refreshIntervalTrends').addEventListener('change', function() {
+                                // Restart auto-refresh with new interval if currently enabled
+                                if (document.getElementById('autoRefreshTrends').checked) {
+                                    startTrendsAutoRefresh();
+                                }
+                            });
+
+                            // Start auto-refresh if checkbox is checked
+                            if (document.getElementById('autoRefreshTrends').checked) {
+                                startTrendsAutoRefresh();
+                            }
+
                             // Refresh button click handler
                             document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
 
@@ -789,11 +879,21 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
-                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Server Logs Analysis</h3>
-                            <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
+                            <div class="plot-section-controls">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshLogs" checked style="cursor: pointer;">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalLogs" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
+                                <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Real-time analysis of server API calls from _server.log file.
@@ -895,6 +995,7 @@
                     callVolume: {},
                     meanDuration: {}
                 };
+                let logsAutoRefreshInterval = null;
 
                 // Function to update charts based on selected paths
                 function updateCharts() {
@@ -1119,6 +1220,45 @@
                 // Load server logs data on page load
                 loadServerLogsData();
 
+                // Auto-refresh functionality
+                function startLogsAutoRefresh() {
+                    if (logsAutoRefreshInterval) {
+                        clearInterval(logsAutoRefreshInterval);
+                    }
+                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalLogs').value) || 30;
+                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
+                    logsAutoRefreshInterval = setInterval(loadServerLogsData, intervalMs);
+                }
+
+                function stopLogsAutoRefresh() {
+                    if (logsAutoRefreshInterval) {
+                        clearInterval(logsAutoRefreshInterval);
+                        logsAutoRefreshInterval = null;
+                    }
+                }
+
+                // Auto-refresh checkbox handler
+                document.getElementById('autoRefreshLogs').addEventListener('change', function() {
+                    if (this.checked) {
+                        startLogsAutoRefresh();
+                    } else {
+                        stopLogsAutoRefresh();
+                    }
+                });
+
+                // Refresh interval input handler
+                document.getElementById('refreshIntervalLogs').addEventListener('change', function() {
+                    // Restart auto-refresh with new interval if currently enabled
+                    if (document.getElementById('autoRefreshLogs').checked) {
+                        startLogsAutoRefresh();
+                    }
+                });
+
+                // Start auto-refresh if checkbox is checked
+                if (document.getElementById('autoRefreshLogs').checked) {
+                    startLogsAutoRefresh();
+                }
+
                 // Refresh button click handler
                 document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
             </script>
@@ -1128,14 +1268,24 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5em;">
-                            <h3 class="title is-5 is-thin" style="margin-bottom: 0;">Client Logs Analysis</h3>
-                            <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
-                                <i class="mdi mdi-refresh"></i> Refresh Data
-                            </button>
+                        <div class="plot-section-header">
+                            <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
+                            <div class="plot-section-controls">
+                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
+                                    <input type="checkbox" id="autoRefreshClientLogs" checked style="cursor: pointer;">
+                                    <span>Auto-refresh</span>
+                                </label>
+                                <input type="number" id="refreshIntervalClientLogs" min="5" max="300" value="30" 
+                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+                                       title="Refresh interval in seconds (5-300)">
+                                <span style="font-size: 0.85em;">sec</span>
+                                <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+                                    <i class="mdi mdi-refresh"></i> Refresh Data
+                                </button>
+                            </div>
                         </div>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Analysis of client method execution from {client_name}_client.log files.
+                            Analysis of client(s) execution.
                         </p>
 
                         <!-- Client selector -->
@@ -1249,6 +1399,7 @@
                     callVolume: {},
                     meanExecutionTime: {}
                 };
+                let clientLogsAutoRefreshInterval = null;
 
                 // Function to update client charts based on selected methods
                 function updateClientCharts() {
@@ -1507,6 +1658,50 @@
                 // Initialize button state on page load
                 updateClientRefreshButtonState();
 
+                // Auto-refresh functionality for client logs
+                function startClientLogsAutoRefresh() {
+                    if (clientLogsAutoRefreshInterval) {
+                        clearInterval(clientLogsAutoRefreshInterval);
+                    }
+                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalClientLogs').value) || 30;
+                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
+                    clientLogsAutoRefreshInterval = setInterval(function() {
+                        const clientId = document.getElementById('clientSelector').value;
+                        if (clientId) {
+                            loadClientLogs(clientId);
+                        }
+                    }, intervalMs);
+                }
+
+                function stopClientLogsAutoRefresh() {
+                    if (clientLogsAutoRefreshInterval) {
+                        clearInterval(clientLogsAutoRefreshInterval);
+                        clientLogsAutoRefreshInterval = null;
+                    }
+                }
+
+                // Auto-refresh checkbox handler
+                document.getElementById('autoRefreshClientLogs').addEventListener('change', function() {
+                    if (this.checked) {
+                        startClientLogsAutoRefresh();
+                    } else {
+                        stopClientLogsAutoRefresh();
+                    }
+                });
+
+                // Refresh interval input handler
+                document.getElementById('refreshIntervalClientLogs').addEventListener('change', function() {
+                    // Restart auto-refresh with new interval if currently enabled
+                    if (document.getElementById('autoRefreshClientLogs').checked) {
+                        startClientLogsAutoRefresh();
+                    }
+                });
+
+                // Start auto-refresh if checkbox is checked and client is selected
+                if (document.getElementById('autoRefreshClientLogs').checked) {
+                    startClientLogsAutoRefresh();
+                }
+
                 // Select All button handler for methods
                 document.getElementById('selectAllMethods').addEventListener('click', function() {
                     document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
@@ -1524,6 +1719,127 @@
                 });
             </script>
             {% endif %}
+
+            <!-- Additional Row for Registered Users and Error Reporting -->
+            <div class="columns is-multiline">
+                {% if len(users) > 0 %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
+                    <div class="dashboard-box" style="height: 100%;">
+                        <h3 class="title is-5 is-thin">Registered Users</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Users with access to participate in this experiment.
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">
+                                        {% for reg_user, user_exp in users %}
+                                            <a href="/admin/user_details/{{ reg_user.id }}"
+                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ reg_user.username }}</a>
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if telemetry_enabled %}
+                <div class="column is-12-mobile is-6-tablet is-6-desktop">
+                    <div class="dashboard-box" style="height: 100%;">
+                        <h3 class="title is-5 is-thin">Something went wrong?</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Help us improve YSocial: submit the experiment log!
+                        </p>
+
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
+                                    This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
+                                </p>
+                                <div class="field" style="margin-bottom: 1em;">
+                                    <label class="label" style="font-size: 0.9em;">Describe the problem (optional):</label>
+                                    <div class="control">
+                                        <textarea 
+                                            id="problem-description-{{ experiment.idexp }}"
+                                            class="textarea" 
+                                            placeholder="What issue did you encounter? What were you trying to do when the error occurred?"
+                                            rows="3"
+                                            style="font-size: 0.85em;"></textarea>
+                                    </div>
+                                    <p class="help" style="font-size: 0.8em;">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
+                                </div>
+                                <button 
+                                    id="submit-logs-btn-{{ experiment.idexp }}"
+                                    class="button is-info is-small" 
+                                    onclick="submitExperimentLogs({{ experiment.idexp }})"
+                                    style="width: 100%;">
+                                    <span class="icon"><i class="mdi mdi-upload"></i></span>
+                                    <span>Submit Logs</span>
+                                </button>
+                                <div id="submit-logs-message-{{ experiment.idexp }}" style="margin-top: 0.5em; font-size: 0.85em; display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function submitExperimentLogs(expId) {
+                            const btn = document.getElementById(`submit-logs-btn-${expId}`);
+                            const messageDiv = document.getElementById(`submit-logs-message-${expId}`);
+                            const descriptionTextarea = document.getElementById(`problem-description-${expId}`);
+                            
+                            // Disable button and show loading
+                            btn.disabled = true;
+                            btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
+                            messageDiv.style.display = 'none';
+                            
+                            // Get the problem description
+                            const problemDescription = descriptionTextarea.value.trim();
+                            
+                            // Submit logs with description
+                            fetch(`/admin/submit_experiment_logs/${expId}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    problem_description: problemDescription
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                // Show message
+                                messageDiv.style.display = 'block';
+                                if (data.success) {
+                                    messageDiv.style.color = '#28a745';
+                                    messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
+                                    // Clear the textarea on success
+                                    descriptionTextarea.value = '';
+                                } else {
+                                    messageDiv.style.color = '#dc3545';
+                                    messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
+                                }
+                                
+                                // Re-enable button
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+                            })
+                            .catch(error => {
+                                messageDiv.style.display = 'block';
+                                messageDiv.style.color = '#dc3545';
+                                messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
+                                
+                                // Re-enable button
+                                btn.disabled = false;
+                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
+                            });
+                        }
+                    </script>
+                </div>
+                {% endif %}
+            </div>
 
         </div>
     </div>

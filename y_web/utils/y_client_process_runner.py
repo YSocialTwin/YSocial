@@ -5,6 +5,7 @@ This script is invoked as a subprocess to run client simulations.
 It's designed to be called by start_client using subprocess.Popen.
 """
 import argparse
+import math
 import random
 import sys
 import traceback
@@ -16,6 +17,10 @@ from y_web.models import (
     ActivityProfile,
     PopulationActivityProfile,
 )
+
+# Number of days to run an infinite client per iteration before checking for termination
+# Infinite clients run for this many days, then loop back to continue running
+INFINITE_CLIENT_ITERATION_DAYS = 365
 
 
 def main():
@@ -45,9 +50,6 @@ def main():
     )
 
     args = parser.parse_args()
-
-    # Import the start_client_process function
-    # from y_web.utils.external_processes import start_client_process
 
     # Create minimal objects with just the IDs needed by start_client_process
     # The function will re-fetch the full objects from the database
@@ -125,40 +127,110 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         if "experiments_" in exp.db_name:
             uid = exp.db_name.removeprefix("experiments_")
-            filename = os.path.join(
-                BASE_DIR, "experiments", uid, f"{population.name.replace(' ', '')}.json"
-            )
         else:
             uid = exp.db_name.split(os.sep)[1]
-            filename = os.path.join(
-                BASE_DIR,
-                exp.db_name.split("database_server.db")[0],
-                f"{population.name.replace(' ', '')}.json",
-            )
 
         data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
-        config_file = json.load(
-            open(
-                os.path.join(
-                    data_base_path, f"client_{cli.name}-{population.name}.json"
-                )
-            )
+
+        # Try to find the population file
+        # The expected filename is {population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_pop_file = os.path.join(
+            data_base_path, f"{population.name.replace(' ', '')}.json"
         )
 
-        print("Starting client process...")
+        if os.path.exists(expected_pop_file):
+            filename = expected_pop_file
+        else:
+            # Fallback: search for a matching population file
+            # Population files don't start with "client_" and end with ".json"
+            filename = None
+            pop_name_base = population.name.replace(" ", "")
+            # Remove any _N suffix to find the base name
+            import re
 
+            base_match = re.match(r"^(.+?)(?:_\d+)?$", pop_name_base)
+            if base_match:
+                base_name = base_match.group(1)
+                for f in os.listdir(data_base_path):
+                    if (
+                        f.endswith(".json")
+                        and not f.startswith("client_")
+                        and not f.startswith("config_")
+                        and not f.startswith("prompts")
+                        and f.startswith(base_name)
+                    ):
+                        filename = os.path.join(data_base_path, f)
+                        print(
+                            f"Warning: Expected population file not found. Using fallback: {f}",
+                            file=sys.stderr,
+                        )
+                        break
+
+            if filename is None:
+                # Use the expected path (will fail when saving if not exists)
+                filename = expected_pop_file
+
+        # Try to find the client config file
+        # The expected filename is client_{cli.name}-{population.name}.json
+        # However, due to population renaming during upload, the file may have
+        # a different name (e.g., without the _2 suffix if uploaded before fix)
+        expected_client_file = os.path.join(
+            data_base_path, f"client_{cli.name}-{population.name}.json"
+        )
+
+        print(
+            f"Looking for client config file at: {expected_client_file}",
+            file=sys.stderr,
+        )
+
+        if os.path.exists(expected_client_file):
+            client_config_path = expected_client_file
+        else:
+            # Fallback: search for a matching client file by client name
+            # This handles cases where population was renamed but files weren't
+            client_config_path = None
+            for f in os.listdir(data_base_path):
+                if f.startswith(f"client_{cli.name}-") and f.endswith(".json"):
+                    client_config_path = os.path.join(data_base_path, f)
+                    print(
+                        f"Warning: Expected file not found. Using fallback: {f}",
+                        file=sys.stderr,
+                    )
+                    break
+
+            if client_config_path is None:
+                raise FileNotFoundError(
+                    f"No client config file found for client '{cli.name}' in {data_base_path}, file=sys.stderr"
+                )
+
+        config_file = json.load(open(client_config_path))
+
+        print("Starting client process...", file=sys.stderr)
+
+        print(f"Looking up Client_Execution for client_id={cli.id}", file=sys.stderr)
         ce = session.query(Client_Execution).filter_by(client_id=cli.id).first()
-        print(f"Client {cli.name} execution record: {ce}")
+        print(
+            f"Client {cli.name} (id={cli.id}) execution record: {ce}", file=sys.stderr
+        )
+        if ce:
+            print(
+                f"  Execution record details: elapsed_time={ce.elapsed_time}, expected_duration={ce.expected_duration_rounds}",
+                file=sys.stderr,
+            )
 
         if ce:
             first_run = False
         else:
             print(f"Client {cli.name} first execution.")
             first_run = True
+            # For infinite clients (days = -1), set expected_duration_rounds to -1
+            expected_rounds = -1 if cli.days == -1 else cli.days * 24
             ce = Client_Execution(
                 client_id=cli.id,
                 elapsed_time=0,
-                expected_duration_rounds=cli.days * 24,
+                expected_duration_rounds=expected_rounds,
                 last_active_hour=-1,
                 last_active_day=-1,
             )
@@ -166,6 +238,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             session.commit()
 
         log_file = f"{data_base_path}{cli.name}_client.log"
+
+        print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
+        print(f"Data base path: {data_base_path}", file=sys.stderr)
+
+        # Check if this is an infinite client
+        is_infinite = cli.days == -1 or ce.expected_duration_rounds == -1
+
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
             cl = YClientWeb(
@@ -176,6 +255,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            print(f"First run (with network)", file=sys.stderr)
         else:
             cl = YClientWeb(
                 config_file,
@@ -184,19 +264,34 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 log_file=log_file,
                 llm=exp.llm_agents_enabled,
             )
+            if first_run:
+                print(f"First run (without network)", file=sys.stderr)
+            else:
+                print(f"Resuming run", file=sys.stderr)
 
-        if resume:
+        if resume and not is_infinite:
             remaining_rounds = ce.expected_duration_rounds - ce.elapsed_time
             # If we've already reached or exceeded expected duration, don't run
             if remaining_rounds <= 0:
                 print(
-                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                    f"Client already completed (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                    file=sys.stderr,
                 )
                 return
-            cl.days = int(remaining_rounds / 24)
+            # Use math.ceil to ensure at least 1 day is processed when there are
+            # remaining rounds. Using int() would result in 0 days when remaining
+            # rounds < 24, causing the simulation to skip the final hours.
+            cl.days = max(1, math.ceil(remaining_rounds / 24))
+        elif is_infinite:
+            # For infinite clients, run for a longer period per iteration
+            # The client will continue running until manually stopped
+            print(f"Infinite client - running until manually stopped", file=sys.stderr)
+            cl.days = INFINITE_CLIENT_ITERATION_DAYS
 
         cl.read_agents()
         cl.add_feeds()
+
+        print(f"Loaded {len(cl.agents.agents)} agents.", file=sys.stderr)
 
         if first_run and cli.network_type:
             cl.add_network()
@@ -204,7 +299,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if not os.path.exists(filename):
             cl.save_agents(filename)
 
-        run_simulation(cl, cli.id, filename, exp, population)
+        run_simulation(cl, cli.id, filename, exp, population, db_type)
 
     finally:
         session.close()
@@ -255,18 +350,18 @@ def sample_agents(agents, expected_active_users):
     return sagents
 
 
-def run_simulation(cl, cli_id, agent_file, exp, population):
+def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     """
     Run the simulation
     """
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 
-    from y_web import create_app, db  # only to reuse URI config
-    from y_web.models import Client, Client_Execution, Exps, Population
+    from y_web import create_app  # only to reuse URI config
+    from y_web.models import Client_Execution
 
     # Create app only to get DB URI, but don't push its context
-    app2 = create_app("sqlite")
+    app2 = create_app(db_type)
     db_uri = app2.config["SQLALCHEMY_DATABASE_URI"]
 
     # Build an independent SQLAlchemy engine/session
@@ -321,14 +416,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
             try:
                 sagents = sample_agents(hour_to_users[h], expected_active_users)
             except Exception as e:
-                # case of no active agents at this hour
+                print(f"Error sampling agents: {e}", file=sys.stderr)
                 sagents = []
 
             # shuffle agents
             random.shuffle(sagents)
 
-            ################# PARALLELIZED SECTION #################
-            # def agent_task(g, tid):
             for g in sagents:
                 acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
 
@@ -339,7 +432,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 if g.is_page == 1:
                     rounds = 0
                 else:
-                    rounds = random.randint(1, int(g.round_actions))
+                    lower = max(int(g.round_actions) - 2, 1)
+                    rounds = random.randint(lower, int(g.round_actions))
+                    # Round_actions max is set for each agent by sampling from a user defined distribution.
+                    # Execute at least "lower" actions per user (to guarantee the activity level distribution).
 
                 for _ in range(rounds):
                     # sample two elements from a list with replacement
@@ -367,11 +463,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                         print(traceback.format_exc())
                         pass
 
-            # Run agent tasks in parallel
-            # with concurrent.futures.ThreadPoolExecutor() as executor:
-            #    executor.map(agent_task, sagents)
-            ################# END OF PARALLELIZATION #################
-
             # increment slot
             cl.sim_clock.increment_slot()
 
@@ -384,11 +475,87 @@ def run_simulation(cl, cli_id, agent_file, exp, population):
                 session.add(ce)  # Explicitly mark as modified for PostgreSQL
                 session.commit()
 
-                # Check if we've reached 100% completion
-                if ce.elapsed_time >= ce.expected_duration_rounds:
+                # Check if we've reached 100% completion (skip for infinite clients)
+                # Infinite clients have expected_duration_rounds = -1
+                if (
+                    ce.expected_duration_rounds > 0
+                    and ce.elapsed_time >= ce.expected_duration_rounds
+                ):
                     print(
-                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})"
+                        f"Client {cli_id} reached 100% completion (elapsed: {ce.elapsed_time}, expected: {ce.expected_duration_rounds})",
+                        file=sys.stderr,
                     )
+
+                    # Check if all clients in this experiment have completed
+                    # Import Client model to check other clients
+                    from y_web.models import Client, Exps
+
+                    # Get current client to find experiment ID
+                    client = session.query(Client).filter_by(id=cli_id).first()
+                    if client:
+                        # Use a single JOIN query to get all client execution records
+                        # for this experiment. Exclude infinite clients (expected_duration_rounds = -1)
+                        incomplete_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(
+                                Client_Execution.expected_duration_rounds
+                                > 0,  # Exclude infinite clients
+                                Client_Execution.elapsed_time
+                                < Client_Execution.expected_duration_rounds,
+                            )
+                            .count()
+                        )
+
+                        # Also check for clients without execution records
+                        clients_without_exec = (
+                            session.query(Client)
+                            .outerjoin(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.id == None)
+                            .count()
+                        )
+
+                        # Check if there are any infinite clients still running
+                        infinite_clients = (
+                            session.query(Client)
+                            .join(
+                                Client_Execution,
+                                Client.id == Client_Execution.client_id,
+                            )
+                            .filter(Client.id_exp == client.id_exp)
+                            .filter(Client_Execution.expected_duration_rounds == -1)
+                            .count()
+                        )
+
+                        all_completed = (
+                            incomplete_clients == 0
+                            and clients_without_exec == 0
+                            and infinite_clients == 0
+                        )
+
+                        # If all clients are completed (no infinite clients), update experiment status to "completed"
+                        if all_completed:
+                            exp = (
+                                session.query(Exps)
+                                .filter_by(idexp=client.id_exp)
+                                .first()
+                            )
+                            if exp:
+                                exp.exp_status = "completed"
+                                session.commit()
+                                print(
+                                    f"Experiment {client.id_exp} marked as completed",
+                                    file=sys.stderr,
+                                )
+
                     # Clean up and exit
                     session.close()
                     engine.dispose()

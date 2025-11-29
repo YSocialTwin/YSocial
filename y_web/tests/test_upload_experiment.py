@@ -178,6 +178,80 @@ def test_zip_file_structure():
         assert extracted_config["port"] == 8080
 
 
+def test_nested_zip_file_extraction():
+    """Test extracting a zip file with nested directory structure.
+
+    This tests the fix for uploading zip files where experiment files
+    are inside a subdirectory rather than at the root of the archive.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Create a minimal experiment structure
+        config = {
+            "name": "Nested Experiment",
+            "host": "127.0.0.1",
+            "port": 8080,
+            "platform_type": "microblogging",
+            "database_uri": "test.db",
+        }
+
+        # Create zip file with files inside a subdirectory
+        zip_path = os.path.join(tmpdir, "experiment.zip")
+        with zipfile.ZipFile(zip_path, "w") as zf:
+            # Create files inside a "my_experiment" subdirectory
+            zf.writestr(
+                "my_experiment/config_server.json", json.dumps(config, indent=4)
+            )
+            zf.writestr("my_experiment/prompts.json", json.dumps({}, indent=4))
+            zf.writestr(
+                "my_experiment/client_test.json",
+                json.dumps({"servers": {"api": "http://127.0.0.1:8080/"}}, indent=4),
+            )
+
+        # Extract to a directory
+        extract_dir = os.path.join(tmpdir, "extracted")
+        os.makedirs(extract_dir)
+        shutil.unpack_archive(zip_path, extract_dir)
+
+        # Verify files are in subdirectory after extraction
+        assert not os.path.exists(os.path.join(extract_dir, "config_server.json"))
+        assert os.path.exists(
+            os.path.join(extract_dir, "my_experiment", "config_server.json")
+        )
+
+        # Now apply the fix logic: move files from subdirectory to parent
+        expected_config = os.path.join(extract_dir, "config_server.json")
+        if not os.path.exists(expected_config):
+            for item in os.listdir(extract_dir):
+                subdir = os.path.join(extract_dir, item)
+                if os.path.isdir(subdir):
+                    nested_config = os.path.join(subdir, "config_server.json")
+                    if os.path.exists(nested_config):
+                        # Found config_server.json in a subdirectory - move all files up
+                        for nested_item in os.listdir(subdir):
+                            src = os.path.join(subdir, nested_item)
+                            dst = os.path.join(extract_dir, nested_item)
+                            # Skip if destination already exists to avoid conflicts
+                            if not os.path.exists(dst):
+                                shutil.move(src, dst)
+                        # Remove the subdirectory (will fail if not empty, which is ok)
+                        shutil.rmtree(subdir, ignore_errors=True)
+                        break
+
+        # Verify files are now at the expected location
+        assert os.path.exists(os.path.join(extract_dir, "config_server.json"))
+        assert os.path.exists(os.path.join(extract_dir, "prompts.json"))
+        assert os.path.exists(os.path.join(extract_dir, "client_test.json"))
+
+        # Verify the subdirectory no longer exists
+        assert not os.path.exists(os.path.join(extract_dir, "my_experiment"))
+
+        # Verify config content
+        with open(os.path.join(extract_dir, "config_server.json")) as f:
+            extracted_config = json.load(f)
+        assert extracted_config["name"] == "Nested Experiment"
+        assert extracted_config["port"] == 8080
+
+
 def test_postgresql_db_name_sanitization():
     """Test that PostgreSQL database names are properly sanitized."""
     import uuid
@@ -297,3 +371,139 @@ def test_config_file_updates_integration():
         assert updated_config["port"] == 5500
         assert updated_config["database_uri"] == "/new/path"
         assert updated_config["host"] == "127.0.0.1"  # Unchanged
+
+
+def test_uid_format_consistency():
+    """Test that UUID format is consistent between folder and db_name.
+
+    This test ensures that the UID used for the experiment folder matches
+    the UID format used in db_name for both SQLite and PostgreSQL.
+    The fix ensures that dashes are replaced with underscores in the UID
+    to maintain consistency.
+    """
+    import uuid
+
+    # Simulate the UID generation as it should be done in upload_experiment
+    uid = str(uuid.uuid4()).replace("-", "_")
+
+    # Verify no dashes in UID (they should all be underscores)
+    assert "-" not in uid
+    assert "_" in uid
+
+    # SQLite format: experiments/<uid>/database_server.db
+    sqlite_db_name = f"experiments/{uid}/database_server.db"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    sqlite_uid_from_db_name = sqlite_db_name.split("/")[1]
+    assert sqlite_uid_from_db_name == uid, "SQLite: folder UID should match db_name UID"
+
+    # PostgreSQL format: experiments_<uid>
+    pg_db_name = f"experiments_{uid}"
+    # Extract the UID part from db_name (same way as in experiments_routes.py)
+    pg_uid_from_db_name = pg_db_name.replace("experiments_", "")
+    assert pg_uid_from_db_name == uid, "PostgreSQL: folder UID should match db_name UID"
+
+
+def test_population_file_rename_on_suffix():
+    """Test that population and client files are renamed when population gets a suffix.
+
+    When a population with the same name but different agents exists, a new population
+    is created with a suffix (e.g., _2). The corresponding JSON files should be renamed
+    to match the new population name so the client can find them.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Setup: create original files
+        original_name = "test_population"
+        new_name = "test_population_2"
+
+        # Create population JSON file
+        pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        with open(pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        # Create client JSON file following the pattern: client_{name}-{population}.json
+        client_file = os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        with open(client_file, "w") as f:
+            json.dump({"simulation": {"name": "TestClient"}}, f)
+
+        # Simulate the rename logic from upload_experiment
+        old_pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        new_pop_file = os.path.join(tmpdir, f"{new_name}.json")
+        if os.path.exists(old_pop_file):
+            os.rename(old_pop_file, new_pop_file)
+
+        # Rename client files using the precise suffix matching
+        for f in os.listdir(tmpdir):
+            if f.startswith("client") and f.endswith(".json"):
+                expected_suffix = f"-{original_name}.json"
+                if f.endswith(expected_suffix):
+                    old_client_file = os.path.join(tmpdir, f)
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
+                    new_client_file = os.path.join(tmpdir, new_client_filename)
+                    os.rename(old_client_file, new_client_file)
+
+        # Verify files were renamed correctly
+        assert os.path.exists(os.path.join(tmpdir, f"{new_name}.json"))
+        assert not os.path.exists(os.path.join(tmpdir, f"{original_name}.json"))
+
+        expected_client_file = f"client_TestClient-{new_name}.json"
+        assert os.path.exists(os.path.join(tmpdir, expected_client_file))
+        assert not os.path.exists(
+            os.path.join(tmpdir, f"client_TestClient-{original_name}.json")
+        )
+
+
+def test_population_file_rename_preserves_similar_names():
+    """Test that renaming only affects the exact population name, not similar ones.
+
+    If there are files with similar names (e.g., 'pop' and 'pop_extended'),
+    only files with the exact population name should be renamed.
+    """
+    with tempfile.TemporaryDirectory() as tmpdir:
+        original_name = "pop"
+        new_name = "pop_2"
+        similar_name = "pop_extended"
+
+        # Create files for both populations
+        pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        with open(pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        similar_pop_file = os.path.join(tmpdir, f"{similar_name}.json")
+        with open(similar_pop_file, "w") as f:
+            json.dump({"agents": []}, f)
+
+        # Create client files for both
+        client_file = os.path.join(tmpdir, f"client_Test-{original_name}.json")
+        with open(client_file, "w") as f:
+            json.dump({}, f)
+
+        similar_client_file = os.path.join(tmpdir, f"client_Test-{similar_name}.json")
+        with open(similar_client_file, "w") as f:
+            json.dump({}, f)
+
+        # Apply rename logic
+        old_pop_file = os.path.join(tmpdir, f"{original_name}.json")
+        new_pop_file = os.path.join(tmpdir, f"{new_name}.json")
+        if os.path.exists(old_pop_file):
+            os.rename(old_pop_file, new_pop_file)
+
+        for f in os.listdir(tmpdir):
+            if f.startswith("client") and f.endswith(".json"):
+                expected_suffix = f"-{original_name}.json"
+                if f.endswith(expected_suffix):
+                    old_client_file = os.path.join(tmpdir, f)
+                    new_client_filename = (
+                        f[: -len(expected_suffix)] + f"-{new_name}.json"
+                    )
+                    new_client_file = os.path.join(tmpdir, new_client_filename)
+                    os.rename(old_client_file, new_client_file)
+
+        # Verify: original 'pop' files renamed to 'pop_2'
+        assert os.path.exists(os.path.join(tmpdir, f"{new_name}.json"))
+        assert os.path.exists(os.path.join(tmpdir, f"client_Test-{new_name}.json"))
+
+        # Verify: 'pop_extended' files should NOT be renamed
+        assert os.path.exists(os.path.join(tmpdir, f"{similar_name}.json"))
+        assert os.path.exists(os.path.join(tmpdir, f"client_Test-{similar_name}.json"))

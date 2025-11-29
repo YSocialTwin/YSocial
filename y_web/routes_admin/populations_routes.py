@@ -219,14 +219,11 @@ def create_population():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
-            "event": "create_population",
-            "data": {
-                "n_agents": n_agents,
-                "interests": interests,
-            },
+            "action": "create_population",
+            "data": {"n_agents": n_agents},
         }
     )
 
@@ -746,6 +743,13 @@ def download_population(uid):
     }
 
     for a in agents:
+        # Get activity profile name if set
+        activity_profile_name = None
+        if a[0].activity_profile:
+            activity_profile_obj = ActivityProfile.query.get(a[0].activity_profile)
+            if activity_profile_obj:
+                activity_profile_name = activity_profile_obj.name
+
         res["agents"].append(
             {
                 "id": a[0].id,
@@ -768,6 +772,8 @@ def download_population(uid):
                 "frecsys": a[0].frecsys,
                 "profile_pic": a[0].profile_pic,
                 "daily_activity_level": a[0].daily_activity_level,
+                "profession": a[0].profession,
+                "activity_profile": activity_profile_name,
                 "profile": (
                     Agent_Profile.query.filter_by(agent_id=a[0].id).first().profile
                     if Agent_Profile.query.filter_by(agent_id=a[0].id).first()
@@ -778,6 +784,13 @@ def download_population(uid):
         )
 
     for p in pages:
+        # Get activity profile name if set
+        page_activity_profile_name = None
+        if p[0].activity_profile:
+            page_activity_profile_obj = ActivityProfile.query.get(p[0].activity_profile)
+            if page_activity_profile_obj:
+                page_activity_profile_name = page_activity_profile_obj.name
+
         res["pages"].append(
             {
                 "id": p[0].id,
@@ -789,6 +802,7 @@ def download_population(uid):
                 "logo": p[0].logo,
                 "pg_type": p[0].pg_type,
                 "leaning": p[0].leaning,
+                "activity_profile": page_activity_profile_name,
             }
         )
 
@@ -832,17 +846,17 @@ def upload_population():
 
     data = json.load(open(filename, "r"))
 
-    # check if the population already exists
-    population = Population.query.filter_by(
-        name=data["population_data"]["name"]
-    ).first()
-    if population:
-        flash("Population already exists.")
-        return redirect(request.referrer)
+    # Handle population name duplicates by adding incremental suffix
+    base_name = data["population_data"]["name"]
+    population_name = base_name
+    suffix = 0
+    while Population.query.filter_by(name=population_name).first():
+        suffix += 1
+        population_name = f"{base_name}_{suffix}"
 
     # add the population to the database
     population = Population(
-        name=data["population_data"]["name"], descr=data["population_data"]["descr"]
+        name=population_name, descr=data["population_data"]["descr"]
     )
     db.session.add(population)
     db.session.commit()
@@ -852,6 +866,15 @@ def upload_population():
         # check if the agent already exists
         agent = Agent.query.filter_by(name=a["name"]).first()
         if not agent:
+            # Resolve activity_profile by name if provided
+            activity_profile_id = None
+            if a.get("activity_profile"):
+                activity_profile_obj = ActivityProfile.query.filter_by(
+                    name=a["activity_profile"]
+                ).first()
+                if activity_profile_obj:
+                    activity_profile_id = activity_profile_obj.id
+
             agent = Agent(
                 name=a["name"],
                 ag_type=a["ag_type"],
@@ -871,14 +894,14 @@ def upload_population():
                 crecsys=a["crecsys"],
                 frecsys=a["frecsys"],
                 profile_pic=a["profile_pic"],
-                daily_activity_level=(
-                    a["daily_activity_level"] if "daily_activity_level" in a else 1
-                ),
+                daily_activity_level=a.get("daily_activity_level", 1),
+                profession=a.get("profession", ""),
+                activity_profile=activity_profile_id,
             )
             db.session.add(agent)
             db.session.commit()
 
-            if a["profile"]:
+            if a.get("profile"):
                 agent_profile = Agent_Profile(agent_id=agent.id, profile=a["profile"])
                 db.session.add(agent_profile)
                 db.session.commit()
@@ -894,6 +917,15 @@ def upload_population():
         # check if the page already exists
         page = Page.query.filter_by(name=p["name"]).first()
         if not page:
+            # Resolve activity_profile by name if provided
+            page_activity_profile_id = None
+            if p.get("activity_profile"):
+                page_activity_profile_obj = ActivityProfile.query.filter_by(
+                    name=p["activity_profile"]
+                ).first()
+                if page_activity_profile_obj:
+                    page_activity_profile_id = page_activity_profile_obj.id
+
             page = Page(
                 name=p["name"],
                 descr=p["descr"],
@@ -903,6 +935,7 @@ def upload_population():
                 logo=p["logo"],
                 pg_type=p["pg_type"],
                 leaning=p["leaning"],
+                activity_profile=page_activity_profile_id,
             )
             db.session.add(page)
             db.session.commit()

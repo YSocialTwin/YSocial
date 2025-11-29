@@ -1,5 +1,59 @@
 {% include "admin/head.html" %}
 
+<style>
+/* Toggle switch styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #039be5;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
     <div id="creator-dashboard" class="dashboard-container">
@@ -59,11 +113,11 @@
                 {% endfor %}
             </div>
 
-            <div class="columns" style="align-items: stretch;">
+            <div class="columns is-multiline" style="align-items: stretch;">
 
 
                 <!--Dashboard column-->
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">User Profile</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -117,7 +171,7 @@
                     </div>
                 </div>
 
-                 <div class="column is-8" style="display: flex;">
+                 <div class="column is-12-mobile is-8-tablet" style="display: flex;">
 
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update LLM Configuration</h3>
@@ -167,8 +221,8 @@
             </div>
 
             <!-- Row 2: Update Password, Update Email, Add Perspective API (3 columns) -->
-            <div class="columns" style="align-items: stretch;">
-                <div class="column is-4" style="display: flex;">
+            <div class="columns is-multiline" style="align-items: stretch;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update Password</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -211,7 +265,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Update Email</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -249,7 +303,7 @@
                     </div>
                 </div>
 
-                <div class="column is-4" style="display: flex;">
+                <div class="column is-12-mobile is-4-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add Perspective API</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
@@ -282,16 +336,17 @@
                 </div>
             </div>
 
-            <!-- Row 3: Experiment Participation and Add to Experiment (2 columns) -->
-            <div class="columns" style="align-items: stretch;">
-                <div class="column is-6" style="display: flex;">
+            <!-- Row 3: Experiment Participation and Add to Experiment -->
+            <div class="columns is-multiline" style="align-items: stretch;">
+                <!-- Experiment Participation -->
+                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
                     <!--Box-->
                      <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Experiment Participation</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Experiments this user owns or participates in.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <div class="box-lines">
                                 <div style="margin-bottom: 15px;">
                                     <b style="display: block; margin-bottom: 8px;">Owned Experiments</b>
@@ -332,13 +387,13 @@
 
                 {% if current_user_role == "admin" %}
                 <!-- Add to Experiment section (admin only) -->
-                <div class="column is-6" style="display: flex;">
+                <div class="column is-12-mobile is-6-tablet" style="display: flex;">
                     <div class="dashboard-box" style="flex: 1; display: flex; flex-direction: column;">
                         <h3 class="title is-5 is-thin">Add to Experiment</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
                             Grant this user access to participate in an experiment.
                         </p>
-                        <div class="box-content">
+                        <div class="box-content" style="flex: 1;">
                             <form action="/admin/add_user_to_experiment" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <div class="box-line">

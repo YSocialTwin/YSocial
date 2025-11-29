@@ -241,8 +241,8 @@ def start_desktop_app(
     llm_backend=None,
     notebook=False,
     window_title="YSocial - Social Media Digital Twin",
-    window_width=0,  # 0 means fullscreen
-    window_height=0,  # 0 means fullscreen
+    window_width=1280,  # Default window width (0 for fullscreen)
+    window_height=800,  # Default window height (0 for fullscreen)
 ):
     """
     Start YSocial in desktop mode with PyWebview.
@@ -255,8 +255,8 @@ def start_desktop_app(
         llm_backend: LLM backend to use
         notebook: Enable Jupyter notebook support
         window_title: Title for the desktop window
-        window_width: Width of the desktop window (0 for fullscreen)
-        window_height: Height of the desktop window (0 for fullscreen)
+        window_width: Width of the desktop window (default: 1280, use 0 for fullscreen)
+        window_height: Height of the desktop window (default: 800, use 0 for fullscreen)
 
     Raises:
         RuntimeError: If webview backend is not compatible with the system
@@ -342,17 +342,27 @@ def start_desktop_app(
 
     # Create a PyWebview window with API
     api = DesktopAPI()
-    window = webview.create_window(
-        title=window_title,
-        url=url,
-        width=window_width,
-        height=window_height,
-        resizable=True,
-        fullscreen=use_fullscreen,
-        min_size=(800, 600),
-        confirm_close=True,
-        js_api=api,  # Expose API to JavaScript
-    )
+
+    # Prepare window creation parameters
+    window_params = {
+        "title": window_title,
+        "url": url,
+        "width": window_width,
+        "height": window_height,
+        "resizable": True,
+        "fullscreen": use_fullscreen,
+        "js_api": api,
+    }
+
+    # On macOS, min_size can cause issues with PyWebview, so only set it on other platforms
+    if not sys.platform.startswith("darwin"):
+        window_params["min_size"] = (800, 600)
+
+    # confirm_close can also be problematic on macOS with certain PyWebview versions
+    if not sys.platform.startswith("darwin"):
+        window_params["confirm_close"] = True
+
+    window = webview.create_window(**window_params)
 
     # Store window reference globally for Flask app access
     set_desktop_window(window)

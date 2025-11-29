@@ -363,6 +363,9 @@ class Admin_users(UserMixin, db.Model):
     llm_url = db.Column(db.String(200), default="")
     profile_pic = db.Column(db.String(400), default="")
     perspective_api = db.Column(db.String(300), default=None)
+    telemetry_enabled = db.Column(db.Boolean, default=True)
+    telemetry_notice_shown = db.Column(db.Boolean, default=False)
+    tutorial_shown = db.Column(db.Boolean, default=False)
 
     def get_id(self):
         """Return user ID with 'admin_' prefix for Flask-Login."""
@@ -375,6 +378,12 @@ class Exps(db.Model):
 
     Defines simulation experiments including platform type (microblogging/reddit),
     database connections, ownership, status tracking, and server configuration.
+
+    exp_status values:
+    - "stopped": Experiment is not running (default)
+    - "active": Experiment server is running
+    - "completed": All clients have finished execution
+    - "scheduled": Experiment is scheduled to run
     """
 
     __bind_key__ = "db_admin"
@@ -392,6 +401,73 @@ class Exps(db.Model):
     annotations = db.Column(db.String(500), nullable=False, default="")
     server_pid = db.Column(db.Integer, nullable=True, default=None)
     llm_agents_enabled = db.Column(db.Integer, nullable=False, default=1)
+    exp_status = db.Column(db.String(20), nullable=False, default="stopped")
+
+
+class ExperimentScheduleGroup(db.Model):
+    """
+    Experiment schedule group for batch execution.
+
+    Groups experiments together for sequential execution as part of a schedule.
+    Experiments in the same group run in parallel, groups run sequentially.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_groups"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    is_completed = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ExperimentScheduleItem(db.Model):
+    """
+    Links experiments to schedule groups.
+
+    Associates experiments with groups for scheduled batch execution.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_items"
+    id = db.Column(db.Integer, primary_key=True)
+    group_id = db.Column(
+        db.Integer,
+        db.ForeignKey("experiment_schedule_groups.id"),
+        nullable=False,
+    )
+    experiment_id = db.Column(db.Integer, db.ForeignKey("exps.idexp"), nullable=False)
+    order_index = db.Column(db.Integer, nullable=False, default=0)
+
+
+class ExperimentScheduleStatus(db.Model):
+    """
+    Tracks the status of scheduled experiment execution.
+
+    Monitors which group is currently running and overall schedule state.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_status"
+    id = db.Column(db.Integer, primary_key=True)
+    is_running = db.Column(db.Integer, nullable=False, default=0)
+    current_group_id = db.Column(db.Integer, nullable=True, default=None)
+    started_at = db.Column(db.DateTime, nullable=True, default=None)
+
+
+class ExperimentScheduleLog(db.Model):
+    """
+    Stores execution logs for the experiment schedule.
+
+    Persists log messages so they are available across page navigations.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "experiment_schedule_logs"
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    log_type = db.Column(db.String(20), nullable=False, default="info")
 
 
 class Exp_stats(db.Model):
@@ -819,3 +895,194 @@ class Jupyter_instances(db.Model):
     notebook_dir = db.Column(db.String(300), nullable=False)
     process = db.Column(db.Integer, nullable=False)
     status = db.Column(db.String(10), nullable=False, default="stopped")
+
+
+class ReleaseInfo(db.Model):
+    """
+    Latest YSocial release information.
+
+    Stores information about the latest available YSocial release for
+    update notifications. Single-row table updated on each application startup.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "release_info"
+    id = db.Column(db.Integer, primary_key=True)
+    latest_version_tag = db.Column(db.String(50), nullable=True)
+    release_name = db.Column(db.String(200), nullable=True)
+    published_at = db.Column(db.String(50), nullable=True)
+    download_url = db.Column(db.String(500), nullable=True)
+    size = db.Column(db.String(50), nullable=True)
+    sha256 = db.Column(db.String(100), nullable=True)
+    latest_check_on = db.Column(db.String(50), nullable=True)
+
+
+class BlogPost(db.Model):
+    """
+    Latest blog post information.
+
+    Stores information about the latest blog post from y-not.social/blog
+    for announcement notifications. Tracks read status per post.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "blog_posts"
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(500), nullable=True)
+    published_at = db.Column(db.String(50), nullable=True)
+    link = db.Column(db.String(500), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    latest_check_on = db.Column(db.String(50), nullable=True)
+
+
+class LogFileOffset(db.Model):
+    """
+    Track last read offset for log files to enable incremental reading.
+
+    Stores the byte offset of the last successfully processed position
+    in each log file, allowing the system to read only new entries on
+    subsequent updates.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "log_file_offsets"
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
+    log_file_type = db.Column(db.String(50), nullable=False)  # 'server', 'client'
+    client_id = db.Column(
+        db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=True
+    )  # NULL for server logs
+    file_path = db.Column(
+        db.String(500), nullable=False
+    )  # relative path from experiment folder
+    last_offset = db.Column(
+        db.BigInteger, nullable=False, default=0
+    )  # byte offset in file
+    last_updated = db.Column(db.DateTime, nullable=False)  # timestamp of last update
+
+
+class ServerLogMetrics(db.Model):
+    """
+    Aggregated metrics from server log files.
+
+    Stores pre-computed aggregations of server API call metrics including
+    call counts, total durations, and timing information. Supports both
+    daily and hourly aggregation levels.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "server_log_metrics"
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
+    aggregation_level = db.Column(db.String(10), nullable=False)  # 'daily' or 'hourly'
+    day = db.Column(db.Integer, nullable=False)
+    hour = db.Column(db.Integer, nullable=True)  # NULL for daily aggregation
+    path = db.Column(db.String(200), nullable=False)  # API path
+    call_count = db.Column(db.Integer, nullable=False, default=0)
+    total_duration = db.Column(
+        db.Float, nullable=False, default=0.0
+    )  # sum of all durations
+    min_time = db.Column(db.DateTime, nullable=True)  # earliest timestamp
+    max_time = db.Column(db.DateTime, nullable=True)  # latest timestamp
+
+
+class ClientLogMetrics(db.Model):
+    """
+    Aggregated metrics from client log files.
+
+    Stores pre-computed aggregations of client method execution metrics
+    including call counts and execution times. Supports both daily and
+    hourly aggregation levels.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "client_log_metrics"
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(
+        db.Integer, db.ForeignKey("exps.idexp", ondelete="CASCADE"), nullable=False
+    )
+    client_id = db.Column(
+        db.Integer, db.ForeignKey("client.id", ondelete="CASCADE"), nullable=False
+    )
+    aggregation_level = db.Column(db.String(10), nullable=False)  # 'daily' or 'hourly'
+    day = db.Column(db.Integer, nullable=False)
+    hour = db.Column(db.Integer, nullable=True)  # NULL for daily aggregation
+    method_name = db.Column(db.String(200), nullable=False)
+    call_count = db.Column(db.Integer, nullable=False, default=0)
+    total_execution_time = db.Column(
+        db.Float, nullable=False, default=0.0
+    )  # sum of all execution times
+    __table_args__ = (
+        db.Index(
+            "idx_client_log_metrics_lookup",
+            "exp_id",
+            "client_id",
+            "aggregation_level",
+            "day",
+            "hour",
+            "method_name",
+        ),
+        {"extend_existing": True},
+    )
+
+
+# Add indexes to ServerLogMetrics as well
+ServerLogMetrics.__table_args__ = (
+    db.Index(
+        "idx_server_log_metrics_lookup",
+        "exp_id",
+        "aggregation_level",
+        "day",
+        "hour",
+        "path",
+    ),
+    {"extend_existing": True},
+)
+
+# Add index to LogFileOffset
+LogFileOffset.__table_args__ = (
+    db.Index("idx_log_file_offset_lookup", "exp_id", "log_file_type", "client_id"),
+    {"extend_existing": True},
+)
+
+
+class LogSyncSettings(db.Model):
+    """
+    Settings for automatic periodic log synchronization.
+
+    Stores configuration for the background log sync scheduler including
+    whether it's enabled and the sync frequency in minutes.
+    Single-row table that is created on first access if it doesn't exist.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "log_sync_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    sync_interval_minutes = db.Column(
+        db.Integer, nullable=False, default=10
+    )  # Default 10 minutes
+    last_sync = db.Column(db.DateTime, nullable=True)  # Last time sync was performed
+
+
+class WatchdogSettings(db.Model):
+    """
+    Settings for the process watchdog that monitors server/client processes.
+
+    Stores configuration for the watchdog scheduler including whether it's
+    enabled, the check interval in minutes, and the last run timestamp.
+    Single-row table that is created on first access if it doesn't exist.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "watchdog_settings"
+    id = db.Column(db.Integer, primary_key=True)
+    enabled = db.Column(db.Boolean, nullable=False, default=True)
+    run_interval_minutes = db.Column(
+        db.Integer, nullable=False, default=15
+    )  # Default 15 minutes
+    last_run = db.Column(db.DateTime, nullable=True)  # Last time watchdog ran

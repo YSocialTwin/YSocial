@@ -36,26 +36,36 @@ from y_web.models import (
     Agent_Profile,
     Client,
     Client_Execution,
+    ClientLogMetrics,
     Education,
     Exp_stats,
     Exp_Topic,
+    ExperimentScheduleGroup,
+    ExperimentScheduleItem,
+    ExperimentScheduleLog,
+    ExperimentScheduleStatus,
     Exps,
     Jupyter_instances,
     Languages,
     Leanings,
+    LogFileOffset,
+    LogSyncSettings,
     Nationalities,
+    Ollama_Pull,
     Page,
     Page_Population,
     Population,
     Population_Experiment,
     Profession,
     Rounds,
+    ServerLogMetrics,
     Topic_List,
     Toxicity_Levels,
     User_Experiment,
     User_mgmt,
 )
 from y_web.utils import (
+    start_client,
     start_server,
     terminate_client,
     terminate_process_on_port,
@@ -63,7 +73,7 @@ from y_web.utils import (
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.jupyter_utils import stop_process
-from y_web.utils.miscellanea import check_privileges, ollama_status, reload_current_user
+from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status, reload_current_user
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
@@ -159,15 +169,25 @@ def settings():
     if user.role == "admin":
         # Admin sees all experiments (limit 5 for initial display)
         experiments = Exps.query.limit(5).all()
+        # All experiments for copy dropdown (no limit)
+        all_experiments = Exps.query.all()
     elif user.role == "researcher":
         # Researcher sees only experiments they own (limit 5 for initial display)
         experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
+        # All experiments owned by researcher for copy dropdown (no limit)
+        all_experiments = Exps.query.filter_by(owner=user.username).all()
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
         return redirect(url_for("auth.login"))
 
     users = Admin_users.query.all()
+
+    # Check which experiments have infinite clients
+    exp_has_infinite = {}
+    for exp in experiments:
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
 
     # check if current db is the same of the active experiment
     exp = Exps.query.filter_by(status=1).first()
@@ -185,10 +205,12 @@ def settings():
     return render_template(
         "admin/settings.html",
         experiments=experiments,
+        all_experiments=all_experiments,
         users=users,
         dbtype=dbtype,
         suggested_port=suggested_port,
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
+        exp_has_infinite=exp_has_infinite,
     )
 
 
@@ -371,7 +393,7 @@ def change_active_experiment(exp_id):
 
     reload_current_user(uname)
 
-    return redirect(request.referrer)
+    return redirect("/admin/dashboard")
 
 
 @experiments.route("/admin/upload_experiment", methods=["POST"])
@@ -383,7 +405,7 @@ def upload_experiment():
     experiment = request.files["experiment"]
     # Get experiment name from form, fallback to name from config if not provided
     exp_name_override = request.form.get("exp_name", "").strip()
-    uid = uuid.uuid4()
+    uid = str(uuid.uuid4()).replace("-", "_")
 
     from y_web.utils.path_utils import get_writable_path
 
@@ -404,6 +426,29 @@ def upload_experiment():
     # remove the zip file
     os.remove(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}exp.zip")
 
+    # Handle ZIP files with nested directory structure
+    # If config_server.json is not at the expected location, look for it in subdirectories
+    exp_dir = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+    expected_config = os.path.join(exp_dir, "config_server.json")
+
+    if not os.path.exists(expected_config):
+        # Look for config_server.json in subdirectories
+        for item in os.listdir(exp_dir):
+            subdir = os.path.join(exp_dir, item)
+            if os.path.isdir(subdir):
+                nested_config = os.path.join(subdir, "config_server.json")
+                if os.path.exists(nested_config):
+                    # Found config_server.json in a subdirectory - move all files up
+                    for nested_item in os.listdir(subdir):
+                        src = os.path.join(subdir, nested_item)
+                        dst = os.path.join(exp_dir, nested_item)
+                        # Skip if destination already exists to avoid conflicts
+                        if not os.path.exists(dst):
+                            shutil.move(src, dst)
+                    # Remove the subdirectory (will fail if not empty, which is ok)
+                    shutil.rmtree(subdir, ignore_errors=True)
+                    break
+
     # Determine database type
     db_type = "sqlite"
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
@@ -415,14 +460,17 @@ def upload_experiment():
         flash(
             "Error: No available port found in range 5000-6000. Cannot upload experiment."
         )
-        shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
         return redirect(request.referrer)
 
     # create the experiment in the database from the config_server.json file
     try:
         # list the files in the directory
-        files = os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
-        config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}config_server.json"
+        files = os.listdir(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}")
+        config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
 
         with open(config_path, "r") as f:
             experiment_config = json.load(f)
@@ -437,7 +485,10 @@ def upload_experiment():
             flash(
                 "The experiment already exists. Please check the experiment name and try again."
             )
-            shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return settings()
 
         # Check client configuration files for llm_agents setting
@@ -445,15 +496,15 @@ def upload_experiment():
         llm_agents_enabled = 1
         client_files = [
             f
-            for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
+            for f in os.listdir(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+            )
             if f.endswith(".json") and f.startswith("client")
         ]
 
         for client_file in client_files:
             try:
-                client_config_path = (
-                    f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{client_file}"
-                )
+                client_config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client_file}"
                 with open(client_config_path, "r") as f:
                     client_config = json.load(f)
 
@@ -484,7 +535,7 @@ def upload_experiment():
         if db_type == "sqlite":
             db_name = f"experiments{os.sep}{uid}{os.sep}database_server.db"
             db_uri = os.path.abspath(
-                f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}database_server.db"
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}database_server.db"
             )
         elif db_type == "postgresql":
             from urllib.parse import urlparse
@@ -503,7 +554,7 @@ def upload_experiment():
             port_db = parsed_uri.port or 5432
 
             # New database name - sanitize to ensure PostgreSQL compatibility
-            dbname = f"experiments_{str(uid).replace('-', '_')}"
+            dbname = f"experiments_{uid}"
             # Validate database name (only alphanumeric and underscore)
             if not dbname.replace("_", "").isalnum():
                 raise ValueError(f"Invalid database name: {dbname}")
@@ -550,7 +601,7 @@ def upload_experiment():
                         raise
 
                     # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
                     stmt = text(
                         """
@@ -566,8 +617,8 @@ def upload_experiment():
                     dummy_conn.execute(
                         stmt,
                         {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
+                            "username": "Admin",
+                            "email": "admin@y-not.social",
                             "password": hashed_pw,
                             "user_type": "user",
                             "leaning": "none",
@@ -596,9 +647,11 @@ def upload_experiment():
             json.dump(experiment_config, f, indent=4)
 
         # Update all client configuration files with new port
-        for item in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}"):
+        for item in os.listdir(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+        ):
             if item.startswith("client") and item.endswith(".json"):
-                client_config_path = f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{item}"
+                client_config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{item}"
                 try:
                     with open(client_config_path, "r") as f:
                         client_config = json.load(f)
@@ -662,16 +715,40 @@ def upload_experiment():
         db.session.add(jupyter_instance)
         db.session.commit()
 
+        # Reconstruct exp_topic entries from config_server.json
+        # If no topics in config, add a generic "Topic 1"
+        topics = experiment_config.get("topics", [])
+        if not topics:
+            topics = ["Topic 1"]
+
+        for topic_name in topics:
+            topic_name = topic_name.strip()
+            if topic_name:
+                # Check if topic already exists in Topic_List
+                existing_topic = Topic_List.query.filter_by(name=topic_name).first()
+                if not existing_topic:
+                    existing_topic = Topic_List(name=topic_name)
+                    db.session.add(existing_topic)
+                    db.session.commit()
+
+                # Add topic to experiment
+                exp_topic = Exp_Topic(exp_id=exp.idexp, topic_id=existing_topic.id)
+                db.session.add(exp_topic)
+                db.session.commit()
+
     except Exception as e:
         flash(f"There was an error loading the experiment files: {str(e)}")
         # remove the directory containing the files
-        shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+        shutil.rmtree(
+            f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+            ignore_errors=True,
+        )
         return redirect(request.referrer)
 
     # get the json files that do not start with "client"
     populations = [
         f
-        for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
+        for f in os.listdir(f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}")
         if f.endswith(".json")
         and not f.startswith("client")
         and f != "config_server.json"
@@ -681,7 +758,9 @@ def upload_experiment():
     for population_file in populations:
         original_name = population_file.split(".")[0]
         pop = json.load(
-            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{population_file}")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{population_file}"
+            )
         )
 
         # check if the population already exists
@@ -735,6 +814,32 @@ def upload_experiment():
                 while Population.query.filter_by(name=new_name).first():
                     counter += 1
                     new_name = f"{original_name}_{counter}"
+
+                # Rename population and client JSON files to match the new population name
+                exp_folder = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+
+                # Rename population JSON file
+                old_pop_file = os.path.join(exp_folder, f"{original_name}.json")
+                new_pop_file = os.path.join(exp_folder, f"{new_name}.json")
+                if os.path.exists(old_pop_file):
+                    os.rename(old_pop_file, new_pop_file)
+
+                # Rename client JSON file(s) that contain the original population name
+                # Client files follow the pattern: client_{client_name}-{population_name}.json
+                for f in os.listdir(exp_folder):
+                    if f.startswith("client") and f.endswith(".json"):
+                        # Check if the filename ends with -{original_name}.json
+                        expected_suffix = f"-{original_name}.json"
+                        if f.endswith(expected_suffix):
+                            old_client_file = os.path.join(exp_folder, f)
+                            # Replace only the population name at the end
+                            new_client_filename = (
+                                f[: -len(expected_suffix)] + f"-{new_name}.json"
+                            )
+                            new_client_file = os.path.join(
+                                exp_folder, new_client_filename
+                            )
+                            os.rename(old_client_file, new_client_file)
 
                 # Create new population with unique name
                 population = Population(name=new_name, descr="")
@@ -803,12 +908,31 @@ def upload_experiment():
 
                 # add agent to the database
                 else:
+                    # Handle activity_profile - look up by name or create default
+                    activity_profile_id = None
+                    activity_profile_name = agent.get("activity_profile", "default")
+                    if activity_profile_name:
+                        existing_profile = ActivityProfile.query.filter_by(
+                            name=activity_profile_name
+                        ).first()
+                        if existing_profile:
+                            activity_profile_id = existing_profile.id
+                        else:
+                            # Create a default activity profile if it doesn't exist
+                            # Default hours: 9am-5pm working hours
+                            new_profile = ActivityProfile(
+                                name=activity_profile_name,
+                                hours="9,10,11,12,13,14,15,16,17",
+                            )
+                            db.session.add(new_profile)
+                            db.session.commit()
+                            activity_profile_id = new_profile.id
+
                     ag = Agent(
                         name=agent["name"],
                         age=agent["age"],
                         ag_type=agent["type"],
                         leaning=agent["leaning"],
-                        interests=",".join(agent["interests"][0]),
                         oe=agent["oe"],
                         co=agent["co"],
                         ne=agent["ne"],
@@ -825,6 +949,7 @@ def upload_experiment():
                         profile_pic="",
                         daily_activity_level=agent["daily_activity_level"],
                         profession=agent["profession"] if "profession" in agent else "",
+                        activity_profile=activity_profile_id,
                     )
                     db.session.add(ag)
                     db.session.commit()
@@ -844,16 +969,23 @@ def upload_experiment():
         # get the json file that start with "client" and contains "population"
         client = [
             f
-            for f in os.listdir(f"{BASE_DIR}experiments{os.sep}{uid}")
+            for f in os.listdir(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}"
+            )
             if f.endswith(".json") and f.startswith("client") and original_name in f
         ]
         if len(client) == 0:
             flash("No client file found for the population")
-            shutil.rmtree(f"{BASE_DIR}experiments{os.sep}{uid}", ignore_errors=True)
+            shutil.rmtree(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}",
+                ignore_errors=True,
+            )
             return redirect(request.referrer)
 
         client = json.load(
-            open(f"{BASE_DIR}experiments{os.sep}{uid}{os.sep}{client[0]}")
+            open(
+                f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{client[0]}"
+            )
         )
 
         # add client to the database
@@ -896,11 +1028,15 @@ def upload_experiment():
         db.session.add(cl)
         db.session.commit()
 
+        # For infinite clients (days = -1), set expected_duration_rounds to -1
+        expected_rounds = (
+            -1 if cl.days == -1 else cl.days * client["simulation"]["slots"]
+        )
         client_exec = Client_Execution(
             client_id=cl.id,
             last_active_hour=-1,
             last_active_day=-1,
-            expected_duration_rounds=cl.days * client["simulation"]["slots"],
+            expected_duration_rounds=expected_rounds,
         )
         db.session.add(client_exec)
         db.session.commit()
@@ -1096,7 +1232,7 @@ def create_experiment():
                         dummy_conn.execute(text(schema_sql))
 
                     # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
+                    hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
 
                     stmt = text(
                         """
@@ -1112,8 +1248,8 @@ def create_experiment():
                     dummy_conn.execute(
                         stmt,
                         {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
+                            "username": "Admin",
+                            "email": "admin@y-not.social",
                             "password": hashed_pw,
                             "user_type": "user",
                             "leaning": "none",
@@ -1152,6 +1288,7 @@ def create_experiment():
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "database_uri": db_uri,
+        "topics": [t.strip() for t in topics if t.strip()],
     }
 
     with open(
@@ -1228,7 +1365,7 @@ def create_experiment():
 
     from y_web.telemetry import Telemetry
 
-    telemetry = Telemetry()
+    telemetry = Telemetry(user=current_user)
     telemetry.log_event(
         {
             "action": "create_experiment",
@@ -1240,7 +1377,8 @@ def create_experiment():
         },
     )
 
-    return settings()
+    # Redirect to the newly created experiment's details page
+    return redirect(url_for("experiments.experiment_details", uid=exp.idexp))
 
 
 @experiments.route("/admin/delete_simulation/<int:exp_id>")
@@ -1325,6 +1463,12 @@ def delete_simulation(exp_id):
         db.session.delete(exp)
         db.session.commit()
 
+        # Delete log metrics and offsets (should cascade but we do it explicitly for safety)
+        db.session.query(LogFileOffset).filter_by(exp_id=exp_id).delete()
+        db.session.query(ServerLogMetrics).filter_by(exp_id=exp_id).delete()
+        db.session.query(ClientLogMetrics).filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+
         # remove populaiton_experiment
         db.session.query(Population_Experiment).filter_by(id_exp=exp_id).delete()
         db.session.commit()
@@ -1375,6 +1519,9 @@ def experiments_data():
     """
     Display paginated list of experiments.
 
+    Query params:
+        exp_status: Filter by experiment status ('active', 'completed', 'stopped', 'scheduled')
+
     Returns:
         Rendered experiments list template
     """
@@ -1390,6 +1537,15 @@ def experiments_data():
     else:
         # Regular users should not access this endpoint
         return {"data": [], "total": 0}
+
+    # Filter by exp_status if provided
+    exp_status_filter = request.args.get("exp_status")
+    if exp_status_filter:
+        if exp_status_filter == "stopped_scheduled":
+            # Include both 'stopped' and 'scheduled' statuses
+            query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
+        else:
+            query = query.filter(Exps.exp_status == exp_status_filter)
 
     # search filter
     search = request.args.get("search")
@@ -1410,6 +1566,7 @@ def experiments_data():
             "annotations": "annotations",
             "running": "running",
             "web": "status",  # web interface status
+            "exp_status": "exp_status",
         }
         for s in sort.split(","):
             direction = s[0]
@@ -1449,6 +1606,45 @@ def experiments_data():
                 pass
         jupyter_status[jupyter.exp_id] = is_running
 
+    # Calculate average progress for running experiments
+    exp_progress = {}
+    # Track experiments with infinite clients
+    exp_has_infinite = {}
+    for exp in res:
+        # Check if any client has infinite duration (days = -1)
+        clients = Client.query.filter_by(id_exp=exp.idexp).all()
+        exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
+
+        if exp.running == 1 or exp.exp_status == "active":
+            # Get all clients for this experiment
+            if clients:
+                total_progress = 0
+                count = 0
+                for client in clients:
+                    client_exec = Client_Execution.query.filter_by(
+                        client_id=client.id
+                    ).first()
+                    if client_exec and client_exec.expected_duration_rounds > 0:
+                        progress = min(
+                            100,
+                            max(
+                                0,
+                                int(
+                                    client_exec.elapsed_time
+                                    / client_exec.expected_duration_rounds
+                                    * 100
+                                ),
+                            ),
+                        )
+                        total_progress += progress
+                        count += 1
+                if count > 0:
+                    exp_progress[exp.idexp] = int(total_progress / count)
+                else:
+                    exp_progress[exp.idexp] = 0
+            else:
+                exp_progress[exp.idexp] = 0
+
     return {
         "data": [
             {
@@ -1458,10 +1654,13 @@ def experiments_data():
                 "owner": exp.owner,
                 "web": "Loaded" if exp.status == 1 else "Not loaded",
                 "running": "Running" if exp.running == 1 else "Stopped",
+                "exp_status": getattr(exp, "exp_status", "stopped"),
                 "jupyter_status": (
                     "Active" if jupyter_status.get(exp.idexp, False) else "Inactive"
                 ),
                 "annotations": exp.annotations if exp.annotations else "",
+                "progress": exp_progress.get(exp.idexp, 0),
+                "has_infinite_client": exp_has_infinite.get(exp.idexp, False),
             }
             for exp in res
         ],
@@ -1503,6 +1702,9 @@ def experiment_details(uid):
         # Client has been run at least once if execution exists and elapsed_time > 0
         client_executions[client.id] = execution and execution.elapsed_time > 0
 
+    # Check if any client has infinite duration (days = -1)
+    has_infinite_client = any(client.days == -1 for client in clients)
+
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -1514,391 +1716,520 @@ def experiment_details(uid):
 
     jupyter_instance = Jupyter_instances.query.filter_by(exp_id=uid).first()
 
+    # Pass telemetry flag independently to avoid issues with current_user object
+    # User is already authenticated due to @login_required decorator
+    telemetry_enabled = getattr(current_user, "telemetry_enabled", True)
+
     return render_template(
         "admin/experiment_details.html",
         experiment=experiment,
         clients=clients,
         client_executions=client_executions,
+        has_infinite_client=has_infinite_client,
         users=users,
         len=len,
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
+        telemetry_enabled=telemetry_enabled,
     )
+
+
+@experiments.route("/admin/submit_experiment_logs/<int:exp_id>", methods=["POST"])
+@login_required
+def submit_experiment_logs(exp_id):
+    """Submit experiment logs to telemetry server for troubleshooting."""
+    check_privileges(current_user.username)
+
+    from y_web.telemetry import Telemetry
+    from y_web.utils.path_utils import get_writable_path
+
+    # Get experiment details
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        return jsonify({"success": False, "message": "Experiment not found"}), 404
+
+    # Check if telemetry is enabled for current user
+    if not current_user.telemetry_enabled:
+        return jsonify(
+            {
+                "success": False,
+                "message": "Telemetry is disabled. Please enable it in your user settings to submit logs.",
+            }
+        )
+
+    # Get problem description from request body
+    problem_description = None
+    if request.is_json:
+        data = request.get_json()
+        problem_description = data.get("problem_description", "").strip()
+        if not problem_description:
+            problem_description = None
+
+    # Get experiment folder path
+    BASE_DIR = get_writable_path()
+
+    # Extract experiment folder name from db_name
+    # db_name format: "experiments{sep}{folder}{sep}database_server.db"
+    db_name_parts = experiment.db_name.split(os.sep)
+    if len(db_name_parts) < 2:
+        return jsonify(
+            {"success": False, "message": "Invalid experiment database path format."}
+        )
+
+    experiment_folder_name = db_name_parts[1]
+    experiment_folder = (
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{experiment_folder_name}"
+    )
+
+    # Initialize telemetry and submit logs with problem description
+    telemetry = Telemetry(user=current_user)
+    success, message = telemetry.submit_experiment_logs(
+        exp_id, experiment_folder, problem_description=problem_description
+    )
+
+    return jsonify({"success": success, "message": message})
 
 
 @experiments.route("/admin/experiment_logs/<int:exp_id>")
 @login_required
 def experiment_logs(exp_id):
-    """Get experiment server logs analysis."""
-    check_privileges(current_user.username)
+    """Get experiment server logs analysis using database-backed metrics."""
+    try:
+        check_privileges(current_user.username)
 
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import (
+            has_server_log_files,
+            update_server_log_metrics,
+        )
+        from y_web.utils.path_utils import get_writable_path
 
-    BASE_DIR = get_writable_path()
+        BASE_DIR = get_writable_path()
 
-    # Construct path to _server.log
-    # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        # Extract the UUID folder
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
+        # Construct path to _server.log
+        # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            # Extract the UUID folder
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            # PostgreSQL format - UUID is after the underscore
+            uid = db_name.replace("experiments_", "")
             exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
             )
         else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        # PostgreSQL format - UUID is after the underscore
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    log_file = os.path.join(exp_folder, "_server.log")
+        log_file = os.path.join(exp_folder, "_server.log")
 
-    # Check if log file exists
-    if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
+            return jsonify(
+                {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
+            )
+
+        # Update metrics incrementally from log file
+        try:
+            update_server_log_metrics(exp_id, log_file)
+        except Exception as e:
+            # Log the error but continue with existing data
+            current_app.logger.error(
+                f"Error updating server log metrics: {e}", exc_info=True
+            )
+            # Ensure session is in clean state after error
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+
+        # Retrieve aggregated metrics from database (daily aggregation for overview)
+        try:
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
+        except Exception as e:
+            # Handle PendingRollbackError by rolling back and retrying
+            current_app.logger.warning(
+                f"Session error during metrics query, retrying: {e}"
+            )
+            db.session.rollback()
+            metrics = ServerLogMetrics.query.filter_by(
+                exp_id=exp_id, aggregation_level="daily"
+            ).all()
+
+        # Aggregate by path across all days
+        path_counts = defaultdict(int)
+        path_total_durations = defaultdict(float)
+
+        for metric in metrics:
+            path_counts[metric.path] += metric.call_count
+            path_total_durations[metric.path] += metric.total_duration
+
+        # Calculate mean durations
+        mean_durations = {}
+        for path in path_counts.keys():
+            if path_counts[path] > 0:
+                mean_durations[path] = path_total_durations[path] / path_counts[path]
+            else:
+                mean_durations[path] = 0
+
         return jsonify(
-            {"call_volume": {}, "mean_duration": {}, "error": "Log file not found"}
+            {"call_volume": dict(path_counts), "mean_duration": mean_durations}
         )
 
-    # Parse the log file
-    path_counts = defaultdict(int)
-    path_durations = defaultdict(list)
-
-    try:
-        with open(log_file, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    line = line.replace("'", '"')
-                    log_entry = json.loads(line)
-                    path = log_entry.get("path", "unknown")
-                    duration = log_entry.get("duration", 0)
-
-                    path_counts[path] += 1
-                    path_durations[path].append(float(duration))
-
-                except json.JSONDecodeError:
-                    # Skip invalid JSON lines
-                    continue
     except Exception as e:
-        return jsonify({"error": f"Error reading log file: {str(e)}"}), 500
-
-    # Calculate mean durations
-    mean_durations = {}
-    for path, durations in path_durations.items():
-        if durations:
-            mean_durations[path] = sum(durations) / len(durations)
-        else:
-            mean_durations[path] = 0
-
-    return jsonify({"call_volume": dict(path_counts), "mean_duration": mean_durations})
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(
+            f"Error in experiment_logs endpoint: {e}", exc_info=True
+        )
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "call_volume": {},
+                    "mean_duration": {},
+                }
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/experiment_trends/<int:exp_id>")
 @login_required
 def experiment_trends(exp_id):
-    """Get experiment server trends analysis (daily/hourly aggregates)."""
-    check_privileges(current_user.username)
+    """Get experiment server trends analysis using database-backed metrics."""
+    try:
+        check_privileges(current_user.username)
 
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=exp_id).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=exp_id).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import (
+            has_server_log_files,
+            update_client_log_metrics,
+            update_server_log_metrics,
+        )
+        from y_web.utils.path_utils import get_writable_path
 
-    BASE_DIR = get_writable_path()
+        BASE_DIR = get_writable_path()
 
-    # Construct path to _server.log
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
+        # Construct path to _server.log
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            uid = db_name.replace("experiments_", "")
             exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
             )
         else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    log_file = os.path.join(exp_folder, "_server.log")
+        log_file = os.path.join(exp_folder, "_server.log")
 
-    # Check if log file exists
-    if not os.path.exists(log_file):
+        # Check if any log files exist (main or rotated)
+        if not has_server_log_files(log_file):
+            return jsonify(
+                {
+                    "daily_compute": {},
+                    "daily_simulation": {},
+                    "hourly_compute": {},
+                    "hourly_simulation": {},
+                    "error": "Log file not found",
+                }
+            )
+
+        # Update server metrics incrementally
+        try:
+            update_server_log_metrics(exp_id, log_file)
+        except Exception as e:
+            current_app.logger.error(
+                f"Error updating server log metrics: {e}", exc_info=True
+            )
+
+        # Retrieve aggregated metrics from database
+        # Get daily metrics
+        daily_metrics = ServerLogMetrics.query.filter_by(
+            exp_id=exp_id, aggregation_level="daily"
+        ).all()
+
+        daily_durations = defaultdict(float)
+        daily_simulation = {}
+
+        for metric in daily_metrics:
+            daily_durations[metric.day] += metric.total_duration
+            # Calculate simulation time from min_time and max_time
+            if metric.min_time and metric.max_time:
+                sim_time = (metric.max_time - metric.min_time).total_seconds()
+                if metric.day in daily_simulation:
+                    daily_simulation[metric.day] = max(
+                        daily_simulation[metric.day], sim_time
+                    )
+                else:
+                    daily_simulation[metric.day] = sim_time
+
+        # Get hourly metrics
+        hourly_metrics = ServerLogMetrics.query.filter_by(
+            exp_id=exp_id, aggregation_level="hourly"
+        ).all()
+
+        hourly_durations = defaultdict(float)
+        hourly_simulation = {}
+
+        for metric in hourly_metrics:
+            key = f"{metric.day}-{metric.hour}"
+            hourly_durations[key] += metric.total_duration
+            # Calculate simulation time from min_time and max_time
+            if metric.min_time and metric.max_time:
+                sim_time = (metric.max_time - metric.min_time).total_seconds()
+                if key in hourly_simulation:
+                    hourly_simulation[key] = max(hourly_simulation[key], sim_time)
+                else:
+                    hourly_simulation[key] = sim_time
+
+        # Get total expected duration from client_execution table
+        clients = Client.query.filter_by(id_exp=exp_id).all()
+        client_ids = [c.id for c in clients]
+
+        max_expected_rounds = 0
+        max_remaining_rounds = 0
+        client_progress = {}
+
+        if client_ids:
+            client_executions = Client_Execution.query.filter(
+                Client_Execution.client_id.in_(client_ids)
+            ).all()
+            if client_executions:
+                max_expected_rounds = max(
+                    ce.expected_duration_rounds for ce in client_executions
+                )
+
+                # Calculate remaining rounds for each client
+                for ce in client_executions:
+                    current_round = ce.last_active_day * 24 + ce.last_active_hour
+                    remaining = ce.expected_duration_rounds - current_round
+                    client_progress[ce.client_id] = {
+                        "expected_rounds": ce.expected_duration_rounds,
+                        "current_round": current_round,
+                        "remaining_rounds": max(0, remaining),
+                    }
+                    max_remaining_rounds = max(max_remaining_rounds, remaining)
+
+        # Convert rounds to days
+        total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
+        max_remaining_days = (
+            max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
+        )
+
+        # Update and retrieve client log metrics
+        client_daily_compute = {}
+        client_hourly_compute = {}
+
+        for client in clients:
+            client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+            # Update client metrics if log file exists
+            if os.path.exists(client_log_file):
+                try:
+                    update_client_log_metrics(exp_id, client.id, client_log_file)
+                except Exception as e:
+                    current_app.logger.error(
+                        f"Error updating client {client.id} log metrics: {e}",
+                        exc_info=True,
+                    )
+
+            # Retrieve aggregated client metrics from database
+            client_daily_metrics = ClientLogMetrics.query.filter_by(
+                exp_id=exp_id, client_id=client.id, aggregation_level="daily"
+            ).all()
+
+            client_hourly_metrics = ClientLogMetrics.query.filter_by(
+                exp_id=exp_id, client_id=client.id, aggregation_level="hourly"
+            ).all()
+
+            # Aggregate by day
+            if client_daily_metrics:
+                client_daily = defaultdict(float)
+                for metric in client_daily_metrics:
+                    client_daily[metric.day] += metric.total_execution_time
+                client_daily_compute[client.name] = dict(client_daily)
+
+            # Aggregate by hour
+            if client_hourly_metrics:
+                client_hourly = defaultdict(float)
+                for metric in client_hourly_metrics:
+                    key = f"{metric.day}-{metric.hour}"
+                    client_hourly[key] += metric.total_execution_time
+                client_hourly_compute[client.name] = dict(client_hourly)
+
         return jsonify(
             {
-                "daily_compute": {},
-                "daily_simulation": {},
-                "hourly_compute": {},
-                "hourly_simulation": {},
-                "error": "Log file not found",
+                "daily_compute": dict(daily_durations),
+                "daily_simulation": daily_simulation,
+                "hourly_compute": dict(hourly_durations),
+                "hourly_simulation": hourly_simulation,
+                "total_expected_days": total_days,
+                "total_expected_rounds": max_expected_rounds,
+                "max_remaining_rounds": max(0, max_remaining_rounds),
+                "max_remaining_days": max_remaining_days,
+                "client_daily_compute": client_daily_compute,
+                "client_hourly_compute": client_hourly_compute,
+                "client_progress": client_progress,
             }
         )
 
-    # Parse the log file and aggregate by day and hour
-    from datetime import datetime
-
-    daily_durations = defaultdict(float)
-    daily_times = defaultdict(list)
-    hourly_durations = defaultdict(float)
-    hourly_times = defaultdict(list)
-
-    try:
-        with open(log_file, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    line = line.replace("'", '"')
-                    log_entry = json.loads(line)
-                    day = log_entry.get("day")
-                    hour = log_entry.get("hour")
-                    duration = log_entry.get("duration", 0)
-                    time_str = log_entry.get("time", "")
-
-                    if day is not None:
-                        # Aggregate by day
-                        daily_durations[day] += float(duration)
-                        if time_str:
-                            try:
-                                time_obj = datetime.strptime(
-                                    time_str, "%Y-%m-%d %H:%M:%S"
-                                )
-                                daily_times[day].append(time_obj)
-                            except ValueError:
-                                pass
-
-                    if day is not None and hour is not None:
-                        # Aggregate by day-hour combination
-                        key = f"{day}-{hour}"
-                        hourly_durations[key] += float(duration)
-                        if time_str:
-                            try:
-                                time_obj = datetime.strptime(
-                                    time_str, "%Y-%m-%d %H:%M:%S"
-                                )
-                                hourly_times[key].append(time_obj)
-                            except ValueError:
-                                pass
-
-                except json.JSONDecodeError:
-                    continue
-    except Exception:
-        return jsonify({"error": "Error reading log file"}), 500
-
-    # Calculate simulation time (delta of time field)
-    daily_simulation = {}
-    for day, times in daily_times.items():
-        if times:
-            daily_simulation[day] = (max(times) - min(times)).total_seconds()
-
-    hourly_simulation = {}
-    for key, times in hourly_times.items():
-        if times:
-            hourly_simulation[key] = (max(times) - min(times)).total_seconds()
-
-    # Get total expected duration from client_execution table
-    # Find all clients for this experiment and get max expected_duration_rounds
-    clients = Client.query.filter_by(id_exp=exp_id).all()
-    client_ids = [c.id for c in clients]
-
-    max_expected_rounds = 0
-    max_remaining_rounds = 0
-    client_progress = {}
-
-    if client_ids:
-        client_executions = Client_Execution.query.filter(
-            Client_Execution.client_id.in_(client_ids)
-        ).all()
-        if client_executions:
-            max_expected_rounds = max(
-                ce.expected_duration_rounds for ce in client_executions
-            )
-
-            # Calculate remaining rounds for each client
-            # Clients may start at different times, so we track individual progress
-            for ce in client_executions:
-                # Current position is last_active_day * 24 + last_active_hour
-                current_round = ce.last_active_day * 24 + ce.last_active_hour
-                remaining = ce.expected_duration_rounds - current_round
-                client_progress[ce.client_id] = {
-                    "expected_rounds": ce.expected_duration_rounds,
-                    "current_round": current_round,
-                    "remaining_rounds": max(0, remaining),
+    except Exception as e:
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(
+            f"Error in experiment_trends endpoint: {e}", exc_info=True
+        )
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "daily_compute": {},
+                    "daily_simulation": {},
+                    "hourly_compute": {},
+                    "hourly_simulation": {},
+                    "total_expected_days": 0,
+                    "total_expected_rounds": 0,
+                    "max_remaining_rounds": 0,
+                    "max_remaining_days": 0,
+                    "client_daily_compute": {},
+                    "client_hourly_compute": {},
+                    "client_progress": {},
                 }
-                # Track the maximum remaining rounds across all clients
-                max_remaining_rounds = max(max_remaining_rounds, remaining)
-
-    # Convert rounds to days (each round is 1 hour, so 24 rounds = 1 day)
-    total_days = max_expected_rounds / 24 if max_expected_rounds > 0 else 0
-    max_remaining_days = max_remaining_rounds / 24 if max_remaining_rounds > 0 else 0
-
-    # Parse client log files and aggregate execution times per client
-    client_daily_compute = {}
-    client_hourly_compute = {}
-
-    for client in clients:
-        client_log_file = os.path.join(exp_folder, f"{client.name}_client.log")
-
-        if os.path.exists(client_log_file):
-            client_daily = defaultdict(float)
-            client_hourly = defaultdict(float)
-
-            try:
-                with open(client_log_file, "r") as f:
-                    for line in f:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            log_entry = json.loads(line)
-                            day = log_entry.get("day")
-                            hour = log_entry.get("hour")
-                            execution_time = log_entry.get("execution_time_seconds", 0)
-
-                            if day is not None:
-                                # Aggregate by day
-                                client_daily[day] += float(execution_time)
-
-                            if day is not None and hour is not None:
-                                # Aggregate by day-hour combination
-                                key = f"{day}-{hour}"
-                                client_hourly[key] += float(execution_time)
-
-                        except json.JSONDecodeError:
-                            continue
-            except Exception:
-                # If there's an error reading a client log, skip it
-                continue
-
-            # Store client aggregates if they have data
-            if client_daily:
-                client_daily_compute[client.name] = dict(client_daily)
-            if client_hourly:
-                client_hourly_compute[client.name] = dict(client_hourly)
-
-    return jsonify(
-        {
-            "daily_compute": dict(daily_durations),
-            "daily_simulation": daily_simulation,
-            "hourly_compute": dict(hourly_durations),
-            "hourly_simulation": hourly_simulation,
-            "total_expected_days": total_days,
-            "total_expected_rounds": max_expected_rounds,
-            "max_remaining_rounds": max(0, max_remaining_rounds),
-            "max_remaining_days": max_remaining_days,
-            "client_daily_compute": client_daily_compute,
-            "client_hourly_compute": client_hourly_compute,
-            "client_progress": client_progress,
-        }
-    )
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/client_logs/<int:client_id>")
 @login_required
 def client_logs(client_id):
     """Get client logs analysis for a specific client."""
-    check_privileges(current_user.username)
+    try:
+        check_privileges(current_user.username)
 
-    # Get client details
-    client = Client.query.filter_by(id=client_id).first()
-    if not client:
-        return jsonify({"error": "Client not found"}), 404
+        # Get client details
+        client = Client.query.filter_by(id=client_id).first()
+        if not client:
+            return jsonify({"error": "Client not found"}), 404
 
-    # Get experiment details
-    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
-    if not experiment:
-        return jsonify({"error": "Experiment not found"}), 404
+        # Get experiment details
+        experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+        if not experiment:
+            return jsonify({"error": "Experiment not found"}), 404
 
-    from y_web.utils.path_utils import get_writable_path
+        from y_web.utils.log_metrics import update_client_log_metrics
+        from y_web.utils.path_utils import get_writable_path
 
-    BASE_DIR = get_writable_path()
+        BASE_DIR = get_writable_path()
 
-    # Construct path to client log file
-    db_name = experiment.db_name
-    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-        # Extract the UUID folder
-        parts = db_name.split(os.sep)
-        if len(parts) >= 2:
+        # Construct path to client log file
+        db_name = experiment.db_name
+        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+            # Extract the UUID folder
+            parts = db_name.split(os.sep)
+            if len(parts) >= 2:
+                exp_folder = os.path.join(
+                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                )
+            else:
+                return jsonify({"error": "Invalid experiment path"}), 400
+        elif db_name.startswith("experiments_"):
+            # PostgreSQL format - UUID is after the underscore
+            uid = db_name.replace("experiments_", "")
             exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
+                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
             )
         else:
-            return jsonify({"error": "Invalid experiment path"}), 400
-    elif db_name.startswith("experiments_"):
-        # PostgreSQL format - UUID is after the underscore
-        uid = db_name.replace("experiments_", "")
-        exp_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}")
-    else:
-        return jsonify({"error": "Invalid experiment path format"}), 400
+            return jsonify({"error": "Invalid experiment path format"}), 400
 
-    # Client log file name format: {client_name}_client.log
-    log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+        # Client log file name format: {client_name}_client.log
+        log_file = os.path.join(exp_folder, f"{client.name}_client.log")
 
-    # Check if log file exists
-    if not os.path.exists(log_file):
+        # Check if log file exists
+        if not os.path.exists(log_file):
+            return jsonify(
+                {
+                    "call_volume": {},
+                    "mean_execution_time": {},
+                    "error": "Log file not found",
+                }
+            )
+
+        # Update client metrics incrementally
+        try:
+            update_client_log_metrics(experiment.idexp, client_id, log_file)
+        except Exception as e:
+            current_app.logger.error(
+                f"Error updating client log metrics: {e}", exc_info=True
+            )
+
+        # Retrieve aggregated metrics from database (daily aggregation for overview)
+        metrics = ClientLogMetrics.query.filter_by(
+            exp_id=experiment.idexp, client_id=client_id, aggregation_level="daily"
+        ).all()
+
+        # Aggregate by method across all days
+        method_counts = defaultdict(int)
+        method_total_times = defaultdict(float)
+
+        for metric in metrics:
+            method_counts[metric.method_name] += metric.call_count
+            method_total_times[metric.method_name] += metric.total_execution_time
+
+        # Calculate mean execution times
+        mean_execution_times = {}
+        for method in method_counts.keys():
+            if method_counts[method] > 0:
+                mean_execution_times[method] = (
+                    method_total_times[method] / method_counts[method]
+                )
+            else:
+                mean_execution_times[method] = 0
+
         return jsonify(
             {
-                "call_volume": {},
-                "mean_execution_time": {},
-                "error": "Log file not found",
+                "call_volume": dict(method_counts),
+                "mean_execution_time": mean_execution_times,
             }
         )
 
-    # Parse the log file
-    method_counts = defaultdict(int)
-    method_durations = defaultdict(list)
-
-    try:
-        with open(log_file, "r") as f:
-            for line in f:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    log_entry = json.loads(line)
-                    method_name = log_entry.get("method_name", "unknown")
-                    execution_time = log_entry.get("execution_time_seconds", 0)
-
-                    method_counts[method_name] += 1
-                    method_durations[method_name].append(float(execution_time))
-
-                except json.JSONDecodeError:
-                    # Skip invalid JSON lines
-                    continue
-    except Exception:
-        return jsonify({"error": "Error reading log file"}), 500
-
-    # Calculate mean execution times
-    mean_execution_times = {}
-    for method, durations in method_durations.items():
-        if durations:
-            mean_execution_times[method] = sum(durations) / len(durations)
-        else:
-            mean_execution_times[method] = 0
-
-    return jsonify(
-        {
-            "call_volume": dict(method_counts),
-            "mean_execution_time": mean_execution_times,
-        }
-    )
+    except Exception as e:
+        # Catch any unhandled exceptions and return JSON error
+        current_app.logger.error(f"Error in client_logs endpoint: {e}", exc_info=True)
+        return (
+            jsonify(
+                {
+                    "error": f"Internal server error: {str(e)}",
+                    "call_volume": {},
+                    "mean_execution_time": {},
+                }
+            ),
+            500,
+        )
 
 
 @experiments.route("/admin/start_experiment/<int:uid>")
@@ -1915,7 +2246,9 @@ def start_experiment(uid):
         return experiment_details(uid)
 
     # update the experiment status
-    db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 1})
+    db.session.query(Exps).filter_by(idexp=uid).update(
+        {Exps.running: 1, Exps.exp_status: "active"}
+    )
     db.session.commit()
 
     # start the yserver
@@ -1973,7 +2306,9 @@ def stop_experiment(uid):
         terminate_process_on_port(exp.port)
 
     # Step 4: Update the experiment status in database
-    db.session.query(Exps).filter_by(idexp=uid).update({Exps.running: 0})
+    db.session.query(Exps).filter_by(idexp=uid).update(
+        {Exps.running: 0, Exps.exp_status: "stopped"}
+    )
     db.session.commit()
 
     return experiment_details(uid)
@@ -2198,6 +2533,8 @@ def miscellanea():
     Returns:
         Rendered miscellaneous settings template
     """
+    from y_web.utils.external_processes import get_llm_models
+
     # Check if user is admin (researchers should not access this page)
     user = Admin_users.query.filter_by(username=current_user.username).first()
     if user.role != "admin":
@@ -2206,7 +2543,46 @@ def miscellanea():
 
     check_privileges(current_user.username)
 
-    return render_template("admin/miscellanea.html")
+    # Get telemetry and watchdog settings for the current admin user
+    telemetry_enabled = getattr(user, "telemetry_enabled", True)
+    watchdog_interval = 15  # Default watchdog interval
+
+    # Try to get watchdog interval from the watchdog status
+    try:
+        from y_web.utils.process_watchdog import get_watchdog_status
+
+        status = get_watchdog_status()
+        watchdog_interval = status.get("run_interval_minutes", 15)
+    except ImportError:
+        # process_watchdog module not available
+        pass
+    except (KeyError, TypeError, AttributeError):
+        # Status returned unexpected format
+        pass
+
+    # Get LLM backend status for the LLM Management tab
+    llm_backend = llm_backend_status()
+
+    # Get installed LLM models
+    models = []
+    try:
+        models = get_llm_models()
+    except Exception:
+        pass
+
+    # Get active Ollama pulls
+    ollama_pulls = Ollama_Pull.query.all()
+    ollama_pulls = [(pull.model_name, float(pull.status)) for pull in ollama_pulls]
+
+    return render_template(
+        "admin/miscellanea.html",
+        telemetry_enabled=telemetry_enabled,
+        watchdog_interval=watchdog_interval,
+        llm_backend=llm_backend,
+        models=models,
+        active_pulls=ollama_pulls,
+        len=len,
+    )
 
 
 @experiments.route("/admin/languages_data")
@@ -3013,23 +3389,30 @@ def copy_experiment():
     - All related records (populations, clients, topics, etc.)
 
     The copy is ready to start without needing a reset.
+    Supports creating multiple copies with incremental naming (name_1, name_2, etc.)
     """
     check_privileges(current_user.username)
+    from y_web.telemetry import Telemetry
 
     # Get form data
     new_exp_name = request.form.get("new_exp_name")
     source_exp_id = request.form.get("source_exp_id")
+    num_copies = request.form.get("num_copies", "1")
 
     # Validate inputs
     if not new_exp_name or not source_exp_id:
         flash("Both experiment name and source experiment are required.")
         return redirect(url_for("experiments.settings"))
 
-    # Check if experiment name already exists
-    existing_exp = Exps.query.filter_by(exp_name=new_exp_name).first()
-    if existing_exp:
-        flash(f"An experiment with name '{new_exp_name}' already exists.")
-        return redirect(url_for("experiments.settings"))
+    # Parse and validate num_copies
+    try:
+        num_copies = int(num_copies)
+        if num_copies < 1:
+            num_copies = 1
+        elif num_copies > 20:
+            num_copies = 20
+    except (ValueError, TypeError):
+        num_copies = 1
 
     # Get source experiment
     source_exp = Exps.query.filter_by(idexp=source_exp_id).first()
@@ -3037,389 +3420,1602 @@ def copy_experiment():
         flash("Source experiment not found.")
         return redirect(url_for("experiments.settings"))
 
-    try:
-        # Create new unique ID for the folder
-        new_uid = str(uuid.uuid4()).replace("-", "_")
+    # Generate list of experiment names to create
+    exp_names_to_create = []
+    if num_copies == 1:
+        exp_names_to_create = [new_exp_name]
+    else:
+        for i in range(1, num_copies + 1):
+            exp_names_to_create.append(f"{new_exp_name}_{i}")
 
-        # Determine database type
-        db_type = "sqlite"
-        if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-            db_type = "postgresql"
-
-        # Extract source experiment folder
-        if db_type == "sqlite":
-            # Source: experiments/old_uid/database_server.db -> old_uid
-            source_parts = source_exp.db_name.split(os.sep)
-            if len(source_parts) >= 2:
-                source_uid = source_parts[1]
-            else:
-                flash("Invalid source experiment path.")
-                return redirect(url_for("experiments.settings"))
-        else:
-            # PostgreSQL: experiments_old_uid -> old_uid
-            source_uid = source_exp.db_name.replace("experiments_", "")
-
-        from y_web.utils.path_utils import get_writable_path
-
-        BASE_DIR = get_writable_path()
-
-        source_folder = os.path.join(
-            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}"
-        )
-        new_folder = os.path.join(
-            BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}"
-        )
-
-        # Check if source folder exists
-        if not os.path.exists(source_folder):
-            flash(f"Source experiment folder not found: {source_folder}")
+    # Validate that none of the names already exist
+    for name in exp_names_to_create:
+        existing_exp = Exps.query.filter_by(exp_name=name).first()
+        if existing_exp:
+            flash(f"An experiment with name '{name}' already exists.")
             return redirect(url_for("experiments.settings"))
 
-        # Create new experiment folder and copy all files
-        pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
+    # Create each copy
+    created_count = 0
+    for copy_name in exp_names_to_create:
+        try:
+            success = _create_single_experiment_copy(source_exp, copy_name)
+            if success:
+                created_count += 1
 
-        # Copy all files from source to new folder, excluding log files
-        for item in os.listdir(source_folder):
-            # Skip log files (server logs and client logs)
-            if item.endswith(".log"):
-                continue
-
-            source_item = os.path.join(source_folder, item)
-            dest_item = os.path.join(new_folder, item)
-
-            if os.path.isfile(source_item):
-                shutil.copy2(source_item, dest_item)
-            elif os.path.isdir(source_item):
-                shutil.copytree(source_item, dest_item)
-
-        # Get suggested port for new experiment
-        suggested_port = get_suggested_port()
-        if not suggested_port:
-            flash(
-                "Error: No available port found in range 5000-6000. Cannot create experiment."
-            )
-            return redirect(url_for("experiments.settings"))
-
-        # Handle database copying first to get the correct db_uri
-        new_db_name = ""
-        new_db_uri = ""
-
-        if db_type == "sqlite":
-            # Create a fresh SQLite database with clean schema (no data from source)
-            new_db_path = os.path.join(new_folder, "database_server.db")
-
-            # Copy the clean database schema instead of the source database
-            clean_db_path = get_resource_path(
-                os.path.join("data_schema", "database_clean_server.db")
-            )
-            if os.path.exists(clean_db_path):
-                shutil.copy2(clean_db_path, new_db_path)
-            else:
-                flash(
-                    "Warning: Clean database template not found. Using empty database."
-                )
-                # Create an empty database file
-                import sqlite3
-
-                conn = sqlite3.connect(new_db_path)
-                conn.close()
-
-            new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
-
-            # Build absolute path for database_uri
-            # Use the absolute path of the new_db_path
-            new_db_uri = os.path.abspath(new_db_path)
-
-        elif db_type == "postgresql":
-            # Create new PostgreSQL database with clean schema (no data from source)
-            from urllib.parse import urlparse
-
-            from sqlalchemy import create_engine, text
-            from werkzeug.security import generate_password_hash
-
-            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
-            parsed_uri = urlparse(current_uri)
-
-            user = parsed_uri.username or "postgres"
-            password = parsed_uri.password or "password"
-            host = parsed_uri.hostname or "localhost"
-            port_db = parsed_uri.port or 5432
-
-            new_dbname = f"experiments_{new_uid}"
-            new_db_name = new_dbname
-            new_db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{new_dbname}"
-
-            # Connect to postgres database
-            admin_engine = create_engine(
-                f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
-            )
-
-            # Check if database already exists
-            with admin_engine.connect() as conn:
-                result = conn.execute(
-                    text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
-                    {"dbname": new_dbname},
-                )
-                db_exists = result.scalar() is not None
-
-            if not db_exists:
-                # Create new empty database
-                with admin_engine.connect().execution_options(
-                    isolation_level="AUTOCOMMIT"
-                ) as conn:
-                    conn.execute(text(f'CREATE DATABASE "{new_dbname}"'))
-
-                # Connect to the newly created database and apply schema
-                experiment_engine = create_engine(new_db_uri)
-                with experiment_engine.connect() as conn:
-                    # Load schema from SQL file
-                    schema_path = get_resource_path(
-                        os.path.join("data_schema", "postgre_server.sql")
-                    )
-                    with open(schema_path, "r") as schema_file:
-                        schema_sql = schema_file.read()
-                        conn.execute(text(schema_sql))
-
-                    # Insert initial admin user
-                    hashed_pw = generate_password_hash("test", method="pbkdf2:sha256")
-
-                    stmt = text(
-                        """
-                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
-                                               language, owner, joined_on, frecsys_type,
-                                               round_actions, toxicity, is_page, daily_activity_level)
-                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
-                                :language, :owner, :joined_on, :frecsys_type,
-                                :round_actions, :toxicity, :is_page, :daily_activity_level)
-                        """
-                    )
-
-                    conn.execute(
-                        stmt,
-                        {
-                            "username": "admin",
-                            "email": "admin@ysocial.com",
-                            "password": hashed_pw,
-                            "user_type": "user",
-                            "leaning": "none",
-                            "age": 0,
-                            "language": "en",
-                            "owner": "admin",
-                            "joined_on": 0,
-                            "frecsys_type": "default",
-                            "round_actions": 3,
-                            "toxicity": "none",
-                            "is_page": 0,
-                            "daily_activity_level": 1,
+                telemetry = Telemetry(user=current_user)
+                telemetry.log_event(
+                    {
+                        "action": "create_experiment",
+                        "data": {
+                            "platform_type": source_exp.platform_type,
+                            "annotations": source_exp.annotations,
+                            "llm_agents_enabled": source_exp.llm_agents_enabled,
+                            "copy_experiment": "True",
                         },
-                    )
-
-                experiment_engine.dispose()
-
-            admin_engine.dispose()
-
-        # Update config_server.json with new name, port, and database_uri
-        config_path = os.path.join(new_folder, "config_server.json")
-        if not os.path.exists(config_path):
-            flash("Error: config_server.json not found in copied experiment folder.")
-            # Cleanup and return
-            if os.path.exists(new_folder):
-                shutil.rmtree(new_folder, ignore_errors=True)
-            return redirect(url_for("experiments.settings"))
-
-        with open(config_path, "r") as f:
-            config = json.load(f)
-
-        # Update all necessary fields
-        config["name"] = new_exp_name
-        config["port"] = suggested_port
-        config["database_uri"] = new_db_uri
-
-        with open(config_path, "w") as f:
-            json.dump(config, f, indent=4)
-
-        # Verify the config was written correctly
-        with open(config_path, "r") as f:
-            verify_config = json.load(f)
-
-        if (
-            verify_config.get("port") != suggested_port
-            or verify_config.get("database_uri") != new_db_uri
-        ):
-            flash("Error: Failed to update config_server.json correctly.")
-            # Cleanup and return
-            if os.path.exists(new_folder):
-                shutil.rmtree(new_folder, ignore_errors=True)
-            return redirect(url_for("experiments.settings"))
-
-        # Update all client configuration files with new port
-        # Client configs have the format: client_*.json
-        for item in os.listdir(new_folder):
-            if item.startswith("client") and item.endswith(".json"):
-                client_config_path = os.path.join(new_folder, item)
-                try:
-                    with open(client_config_path, "r") as f:
-                        client_config = json.load(f)
-
-                    # Update the API endpoint in servers section
-                    if "servers" in client_config and "api" in client_config["servers"]:
-                        # Update the port in the API URL
-                        old_api = client_config["servers"]["api"]
-                        # Replace the port in the URL (format: http://host:port/)
-                        import re
-
-                        new_api = re.sub(r":\d+/", f":{suggested_port}/", old_api)
-                        client_config["servers"]["api"] = new_api
-
-                        with open(client_config_path, "w") as f:
-                            json.dump(client_config, f, indent=4)
-                except Exception as e:
-                    flash(f"Warning: Failed to update client config {item}: {str(e)}")
-                    # Continue anyway - this is not critical enough to fail the entire copy
-
-        # Create new experiment record in admin database
-        new_exp = Exps(
-            exp_name=new_exp_name,
-            platform_type=source_exp.platform_type,
-            db_name=new_db_name,
-            owner=current_user.username,
-            exp_descr=source_exp.exp_descr,
-            status=0,  # Not loaded
-            running=0,  # Not running
-            port=suggested_port,
-            server=source_exp.server,
-            annotations=source_exp.annotations,
-            llm_agents_enabled=source_exp.llm_agents_enabled,
-        )
-        db.session.add(new_exp)
-        db.session.commit()
-
-        # Copy Exp_stats
-        source_stats = Exp_stats.query.filter_by(exp_id=source_exp.idexp).first()
-        if source_stats:
-            new_stats = Exp_stats(
-                exp_id=new_exp.idexp,
-                rounds=0,  # Reset to 0 for new experiment
-                agents=source_stats.agents,
-                posts=0,  # Reset to 0
-                reactions=0,  # Reset to 0
-                mentions=0,  # Reset to 0
-            )
-            db.session.add(new_stats)
-            db.session.commit()
-
-        # Copy Exp_Topic relationships
-        source_topics = Exp_Topic.query.filter_by(exp_id=source_exp.idexp).all()
-        for topic in source_topics:
-            new_topic = Exp_Topic(exp_id=new_exp.idexp, topic_id=topic.topic_id)
-            db.session.add(new_topic)
-        db.session.commit()
-
-        # Copy Population_Experiment relationships
-        source_pop_exps = Population_Experiment.query.filter_by(
-            id_exp=source_exp.idexp
-        ).all()
-        for pop_exp in source_pop_exps:
-            new_pop_exp = Population_Experiment(
-                id_exp=new_exp.idexp, id_population=pop_exp.id_population
-            )
-            db.session.add(new_pop_exp)
-        db.session.commit()
-
-        # Copy Client records
-        source_clients = Client.query.filter_by(id_exp=source_exp.idexp).all()
-        for source_client in source_clients:
-            new_client = Client(
-                name=source_client.name,
-                descr=source_client.descr,
-                days=source_client.days,
-                percentage_new_agents_iteration=source_client.percentage_new_agents_iteration,
-                percentage_removed_agents_iteration=source_client.percentage_removed_agents_iteration,
-                max_length_thread_reading=source_client.max_length_thread_reading,
-                reading_from_follower_ratio=source_client.reading_from_follower_ratio,
-                probability_of_daily_follow=source_client.probability_of_daily_follow,
-                attention_window=source_client.attention_window,
-                visibility_rounds=source_client.visibility_rounds,
-                post=source_client.post,
-                share=source_client.share,
-                image=source_client.image,
-                comment=source_client.comment,
-                read=source_client.read,
-                news=source_client.news,
-                search=source_client.search,
-                vote=source_client.vote,
-                share_link=source_client.share_link,
-                llm=source_client.llm,
-                llm_api_key=source_client.llm_api_key,
-                llm_max_tokens=source_client.llm_max_tokens,
-                llm_temperature=source_client.llm_temperature,
-                llm_v_agent=source_client.llm_v_agent,
-                llm_v=source_client.llm_v,
-                llm_v_api_key=source_client.llm_v_api_key,
-                llm_v_max_tokens=source_client.llm_v_max_tokens,
-                llm_v_temperature=source_client.llm_v_temperature,
-                status=0,  # Not running
-                id_exp=new_exp.idexp,
-                probability_of_secondary_follow=source_client.probability_of_secondary_follow,
-                population_id=source_client.population_id,
-                network_type=source_client.network_type,
-                crecsys=source_client.crecsys,
-                frecsys=source_client.frecsys,
-                pid=None,  # No process ID yet
-            )
-            db.session.add(new_client)
-            db.session.commit()
-
-        # Note: Client_Execution entries are NOT copied - they will be created
-        # when the client is first started, ensuring fresh execution state
-
-        # Note: Rounds table is in the experiment database (db_exp)
-        # The clean database template already has the initial round (day=0, hour=0)
-
-        # Create Jupyter instance record
-        jupyter_instance = Jupyter_instances(
-            port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped"
-        )
-        db.session.add(jupyter_instance)
-        db.session.commit()
-
-        flash(
-            f"Experiment '{new_exp_name}' successfully created as a copy of '{source_exp.exp_name}'."
-        )
-
-    except Exception as e:
-        # Cleanup on error
-        if "new_folder" in locals() and os.path.exists(new_folder):
-            shutil.rmtree(new_folder, ignore_errors=True)
-
-        if db_type == "postgresql" and "new_dbname" in locals():
-            try:
-                from urllib.parse import urlparse
-
-                from sqlalchemy import create_engine, text
-
-                current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
-                parsed_uri = urlparse(current_uri)
-
-                user = parsed_uri.username or "postgres"
-                password = parsed_uri.password or "password"
-                host = parsed_uri.hostname or "localhost"
-                port_db = parsed_uri.port or 5432
-
-                admin_engine = create_engine(
-                    f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+                    },
                 )
+        except Exception as e:
+            current_app.logger.error(
+                f"Error copying experiment to '{copy_name}': {str(e)}", exc_info=True
+            )
+            flash(f"Error creating copy '{copy_name}': {str(e)}")
 
-                with admin_engine.connect().execution_options(
-                    isolation_level="AUTOCOMMIT"
-                ) as conn:
-                    conn.execute(text(f'DROP DATABASE IF EXISTS "{new_dbname}"'))
-
-                admin_engine.dispose()
-            except Exception:
-                pass
-
-        flash(f"Error copying experiment: {str(e)}")
-        current_app.logger.error(f"Error copying experiment: {str(e)}", exc_info=True)
+    if created_count > 0:
+        if created_count == 1:
+            flash(
+                f"Experiment '{exp_names_to_create[0]}' successfully created as a copy of '{source_exp.exp_name}'."
+            )
+        else:
+            flash(
+                f"{created_count} experiment copies successfully created from '{source_exp.exp_name}'."
+            )
 
     return redirect(url_for("experiments.settings"))
+
+
+def _create_single_experiment_copy(source_exp, new_exp_name):
+    """
+    Helper function to create a single experiment copy.
+
+    Args:
+        source_exp: Source experiment object
+        new_exp_name: Name for the new experiment
+
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    # Create new unique ID for the folder
+    new_uid = str(uuid.uuid4()).replace("-", "_")
+
+    # Determine database type
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
+    # Extract source experiment folder
+    if db_type == "sqlite":
+        # Source: experiments/old_uid/database_server.db -> old_uid
+        source_parts = source_exp.db_name.split(os.sep)
+        if len(source_parts) >= 2:
+            source_uid = source_parts[1]
+        else:
+            return False
+    else:
+        # PostgreSQL: experiments_old_uid -> old_uid
+        source_uid = source_exp.db_name.replace("experiments_", "")
+
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
+    source_folder = os.path.join(
+        BASE_DIR, f"y_web{os.sep}experiments{os.sep}{source_uid}"
+    )
+    new_folder = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}{new_uid}")
+
+    # Check if source folder exists
+    if not os.path.exists(source_folder):
+        return False
+
+    # Create new experiment folder and copy all files
+    pathlib.Path(new_folder).mkdir(parents=True, exist_ok=True)
+
+    # Copy all files from source to new folder, excluding log files
+    import re
+
+    log_pattern = re.compile(r"\.log(\.\d+)?$")  # Matches .log, .log.1, .log.2, etc.
+
+    for item in os.listdir(source_folder):
+        # Skip log files (server logs and client logs) including rotated logs
+        if log_pattern.search(item):
+            continue
+
+        source_item = os.path.join(source_folder, item)
+        dest_item = os.path.join(new_folder, item)
+
+        if os.path.isfile(source_item):
+            shutil.copy2(source_item, dest_item)
+        elif os.path.isdir(source_item):
+            shutil.copytree(source_item, dest_item)
+
+    # Get suggested port for new experiment
+    suggested_port = get_suggested_port()
+    if not suggested_port:
+        # Cleanup and return
+        current_app.logger.warning(
+            f"No available port found for experiment copy: {new_exp_name}"
+        )
+        shutil.rmtree(new_folder, ignore_errors=True)
+        return False
+
+    # Handle database copying first to get the correct db_uri
+    new_db_name = ""
+    new_db_uri = ""
+
+    if db_type == "sqlite":
+        # Create a fresh SQLite database with clean schema (no data from source)
+        new_db_path = os.path.join(new_folder, "database_server.db")
+
+        # Copy the clean database schema instead of the source database
+        clean_db_path = get_resource_path(
+            os.path.join("data_schema", "database_clean_server.db")
+        )
+        if os.path.exists(clean_db_path):
+            shutil.copy2(clean_db_path, new_db_path)
+        else:
+            # Create an empty database file
+            import sqlite3
+
+            conn = sqlite3.connect(new_db_path)
+            conn.close()
+
+        new_db_name = f"experiments{os.sep}{new_uid}{os.sep}database_server.db"
+
+        # Build absolute path for database_uri
+        # Use the absolute path of the new_db_path
+        new_db_uri = os.path.abspath(new_db_path)
+
+    elif db_type == "postgresql":
+        # Create new PostgreSQL database with clean schema (no data from source)
+        from urllib.parse import urlparse
+
+        from sqlalchemy import create_engine, text
+        from werkzeug.security import generate_password_hash
+
+        current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+        parsed_uri = urlparse(current_uri)
+
+        user = parsed_uri.username or "postgres"
+        password = parsed_uri.password or "password"
+        host = parsed_uri.hostname or "localhost"
+        port_db = parsed_uri.port or 5432
+
+        new_dbname = f"experiments_{new_uid}"
+        new_db_name = new_dbname
+        new_db_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{new_dbname}"
+
+        # Connect to postgres database
+        admin_engine = create_engine(
+            f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+        )
+
+        # Check if database already exists
+        with admin_engine.connect() as conn:
+            result = conn.execute(
+                text("SELECT 1 FROM pg_database WHERE datname = :dbname"),
+                {"dbname": new_dbname},
+            )
+            db_exists = result.scalar() is not None
+
+        if not db_exists:
+            # Create new empty database
+            with admin_engine.connect().execution_options(
+                isolation_level="AUTOCOMMIT"
+            ) as conn:
+                conn.execute(text(f'CREATE DATABASE "{new_dbname}"'))
+
+            # Connect to the newly created database and apply schema
+            experiment_engine = create_engine(new_db_uri)
+            with experiment_engine.connect() as conn:
+                # Load schema from SQL file
+                schema_path = get_resource_path(
+                    os.path.join("data_schema", "postgre_server.sql")
+                )
+                with open(schema_path, "r") as schema_file:
+                    schema_sql = schema_file.read()
+                    conn.execute(text(schema_sql))
+
+                # Insert initial admin user
+                hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
+
+                stmt = text(
+                    """
+                    INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
+                                           language, owner, joined_on, frecsys_type,
+                                           round_actions, toxicity, is_page, daily_activity_level)
+                    VALUES (:username, :email, :password, :user_type, :leaning, :age,
+                            :language, :owner, :joined_on, :frecsys_type,
+                            :round_actions, :toxicity, :is_page, :daily_activity_level)
+                    """
+                )
+
+                conn.execute(
+                    stmt,
+                    {
+                        "username": "Admin",
+                        "email": "admin@y-not.social",
+                        "password": hashed_pw,
+                        "user_type": "user",
+                        "leaning": "none",
+                        "age": 0,
+                        "language": "en",
+                        "owner": "admin",
+                        "joined_on": 0,
+                        "frecsys_type": "default",
+                        "round_actions": 3,
+                        "toxicity": "none",
+                        "is_page": 0,
+                        "daily_activity_level": 1,
+                    },
+                )
+
+            experiment_engine.dispose()
+
+        admin_engine.dispose()
+
+    # Update config_server.json with new name, port, and database_uri
+    config_path = os.path.join(new_folder, "config_server.json")
+    if not os.path.exists(config_path):
+        # Cleanup and return
+        if os.path.exists(new_folder):
+            shutil.rmtree(new_folder, ignore_errors=True)
+        return False
+
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    # Update all necessary fields
+    config["name"] = new_exp_name
+    config["port"] = suggested_port
+    config["database_uri"] = new_db_uri
+
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=4)
+
+    # Verify the config was written correctly
+    with open(config_path, "r") as f:
+        verify_config = json.load(f)
+
+    if (
+        verify_config.get("port") != suggested_port
+        or verify_config.get("database_uri") != new_db_uri
+    ):
+        # Cleanup and return
+        if os.path.exists(new_folder):
+            shutil.rmtree(new_folder, ignore_errors=True)
+        return False
+
+    # Update all client configuration files with new port
+    # Client configs have the format: client_*.json
+    for item in os.listdir(new_folder):
+        if item.startswith("client") and item.endswith(".json"):
+            client_config_path = os.path.join(new_folder, item)
+            try:
+                with open(client_config_path, "r") as f:
+                    client_config = json.load(f)
+
+                # Update the API endpoint in servers section
+                if "servers" in client_config and "api" in client_config["servers"]:
+                    # Update the port in the API URL
+                    old_api = client_config["servers"]["api"]
+                    # Replace port in URL - handles both with and without trailing slash
+                    # Pattern matches :port/ or :port at end of string
+                    import re
+
+                    new_api = re.sub(r":(\d+)(/|$)", f":{suggested_port}\\2", old_api)
+                    client_config["servers"]["api"] = new_api
+
+                    with open(client_config_path, "w") as f:
+                        json.dump(client_config, f, indent=4)
+            except Exception as e:
+                # Continue anyway - this is not critical enough to fail the entire copy
+                current_app.logger.warning(
+                    f"Failed to update client config {item}: {str(e)}"
+                )
+
+    # Create new experiment record in admin database
+    new_exp = Exps(
+        exp_name=new_exp_name,
+        platform_type=source_exp.platform_type,
+        db_name=new_db_name,
+        owner=current_user.username,
+        exp_descr=source_exp.exp_descr,
+        status=0,  # Not loaded
+        running=0,  # Not running
+        port=suggested_port,
+        server=source_exp.server,
+        annotations=source_exp.annotations,
+        llm_agents_enabled=source_exp.llm_agents_enabled,
+    )
+    db.session.add(new_exp)
+    db.session.commit()
+
+    # Copy Exp_stats
+    source_stats = Exp_stats.query.filter_by(exp_id=source_exp.idexp).first()
+    if source_stats:
+        new_stats = Exp_stats(
+            exp_id=new_exp.idexp,
+            rounds=0,  # Reset to 0 for new experiment
+            agents=source_stats.agents,
+            posts=0,  # Reset to 0
+            reactions=0,  # Reset to 0
+            mentions=0,  # Reset to 0
+        )
+        db.session.add(new_stats)
+        db.session.commit()
+
+    # Copy Exp_Topic relationships
+    source_topics = Exp_Topic.query.filter_by(exp_id=source_exp.idexp).all()
+    for topic in source_topics:
+        new_topic = Exp_Topic(exp_id=new_exp.idexp, topic_id=topic.topic_id)
+        db.session.add(new_topic)
+    db.session.commit()
+
+    # Copy Population_Experiment relationships
+    source_pop_exps = Population_Experiment.query.filter_by(
+        id_exp=source_exp.idexp
+    ).all()
+    for pop_exp in source_pop_exps:
+        new_pop_exp = Population_Experiment(
+            id_exp=new_exp.idexp, id_population=pop_exp.id_population
+        )
+        db.session.add(new_pop_exp)
+    db.session.commit()
+
+    # Copy Client records
+    source_clients = Client.query.filter_by(id_exp=source_exp.idexp).all()
+    for source_client in source_clients:
+        new_client = Client(
+            name=source_client.name,
+            descr=source_client.descr,
+            days=source_client.days,
+            percentage_new_agents_iteration=source_client.percentage_new_agents_iteration,
+            percentage_removed_agents_iteration=source_client.percentage_removed_agents_iteration,
+            max_length_thread_reading=source_client.max_length_thread_reading,
+            reading_from_follower_ratio=source_client.reading_from_follower_ratio,
+            probability_of_daily_follow=source_client.probability_of_daily_follow,
+            attention_window=source_client.attention_window,
+            visibility_rounds=source_client.visibility_rounds,
+            post=source_client.post,
+            share=source_client.share,
+            image=source_client.image,
+            comment=source_client.comment,
+            read=source_client.read,
+            news=source_client.news,
+            search=source_client.search,
+            vote=source_client.vote,
+            share_link=source_client.share_link,
+            llm=source_client.llm,
+            llm_api_key=source_client.llm_api_key,
+            llm_max_tokens=source_client.llm_max_tokens,
+            llm_temperature=source_client.llm_temperature,
+            llm_v_agent=source_client.llm_v_agent,
+            llm_v=source_client.llm_v,
+            llm_v_api_key=source_client.llm_v_api_key,
+            llm_v_max_tokens=source_client.llm_v_max_tokens,
+            llm_v_temperature=source_client.llm_v_temperature,
+            status=0,  # Not running
+            id_exp=new_exp.idexp,
+            probability_of_secondary_follow=source_client.probability_of_secondary_follow,
+            population_id=source_client.population_id,
+            network_type=source_client.network_type,
+            crecsys=source_client.crecsys,
+            frecsys=source_client.frecsys,
+            pid=None,  # No process ID yet
+        )
+        db.session.add(new_client)
+        db.session.commit()
+
+    # Note: Client_Execution entries are NOT copied - they will be created
+    # when the client is first started, ensuring fresh execution state
+
+    # Note: Rounds table is in the experiment database (db_exp)
+    # The clean database template already has the initial round (day=0, hour=0)
+
+    # Create Jupyter instance record
+    jupyter_instance = Jupyter_instances(
+        port=-1, notebook_dir="", exp_id=new_exp.idexp, status="stopped"
+    )
+    db.session.add(jupyter_instance)
+    db.session.commit()
+
+    return True
+
+
+@experiments.route("/admin/log_sync_settings", methods=["GET"])
+@login_required
+def get_log_sync_settings():
+    """
+    Get current log sync settings.
+
+    Returns:
+        JSON with log sync settings
+    """
+    check_privileges(current_user.username)
+
+    # Get or create default settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+        db.session.commit()
+
+    return jsonify(
+        {
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+            "last_sync": (
+                settings.last_sync.isoformat() + "Z" if settings.last_sync else None
+            ),
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_settings", methods=["POST"])
+@login_required
+def update_log_sync_settings():
+    """
+    Update log sync settings.
+
+    Expects JSON body with:
+    - enabled (bool): Whether automatic log sync is enabled
+    - sync_interval_minutes (int): Sync frequency in minutes (1-1440)
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    # Get or create settings
+    settings = LogSyncSettings.query.first()
+    if not settings:
+        settings = LogSyncSettings(enabled=True, sync_interval_minutes=10)
+        db.session.add(settings)
+
+    # Update enabled if provided
+    if "enabled" in data:
+        settings.enabled = bool(data["enabled"])
+
+    # Update sync interval if provided
+    if "sync_interval_minutes" in data:
+        try:
+            interval = int(data["sync_interval_minutes"])
+            # Validate range: 1 minute to 24 hours
+            if interval < 1 or interval > 1440:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "message": "Sync interval must be between 1 and 1440 minutes",
+                        }
+                    ),
+                    400,
+                )
+            settings.sync_interval_minutes = interval
+        except (ValueError, TypeError):
+            return (
+                jsonify({"success": False, "message": "Invalid sync interval value"}),
+                400,
+            )
+
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "enabled": settings.enabled,
+            "sync_interval_minutes": settings.sync_interval_minutes,
+        }
+    )
+
+
+@experiments.route("/admin/log_sync_trigger", methods=["POST"])
+@login_required
+def trigger_log_sync():
+    """
+    Manually trigger a log sync for all running experiments.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    try:
+        from y_web.utils.log_sync_scheduler import get_scheduler
+
+        scheduler = get_scheduler()
+        if scheduler:
+            success = scheduler.trigger_sync()
+            if success:
+                return jsonify(
+                    {"success": True, "message": "Log sync triggered successfully"}
+                )
+            else:
+                return (
+                    jsonify({"success": False, "message": "Log sync failed"}),
+                    500,
+                )
+        else:
+            return (
+                jsonify(
+                    {"success": False, "message": "Log sync scheduler not running"}
+                ),
+                503,
+            )
+    except Exception as e:
+        current_app.logger.error(f"Error triggering log sync: {e}", exc_info=True)
+        return jsonify({"success": False, "message": str(e)}), 500
+
+
+# =====================================================
+# Experiment Schedule Routes
+# =====================================================
+
+
+@experiments.route("/admin/schedule/groups", methods=["GET"])
+@login_required
+def get_schedule_groups():
+    """
+    Get all experiment schedule groups with their experiments.
+
+    Returns:
+        JSON with groups and their associated experiments
+    """
+    check_privileges(current_user.username)
+
+    # Only show non-completed groups
+    groups = (
+        ExperimentScheduleGroup.query.filter(
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None)
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .all()
+    )
+
+    result = []
+    for group in groups:
+        items = (
+            ExperimentScheduleItem.query.filter_by(group_id=group.id)
+            .order_by(ExperimentScheduleItem.order_index)
+            .all()
+        )
+        experiments_list = []
+        for item in items:
+            exp = Exps.query.get(item.experiment_id)
+            if exp:
+                experiments_list.append(
+                    {
+                        "id": exp.idexp,
+                        "name": exp.exp_name,
+                        "owner": exp.owner,
+                        "exp_status": exp.exp_status,
+                        "item_id": item.id,
+                    }
+                )
+        result.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "order_index": group.order_index,
+                "is_completed": group.is_completed or 0,
+                "experiments": experiments_list,
+            }
+        )
+
+    return jsonify({"success": True, "groups": result})
+
+
+@experiments.route("/admin/schedule/groups", methods=["POST"])
+@login_required
+def create_schedule_group():
+    """
+    Create a new experiment schedule group.
+
+    Expects JSON body with:
+    - name: Group name
+
+    Returns:
+        JSON with created group details
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "name" not in data:
+        return jsonify({"success": False, "message": "Name is required"}), 400
+
+    # Get max order index
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleGroup.order_index)).scalar() or 0
+    )
+
+    group = ExperimentScheduleGroup(name=data["name"], order_index=max_order + 1)
+    db.session.add(group)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "group": {
+                "id": group.id,
+                "name": group.name,
+                "order_index": group.order_index,
+                "experiments": [],
+            },
+        }
+    )
+
+
+@experiments.route("/admin/schedule/groups/<int:group_id>", methods=["DELETE"])
+@login_required
+def delete_schedule_group(group_id):
+    """
+    Delete an experiment schedule group.
+
+    Args:
+        group_id: ID of the group to delete
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    group = ExperimentScheduleGroup.query.get(group_id)
+    if not group:
+        return jsonify({"success": False, "message": "Group not found"}), 404
+
+    # Check if the group is currently running
+    status = ExperimentScheduleStatus.query.first()
+    if status and status.is_running and status.current_group_id == group_id:
+        return (
+            jsonify({"success": False, "message": "Cannot delete a running group"}),
+            400,
+        )
+
+    # Delete all items in the group first
+    ExperimentScheduleItem.query.filter_by(group_id=group_id).delete()
+    db.session.delete(group)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route(
+    "/admin/schedule/groups/<int:group_id>/experiments", methods=["POST"]
+)
+@login_required
+def add_experiment_to_group(group_id):
+    """
+    Add an experiment to a schedule group.
+
+    Args:
+        group_id: ID of the group
+
+    Expects JSON body with:
+    - experiment_id: ID of the experiment to add
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "experiment_id" not in data:
+        return jsonify({"success": False, "message": "experiment_id is required"}), 400
+
+    group = ExperimentScheduleGroup.query.get(group_id)
+    if not group:
+        return jsonify({"success": False, "message": "Group not found"}), 404
+
+    exp = Exps.query.get(data["experiment_id"])
+    if not exp:
+        return jsonify({"success": False, "message": "Experiment not found"}), 404
+
+    # Check if already in this group
+    existing = ExperimentScheduleItem.query.filter_by(
+        group_id=group_id, experiment_id=data["experiment_id"]
+    ).first()
+    if existing:
+        return (
+            jsonify({"success": False, "message": "Experiment already in group"}),
+            400,
+        )
+
+    # Get max order index for this group
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleItem.order_index))
+        .filter(ExperimentScheduleItem.group_id == group_id)
+        .scalar()
+        or 0
+    )
+
+    item = ExperimentScheduleItem(
+        group_id=group_id,
+        experiment_id=data["experiment_id"],
+        order_index=max_order + 1,
+    )
+    db.session.add(item)
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "item": {
+                "id": item.id,
+                "experiment_id": exp.idexp,
+                "name": exp.exp_name,
+            },
+        }
+    )
+
+
+@experiments.route("/admin/schedule/items/<int:item_id>", methods=["DELETE"])
+@login_required
+def remove_experiment_from_group(item_id):
+    """
+    Remove an experiment from a schedule group.
+
+    Args:
+        item_id: ID of the schedule item to remove
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    item = ExperimentScheduleItem.query.get(item_id)
+    if not item:
+        return jsonify({"success": False, "message": "Item not found"}), 404
+
+    # Check if the group is currently running
+    status = ExperimentScheduleStatus.query.first()
+    if status and status.is_running and status.current_group_id == item.group_id:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Cannot remove experiments from a running group",
+                }
+            ),
+            400,
+        )
+
+    db.session.delete(item)
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/groups/reorder", methods=["POST"])
+@login_required
+def reorder_schedule_groups():
+    """
+    Reorder schedule groups.
+
+    Expects JSON body with:
+    - group_ids: List of group IDs in new order
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "group_ids" not in data:
+        return jsonify({"success": False, "message": "group_ids is required"}), 400
+
+    for index, group_id in enumerate(data["group_ids"]):
+        group = ExperimentScheduleGroup.query.get(group_id)
+        if group:
+            group.order_index = index
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/status", methods=["GET"])
+@login_required
+def get_schedule_status():
+    """
+    Get current schedule execution status.
+
+    Returns:
+        JSON with schedule status
+    """
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status:
+        status = ExperimentScheduleStatus(is_running=0)
+        db.session.add(status)
+        db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "is_running": bool(status.is_running),
+            "current_group_id": status.current_group_id,
+            "started_at": status.started_at.isoformat() if status.started_at else None,
+        }
+    )
+
+
+def _get_clients_to_start(exp):
+    """
+    Check which clients in an experiment need to be started.
+
+    Args:
+        exp: Experiment object
+
+    Returns:
+        tuple: (all_clients_completed, clients_to_start)
+            - all_clients_completed: True if all clients have finished
+            - clients_to_start: List of Client objects that still need to run
+    """
+    clients = Client.query.filter_by(id_exp=exp.idexp).all()
+    all_clients_completed = True
+    clients_to_start = []
+
+    for client in clients:
+        # Check if client has completed
+        client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+        if client_exec:
+            # Infinite clients (expected_duration_rounds = -1) are never considered completed
+            if client_exec.expected_duration_rounds == -1:
+                all_clients_completed = False
+                clients_to_start.append(client)
+            elif client_exec.elapsed_time < client_exec.expected_duration_rounds:
+                all_clients_completed = False
+                clients_to_start.append(client)
+        else:
+            # No execution record means client hasn't run yet
+            all_clients_completed = False
+            clients_to_start.append(client)
+
+    # If no clients exist, consider it not completed (nothing to run)
+    if len(clients) == 0:
+        all_clients_completed = False
+
+    return all_clients_completed, clients_to_start
+
+
+@experiments.route("/admin/schedule/start", methods=["POST"])
+@login_required
+def start_schedule():
+    """
+    Start executing the experiment schedule.
+
+    Starts all experiments in the first group and monitors for completion.
+
+    Returns:
+        JSON with success status and execution logs
+    """
+    import time
+
+    check_privileges(current_user.username)
+
+    # Check if already running
+    status = ExperimentScheduleStatus.query.first()
+    if not status:
+        status = ExperimentScheduleStatus(is_running=0)
+        db.session.add(status)
+        db.session.commit()
+
+    if status.is_running:
+        return jsonify({"success": False, "message": "Schedule already running"}), 400
+
+    # Clear old logs when starting a new schedule
+    ExperimentScheduleLog.query.delete()
+    db.session.commit()
+
+    # Get first non-completed group
+    first_group = (
+        ExperimentScheduleGroup.query.filter(
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None)
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .first()
+    )
+    if not first_group:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "No groups defined or all groups completed",
+                }
+            ),
+            400,
+        )
+
+    # Start all experiments in first group
+    items = ExperimentScheduleItem.query.filter_by(group_id=first_group.id).all()
+    if not items:
+        return (
+            jsonify({"success": False, "message": "First group has no experiments"}),
+            400,
+        )
+
+    from datetime import datetime
+
+    # Add persistent log
+    log_entry = ExperimentScheduleLog(
+        message=f"Schedule started - beginning with group '{first_group.name}'",
+        log_type="info",
+        created_at=datetime.utcnow(),
+    )
+    db.session.add(log_entry)
+    db.session.commit()
+
+    # Update status
+    status.is_running = 1
+    status.current_group_id = first_group.id
+    status.started_at = datetime.utcnow()
+    db.session.commit()
+
+    # Collect execution logs
+    logs = []
+
+    # Start each experiment in the group
+    started_count = 0
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 0:
+            # Check if all clients have already completed before starting the server
+            all_clients_completed, clients_to_start = _get_clients_to_start(exp)
+
+            # If all clients have completed, mark experiment as completed and skip
+            if all_clients_completed:
+                msg = f"Experiment '{exp.exp_name}' already completed - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                exp.exp_status = "completed"
+                db.session.commit()
+                continue
+
+            # If no clients to start, skip
+            if len(clients_to_start) == 0:
+                msg = f"No clients to start for '{exp.exp_name}' - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                continue
+
+            msg = f"Starting server for '{exp.exp_name}'..."
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+
+            # Update experiment status
+            exp.running = 1
+            exp.exp_status = "active"
+            db.session.commit()
+
+            # Start the server
+            start_server(exp)
+            started_count += 1
+
+            # Wait for server to be ready
+            msg = f"Waiting for server '{exp.exp_name}' to be ready..."
+            logs.append(msg)
+            time.sleep(3)  # Give server time to start
+
+            # Start only clients that haven't completed
+            for client in clients_to_start:
+                if client.status == 0:
+                    msg = f"Starting client '{client.name}' for '{exp.exp_name}'..."
+                    logs.append(msg)
+                    db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                    # Get population for client
+                    population = Population.query.filter_by(
+                        id=client.population_id
+                    ).first()
+                    if population:
+                        start_client(exp, client, population, resume=True)
+                        # Mark client as running
+                        client.status = 1
+                        db.session.commit()
+                        msg = f"Client '{client.name}' started successfully"
+                        logs.append(msg)
+                    else:
+                        msg = f"Warning: No population found for client '{client.name}'"
+                        logs.append(msg)
+                        db.session.add(
+                            ExperimentScheduleLog(message=msg, log_type="warning")
+                        )
+
+            msg = f"Experiment '{exp.exp_name}' started successfully"
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+            db.session.commit()
+
+    msg = f"Group '{first_group.name}' started with {started_count} experiment(s)"
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Started {started_count} experiments in group '{first_group.name}'",
+            "current_group": first_group.name,
+            "current_group_id": first_group.id,
+            "logs": logs,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/stop", methods=["POST"])
+@login_required
+def stop_schedule():
+    """
+    Stop the experiment schedule.
+
+    Stops all running experiments and resets schedule status.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status or not status.is_running:
+        return jsonify({"success": False, "message": "Schedule not running"}), 400
+
+    # Stop all experiments in current group
+    if status.current_group_id:
+        items = ExperimentScheduleItem.query.filter_by(
+            group_id=status.current_group_id
+        ).all()
+        for item in items:
+            exp = Exps.query.get(item.experiment_id)
+            if exp and exp.running == 1:
+                # Stop all clients first
+                clients = Client.query.filter_by(id_exp=exp.idexp).all()
+                for client in clients:
+                    if client.status == 1:
+                        if client.pid:
+                            terminate_client(client, pause=False)
+                        client.status = 0
+                        db.session.commit()
+
+                # Stop server
+                terminated = terminate_server_process(exp.idexp)
+                if not terminated:
+                    terminate_process_on_port(exp.port)
+
+                exp.running = 0
+                exp.exp_status = "stopped"
+                db.session.commit()
+
+    # Reset status
+    status.is_running = 0
+    status.current_group_id = None
+    status.started_at = None
+    db.session.commit()
+
+    return jsonify({"success": True, "message": "Schedule stopped"})
+
+
+@experiments.route("/admin/schedule/check_progress", methods=["POST"])
+@login_required
+def check_schedule_progress():
+    """
+    Check progress of scheduled experiments and advance to next group if needed.
+
+    Called periodically to check if current group is complete and start next group.
+
+    Returns:
+        JSON with progress status
+    """
+    import time
+
+    check_privileges(current_user.username)
+
+    status = ExperimentScheduleStatus.query.first()
+    if not status or not status.is_running:
+        return jsonify({"success": True, "is_running": False})
+
+    if not status.current_group_id:
+        return jsonify({"success": True, "is_running": False})
+
+    # Check if all experiments in current group are completed
+    items = ExperimentScheduleItem.query.filter_by(
+        group_id=status.current_group_id
+    ).all()
+    all_completed = True
+
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp:
+            # Check if experiment is completed
+            if exp.exp_status != "completed":
+                all_completed = False
+                break
+
+    if not all_completed:
+        return jsonify(
+            {
+                "success": True,
+                "is_running": True,
+                "all_completed": False,
+                "current_group_id": status.current_group_id,
+            }
+        )
+
+    # All completed - stop current group experiments and move to next group
+    logs = []
+    current_group = ExperimentScheduleGroup.query.get(status.current_group_id)
+
+    msg = f"Group '{current_group.name}' completed!"
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+
+    # Mark current group as completed (don't delete yet - will clean up at end of schedule)
+    current_group.is_completed = 1
+    db.session.commit()
+
+    for item in items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 1:
+            msg = f"Stopping experiment '{exp.exp_name}'..."
+            logs.append(msg)
+            db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+            # Stop clients
+            clients = Client.query.filter_by(id_exp=exp.idexp).all()
+            for client in clients:
+                if client.status == 1:
+                    if client.pid:
+                        terminate_client(client, pause=False)
+                    client.status = 0
+                    db.session.commit()
+
+            # Stop server
+            terminated = terminate_server_process(exp.idexp)
+            if not terminated:
+                terminate_process_on_port(exp.port)
+
+            exp.running = 0
+            db.session.commit()
+
+    # Get next non-completed group
+    next_group = (
+        ExperimentScheduleGroup.query.filter(
+            ExperimentScheduleGroup.order_index > current_group.order_index,
+            (ExperimentScheduleGroup.is_completed == 0)
+            | (ExperimentScheduleGroup.is_completed == None),
+        )
+        .order_by(ExperimentScheduleGroup.order_index)
+        .first()
+    )
+
+    if not next_group:
+        # Schedule complete
+        status.is_running = 0
+        status.current_group_id = None
+        db.session.commit()
+        msg = "All groups completed! Schedule finished."
+        logs.append(msg)
+        db.session.add(ExperimentScheduleLog(message=msg, log_type="success"))
+        db.session.commit()
+
+        # Clean up all completed groups from the database
+        completed_groups = ExperimentScheduleGroup.query.filter_by(is_completed=1).all()
+        for group in completed_groups:
+            ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+            db.session.delete(group)
+        db.session.commit()
+
+        # Clear all schedule logs after successful completion
+        ExperimentScheduleLog.query.delete()
+        db.session.commit()
+
+        return jsonify(
+            {
+                "success": True,
+                "is_running": False,
+                "all_completed": True,
+                "schedule_complete": True,
+                "logs": logs,
+            }
+        )
+
+    # Start next group
+    msg = f"Starting next group: '{next_group.name}'..."
+    logs.append(msg)
+    db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+    status.current_group_id = next_group.id
+    db.session.commit()
+
+    next_items = ExperimentScheduleItem.query.filter_by(group_id=next_group.id).all()
+    for item in next_items:
+        exp = Exps.query.get(item.experiment_id)
+        if exp and exp.running == 0:
+            # Check if all clients have already completed before starting the server
+            all_clients_completed, clients_to_start = _get_clients_to_start(exp)
+
+            # If all clients have completed, mark experiment as completed and skip
+            if all_clients_completed:
+                msg = f"Experiment '{exp.exp_name}' already completed - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                exp.exp_status = "completed"
+                db.session.commit()
+                continue
+
+            # If no clients to start, skip
+            if len(clients_to_start) == 0:
+                msg = f"No clients to start for '{exp.exp_name}' - skipping"
+                logs.append(msg)
+                db.session.add(ExperimentScheduleLog(message=msg, log_type="info"))
+                continue
+
+            logs.append(f"Starting server for '{exp.exp_name}'...")
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=f"Starting server for '{exp.exp_name}'...", log_type="info"
+                )
+            )
+            exp.running = 1
+            exp.exp_status = "active"
+            db.session.commit()
+            start_server(exp)
+
+            # Wait for server to be ready
+            logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
+            time.sleep(3)
+
+            # Start only clients that haven't completed
+            for client in clients_to_start:
+                if client.status == 0:
+                    logs.append(f"Starting client '{client.name}'...")
+                    db.session.add(
+                        ExperimentScheduleLog(
+                            message=f"Starting client '{client.name}'...",
+                            log_type="info",
+                        )
+                    )
+                    population = Population.query.filter_by(
+                        id=client.population_id
+                    ).first()
+                    if population:
+                        start_client(exp, client, population, resume=True)
+                        client.status = 1
+                        db.session.commit()
+
+            logs.append(f"Experiment '{exp.exp_name}' started successfully")
+            db.session.add(
+                ExperimentScheduleLog(
+                    message=f"Experiment '{exp.exp_name}' started successfully",
+                    log_type="success",
+                )
+            )
+            db.session.commit()
+
+    logs.append(f"Group '{next_group.name}' started!")
+    db.session.add(
+        ExperimentScheduleLog(
+            message=f"Group '{next_group.name}' started!", log_type="success"
+        )
+    )
+    db.session.commit()
+
+    return jsonify(
+        {
+            "success": True,
+            "is_running": True,
+            "all_completed": True,
+            "next_group": next_group.name,
+            "next_group_id": next_group.id,
+            "logs": logs,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/available_experiments", methods=["GET"])
+@login_required
+def get_available_experiments_for_schedule():
+    """
+    Get experiments that can be added to schedule groups.
+
+    Returns experiments that are stopped, not already in any group,
+    and do not have any infinite-duration clients.
+
+    Returns:
+        JSON with available experiments
+    """
+    check_privileges(current_user.username)
+
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Get experiments based on role
+    if user.role == "admin":
+        experiments_query = Exps.query
+    else:
+        experiments_query = Exps.query.filter_by(owner=user.username)
+
+    # Get experiments that are stopped
+    experiments_list = experiments_query.filter(
+        Exps.exp_status.in_(["stopped", "scheduled"])
+    ).all()
+
+    # Get experiments already in groups
+    scheduled_exp_ids = set(
+        item.experiment_id for item in ExperimentScheduleItem.query.all()
+    )
+
+    # Get experiment IDs that have infinite clients (clients with days = -1)
+    # Use a single query instead of nested loops for efficiency
+    exp_ids = [exp.idexp for exp in experiments_list]
+    infinite_clients = (
+        (
+            Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+            .with_entities(Client.id_exp)
+            .distinct()
+            .all()
+        )
+        if exp_ids
+        else []
+    )
+    experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
+
+    result = []
+    for exp in experiments_list:
+        # Exclude experiments that are already scheduled or have infinite clients
+        if (
+            exp.idexp not in scheduled_exp_ids
+            and exp.idexp not in experiments_with_infinite_clients
+        ):
+            result.append(
+                {
+                    "id": exp.idexp,
+                    "name": exp.exp_name,
+                    "owner": exp.owner,
+                    "exp_status": exp.exp_status,
+                }
+            )
+
+    return jsonify({"success": True, "experiments": result})
+
+
+def add_schedule_log(message, log_type="info"):
+    """Helper function to add a log message to the database."""
+    from datetime import datetime
+
+    log = ExperimentScheduleLog(
+        message=message, log_type=log_type, created_at=datetime.utcnow()
+    )
+    db.session.add(log)
+    db.session.commit()
+    return log
+
+
+@experiments.route("/admin/schedule/logs", methods=["GET"])
+@login_required
+def get_schedule_logs():
+    """
+    Get persistent schedule execution logs.
+
+    Returns:
+        JSON with log entries
+    """
+    check_privileges(current_user.username)
+
+    # Get last 100 logs, ordered by most recent first
+    logs = (
+        ExperimentScheduleLog.query.order_by(ExperimentScheduleLog.created_at.desc())
+        .limit(100)
+        .all()
+    )
+
+    # Reverse to show oldest first in UI
+    logs = list(reversed(logs))
+
+    return jsonify(
+        {
+            "success": True,
+            "logs": [
+                {
+                    "id": log.id,
+                    "message": log.message,
+                    "log_type": log.log_type,
+                    "created_at": (
+                        log.created_at.isoformat() if log.created_at else None
+                    ),
+                }
+                for log in logs
+            ],
+        }
+    )
+
+
+@experiments.route("/admin/schedule/logs/clear", methods=["POST"])
+@login_required
+def clear_schedule_logs():
+    """
+    Clear all schedule execution logs.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    ExperimentScheduleLog.query.delete()
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route("/admin/schedule/auto_create_groups", methods=["POST"])
+@login_required
+def auto_create_groups():
+    """
+    Automatically create groups and assign available experiments.
+
+    Expects JSON body with:
+    - experiments_per_group: Number of experiments per group
+
+    Returns:
+        JSON with created groups
+    """
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data or "experiments_per_group" not in data:
+        return (
+            jsonify({"success": False, "message": "experiments_per_group is required"}),
+            400,
+        )
+
+    try:
+        experiments_per_group = int(data["experiments_per_group"])
+        if experiments_per_group < 1:
+            raise ValueError("Must be at least 1")
+    except (ValueError, TypeError):
+        return (
+            jsonify(
+                {"success": False, "message": "Invalid experiments_per_group value"}
+            ),
+            400,
+        )
+
+    # Get current user
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+
+    # Get available experiments (stopped, not in any group)
+    if user.role == "admin":
+        experiments_query = Exps.query
+    else:
+        experiments_query = Exps.query.filter_by(owner=user.username)
+
+    experiments_list = experiments_query.filter(
+        Exps.exp_status.in_(["stopped", "scheduled"])
+    ).all()
+
+    # Filter out experiments already in groups
+    scheduled_exp_ids = set(
+        item.experiment_id for item in ExperimentScheduleItem.query.all()
+    )
+
+    # Filter out experiments with infinite clients (days = -1)
+    exp_ids = [exp.idexp for exp in experiments_list]
+    infinite_clients = (
+        (
+            Client.query.filter(Client.days == -1, Client.id_exp.in_(exp_ids))
+            .with_entities(Client.id_exp)
+            .distinct()
+            .all()
+        )
+        if exp_ids
+        else []
+    )
+    experiments_with_infinite_clients = set(c.id_exp for c in infinite_clients)
+
+    available_exps = [
+        exp
+        for exp in experiments_list
+        if exp.idexp not in scheduled_exp_ids
+        and exp.idexp not in experiments_with_infinite_clients
+    ]
+
+    if not available_exps:
+        return (
+            jsonify(
+                {"success": False, "message": "No available experiments to assign"}
+            ),
+            400,
+        )
+
+    # Get current max order index
+    max_order = (
+        db.session.query(db.func.max(ExperimentScheduleGroup.order_index)).scalar() or 0
+    )
+
+    # Create groups and assign experiments
+    created_groups = []
+    group_num = 1
+
+    for i in range(0, len(available_exps), experiments_per_group):
+        group_exps = available_exps[i : i + experiments_per_group]
+
+        # Create group
+        group = ExperimentScheduleGroup(
+            name=f"Auto Group {max_order + group_num}",
+            order_index=max_order + group_num,
+            is_completed=0,
+        )
+        db.session.add(group)
+        db.session.commit()
+
+        # Add experiments to group
+        for idx, exp in enumerate(group_exps):
+            item = ExperimentScheduleItem(
+                group_id=group.id, experiment_id=exp.idexp, order_index=idx
+            )
+            db.session.add(item)
+
+        db.session.commit()
+
+        created_groups.append(
+            {
+                "id": group.id,
+                "name": group.name,
+                "experiment_count": len(group_exps),
+            }
+        )
+        group_num += 1
+
+    add_schedule_log(
+        f"Auto-created {len(created_groups)} group(s) with {len(available_exps)} experiment(s)",
+        "info",
+    )
+
+    return jsonify(
+        {
+            "success": True,
+            "message": f"Created {len(created_groups)} groups",
+            "groups": created_groups,
+        }
+    )
+
+
+@experiments.route("/admin/schedule/cleanup_completed", methods=["POST"])
+@login_required
+def cleanup_completed_groups():
+    """
+    Remove all completed groups from the schedule.
+
+    Returns:
+        JSON with success status
+    """
+    check_privileges(current_user.username)
+
+    # Find and delete completed groups
+    completed_groups = ExperimentScheduleGroup.query.filter_by(is_completed=1).all()
+    count = len(completed_groups)
+
+    for group in completed_groups:
+        # Delete items first
+        ExperimentScheduleItem.query.filter_by(group_id=group.id).delete()
+        db.session.delete(group)
+
+    db.session.commit()
+
+    if count > 0:
+        add_schedule_log(f"Cleaned up {count} completed group(s)", "info")
+
+    return jsonify({"success": True, "removed_count": count})
