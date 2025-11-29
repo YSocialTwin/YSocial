@@ -9,6 +9,7 @@ assignment, and experiment lifecycle control.
 import json
 import os
 import pathlib
+import re
 import shutil
 import socket
 import uuid
@@ -99,14 +100,12 @@ def get_experiment_uid_from_db_name(db_name):
     Returns:
         str: The experiment UID, or None if unable to extract
     """
-    import re
-
     if db_name.startswith("experiments_"):
         # PostgreSQL format - UUID is after the underscore
         return db_name.replace("experiments_", "")
     elif db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
         # SQLite format - split using both possible separators
-        # Use regex to split on either / or \
+        # Use regex to split on either forward slash or backslash
         parts = re.split(r"[/\\]", db_name)
         if len(parts) >= 2:
             return parts[1]
