@@ -498,11 +498,14 @@
     createTable('table-completed', EXP_STATUS.COMPLETED, 'box-completed');
     createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED, 'box-stopped');
 
+    // Delay for Grid.js to complete rendering before equalizing heights
+    const EQUALIZATION_DELAY = 500;
+
     // Function to equalize heights of visible experiment boxes
     function equalizeBoxHeights() {
         const boxes = ['box-active', 'box-completed', 'box-stopped'];
         const visibleBoxes = boxes.map(id => document.getElementById(id))
-            .filter(box => box && box.style.display !== 'none');
+            .filter(box => box && getComputedStyle(box).display !== 'none');
         
         if (visibleBoxes.length <= 1) return;
         
@@ -522,15 +525,17 @@
     }
 
     // Equalize heights after initial tables load (with delay for Grid.js render)
-    setTimeout(equalizeBoxHeights, 500);
+    setTimeout(equalizeBoxHeights, EQUALIZATION_DELAY);
 
     // Also equalize after each refresh
-    const originalRefreshAllTables = refreshAllTables;
-    refreshAllTables = function() {
-        originalRefreshAllTables();
-        // Re-equalize after the async refresh completes
-        setTimeout(equalizeBoxHeights, 500);
-    };
+    if (typeof refreshAllTables === 'function') {
+        const originalRefreshAllTables = refreshAllTables;
+        refreshAllTables = function() {
+            originalRefreshAllTables();
+            // Re-equalize after the async refresh completes
+            setTimeout(equalizeBoxHeights, EQUALIZATION_DELAY);
+        };
+    }
 
     // Set up periodic refresh
     setInterval(refreshAllTables, DATA_REFRESH_INTERVAL);
