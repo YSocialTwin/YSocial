@@ -562,8 +562,8 @@ def create_tutorial_experiment():
             llm_api_key="NULL",
             llm_max_tokens=-1,
             llm_temperature=1.5,
-            llm_v_agent="minicpm-v",
-            llm_v="http://127.0.0.1:11434/v1",
+            llm_v_agent="",
+            llm_v="",
             llm_v_api_key="NULL",
             llm_v_max_tokens=300,
             llm_v_temperature=0.5,
@@ -571,7 +571,7 @@ def create_tutorial_experiment():
             crecsys=content_recsys,
             frecsys=follow_recsys,
             status=0,
-            user_type=llm_model if llm_enabled and llm_model else None,
+            # user_type=llm_model if llm_enabled and llm_model else None,
         )
 
         db.session.add(client)
