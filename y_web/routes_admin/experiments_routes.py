@@ -2529,6 +2529,194 @@ def download_experiment_file(eid):
     )
 
 
+@experiments.route("/admin/download_experiments_bulk", methods=["POST"])
+@login_required
+def download_experiments_bulk():
+    """Download multiple experiment files as a single ZIP.
+
+    Creates a ZIP file containing individually zipped experiments,
+    each named {exp_name}.zip.
+    """
+    check_privileges(current_user.username)
+
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
+    # Get experiment IDs from form data
+    exp_ids_json = request.form.get("exp_ids", "[]")
+    try:
+        exp_ids = json.loads(exp_ids_json)
+    except json.JSONDecodeError:
+        flash("Invalid experiment IDs provided.")
+        return redirect(url_for("experiments.settings"))
+
+    if not exp_ids:
+        flash("No experiments selected for download.")
+        return redirect(url_for("experiments.settings"))
+
+    # Determine database type
+    db_type = "sqlite"
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        db_type = "postgresql"
+
+    # Create a temporary directory for the bulk download
+    bulk_download_dir = os.path.join(
+        BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_bulk_{uuid.uuid4().hex}"
+    )
+    os.makedirs(bulk_download_dir, exist_ok=True)
+
+    try:
+        # Process each experiment
+        for eid in exp_ids:
+            experiment = Exps.query.filter_by(idexp=eid).first()
+            if not experiment:
+                continue
+
+            # Get folder path based on database type
+            if db_type == "sqlite":
+                folder = os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
+                )
+            else:
+                # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
+                folder = os.path.join(
+                    BASE_DIR,
+                    f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
+                )
+
+            if not os.path.exists(folder):
+                continue
+
+            # For PostgreSQL, create an SQLite copy of the database
+            if db_type == "postgresql":
+                try:
+                    import sqlite3
+                    from urllib.parse import urlparse
+
+                    from sqlalchemy import create_engine, inspect
+
+                    # Connect to PostgreSQL database
+                    current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+                    parsed_uri = urlparse(current_uri)
+
+                    user = parsed_uri.username or "postgres"
+                    password = parsed_uri.password or "password"
+                    host = parsed_uri.hostname or "localhost"
+                    port_db = parsed_uri.port or 5432
+
+                    pg_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
+                    pg_engine = create_engine(pg_uri)
+
+                    # Create SQLite database in the experiment folder
+                    sqlite_path = os.path.join(folder, "database_server.db")
+                    sqlite_uri = f"sqlite:///{sqlite_path}"
+                    sqlite_engine = create_engine(sqlite_uri)
+
+                    # Get inspector for PostgreSQL database
+                    inspector = inspect(pg_engine)
+
+                    # Copy all tables from PostgreSQL to SQLite
+                    with pg_engine.connect() as pg_conn:
+                        from sqlalchemy import text
+
+                        table_names = inspector.get_table_names()
+                        sqlite_raw_conn = sqlite3.connect(sqlite_path)
+                        sqlite_cursor = sqlite_raw_conn.cursor()
+
+                        for table_name in table_names:
+                            result = pg_conn.execute(text(f"SELECT * FROM {table_name}"))
+                            rows = result.fetchall()
+                            columns = result.keys()
+
+                            if rows:
+                                pg_columns = inspector.get_columns(table_name)
+                                col_defs = []
+                                for col in pg_columns:
+                                    col_type = str(col["type"])
+                                    if "INTEGER" in col_type or "SERIAL" in col_type:
+                                        sqlite_type = "INTEGER"
+                                    elif (
+                                        "REAL" in col_type
+                                        or "DOUBLE" in col_type
+                                        or "FLOAT" in col_type
+                                    ):
+                                        sqlite_type = "REAL"
+                                    elif (
+                                        "TEXT" in col_type
+                                        or "VARCHAR" in col_type
+                                        or "CHAR" in col_type
+                                    ):
+                                        sqlite_type = "TEXT"
+                                    else:
+                                        sqlite_type = "TEXT"
+
+                                    col_defs.append(f"{col['name']} {sqlite_type}")
+
+                                create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
+                                sqlite_cursor.execute(create_table_sql)
+
+                                placeholders = ", ".join(["?" for _ in columns])
+                                insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+
+                                for row in rows:
+                                    sqlite_cursor.execute(insert_sql, tuple(row))
+
+                        sqlite_raw_conn.commit()
+                        sqlite_raw_conn.close()
+
+                    pg_engine.dispose()
+                    sqlite_engine.dispose()
+
+                except Exception as e:
+                    current_app.logger.error(
+                        f"Error creating SQLite copy for {experiment.exp_name}: {str(e)}",
+                        exc_info=True,
+                    )
+                    continue
+
+            # Create a ZIP of this experiment folder with the experiment name
+            # Sanitize experiment name for use as filename
+            safe_exp_name = "".join(
+                c for c in experiment.exp_name if c.isalnum() or c in (" ", "-", "_")
+            ).strip()
+            if not safe_exp_name:
+                safe_exp_name = f"experiment_{eid}"
+
+            exp_zip_path = os.path.join(bulk_download_dir, safe_exp_name)
+            shutil.make_archive(exp_zip_path, "zip", folder)
+
+        # Now create the final bulk ZIP containing all experiment ZIPs
+        bulk_zip_path = os.path.join(
+            BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data"
+        )
+        os.makedirs(bulk_zip_path, exist_ok=True)
+
+        final_zip_name = f"experiments_bulk_{uuid.uuid4().hex[:8]}"
+        final_zip_path = os.path.join(bulk_zip_path, final_zip_name)
+        shutil.make_archive(final_zip_path, "zip", bulk_download_dir)
+
+        # Clean up the temporary bulk download directory
+        shutil.rmtree(bulk_download_dir, ignore_errors=True)
+
+        # Return the file
+        return send_file_desktop(
+            f"{final_zip_path}.zip",
+            as_attachment=True,
+            download_name="experiments.zip",
+        )
+
+    except Exception as e:
+        current_app.logger.error(
+            f"Error creating bulk download: {str(e)}", exc_info=True
+        )
+        # Clean up on error
+        shutil.rmtree(bulk_download_dir, ignore_errors=True)
+        flash(f"Error creating bulk download: {str(e)}")
+        return redirect(url_for("experiments.settings"))
+
+
 @experiments.route("/admin/miscellanea/", methods=["GET"])
 @login_required
 def miscellanea():
