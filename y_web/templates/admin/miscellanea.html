@@ -2401,9 +2401,15 @@
                                                             method: 'GET',
                                                             dataType: 'json',
                                                             success: function (data) {
-                                                                const model_name  = data.model_name;
+                                                                const modelName = data.model_name;
                                                                 const percentage = data.progress;
                                                                 const progressBar = $('#pull-progress-bar_{{ pull[0] }}');
+                                                                const textContainer = document.getElementById('model_pull_name_{{ pull[0] }}');
+                                                                
+                                                                // Update model name display
+                                                                if (textContainer) {
+                                                                    textContainer.textContent = modelName;
+                                                                }
 
                                                                 progressBar.css('width', percentage + '%');
                                                                 progressBar.attr('aria-valuenow', percentage);
