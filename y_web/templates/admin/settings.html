@@ -88,9 +88,16 @@
 
                         <!-- Completed Experiments Section -->
                         <div id="box-completed" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
-                                Completed
+                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+                                <span style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+                                    Completed
+                                </span>
+                                <button id="download-selected-btn" onclick="downloadSelectedExperiments()" 
+                                        style="background-color: #17a2b8; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem; display: none;"
+                                        title="Download selected experiments as a ZIP file">
+                                    <i class="mdi mdi-download"></i> Download Selected
+                                </button>
                             </h3>
                             <div class="box-content" style="flex: 1;">
                                 <div id="table-completed" class="experiment-table compact-table"></div>
@@ -401,13 +408,222 @@
         ];
     }
 
+    // Track selected experiments for download
+    const selectedExperiments = new Set();
+
+    // Function to update the download button visibility
+    function updateDownloadButton() {
+        const btn = document.getElementById('download-selected-btn');
+        if (btn) {
+            if (selectedExperiments.size > 0) {
+                btn.style.display = 'inline-block';
+                btn.innerHTML = `<i class="mdi mdi-download"></i> Download Selected (${selectedExperiments.size})`;
+            } else {
+                btn.style.display = 'none';
+            }
+        }
+    }
+
+    // Function to toggle experiment selection
+    function toggleExperimentSelection(expId, checkbox) {
+        if (checkbox.checked) {
+            selectedExperiments.add(expId);
+        } else {
+            selectedExperiments.delete(expId);
+        }
+        updateDownloadButton();
+        updateSelectAllCheckbox();
+    }
+
+    // Function to toggle all experiments selection
+    function toggleAllExperiments(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.exp-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+            const expId = parseInt(cb.dataset.expId);
+            if (masterCheckbox.checked) {
+                selectedExperiments.add(expId);
+            } else {
+                selectedExperiments.delete(expId);
+            }
+        });
+        updateDownloadButton();
+    }
+
+    // Function to update select all checkbox state
+    function updateSelectAllCheckbox() {
+        const masterCheckbox = document.getElementById('select-all-completed');
+        const checkboxes = document.querySelectorAll('.exp-checkbox');
+        if (masterCheckbox && checkboxes.length > 0) {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const someChecked = Array.from(checkboxes).some(cb => cb.checked);
+            masterCheckbox.checked = allChecked;
+            masterCheckbox.indeterminate = someChecked && !allChecked;
+        }
+    }
+
+    // Function to download selected experiments
+    function downloadSelectedExperiments() {
+        if (selectedExperiments.size === 0) {
+            alert('Please select at least one experiment to download.');
+            return;
+        }
+
+        const expIds = Array.from(selectedExperiments);
+        
+        // Show loading indicator
+        const btn = document.getElementById('download-selected-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Preparing...';
+        btn.disabled = true;
+
+        // Submit a form to download (to properly handle file download)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/download_experiments_bulk';
+        
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'exp_ids';
+        input.value = JSON.stringify(expIds);
+        form.appendChild(input);
+        
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        // Reset button after a delay
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        }, 3000);
+    }
+
+    // Function to create compact table columns configuration for Completed Experiments (with checkbox)
+    function getCompletedTableColumns() {
+        return [
+            { id: 'idexp', hidden: true },
+            { id: 'has_infinite_client', hidden: true },
+            {
+                id: 'checkbox',
+                name: gridjs.html('<input type="checkbox" id="select-all-completed" onchange="toggleAllExperiments(this)" title="Select all"/>'),
+                sort: false,
+                width: '30px',
+                formatter: (cell, row) => {
+                    const id = row.cells[0].data;
+                    const isChecked = selectedExperiments.has(id) ? 'checked' : '';
+                    return gridjs.html(`
+                        <input type="checkbox" class="exp-checkbox" data-exp-id="${id}" 
+                               onchange="toggleExperimentSelection(${id}, this)" ${isChecked}
+                               style="cursor: pointer;"/>
+                    `);
+                }
+            },
+            { 
+                id: 'exp_name', 
+                name: 'Name', 
+                attributes: editableCellAttributes, 
+                width: '100px',
+                formatter: (cell, row) => {
+                    const hasInfinite = row.cells[1].data;
+                    const infiniteTag = hasInfinite ? 
+                        '<span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 8px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>' : '';
+                    return gridjs.html(`<span>${cell}${infiniteTag}</span>`);
+                }
+            },
+            { id: 'owner', name: 'Owner', sort: false, width: '50px' },
+            {
+                id: 'annotations',
+                name: 'Tags',
+                sort: false,
+                width: '70px',
+                formatter: (cell) => {
+                    if (!cell || cell === '') {
+                        return gridjs.html('<div style="text-align: center;">-</div>');
+                    }
+                    const annotations = cell.split(',').filter(a => a.trim());
+                    const tags = annotations.map(annotation => {
+                        const colors = {
+                            'toxicity': '#dc3545',
+                            'sentiment': '#28a745',
+                            'emotion': '#17a2b8'
+                        };
+                        const color = colors[annotation.trim()] || '#6c757d';
+                        const shortName = annotation.trim().substring(0, 3);
+                        return `<span style="display: inline-block; background-color: ${color}; color: white; padding: 1px 4px; margin: 1px; border-radius: 8px; font-size: 0.65rem;" title="${annotation.trim()}">${shortName}</span>`;
+                    }).join('');
+                    return gridjs.html(`<div style="display: flex; justify-content: center; flex-wrap: wrap;">${tags}</div>`);
+                }
+            },
+            {
+                id: 'status_combined',
+                name: 'Status',
+                sort: false,
+                width: '40px',
+                formatter: (cell, row) => {
+                    // Get the web value from hidden cell (shifted by 1 due to checkbox and has_infinite_client column)
+                    const web = row.cells[6].data;      // web is at index 6 (shifted +1)
+                    {% if enable_notebook %}
+                    const jupyter = row.cells[7].data;  // jupyter_status is at index 7 (shifted +1)
+                    {% endif %}
+                    
+                    const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
+                    {% if enable_notebook %}
+                    const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
+                    {% endif %}
+                    
+                    return gridjs.html(`
+                        <div class="status-indicators">
+                            <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
+                            {% if enable_notebook %}
+                            <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
+                            {% endif %}
+                        </div>
+                    `);
+                }
+            },
+            { id: 'web', hidden: true },
+            {% if enable_notebook %}
+            { id: 'jupyter_status', hidden: true },
+            {% endif %}
+            {
+                id: 'details',
+                name: '',
+                sort: false,
+                width: '45px',
+                formatter: (cell, row) => {
+                    const id = row.cells[0].data;
+                    return gridjs.html(`
+                        <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
+                            <a href="/admin/experiment_details/${id}"
+                               style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                View
+                            </a>
+                            <a href="/admin/delete_simulation/${id}"
+                               style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
+                                Delete
+                            </a>
+                        </div>
+                    `);
+                }
+            },
+        ];
+    }
+
     // Create table for a specific status
     function createTable(tableId, statusFilter, boxId) {
         const tableDiv = document.getElementById(tableId);
         const boxDiv = document.getElementById(boxId);
         
-        // Use progress bar columns for running experiments, tags for others
-        const columns = (statusFilter === EXP_STATUS.ACTIVE) ? getRunningTableColumns() : getTableColumns();
+        // Use progress bar columns for running experiments, completed columns for completed (with checkboxes), tags for others
+        let columns;
+        if (statusFilter === EXP_STATUS.ACTIVE) {
+            columns = getRunningTableColumns();
+        } else if (statusFilter === EXP_STATUS.COMPLETED) {
+            columns = getCompletedTableColumns();
+        } else {
+            columns = getTableColumns();
+        }
         
         const grid = new gridjs.Grid({
             columns: columns,
