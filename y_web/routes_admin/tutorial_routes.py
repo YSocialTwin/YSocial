@@ -16,7 +16,15 @@ import uuid
 from urllib.parse import urlparse
 
 import faker
-from flask import Blueprint, current_app, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
@@ -66,10 +74,7 @@ def check_tutorial_status():
     if not user or user.role not in ["admin", "researcher"]:
         return jsonify({"show_tutorial": False, "role": None})
 
-    return jsonify({
-        "show_tutorial": not user.tutorial_shown,
-        "role": user.role
-    })
+    return jsonify({"show_tutorial": not user.tutorial_shown, "role": user.role})
 
 
 @tutorial.route("/admin/tutorial/dismiss", methods=["POST"])
@@ -122,7 +127,7 @@ def get_tutorial_data():
         JSON with education levels, political leanings, activity profiles,
         recommendation systems, and Ollama status
     """
-    from y_web.utils.external_processes import is_ollama_running, get_ollama_models
+    from y_web.utils.external_processes import get_ollama_models, is_ollama_running
 
     check_privileges(current_user.username)
 
@@ -142,15 +147,26 @@ def get_tutorial_data():
     except Exception:
         pass
 
-    return jsonify({
-        "education_levels": [{"id": e.id, "name": e.education_level} for e in education_levels],
-        "political_leanings": [{"id": l.id, "name": l.leaning} for l in leanings],
-        "activity_profiles": [{"id": a.id, "name": a.name, "hours": a.hours} for a in activity_profiles],
-        "content_recsys": [{"id": c.id, "name": c.name, "value": c.value} for c in crecsys],
-        "follow_recsys": [{"id": f.id, "name": f.name, "value": f.value} for f in frecsys],
-        "ollama_available": ollama_available,
-        "ollama_models": ollama_models,
-    })
+    return jsonify(
+        {
+            "education_levels": [
+                {"id": e.id, "name": e.education_level} for e in education_levels
+            ],
+            "political_leanings": [{"id": l.id, "name": l.leaning} for l in leanings],
+            "activity_profiles": [
+                {"id": a.id, "name": a.name, "hours": a.hours}
+                for a in activity_profiles
+            ],
+            "content_recsys": [
+                {"id": c.id, "name": c.name, "value": c.value} for c in crecsys
+            ],
+            "follow_recsys": [
+                {"id": f.id, "name": f.name, "value": f.value} for f in frecsys
+            ],
+            "ollama_available": ollama_available,
+            "ollama_models": ollama_models,
+        }
+    )
 
 
 @tutorial.route("/admin/tutorial/create_all", methods=["POST"])
@@ -213,30 +229,71 @@ def create_tutorial_experiment():
 
         # Validate required fields
         if not population_name:
-            return jsonify({"success": False, "message": "Population name is required"}), 400
+            return (
+                jsonify({"success": False, "message": "Population name is required"}),
+                400,
+            )
         if not experiment_name:
-            return jsonify({"success": False, "message": "Experiment name is required"}), 400
+            return (
+                jsonify({"success": False, "message": "Experiment name is required"}),
+                400,
+            )
         if not client_name:
-            return jsonify({"success": False, "message": "Client name is required"}), 400
+            return (
+                jsonify({"success": False, "message": "Client name is required"}),
+                400,
+            )
 
         # Validate size constraints
         if population_size < 10 or population_size > 100:
-            return jsonify({"success": False, "message": "Population size must be between 10 and 100"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Population size must be between 10 and 100",
+                    }
+                ),
+                400,
+            )
         if simulation_days < 1 or simulation_days > 30:
-            return jsonify({"success": False, "message": "Simulation length must be between 1 and 30 days"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Simulation length must be between 1 and 30 days",
+                    }
+                ),
+                400,
+            )
 
         # Check for existing names
         if Population.query.filter_by(name=population_name).first():
-            return jsonify({"success": False, "message": f"Population '{population_name}' already exists"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Population '{population_name}' already exists",
+                    }
+                ),
+                400,
+            )
         if Exps.query.filter_by(exp_name=experiment_name).first():
-            return jsonify({"success": False, "message": f"Experiment '{experiment_name}' already exists"}), 400
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Experiment '{experiment_name}' already exists",
+                    }
+                ),
+                400,
+            )
 
         # ============== STEP 1: Create Population ==============
 
         # Convert IDs to comma-separated strings
         education_str = ",".join(str(e) for e in education_levels)
         political_str = ",".join(str(p) for p in political_leanings)
-        
+
         # Default toxicity to "None" (ID 1 typically)
         none_toxicity = Toxicity_Levels.query.filter_by(toxicity_level="None").first()
         toxicity_str = str(none_toxicity.id) if none_toxicity else "1"
@@ -256,7 +313,7 @@ def create_tutorial_experiment():
             "Middle-aged": 18.0,
             "Elderly": 5.0,
         }
-        
+
         # Query all age classes from database and build percentages
         all_age_classes = AgeClass.query.all()
         age_class_percentages = {}
@@ -264,13 +321,15 @@ def create_tutorial_experiment():
             # Use default percentage if available, otherwise distribute evenly
             pct = default_age_percentages.get(age_class.name, 25.0)
             age_class_percentages[str(age_class.id)] = pct
-        
+
         # Normalize to ensure they sum to 100
         if age_class_percentages:
             total = sum(age_class_percentages.values())
             if total > 0:
-                age_class_percentages = {k: (v / total) * 100 for k, v in age_class_percentages.items()}
-        
+                age_class_percentages = {
+                    k: (v / total) * 100 for k, v in age_class_percentages.items()
+                }
+
         # Build toxicity percentages (default to None only)
         toxicity_percentages = {toxicity_str: 100.0}
 
@@ -304,10 +363,12 @@ def create_tutorial_experiment():
 
         # Assign activity profile (use the selected one or default to "Always On")
         if activity_profile_id:
-            selected_profile = ActivityProfile.query.filter_by(id=activity_profile_id).first()
+            selected_profile = ActivityProfile.query.filter_by(
+                id=activity_profile_id
+            ).first()
         else:
             selected_profile = ActivityProfile.query.filter_by(name="Always On").first()
-        
+
         if selected_profile:
             profile_assoc = PopulationActivityProfile(
                 population=pop.id,
@@ -332,7 +393,9 @@ def create_tutorial_experiment():
         }
 
         # Generate the population agents
-        generate_population(population_name, percentages, actions_config, profession_backgrounds)
+        generate_population(
+            population_name, percentages, actions_config, profession_backgrounds
+        )
 
         # ============== STEP 2: Create Experiment ==============
 
@@ -351,7 +414,10 @@ def create_tutorial_experiment():
         # Get suggested port
         port = get_suggested_port()
         if not port:
-            return jsonify({"success": False, "message": "No available port found"}), 500
+            return (
+                jsonify({"success": False, "message": "No available port found"}),
+                500,
+            )
 
         # Create experiment database
         if db_type == "sqlite":
@@ -529,10 +595,30 @@ def create_tutorial_experiment():
 
         # Default hourly activity pattern
         default_hourly_activity = {
-            "0": 0.023, "1": 0.021, "2": 0.020, "3": 0.020, "4": 0.018, "5": 0.017,
-            "6": 0.017, "7": 0.018, "8": 0.020, "9": 0.020, "10": 0.021, "11": 0.022,
-            "12": 0.024, "13": 0.027, "14": 0.030, "15": 0.032, "16": 0.032, "17": 0.032,
-            "18": 0.032, "19": 0.031, "20": 0.030, "21": 0.029, "22": 0.027, "23": 0.025,
+            "0": 0.023,
+            "1": 0.021,
+            "2": 0.020,
+            "3": 0.020,
+            "4": 0.018,
+            "5": 0.017,
+            "6": 0.017,
+            "7": 0.018,
+            "8": 0.020,
+            "9": 0.020,
+            "10": 0.021,
+            "11": 0.022,
+            "12": 0.024,
+            "13": 0.027,
+            "14": 0.030,
+            "15": 0.032,
+            "16": 0.032,
+            "17": 0.032,
+            "18": 0.032,
+            "19": 0.031,
+            "20": 0.030,
+            "21": 0.029,
+            "22": 0.027,
+            "23": 0.025,
         }
 
         # Create client record with LLM model if enabled
@@ -601,7 +687,9 @@ def create_tutorial_experiment():
             )
 
             activity_profile_obj = (
-                db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
+                db.session.query(ActivityProfile)
+                .filter_by(id=a.activity_profile)
+                .first()
             )
             activity_profile_name = (
                 activity_profile_obj.name if activity_profile_obj else "Always On"
@@ -610,34 +698,36 @@ def create_tutorial_experiment():
             # Set agent type based on LLM model if enabled
             agent_type = llm_model if llm_enabled and llm_model else ""
 
-            res["agents"].append({
-                "name": a.name,
-                "email": f"{a.name}@ysocial.it",
-                "password": f"{a.name}",
-                "age": a.age,
-                "type": agent_type,
-                "leaning": a.leaning,
-                "interests": [interests, len(interests)],
-                "oe": a.oe,
-                "co": a.co,
-                "ex": a.ex,
-                "ag": a.ag,
-                "ne": a.ne,
-                "rec_sys": content_recsys,
-                "frec_sys": follow_recsys,
-                "language": a.language,
-                "owner": exp.owner,
-                "education_level": a.education_level,
-                "round_actions": int(a.round_actions) if a.round_actions else 3,
-                "gender": a.gender,
-                "nationality": a.nationality,
-                "toxicity": a.toxicity,
-                "is_page": 0,
-                "prompts": None,
-                "daily_activity_level": a.daily_activity_level,
-                "profession": a.profession,
-                "activity_profile": activity_profile_name,
-            })
+            res["agents"].append(
+                {
+                    "name": a.name,
+                    "email": f"{a.name}@ysocial.it",
+                    "password": f"{a.name}",
+                    "age": a.age,
+                    "type": agent_type,
+                    "leaning": a.leaning,
+                    "interests": [interests, len(interests)],
+                    "oe": a.oe,
+                    "co": a.co,
+                    "ex": a.ex,
+                    "ag": a.ag,
+                    "ne": a.ne,
+                    "rec_sys": content_recsys,
+                    "frec_sys": follow_recsys,
+                    "language": a.language,
+                    "owner": exp.owner,
+                    "education_level": a.education_level,
+                    "round_actions": int(a.round_actions) if a.round_actions else 3,
+                    "gender": a.gender,
+                    "nationality": a.nationality,
+                    "toxicity": a.toxicity,
+                    "is_page": 0,
+                    "prompts": None,
+                    "daily_activity_level": a.daily_activity_level,
+                    "profession": a.profession,
+                    "activity_profile": activity_profile_name,
+                }
+            )
 
         # Save agent population file
         pop_filename = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}{population_name.replace(' ', '')}.json"
@@ -683,13 +773,34 @@ def create_tutorial_experiment():
             "posts": {
                 "visibility_rounds": 48,
                 "emotions": {
-                    "admiration": None, "amusement": None, "anger": None, "annoyance": None,
-                    "approval": None, "caring": None, "confusion": None, "curiosity": None,
-                    "desire": None, "disappointment": None, "disapproval": None, "disgust": None,
-                    "embarrassment": None, "excitement": None, "fear": None, "gratitude": None,
-                    "grief": None, "joy": None, "love": None, "nervousness": None,
-                    "optimism": None, "pride": None, "realization": None, "relief": None,
-                    "remorse": None, "sadness": None, "surprise": None, "trust": None,
+                    "admiration": None,
+                    "amusement": None,
+                    "anger": None,
+                    "annoyance": None,
+                    "approval": None,
+                    "caring": None,
+                    "confusion": None,
+                    "curiosity": None,
+                    "desire": None,
+                    "disappointment": None,
+                    "disapproval": None,
+                    "disgust": None,
+                    "embarrassment": None,
+                    "excitement": None,
+                    "fear": None,
+                    "gratitude": None,
+                    "grief": None,
+                    "joy": None,
+                    "love": None,
+                    "nervousness": None,
+                    "optimism": None,
+                    "pride": None,
+                    "realization": None,
+                    "relief": None,
+                    "remorse": None,
+                    "sadness": None,
+                    "surprise": None,
+                    "trust": None,
                 },
             },
             "agents": {
@@ -743,22 +854,28 @@ def create_tutorial_experiment():
             from y_web.telemetry import Telemetry
 
             telemetry = Telemetry(user=current_user)
-            telemetry.log_event({
-                "action": "tutorial_complete",
-                "data": {
-                    "population_size": population_size,
-                    "simulation_days": simulation_days,
-                },
-            })
+            telemetry.log_event(
+                {
+                    "action": "tutorial_complete",
+                    "data": {
+                        "population_size": population_size,
+                        "simulation_days": simulation_days,
+                    },
+                }
+            )
         except Exception as telemetry_error:
-            current_app.logger.debug(f"Telemetry logging skipped: {str(telemetry_error)}")
+            current_app.logger.debug(
+                f"Telemetry logging skipped: {str(telemetry_error)}"
+            )
 
-        return jsonify({
-            "success": True,
-            "experiment_id": exp.idexp,
-            "client_id": client.id,
-            "message": "Experiment created successfully!"
-        })
+        return jsonify(
+            {
+                "success": True,
+                "experiment_id": exp.idexp,
+                "client_id": client.id,
+                "message": "Experiment created successfully!",
+            }
+        )
 
     except Exception as e:
         db.session.rollback()
@@ -782,8 +899,8 @@ def run_tutorial_simulation():
     Returns:
         JSON with success status
     """
-    from y_web.utils.external_processes import start_server
     from y_web.utils import start_client
+    from y_web.utils.external_processes import start_server
 
     check_privileges(current_user.username)
 
@@ -795,7 +912,12 @@ def run_tutorial_simulation():
     client_id = data.get("client_id")
 
     if not experiment_id or not client_id:
-        return jsonify({"success": False, "message": "Missing experiment_id or client_id"}), 400
+        return (
+            jsonify(
+                {"success": False, "message": "Missing experiment_id or client_id"}
+            ),
+            400,
+        )
 
     try:
         # Get the experiment
@@ -826,6 +948,7 @@ def run_tutorial_simulation():
 
             # Wait a bit for the server to start
             import time
+
             time.sleep(2)
 
         # Start the client
@@ -835,11 +958,10 @@ def run_tutorial_simulation():
         db.session.query(Client).filter_by(id=client_id).update({Client.status: 1})
         db.session.commit()
 
-        return jsonify({
-            "success": True,
-            "message": "Simulation started successfully!"
-        })
+        return jsonify({"success": True, "message": "Simulation started successfully!"})
 
     except Exception as e:
-        current_app.logger.error(f"Error starting tutorial simulation: {str(e)}", exc_info=True)
+        current_app.logger.error(
+            f"Error starting tutorial simulation: {str(e)}", exc_info=True
+        )
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
