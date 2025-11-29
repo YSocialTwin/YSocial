@@ -298,9 +298,8 @@ class TestTutorialTemplate:
         # Step 1 fields
         assert "tut-pop-name" in content
         assert "tut-pop-size" in content
-        assert "tut-education-options" in content
-        assert "tut-political-options" in content
-        assert "tut-toxicity-options" in content
+        assert "tut-education-dropdown" in content
+        assert "tut-political-dropdown" in content
 
         # Step 2 fields
         assert "tut-exp-name" in content

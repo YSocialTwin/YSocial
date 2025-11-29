@@ -54,13 +54,16 @@
             </style>
 
             <div class="misc-tabs">
-                <button class="misc-tab active" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
+                <button class="misc-tab active" onclick="switchMiscTab('system-settings')">System Settings</button>
+                {% if llm_backend['backend'] is not none %}
+                <button class="misc-tab" onclick="switchMiscTab('llm-management')">LLM Management</button>
+                {% endif %}
+                <button class="misc-tab" onclick="switchMiscTab('demographics')">Demographics & Attributes</button>
                 <button class="misc-tab" onclick="switchMiscTab('content-behavior')">Content & Behavior</button>
-                <button class="misc-tab" onclick="switchMiscTab('system-settings')">System Settings</button>
             </div>
 
             <!-- Demographics & Attributes Tab (merged Agent Attributes + Demographics) -->
-            <div id="tab-demographics" class="misc-tab-content active">
+            <div id="tab-demographics" class="misc-tab-content">
                 <div class="misc-section-description">
                     <strong>Demographics & Attributes:</strong> Configure demographic characteristics (languages, nationalities) and social attributes (political leanings, education levels, professions) that define the agents in your simulations.
                 </div>
@@ -1720,7 +1723,7 @@
             <!-- End Content & Behavior Tab -->
 
             <!-- System Settings Tab -->
-            <div id="tab-system-settings" class="misc-tab-content">
+            <div id="tab-system-settings" class="misc-tab-content active">
                 <style>
                     /* Toggle switch styles for System Settings */
                     .switch-small {
@@ -2272,6 +2275,266 @@
                 </div>
             </div>
             <!-- End System Settings Tab -->
+
+            {% if llm_backend['backend'] is not none %}
+            <!-- LLM Management Tab -->
+            <div id="tab-llm-management" class="misc-tab-content">
+                <div class="misc-section-description">
+                    <strong>LLM Management:</strong> Manage your self-hosted Large Language Model server, view available models, and pull new models from the repository.
+                </div>
+
+                <div class="misc-grid" style="grid-template-columns: repeat(2, 1fr);">
+                    <!-- LLM Server Status -->
+                    <div class="misc-compact-box">
+                        <h3>Self-hosted LLM Server ({{ llm_backend['backend']|upper }})</h3>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                {% if llm_backend.get('url') %}
+                                <div class="box-line">
+                                    <span class="left">URL</span>
+                                    <span class="right"><small><code>{{ llm_backend['url'] }}</code></small></span>
+                                </div>
+                                {% endif %}
+                                <div class="box-line">
+                                    <span class="left">Installed</span>
+                                    <span class="right">  <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['installed'] %} active {% endif %}" style="font-size: 20px;"></i> </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Running</span>
+                                    <span class="right"> <i class="mdi mdi-checkbox-blank-circle {% if llm_backend['status'] %} active {% endif %}" style="font-size: 20px;"></i></span>
+                                </div>
+                                {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
+                                <div class="box-line">
+                                    <span class="left">Start Ollama</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" {% if not llm_backend['status'] %} href="/admin/start_ollama/" {% endif %} title="Run">
+                                            <i class="mdi mdi-play-box-outline {% if not llm_backend['status'] %} active {% endif %}" style="font-size: 24px;"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if llm_backend['backend'] == 'vllm' and not llm_backend['status'] %}
+                                <div class="box-line">
+                                    <span class="left" style="font-size: 0.9em;">vLLM server not running. Start manually:<br>
+                                    <small><code>vllm serve &lt;model&gt; --host 0.0.0.0 --port 8000</code></small>
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if llm_backend['backend'] == 'ollama' %}
+                    <!-- Add LLM Model (Ollama only) -->
+                    <div class="misc-compact-box">
+                        <h3>Add LLM Model</h3>
+                         <div class="box-content">
+                            <div class="box-lines">
+                                 <div class="box-line">
+                                    <span class="left">
+                                        If the model you want to use is not available, you can pull it from the Ollama server.
+                                        For a list of available models refer to the <a href="https://ollama.com/search">Ollama directory</a>.
+                                    </span>
+                                 </div>
+                            </div>
+                         </div>
+
+                        <hr>
+
+                        <div class="box-content">
+                            <form action="/admin/ollama_pull" enctype="multipart/form-data" method="POST">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">Model Name</span>
+                                    <span class="right">
+                                        <input type="text" name="model_name" class="input" value="">
+                                    </span>
+                                </div>
+                                 <div class="box-line">
+                                    <span class="left"></span>
+                                    <span class="right">
+
+                                    <div class="button-wrap">
+                                    <button class="button is-solid primary-button is-fullwidth">
+                                        Download Model
+                                    </button>
+                                </div>
+                                    </span>
+                                </div>
+                            </div>
+                             <div class="box-lines">
+                                {% for pull in active_pulls %}
+
+                                {% if pull[1] < 1 %}
+                                <div class="box-line">
+                                <span class="left" id="model_pull_name_{{ pull[0] }}">
+                                    {{ pull[0] }}
+                                </span>
+                                 <span class="right" style="height: 22px; width: 70%;">
+                                <div class="progress" style="height: 22px; width: 100%;" >
+                                    <div id="pull-progress-bar_{{ pull[0] }}" class="progress-bar progress-bar-striped progress_exp" role="progressbar"
+                                         aria-valuenow="{{ pull[1] }}" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">
+                                        {{ pull[1] }}%
+                                    </div>
+                                </div>
+                                 </span>
+                                    <span class="right" style="height: 22px; width: 10%;">
+                                        <a href="/admin/ollama_cancel_pull/{{ pull[0] }}" title="Delete">
+                                        <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+                                    </a>
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                 <script>
+                                        $(document).ready(function () {
+                                                    // Start the background progress as soon as the page loads
+                                                    $.ajax({
+                                                        url: `/admin/pull_progress/{{ pull[0] }}`,
+                                                        method: 'GET'
+                                                    });
+
+                                                    // Poll progress updates
+                                                    function pullProgress() {
+                                                        $.ajax({
+                                                            url: '/admin/pull_progress/{{ pull[0] }}',
+                                                            method: 'GET',
+                                                            dataType: 'json',
+                                                            success: function (data) {
+                                                                const modelName = data.model_name;
+                                                                const percentage = data.progress;
+                                                                const progressBar = $('#pull-progress-bar_{{ pull[0] }}');
+                                                                const textContainer = document.getElementById('model_pull_name_{{ pull[0] }}');
+                                                                
+                                                                // Update model name display
+                                                                if (textContainer) {
+                                                                    textContainer.textContent = modelName;
+                                                                }
+
+                                                                progressBar.css('width', percentage + '%');
+                                                                progressBar.attr('aria-valuenow', percentage);
+                                                                progressBar.text(percentage + '%');
+
+                                                                if (percentage >= 100) {
+                                                                    setTimeout(function () {
+                                                                        location.reload();
+                                                                    }, 1000);
+                                                                } else {
+                                                                    setTimeout(pullProgress, 1000);
+                                                                }
+                                                            },
+                                                            error: function () {
+                                                                setTimeout(pullProgress, 1000);
+                                                            }
+                                                        });
+                                                    }
+
+                                                    pullProgress();
+                                                });
+                                </script>
+                                {% endfor %}
+                            </div>
+                            </form>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if llm_backend["status"] and llm_backend["installed"] %}
+                {% if len(models) > 0 %}
+                <!-- Available LLMs Table (full width) -->
+                <div class="misc-grid" style="grid-template-columns: 1fr; margin-top: 20px;">
+                    <div class="misc-compact-box">
+                        <h3>Available LLMs</h3>
+
+                        <div class="box-content">
+                            <div id="llm-models-table"></div>
+
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+
+                            <style>
+                              #llm-models-table td {
+                                vertical-align: middle !important;
+                              }
+                            </style>
+
+                            <script>
+                                const llmModelsTableDiv = document.getElementById('llm-models-table');
+
+                                const updateUrlLLM = (prev, query) => {
+                                    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+                                };
+
+                                new gridjs.Grid({
+                                    columns: [
+                                        { id: 'model_name', name: 'Model Name', sort: true },
+                                        {
+                                            id: 'actions',
+                                            name: 'Actions',
+                                            sort: false,
+                                            formatter: (cell, row) => {
+                                                const modelName = row.cells[0].data;
+                                                const backend = '{{ llm_backend["backend"] }}';
+
+                                                // Only show delete button for Ollama backend
+                                                if (backend === 'ollama') {
+                                                    return gridjs.html(`
+                                                        <div style="display: flex; gap: 8px; justify-content: center;">
+                                                            <a href="/admin/delete_model/${encodeURIComponent(modelName)}"
+                                                               style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
+                                                                Delete
+                                                            </a>
+                                                        </div>
+                                                    `);
+                                                } else {
+                                                    return gridjs.html(`<div style="text-align: center;">-</div>`);
+                                                }
+                                            }
+                                        },
+                                    ],
+                                    server: {
+                                        url: '/admin/models_data',
+                                        then: results => results.data,
+                                        total: results => results.total,
+                                    },
+                                    search: {
+                                        enabled: true,
+                                        server: {
+                                            url: (prev, search) => {
+                                                return updateUrlLLM(prev, { search });
+                                            },
+                                        },
+                                    },
+                                    sort: {
+                                        enabled: true,
+                                        multiColumn: false,
+                                        server: {
+                                            url: (prev, columns) => {
+                                                const columnIds = ['model_name'];
+                                                const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
+                                                return updateUrlLLM(prev, { sort });
+                                            },
+                                        },
+                                    },
+                                    pagination: {
+                                        enabled: true,
+                                        limit: 10,
+                                        server: {
+                                            url: (prev, page, limit) => {
+                                                return updateUrlLLM(prev, { start: page * limit, length: limit });
+                                            },
+                                        },
+                                    },
+                                }).render(llmModelsTableDiv);
+                            </script>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+            <!-- End LLM Management Tab -->
+            {% endif %}
 
             <script>
                 function switchMiscTab(tabName) {

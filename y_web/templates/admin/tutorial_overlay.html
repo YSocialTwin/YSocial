@@ -488,27 +488,8 @@
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Share News</span>
-                        <span class="right" style="width: 70%;">
-                            <div class="scale-wrapper">
-                                <div class="number-scale" id="tut-share-scale" style="display: flex; gap: 5px; margin: 5px 0;">
-                                    <div class="number-box selected" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">0</div>
-                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
-                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
-                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
-                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
-                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
-                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
-                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
-                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
-                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
-                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
-                                </div>
-                                <input type="hidden" id="tut-share-prob" value="0">
-                            </div>
-                        </span>
-                    </div>
+                    <!-- Share News removed - default value of 0 is maintained via hidden input -->
+                    <input type="hidden" id="tut-share-prob" value="0">
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                         <div>
@@ -1091,7 +1072,7 @@
     
     // Setup number scale interactions
     function setupNumberScales() {
-        const scales = ['tut-post-scale', 'tut-comment-scale', 'tut-read-scale', 'tut-share-scale'];
+        const scales = ['tut-post-scale', 'tut-comment-scale', 'tut-read-scale'];
         
         scales.forEach(scaleId => {
             const scale = document.getElementById(scaleId);
@@ -1612,7 +1593,7 @@
             resetNumberScale('tut-post-scale', 3);
             resetNumberScale('tut-comment-scale', 5);
             resetNumberScale('tut-read-scale', 2);
-            resetNumberScale('tut-share-scale', 0);
+            // Note: share-prob is kept at 0 via hidden input
             
             // Reset LLM toggle
             document.getElementById('tut-llm-toggle').checked = false;
