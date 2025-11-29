@@ -125,18 +125,14 @@
                         min-width: 300px;
                         display: flex;
                         flex-direction: column;
-                        height: 450px;
                       }
                       .experiment-box .box-content {
                         flex: 1;
-                        overflow: auto;
                       }
                       @media (max-width: 992px) {
                         .experiment-box {
                           flex: 1 1 100%;
                           min-width: 100%;
-                          height: auto;
-                          min-height: 400px;
                         }
                       }
                       .experiment-table td {
@@ -501,6 +497,40 @@
     createTable('table-active', EXP_STATUS.ACTIVE, 'box-active');
     createTable('table-completed', EXP_STATUS.COMPLETED, 'box-completed');
     createTable('table-stopped', EXP_STATUS.STOPPED_SCHEDULED, 'box-stopped');
+
+    // Function to equalize heights of visible experiment boxes
+    function equalizeBoxHeights() {
+        const boxes = ['box-active', 'box-completed', 'box-stopped'];
+        const visibleBoxes = boxes.map(id => document.getElementById(id))
+            .filter(box => box && box.style.display !== 'none');
+        
+        if (visibleBoxes.length <= 1) return;
+        
+        // Reset heights to auto to get natural heights
+        visibleBoxes.forEach(box => box.style.height = 'auto');
+        
+        // Wait a frame for layout recalculation
+        requestAnimationFrame(() => {
+            // Find the maximum height
+            const maxHeight = Math.max(...visibleBoxes.map(box => box.offsetHeight));
+            
+            // Apply the maximum height to all visible boxes
+            visibleBoxes.forEach(box => {
+                box.style.height = maxHeight + 'px';
+            });
+        });
+    }
+
+    // Equalize heights after initial tables load (with delay for Grid.js render)
+    setTimeout(equalizeBoxHeights, 500);
+
+    // Also equalize after each refresh
+    const originalRefreshAllTables = refreshAllTables;
+    refreshAllTables = function() {
+        originalRefreshAllTables();
+        // Re-equalize after the async refresh completes
+        setTimeout(equalizeBoxHeights, 500);
+    };
 
     // Set up periodic refresh
     setInterval(refreshAllTables, DATA_REFRESH_INTERVAL);
