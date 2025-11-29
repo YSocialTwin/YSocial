@@ -1,0 +1,1665 @@
+<!-- Tutorial Wizard Overlay -->
+<div id="tutorial-overlay" style="display: none;">
+    <!-- Backdrop -->
+    <div id="tutorial-backdrop" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 9999;
+        backdrop-filter: blur(3px);
+    "></div>
+    
+    <!-- Modal Container -->
+    <div id="tutorial-modal" style="
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        z-index: 10000;
+        max-width: 650px;
+        width: 90%;
+        max-height: 85vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    ">
+        <!-- Header -->
+        <div style="
+            background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
+            padding: 24px 30px;
+            border-radius: 16px 16px 0 0;
+            position: relative;
+            flex-shrink: 0;
+        ">
+            <button id="tutorial-close-btn" style="
+                position: absolute;
+                top: 15px;
+                right: 15px;
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                font-size: 1.5em;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: background 0.2s;
+            " title="Skip Tutorial">&times;</button>
+            
+            <h2 style="color: white; margin: 0 0 8px 0; font-size: 1.6em; font-weight: 600;">
+                Welcome to YSocial! 🎉
+            </h2>
+            <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 0.95em;">
+                Let's create your first simulation in just 4 easy steps.
+            </p>
+        </div>
+        
+        <!-- Progress Indicator -->
+        <div style="
+            display: flex;
+            justify-content: center;
+            padding: 20px 30px 10px;
+            gap: 10px;
+            flex-shrink: 0;
+        ">
+            <div class="tutorial-step-indicator" id="step-indicator-1" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #039be5;
+                color: white;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>1</span> Population
+            </div>
+            <div class="tutorial-step-indicator" id="step-indicator-2" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>2</span> Experiment
+            </div>
+            <div class="tutorial-step-indicator" id="step-indicator-3" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>3</span> Client
+            </div>
+            <div class="tutorial-step-indicator" id="step-indicator-4" style="
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px 16px;
+                background: #e0e0e0;
+                color: #666;
+                border-radius: 20px;
+                font-size: 0.85em;
+                font-weight: 500;
+                transition: all 0.3s;
+            ">
+                <span>4</span> Run
+            </div>
+        </div>
+        
+        <!-- Step Content Container -->
+        <div id="tutorial-content" style="padding: 20px 30px; overflow-y: auto; flex: 1 1 auto; min-height: 0;">
+            <!-- Step 1: Population -->
+            <div id="tutorial-step-1" class="tutorial-step">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-account-group" style="color: #039be5;"></i> Create Your Population
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    A population is a group of synthetic agents that will participate in your simulation.
+                    For more advanced options, visit the <a href="/admin/populations" style="color: #039be5;">Populations</a> page.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Population Name <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <input type="text" id="tut-pop-name" placeholder="e.g., My First Population" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            transition: border-color 0.2s;
+                            box-sizing: border-box;
+                        " required>
+                    </div>
+                    
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Population Size: <span id="tut-pop-size-value">50</span> agents
+                        </label>
+                        <input type="range" id="tut-pop-size" min="10" max="100" value="50" style="
+                            width: 100%;
+                            cursor: pointer;
+                        " oninput="document.getElementById('tut-pop-size-value').textContent = this.value">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.75em; color: #999; margin-top: 3px;">
+                            <span>10</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
+                            Education Levels <span style="color: #e74c3c;">*</span>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <div class="multi-select-wrapper" style="position: relative;">
+                                <div class="multi-select-display" id="tut-education-display-wrapper" onclick="toggleTutDropdown('education')" style="
+                                    min-height: 38px;
+                                    padding: 6px 10px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    background: white;
+                                    cursor: pointer;
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 5px;
+                                    align-items: center;
+                                ">
+                                    <span id="tut-education-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select education levels...</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="tut-education-dropdown" style="
+                                    position: absolute;
+                                    top: 100%;
+                                    left: 0;
+                                    right: 0;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    background: white;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    z-index: 1000;
+                                    display: none;
+                                    margin-top: 2px;
+                                ">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
+                            Political Leanings <span style="color: #e74c3c;">*</span>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <div class="multi-select-wrapper" style="position: relative;">
+                                <div class="multi-select-display" id="tut-political-display-wrapper" onclick="toggleTutDropdown('political')" style="
+                                    min-height: 38px;
+                                    padding: 6px 10px;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    background: white;
+                                    cursor: pointer;
+                                    display: flex;
+                                    flex-wrap: wrap;
+                                    gap: 5px;
+                                    align-items: center;
+                                ">
+                                    <span id="tut-political-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select political leanings...</span>
+                                </div>
+                                <div class="multi-select-dropdown" id="tut-political-dropdown" style="
+                                    position: absolute;
+                                    top: 100%;
+                                    left: 0;
+                                    right: 0;
+                                    max-height: 200px;
+                                    overflow-y: auto;
+                                    background: white;
+                                    border: 1px solid #ddd;
+                                    border-radius: 4px;
+                                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                                    z-index: 1000;
+                                    display: none;
+                                    margin-top: 2px;
+                                ">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <!-- Activity Pattern with Drag and Drop -->
+                    <div class="form-section-header" style="font-size: 0.95em; font-weight: 600; color: #333; margin: 15px 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #e0e0e0;">
+                        Activity Patterns
+                    </div>
+                    <div class="form-section-description" style="font-size: 0.85em; color: #666; margin-bottom: 12px; line-height: 1.4;">
+                        Drag activity profiles from available to assigned, then set the percentage for each. Percentages must total 100%.
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background-color: #fafafa;">
+                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Available Profiles (Drag to assign)</div>
+                            <div id="tut-available-profiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; min-height: 40px;">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <div style="border: 2px dashed #22c55e; border-radius: 6px; padding: 10px; background-color: #f0fdf4;">
+                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Assigned Profiles & Percentages</div>
+                            <div id="tut-assigned-profiles" style="min-height: 40px;">
+                                <div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>
+                            </div>
+                            <div id="tut-activity-validation" style="display: none; margin-top: 8px; padding: 8px; border-radius: 4px; font-size: 0.8em;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Experiment -->
+            <div id="tutorial-step-2" class="tutorial-step" style="display: none;">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-flask" style="color: #039be5;"></i> Create Your Experiment
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    An experiment defines the simulation environment.
+                    For more options, visit the <a href="/admin/settings" style="color: #039be5;">Settings</a> page.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Experiment Name <span style="color: #e74c3c;">*</span>
+                        </label>
+                        <input type="text" id="tut-exp-name" placeholder="e.g., My First Experiment" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            transition: border-color 0.2s;
+                            box-sizing: border-box;
+                        " required>
+                    </div>
+                    
+                    <div id="tut-llm-section" style="
+                        background: #f5f5f5;
+                        padding: 15px;
+                        border-radius: 8px;
+                        border-left: 4px solid #039be5;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <i id="tut-llm-icon" class="mdi mdi-robot-off" style="font-size: 1.5em; color: #6c757d;"></i>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <strong style="color: #333;">LLM Agents</strong>
+                                    <label class="switch-small" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                        <input type="checkbox" id="tut-llm-toggle" style="opacity: 0; width: 0; height: 0;">
+                                        <span style="
+                                            position: absolute;
+                                            cursor: pointer;
+                                            top: 0;
+                                            left: 0;
+                                            right: 0;
+                                            bottom: 0;
+                                            background-color: #ccc;
+                                            transition: 0.4s;
+                                            border-radius: 22px;
+                                        "></span>
+                                    </label>
+                                    <span id="tut-llm-status" style="
+                                        background: #6c757d;
+                                        color: white;
+                                        padding: 2px 8px;
+                                        border-radius: 10px;
+                                        font-size: 0.75em;
+                                    ">Disabled</span>
+                                </div>
+                                <p id="tut-llm-desc" style="color: #666; font-size: 0.85em; margin: 5px 0 0 0;">
+                                    Enable AI-powered agents using a local Ollama server.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Topics section (shown when LLM is enabled) -->
+                    <div id="tut-topics-section" style="display: none;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Simulation Topics <span style="color: #e74c3c;">*</span> <span style="font-weight: normal; color: #999;">(at least 2)</span>
+                        </label>
+                        <div style="
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            padding: 10px;
+                            background: white;
+                        ">
+                            <div id="tut-topics-tags" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; margin-bottom: 8px;">
+                                <!-- Tags will be added here -->
+                            </div>
+                            <input type="text" id="tut-topic-input" placeholder="Type a topic and press Enter" style="
+                                width: 100%;
+                                padding: 8px 12px;
+                                border: 1px solid #eee;
+                                border-radius: 6px;
+                                font-size: 0.9em;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                            Enter topics that agents will discuss. Press Enter after each topic.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Client -->
+            <div id="tutorial-step-3" class="tutorial-step" style="display: none;">
+                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
+                    <i class="mdi mdi-cog" style="color: #039be5;"></i> Configure Your Client
+                </h3>
+                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+                    A client runs the simulation with your population.
+                    For advanced settings, visit the client details page after creation.
+                </p>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
+                            Client Name <span style="color: #e74c3c;">*</span>
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <input type="text" id="tut-client-name" placeholder="e.g., Main Simulation" class="input" style="
+                                width: 100%;
+                                padding: 8px 12px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                                box-sizing: border-box;
+                            " required>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
+                            Simulation Days
+                        </span>
+                        <span class="right" style="width: 70%;">
+                            <input type="number" id="tut-sim-days" min="1" max="30" value="7" class="input" style="
+                                width: 80px;
+                                padding: 8px 12px;
+                                border: 1px solid #ddd;
+                                border-radius: 4px;
+                                font-size: 0.9em;
+                            ">
+                        </span>
+                    </div>
+                    
+                    <div class="form-section-header" style="font-size: 0.95em; font-weight: 600; color: #333; margin: 10px 0 8px 0; padding-bottom: 5px; border-bottom: 1px solid #e0e0e0;">
+                        Agents' Actions Relevance
+                    </div>
+                    <div class="form-section-description" style="font-size: 0.85em; color: #666; margin-bottom: 15px; line-height: 1.4;">
+                        All actions are scored from 0 to 10, where 0 means the action is never performed. Scores greater than 0 are relative to each other.
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Post new content</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-post-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box selected" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-post-prob" value="3">
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Comment a Post</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-comment-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box selected" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-comment-prob" value="5">
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Read a content</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-read-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box selected" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-read-prob" value="2">
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
+                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Share News</span>
+                        <span class="right" style="width: 70%;">
+                            <div class="scale-wrapper">
+                                <div class="number-scale" id="tut-share-scale" style="display: flex; gap: 5px; margin: 5px 0;">
+                                    <div class="number-box selected" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">0</div>
+                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
+                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
+                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
+                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
+                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
+                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
+                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
+                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
+                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
+                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+                                </div>
+                                <input type="hidden" id="tut-share-prob" value="0">
+                            </div>
+                        </span>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div>
+                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                                Content Recommendation
+                            </label>
+                            <select id="tut-content-recsys" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                                Follow Recommendation
+                            </label>
+                            <select id="tut-follow-recsys" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- LLM Model Selection (shown when LLM is enabled) -->
+                    <div id="tut-llm-model-section" style="display: none; margin-top: 10px;">
+                        <div style="
+                            background: #f5f5f5;
+                            padding: 15px;
+                            border-radius: 8px;
+                            border-left: 4px solid #22c55e;
+                        ">
+                            <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333; font-size: 0.9em;">
+                                <i class="mdi mdi-robot" style="color: #22c55e;"></i> LLM Model
+                            </label>
+                            <select id="tut-llm-model" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                            <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                                Select the Ollama model for agent content generation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 4: Congratulations -->
+            <div id="tutorial-step-4" class="tutorial-step" style="display: none;">
+                <div style="text-align: center; padding: 20px 0;">
+                    <div style="font-size: 4em; margin-bottom: 15px;">🎊</div>
+                    <h3 style="color: #333; margin: 0 0 15px 0; font-size: 1.5em;">
+                        Congratulations!
+                    </h3>
+                    <p style="color: #666; margin: 0 0 20px 0; font-size: 1em; line-height: 1.6;">
+                        You've successfully created your first YSocial experiment!
+                    </p>
+                    
+                    <div style="
+                        background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+                        border-radius: 12px;
+                        padding: 20px;
+                        margin: 20px 0;
+                        text-align: left;
+                    ">
+                        <h4 style="color: #2e7d32; margin: 0 0 12px 0; font-size: 1em;">
+                            <i class="mdi mdi-lightbulb-on" style="margin-right: 8px;"></i>What's Next?
+                        </h4>
+                        <ul style="color: #555; margin: 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
+                            <li>✔️ Explore <mark>advanced population settings</mark>  <small> (e.g., personality traits & toxicity) </small></li>
+                            <li>✔️ Experiment with <mark>recommendation</mark> algorithms</li>
+                            <li>✔️ Create <mark>multiple clients</mark> to compare simulation scenarios</li>
+                            <li>✔️ Play with <mark>Hybrid Human-LLM</mark> Simulations</li>
+                            <li>✔️ Navigate the Experiment with an OSN like interface</li>
+                            <li>✔️ Use <mark>ySights</mark> to analyze simulation results <small>(available in developer/docker mode)</small></li>
+                        </ul>
+                    </div>
+                    
+                    <p style="color: #888; font-size: 0.85em; margin-top: 15px;">
+                        <i class="mdi mdi-information-outline"></i>
+                        Click "Run Simulation" to start both the experiment server and your client!
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error Message -->
+        <div id="tutorial-error" style="
+            display: none;
+            margin: 0 30px 15px;
+            padding: 10px 15px;
+            background: #fee;
+            border: 1px solid #fcc;
+            border-radius: 8px;
+            color: #c00;
+            font-size: 0.9em;
+        "></div>
+        
+        <!-- Footer -->
+        <div id="tutorial-footer" style="
+            padding: 15px 30px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            flex-shrink: 0;
+            background: white;
+            border-radius: 0 0 16px 16px;
+        ">
+            <button id="tutorial-prev-btn" style="
+                padding: 10px 20px;
+                background: #f5f5f5;
+                border: none;
+                border-radius: 8px;
+                color: #666;
+                font-size: 0.95em;
+                cursor: pointer;
+                transition: background 0.2s;
+                display: none;
+            ">
+                <i class="mdi mdi-arrow-left"></i> Back
+            </button>
+            
+            <div style="display: flex; gap: 10px; margin-left: auto;">
+                <button id="tutorial-skip-btn" style="
+                    padding: 10px 20px;
+                    background: none;
+                    border: none;
+                    color: #999;
+                    font-size: 0.9em;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                ">
+                    Skip Tutorial
+                </button>
+                
+                <button id="tutorial-next-btn" style="
+                    padding: 10px 25px;
+                    background: linear-gradient(135deg, #039be5 0%, #00bcd4 100%);
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    font-size: 0.95em;
+                    font-weight: 500;
+                    cursor: pointer;
+                    transition: transform 0.2s, box-shadow 0.2s;
+                    box-shadow: 0 4px 12px rgba(3, 155, 229, 0.3);
+                ">
+                    Next <i class="mdi mdi-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Tag button styles */
+    .tutorial-tag {
+        display: inline-block;
+        padding: 6px 12px;
+        border: 2px solid #ddd;
+        border-radius: 20px;
+        background: white;
+        color: #666;
+        font-size: 0.85em;
+        cursor: pointer;
+        transition: all 0.2s;
+        user-select: none;
+    }
+    
+    .tutorial-tag:hover {
+        border-color: #039be5;
+        color: #039be5;
+    }
+    
+    .tutorial-tag.selected {
+        background: #039be5;
+        border-color: #039be5;
+        color: white;
+    }
+    
+    /* Input focus styles */
+    #tutorial-modal input:focus,
+    #tutorial-modal select:focus {
+        outline: none;
+        border-color: #039be5;
+        box-shadow: 0 0 0 3px rgba(3, 155, 229, 0.1);
+    }
+    
+    /* Button hover effects */
+    #tutorial-next-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(3, 155, 229, 0.4);
+    }
+    
+    #tutorial-prev-btn:hover {
+        background: #e8e8e8;
+    }
+    
+    #tutorial-skip-btn:hover {
+        color: #666;
+    }
+    
+    #tutorial-close-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+</style>
+
+<script>
+(function() {
+    // Tutorial state
+    let currentStep = 1;
+    let tutorialData = null;
+    let selectedEducation = [];
+    let selectedPolitical = [];
+    let createdExperimentId = null;
+    let createdClientId = null;
+    let llmEnabled = false;
+    let topicsList = [];
+    let tutAssignedProfiles = [];  // Activity profiles assigned with percentages
+    
+    // Check if tutorial should be shown
+    function checkTutorialStatus() {
+        fetch('/admin/tutorial/check_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.show_tutorial && (data.role === 'admin' || data.role === 'researcher')) {
+                    loadTutorialData();
+                }
+            })
+            .catch(error => console.error('Error checking tutorial status:', error));
+    }
+    
+    // Load tutorial form data
+    function loadTutorialData() {
+        fetch('/admin/tutorial/data')
+            .then(response => response.json())
+            .then(data => {
+                tutorialData = data;
+                populateFormOptions();
+                setupLLMToggle();
+                setupTopicsInput();
+                setupNumberScales();
+                setupActivityProfileDragDrop();
+                showTutorial();
+            })
+            .catch(error => console.error('Error loading tutorial data:', error));
+    }
+    
+    // Populate form options from API data
+    function populateFormOptions() {
+        // Education levels - multi-select dropdown
+        const educationDropdown = document.getElementById('tut-education-dropdown');
+        educationDropdown.innerHTML = tutorialData.education_levels.map(e => 
+            `<div class="multi-select-option" data-id="${e.id}" data-name="${e.name}" onclick="toggleTutOption('education', '${e.name}', ${e.id})" style="padding: 8px 12px; cursor: pointer; font-size: 0.9em; transition: background 0.15s;">${e.name}</div>`
+        ).join('');
+        
+        // Political leanings - multi-select dropdown
+        const politicalDropdown = document.getElementById('tut-political-dropdown');
+        politicalDropdown.innerHTML = tutorialData.political_leanings.map(p => 
+            `<div class="multi-select-option" data-id="${p.id}" data-name="${p.name}" onclick="toggleTutOption('political', '${p.name}', ${p.id})" style="padding: 8px 12px; cursor: pointer; font-size: 0.9em; transition: background 0.15s;">${p.name}</div>`
+        ).join('');
+        
+        // Activity profiles - now rendered as draggable items
+        renderTutAvailableProfiles();
+        
+        // Set default activity profile ("Always On" at 100%)
+        const alwaysOnProfile = tutorialData.activity_profiles.find(p => p.name === 'Always On');
+        if (alwaysOnProfile) {
+            tutAssignedProfiles = [{
+                id: alwaysOnProfile.id,
+                name: alwaysOnProfile.name,
+                hours: alwaysOnProfile.hours || '',
+                percentage: 100
+            }];
+            renderTutAssignedProfiles();
+            validateTutActivityPercentages();
+        }
+        
+        // Content recommendation systems - use 'name' as value (class name) and 'value' as display text
+        const contentSelect = document.getElementById('tut-content-recsys');
+        contentSelect.innerHTML = tutorialData.content_recsys.map(c => 
+            `<option value="${c.name}">${c.value}</option>`
+        ).join('');
+        
+        // Follow recommendation systems - use 'name' as value (class name) and 'value' as display text
+        const followSelect = document.getElementById('tut-follow-recsys');
+        followSelect.innerHTML = tutorialData.follow_recsys.map(f => 
+            `<option value="${f.name}">${f.value}</option>`
+        ).join('');
+        
+        // LLM models (if available)
+        const llmModelSelect = document.getElementById('tut-llm-model');
+        if (tutorialData.ollama_models && tutorialData.ollama_models.length > 0) {
+            llmModelSelect.innerHTML = tutorialData.ollama_models.map(m => 
+                `<option value="${m}">${m}</option>`
+            ).join('');
+        }
+        
+        // Update LLM section based on Ollama availability
+        updateLLMAvailability();
+    }
+    
+    // Render available activity profiles
+    function renderTutAvailableProfiles() {
+        const container = document.getElementById('tut-available-profiles');
+        if (!container || !tutorialData.activity_profiles) return;
+        
+        // Filter out already assigned profiles
+        const available = tutorialData.activity_profiles.filter(p => 
+            !tutAssignedProfiles.find(ap => ap.id === p.id)
+        );
+        
+        if (available.length === 0) {
+            container.innerHTML = '<div style="text-align: center; color: #999; font-size: 0.8em; padding: 8px;">All profiles assigned</div>';
+            return;
+        }
+        
+        container.innerHTML = available.map(p => {
+            const hours = p.hours ? p.hours.split(',') : [];
+            return `
+            <div class="tut-profile-item" draggable="true" data-profile-id="${p.id}" data-profile-name="${p.name}" data-profile-hours="${p.hours || ''}" style="
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                padding: 6px 8px;
+                cursor: move;
+                transition: all 0.2s ease;
+                font-size: 0.8em;
+            ">
+                <div style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${p.name}">${p.name}</div>
+                <div style="display: flex; gap: 1px; height: 8px; margin-top: 4px;">
+                    ${Array.from({length: 24}, (_, h) => `<div style="flex: 1; height: 100%; background: ${hours.includes(h.toString()) ? '#22c55e' : '#e5e7eb'}; border-radius: 1px;" title="Hour ${h}"></div>`).join('')}
+                </div>
+            </div>
+        `}).join('');
+        
+        // Add drag event listeners
+        container.querySelectorAll('.tut-profile-item').forEach(item => {
+            item.addEventListener('dragstart', handleTutProfileDragStart);
+            item.addEventListener('dragend', handleTutProfileDragEnd);
+        });
+    }
+    
+    // Render assigned activity profiles
+    function renderTutAssignedProfiles() {
+        const container = document.getElementById('tut-assigned-profiles');
+        if (!container) return;
+        
+        if (tutAssignedProfiles.length === 0) {
+            container.innerHTML = '<div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>';
+            return;
+        }
+        
+        container.innerHTML = '<div style="display: flex; flex-wrap: wrap; gap: 8px;">' + tutAssignedProfiles.map(profile => `
+            <div class="tut-assigned-profile" style="
+                background: white;
+                border: 1px solid #22c55e;
+                border-radius: 4px;
+                padding: 6px 8px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 0.8em;
+            ">
+                <span style="font-weight: 500; color: #333;">${profile.name}</span>
+                <input type="number" 
+                       class="tut-percentage-input" 
+                       min="0" 
+                       max="100" 
+                       step="0.01"
+                       placeholder="%" 
+                       value="${profile.percentage || ''}"
+                       onchange="updateTutProfilePercentage('${profile.id}', this.value)"
+                       style="width: 55px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 3px; text-align: center; font-size: 0.85em;">
+                <span style="font-size: 0.75em; color: #666;">%</span>
+                <button type="button" onclick="removeTutProfile('${profile.id}')" style="
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 3px;
+                    padding: 3px 6px;
+                    cursor: pointer;
+                    font-size: 0.75em;
+                ">×</button>
+            </div>
+        `).join('') + '</div>';
+        
+        // Re-render available to exclude assigned
+        renderTutAvailableProfiles();
+    }
+    
+    // Setup activity profile drag and drop
+    function setupActivityProfileDragDrop() {
+        const assignedContainer = document.getElementById('tut-assigned-profiles');
+        if (assignedContainer) {
+            assignedContainer.addEventListener('dragover', handleTutProfileDragOver);
+            assignedContainer.addEventListener('drop', handleTutProfileDrop);
+            assignedContainer.addEventListener('dragleave', handleTutProfileDragLeave);
+        }
+    }
+    
+    function handleTutProfileDragStart(e) {
+        e.currentTarget.style.opacity = '0.5';
+        e.dataTransfer.effectAllowed = 'copy';
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+            id: e.currentTarget.dataset.profileId,
+            name: e.currentTarget.dataset.profileName,
+            hours: e.currentTarget.dataset.profileHours
+        }));
+    }
+    
+    function handleTutProfileDragEnd(e) {
+        e.currentTarget.style.opacity = '1';
+    }
+    
+    function handleTutProfileDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        e.currentTarget.style.backgroundColor = '#dcfce7';
+        e.currentTarget.style.borderColor = '#22c55e';
+    }
+    
+    function handleTutProfileDragLeave(e) {
+        if (e.currentTarget === e.target) {
+            e.currentTarget.style.backgroundColor = '#f0fdf4';
+            e.currentTarget.style.borderColor = '';
+        }
+    }
+    
+    function handleTutProfileDrop(e) {
+        e.preventDefault();
+        e.currentTarget.style.backgroundColor = '#f0fdf4';
+        e.currentTarget.style.borderColor = '';
+        
+        const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+        
+        // Check if profile is already assigned
+        if (tutAssignedProfiles.find(p => p.id === data.id)) {
+            return;
+        }
+        
+        // Add to assigned profiles
+        tutAssignedProfiles.push({
+            id: data.id,
+            name: data.name,
+            hours: data.hours,
+            percentage: 0
+        });
+        
+        renderTutAssignedProfiles();
+        validateTutActivityPercentages();
+    }
+    
+    // Update profile percentage
+    window.updateTutProfilePercentage = function(profileId, value) {
+        const profile = tutAssignedProfiles.find(p => p.id === profileId);
+        if (profile) {
+            profile.percentage = parseFloat(value) || 0;
+            validateTutActivityPercentages();
+        }
+    };
+    
+    // Remove assigned profile
+    window.removeTutProfile = function(profileId) {
+        tutAssignedProfiles = tutAssignedProfiles.filter(p => p.id !== profileId);
+        renderTutAssignedProfiles();
+        validateTutActivityPercentages();
+    };
+    
+    // Validate activity profile percentages
+    function validateTutActivityPercentages() {
+        const validation = document.getElementById('tut-activity-validation');
+        if (!validation) return true;
+        
+        const total = tutAssignedProfiles.reduce((sum, p) => sum + (p.percentage || 0), 0);
+        
+        if (tutAssignedProfiles.length === 0) {
+            validation.style.display = 'none';
+            return true;
+        }
+        
+        validation.style.display = 'block';
+        
+        if (Math.abs(total - 100) < 0.01) {
+            validation.style.background = '#efe';
+            validation.style.border = '1px solid #cfc';
+            validation.style.color = '#0a0';
+            validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
+            return true;
+        } else {
+            validation.style.background = '#fee';
+            validation.style.border = '1px solid #fcc';
+            validation.style.color = '#c00';
+            validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
+            return false;
+        }
+    }
+    
+    // Toggle multi-select dropdown visibility
+    window.toggleTutDropdown = function(type) {
+        const dropdown = document.getElementById(`tut-${type}-dropdown`);
+        const isActive = dropdown.style.display === 'block';
+        
+        // Close all dropdowns first
+        document.querySelectorAll('.multi-select-dropdown').forEach(d => d.style.display = 'none');
+        
+        // Toggle the clicked one
+        if (!isActive) {
+            dropdown.style.display = 'block';
+        }
+    };
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.multi-select-wrapper')) {
+            document.querySelectorAll('.multi-select-dropdown').forEach(d => d.style.display = 'none');
+        }
+    });
+    
+    // Toggle option selection in multi-select
+    window.toggleTutOption = function(type, name, id) {
+        let array = type === 'education' ? selectedEducation : selectedPolitical;
+        const option = document.querySelector(`#tut-${type}-dropdown .multi-select-option[data-id="${id}"]`);
+        
+        const existingIndex = array.findIndex(item => item.id === id);
+        if (existingIndex > -1) {
+            // Remove
+            array.splice(existingIndex, 1);
+            option.style.background = '';
+            option.style.color = '';
+            option.style.fontWeight = '';
+        } else {
+            // Add
+            array.push({ id: id, name: name });
+            option.style.background = '#e8f5e9';
+            option.style.color = '#22c55e';
+            option.style.fontWeight = '500';
+        }
+        
+        updateTutMultiSelectDisplay(type);
+    };
+    
+    // Update the display of selected items
+    function updateTutMultiSelectDisplay(type) {
+        const array = type === 'education' ? selectedEducation : selectedPolitical;
+        const display = document.getElementById(`tut-${type}-display`);
+        const wrapper = document.getElementById(`tut-${type}-display-wrapper`);
+        
+        if (array.length === 0) {
+            wrapper.innerHTML = `<span id="tut-${type}-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select ${type === 'education' ? 'education levels' : 'political leanings'}...</span>`;
+        } else {
+            wrapper.innerHTML = array.map(item => 
+                `<span class="multi-select-tag" style="background: #22c55e; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; display: inline-flex; align-items: center; gap: 5px;">
+                    ${item.name}
+                    <span class="multi-select-tag-remove" onclick="event.stopPropagation(); toggleTutOption('${type}', '${item.name}', ${item.id})" style="cursor: pointer; font-weight: bold;">×</span>
+                </span>`
+            ).join('');
+        }
+    }
+    
+    // Setup number scale interactions
+    function setupNumberScales() {
+        const scales = ['tut-post-scale', 'tut-comment-scale', 'tut-read-scale', 'tut-share-scale'];
+        
+        scales.forEach(scaleId => {
+            const scale = document.getElementById(scaleId);
+            if (!scale) return;
+            
+            const boxes = scale.querySelectorAll('.number-box');
+            const hiddenInput = scale.parentElement.querySelector('input[type="hidden"]');
+            
+            boxes.forEach(box => {
+                box.addEventListener('click', function() {
+                    // Remove selected from all boxes in this scale
+                    boxes.forEach(b => {
+                        b.classList.remove('selected');
+                        b.style.backgroundColor = '';
+                        b.style.color = '';
+                        b.style.borderColor = '#ccc';
+                    });
+                    
+                    // Add selected to clicked box
+                    this.classList.add('selected');
+                    this.style.backgroundColor = '#C1E0E6';
+                    this.style.color = '#888';
+                    this.style.borderColor = '#888';
+                    
+                    // Update hidden input
+                    if (hiddenInput) {
+                        hiddenInput.value = this.dataset.value;
+                    }
+                });
+                
+                // Hover effects
+                box.addEventListener('mouseenter', function() {
+                    if (!this.classList.contains('selected')) {
+                        this.style.borderColor = '#888';
+                    }
+                });
+                
+                box.addEventListener('mouseleave', function() {
+                    if (!this.classList.contains('selected')) {
+                        this.style.borderColor = '#ccc';
+                    }
+                });
+            });
+        });
+    }
+    
+    // Setup LLM toggle behavior
+    function setupLLMToggle() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const slider = toggle.nextElementSibling;
+        
+        // Style the slider
+        slider.innerHTML = '<span style="position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.4s;"></span>';
+        
+        toggle.addEventListener('change', function() {
+            llmEnabled = this.checked;
+            updateLLMUI();
+        });
+    }
+    
+    // Update LLM availability UI
+    function updateLLMAvailability() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const section = document.getElementById('tut-llm-section');
+        const icon = document.getElementById('tut-llm-icon');
+        const status = document.getElementById('tut-llm-status');
+        const desc = document.getElementById('tut-llm-desc');
+        
+        if (!tutorialData.ollama_available) {
+            // Ollama not available - disable toggle
+            toggle.disabled = true;
+            section.style.borderLeftColor = '#ccc';
+            icon.className = 'mdi mdi-robot-off';
+            icon.style.color = '#ccc';
+            status.textContent = 'Unavailable';
+            status.style.background = '#ccc';
+            desc.textContent = 'Ollama is not running. Start Ollama to enable LLM agents.';
+        } else {
+            // Ollama available - enable toggle
+            toggle.disabled = false;
+            section.style.borderLeftColor = '#039be5';
+        }
+    }
+    
+    // Update LLM-related UI elements
+    function updateLLMUI() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const slider = toggle.nextElementSibling;
+        const icon = document.getElementById('tut-llm-icon');
+        const status = document.getElementById('tut-llm-status');
+        const section = document.getElementById('tut-llm-section');
+        const topicsSection = document.getElementById('tut-topics-section');
+        const llmModelSection = document.getElementById('tut-llm-model-section');
+        const knob = slider.querySelector('span');
+        
+        if (llmEnabled) {
+            knob.style.transform = 'translateX(18px)';
+            slider.style.backgroundColor = '#22c55e';
+            icon.className = 'mdi mdi-robot';
+            icon.style.color = '#22c55e';
+            status.textContent = 'Enabled';
+            status.style.background = '#22c55e';
+            section.style.borderLeftColor = '#22c55e';
+            topicsSection.style.display = 'block';
+            llmModelSection.style.display = 'block';
+        } else {
+            knob.style.transform = 'translateX(0)';
+            slider.style.backgroundColor = '#ccc';
+            icon.className = 'mdi mdi-robot-off';
+            icon.style.color = '#6c757d';
+            status.textContent = 'Disabled';
+            status.style.background = '#6c757d';
+            section.style.borderLeftColor = '#039be5';
+            topicsSection.style.display = 'none';
+            llmModelSection.style.display = 'none';
+        }
+    }
+    
+    // Setup topics input
+    function setupTopicsInput() {
+        const input = document.getElementById('tut-topic-input');
+        const container = document.getElementById('tut-topics-tags');
+        
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const topic = this.value.trim();
+                if (topic && !topicsList.includes(topic)) {
+                    topicsList.push(topic);
+                    renderTopicTags();
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Render topic tags
+    function renderTopicTags() {
+        const container = document.getElementById('tut-topics-tags');
+        container.innerHTML = topicsList.map((topic, index) => `
+            <span style="
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #039be5;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 15px;
+                font-size: 0.85em;
+            ">
+                ${topic}
+                <span onclick="removeTopic(${index})" style="
+                    cursor: pointer;
+                    font-size: 1.1em;
+                    opacity: 0.8;
+                    margin-left: 2px;
+                ">&times;</span>
+            </span>
+        `).join('');
+    }
+    
+    // Remove topic
+    window.removeTopic = function(index) {
+        topicsList.splice(index, 1);
+        renderTopicTags();
+    };
+    
+    // Show the tutorial overlay
+    function showTutorial() {
+        document.getElementById('tutorial-overlay').style.display = 'block';
+        currentStep = 1;
+        updateStepDisplay();
+    }
+    
+    // Hide the tutorial overlay
+    function hideTutorial() {
+        document.getElementById('tutorial-overlay').style.display = 'none';
+    }
+    
+    // Update step display
+    function updateStepDisplay() {
+        // Hide all steps
+        document.querySelectorAll('.tutorial-step').forEach(el => el.style.display = 'none');
+        
+        // Show current step
+        document.getElementById(`tutorial-step-${currentStep}`).style.display = 'block';
+        
+        // Update indicators
+        for (let i = 1; i <= 4; i++) {
+            const indicator = document.getElementById(`step-indicator-${i}`);
+            if (i < currentStep) {
+                indicator.style.background = '#4caf50';
+                indicator.style.color = 'white';
+            } else if (i === currentStep) {
+                indicator.style.background = '#039be5';
+                indicator.style.color = 'white';
+            } else {
+                indicator.style.background = '#e0e0e0';
+                indicator.style.color = '#666';
+            }
+        }
+        
+        // Update buttons
+        const prevBtn = document.getElementById('tutorial-prev-btn');
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        const skipBtn = document.getElementById('tutorial-skip-btn');
+        
+        // Hide prev button on step 4 (congratulations)
+        prevBtn.style.display = (currentStep > 1 && currentStep < 4) ? 'block' : 'none';
+        
+        // Hide skip button on step 4
+        skipBtn.style.display = currentStep < 4 ? 'block' : 'none';
+        
+        if (currentStep === 3) {
+            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+        } else if (currentStep === 4) {
+            nextBtn.innerHTML = '<i class="mdi mdi-play"></i> Run Simulation';
+            nextBtn.style.background = 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(76, 175, 80, 0.3)';
+        } else {
+            nextBtn.innerHTML = 'Next <i class="mdi mdi-arrow-right"></i>';
+            nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(3, 155, 229, 0.3)';
+        }
+        
+        // Clear error
+        hideError();
+    }
+    
+    // Show error message
+    function showError(message) {
+        const errorEl = document.getElementById('tutorial-error');
+        errorEl.textContent = message;
+        errorEl.style.display = 'block';
+    }
+    
+    // Hide error message
+    function hideError() {
+        document.getElementById('tutorial-error').style.display = 'none';
+    }
+    
+    // Validate current step
+    function validateStep() {
+        hideError();
+        
+        if (currentStep === 1) {
+            const name = document.getElementById('tut-pop-name').value.trim();
+            if (!name) {
+                showError('Please enter a population name.');
+                return false;
+            }
+            if (selectedEducation.length === 0) {
+                showError('Please select at least one education level.');
+                return false;
+            }
+            if (selectedPolitical.length === 0) {
+                showError('Please select at least one political leaning.');
+                return false;
+            }
+            // Validate activity profiles
+            if (tutAssignedProfiles.length === 0) {
+                showError('Please assign at least one activity profile.');
+                return false;
+            }
+            if (!validateTutActivityPercentages()) {
+                showError('Activity profile percentages must sum to 100%.');
+                return false;
+            }
+        } else if (currentStep === 2) {
+            const name = document.getElementById('tut-exp-name').value.trim();
+            if (!name) {
+                showError('Please enter an experiment name.');
+                return false;
+            }
+            // If LLM is enabled, require at least 2 topics
+            if (llmEnabled && topicsList.length < 2) {
+                showError('Please enter at least 2 topics for LLM agents.');
+                return false;
+            }
+        } else if (currentStep === 3) {
+            const name = document.getElementById('tut-client-name').value.trim();
+            if (!name) {
+                showError('Please enter a client name.');
+                return false;
+            }
+            // If LLM is enabled, require a model selection
+            if (llmEnabled) {
+                const model = document.getElementById('tut-llm-model').value;
+                if (!model) {
+                    showError('Please select an LLM model.');
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    }
+    
+    // Handle next button click
+    function handleNext() {
+        if (!validateStep()) return;
+        
+        if (currentStep < 3) {
+            currentStep++;
+            updateStepDisplay();
+        } else if (currentStep === 3) {
+            // Submit the form to create experiment
+            createExperiment();
+        } else if (currentStep === 4) {
+            // Run the simulation
+            runSimulation();
+        }
+    }
+    
+    // Handle previous button click
+    function handlePrev() {
+        if (currentStep > 1 && currentStep < 4) {
+            currentStep--;
+            updateStepDisplay();
+        }
+    }
+    
+    // Create the experiment
+    function createExperiment() {
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Creating...';
+        
+        // Get the action relevance values (0-10 scale, convert to probability 0-1)
+        const postValue = parseInt(document.getElementById('tut-post-prob').value);
+        const commentValue = parseInt(document.getElementById('tut-comment-prob').value);
+        const readValue = parseInt(document.getElementById('tut-read-prob').value);
+        const shareValue = parseInt(document.getElementById('tut-share-prob').value);
+        
+        // Normalize to probabilities (sum should be 1 for meaningful distribution)
+        const total = postValue + commentValue + readValue + shareValue;
+        const postProb = total > 0 ? postValue / total : 0.25;
+        const commentProb = total > 0 ? commentValue / total : 0.25;
+        const readProb = total > 0 ? readValue / total : 0.25;
+        const shareProb = total > 0 ? shareValue / total : 0.25;
+        
+        // Prepare activity profiles data (id -> percentage)
+        const activityProfilesData = tutAssignedProfiles.map(p => ({
+            id: p.id,
+            name: p.name,
+            percentage: p.percentage || 0
+        }));
+        
+        const data = {
+            // Population - extract just the IDs from the objects
+            population_name: document.getElementById('tut-pop-name').value.trim(),
+            population_size: parseInt(document.getElementById('tut-pop-size').value),
+            education_levels: selectedEducation.map(e => e.id),
+            political_leanings: selectedPolitical.map(p => p.id),
+            activity_profiles_data: activityProfilesData,
+            
+            // Experiment
+            experiment_name: document.getElementById('tut-exp-name').value.trim(),
+            llm_enabled: llmEnabled,
+            topics: topicsList,
+            
+            // Client
+            client_name: document.getElementById('tut-client-name').value.trim(),
+            simulation_days: parseInt(document.getElementById('tut-sim-days').value),
+            post_probability: postProb,
+            share_probability: shareProb,
+            comment_probability: commentProb,
+            read_probability: readProb,
+            content_recsys: document.getElementById('tut-content-recsys').value,
+            follow_recsys: document.getElementById('tut-follow-recsys').value,
+            llm_model: llmEnabled ? document.getElementById('tut-llm-model').value : '',
+        };
+        
+        fetch('/admin/tutorial/create_all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Store the created IDs for later use
+                createdExperimentId = result.experiment_id;
+                createdClientId = result.client_id;
+                
+                // Move to congratulations step
+                currentStep = 4;
+                updateStepDisplay();
+                
+                // Re-enable the button
+                const nextBtn = document.getElementById('tutorial-next-btn');
+                nextBtn.disabled = false;
+            } else {
+                showError(result.message || 'An error occurred. Please try again.');
+                nextBtn.disabled = false;
+                nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+            }
+        })
+        .catch(error => {
+            console.error('Error creating experiment:', error);
+            showError('An error occurred. Please try again.');
+            nextBtn.disabled = false;
+            nextBtn.innerHTML = 'Create Simulation <i class="mdi mdi-check"></i>';
+        });
+    }
+    
+    // Run the simulation (start server and client)
+    function runSimulation() {
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        nextBtn.disabled = true;
+        nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Starting...';
+        
+        // Use the new JSON API endpoint to start both server and client
+        fetch('/admin/tutorial/run_simulation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                experiment_id: createdExperimentId,
+                client_id: createdClientId
+            }),
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Redirect to experiment details page
+                window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+            } else {
+                console.error('Error starting simulation:', result.message);
+                // Still redirect - user can start manually
+                window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error starting simulation:', error);
+            // Still redirect even if there's an error - the user can start manually
+            window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+        });
+    }
+    
+    // Dismiss tutorial
+    function dismissTutorial() {
+        fetch('/admin/tutorial/dismiss', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(() => {
+            hideTutorial();
+        })
+        .catch(error => {
+            console.error('Error dismissing tutorial:', error);
+            hideTutorial();
+        });
+    }
+    
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check tutorial status on page load
+        checkTutorialStatus();
+        
+        // Event listeners
+        document.getElementById('tutorial-next-btn').addEventListener('click', handleNext);
+        document.getElementById('tutorial-prev-btn').addEventListener('click', handlePrev);
+        document.getElementById('tutorial-skip-btn').addEventListener('click', dismissTutorial);
+        document.getElementById('tutorial-close-btn').addEventListener('click', dismissTutorial);
+    });
+    
+    // Expose function to manually show tutorial (for "Show Tutorial" button)
+    window.showTutorialWizard = function() {
+        if (tutorialData) {
+            // Reset selections
+            selectedEducation = [];
+            selectedPolitical = [];
+            createdExperimentId = null;
+            createdClientId = null;
+            llmEnabled = false;
+            topicsList = [];
+            
+            // Reset activity profiles to default ("Always On" at 100%)
+            tutAssignedProfiles = [];
+            const alwaysOnProfile = tutorialData.activity_profiles.find(p => p.name === 'Always On');
+            if (alwaysOnProfile) {
+                tutAssignedProfiles = [{
+                    id: alwaysOnProfile.id,
+                    name: alwaysOnProfile.name,
+                    hours: alwaysOnProfile.hours || '',
+                    percentage: 100
+                }];
+            }
+            renderTutAssignedProfiles();
+            validateTutActivityPercentages();
+            
+            // Reset multi-select displays
+            updateTutMultiSelectDisplay('education');
+            updateTutMultiSelectDisplay('political');
+            
+            // Reset multi-select dropdown options styling
+            document.querySelectorAll('.multi-select-option').forEach(el => {
+                el.style.background = '';
+                el.style.color = '';
+                el.style.fontWeight = '';
+            });
+            
+            // Reset form inputs
+            document.getElementById('tut-pop-name').value = '';
+            document.getElementById('tut-pop-size').value = 50;
+            document.getElementById('tut-pop-size-value').textContent = '50';
+            document.getElementById('tut-exp-name').value = '';
+            document.getElementById('tut-client-name').value = '';
+            document.getElementById('tut-sim-days').value = 7;
+            
+            // Reset number scales to default values
+            resetNumberScale('tut-post-scale', 3);
+            resetNumberScale('tut-comment-scale', 5);
+            resetNumberScale('tut-read-scale', 2);
+            resetNumberScale('tut-share-scale', 0);
+            
+            // Reset LLM toggle
+            document.getElementById('tut-llm-toggle').checked = false;
+            updateLLMUI();
+            
+            // Reset topics
+            document.getElementById('tut-topics-tags').innerHTML = '';
+            document.getElementById('tut-topic-input').value = '';
+            
+            // Reset button styles
+            const nextBtn = document.getElementById('tutorial-next-btn');
+            nextBtn.style.background = 'linear-gradient(135deg, #039be5 0%, #00bcd4 100%)';
+            nextBtn.style.boxShadow = '0 4px 12px rgba(3, 155, 229, 0.3)';
+            
+            currentStep = 1;
+            showTutorial();
+        } else {
+            loadTutorialData();
+        }
+    };
+    
+    // Helper function to reset number scale to a specific value
+    function resetNumberScale(scaleId, value) {
+        const scale = document.getElementById(scaleId);
+        if (!scale) return;
+        
+        const boxes = scale.querySelectorAll('.number-box');
+        const hiddenInput = scale.parentElement.querySelector('input[type="hidden"]');
+        
+        boxes.forEach(box => {
+            const boxValue = parseInt(box.dataset.value);
+            if (boxValue === value) {
+                box.classList.add('selected');
+                box.style.backgroundColor = '#C1E0E6';
+                box.style.color = '#888';
+                box.style.borderColor = '#888';
+            } else {
+                box.classList.remove('selected');
+                box.style.backgroundColor = '';
+                box.style.color = '';
+                box.style.borderColor = '#ccc';
+            }
+        });
+        
+        if (hiddenInput) {
+            hiddenInput.value = value;
+        }
+    }
+})();
+</script>

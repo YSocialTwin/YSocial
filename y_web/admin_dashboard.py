@@ -302,6 +302,7 @@ def dashboard_experiments_by_status(status):
                     "progress": progress,
                     "elapsed": elapsed,
                     "expected": expected,
+                    "days": client.days,
                 }
             )
         result.append(
@@ -310,6 +311,7 @@ def dashboard_experiments_by_status(status):
                 "exp_name": exp.exp_name,
                 "running": exp.running,
                 "status": exp.status,
+                "owner": exp.owner,
                 "clients": client_data,
             }
         )
