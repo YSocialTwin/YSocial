@@ -831,25 +831,33 @@
         nextBtn.disabled = true;
         nextBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Starting...';
         
-        // First, start the experiment server
-        fetch(`/admin/start_experiment/${createdExperimentId}`)
-            .then(response => {
-                // Wait a moment for the server to start
-                return new Promise(resolve => setTimeout(resolve, 1500));
-            })
-            .then(() => {
-                // Then start the client
-                return fetch(`/admin/run_client/${createdClientId}/${createdExperimentId}`);
-            })
-            .then(() => {
+        // Use the new JSON API endpoint to start both server and client
+        fetch('/admin/tutorial/run_simulation', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                experiment_id: createdExperimentId,
+                client_id: createdClientId
+            }),
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
                 // Redirect to experiment details page
                 window.location.href = `/admin/experiment_details/${createdExperimentId}`;
-            })
-            .catch(error => {
-                console.error('Error starting simulation:', error);
-                // Still redirect even if there's an error - the user can start manually
+            } else {
+                console.error('Error starting simulation:', result.message);
+                // Still redirect - user can start manually
                 window.location.href = `/admin/experiment_details/${createdExperimentId}`;
-            });
+            }
+        })
+        .catch(error => {
+            console.error('Error starting simulation:', error);
+            // Still redirect even if there's an error - the user can start manually
+            window.location.href = `/admin/experiment_details/${createdExperimentId}`;
+        });
     }
     
     // Dismiss tutorial

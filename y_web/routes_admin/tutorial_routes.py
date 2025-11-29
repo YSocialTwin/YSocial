@@ -738,3 +738,82 @@ def create_tutorial_experiment():
         db.session.rollback()
         current_app.logger.error(f"Tutorial wizard error: {str(e)}", exc_info=True)
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+
+@tutorial.route("/admin/tutorial/run_simulation", methods=["POST"])
+@login_required
+def run_tutorial_simulation():
+    """
+    Start the experiment server and client for a tutorial-created experiment.
+
+    This is an async-friendly JSON API endpoint that starts both the server
+    and client, waiting for the server to be ready before starting the client.
+
+    Expects JSON body with:
+    - experiment_id: ID of the experiment to start
+    - client_id: ID of the client to run
+
+    Returns:
+        JSON with success status
+    """
+    from y_web.utils.external_processes import start_server
+    from y_web.utils import start_client
+
+    check_privileges(current_user.username)
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"success": False, "message": "No data provided"}), 400
+
+    experiment_id = data.get("experiment_id")
+    client_id = data.get("client_id")
+
+    if not experiment_id or not client_id:
+        return jsonify({"success": False, "message": "Missing experiment_id or client_id"}), 400
+
+    try:
+        # Get the experiment
+        exp = Exps.query.filter_by(idexp=experiment_id).first()
+        if not exp:
+            return jsonify({"success": False, "message": "Experiment not found"}), 404
+
+        # Get the client
+        client = Client.query.filter_by(id=client_id).first()
+        if not client:
+            return jsonify({"success": False, "message": "Client not found"}), 404
+
+        # Get the population
+        population = Population.query.filter_by(id=client.population_id).first()
+        if not population:
+            return jsonify({"success": False, "message": "Population not found"}), 404
+
+        # Start the experiment server if not already running
+        if exp.running == 0:
+            # Update experiment status
+            db.session.query(Exps).filter_by(idexp=experiment_id).update(
+                {Exps.running: 1, Exps.exp_status: "active"}
+            )
+            db.session.commit()
+
+            # Start the server
+            start_server(exp)
+
+            # Wait a bit for the server to start
+            import time
+            time.sleep(2)
+
+        # Start the client
+        start_client(exp, client, population, resume=True)
+
+        # Update client status
+        db.session.query(Client).filter_by(id=client_id).update({Client.status: 1})
+        db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Simulation started successfully!"
+        })
+
+    except Exception as e:
+        current_app.logger.error(f"Error starting tutorial simulation: {str(e)}", exc_info=True)
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
