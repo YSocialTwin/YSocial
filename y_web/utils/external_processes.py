@@ -1018,13 +1018,20 @@ def _update_server_port_in_configs(exp, new_port):
 
     print(f"Watchdog: Updating port from {old_port} to {new_port} in configs...")
 
-    # Get experiment directory
-    y_web_dir = os.path.dirname(os.path.abspath(__file__)).split("utils")[0]
+    # Get experiment directory - use get_writable_path for PyInstaller compatibility
+    from y_web.utils.path_utils import get_writable_path
+
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
 
     if "database_server.db" in exp.db_name:
-        exp_dir = os.path.join(
-            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip(os.sep)
-        )
+        # Handle path separator differences - split on both / and \
+        import re
+
+        path_part = exp.db_name.split("database_server.db")[0].rstrip("/\\")
+        # Normalize path separators
+        path_part = re.sub(r"[/\\]", os.sep, path_part)
+        exp_dir = os.path.join(writable_base, "y_web", path_part)
     else:
         uid = exp.db_name.removeprefix("experiments_")
         exp_dir = os.path.join(y_web_dir, "experiments", uid)
@@ -1039,6 +1046,8 @@ def _update_server_port_in_configs(exp, new_port):
                 server_config = json.load(f)
 
             server_config["port"] = new_port
+            # Add data_path so YServer knows where to write logs
+            server_config["data_path"] = exp_dir + os.sep
 
             with open(server_config_path, "w") as f:
                 json.dump(server_config, f, indent=4)

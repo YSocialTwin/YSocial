@@ -9,6 +9,7 @@ assignment, and experiment lifecycle control.
 import json
 import os
 import pathlib
+import re
 import shutil
 import socket
 import uuid
@@ -82,6 +83,33 @@ from y_web.utils.miscellanea import (
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
+
+
+def get_experiment_uid_from_db_name(db_name):
+    """
+    Extract the experiment UID from the db_name field.
+
+    This function handles both SQLite and PostgreSQL formats, and correctly
+    parses paths regardless of which path separator was used when storing.
+
+    Args:
+        db_name: The db_name field from an experiment record
+                 SQLite format: "experiments/uid/database_server.db" or "experiments\\uid\\database_server.db"
+                 PostgreSQL format: "experiments_uid"
+
+    Returns:
+        str: The experiment UID, or None if unable to extract
+    """
+    if db_name.startswith("experiments_"):
+        # PostgreSQL format - UUID is after the underscore
+        return db_name.replace("experiments_", "")
+    elif db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        # SQLite format - split using both possible separators
+        # Use regex to split on either forward slash or backslash
+        parts = re.split(r"[/\\]", db_name)
+        if len(parts) >= 2:
+            return parts[1]
+    return None
 
 
 def get_suggested_port():
@@ -643,10 +671,13 @@ def upload_experiment():
 
             admin_engine.dispose()
 
-        # Update config_server.json with new port, name, and database_uri
+        # Update config_server.json with new port, name, database_uri, and data_path
         experiment_config["name"] = name
         experiment_config["port"] = suggested_port
         experiment_config["database_uri"] = db_uri
+        # Add data_path so YServer knows where to write logs (e.g., _server.log)
+        exp_data_path = os.path.join(BASE_DIR, "y_web", "experiments", uid) + os.sep
+        experiment_config["data_path"] = exp_data_path
 
         with open(config_path, "w") as f:
             json.dump(experiment_config, f, indent=4)
@@ -1817,26 +1848,12 @@ def experiment_logs(exp_id):
         BASE_DIR = get_writable_path()
 
         # Construct path to _server.log
-        # db_name format: "experiments/uid/database_server.db" or "experiments_uid" for postgresql
-        db_name = experiment.db_name
-        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-            # Extract the UUID folder
-            parts = db_name.split(os.sep)
-            if len(parts) >= 2:
-                exp_folder = os.path.join(
-                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-                )
-            else:
-                return jsonify({"error": "Invalid experiment path"}), 400
-        elif db_name.startswith("experiments_"):
-            # PostgreSQL format - UUID is after the underscore
-            uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
-            )
-        else:
+        # Use helper function to extract UID regardless of path separator
+        uid = get_experiment_uid_from_db_name(experiment.db_name)
+        if uid is None:
             return jsonify({"error": "Invalid experiment path format"}), 400
 
+        exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         log_file = os.path.join(exp_folder, "_server.log")
 
         # Check if any log files exist (main or rotated)
@@ -1933,23 +1950,12 @@ def experiment_trends(exp_id):
         BASE_DIR = get_writable_path()
 
         # Construct path to _server.log
-        db_name = experiment.db_name
-        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-            parts = db_name.split(os.sep)
-            if len(parts) >= 2:
-                exp_folder = os.path.join(
-                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-                )
-            else:
-                return jsonify({"error": "Invalid experiment path"}), 400
-        elif db_name.startswith("experiments_"):
-            uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
-            )
-        else:
+        # Use helper function to extract UID regardless of path separator
+        uid = get_experiment_uid_from_db_name(experiment.db_name)
+        if uid is None:
             return jsonify({"error": "Invalid experiment path format"}), 400
 
+        exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
         log_file = os.path.join(exp_folder, "_server.log")
 
         # Check if any log files exist (main or rotated)
@@ -2152,24 +2158,12 @@ def client_logs(client_id):
         BASE_DIR = get_writable_path()
 
         # Construct path to client log file
-        db_name = experiment.db_name
-        if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
-            # Extract the UUID folder
-            parts = db_name.split(os.sep)
-            if len(parts) >= 2:
-                exp_folder = os.path.join(
-                    BASE_DIR, f"y_web{os.sep}experiments{os.sep}{parts[1]}"
-                )
-            else:
-                return jsonify({"error": "Invalid experiment path"}), 400
-        elif db_name.startswith("experiments_"):
-            # PostgreSQL format - UUID is after the underscore
-            uid = db_name.replace("experiments_", "")
-            exp_folder = os.path.join(
-                BASE_DIR, f"y_web{os.sep}experiments{os.sep}{uid}"
-            )
-        else:
+        # Use helper function to extract UID regardless of path separator
+        uid = get_experiment_uid_from_db_name(experiment.db_name)
+        if uid is None:
             return jsonify({"error": "Invalid experiment path format"}), 400
+
+        exp_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
 
         # Client log file name format: {client_name}_client.log
         log_file = os.path.join(exp_folder, f"{client.name}_client.log")
@@ -3684,6 +3678,8 @@ def _create_single_experiment_copy(source_exp, new_exp_name):
     config["name"] = new_exp_name
     config["port"] = suggested_port
     config["database_uri"] = new_db_uri
+    # Add data_path so YServer knows where to write logs (e.g., _server.log)
+    config["data_path"] = new_folder + os.sep
 
     with open(config_path, "w") as f:
         json.dump(config, f, indent=4)

@@ -51,6 +51,14 @@ def main():
     # Load configuration
     config = json.load(open(args.config, "r"))
 
+    # Calculate log file path using the same pattern as client runner
+    # The config file is at: {writable_path}/y_web/experiments/{uid}/config_server.json
+    # So the log file should be at: {writable_path}/y_web/experiments/{uid}/_server.log
+    config_dir = os.path.dirname(os.path.abspath(args.config))
+    log_file = os.path.join(config_dir, "_server.log")
+
+    print(f"Server log file: {log_file}", file=sys.stderr)
+
     # Import and start the server
     print(f"Starting YServer for {args.platform}...", config)
     from y_server import app
@@ -59,6 +67,8 @@ def main():
     app.config["perspective_api"] = config["perspective_api"]
     app.config["sentiment_annotation"] = config["sentiment_annotation"]
     app.config["emotion_annotation"] = config["emotion_annotation"]
+    # Pass the log file path to the server via app.config
+    app.config["log_file"] = log_file
     app.run(debug=debug, port=int(config["port"]), host=config["host"])
 
 
