@@ -119,23 +119,37 @@ def get_tutorial_data():
     Get all data needed for the tutorial wizard forms.
 
     Returns:
-        JSON with education levels, political leanings, toxicity levels,
-        and recommendation systems
+        JSON with education levels, political leanings, activity profiles,
+        recommendation systems, and Ollama status
     """
+    from y_web.utils.external_processes import is_ollama_running, get_ollama_models
+
     check_privileges(current_user.username)
 
     education_levels = Education.query.all()
     leanings = Leanings.query.all()
-    toxicity_levels = Toxicity_Levels.query.all()
+    activity_profiles = ActivityProfile.query.all()
     crecsys = Content_Recsys.query.all()
     frecsys = Follow_Recsys.query.all()
+
+    # Check if Ollama is running
+    ollama_available = False
+    ollama_models = []
+    try:
+        ollama_available = is_ollama_running()
+        if ollama_available:
+            ollama_models = get_ollama_models()
+    except Exception:
+        pass
 
     return jsonify({
         "education_levels": [{"id": e.id, "name": e.education_level} for e in education_levels],
         "political_leanings": [{"id": l.id, "name": l.leaning} for l in leanings],
-        "toxicity_levels": [{"id": t.id, "name": t.toxicity_level} for t in toxicity_levels],
+        "activity_profiles": [{"id": a.id, "name": a.name, "hours": a.hours} for a in activity_profiles],
         "content_recsys": [{"id": c.id, "name": c.name, "value": c.value} for c in crecsys],
         "follow_recsys": [{"id": f.id, "name": f.name, "value": f.value} for f in frecsys],
+        "ollama_available": ollama_available,
+        "ollama_models": ollama_models,
     })
 
 
@@ -179,10 +193,12 @@ def create_tutorial_experiment():
         population_size = int(data.get("population_size", 50))
         education_levels = data.get("education_levels", [])
         political_leanings = data.get("political_leanings", [])
-        toxicity_levels = data.get("toxicity_levels", [])
+        activity_profile_id = data.get("activity_profile_id")  # Single activity profile
 
         # Extract experiment data
         experiment_name = data.get("experiment_name", "").strip()
+        llm_enabled = data.get("llm_enabled", False)
+        topics = data.get("topics", [])
 
         # Extract client data
         client_name = data.get("client_name", "").strip()
@@ -193,6 +209,7 @@ def create_tutorial_experiment():
         read_probability = float(data.get("read_probability", 0.2))
         content_recsys = data.get("content_recsys", "reverse_chronological")
         follow_recsys = data.get("follow_recsys", "preferential_attachment")
+        llm_model = data.get("llm_model", "")
 
         # Validate required fields
         if not population_name:
@@ -219,7 +236,10 @@ def create_tutorial_experiment():
         # Convert IDs to comma-separated strings
         education_str = ",".join(str(e) for e in education_levels)
         political_str = ",".join(str(p) for p in political_leanings)
-        toxicity_str = ",".join(str(t) for t in toxicity_levels)
+        
+        # Default toxicity to "None" (ID 1 typically)
+        none_toxicity = Toxicity_Levels.query.filter_by(toxicity_level="None").first()
+        toxicity_str = str(none_toxicity.id) if none_toxicity else "1"
 
         # Build percentages dict with equal distribution
         def build_percentages(items):
@@ -250,11 +270,14 @@ def create_tutorial_experiment():
             total = sum(age_class_percentages.values())
             if total > 0:
                 age_class_percentages = {k: (v / total) * 100 for k, v in age_class_percentages.items()}
+        
+        # Build toxicity percentages (default to None only)
+        toxicity_percentages = {toxicity_str: 100.0}
 
         percentages = {
             "education": build_percentages(education_levels),
             "political_leanings": build_percentages(political_leanings),
-            "toxicity_levels": build_percentages(toxicity_levels),
+            "toxicity_levels": toxicity_percentages,
             "age_classes": age_class_percentages,
             "gender": {"male": 50, "female": 50},
         }
@@ -279,12 +302,16 @@ def create_tutorial_experiment():
         db.session.add(pop)
         db.session.commit()
 
-        # Assign "Always On" activity profile with 100%
-        always_on_profile = ActivityProfile.query.filter_by(name="Always On").first()
-        if always_on_profile:
+        # Assign activity profile (use the selected one or default to "Always On")
+        if activity_profile_id:
+            selected_profile = ActivityProfile.query.filter_by(id=activity_profile_id).first()
+        else:
+            selected_profile = ActivityProfile.query.filter_by(name="Always On").first()
+        
+        if selected_profile:
             profile_assoc = PopulationActivityProfile(
                 population=pop.id,
-                activity_profile=always_on_profile.id,
+                activity_profile=selected_profile.id,
                 percentage=100.0,
             )
             db.session.add(profile_assoc)
@@ -412,6 +439,9 @@ def create_tutorial_experiment():
 
             admin_engine.dispose()
 
+        # Determine topics list (use provided topics if LLM enabled, otherwise "General")
+        experiment_topics = topics if llm_enabled and topics else ["General"]
+
         # Create experiment config file
         config = {
             "platform_type": "microblogging",
@@ -425,7 +455,7 @@ def create_tutorial_experiment():
             "sentiment_annotation": False,
             "emotion_annotation": False,
             "database_uri": db_uri,
-            "topics": ["General"],
+            "topics": experiment_topics,
         }
 
         config_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}config_server.json"
@@ -443,7 +473,7 @@ def create_tutorial_experiment():
             port=int(port),
             server="127.0.0.1",
             annotations="",
-            llm_agents_enabled=0,  # LLM agents disabled as per requirement
+            llm_agents_enabled=1 if llm_enabled else 0,
         )
 
         db.session.add(exp)
@@ -456,16 +486,17 @@ def create_tutorial_experiment():
         db.session.add(exp_stats)
         db.session.commit()
 
-        # Create default topic
-        existing_topic = Topic_List.query.filter_by(name="General").first()
-        if not existing_topic:
-            existing_topic = Topic_List(name="General")
-            db.session.add(existing_topic)
-            db.session.commit()
+        # Create topics for the experiment
+        for topic_name in experiment_topics:
+            existing_topic = Topic_List.query.filter_by(name=topic_name).first()
+            if not existing_topic:
+                existing_topic = Topic_List(name=topic_name)
+                db.session.add(existing_topic)
+                db.session.commit()
 
-        exp_topic = Exp_Topic(exp_id=exp.idexp, topic_id=existing_topic.id)
-        db.session.add(exp_topic)
-        db.session.commit()
+            exp_topic = Exp_Topic(exp_id=exp.idexp, topic_id=existing_topic.id)
+            db.session.add(exp_topic)
+            db.session.commit()
 
         # Create Jupyter instance record
         jupyter_instance = Jupyter_instances(
@@ -504,7 +535,7 @@ def create_tutorial_experiment():
             "18": 0.032, "19": 0.031, "20": 0.030, "21": 0.029, "22": 0.027, "23": 0.025,
         }
 
-        # Create client record
+        # Create client record with LLM model if enabled
         client = Client(
             name=client_name,
             descr="Created via tutorial wizard",
@@ -540,6 +571,7 @@ def create_tutorial_experiment():
             crecsys=content_recsys,
             frecsys=follow_recsys,
             status=0,
+            user_type=llm_model if llm_enabled and llm_model else None,
         )
 
         db.session.add(client)
@@ -553,7 +585,7 @@ def create_tutorial_experiment():
         # Build agent population file
         res = {"agents": []}
         fake = faker.Faker()
-        topics = ["General"]
+        agent_topics = experiment_topics  # Use the experiment topics
 
         for a in agents:
             if a is None:
@@ -562,8 +594,8 @@ def create_tutorial_experiment():
             interests = list(
                 set(
                     fake.random_elements(
-                        elements=set(topics),
-                        length=fake.random_int(min=1, max=min(5, len(topics))),
+                        elements=set(agent_topics),
+                        length=fake.random_int(min=1, max=min(5, len(agent_topics))),
                     )
                 )
             )
@@ -575,12 +607,15 @@ def create_tutorial_experiment():
                 activity_profile_obj.name if activity_profile_obj else "Always On"
             )
 
+            # Set agent type based on LLM model if enabled
+            agent_type = llm_model if llm_enabled and llm_model else ""
+
             res["agents"].append({
                 "name": a.name,
                 "email": f"{a.name}@ysocial.it",
                 "password": f"{a.name}",
                 "age": a.age,
-                "type": "",  # LLM agents disabled
+                "type": agent_type,
                 "leaning": a.leaning,
                 "interests": [interests, len(interests)],
                 "oe": a.oe,

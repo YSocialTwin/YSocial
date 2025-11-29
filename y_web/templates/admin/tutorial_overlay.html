@@ -184,11 +184,22 @@
                     
                     <div>
                         <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
-                            Toxicity Levels <span style="color: #e74c3c;">*</span>
+                            Activity Pattern
                         </label>
-                        <div id="tut-toxicity-options" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <select id="tut-activity-profile" style="
+                            width: 100%;
+                            padding: 10px 14px;
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            font-size: 0.95em;
+                            background: white;
+                            cursor: pointer;
+                        ">
                             <!-- Will be populated by JavaScript -->
-                        </div>
+                        </select>
+                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                            Defines when agents are active during the day.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -200,7 +211,7 @@
                 </h3>
                 <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
                     An experiment defines the simulation environment.
-                    For more options, visit the <a href="/admin/experiments" style="color: #039be5;">Experiments</a> page.
+                    For more options, visit the <a href="/admin/settings" style="color: #039be5;">Settings</a> page.
                 </p>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -219,29 +230,72 @@
                         " required>
                     </div>
                     
-                    <div style="
+                    <div id="tut-llm-section" style="
                         background: #f5f5f5;
                         padding: 15px;
                         border-radius: 8px;
                         border-left: 4px solid #039be5;
                     ">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <i class="mdi mdi-robot-off" style="font-size: 1.5em; color: #6c757d;"></i>
-                            <div>
-                                <strong style="color: #333;">LLM Agents</strong>
-                                <span style="
-                                    background: #6c757d;
-                                    color: white;
-                                    padding: 2px 8px;
-                                    border-radius: 10px;
-                                    font-size: 0.75em;
-                                    margin-left: 8px;
-                                ">Disabled</span>
-                                <p style="color: #666; font-size: 0.85em; margin: 5px 0 0 0;">
-                                    For this tutorial, LLM agents are disabled. You can enable them later in the experiment settings if you have a local LLM server configured.
+                            <i id="tut-llm-icon" class="mdi mdi-robot-off" style="font-size: 1.5em; color: #6c757d;"></i>
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <strong style="color: #333;">LLM Agents</strong>
+                                    <label class="switch-small" style="position: relative; display: inline-block; width: 40px; height: 22px;">
+                                        <input type="checkbox" id="tut-llm-toggle" style="opacity: 0; width: 0; height: 0;">
+                                        <span style="
+                                            position: absolute;
+                                            cursor: pointer;
+                                            top: 0;
+                                            left: 0;
+                                            right: 0;
+                                            bottom: 0;
+                                            background-color: #ccc;
+                                            transition: 0.4s;
+                                            border-radius: 22px;
+                                        "></span>
+                                    </label>
+                                    <span id="tut-llm-status" style="
+                                        background: #6c757d;
+                                        color: white;
+                                        padding: 2px 8px;
+                                        border-radius: 10px;
+                                        font-size: 0.75em;
+                                    ">Disabled</span>
+                                </div>
+                                <p id="tut-llm-desc" style="color: #666; font-size: 0.85em; margin: 5px 0 0 0;">
+                                    Enable AI-powered agents using a local Ollama server.
                                 </p>
                             </div>
                         </div>
+                    </div>
+                    
+                    <!-- Topics section (shown when LLM is enabled) -->
+                    <div id="tut-topics-section" style="display: none;">
+                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+                            Simulation Topics <span style="color: #e74c3c;">*</span> <span style="font-weight: normal; color: #999;">(at least 2)</span>
+                        </label>
+                        <div style="
+                            border: 1px solid #ddd;
+                            border-radius: 8px;
+                            padding: 10px;
+                            background: white;
+                        ">
+                            <div id="tut-topics-tags" style="display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; margin-bottom: 8px;">
+                                <!-- Tags will be added here -->
+                            </div>
+                            <input type="text" id="tut-topic-input" placeholder="Type a topic and press Enter" style="
+                                width: 100%;
+                                padding: 8px 12px;
+                                border: 1px solid #eee;
+                                border-radius: 6px;
+                                font-size: 0.9em;
+                                box-sizing: border-box;
+                            ">
+                        </div>
+                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                            Enter topics that agents will discuss. Press Enter after each topic.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -377,6 +431,34 @@
                             ">
                                 <!-- Populated by JavaScript -->
                             </select>
+                        </div>
+                    </div>
+                    
+                    <!-- LLM Model Selection (shown when LLM is enabled) -->
+                    <div id="tut-llm-model-section" style="display: none; margin-top: 10px;">
+                        <div style="
+                            background: #f5f5f5;
+                            padding: 15px;
+                            border-radius: 8px;
+                            border-left: 4px solid #22c55e;
+                        ">
+                            <label style="display: block; font-weight: 500; margin-bottom: 8px; color: #333; font-size: 0.9em;">
+                                <i class="mdi mdi-robot" style="color: #22c55e;"></i> LLM Model
+                            </label>
+                            <select id="tut-llm-model" style="
+                                width: 100%;
+                                padding: 10px 14px;
+                                border: 1px solid #ddd;
+                                border-radius: 8px;
+                                font-size: 0.9em;
+                                background: white;
+                                cursor: pointer;
+                            ">
+                                <!-- Populated by JavaScript -->
+                            </select>
+                            <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+                                Select the Ollama model for agent content generation.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -546,9 +628,10 @@
     let tutorialData = null;
     let selectedEducation = [];
     let selectedPolitical = [];
-    let selectedToxicity = [];
     let createdExperimentId = null;
     let createdClientId = null;
+    let llmEnabled = false;
+    let topicsList = [];
     
     // Check if tutorial should be shown
     function checkTutorialStatus() {
@@ -569,6 +652,8 @@
             .then(data => {
                 tutorialData = data;
                 populateFormOptions();
+                setupLLMToggle();
+                setupTopicsInput();
                 showTutorial();
             })
             .catch(error => console.error('Error loading tutorial data:', error));
@@ -588,10 +673,10 @@
             `<span class="tutorial-tag" data-id="${p.id}" onclick="toggleTag(this, 'political')">${p.name}</span>`
         ).join('');
         
-        // Toxicity levels
-        const toxicityContainer = document.getElementById('tut-toxicity-options');
-        toxicityContainer.innerHTML = tutorialData.toxicity_levels.map(t => 
-            `<span class="tutorial-tag" data-id="${t.id}" onclick="toggleTag(this, 'toxicity')">${t.name}</span>`
+        // Activity profiles
+        const activitySelect = document.getElementById('tut-activity-profile');
+        activitySelect.innerHTML = tutorialData.activity_profiles.map(a => 
+            `<option value="${a.id}" ${a.name === 'Always On' ? 'selected' : ''}>${a.name}</option>`
         ).join('');
         
         // Content recommendation systems - use 'name' as value (class name) and 'value' as display text
@@ -605,7 +690,139 @@
         followSelect.innerHTML = tutorialData.follow_recsys.map(f => 
             `<option value="${f.name}">${f.value}</option>`
         ).join('');
+        
+        // LLM models (if available)
+        const llmModelSelect = document.getElementById('tut-llm-model');
+        if (tutorialData.ollama_models && tutorialData.ollama_models.length > 0) {
+            llmModelSelect.innerHTML = tutorialData.ollama_models.map(m => 
+                `<option value="${m}">${m}</option>`
+            ).join('');
+        }
+        
+        // Update LLM section based on Ollama availability
+        updateLLMAvailability();
     }
+    
+    // Setup LLM toggle behavior
+    function setupLLMToggle() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const slider = toggle.nextElementSibling;
+        
+        // Style the slider
+        slider.innerHTML = '<span style="position: absolute; left: 3px; top: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: 0.4s;"></span>';
+        
+        toggle.addEventListener('change', function() {
+            llmEnabled = this.checked;
+            updateLLMUI();
+        });
+    }
+    
+    // Update LLM availability UI
+    function updateLLMAvailability() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const section = document.getElementById('tut-llm-section');
+        const icon = document.getElementById('tut-llm-icon');
+        const status = document.getElementById('tut-llm-status');
+        const desc = document.getElementById('tut-llm-desc');
+        
+        if (!tutorialData.ollama_available) {
+            // Ollama not available - disable toggle
+            toggle.disabled = true;
+            section.style.borderLeftColor = '#ccc';
+            icon.className = 'mdi mdi-robot-off';
+            icon.style.color = '#ccc';
+            status.textContent = 'Unavailable';
+            status.style.background = '#ccc';
+            desc.textContent = 'Ollama is not running. Start Ollama to enable LLM agents.';
+        } else {
+            // Ollama available - enable toggle
+            toggle.disabled = false;
+            section.style.borderLeftColor = '#039be5';
+        }
+    }
+    
+    // Update LLM-related UI elements
+    function updateLLMUI() {
+        const toggle = document.getElementById('tut-llm-toggle');
+        const slider = toggle.nextElementSibling;
+        const icon = document.getElementById('tut-llm-icon');
+        const status = document.getElementById('tut-llm-status');
+        const section = document.getElementById('tut-llm-section');
+        const topicsSection = document.getElementById('tut-topics-section');
+        const llmModelSection = document.getElementById('tut-llm-model-section');
+        const knob = slider.querySelector('span');
+        
+        if (llmEnabled) {
+            knob.style.transform = 'translateX(18px)';
+            slider.style.backgroundColor = '#22c55e';
+            icon.className = 'mdi mdi-robot';
+            icon.style.color = '#22c55e';
+            status.textContent = 'Enabled';
+            status.style.background = '#22c55e';
+            section.style.borderLeftColor = '#22c55e';
+            topicsSection.style.display = 'block';
+            llmModelSection.style.display = 'block';
+        } else {
+            knob.style.transform = 'translateX(0)';
+            slider.style.backgroundColor = '#ccc';
+            icon.className = 'mdi mdi-robot-off';
+            icon.style.color = '#6c757d';
+            status.textContent = 'Disabled';
+            status.style.background = '#6c757d';
+            section.style.borderLeftColor = '#039be5';
+            topicsSection.style.display = 'none';
+            llmModelSection.style.display = 'none';
+        }
+    }
+    
+    // Setup topics input
+    function setupTopicsInput() {
+        const input = document.getElementById('tut-topic-input');
+        const container = document.getElementById('tut-topics-tags');
+        
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const topic = this.value.trim();
+                if (topic && !topicsList.includes(topic)) {
+                    topicsList.push(topic);
+                    renderTopicTags();
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Render topic tags
+    function renderTopicTags() {
+        const container = document.getElementById('tut-topics-tags');
+        container.innerHTML = topicsList.map((topic, index) => `
+            <span style="
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                background: #039be5;
+                color: white;
+                padding: 4px 10px;
+                border-radius: 15px;
+                font-size: 0.85em;
+            ">
+                ${topic}
+                <span onclick="removeTopic(${index})" style="
+                    cursor: pointer;
+                    font-size: 1.1em;
+                    opacity: 0.8;
+                    margin-left: 2px;
+                ">&times;</span>
+            </span>
+        `).join('');
+    }
+    
+    // Remove topic
+    window.removeTopic = function(index) {
+        topicsList.splice(index, 1);
+        renderTopicTags();
+    };
     
     // Toggle tag selection
     window.toggleTag = function(element, type) {
@@ -615,13 +832,14 @@
         let array;
         if (type === 'education') array = selectedEducation;
         else if (type === 'political') array = selectedPolitical;
-        else if (type === 'toxicity') array = selectedToxicity;
         
-        const index = array.indexOf(id);
-        if (index === -1) {
-            array.push(id);
-        } else {
-            array.splice(index, 1);
+        if (array) {
+            const index = array.indexOf(id);
+            if (index === -1) {
+                array.push(id);
+            } else {
+                array.splice(index, 1);
+            }
         }
     };
     
@@ -717,14 +935,15 @@
                 showError('Please select at least one political leaning.');
                 return false;
             }
-            if (selectedToxicity.length === 0) {
-                showError('Please select at least one toxicity level.');
-                return false;
-            }
         } else if (currentStep === 2) {
             const name = document.getElementById('tut-exp-name').value.trim();
             if (!name) {
                 showError('Please enter an experiment name.');
+                return false;
+            }
+            // If LLM is enabled, require at least 2 topics
+            if (llmEnabled && topicsList.length < 2) {
+                showError('Please enter at least 2 topics for LLM agents.');
                 return false;
             }
         } else if (currentStep === 3) {
@@ -732,6 +951,14 @@
             if (!name) {
                 showError('Please enter a client name.');
                 return false;
+            }
+            // If LLM is enabled, require a model selection
+            if (llmEnabled) {
+                const model = document.getElementById('tut-llm-model').value;
+                if (!model) {
+                    showError('Please select an LLM model.');
+                    return false;
+                }
             }
         }
         
@@ -774,10 +1001,12 @@
             population_size: parseInt(document.getElementById('tut-pop-size').value),
             education_levels: selectedEducation,
             political_leanings: selectedPolitical,
-            toxicity_levels: selectedToxicity,
+            activity_profile_id: parseInt(document.getElementById('tut-activity-profile').value),
             
             // Experiment
             experiment_name: document.getElementById('tut-exp-name').value.trim(),
+            llm_enabled: llmEnabled,
+            topics: topicsList,
             
             // Client
             client_name: document.getElementById('tut-client-name').value.trim(),
@@ -788,6 +1017,7 @@
             read_probability: parseInt(document.getElementById('tut-read-prob').value) / 100,
             content_recsys: document.getElementById('tut-content-recsys').value,
             follow_recsys: document.getElementById('tut-follow-recsys').value,
+            llm_model: llmEnabled ? document.getElementById('tut-llm-model').value : '',
         };
         
         fetch('/admin/tutorial/create_all', {
@@ -895,9 +1125,10 @@
             // Reset selections
             selectedEducation = [];
             selectedPolitical = [];
-            selectedToxicity = [];
             createdExperimentId = null;
             createdClientId = null;
+            llmEnabled = false;
+            topicsList = [];
             document.querySelectorAll('.tutorial-tag').forEach(el => el.classList.remove('selected'));
             
             // Reset form inputs
@@ -908,6 +1139,14 @@
             document.getElementById('tut-client-name').value = '';
             document.getElementById('tut-sim-days').value = 7;
             document.getElementById('tut-days-value').textContent = '7';
+            
+            // Reset LLM toggle
+            document.getElementById('tut-llm-toggle').checked = false;
+            updateLLMUI();
+            
+            // Reset topics
+            document.getElementById('tut-topics-tags').innerHTML = '';
+            document.getElementById('tut-topic-input').value = '';
             
             // Reset button styles
             const nextBtn = document.getElementById('tutorial-next-btn');
