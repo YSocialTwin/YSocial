@@ -1044,8 +1044,10 @@
                 paginationState.running.totalPages = data.total_pages;
                 
                 const container = document.getElementById('running-experiments-container');
-                const html = data.experiments.map(exp => renderExperimentBoxFromData(exp, '#28a745', {}, false, false)).join('');
-                container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                if (container) {
+                    const html = data.experiments.map(exp => renderExperimentBoxFromData(exp, '#28a745', {}, false, false)).join('');
+                    container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                }
                 
                 // Update pagination buttons
                 const prevBtn = document.getElementById('running-prev');
@@ -1074,8 +1076,10 @@
                 paginationState.completed.totalPages = data.total_pages;
                 
                 const container = document.getElementById('completed-experiments-container');
-                const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#17a2b8')).join('');
-                container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                if (container) {
+                    const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#17a2b8')).join('');
+                    container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                }
                 
                 // Update pagination buttons
                 const prevBtn = document.getElementById('completed-prev');
@@ -1104,8 +1108,10 @@
                 paginationState.stopped.totalPages = data.total_pages;
                 
                 const container = document.getElementById('stopped-experiments-container');
-                const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#6c757d')).join('');
-                container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                if (container) {
+                    const html = data.experiments.map(exp => renderCompactExperimentBoxFromData(exp, '#6c757d')).join('');
+                    container.innerHTML = html || '<p style="color: #666; text-align: center;">No experiments</p>';
+                }
                 
                 // Update pagination buttons
                 const prevBtn = document.getElementById('stopped-prev');
