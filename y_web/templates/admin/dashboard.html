@@ -440,10 +440,13 @@
                             
                             const deleteExpButton = exp.status === 0 ?
                                 `<a class="link-tooltip" href="javascript:void(0);" 
-                                   onclick="if(confirm('Are you sure you want to delete this experiment?')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
+                                   onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
                                    title="Delete Experiment">
                                     <i class="mdi mdi-delete" style="font-size: 18px;"></i>
                                 </a>` : '';
+                            
+                            const ownerBadge = exp.owner ? 
+                                `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.65em; padding: 1px 5px; border-radius: 8px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
                             
                             return `
                             <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 3px solid ${sectionColor}; border-radius: 6px; padding: 8px 12px; margin-bottom: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
@@ -451,7 +454,7 @@
                                     <div class="box-line" style="padding: 2px 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
                                         <span class="left" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1; min-width: 0;">
                                             <strong style="color: #0d95e8; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;" title="${exp.exp_name}">${exp.exp_name}</strong>
-                                            <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.65em; padding: 1px 5px; border-radius: 8px; font-weight: 600;" title="Experiment owner">${exp.owner || ''}</span>
+                                            ${ownerBadge}
                                             ${clientCountBadge}
                                             ${infiniteBadge}
                                         </span>
@@ -545,7 +548,7 @@
                             
                             const deleteExpButton = exp.status === 0 ?
                                 `<a class="link-tooltip" href="javascript:void(0);" 
-                                   onclick="if(confirm('Are you sure you want to delete this experiment?')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
+                                   onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/${exp.idexp}'; }" 
                                    title="Delete Experiment">
                                     <i class="mdi mdi-delete" style="font-size: 24px;"></i>
                                 </a>` : '';
@@ -553,13 +556,16 @@
                             const clientsSeparator = exp.clients.length > 0 ? 
                                 '<hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">' : '';
                             
+                            const ownerBadgeFull = exp.owner ?
+                                `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
+                            
                             return `
                             <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid ${sectionColor}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
                                 <div class="box-lines">
                                     <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
                                         <span class="left" style="display: flex; align-items: center; gap: 10px;">
                                             Experiment: <strong style="color: #0d95e8">${exp.exp_name}</strong>
-                                            <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner || ''}</span>
+                                            ${ownerBadgeFull}
                                             ${infiniteBadge}
                                             <a href="/admin/experiment_details/${exp.idexp}" class="link-tooltip" title="View Experiment Details">
                                                 <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
