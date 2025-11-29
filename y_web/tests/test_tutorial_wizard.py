@@ -6,8 +6,9 @@ for admin and researcher users.
 """
 
 import json
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 from flask import Flask
 
 
@@ -72,20 +73,31 @@ class TestTutorialRoutes:
         assert mock_admin_user.role == "admin"
         assert mock_admin_user.tutorial_shown is False
         # Logic: show_tutorial = not user.tutorial_shown and role in ['admin', 'researcher']
-        show_tutorial = not mock_admin_user.tutorial_shown and mock_admin_user.role in ["admin", "researcher"]
+        show_tutorial = not mock_admin_user.tutorial_shown and mock_admin_user.role in [
+            "admin",
+            "researcher",
+        ]
         assert show_tutorial is True
 
     def test_tutorial_check_status_returns_hide_for_shown_admin(self, mock_admin_user):
         """Test that tutorial should not show for admin who has already seen it."""
         mock_admin_user.tutorial_shown = True
-        show_tutorial = not mock_admin_user.tutorial_shown and mock_admin_user.role in ["admin", "researcher"]
+        show_tutorial = not mock_admin_user.tutorial_shown and mock_admin_user.role in [
+            "admin",
+            "researcher",
+        ]
         assert show_tutorial is False
 
-    def test_tutorial_check_status_returns_show_for_new_researcher(self, mock_researcher_user):
+    def test_tutorial_check_status_returns_show_for_new_researcher(
+        self, mock_researcher_user
+    ):
         """Test that tutorial should show for new researcher users."""
         assert mock_researcher_user.role == "researcher"
         assert mock_researcher_user.tutorial_shown is False
-        show_tutorial = not mock_researcher_user.tutorial_shown and mock_researcher_user.role in ["admin", "researcher"]
+        show_tutorial = (
+            not mock_researcher_user.tutorial_shown
+            and mock_researcher_user.role in ["admin", "researcher"]
+        )
         assert show_tutorial is True
 
     def test_tutorial_not_shown_for_regular_users(self):
@@ -215,13 +227,16 @@ class TestMigrationScript:
         migration_path = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
             "migrations",
-            "add_tutorial_shown_column.py"
+            "add_tutorial_shown_column.py",
         )
         assert os.path.exists(migration_path)
 
     def test_migration_functions_exist(self):
         """Test that migration functions are defined."""
-        from y_web.migrations.add_tutorial_shown_column import migrate_sqlite, migrate_postgresql
+        from y_web.migrations.add_tutorial_shown_column import (
+            migrate_postgresql,
+            migrate_sqlite,
+        )
 
         assert callable(migrate_sqlite)
         assert callable(migrate_postgresql)
@@ -238,7 +253,7 @@ class TestTutorialTemplate:
             os.path.dirname(os.path.dirname(__file__)),
             "templates",
             "admin",
-            "tutorial_overlay.html"
+            "tutorial_overlay.html",
         )
         assert os.path.exists(template_path)
 
@@ -250,7 +265,7 @@ class TestTutorialTemplate:
             os.path.dirname(os.path.dirname(__file__)),
             "templates",
             "admin",
-            "tutorial_overlay.html"
+            "tutorial_overlay.html",
         )
 
         with open(template_path, "r") as f:
@@ -274,7 +289,7 @@ class TestTutorialTemplate:
             os.path.dirname(os.path.dirname(__file__)),
             "templates",
             "admin",
-            "tutorial_overlay.html"
+            "tutorial_overlay.html",
         )
 
         with open(template_path, "r") as f:
