@@ -73,7 +73,12 @@ from y_web.utils import (
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.jupyter_utils import stop_process
-from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status, reload_current_user
+from y_web.utils.miscellanea import (
+    check_privileges,
+    llm_backend_status,
+    ollama_status,
+    reload_current_user,
+)
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
