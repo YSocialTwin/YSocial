@@ -530,10 +530,9 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Fal
             if not ray.is_initialized():
                 # Configure runtime environment for Ray workers
                 # We need to modify PYTHONPATH to include the external client modules
-                import os as os_module
 
                 # Get existing PYTHONPATH and append our client path
-                existing_pythonpath = os_module.environ.get("PYTHONPATH", "")
+                existing_pythonpath = os.environ.get("PYTHONPATH", "")
                 if client_path:
                     if existing_pythonpath:
                         new_pythonpath = (
@@ -543,7 +542,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Fal
                         new_pythonpath = client_path
 
                     # Set PYTHONPATH for this process (inherited by Ray workers)
-                    os_module.environ["PYTHONPATH"] = new_pythonpath
+                    os.environ["PYTHONPATH"] = new_pythonpath
 
                 ray.init(
                     ignore_reinit_error=True,
