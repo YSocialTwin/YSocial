@@ -99,6 +99,14 @@ The **Y Social** supports a wide range of simulation configurations and automate
 - **Content Annotation**: Automatic emotion detection (GoEmotions taxonomy) and topic extraction using LLMs
 - **Image Captioning**: Vision-capable LLMs (`MiniCPM-v`) for automatic image description generation
 
+### ⚡ **Performance Optimization**
+- **Parallel Agent Processing**: Ray-based parallel processing of agents for faster simulations
+  - Agents process their actions concurrently during each hourly time slot
+  - Automatically uses all available CPU cores by default
+  - Configurable CPU limits via `YSOCIAL_RAY_NUM_CPUS` environment variable
+  - Can be disabled with `--no-ray` flag or `YSOCIAL_USE_RAY=false` environment variable
+  - Graceful fallback to sequential processing if Ray encounters errors
+
 ---
 
 ## 🏁 Getting Started
@@ -221,6 +229,40 @@ Each user can also configure their own LLM backend and model through the admin p
    ```bash
    python3 -m vllm.entrypoints.openai.api_server <model_name> --host 0.0.0.0 --port 8000
    ```
+
+---
+
+## ⚡ **Performance Configuration**
+
+YSocial includes Ray-based parallel processing to speed up simulations by processing agents concurrently.
+
+### Ray Parallel Processing
+
+**Enabling/Disabling Ray:**
+```bash
+# Ray is enabled by default
+python y_social.py --host localhost --port 8080
+
+# Disable Ray for sequential processing
+python y_social.py --host localhost --port 8080 --no-ray
+
+# Or use environment variable
+export YSOCIAL_USE_RAY=false
+python y_social.py --host localhost --port 8080
+```
+
+**Configuring CPU Usage:**
+```bash
+# Limit Ray to use 4 CPU cores (default: all available cores)
+export YSOCIAL_RAY_NUM_CPUS=4
+python y_social.py --host localhost --port 8080
+```
+
+**Performance Benefits:**
+- Significantly faster simulations with many agents (100+)
+- Scales with available CPU cores
+- Particularly effective for LLM-based agent actions that can run concurrently
+- Graceful fallback to sequential processing if errors occur
 
 ---
 
