@@ -12,6 +12,7 @@ def start_app(
     llm_backend=None,
     notebook=False,
     desktop_mode=False,
+    use_ray=False,
 ):
     import sys
 
@@ -77,6 +78,12 @@ def start_app(
         os.environ.pop("LLM_BACKEND", None)
         os.environ.pop("LLM_URL", None)
 
+    # Set Ray configuration as environment variable for child processes
+    if use_ray:
+        os.environ["YSOCIAL_USE_RAY"] = "true"
+    else:
+        os.environ["YSOCIAL_USE_RAY"] = "false"
+
     app = create_app(db_type=db_type, desktop_mode=desktop_mode)
 
     with app.app_context():
@@ -124,6 +131,12 @@ if __name__ == "__main__":
         action="store_false",
         help="Enable Jupyter Notebook server launch for experiments",
     )
+    parser.add_argument(
+        "--use-ray",
+        action="store_true",
+        default=False,
+        help="Enable Ray for parallel agent processing in simulations (default: False)",
+    )
 
     args = parser.parse_args()
 
@@ -144,4 +157,5 @@ if __name__ == "__main__":
         port=args.port,
         llm_backend=args.llm_backend,
         notebook=args.no_notebook,
+        use_ray=args.use_ray,
     )

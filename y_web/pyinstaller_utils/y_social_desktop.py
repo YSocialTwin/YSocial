@@ -243,6 +243,7 @@ def start_desktop_app(
     window_title="YSocial - Social Media Digital Twin",
     window_width=1280,  # Default window width (0 for fullscreen)
     window_height=800,  # Default window height (0 for fullscreen)
+    use_ray=False,
 ):
     """
     Start YSocial in desktop mode with PyWebview.
@@ -257,6 +258,7 @@ def start_desktop_app(
         window_title: Title for the desktop window
         window_width: Width of the desktop window (default: 1280, use 0 for fullscreen)
         window_height: Height of the desktop window (default: 800, use 0 for fullscreen)
+        use_ray: Enable Ray for parallel agent processing (default: False)
 
     Raises:
         RuntimeError: If webview backend is not compatible with the system
@@ -289,6 +291,7 @@ def start_desktop_app(
             llm_backend=llm_backend,
             notebook=notebook,
             desktop_mode=True,  # Enable desktop mode
+            use_ray=use_ray,
         )
 
     # Start Flask server in background thread

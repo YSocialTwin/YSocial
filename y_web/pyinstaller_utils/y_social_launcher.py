@@ -290,6 +290,12 @@ def main():
         default=800,  # Default window height
         help="Desktop window height in pixels (default: 800, use 0 for fullscreen)",
     )
+    parser.add_argument(
+        "--use-ray",
+        action="store_true",
+        default=False,
+        help="Enable Ray for parallel agent processing in simulations (default: False)",
+    )
 
     args = parser.parse_args()
 
@@ -358,6 +364,7 @@ def main():
                     notebook=notebook,
                     window_width=args.window_width,
                     window_height=args.window_height,
+                    use_ray=args.use_ray,
                 )
                 # If desktop mode succeeds, we're done
                 sys.exit(0)
@@ -464,6 +471,7 @@ def main():
                 port=args.port,
                 llm_backend=args.llm_backend,
                 notebook=notebook,
+                use_ray=args.use_ray,
             )
         except KeyboardInterrupt:
             print("\n\nShutting down YSocial...")
