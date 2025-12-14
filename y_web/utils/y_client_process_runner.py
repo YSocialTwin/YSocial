@@ -508,13 +508,47 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Fal
     Session = sessionmaker(bind=engine)
     session = Session()
 
+    platform_type = exp.platform_type
+    base_path = get_base_path()
+
+    # Determine the client module path based on platform type
+    if platform_type == "microblogging":
+        client_path = os.path.join(base_path, "external", "YClient")
+    elif platform_type == "forum":
+        client_path = os.path.join(base_path, "external", "YClientReddit")
+    else:
+        client_path = None
+
+    # Add client path to current process sys.path if not already there
+    if client_path and client_path not in sys.path:
+        sys.path.insert(0, client_path)
+
     # Initialize Ray for parallel processing if enabled
     ray_initialized = False
     if use_ray:
         try:
             if not ray.is_initialized():
+                # Configure runtime environment for Ray workers
+                # We need to modify PYTHONPATH to include the external client modules
+                import os as os_module
+
+                # Get existing PYTHONPATH and append our client path
+                existing_pythonpath = os_module.environ.get("PYTHONPATH", "")
+                if client_path:
+                    if existing_pythonpath:
+                        new_pythonpath = (
+                            f"{client_path}{os.pathsep}{existing_pythonpath}"
+                        )
+                    else:
+                        new_pythonpath = client_path
+
+                    # Set PYTHONPATH for this process (inherited by Ray workers)
+                    os_module.environ["PYTHONPATH"] = new_pythonpath
+
                 ray.init(
-                    ignore_reinit_error=True, num_cpus=ray_num_cpus, log_to_driver=False
+                    ignore_reinit_error=True,
+                    num_cpus=ray_num_cpus,
+                    log_to_driver=False,
                 )
                 ray_initialized = True
                 cpu_msg = f" with {ray_num_cpus} CPUs" if ray_num_cpus else ""
@@ -530,9 +564,6 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Fal
                 file=sys.stderr,
             )
             use_ray = False
-
-    platform_type = exp.platform_type
-    base_path = get_base_path()
 
     total_days = int(cl.days)
     daily_slots = int(cl.slots)
