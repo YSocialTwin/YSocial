@@ -390,9 +390,6 @@ def process_agent_actions(
     Returns:
         Tuple of (agent_name, success, error_message)
     """
-    import random
-    import traceback
-
     try:
         # Get a random integer within agent.round_actions.
         # If agent.is_page == 1, then rounds = 0 (the page does not perform actions)
@@ -451,9 +448,22 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
     from y_web import create_app  # only to reuse URI config
     from y_web.models import Client_Execution
 
-    # Check environment variable for Ray usage (can override parameter)
-    use_ray_env = os.environ.get("YSOCIAL_USE_RAY", "true").lower() == "true"
-    use_ray = use_ray and use_ray_env
+    # Check environment variable for Ray usage (overrides parameter if set)
+    use_ray_env = os.environ.get("YSOCIAL_USE_RAY", None)
+    if use_ray_env is not None:
+        use_ray = use_ray_env.lower() == "true"
+
+    # Get CPU limit from environment variable (None = use all CPUs)
+    ray_num_cpus = os.environ.get("YSOCIAL_RAY_NUM_CPUS", None)
+    if ray_num_cpus is not None:
+        try:
+            ray_num_cpus = int(ray_num_cpus)
+        except ValueError:
+            print(
+                f"Warning: Invalid YSOCIAL_RAY_NUM_CPUS value '{ray_num_cpus}', using all CPUs",
+                file=sys.stderr,
+            )
+            ray_num_cpus = None
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app(db_type)
@@ -469,9 +479,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
     if use_ray:
         try:
             if not ray.is_initialized():
-                ray.init(ignore_reinit_error=True, num_cpus=None, log_to_driver=False)
+                ray.init(
+                    ignore_reinit_error=True, num_cpus=ray_num_cpus, log_to_driver=False
+                )
                 ray_initialized = True
-                print("Ray initialized for parallel agent processing", file=sys.stderr)
+                cpu_msg = f" with {ray_num_cpus} CPUs" if ray_num_cpus else ""
+                print(
+                    f"Ray initialized for parallel agent processing{cpu_msg}",
+                    file=sys.stderr,
+                )
             else:
                 ray_initialized = True
         except Exception as e:
@@ -542,7 +558,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
                 daily_active[g.name] = None
 
             # Process agents: use Ray for parallel processing if enabled, otherwise sequential
-            if use_ray:
+            use_ray_this_iteration = (
+                use_ray  # Use local variable to avoid permanently disabling Ray
+            )
+            if use_ray_this_iteration:
                 try:
                     # Process agents in parallel using Ray
                     futures = []
@@ -566,13 +585,13 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
                             print(error_msg, file=sys.stderr)
                 except Exception as e:
                     print(
-                        f"Warning: Ray processing failed: {e}. Falling back to sequential processing.",
+                        f"Warning: Ray processing failed: {e}. Falling back to sequential processing for this time slot.",
                         file=sys.stderr,
                     )
-                    # Fall back to sequential processing for this batch
-                    use_ray = False
+                    # Fall back to sequential processing for this batch only
+                    use_ray_this_iteration = False
 
-            if not use_ray:
+            if not use_ray_this_iteration:
                 # Sequential processing (original implementation)
                 for g in sagents:
                     # Get a random integer within g.round_actions.
