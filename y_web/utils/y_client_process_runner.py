@@ -53,8 +53,8 @@ def main():
     parser.add_argument(
         "--use-ray",
         action="store_true",
-        default=True,
-        help="Use Ray for parallel agent processing (default: True)",
+        default=False,
+        help="Use Ray for parallel agent processing (default: False)",
     )
     parser.add_argument(
         "--no-ray",
@@ -92,7 +92,7 @@ def main():
 
 
 def start_client_process(
-    exp, cli, population, resume=True, db_type="sqlite", use_ray=True
+    exp, cli, population, resume=True, db_type="sqlite", use_ray=False
 ):
     """
     Start client simulation without pushing Flask app context.
@@ -374,7 +374,14 @@ def sample_agents(agents, expected_active_users):
 
 @ray.remote
 def process_agent_actions(
-    agent, acts, actions_likelihood, tid, pages, max_length_thread_reading
+    agent,
+    acts,
+    actions_likelihood,
+    tid,
+    pages,
+    max_length_thread_reading,
+    platform_type,
+    base_path,
 ):
     """
     Process actions for a single agent in parallel using Ray.
@@ -396,11 +403,27 @@ def process_agent_actions(
         tid: Current time slot ID
         pages: List of page agents
         max_length_thread_reading: Maximum thread reading length
+        platform_type: Platform type (microblogging or forum)
+        base_path: Base path for external modules
 
     Returns:
         Tuple of (agent_name, success, error_message)
     """
+    import os
+    import sys
+
     try:
+        # Add external client modules to path (required for Ray workers)
+        # Each Ray worker is a separate process and needs the module path configured
+        if platform_type == "microblogging":
+            client_path = os.path.join(base_path, "external", "YClient")
+            if client_path not in sys.path:
+                sys.path.append(client_path)
+        elif platform_type == "forum":
+            client_path = os.path.join(base_path, "external", "YClientReddit")
+            if client_path not in sys.path:
+                sys.path.append(client_path)
+
         # Get a random integer within agent.round_actions.
         # If agent.is_page == 1, then rounds = 0 (the page does not perform actions)
         if agent.is_page == 1:
@@ -437,7 +460,7 @@ def process_agent_actions(
         return (agent.name, False, error_msg)
 
 
-def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=True):
+def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=False):
     """
     Run the simulation
 
@@ -448,7 +471,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
         exp: Experiment object
         population: Population object
         db_type: Database type (sqlite or postgresql)
-        use_ray: Whether to use Ray for parallel processing (default: True)
+        use_ray: Whether to use Ray for parallel processing (default: False)
     """
     import os
 
@@ -457,6 +480,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
 
     from y_web import create_app  # only to reuse URI config
     from y_web.models import Client_Execution
+    from y_web.utils.path_utils import get_base_path
 
     # Check environment variable for Ray usage (overrides parameter if set)
     use_ray_env = os.environ.get("YSOCIAL_USE_RAY", None)
@@ -508,6 +532,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
             use_ray = False
 
     platform_type = exp.platform_type
+    base_path = get_base_path()
 
     total_days = int(cl.days)
     daily_slots = int(cl.slots)
@@ -583,6 +608,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
                             tid,
                             cl.pages,
                             cl.max_length_thread_reading,
+                            platform_type,
+                            base_path,
                         )
                         futures.append(future)
 

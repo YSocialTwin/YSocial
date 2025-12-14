@@ -100,11 +100,11 @@ The **Y Social** supports a wide range of simulation configurations and automate
 - **Image Captioning**: Vision-capable LLMs (`MiniCPM-v`) for automatic image description generation
 
 ### ⚡ **Performance Optimization**
-- **Parallel Agent Processing**: Ray-based parallel processing of agents for faster simulations
+- **Parallel Agent Processing**: Optional Ray-based parallel processing of agents for faster simulations
   - Agents process their actions concurrently during each hourly time slot
-  - Automatically uses all available CPU cores by default
+  - Disabled by default for compatibility; enable with `--use-ray` flag or `YSOCIAL_USE_RAY=true` environment variable
+  - Automatically uses all available CPU cores when enabled
   - Configurable CPU limits via `YSOCIAL_RAY_NUM_CPUS` environment variable
-  - Can be disabled with `--no-ray` flag or `YSOCIAL_USE_RAY=false` environment variable
   - Graceful fallback to sequential processing if Ray encounters errors
 
 ---
@@ -234,20 +234,20 @@ Each user can also configure their own LLM backend and model through the admin p
 
 ## ⚡ **Performance Configuration**
 
-YSocial includes Ray-based parallel processing to speed up simulations by processing agents concurrently.
+YSocial includes optional Ray-based parallel processing to speed up simulations by processing agents concurrently.
 
 ### Ray Parallel Processing
 
 **Enabling/Disabling Ray:**
 ```bash
-# Ray is enabled by default
+# Ray is disabled by default for compatibility
 python y_social.py --host localhost --port 8080
 
-# Disable Ray for sequential processing
-python y_social.py --host localhost --port 8080 --no-ray
+# Enable Ray for parallel processing
+python y_social.py --host localhost --port 8080 --use-ray
 
 # Or use environment variable
-export YSOCIAL_USE_RAY=false
+export YSOCIAL_USE_RAY=true
 python y_social.py --host localhost --port 8080
 ```
 
@@ -255,7 +255,7 @@ python y_social.py --host localhost --port 8080
 ```bash
 # Limit Ray to use 4 CPU cores (default: all available cores)
 export YSOCIAL_RAY_NUM_CPUS=4
-python y_social.py --host localhost --port 8080
+python y_social.py --host localhost --port 8080 --use-ray
 ```
 
 **Performance Benefits:**

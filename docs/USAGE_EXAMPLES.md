@@ -232,21 +232,33 @@ print(f"Agent 1's top interests: {list(interests.items())[:5]}")
 
 ## Performance Optimization with Ray
 
-YSocial includes Ray-based parallel processing to speed up simulations by processing agents concurrently during each hourly time slot.
+YSocial includes optional Ray-based parallel processing to speed up simulations by processing agents concurrently during each hourly time slot.
 
-### Basic Usage (Ray Enabled by Default)
+### Basic Usage (Ray Disabled by Default)
 
 ```bash
-# Ray is enabled by default - no special flags needed
+# Ray is disabled by default for compatibility
 python y_social.py --host localhost --port 8080
 
-# The simulation will automatically use all available CPU cores
-# to process agents in parallel
+# To enable Ray for parallel processing, use the --use-ray flag
+python y_social.py --host localhost --port 8080 --use-ray
+
+# The simulation will use all available CPU cores when Ray is enabled
+```
+
+### Enabling Ray with Environment Variable
+
+If you prefer to use environment variables:
+
+```bash
+# Enable Ray via environment variable
+export YSOCIAL_USE_RAY=true
+python y_social.py --host localhost --port 8080
 ```
 
 ### Disabling Ray (Sequential Processing)
 
-If you need to disable parallel processing (e.g., for debugging):
+Ray is disabled by default, but if you've enabled it via environment variable and want to disable it:
 
 ```bash
 # Option 1: Use command-line flag
@@ -262,12 +274,12 @@ python y_social.py --host localhost --port 8080
 By default, Ray uses all available CPU cores. You can limit the number of cores used:
 
 ```bash
-# Use only 4 CPU cores for Ray processing
+# Use only 4 CPU cores for Ray processing (Ray must be enabled)
 export YSOCIAL_RAY_NUM_CPUS=4
-python y_social.py --host localhost --port 8080
+python y_social.py --host localhost --port 8080 --use-ray
 
 # Or inline
-YSOCIAL_RAY_NUM_CPUS=4 python y_social.py --host localhost --port 8080
+YSOCIAL_RAY_NUM_CPUS=4 python y_social.py --host localhost --port 8080 --use-ray
 ```
 
 ### When to Limit CPU Usage
@@ -290,32 +302,35 @@ Ray parallel processing provides significant speedups for:
 
 #### Scenario 1: Development (Limited Resources)
 ```bash
-# Use 2 cores for development testing
+# Use 2 cores for development testing with Ray enabled
 YSOCIAL_RAY_NUM_CPUS=2 python y_social.py \
   --host localhost \
   --port 8080 \
-  --llm-backend ollama
+  --llm-backend ollama \
+  --use-ray
 ```
 
 #### Scenario 2: Production (Maximum Performance)
 ```bash
-# Use all available cores (default)
+# Enable Ray to use all available cores
 python y_social.py \
   --host 0.0.0.0 \
   --port 5000 \
   --db postgresql \
-  --llm-backend vllm
-# Ray automatically uses all CPU cores
+  --llm-backend vllm \
+  --use-ray
+# Ray automatically uses all CPU cores when enabled
 ```
 
 #### Scenario 3: Debugging (Sequential Processing)
 ```bash
-# Disable Ray for easier debugging
+# Ray is disabled by default, so no special flag needed for sequential processing
 python y_social.py \
   --host localhost \
   --port 8080 \
-  --llm-backend ollama \
-  --no-ray
+  --llm-backend ollama
+# Sequential processing (Ray disabled)
+```
 ```
 
 ### Troubleshooting Ray
