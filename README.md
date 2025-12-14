@@ -102,10 +102,12 @@ The **Y Social** supports a wide range of simulation configurations and automate
 ### ⚡ **Performance Optimization**
 - **Parallel Agent Processing**: Optional Ray-based parallel processing of agents for faster simulations
   - Agents process their actions concurrently during each hourly time slot
-  - Disabled by default for compatibility; enable with `--use-ray` flag or `YSOCIAL_USE_RAY=true` environment variable
+  - **Experimental feature**: Disabled by default due to potential serialization issues with complex agent objects
+  - Enable with `--use-ray` flag or `YSOCIAL_USE_RAY=true` environment variable
   - Automatically uses all available CPU cores when enabled
   - Configurable CPU limits via `YSOCIAL_RAY_NUM_CPUS` environment variable
   - Graceful fallback to sequential processing if Ray encounters errors
+  - **Note**: May not work with all agent configurations; test in your environment before production use
 
 ---
 
@@ -238,12 +240,14 @@ YSocial includes optional Ray-based parallel processing to speed up simulations 
 
 ### Ray Parallel Processing
 
+**⚠️ Experimental Feature**: Ray parallelization is experimental and may encounter serialization issues with complex agent objects. It's disabled by default and falls back gracefully to sequential processing if errors occur.
+
 **Enabling/Disabling Ray:**
 ```bash
 # Ray is disabled by default for compatibility
 python y_social.py --host localhost --port 8080
 
-# Enable Ray for parallel processing
+# Enable Ray for parallel processing (experimental)
 python y_social.py --host localhost --port 8080 --use-ray
 
 # Or use environment variable
@@ -259,10 +263,15 @@ python y_social.py --host localhost --port 8080 --use-ray
 ```
 
 **Performance Benefits:**
-- Significantly faster simulations with many agents (100+)
+- Significantly faster simulations with many agents (100+) when it works
 - Scales with available CPU cores
 - Particularly effective for LLM-based agent actions that can run concurrently
 - Graceful fallback to sequential processing if errors occur
+
+**Known Limitations:**
+- May fail with agent objects that have complex dependencies (database connections, file handles, lazy-loaded modules)
+- Serialization issues can cause fallback to sequential processing
+- Test in your specific environment before production use
 
 ---
 

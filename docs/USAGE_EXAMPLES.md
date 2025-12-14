@@ -234,13 +234,15 @@ print(f"Agent 1's top interests: {list(interests.items())[:5]}")
 
 YSocial includes optional Ray-based parallel processing to speed up simulations by processing agents concurrently during each hourly time slot.
 
+**⚠️ Experimental Feature**: Ray parallelization may encounter serialization issues with complex agent objects. It automatically falls back to sequential processing if errors occur.
+
 ### Basic Usage (Ray Disabled by Default)
 
 ```bash
 # Ray is disabled by default for compatibility
 python y_social.py --host localhost --port 8080
 
-# To enable Ray for parallel processing, use the --use-ray flag
+# To enable Ray for parallel processing (experimental), use the --use-ray flag
 python y_social.py --host localhost --port 8080 --use-ray
 
 # The simulation will use all available CPU cores when Ray is enabled
@@ -342,16 +344,26 @@ python y_social.py \
 - Check logs for specific error messages
 - Try disabling Ray with `--no-ray` flag
 
+#### Issue: Ray serialization errors (NoneType, module import errors)
+**This is a known limitation:** Agent objects with complex dependencies (database connections, file handles, lazy-loaded modules) may not serialize properly across Ray workers.
+
+**Solution:**
+- The system automatically falls back to sequential processing
+- Ray parallelization is experimental - sequential processing is the stable option
+- If you need parallel processing, ensure agent objects are serializable (no database connections, file handles, etc.)
+
 #### Issue: Slower performance with Ray enabled
 **Possible causes:**
 - Too many CPU cores allocated (overhead from parallelization)
 - Small number of agents (parallelization overhead > benefit)
 - Database contention from concurrent writes
+- Serialization failures causing fallback to sequential mode
 
 **Solution:**
-- For small simulations (< 50 agents), consider using `--no-ray`
+- For small simulations (< 50 agents), use sequential mode (default)
 - Limit CPU cores: `YSOCIAL_RAY_NUM_CPUS=4`
 - Use faster database (PostgreSQL with tuning)
+- Check logs for "falling back to sequential processing" messages
 
 #### Issue: Memory usage is high with Ray
 **Solution:**
@@ -366,4 +378,4 @@ If you encounter issues:
 2. Verify backend server is accessible
 3. Ensure models are properly loaded
 4. Consult the main README.md for installation instructions
-5. For Ray issues, try running with `--no-ray` to isolate the problem
+5. For Ray issues, system automatically falls back to sequential processing which is stable
