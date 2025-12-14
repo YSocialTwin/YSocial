@@ -230,6 +230,120 @@ print(f"Agent 1's top interests: {list(interests.items())[:5]}")
 2. Check database file path or connection string
 3. Ensure experiment is properly initialized
 
+## Performance Optimization with Ray
+
+YSocial includes Ray-based parallel processing to speed up simulations by processing agents concurrently during each hourly time slot.
+
+### Basic Usage (Ray Enabled by Default)
+
+```bash
+# Ray is enabled by default - no special flags needed
+python y_social.py --host localhost --port 8080
+
+# The simulation will automatically use all available CPU cores
+# to process agents in parallel
+```
+
+### Disabling Ray (Sequential Processing)
+
+If you need to disable parallel processing (e.g., for debugging):
+
+```bash
+# Option 1: Use command-line flag
+python y_social.py --host localhost --port 8080 --no-ray
+
+# Option 2: Use environment variable
+export YSOCIAL_USE_RAY=false
+python y_social.py --host localhost --port 8080
+```
+
+### Configuring CPU Usage
+
+By default, Ray uses all available CPU cores. You can limit the number of cores used:
+
+```bash
+# Use only 4 CPU cores for Ray processing
+export YSOCIAL_RAY_NUM_CPUS=4
+python y_social.py --host localhost --port 8080
+
+# Or inline
+YSOCIAL_RAY_NUM_CPUS=4 python y_social.py --host localhost --port 8080
+```
+
+### When to Limit CPU Usage
+
+Consider limiting CPU cores when:
+- Running on shared infrastructure
+- Running other CPU-intensive processes simultaneously
+- Need to reserve resources for LLM backends
+- Testing performance scaling
+
+### Performance Benefits
+
+Ray parallel processing provides significant speedups for:
+- **Large simulations**: 100+ agents see the most benefit
+- **Multi-core systems**: Speedup scales with available cores
+- **LLM-based actions**: Concurrent API calls to LLM backends
+- **Complex agent behaviors**: Agents with multiple actions per time slot
+
+### Example Performance Scenarios
+
+#### Scenario 1: Development (Limited Resources)
+```bash
+# Use 2 cores for development testing
+YSOCIAL_RAY_NUM_CPUS=2 python y_social.py \
+  --host localhost \
+  --port 8080 \
+  --llm-backend ollama
+```
+
+#### Scenario 2: Production (Maximum Performance)
+```bash
+# Use all available cores (default)
+python y_social.py \
+  --host 0.0.0.0 \
+  --port 5000 \
+  --db postgresql \
+  --llm-backend vllm
+# Ray automatically uses all CPU cores
+```
+
+#### Scenario 3: Debugging (Sequential Processing)
+```bash
+# Disable Ray for easier debugging
+python y_social.py \
+  --host localhost \
+  --port 8080 \
+  --llm-backend ollama \
+  --no-ray
+```
+
+### Troubleshooting Ray
+
+#### Issue: Ray initialization fails
+**Solution:** 
+- Check if another Ray instance is running: `ray stop`
+- Verify system resources are available
+- Check logs for specific error messages
+- Try disabling Ray with `--no-ray` flag
+
+#### Issue: Slower performance with Ray enabled
+**Possible causes:**
+- Too many CPU cores allocated (overhead from parallelization)
+- Small number of agents (parallelization overhead > benefit)
+- Database contention from concurrent writes
+
+**Solution:**
+- For small simulations (< 50 agents), consider using `--no-ray`
+- Limit CPU cores: `YSOCIAL_RAY_NUM_CPUS=4`
+- Use faster database (PostgreSQL with tuning)
+
+#### Issue: Memory usage is high with Ray
+**Solution:**
+- Limit CPU cores to reduce concurrent workers
+- Monitor with: `ray status`
+- Stop Ray between simulations: `ray stop`
+
 ## Getting Help
 
 If you encounter issues:
@@ -237,3 +351,4 @@ If you encounter issues:
 2. Verify backend server is accessible
 3. Ensure models are properly loaded
 4. Consult the main README.md for installation instructions
+5. For Ray issues, try running with `--no-ray` to isolate the problem
