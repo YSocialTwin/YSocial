@@ -263,7 +263,7 @@ python y_social.py --host localhost --port 8080 --use-ray
 ```
 
 **Performance Benefits:**
-- Significantly faster simulations with many agents (100+) when it works
+- Significantly faster simulations with many agents (100+) in compatible environments
 - Scales with available CPU cores
 - Particularly effective for LLM-based agent actions that can run concurrently
 - Graceful fallback to sequential processing if errors occur

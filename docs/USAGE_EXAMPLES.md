@@ -345,7 +345,7 @@ python y_social.py \
 - Try disabling Ray with `--no-ray` flag
 
 #### Issue: Ray serialization errors (NoneType, module import errors)
-**This is a known limitation:** Agent objects with complex dependencies (database connections, file handles, lazy-loaded modules) may not serialize properly across Ray workers.
+**This is a known limitation:** Agent objects with complex dependencies (database connections, file handles, lazy-loaded modules) may not serialize (convert to a format that can be sent between processes) properly across Ray workers.
 
 **Solution:**
 - The system automatically falls back to sequential processing
