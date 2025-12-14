@@ -81,7 +81,9 @@ def main():
 
     # Call start_client_process with the parameters
     try:
-        start_client_process(exp, cli, population, args.resume, args.db_type, args.use_ray)
+        start_client_process(
+            exp, cli, population, args.resume, args.db_type, args.use_ray
+        )
     except Exception as e:
         print(f"ERROR in client process: {e}", file=sys.stderr)
 
@@ -89,7 +91,9 @@ def main():
         sys.exit(1)
 
 
-def start_client_process(exp, cli, population, resume=True, db_type="sqlite", use_ray=True):
+def start_client_process(
+    exp, cli, population, resume=True, db_type="sqlite", use_ray=True
+):
     """
     Start client simulation without pushing Flask app context.
     Independent of the main Flask runtime.
@@ -369,10 +373,12 @@ def sample_agents(agents, expected_active_users):
 
 
 @ray.remote
-def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_length_thread_reading):
+def process_agent_actions(
+    agent, acts, actions_likelihood, tid, pages, max_length_thread_reading
+):
     """
     Process actions for a single agent in parallel using Ray.
-    
+
     Args:
         agent: Agent object to process
         acts: List of available actions
@@ -380,13 +386,13 @@ def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_lengt
         tid: Current time slot ID
         pages: List of page agents
         max_length_thread_reading: Maximum thread reading length
-    
+
     Returns:
         Tuple of (agent_name, success, error_message)
     """
     import random
     import traceback
-    
+
     try:
         # Get a random integer within agent.round_actions.
         # If agent.is_page == 1, then rounds = 0 (the page does not perform actions)
@@ -397,7 +403,7 @@ def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_lengt
             rounds = random.randint(lower, int(agent.round_actions))
             # Round_actions max is set for each agent by sampling from a user defined distribution.
             # Execute at least "lower" actions per user (to guarantee the activity level distribution).
-        
+
         for _ in range(rounds):
             # sample two elements from a list with replacement
             candidates = random.choices(
@@ -406,18 +412,18 @@ def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_lengt
                 weights=[actions_likelihood[a] for a in acts],
             )
             candidates.append("NONE")
-            
+
             # reply to received mentions
             if agent not in pages:
                 agent.reply(tid=tid)
-            
+
             # select action to be performed
             agent.select_action(
                 tid=tid,
                 actions=candidates,
                 max_length_thread_reading=max_length_thread_reading,
             )
-        
+
         return (agent.name, True, None)
     except Exception as e:
         error_msg = f"Error ({agent.name}): {e}\n{traceback.format_exc()}"
@@ -427,7 +433,7 @@ def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_lengt
 def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=True):
     """
     Run the simulation
-    
+
     Args:
         cl: Client object
         cli_id: Client ID
@@ -438,12 +444,13 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
         use_ray: Whether to use Ray for parallel processing (default: True)
     """
     import os
+
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker
 
     from y_web import create_app  # only to reuse URI config
     from y_web.models import Client_Execution
-    
+
     # Check environment variable for Ray usage (can override parameter)
     use_ray_env = os.environ.get("YSOCIAL_USE_RAY", "true").lower() == "true"
     use_ray = use_ray and use_ray_env
@@ -456,7 +463,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
     engine = create_engine(db_uri, pool_pre_ping=True)
     Session = sessionmaker(bind=engine)
     session = Session()
-    
+
     # Initialize Ray for parallel processing if enabled
     ray_initialized = False
     if use_ray:
@@ -468,7 +475,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
             else:
                 ray_initialized = True
         except Exception as e:
-            print(f"Warning: Failed to initialize Ray: {e}. Falling back to sequential processing.", file=sys.stderr)
+            print(
+                f"Warning: Failed to initialize Ray: {e}. Falling back to sequential processing.",
+                file=sys.stderr,
+            )
             use_ray = False
 
     platform_type = exp.platform_type
@@ -526,11 +536,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
 
             # Prepare data for parallel processing
             acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
-            
+
             # Mark all sampled agents as daily active
             for g in sagents:
                 daily_active[g.name] = None
-            
+
             # Process agents: use Ray for parallel processing if enabled, otherwise sequential
             if use_ray:
                 try:
@@ -543,22 +553,25 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
                             cl.actions_likelihood,
                             tid,
                             cl.pages,
-                            cl.max_length_thread_reading
+                            cl.max_length_thread_reading,
                         )
                         futures.append(future)
-                    
+
                     # Wait for all agent processing to complete and collect results
                     results = ray.get(futures)
-                    
+
                     # Log any errors that occurred during agent processing
                     for agent_name, success, error_msg in results:
                         if not success:
                             print(error_msg, file=sys.stderr)
                 except Exception as e:
-                    print(f"Warning: Ray processing failed: {e}. Falling back to sequential processing.", file=sys.stderr)
+                    print(
+                        f"Warning: Ray processing failed: {e}. Falling back to sequential processing.",
+                        file=sys.stderr,
+                    )
                     # Fall back to sequential processing for this batch
                     use_ray = False
-            
+
             if not use_ray:
                 # Sequential processing (original implementation)
                 for g in sagents:
@@ -734,7 +747,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type, use_ray=Tru
     # Shutdown Ray after simulation completes if we initialized it
     if ray_initialized and ray.is_initialized():
         ray.shutdown()
-    
+
     session.close()
     engine.dispose()
 
