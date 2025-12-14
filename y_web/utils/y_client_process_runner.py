@@ -13,6 +13,7 @@ import traceback
 from collections import defaultdict
 
 import numpy as np
+import ray
 
 from y_web.models import (
     ActivityProfile,
@@ -355,6 +356,62 @@ def sample_agents(agents, expected_active_users):
     return sagents
 
 
+@ray.remote
+def process_agent_actions(agent, acts, actions_likelihood, tid, pages, max_length_thread_reading):
+    """
+    Process actions for a single agent in parallel using Ray.
+    
+    Args:
+        agent: Agent object to process
+        acts: List of available actions
+        actions_likelihood: Dictionary of action likelihoods
+        tid: Current time slot ID
+        pages: List of page agents
+        max_length_thread_reading: Maximum thread reading length
+    
+    Returns:
+        Tuple of (agent_name, success, error_message)
+    """
+    import random
+    import traceback
+    
+    try:
+        # Get a random integer within agent.round_actions.
+        # If agent.is_page == 1, then rounds = 0 (the page does not perform actions)
+        if agent.is_page == 1:
+            rounds = 0
+        else:
+            lower = max(int(agent.round_actions) - 2, 1)
+            rounds = random.randint(lower, int(agent.round_actions))
+            # Round_actions max is set for each agent by sampling from a user defined distribution.
+            # Execute at least "lower" actions per user (to guarantee the activity level distribution).
+        
+        for _ in range(rounds):
+            # sample two elements from a list with replacement
+            candidates = random.choices(
+                acts,
+                k=2,
+                weights=[actions_likelihood[a] for a in acts],
+            )
+            candidates.append("NONE")
+            
+            # reply to received mentions
+            if agent not in pages:
+                agent.reply(tid=tid)
+            
+            # select action to be performed
+            agent.select_action(
+                tid=tid,
+                actions=candidates,
+                max_length_thread_reading=max_length_thread_reading,
+            )
+        
+        return (agent.name, True, None)
+    except Exception as e:
+        error_msg = f"Error ({agent.name}): {e}\n{traceback.format_exc()}"
+        return (agent.name, False, error_msg)
+
+
 def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     """
     Run the simulation
@@ -373,6 +430,11 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     engine = create_engine(db_uri, pool_pre_ping=True)
     Session = sessionmaker(bind=engine)
     session = Session()
+    
+    # Initialize Ray for parallel processing
+    # Use ignore_reinit_error to handle cases where Ray is already initialized
+    if not ray.is_initialized():
+        ray.init(ignore_reinit_error=True, num_cpus=None, log_to_driver=False)
 
     platform_type = exp.platform_type
 
@@ -427,46 +489,33 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             # shuffle agents
             random.shuffle(sagents)
 
+            # Prepare data for parallel processing
+            acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
+            
+            # Mark all sampled agents as daily active
             for g in sagents:
-                acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
-
                 daily_active[g.name] = None
-
-                # Get a random integer within g.round_actions.
-                # If g.is_page == 1, then rounds = 0 (the page does not perform actions)
-                if g.is_page == 1:
-                    rounds = 0
-                else:
-                    lower = max(int(g.round_actions) - 2, 1)
-                    rounds = random.randint(lower, int(g.round_actions))
-                    # Round_actions max is set for each agent by sampling from a user defined distribution.
-                    # Execute at least "lower" actions per user (to guarantee the activity level distribution).
-
-                for _ in range(rounds):
-                    # sample two elements from a list with replacement
-
-                    candidates = random.choices(
-                        acts,
-                        k=2,
-                        weights=[cl.actions_likelihood[a] for a in acts],
-                    )
-                    candidates.append("NONE")
-
-                    try:
-                        # reply to received mentions
-                        if g not in cl.pages:
-                            g.reply(tid=tid)
-
-                        # select action to be performed
-                        g.select_action(
-                            tid=tid,
-                            actions=candidates,
-                            max_length_thread_reading=cl.max_length_thread_reading,
-                        )
-                    except Exception as e:
-                        print(f"Error ({g.name}): {e}")
-                        print(traceback.format_exc())
-                        pass
+            
+            # Process agents in parallel using Ray
+            futures = []
+            for g in sagents:
+                future = process_agent_actions.remote(
+                    g,
+                    acts,
+                    cl.actions_likelihood,
+                    tid,
+                    cl.pages,
+                    cl.max_length_thread_reading
+                )
+                futures.append(future)
+            
+            # Wait for all agent processing to complete and collect results
+            results = ray.get(futures)
+            
+            # Log any errors that occurred during agent processing
+            for agent_name, success, error_msg in results:
+                if not success:
+                    print(error_msg, file=sys.stderr)
 
             # increment slot
             cl.sim_clock.increment_slot()
@@ -562,6 +611,8 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                                 )
 
                     # Clean up and exit
+                    if ray.is_initialized():
+                        ray.shutdown()
                     session.close()
                     engine.dispose()
                     return
@@ -600,6 +651,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
         # saving "living" agents at the end of the day
         cl.save_agents(agent_file)
 
+    # Shutdown Ray after simulation completes
+    if ray.is_initialized():
+        ray.shutdown()
+    
     session.close()
     engine.dispose()
 
