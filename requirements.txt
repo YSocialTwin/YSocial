@@ -46,4 +46,4 @@ gunicorn
 gevent
 jupyterlab
 pywebview
-ray>=2.53.0
+ray>=2.52.1
