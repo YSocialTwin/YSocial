@@ -379,6 +379,16 @@ def process_agent_actions(
     """
     Process actions for a single agent in parallel using Ray.
 
+    This function processes agent actions in a separate process/worker. Agent objects
+    are serialized and sent to Ray workers, where they perform their actions. The
+    agent's actions (reply, select_action) should write to a database or external
+    storage rather than relying on in-memory state, as Ray serialization means
+    in-memory state changes won't be reflected in the parent process.
+
+    Note: This implementation assumes that agent actions are stateless with respect
+    to the in-memory agent object, and that all state is persisted to the database
+    or other external storage systems.
+
     Args:
         agent: Agent object to process
         acts: List of available actions
