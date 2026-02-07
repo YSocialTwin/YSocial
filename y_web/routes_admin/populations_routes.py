@@ -122,9 +122,6 @@ def create_population():
     except ValueError as e:
         flash(f"Invalid population parameters: {str(e)}")
         return redirect(request.referrer or "/admin/populations")
-    except TypeError:
-        flash("Invalid population parameters: required numeric field is missing")
-        return redirect(request.referrer or "/admin/populations")
     
     gender_distribution = {"male": male_percentage, "female": female_percentage}
 
@@ -192,9 +189,6 @@ def create_population():
         zipf_s = float(request.form.get("zipf_s", "2.5"))
     except ValueError as e:
         flash(f"Invalid actions configuration: {str(e)}. Please check numeric values for actions_min, actions_max, and distribution parameters.")
-        return redirect(request.referrer or "/admin/populations")
-    except TypeError:
-        flash("Invalid actions configuration: required numeric field is missing")
         return redirect(request.referrer or "/admin/populations")
 
     # Store actions configuration for future use
