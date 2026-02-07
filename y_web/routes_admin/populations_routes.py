@@ -103,7 +103,7 @@ def create_population():
     check_privileges(current_user.username)
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
-    n_agents = request.form.get("n_agents")
+    n_agents = int(request.form.get("n_agents"))
     user_type = request.form.get("user_type")
 
     llm = request.form.get("host_llm")
@@ -166,14 +166,14 @@ def create_population():
         activity_profiles_json = []
 
     # Get actions per user once active data
-    actions_min = request.form.get("actions_min", "1")
-    actions_max = request.form.get("actions_max", "10")
+    actions_min = int(request.form.get("actions_min", "1"))
+    actions_max = int(request.form.get("actions_max", "10"))
     actions_distribution = request.form.get("actions_distribution", "Uniform")
 
     # Get distribution-specific parameters
-    poisson_lambda = request.form.get("poisson_lambda", "0.88")
-    geometric_p = request.form.get("geometric_p", "0.6667")
-    zipf_s = request.form.get("zipf_s", "2.5")
+    poisson_lambda = float(request.form.get("poisson_lambda", "0.88"))
+    geometric_p = float(request.form.get("geometric_p", "0.6667"))
+    zipf_s = float(request.form.get("zipf_s", "2.5"))
 
     # Store actions configuration for future use
     # Note: Not persisted yet, maintaining backward compatibility
