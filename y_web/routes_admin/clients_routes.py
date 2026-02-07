@@ -525,6 +525,21 @@ def stop_client(uid, idexp):
     return experiment_details(idexp)  # redirect(request.referrer)
 
 
+@clientsr.route("/admin/clients")
+@login_required
+def clients_list():
+    """Display list of experiments for client management selection."""
+    check_privileges(current_user.username)
+    
+    # Get all experiments
+    experiments = Exps.query.all()
+    
+    return render_template(
+        "admin/select_experiment_clients.html",
+        experiments=experiments,
+    )
+
+
 @clientsr.route("/admin/clients/<idexp>")
 @login_required
 def clients(idexp):
