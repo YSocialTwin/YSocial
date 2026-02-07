@@ -110,8 +110,10 @@ def create_population():
         # Validate n_agents
         n_agents_str = request.form.get("n_agents")
         if not n_agents_str:
-            raise ValueError("Number of agents is required")
+            raise ValueError("Number of agents is required and must be a positive integer")
         n_agents = int(n_agents_str)
+        if n_agents <= 0:
+            raise ValueError("Number of agents must be a positive integer")
         
         user_type = request.form.get("user_type")
         llm = request.form.get("host_llm")
@@ -182,13 +184,21 @@ def create_population():
         actions_min = int(request.form.get("actions_min", "1"))
         actions_max = int(request.form.get("actions_max", "10"))
         actions_distribution = request.form.get("actions_distribution", "Uniform")
+        
+        # Validate actions range
+        if actions_min < 1:
+            raise ValueError("actions_min must be a positive integer")
+        if actions_max < 1:
+            raise ValueError("actions_max must be a positive integer")
+        if actions_min > actions_max:
+            raise ValueError("actions_min cannot be greater than actions_max")
 
         # Get distribution-specific parameters
         poisson_lambda = float(request.form.get("poisson_lambda", "0.88"))
         geometric_p = float(request.form.get("geometric_p", "0.6667"))
         zipf_s = float(request.form.get("zipf_s", "2.5"))
     except ValueError as e:
-        flash(f"Invalid actions configuration: {str(e)}. Please check numeric values for actions_min, actions_max, and distribution parameters.")
+        flash(f"Invalid actions configuration: {str(e)}")
         return redirect(request.referrer or "/admin/populations")
 
     # Store actions configuration for future use
