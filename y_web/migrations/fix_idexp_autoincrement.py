@@ -57,11 +57,18 @@ def migrate_sqlite(db_path):
         cursor.execute("SELECT * FROM exps")
         existing_data = cursor.fetchall()
         
-        # Get column names (excluding idexp which we'll regenerate)
+        # Get column names
         column_names = [col[1] for col in columns_info]
         
+        # Check if exp_group exists in the original table
+        has_exp_group = 'exp_group' in column_names
+        
         # Create new table with proper primary key
-        cursor.execute("""
+        # Include exp_group only if it exists in the original table
+        exp_group_column = "exp_group TEXT DEFAULT ''" if has_exp_group else ""
+        exp_group_comma = "," if has_exp_group else ""
+        
+        create_table_sql = f"""
             CREATE TABLE exps_new (
                 idexp INTEGER PRIMARY KEY AUTOINCREMENT,
                 platform_type TEXT,
@@ -78,29 +85,29 @@ def migrate_sqlite(db_path):
                 llm_agents_enabled INT,
                 exp_status TEXT,
                 simulator_type TEXT,
-                is_remote INT,
-                exp_group TEXT DEFAULT ''
+                is_remote INT{exp_group_comma}
+                {exp_group_column}
             )
-        """)
+        """
+        cursor.execute(create_table_sql)
         
         # Copy data from old table to new table
-        # Filter out NULL idexp entries and let autoincrement handle them
+        # All rows will be migrated with new auto-generated IDs
         if existing_data:
             # Prepare insert statement (excluding idexp for auto-generation)
             insert_cols = [col for col in column_names if col != 'idexp']
             placeholders = ','.join(['?' for _ in insert_cols])
             insert_sql = f"INSERT INTO exps_new ({','.join(insert_cols)}) VALUES ({placeholders})"
             
+            migrated_count = 0
             for row in existing_data:
-                # Skip if idexp is NULL
-                if row[0] is None:
-                    print(f"  Skipping row with NULL idexp: {row[2]}")  # row[2] is exp_name
-                    continue
-                    
                 # Create data tuple excluding idexp (let it auto-generate)
                 row_dict = dict(zip(column_names, row))
                 data_tuple = tuple(row_dict[col] for col in insert_cols)
                 cursor.execute(insert_sql, data_tuple)
+                migrated_count += 1
+            
+            print(f"  Migrated {migrated_count} experiment(s) with new auto-generated IDs")
         
         # Drop old table and rename new table
         cursor.execute("DROP TABLE exps")
