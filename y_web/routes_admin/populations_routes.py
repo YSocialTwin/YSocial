@@ -106,16 +106,24 @@ def create_population():
     try:
         name = request.form.get("pop_name")
         descr = request.form.get("pop_descr")
-        n_agents = int(request.form.get("n_agents"))
+        
+        # Validate n_agents
+        n_agents_str = request.form.get("n_agents")
+        if not n_agents_str:
+            raise ValueError("Number of agents is required")
+        n_agents = int(n_agents_str)
+        
         user_type = request.form.get("user_type")
-
         llm = request.form.get("host_llm")
 
         # Get gender distribution
         male_percentage = int(request.form.get("male_percentage", "50"))
         female_percentage = int(request.form.get("female_percentage", "50"))
-    except (ValueError, TypeError) as e:
-        flash(f"Invalid input for population parameters: {str(e)}")
+    except ValueError as e:
+        flash(f"Invalid population parameters: {str(e)}")
+        return redirect(request.referrer or "/admin/populations")
+    except TypeError:
+        flash("Invalid population parameters: required numeric field is missing")
         return redirect(request.referrer or "/admin/populations")
     
     gender_distribution = {"male": male_percentage, "female": female_percentage}
@@ -182,8 +190,11 @@ def create_population():
         poisson_lambda = float(request.form.get("poisson_lambda", "0.88"))
         geometric_p = float(request.form.get("geometric_p", "0.6667"))
         zipf_s = float(request.form.get("zipf_s", "2.5"))
-    except (ValueError, TypeError) as e:
-        flash(f"Invalid input for actions configuration: {str(e)}")
+    except ValueError as e:
+        flash(f"Invalid actions configuration: {str(e)}. Please check numeric values for actions_min, actions_max, and distribution parameters.")
+        return redirect(request.referrer or "/admin/populations")
+    except TypeError:
+        flash("Invalid actions configuration: required numeric field is missing")
         return redirect(request.referrer or "/admin/populations")
 
     # Store actions configuration for future use
