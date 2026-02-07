@@ -101,16 +101,23 @@ def create_population():
         Redirect to populations list
     """
     check_privileges(current_user.username)
-    name = request.form.get("pop_name")
-    descr = request.form.get("pop_descr")
-    n_agents = int(request.form.get("n_agents"))
-    user_type = request.form.get("user_type")
+    
+    # Get form data and validate numeric inputs
+    try:
+        name = request.form.get("pop_name")
+        descr = request.form.get("pop_descr")
+        n_agents = int(request.form.get("n_agents"))
+        user_type = request.form.get("user_type")
 
-    llm = request.form.get("host_llm")
+        llm = request.form.get("host_llm")
 
-    # Get gender distribution
-    male_percentage = int(request.form.get("male_percentage", "50"))
-    female_percentage = int(request.form.get("female_percentage", "50"))
+        # Get gender distribution
+        male_percentage = int(request.form.get("male_percentage", "50"))
+        female_percentage = int(request.form.get("female_percentage", "50"))
+    except (ValueError, TypeError) as e:
+        flash(f"Invalid input for population parameters: {str(e)}")
+        return redirect(request.referrer or "/admin/populations")
+    
     gender_distribution = {"male": male_percentage, "female": female_percentage}
 
     education_levels = request.form.getlist("education_levels")
@@ -165,15 +172,19 @@ def create_population():
     except:
         activity_profiles_json = []
 
-    # Get actions per user once active data
-    actions_min = int(request.form.get("actions_min", "1"))
-    actions_max = int(request.form.get("actions_max", "10"))
-    actions_distribution = request.form.get("actions_distribution", "Uniform")
+    # Get actions per user once active data with error handling
+    try:
+        actions_min = int(request.form.get("actions_min", "1"))
+        actions_max = int(request.form.get("actions_max", "10"))
+        actions_distribution = request.form.get("actions_distribution", "Uniform")
 
-    # Get distribution-specific parameters
-    poisson_lambda = float(request.form.get("poisson_lambda", "0.88"))
-    geometric_p = float(request.form.get("geometric_p", "0.6667"))
-    zipf_s = float(request.form.get("zipf_s", "2.5"))
+        # Get distribution-specific parameters
+        poisson_lambda = float(request.form.get("poisson_lambda", "0.88"))
+        geometric_p = float(request.form.get("geometric_p", "0.6667"))
+        zipf_s = float(request.form.get("zipf_s", "2.5"))
+    except (ValueError, TypeError) as e:
+        flash(f"Invalid input for actions configuration: {str(e)}")
+        return redirect(request.referrer or "/admin/populations")
 
     # Store actions configuration for future use
     # Note: Not persisted yet, maintaining backward compatibility
