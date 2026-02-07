@@ -94,16 +94,16 @@ def migrate_sqlite(db_path):
         # Copy data from old table to new table
         # All rows will be migrated with new auto-generated IDs
         if existing_data:
-            # Prepare insert statement (excluding idexp for auto-generation)
-            insert_cols = [col for col in column_names if col != 'idexp']
-            placeholders = ','.join(['?' for _ in insert_cols])
-            insert_sql = f"INSERT INTO exps_new ({','.join(insert_cols)}) VALUES ({placeholders})"
+            # Prepare insert statement (excluding idexp which will be auto-generated)
+            columns_to_migrate = [col for col in column_names if col != 'idexp']
+            placeholders = ','.join(['?' for _ in columns_to_migrate])
+            insert_sql = f"INSERT INTO exps_new ({','.join(columns_to_migrate)}) VALUES ({placeholders})"
             
             migrated_count = 0
             for row in existing_data:
                 # Create data tuple excluding idexp (let it auto-generate)
                 row_dict = dict(zip(column_names, row))
-                data_tuple = tuple(row_dict[col] for col in insert_cols)
+                data_tuple = tuple(row_dict[col] for col in columns_to_migrate)
                 cursor.execute(insert_sql, data_tuple)
                 migrated_count += 1
             
@@ -177,9 +177,11 @@ def migrate_postgresql(host, port, database, user, password):
         """)
         next_id = cursor.fetchone()[0]
         
-        cursor.execute(f"""
-            ALTER SEQUENCE exps_idexp_seq RESTART WITH {next_id}
-        """)
+        # Use parameterized query to safely set sequence value
+        cursor.execute(
+            "SELECT setval('exps_idexp_seq', %s, false)",
+            (next_id,)
+        )
         
         # Set the default value for idexp to use the sequence
         cursor.execute("""
