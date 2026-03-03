@@ -1484,7 +1484,9 @@ def generate_hpc_config(
             "sliding_window_days": redis_sliding_window_days,
         },
         "posts": {"visibility_rounds": 36},
-        "recommendations": {"default_limit": 12},
+        # Server-side fallback. Client-specific recommendation limits are set
+        # in each HPC client config at client creation time.
+        "recommendations": {"default_limit": 5},
         "simulation": {
             "agent_archetypes": {
                 "enabled": True,
