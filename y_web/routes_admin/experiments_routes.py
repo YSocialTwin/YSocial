@@ -164,7 +164,9 @@ def _is_path_in_temp_data(path):
 
 def _serialize_download_notification(notification):
     """Convert notification model to JSON-safe structure."""
-    clean_message, related_exp_ids = _extract_related_experiment_ids(notification.message)
+    clean_message, related_exp_ids = _extract_related_experiment_ids(
+        notification.message
+    )
     related_experiments = []
     if related_exp_ids:
         experiments = Exps.query.filter(Exps.idexp.in_(related_exp_ids)).all()
@@ -181,7 +183,10 @@ def _serialize_download_notification(notification):
                 )
 
     action_url = (
-        url_for("experiments.download_notification_resource", notification_id=notification.id)
+        url_for(
+            "experiments.download_notification_resource",
+            notification_id=notification.id,
+        )
         if notification.status == "ready" and notification.resource_path
         else None
     )
@@ -192,12 +197,12 @@ def _serialize_download_notification(notification):
         "status": notification.status,
         "resource_name": notification.resource_name,
         "is_read": bool(notification.is_read),
-        "created_at": notification.created_at.isoformat()
-        if notification.created_at
-        else None,
-        "updated_at": notification.updated_at.isoformat()
-        if notification.updated_at
-        else None,
+        "created_at": (
+            notification.created_at.isoformat() if notification.created_at else None
+        ),
+        "updated_at": (
+            notification.updated_at.isoformat() if notification.updated_at else None
+        ),
         "action_url": action_url,
         "download_url": action_url,
         "related_experiments": related_experiments,
@@ -3644,9 +3649,7 @@ def _create_sqlite_copy_for_postgresql(experiment, folder):
             sqlite_cursor.execute(create_table_sql)
 
             placeholders = ", ".join(["?" for _ in columns])
-            insert_sql = (
-                f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-            )
+            insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
             for row in rows:
                 sqlite_cursor.execute(insert_sql, tuple(row))
 
@@ -3674,7 +3677,9 @@ def _build_single_experiment_zip(eid, output_zip_path):
     if db_type == "postgresql":
         _create_sqlite_copy_for_postgresql(experiment, folder)
 
-    output_base = output_zip_path[:-4] if output_zip_path.endswith(".zip") else output_zip_path
+    output_base = (
+        output_zip_path[:-4] if output_zip_path.endswith(".zip") else output_zip_path
+    )
     if os.path.exists(f"{output_base}.zip"):
         os.remove(f"{output_base}.zip")
     shutil.make_archive(output_base, "zip", folder)
@@ -3723,7 +3728,11 @@ def _build_bulk_experiments_zip(exp_ids, output_zip_path):
             exp_zip_path = os.path.join(bulk_download_dir, safe_exp_name)
             shutil.make_archive(exp_zip_path, "zip", folder)
 
-        output_base = output_zip_path[:-4] if output_zip_path.endswith(".zip") else output_zip_path
+        output_base = (
+            output_zip_path[:-4]
+            if output_zip_path.endswith(".zip")
+            else output_zip_path
+        )
         if os.path.exists(f"{output_base}.zip"):
             os.remove(f"{output_base}.zip")
         shutil.make_archive(output_base, "zip", bulk_download_dir)
@@ -3765,7 +3774,9 @@ def _run_single_download_job(app, notification_id, eid):
             if not notification:
                 return
             if notification.status == "cancelled":
-                if os.path.exists(output_zip_path) and _is_path_in_temp_data(output_zip_path):
+                if os.path.exists(output_zip_path) and _is_path_in_temp_data(
+                    output_zip_path
+                ):
                     os.remove(output_zip_path)
                 return
 
@@ -3810,7 +3821,9 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             if not notification:
                 return
             if notification.status == "cancelled":
-                if os.path.exists(output_zip_path) and _is_path_in_temp_data(output_zip_path):
+                if os.path.exists(output_zip_path) and _is_path_in_temp_data(
+                    output_zip_path
+                ):
                     os.remove(output_zip_path)
                 return
 
@@ -3909,8 +3922,13 @@ def download_experiment_file(eid):
         daemon=True,
     ).start()
 
-    flash("Archive generation started. You will be notified when the file is ready.", "info")
-    return redirect(request.referrer or url_for("experiments.experiment_details", uid=eid))
+    flash(
+        "Archive generation started. You will be notified when the file is ready.",
+        "info",
+    )
+    return redirect(
+        request.referrer or url_for("experiments.experiment_details", uid=eid)
+    )
 
 
 @experiments.route("/admin/download_experiments_bulk", methods=["POST"])
@@ -3951,7 +3969,10 @@ def download_experiments_bulk():
         daemon=True,
     ).start()
 
-    flash("Bulk archive generation started. You will be notified when the file is ready.", "info")
+    flash(
+        "Bulk archive generation started. You will be notified when the file is ready.",
+        "info",
+    )
     return redirect(request.referrer or url_for("experiments.settings"))
 
 
@@ -3968,12 +3989,16 @@ def download_notifications_page():
 
     notifications = (
         DownloadNotification.query.filter_by(user_id=admin_user.id)
-        .order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
+        .order_by(
+            DownloadNotification.created_at.desc(), DownloadNotification.id.desc()
+        )
         .all()
     )
     return render_template(
         "admin/download_notifications.html",
-        notifications=[_serialize_download_notification(item) for item in notifications],
+        notifications=[
+            _serialize_download_notification(item) for item in notifications
+        ],
     )
 
 
@@ -3997,9 +4022,9 @@ def download_notifications_data():
         user_id=admin_user.id, is_read=False
     ).order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
     notifications = query.limit(limit).all()
-    unread_count = (
-        DownloadNotification.query.filter_by(user_id=admin_user.id, is_read=False).count()
-    )
+    unread_count = DownloadNotification.query.filter_by(
+        user_id=admin_user.id, is_read=False
+    ).count()
     return jsonify(
         {
             "items": [_serialize_download_notification(item) for item in notifications],
@@ -4008,9 +4033,7 @@ def download_notifications_data():
     )
 
 
-@experiments.route(
-    "/admin/notifications/<int:notification_id>/read", methods=["POST"]
-)
+@experiments.route("/admin/notifications/<int:notification_id>/read", methods=["POST"])
 @experiments.route(
     "/admin/download_notifications/<int:notification_id>/read", methods=["POST"]
 )
@@ -4152,7 +4175,8 @@ def download_notification_resource(notification_id):
     return send_file_desktop(
         notification.resource_path,
         as_attachment=True,
-        download_name=notification.resource_name or os.path.basename(notification.resource_path),
+        download_name=notification.resource_name
+        or os.path.basename(notification.resource_path),
     )
 
 

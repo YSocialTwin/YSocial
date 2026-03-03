@@ -34,8 +34,7 @@ def migrate_sqlite(db_path):
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE download_notifications (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
@@ -50,8 +49,7 @@ def migrate_sqlite(db_path):
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES admin_users(id)
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX idx_download_notifications_user_created ON download_notifications(user_id, created_at)"
         )
@@ -77,20 +75,19 @@ def migrate_postgresql(host, port, database, user, password):
         )
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = 'download_notifications'
-            """
-        )
+            """)
         if cursor.fetchone():
-            print("○ download_notifications table already exists in PostgreSQL database")
+            print(
+                "○ download_notifications table already exists in PostgreSQL database"
+            )
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE download_notifications (
                 id SERIAL PRIMARY KEY,
                 user_id INTEGER NOT NULL REFERENCES admin_users(id),
@@ -104,8 +101,7 @@ def migrate_postgresql(host, port, database, user, password):
                 created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX idx_download_notifications_user_created ON download_notifications(user_id, created_at)"
         )
