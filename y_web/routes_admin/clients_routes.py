@@ -679,7 +679,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     )
     max_length_thread_reading = int(form_data.get("max_length_thread_reading", "5"))
     reading_from_follower_ratio = float(
-        form_data.get("reading_from_follower_ratio", "0.6")
+        form_data.get("reading_from_follower_ratio", "0.8")
     )
     probability_of_daily_follow = float(
         form_data.get("probability_of_daily_follow", "0.1")
