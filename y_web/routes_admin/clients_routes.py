@@ -690,7 +690,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     attention_window = int(form_data.get("attention_window", "336"))
     visibility_rounds = int(form_data.get("visibility_rounds", "36"))
     batch_size = int(form_data.get("batch_size", "100"))
-    recommendations_default_limit = int(form_data.get("recommendations_default_limit", "12"))
+    recommendations_default_limit = int(
+        form_data.get("recommendations_default_limit", "12")
+    )
 
     # Follow action decay parameters
     follow_decay_enabled = form_data.get("follow_decay_enabled") == "on"
