@@ -1,0 +1,130 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Notifications</h3>
+                        <p class="is-size-7" style="margin-top: 0.4rem; color: #666;">
+                            Background tasks and resource alerts appear here.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    {% for message in get_flashed_messages() %}
+                    <div class="alert alert-warning">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+
+                    <div class="dashboard-box">
+                        {% if notifications %}
+                        <div class="table-responsive">
+                            <table class="table is-fullwidth is-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Read</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for n in notifications %}
+                                    <tr id="notification-row-{{ n.id }}">
+                                        <td>
+                                            <strong>{{ n.title }}</strong>
+                                            <div class="is-size-7" style="color: #666;">{{ n.message }}</div>
+                                            {% if n.related_experiments %}
+                                            <div class="is-size-7" style="margin-top: 0.25rem;">
+                                                Related:
+                                                {% for exp in n.related_experiments %}
+                                                <a href="{{ exp.url }}">{{ exp.name }}</a>{% if not loop.last %}, {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="tag {% if n.status == 'ready' %}is-success{% elif n.status == 'failed' %}is-danger{% elif n.status == 'processing' %}is-info{% else %}is-light{% endif %}">
+                                                {{ n.status }}
+                                            </span>
+                                        </td>
+                                        <td>{{ n.created_at }}</td>
+                                        <td>{% if n.is_read %}Yes{% else %}No{% endif %}</td>
+                                        <td>
+                                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                                {% if n.status == 'ready' and n.resource_path %}
+                                                <a href="/admin/notifications/{{ n.id }}/download" class="button is-small is-success">
+                                                    Open
+                                                </a>
+                                                {% endif %}
+
+                                                {% if not n.is_read %}
+                                                <button class="button is-small" onclick="markRead({{ n.id }})">
+                                                    Mark read
+                                                </button>
+                                                {% endif %}
+                                                <button class="button is-small is-danger is-light" onclick="deleteNotification({{ n.id }})">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p>No notifications yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function markRead(id) {
+    try {
+        const response = await fetch(`/admin/notifications/${id}/read`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+    }
+}
+
+async function deleteNotification(id) {
+    if (!confirm('Delete this notification and remove attached file if present?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/notifications/${id}/delete`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to delete notification:', error);
+    }
+}
+</script>
+
+{% include "admin/footer.html" %}

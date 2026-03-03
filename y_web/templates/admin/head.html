@@ -118,13 +118,6 @@
                 <span>Users</span>
             </div>
         </a>
-        {% else %}
-        <a href="/admin/user_details/{{ current_user_id }}" class="dashboard-aside-link sidebar-collapsible" id="sidebar-profile">
-            <div>
-                <i data-feather="user"></i>
-                <span>My Profile</span>
-            </div>
-        </a>
         {% endif %}
         <hr class="sidebar-collapsible">
 
@@ -428,7 +421,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 
 
 

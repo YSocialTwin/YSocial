@@ -159,9 +159,8 @@ function dismissBlogPost(postId) {
         </label> -->
         <div class="buttons header-buttons">
             <!-- Tutorial Replay Button - only shown on pages with tutorials -->
-            <button id="tutorial-replay-btn" class="button is-solid has-icon" onclick="replayPageTutorial()" title="Replay Tutorial" style="display: none;">
+            <button id="tutorial-replay-btn" class="button is-solid live-button has-icon tutorial-icon-button" onclick="replayPageTutorial()" title="Replay Tutorial" style="display: none;">
                 <i data-feather="help-circle"></i>
-                <span class="btn-text">Tutorial</span>
             </button>
             <script>
                 // Show tutorial button only if a tutorial exists for this page
@@ -227,7 +226,7 @@ function dismissBlogPost(postId) {
                     </a>
                 {% else %}
                     {# Multiple experiments - dropdown menu #}
-                    <div class="dropdown is-hoverable">
+                    <div class="dropdown is-hoverable toolbar-menu">
                         <div class="dropdown-trigger">
                             <button class="button is-solid live-button has-icon" aria-haspopup="true" aria-controls="join-simulation-menu">
                                 <i data-feather="video"></i>
@@ -253,16 +252,290 @@ function dismissBlogPost(postId) {
                     <span class="btn-text">No Active Experiments</span>
                 </button>
             {% endif %}
-            <a class="button is-solid has-icon" href="/logout">
-                <i data-feather="log-out"></i>
-                <span class="btn-text">Log Out</span>
-            </a>
+            <div class="dropdown is-hoverable is-right toolbar-menu notification-dropdown-wrap" id="download-notifications-dropdown">
+                <div class="dropdown-trigger">
+                    <button class="button is-solid live-button has-icon notification-menu-button" aria-haspopup="true" aria-controls="download-notifications-menu" title="Notifications">
+                        <i data-feather="bell"></i>
+                        <span id="download-notifications-badge" class="download-notification-badge" style="display:none;">0</span>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="download-notifications-menu" role="menu">
+                    <div class="dropdown-content" id="download-notifications-list">
+                        <div class="dropdown-item">No notifications yet.</div>
+                    </div>
+                </div>
+            </div>
+            <div class="dropdown is-hoverable is-right toolbar-menu account-dropdown-wrap">
+                <div class="dropdown-trigger">
+                    <button class="button is-solid live-button has-icon account-menu-button" aria-haspopup="true" aria-controls="account-menu" title="Account">
+                        <i data-feather="user"></i>
+                        <span class="btn-text">Account</span>
+                        <i data-feather="chevron-down" style="margin-left: 0.35rem; width: 14px; height: 14px;"></i>
+                    </button>
+                </div>
+                <div class="dropdown-menu" id="account-menu" role="menu">
+                    <div class="dropdown-content">
+                        {% if current_user_id %}
+                        <a class="dropdown-item" href="/admin/user_details/{{ current_user_id }}">
+                            My Profile
+                        </a>
+                        {% endif %}
+                        <a class="dropdown-item" href="/logout">
+                            Log Out
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
+<script>
+function escapeHtml(text) {
+    if (text === null || text === undefined) {
+        return '';
+    }
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderDownloadNotifications(items, unreadCount) {
+    const list = document.getElementById('download-notifications-list');
+    const badge = document.getElementById('download-notifications-badge');
+    if (!list || !badge) {
+        return;
+    }
+
+    if (unreadCount > 0) {
+        badge.style.display = 'inline-flex';
+        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+    } else {
+        badge.style.display = 'none';
+    }
+
+    const rows = [];
+    if (!items || items.length === 0) {
+        rows.push('<div class=\"dropdown-item\">No notifications yet.</div>');
+    } else {
+        items.slice(0, 5).forEach(item => {
+            const statusTagClass =
+                item.status === 'ready'
+                    ? 'is-success'
+                    : (item.status === 'failed' ? 'is-danger' : (item.status === 'processing' ? 'is-info' : 'is-light'));
+            const unreadClass = item.is_read ? '' : ' download-item-unread';
+            const action = item.action_url
+                ? `<a class=\"download-notification-link\" href=\"${item.action_url}\">Open</a>`
+                : '';
+            let relatedHtml = '';
+            if (item.related_experiments && item.related_experiments.length > 0) {
+                const firstExp = item.related_experiments[0];
+                const extraCount = item.related_experiments.length - 1;
+                const moreLabel = extraCount > 0 ? ` <span class="download-related-more">+${extraCount}</span>` : '';
+                relatedHtml = `
+                    <div class=\"download-notification-related\">
+                        <a class=\"download-notification-link\" href=\"${firstExp.url}\">${escapeHtml(firstExp.name)}</a>${moreLabel}
+                    </div>
+                `;
+            }
+            rows.push(`
+                <div class=\"dropdown-item download-notification-item${unreadClass}\">
+                    <div class=\"download-notification-title\">${escapeHtml(item.title)}</div>
+                    <div class=\"download-notification-meta\">
+                        <span class=\"tag ${statusTagClass}\">${escapeHtml(item.status)}</span>
+                        ${action}
+                    </div>
+                    <div class=\"download-notification-message\">${escapeHtml(item.message)}</div>
+                    ${relatedHtml}
+                </div>
+            `);
+        });
+    }
+
+    rows.push('<hr class=\"dropdown-divider\">');
+    rows.push('<a class=\"dropdown-item has-text-weight-semibold\" href=\"/admin/notifications\">See all</a>');
+    list.innerHTML = rows.join('');
+}
+
+async function refreshDownloadNotifications() {
+    try {
+        const response = await fetch('/admin/notifications/data?limit=5', {
+            credentials: 'same-origin'
+        });
+        if (!response.ok) {
+            return;
+        }
+        const payload = await response.json();
+        renderDownloadNotifications(payload.items || [], payload.unread_count || 0);
+    } catch (error) {
+        console.error('Failed to refresh download notifications:', error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    refreshDownloadNotifications();
+    setInterval(refreshDownloadNotifications, 15000);
+});
+</script>
+
 <!-- Header Responsive Styles -->
 <style>
+.download-notification-badge {
+    margin-left: 0.35rem;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #dc3545;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+.download-notification-item {
+    min-width: 0;
+    max-width: 100%;
+    padding: 6px 8px !important;
+}
+
+.download-item-unread {
+    background-color: #f4faff;
+}
+
+.download-notification-title {
+    font-weight: 600;
+    font-size: 0.8rem;
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+}
+
+.download-notification-message {
+    color: #6b7280;
+    font-size: 0.76rem;
+    margin-top: 0.15rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.download-notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.download-notification-link {
+    font-size: 0.74rem;
+}
+
+.download-notification-related {
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    word-break: break-word;
+}
+
+.download-related-more {
+    color: #6b7280;
+}
+
+.notification-menu-button {
+    min-width: 44px;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.notification-dropdown-wrap {
+    margin-right: 0;
+}
+
+.notification-dropdown-wrap .dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 260px !important;
+    width: 280px;
+    max-width: calc(100vw - 24px);
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+#download-notifications-menu .dropdown-content {
+    padding: 4px 0;
+    overflow: visible;
+}
+
+#download-notifications-menu .dropdown-item {
+    margin: 0 !important;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.account-menu-button {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.tutorial-icon-button {
+    min-width: 44px;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+}
+
+.dashboard-toolbar .header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-toolbar .header-buttons > * {
+    margin: 0 !important;
+}
+
+.dashboard-toolbar .header-buttons .button {
+    margin: 0 !important;
+}
+
+.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-menu {
+    margin-top: 6px;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-content {
+    border: 1px solid #e4e8ef;
+    border-radius: 6px;
+    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.12);
+    padding: 4px 0;
+}
+
+.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-item {
+    border: none !important;
+    font-size: 0.78rem;
+    line-height: 1.25;
+    transition: background-color 0.15s ease !important;
+    transform: none !important;
+}
+
+.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-divider {
+    margin: 4px 0;
+}
+
 /* Mobile header button styles */
 @media screen and (max-width: 768px) {
     .dashboard-toolbar {

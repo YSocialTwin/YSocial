@@ -989,6 +989,33 @@ class BlogPost(db.Model):
     latest_check_on = db.Column(db.String(50), nullable=True)
 
 
+class DownloadNotification(db.Model):
+    """
+    Async download notification for admin users.
+
+    Tracks long-running archive generation jobs and stores links to generated
+    resources in temp_data so users can download when ready.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "download_notifications"
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("admin_users.id"), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.String(500), nullable=False, default="")
+    status = db.Column(
+        db.String(20), nullable=False, default="processing"
+    )  # processing|ready|failed|cancelled
+    resource_path = db.Column(db.String(500), nullable=True)
+    resource_name = db.Column(db.String(255), nullable=True)
+    error_message = db.Column(db.String(500), nullable=True)
+    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime, nullable=False, default=db.func.now(), onupdate=db.func.now()
+    )
+
+
 class LogFileOffset(db.Model):
     """
     Track last read offset for log files to enable incremental reading.

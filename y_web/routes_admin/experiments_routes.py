@@ -42,6 +42,7 @@ from y_web.models import (
     Client,
     Client_Execution,
     ClientLogMetrics,
+    DownloadNotification,
     Education,
     Exp_stats,
     Exp_Topic,
@@ -102,6 +103,7 @@ MAX_HPC_PER_GROUP = 4  # Maximum number of HPC experiments allowed per schedule 
 
 # Lock to prevent concurrent schedule advancement (from HTTP endpoint and background monitor)
 _schedule_check_lock = threading.Lock()
+_EXP_IDS_MARKER_RE = re.compile(r"\[exp_ids:([0-9,\s]+)\]")
 
 
 def get_experiment_uid_from_db_name(db_name):
@@ -129,6 +131,120 @@ def get_experiment_uid_from_db_name(db_name):
         if len(parts) >= 2:
             return parts[1]
     return None
+
+
+def _sanitize_filename(name, fallback):
+    """Return a filesystem-safe filename stem."""
+    safe_name = "".join(c for c in (name or "") if c.isalnum() or c in (" ", "-", "_"))
+    safe_name = safe_name.strip()
+    return safe_name or fallback
+
+
+def _current_admin_user():
+    """Resolve current authenticated admin user record."""
+    return Admin_users.query.filter_by(username=current_user.username).first()
+
+
+def _notifications_temp_data_dir():
+    """Return temp_data directory used for async archive output."""
+    from y_web.utils.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    return os.path.join(base_dir, f"y_web{os.sep}experiments{os.sep}temp_data")
+
+
+def _is_path_in_temp_data(path):
+    """Ensure file path is inside temp_data to prevent arbitrary deletions."""
+    if not path:
+        return False
+    temp_dir = os.path.realpath(_notifications_temp_data_dir())
+    real_path = os.path.realpath(path)
+    return real_path.startswith(temp_dir + os.sep) or real_path == temp_dir
+
+
+def _serialize_download_notification(notification):
+    """Convert notification model to JSON-safe structure."""
+    clean_message, related_exp_ids = _extract_related_experiment_ids(notification.message)
+    related_experiments = []
+    if related_exp_ids:
+        experiments = Exps.query.filter(Exps.idexp.in_(related_exp_ids)).all()
+        exp_map = {exp.idexp: exp for exp in experiments}
+        for exp_id in related_exp_ids:
+            exp = exp_map.get(exp_id)
+            if exp:
+                related_experiments.append(
+                    {
+                        "id": exp.idexp,
+                        "name": exp.exp_name,
+                        "url": url_for("experiments.experiment_details", uid=exp.idexp),
+                    }
+                )
+
+    action_url = (
+        url_for("experiments.download_notification_resource", notification_id=notification.id)
+        if notification.status == "ready" and notification.resource_path
+        else None
+    )
+    return {
+        "id": notification.id,
+        "title": notification.title,
+        "message": clean_message,
+        "status": notification.status,
+        "resource_name": notification.resource_name,
+        "is_read": bool(notification.is_read),
+        "created_at": notification.created_at.isoformat()
+        if notification.created_at
+        else None,
+        "updated_at": notification.updated_at.isoformat()
+        if notification.updated_at
+        else None,
+        "action_url": action_url,
+        "download_url": action_url,
+        "related_experiments": related_experiments,
+    }
+
+
+def _inject_related_experiment_ids(message, exp_ids):
+    """Attach experiment IDs marker to message for link rendering without schema changes."""
+    if not exp_ids:
+        return message
+    normalized = []
+    seen = set()
+    for exp_id in exp_ids:
+        try:
+            eid = int(exp_id)
+        except (TypeError, ValueError):
+            continue
+        if eid not in seen:
+            normalized.append(eid)
+            seen.add(eid)
+    if not normalized:
+        return message
+    return f"{(message or '').strip()} [exp_ids:{','.join(str(eid) for eid in normalized)}]"
+
+
+def _extract_related_experiment_ids(message):
+    """Extract encoded related experiment IDs from message."""
+    text = message or ""
+    exp_ids = []
+    seen = set()
+    for match in _EXP_IDS_MARKER_RE.finditer(text):
+        ids_raw = match.group(1)
+        for token in ids_raw.split(","):
+            token = token.strip()
+            if not token:
+                continue
+            try:
+                eid = int(token)
+            except ValueError:
+                continue
+            if eid not in seen:
+                exp_ids.append(eid)
+                seen.add(eid)
+
+    clean_message = _EXP_IDS_MARKER_RE.sub("", text)
+    clean_message = re.sub(r"\s{2,}", " ", clean_message).strip()
+    return clean_message, exp_ids
 
 
 def get_suggested_port():
@@ -2074,21 +2190,7 @@ def delete_simulations_bulk():
         flash("Invalid experiment IDs provided.", "error")
         return redirect(url_for("experiments.settings"))
 
-    if not isinstance(exp_ids, list):
-        flash("Invalid experiment IDs payload.", "error")
-        return redirect(url_for("experiments.settings"))
-
-    # Normalize to integers and de-duplicate while preserving order
-    normalized_ids = []
-    seen = set()
-    for eid in exp_ids:
-        try:
-            eid_int = int(eid)
-        except (TypeError, ValueError):
-            continue
-        if eid_int not in seen:
-            normalized_ids.append(eid_int)
-            seen.add(eid_int)
+    normalized_ids = _resolve_bulk_experiment_ids(exp_ids)
 
     if not normalized_ids:
         flash("No experiments selected for deletion.", "warning")
@@ -3464,356 +3566,594 @@ def update_prompts_hpc(uid):
     return redirect(request.referrer)
 
 
-@experiments.route("/admin/download_experiment/<int:eid>", methods=["POST", "GET"])
-@login_required
-def download_experiment_file(eid):
-    """Download experiment file.
-
-    For SQLite: Downloads experiment folder as-is with the database file.
-    For PostgreSQL: Creates an SQLite copy of the PostgreSQL database first,
-    then downloads the experiment folder with the SQLite copy.
-    """
-    check_privileges(current_user.username)
-
-    from y_web.utils.path_utils import get_writable_path
-
-    BASE_DIR = get_writable_path()
-
-    # get experiment details
-    experiment = Exps.query.filter_by(idexp=eid).first()
-
-    # Determine database type
-    db_type = "sqlite"
+def _get_database_type():
+    """Get active admin database backend type."""
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        db_type = "postgresql"
+        return "postgresql"
+    return "sqlite"
 
-    # Get folder path based on database type
+
+def _get_experiment_folder(base_dir, experiment, db_type):
+    """Resolve experiment folder path for sqlite/postgresql layouts."""
     if db_type == "sqlite":
-        folder = os.path.join(
-            BASE_DIR,
+        return os.path.join(
+            base_dir,
             f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
         )
-    else:
-        # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
-        folder = os.path.join(
-            BASE_DIR,
-            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
-        )
 
-    # For PostgreSQL, create an SQLite copy of the database
-    if db_type == "postgresql":
-        try:
-            import sqlite3
-            from urllib.parse import urlparse
-
-            from sqlalchemy import create_engine, inspect
-
-            # Connect to PostgreSQL database
-            current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
-            parsed_uri = urlparse(current_uri)
-
-            user = parsed_uri.username or "postgres"
-            password = parsed_uri.password or "password"
-            host = parsed_uri.hostname or "localhost"
-            port_db = parsed_uri.port or 5432
-
-            pg_uri = (
-                f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
-            )
-            pg_engine = create_engine(pg_uri)
-
-            # Create SQLite database in the experiment folder
-            sqlite_path = os.path.join(folder, "database_server.db")
-            sqlite_uri = f"sqlite:///{sqlite_path}"
-            sqlite_engine = create_engine(sqlite_uri)
-
-            # Get inspector for PostgreSQL database
-            inspector = inspect(pg_engine)
-
-            # Copy all tables from PostgreSQL to SQLite
-            # Use raw connection for SQLite to handle parameter binding correctly
-            with pg_engine.connect() as pg_conn:
-                from sqlalchemy import text
-
-                # Get all table names
-                table_names = inspector.get_table_names()
-
-                # Get raw SQLite connection
-                sqlite_raw_conn = sqlite3.connect(sqlite_path)
-                sqlite_cursor = sqlite_raw_conn.cursor()
-
-                for table_name in table_names:
-                    # Read from PostgreSQL using text()
-                    result = pg_conn.execute(text(f"SELECT * FROM {table_name}"))
-                    rows = result.fetchall()
-                    columns = result.keys()
-
-                    if rows:
-                        # Create table in SQLite if it doesn't exist
-                        # Get column definitions from PostgreSQL
-                        pg_columns = inspector.get_columns(table_name)
-                        col_defs = []
-                        for col in pg_columns:
-                            col_type = str(col["type"])
-                            # Map PostgreSQL types to SQLite types
-                            if "INTEGER" in col_type or "SERIAL" in col_type:
-                                sqlite_type = "INTEGER"
-                            elif (
-                                "REAL" in col_type
-                                or "DOUBLE" in col_type
-                                or "FLOAT" in col_type
-                            ):
-                                sqlite_type = "REAL"
-                            elif (
-                                "TEXT" in col_type
-                                or "VARCHAR" in col_type
-                                or "CHAR" in col_type
-                            ):
-                                sqlite_type = "TEXT"
-                            else:
-                                sqlite_type = "TEXT"
-
-                            col_defs.append(f"{col['name']} {sqlite_type}")
-
-                        create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
-                        sqlite_cursor.execute(create_table_sql)
-
-                        # Insert data into SQLite using raw connection
-                        placeholders = ", ".join(["?" for _ in columns])
-                        insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-
-                        for row in rows:
-                            sqlite_cursor.execute(insert_sql, tuple(row))
-
-                sqlite_raw_conn.commit()
-                sqlite_raw_conn.close()
-
-            pg_engine.dispose()
-            sqlite_engine.dispose()
-
-        except Exception as e:
-            current_app.logger.error(
-                f"Error creating SQLite copy of PostgreSQL database: {str(e)}",
-                exc_info=True,
-            )
-            flash(f"Error creating database copy: {str(e)}")
-            return redirect(url_for("experiments.experiment_details", uid=eid))
-
-    # compress the folder and send the file
-    shutil.make_archive(folder, "zip", folder)
-
-    # Ensure temp_data directory exists
-    temp_data_dir = os.path.join(BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data")
-    os.makedirs(temp_data_dir, exist_ok=True)
-
-    # move the file to the temp_data folder
-    temp_data_path = os.path.join(temp_data_dir, f"{folder.split(os.sep)[-1]}.zip")
-    shutil.move(
-        f"{folder}.zip",
-        temp_data_path,
-    )
-    # return the file
-    return send_file_desktop(
-        temp_data_path,
-        as_attachment=True,
+    return os.path.join(
+        base_dir,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
     )
 
 
-@experiments.route("/admin/download_experiments_bulk", methods=["POST"])
-@login_required
-def download_experiments_bulk():
-    """Download multiple experiment files as a single ZIP.
+def _create_sqlite_copy_for_postgresql(experiment, folder):
+    """Create SQLite mirror DB file for PostgreSQL experiment export."""
+    import sqlite3
+    from urllib.parse import urlparse
 
-    Creates a ZIP file containing individually zipped experiments,
-    each named {exp_name}.zip.
+    from sqlalchemy import create_engine, inspect, text
 
-    If exp_ids is 'all', downloads all completed experiments.
-    """
-    check_privileges(current_user.username)
+    current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+    parsed_uri = urlparse(current_uri)
 
+    user = parsed_uri.username or "postgres"
+    password = parsed_uri.password or "password"
+    host = parsed_uri.hostname or "localhost"
+    port_db = parsed_uri.port or 5432
+
+    pg_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
+    pg_engine = create_engine(pg_uri)
+
+    sqlite_path = os.path.join(folder, "database_server.db")
+    sqlite_uri = f"sqlite:///{sqlite_path}"
+    sqlite_engine = create_engine(sqlite_uri)
+
+    inspector = inspect(pg_engine)
+
+    with pg_engine.connect() as pg_conn:
+        table_names = inspector.get_table_names()
+        sqlite_raw_conn = sqlite3.connect(sqlite_path)
+        sqlite_cursor = sqlite_raw_conn.cursor()
+
+        for table_name in table_names:
+            result = pg_conn.execute(text(f"SELECT * FROM {table_name}"))
+            rows = result.fetchall()
+            columns = result.keys()
+
+            if not rows:
+                continue
+
+            pg_columns = inspector.get_columns(table_name)
+            col_defs = []
+            for col in pg_columns:
+                col_type = str(col["type"])
+                if "INTEGER" in col_type or "SERIAL" in col_type:
+                    sqlite_type = "INTEGER"
+                elif "REAL" in col_type or "DOUBLE" in col_type or "FLOAT" in col_type:
+                    sqlite_type = "REAL"
+                elif "TEXT" in col_type or "VARCHAR" in col_type or "CHAR" in col_type:
+                    sqlite_type = "TEXT"
+                else:
+                    sqlite_type = "TEXT"
+                col_defs.append(f"{col['name']} {sqlite_type}")
+
+            create_table_sql = (
+                f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
+            )
+            sqlite_cursor.execute(create_table_sql)
+
+            placeholders = ", ".join(["?" for _ in columns])
+            insert_sql = (
+                f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+            )
+            for row in rows:
+                sqlite_cursor.execute(insert_sql, tuple(row))
+
+        sqlite_raw_conn.commit()
+        sqlite_raw_conn.close()
+
+    pg_engine.dispose()
+    sqlite_engine.dispose()
+
+
+def _build_single_experiment_zip(eid, output_zip_path):
+    """Build a single experiment zip file and return user-facing name."""
     from y_web.utils.path_utils import get_writable_path
 
-    BASE_DIR = get_writable_path()
+    base_dir = get_writable_path()
+    experiment = Exps.query.filter_by(idexp=eid).first()
+    if not experiment:
+        raise ValueError(f"Experiment {eid} not found")
 
-    # Get experiment IDs from form data
-    exp_ids_json = request.form.get("exp_ids", "[]")
-    try:
-        exp_ids = json.loads(exp_ids_json)
-    except json.JSONDecodeError:
-        flash("Invalid experiment IDs provided.")
-        return redirect(url_for("experiments.settings"))
+    db_type = _get_database_type()
+    folder = _get_experiment_folder(base_dir, experiment, db_type)
+    if not os.path.exists(folder):
+        raise FileNotFoundError(f"Experiment folder not found: {folder}")
 
-    # Handle 'all' case - download all completed experiments
-    if exp_ids == "all":
-        completed_experiments = Exps.query.filter_by(exp_status="completed").all()
-        exp_ids = [exp.idexp for exp in completed_experiments]
+    if db_type == "postgresql":
+        _create_sqlite_copy_for_postgresql(experiment, folder)
 
-    if not exp_ids:
-        flash("No experiments selected for download.")
-        return redirect(url_for("experiments.settings"))
+    output_base = output_zip_path[:-4] if output_zip_path.endswith(".zip") else output_zip_path
+    if os.path.exists(f"{output_base}.zip"):
+        os.remove(f"{output_base}.zip")
+    shutil.make_archive(output_base, "zip", folder)
 
-    # Determine database type
-    db_type = "sqlite"
-    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
-        db_type = "postgresql"
+    safe_exp_name = _sanitize_filename(experiment.exp_name, f"experiment_{eid}")
+    return f"{safe_exp_name}.zip"
 
-    # Create a temporary directory for the bulk download
+
+def _build_bulk_experiments_zip(exp_ids, output_zip_path):
+    """Build a bulk zip containing one zip per experiment."""
+    from y_web.utils.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    db_type = _get_database_type()
     bulk_download_dir = os.path.join(
-        BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_bulk_{uuid.uuid4().hex}"
+        base_dir, f"y_web{os.sep}experiments{os.sep}temp_bulk_{uuid.uuid4().hex}"
     )
     os.makedirs(bulk_download_dir, exist_ok=True)
 
+    used_names = set()
     try:
-        # Process each experiment
         for eid in exp_ids:
             experiment = Exps.query.filter_by(idexp=eid).first()
             if not experiment:
                 continue
 
-            # Get folder path based on database type
-            if db_type == "sqlite":
-                folder = os.path.join(
-                    BASE_DIR,
-                    f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
-                )
-            else:
-                # PostgreSQL: extract UUID from db_name (format: experiments_uuid)
-                folder = os.path.join(
-                    BASE_DIR,
-                    f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
-                )
-
+            folder = _get_experiment_folder(base_dir, experiment, db_type)
             if not os.path.exists(folder):
                 continue
 
-            # For PostgreSQL, create an SQLite copy of the database
             if db_type == "postgresql":
                 try:
-                    import sqlite3
-                    from urllib.parse import urlparse
-
-                    from sqlalchemy import create_engine, inspect
-
-                    # Connect to PostgreSQL database
-                    current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
-                    parsed_uri = urlparse(current_uri)
-
-                    user = parsed_uri.username or "postgres"
-                    password = parsed_uri.password or "password"
-                    host = parsed_uri.hostname or "localhost"
-                    port_db = parsed_uri.port or 5432
-
-                    pg_uri = f"postgresql://{user}:{password}@{host}:{port_db}/{experiment.db_name}"
-                    pg_engine = create_engine(pg_uri)
-
-                    # Create SQLite database in the experiment folder
-                    sqlite_path = os.path.join(folder, "database_server.db")
-                    sqlite_uri = f"sqlite:///{sqlite_path}"
-                    sqlite_engine = create_engine(sqlite_uri)
-
-                    # Get inspector for PostgreSQL database
-                    inspector = inspect(pg_engine)
-
-                    # Copy all tables from PostgreSQL to SQLite
-                    with pg_engine.connect() as pg_conn:
-                        from sqlalchemy import text
-
-                        table_names = inspector.get_table_names()
-                        sqlite_raw_conn = sqlite3.connect(sqlite_path)
-                        sqlite_cursor = sqlite_raw_conn.cursor()
-
-                        for table_name in table_names:
-                            result = pg_conn.execute(
-                                text(f"SELECT * FROM {table_name}")
-                            )
-                            rows = result.fetchall()
-                            columns = result.keys()
-
-                            if rows:
-                                pg_columns = inspector.get_columns(table_name)
-                                col_defs = []
-                                for col in pg_columns:
-                                    col_type = str(col["type"])
-                                    if "INTEGER" in col_type or "SERIAL" in col_type:
-                                        sqlite_type = "INTEGER"
-                                    elif (
-                                        "REAL" in col_type
-                                        or "DOUBLE" in col_type
-                                        or "FLOAT" in col_type
-                                    ):
-                                        sqlite_type = "REAL"
-                                    elif (
-                                        "TEXT" in col_type
-                                        or "VARCHAR" in col_type
-                                        or "CHAR" in col_type
-                                    ):
-                                        sqlite_type = "TEXT"
-                                    else:
-                                        sqlite_type = "TEXT"
-
-                                    col_defs.append(f"{col['name']} {sqlite_type}")
-
-                                create_table_sql = f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join(col_defs)})"
-                                sqlite_cursor.execute(create_table_sql)
-
-                                placeholders = ", ".join(["?" for _ in columns])
-                                insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
-
-                                for row in rows:
-                                    sqlite_cursor.execute(insert_sql, tuple(row))
-
-                        sqlite_raw_conn.commit()
-                        sqlite_raw_conn.close()
-
-                    pg_engine.dispose()
-                    sqlite_engine.dispose()
-
-                except Exception as e:
+                    _create_sqlite_copy_for_postgresql(experiment, folder)
+                except Exception as exc:
                     current_app.logger.error(
-                        f"Error creating SQLite copy for {experiment.exp_name}: {str(e)}",
+                        f"Error creating SQLite copy for {experiment.exp_name}: {exc}",
                         exc_info=True,
                     )
                     continue
 
-            # Create a ZIP of this experiment folder with the experiment name
-            # Sanitize experiment name for use as filename
-            safe_exp_name = "".join(
-                c for c in experiment.exp_name if c.isalnum() or c in (" ", "-", "_")
-            ).strip()
-            if not safe_exp_name:
-                safe_exp_name = f"experiment_{eid}"
+            safe_exp_name = _sanitize_filename(experiment.exp_name, f"experiment_{eid}")
+            if safe_exp_name in used_names:
+                safe_exp_name = f"{safe_exp_name}_{eid}"
+            used_names.add(safe_exp_name)
 
             exp_zip_path = os.path.join(bulk_download_dir, safe_exp_name)
             shutil.make_archive(exp_zip_path, "zip", folder)
 
-        # Now create the final bulk ZIP containing all experiment ZIPs
-        bulk_zip_path = os.path.join(
-            BASE_DIR, f"y_web{os.sep}experiments{os.sep}temp_data"
-        )
-        os.makedirs(bulk_zip_path, exist_ok=True)
-
-        final_zip_name = f"experiments_bulk_{uuid.uuid4().hex[:8]}"
-        final_zip_path = os.path.join(bulk_zip_path, final_zip_name)
-        shutil.make_archive(final_zip_path, "zip", bulk_download_dir)
-
-        # Clean up the temporary bulk download directory
+        output_base = output_zip_path[:-4] if output_zip_path.endswith(".zip") else output_zip_path
+        if os.path.exists(f"{output_base}.zip"):
+            os.remove(f"{output_base}.zip")
+        shutil.make_archive(output_base, "zip", bulk_download_dir)
+    finally:
         shutil.rmtree(bulk_download_dir, ignore_errors=True)
 
-        # Return the file
-        return send_file_desktop(
-            f"{final_zip_path}.zip",
-            as_attachment=True,
-            download_name="experiments.zip",
-        )
+    return "experiments.zip"
 
-    except Exception as e:
-        current_app.logger.error(
-            f"Error creating bulk download: {str(e)}", exc_info=True
-        )
-        # Clean up on error
-        shutil.rmtree(bulk_download_dir, ignore_errors=True)
-        flash(f"Error creating bulk download: {str(e)}")
+
+def _create_download_notification(user_id, title, message):
+    """Create a processing notification entry."""
+    notification = DownloadNotification(
+        user_id=user_id,
+        title=title,
+        message=message,
+        status="processing",
+        is_read=False,
+    )
+    db.session.add(notification)
+    db.session.commit()
+    return notification
+
+
+def _run_single_download_job(app, notification_id, eid):
+    """Background worker for single experiment export."""
+    with app.app_context():
+        notification = DownloadNotification.query.get(notification_id)
+        if not notification:
+            return
+
+        try:
+            temp_data_dir = _notifications_temp_data_dir()
+            os.makedirs(temp_data_dir, exist_ok=True)
+            file_base = f"exp_{eid}_{notification_id}_{uuid.uuid4().hex[:8]}"
+            output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
+            download_name = _build_single_experiment_zip(eid, output_zip_path)
+
+            notification = DownloadNotification.query.get(notification_id)
+            if not notification:
+                return
+            if notification.status == "cancelled":
+                if os.path.exists(output_zip_path) and _is_path_in_temp_data(output_zip_path):
+                    os.remove(output_zip_path)
+                return
+
+            notification.status = "ready"
+            notification.resource_path = output_zip_path
+            notification.resource_name = download_name
+            notification.message = _inject_related_experiment_ids(
+                "Your experiment archive is ready to download.", [eid]
+            )
+            notification.error_message = None
+            db.session.commit()
+        except Exception as exc:
+            current_app.logger.error(
+                f"Error generating async experiment archive (eid={eid}): {exc}",
+                exc_info=True,
+            )
+            notification = DownloadNotification.query.get(notification_id)
+            if notification and notification.status != "cancelled":
+                notification.status = "failed"
+                notification.message = "Archive generation failed."
+                notification.error_message = str(exc)[:500]
+                db.session.commit()
+        finally:
+            db.session.remove()
+
+
+def _run_bulk_download_job(app, notification_id, exp_ids):
+    """Background worker for bulk experiments export."""
+    with app.app_context():
+        notification = DownloadNotification.query.get(notification_id)
+        if not notification:
+            return
+
+        try:
+            temp_data_dir = _notifications_temp_data_dir()
+            os.makedirs(temp_data_dir, exist_ok=True)
+            file_base = f"bulk_{notification_id}_{uuid.uuid4().hex[:8]}"
+            output_zip_path = os.path.join(temp_data_dir, f"{file_base}.zip")
+            download_name = _build_bulk_experiments_zip(exp_ids, output_zip_path)
+
+            notification = DownloadNotification.query.get(notification_id)
+            if not notification:
+                return
+            if notification.status == "cancelled":
+                if os.path.exists(output_zip_path) and _is_path_in_temp_data(output_zip_path):
+                    os.remove(output_zip_path)
+                return
+
+            notification.status = "ready"
+            notification.resource_path = output_zip_path
+            notification.resource_name = download_name
+            notification.message = _inject_related_experiment_ids(
+                "Your bulk experiments archive is ready to download.", exp_ids
+            )
+            notification.error_message = None
+            db.session.commit()
+        except Exception as exc:
+            current_app.logger.error(
+                f"Error generating async bulk archive: {exc}", exc_info=True
+            )
+            notification = DownloadNotification.query.get(notification_id)
+            if notification and notification.status != "cancelled":
+                notification.status = "failed"
+                notification.message = "Bulk archive generation failed."
+                notification.error_message = str(exc)[:500]
+                db.session.commit()
+        finally:
+            db.session.remove()
+
+
+def _resolve_bulk_experiment_ids(exp_ids_payload):
+    """Resolve incoming payload to a deduplicated integer experiment ID list."""
+    if exp_ids_payload == "all":
+        completed_experiments = Exps.query.filter_by(exp_status="completed").all()
+        return [exp.idexp for exp in completed_experiments]
+
+    if isinstance(exp_ids_payload, dict) and exp_ids_payload.get("all"):
+        status_filter = str(exp_ids_payload.get("status", "")).strip()
+        query = Exps.query
+        if status_filter:
+            if status_filter == "stopped_scheduled":
+                query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
+            else:
+                query = query.filter(Exps.exp_status == status_filter)
+        return [exp.idexp for exp in query.all()]
+
+    if isinstance(exp_ids_payload, dict) and exp_ids_payload.get("group"):
+        group_name = str(exp_ids_payload.get("group")).strip()
+        status_filter = str(exp_ids_payload.get("status", "")).strip()
+        query = Exps.query.filter(Exps.exp_group == group_name)
+        if status_filter:
+            if status_filter == "stopped_scheduled":
+                query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
+            else:
+                query = query.filter(Exps.exp_status == status_filter)
+        return [exp.idexp for exp in query.all()]
+
+    if not isinstance(exp_ids_payload, list):
+        return []
+
+    normalized_ids = []
+    seen = set()
+    for eid in exp_ids_payload:
+        try:
+            eid_int = int(eid)
+        except (TypeError, ValueError):
+            continue
+        if eid_int not in seen:
+            normalized_ids.append(eid_int)
+            seen.add(eid_int)
+    return normalized_ids
+
+
+@experiments.route("/admin/download_experiment/<int:eid>", methods=["POST", "GET"])
+@login_required
+def download_experiment_file(eid):
+    """Queue asynchronous experiment archive generation and notify when ready."""
+    check_privileges(current_user.username)
+
+    experiment = Exps.query.filter_by(idexp=eid).first()
+    if not experiment:
+        flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user()
+    if not admin_user:
+        flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    notification = _create_download_notification(
+        admin_user.id,
+        title=f"Export {experiment.exp_name}",
+        message=_inject_related_experiment_ids(
+            "Preparing experiment archive in background...", [eid]
+        ),
+    )
+    app_obj = current_app._get_current_object()
+    threading.Thread(
+        target=_run_single_download_job,
+        args=(app_obj, notification.id, eid),
+        daemon=True,
+    ).start()
+
+    flash("Archive generation started. You will be notified when the file is ready.", "info")
+    return redirect(request.referrer or url_for("experiments.experiment_details", uid=eid))
+
+
+@experiments.route("/admin/download_experiments_bulk", methods=["POST"])
+@login_required
+def download_experiments_bulk():
+    """Queue asynchronous bulk archive generation for selected experiments."""
+    check_privileges(current_user.username)
+
+    exp_ids_json = request.form.get("exp_ids", "[]")
+    try:
+        exp_ids_payload = json.loads(exp_ids_json)
+    except json.JSONDecodeError:
+        flash("Invalid experiment IDs provided.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    exp_ids = _resolve_bulk_experiment_ids(exp_ids_payload)
+    if not exp_ids:
+        flash("No experiments selected for download.", "warning")
+        return redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user()
+    if not admin_user:
+        flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    notification = _create_download_notification(
+        admin_user.id,
+        title="Bulk export experiments",
+        message=_inject_related_experiment_ids(
+            f"Preparing archive for {len(exp_ids)} experiment(s) in background...",
+            exp_ids,
+        ),
+    )
+    app_obj = current_app._get_current_object()
+    threading.Thread(
+        target=_run_bulk_download_job,
+        args=(app_obj, notification.id, exp_ids),
+        daemon=True,
+    ).start()
+
+    flash("Bulk archive generation started. You will be notified when the file is ready.", "info")
+    return redirect(request.referrer or url_for("experiments.settings"))
+
+
+@experiments.route("/admin/notifications")
+@experiments.route("/admin/download_notifications")
+@login_required
+def download_notifications_page():
+    """Render all download notifications for current admin user."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    notifications = (
+        DownloadNotification.query.filter_by(user_id=admin_user.id)
+        .order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
+        .all()
+    )
+    return render_template(
+        "admin/download_notifications.html",
+        notifications=[_serialize_download_notification(item) for item in notifications],
+    )
+
+
+@experiments.route("/admin/notifications/data")
+@experiments.route("/admin/download_notifications/data")
+@login_required
+def download_notifications_data():
+    """Return notifications for header dropdown and dedicated page."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        return jsonify({"items": [], "unread_count": 0})
+
+    limit = request.args.get("limit", default=5, type=int)
+    if limit < 1:
+        limit = 5
+    if limit > 100:
+        limit = 100
+
+    query = DownloadNotification.query.filter_by(
+        user_id=admin_user.id, is_read=False
+    ).order_by(DownloadNotification.created_at.desc(), DownloadNotification.id.desc())
+    notifications = query.limit(limit).all()
+    unread_count = (
+        DownloadNotification.query.filter_by(user_id=admin_user.id, is_read=False).count()
+    )
+    return jsonify(
+        {
+            "items": [_serialize_download_notification(item) for item in notifications],
+            "unread_count": unread_count,
+        }
+    )
+
+
+@experiments.route(
+    "/admin/notifications/<int:notification_id>/read", methods=["POST"]
+)
+@experiments.route(
+    "/admin/download_notifications/<int:notification_id>/read", methods=["POST"]
+)
+@login_required
+def mark_download_notification_read(notification_id):
+    """Mark a download notification as read."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    notification = DownloadNotification.query.filter_by(
+        id=notification_id, user_id=admin_user.id
+    ).first()
+    if not notification:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    notification.is_read = True
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@experiments.route(
+    "/admin/notifications/<int:notification_id>/cancel", methods=["POST"]
+)
+@experiments.route(
+    "/admin/download_notifications/<int:notification_id>/cancel", methods=["POST"]
+)
+@login_required
+def cancel_download_notification(notification_id):
+    """Cancel notification and delete related zip from temp_data if present."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    notification = DownloadNotification.query.filter_by(
+        id=notification_id, user_id=admin_user.id
+    ).first()
+    if not notification:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    if (
+        not notification.is_read
+        and notification.resource_path
+        and _is_path_in_temp_data(notification.resource_path)
+        and os.path.exists(notification.resource_path)
+    ):
+        try:
+            os.remove(notification.resource_path)
+        except OSError as exc:
+            current_app.logger.warning(
+                f"Could not delete cancelled notification file: {exc}"
+            )
+
+    notification.resource_path = None
+    notification.resource_name = None
+    notification.status = "cancelled"
+    notification.message = "Notification cancelled."
+    notification.error_message = None
+    db.session.commit()
+
+    return jsonify({"success": True})
+
+
+@experiments.route(
+    "/admin/notifications/<int:notification_id>/delete", methods=["POST"]
+)
+@experiments.route(
+    "/admin/download_notifications/<int:notification_id>/delete", methods=["POST"]
+)
+@login_required
+def delete_notification(notification_id):
+    """Delete a notification and remove attached file from temp_data if present."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        return jsonify({"success": False, "error": "User not found"}), 404
+
+    notification = DownloadNotification.query.filter_by(
+        id=notification_id, user_id=admin_user.id
+    ).first()
+    if not notification:
+        return jsonify({"success": False, "error": "Notification not found"}), 404
+
+    file_path = notification.resource_path
+    if file_path and _is_path_in_temp_data(file_path) and os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except OSError as exc:
+            current_app.logger.warning(f"Could not delete notification file: {exc}")
+
+    db.session.delete(notification)
+    db.session.commit()
+    return jsonify({"success": True})
+
+
+@experiments.route(
+    "/admin/notifications/<int:notification_id>/download", methods=["GET"]
+)
+@experiments.route(
+    "/admin/download_notifications/<int:notification_id>/download", methods=["GET"]
+)
+@login_required
+def download_notification_resource(notification_id):
+    """Download the generated archive for a ready notification."""
+    check_privileges(current_user.username)
+    admin_user = _current_admin_user()
+    if not admin_user:
+        flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.download_notifications_page"))
+
+    notification = DownloadNotification.query.filter_by(
+        id=notification_id, user_id=admin_user.id
+    ).first()
+    if not notification:
+        flash("Notification not found.", "error")
+        return redirect(url_for("experiments.download_notifications_page"))
+
+    if notification.status != "ready" or not notification.resource_path:
+        flash("Requested file is not ready for download.", "warning")
+        return redirect(url_for("experiments.download_notifications_page"))
+
+    if not _is_path_in_temp_data(notification.resource_path):
+        flash("Invalid download path.", "error")
+        return redirect(url_for("experiments.download_notifications_page"))
+
+    if not os.path.exists(notification.resource_path):
+        notification.status = "failed"
+        notification.message = "Download file is no longer available."
+        notification.error_message = "Generated archive not found in temp_data."
+        db.session.commit()
+        flash("Download file is no longer available.", "error")
+        return redirect(url_for("experiments.download_notifications_page"))
+
+    notification.is_read = True
+    db.session.commit()
+
+    return send_file_desktop(
+        notification.resource_path,
+        as_attachment=True,
+        download_name=notification.resource_name or os.path.basename(notification.resource_path),
+    )
 
 
 @experiments.route("/admin/miscellanea/", methods=["GET"])
