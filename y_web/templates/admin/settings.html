@@ -269,6 +269,16 @@
     .delete-group-btn:hover {
         background: #c82333;
     }
+    .group-action-icononly {
+        width: 24px;
+        min-width: 24px;
+        height: 24px;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95em;
+    }
 </style>
 
 <div class="view-wrapper is-dashboard">
@@ -1040,6 +1050,13 @@
     }
     
     // Function to create grouped experiment display with pagination
+    function getVisibleExperimentBoxCount() {
+        const boxes = ['box-active', 'box-completed', 'box-stopped'];
+        return boxes
+            .map(id => document.getElementById(id))
+            .filter(box => box && getComputedStyle(box).display !== 'none').length;
+    }
+
     function createGroupedView(containerId, statusFilter, boxId) {
         const containerDiv = document.getElementById(containerId);
         const boxDiv = document.getElementById(boxId);
@@ -1088,6 +1105,8 @@
                     const groupId = `${statusFilter}-${group.replace(/[^a-zA-Z0-9]/g, '_')}`;
                     const experiments = grouped[group];
                     const count = experiments.length;
+                    const iconOnlyCompletedGroupActions =
+                        statusFilter === EXP_STATUS.COMPLETED && getVisibleExperimentBoxCount() > 2;
                     
                     // Determine badge color
                     let badgeClass = '';
@@ -1097,15 +1116,15 @@
                     // Group header controls
                     const downloadBtn = statusFilter === EXP_STATUS.COMPLETED ? 
                         `<button onclick="event.stopPropagation(); downloadGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
-                                 class="download-group-btn"
+                                 class="download-group-btn ${iconOnlyCompletedGroupActions ? 'group-action-icononly' : ''}"
                                  title="Download all experiments in this group">
-                            <i class="mdi mdi-download"></i> Download Group
+                            <i class="mdi mdi-download"></i>${iconOnlyCompletedGroupActions ? '' : ' Download Group'}
                         </button>` : '';
                     const deleteBtn = statusFilter !== EXP_STATUS.ACTIVE ?
                         `<button onclick="event.stopPropagation(); deleteGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
-                                 class="delete-group-btn"
+                                 class="delete-group-btn ${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? 'group-action-icononly' : ''}"
                                  title="Delete all experiments in this group">
-                            <i class="mdi mdi-delete"></i> Delete Group
+                            <i class="mdi mdi-delete"></i>${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? '' : ' Delete Group'}
                         </button>` : '';
                     
                     // Determine if group should be collapsed by default (for completed and stopped)
