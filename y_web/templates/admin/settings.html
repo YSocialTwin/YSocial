@@ -256,6 +256,19 @@
     .download-group-btn:hover {
         background: #218838;
     }
+    .delete-group-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 2px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.7em;
+        margin-left: 6px;
+    }
+    .delete-group-btn:hover {
+        background: #c82333;
+    }
 </style>
 
 <div class="view-wrapper is-dashboard">
@@ -301,6 +314,11 @@
                                             title="Download all completed experiments as a ZIP file">
                                         <i class="mdi mdi-download-multiple"></i> Download All
                                     </button>
+                                    <button id="delete-all-completed-btn" onclick="deleteAllExperiments('completed', 'delete-all-completed-btn', 'completed')"
+                                            style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
+                                            title="Delete all completed experiments">
+                                        <i class="mdi mdi-delete-sweep"></i> Delete All
+                                    </button>
                                     <button id="download-selected-btn" onclick="downloadSelectedExperiments()" 
                                             style="background-color: #17a2b8; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem; display: none;"
                                             title="Download selected experiments as a ZIP file">
@@ -315,9 +333,16 @@
 
                         <!-- Stopped/Scheduled Experiments Section -->
                         <div id="box-stopped" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
-                                Stopped / Scheduled
+                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+                                <span style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
+                                    Stopped / Scheduled
+                                </span>
+                                <button id="delete-all-stopped-btn" onclick="deleteAllExperiments('stopped_scheduled', 'delete-all-stopped-btn', 'stopped/scheduled')"
+                                        style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
+                                        title="Delete all stopped/scheduled experiments">
+                                    <i class="mdi mdi-delete-sweep"></i> Delete All
+                                </button>
                             </h3>
                             <div class="box-content" style="flex: 1;">
                                 <div id="groups-stopped" class="experiment-groups"></div>
@@ -928,6 +953,91 @@
                 alert('Error downloading group experiments.');
             });
     }
+
+    function submitBulkDelete(expIds, buttonId, loadingText) {
+        if (!expIds || expIds.length === 0) {
+            alert('No experiments found to delete.');
+            return;
+        }
+
+        const btn = buttonId ? document.getElementById(buttonId) : null;
+        let originalText = null;
+        if (btn) {
+            originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="mdi mdi-loading mdi-spin"></i> ${loadingText}`;
+            btn.disabled = true;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/admin/delete_simulations_bulk';
+
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'exp_ids';
+        input.value = JSON.stringify(expIds);
+        form.appendChild(input);
+
+        document.body.appendChild(form);
+        form.submit();
+        document.body.removeChild(form);
+
+        if (btn) {
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }, 1500);
+        }
+    }
+
+    function deleteAllExperiments(statusFilter, buttonId, label) {
+        fetch(`/admin/experiments_data?exp_status=${statusFilter}&length=1000`)
+            .then(response => response.json())
+            .then(results => {
+                const expIds = (results.data || []).map(exp => exp.idexp);
+                if (expIds.length === 0) {
+                    alert(`No ${label} experiments found.`);
+                    return;
+                }
+
+                if (!confirm(`Delete all ${expIds.length} ${label} experiments? This action cannot be undone.`)) {
+                    return;
+                }
+
+                submitBulkDelete(expIds, buttonId, 'Deleting...');
+            })
+            .catch(error => {
+                console.error('Error deleting all experiments:', error);
+                alert('Error deleting experiments.');
+            });
+    }
+
+    // Function to delete all experiments from a group
+    function deleteGroupExperiments(groupName, statusFilter) {
+        fetch(`/admin/experiments_data?exp_status=${statusFilter}&length=1000`)
+            .then(response => response.json())
+            .then(results => {
+                const groupExps = results.data.filter(exp =>
+                    (exp.exp_group || 'No group') === groupName
+                );
+
+                if (groupExps.length === 0) {
+                    alert('No experiments found in this group.');
+                    return;
+                }
+
+                if (!confirm(`Delete all ${groupExps.length} experiments in group "${groupName}"? This action cannot be undone.`)) {
+                    return;
+                }
+
+                const expIds = groupExps.map(exp => exp.idexp);
+                submitBulkDelete(expIds, null, 'Deleting...');
+            })
+            .catch(error => {
+                console.error('Error deleting group:', error);
+                alert('Error deleting group experiments.');
+            });
+    }
     
     // Function to create grouped experiment display with pagination
     function createGroupedView(containerId, statusFilter, boxId) {
@@ -984,12 +1094,18 @@
                     if (statusFilter === EXP_STATUS.COMPLETED) badgeClass = 'completed';
                     else if (statusFilter === EXP_STATUS.STOPPED_SCHEDULED) badgeClass = 'stopped';
                     
-                    // Group header with download button for completed experiments
+                    // Group header controls
                     const downloadBtn = statusFilter === EXP_STATUS.COMPLETED ? 
                         `<button onclick="event.stopPropagation(); downloadGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
                                  class="download-group-btn"
                                  title="Download all experiments in this group">
                             <i class="mdi mdi-download"></i> Download Group
+                        </button>` : '';
+                    const deleteBtn = statusFilter !== EXP_STATUS.ACTIVE ?
+                        `<button onclick="event.stopPropagation(); deleteGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
+                                 class="delete-group-btn"
+                                 title="Delete all experiments in this group">
+                            <i class="mdi mdi-delete"></i> Delete Group
                         </button>` : '';
                     
                     // Determine if group should be collapsed by default (for completed and stopped)
@@ -1005,6 +1121,7 @@
                                     <span style="font-weight: 600; color: #333; font-size: 0.9em;">${group}</span>
                                     <span class="count-badge ${badgeClass}">${count}</span>
                                     ${downloadBtn}
+                                    ${deleteBtn}
                                 </div>
                                 <span style="font-size: 0.7em; color: #999;">Click to expand/collapse</span>
                             </div>

@@ -1912,8 +1912,24 @@ def create_experiment():
 @experiments.route("/admin/delete_simulation/<int:exp_id>")
 @login_required
 def delete_simulation(exp_id):
+    """Delete a single simulation."""
+    check_privileges(current_user.username)
+
+    deleted, error_message = _delete_simulation_internal(exp_id)
+    if not deleted and error_message:
+        flash(error_message, "warning")
+
+    return settings()
+
+
+def _delete_simulation_internal(exp_id):
+    """
+    Delete an experiment and related artifacts/records.
+
+    Returns:
+        tuple(bool, str|None): (deleted, error_message)
+    """
     # get the experiment
-    """Delete simulation."""
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if exp:
         # remove the experiment folder
@@ -2029,14 +2045,72 @@ def delete_simulation(exp_id):
 
         # delete jupyter instances
         instances = db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).all()
-        try:
-            stop_process(instances.process, instances.exp_id)
-        except Exception:
-            pass
+        for instance in instances:
+            try:
+                if getattr(instance, "process", None):
+                    stop_process(instance.process, instance.exp_id)
+            except Exception:
+                pass
         db.session.query(Jupyter_instances).filter_by(exp_id=exp_id).delete()
         db.session.commit()
 
-    return settings()
+        return True, None
+
+    return False, f"Experiment with id {exp_id} was not found."
+
+
+@experiments.route("/admin/delete_simulations_bulk", methods=["POST"])
+@login_required
+def delete_simulations_bulk():
+    """Delete multiple experiments selected from the experiment boxes."""
+    check_privileges(current_user.username)
+
+    exp_ids_json = request.form.get("exp_ids", "[]")
+    try:
+        exp_ids = json.loads(exp_ids_json)
+    except json.JSONDecodeError:
+        flash("Invalid experiment IDs provided.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    if not isinstance(exp_ids, list):
+        flash("Invalid experiment IDs payload.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    # Normalize to integers and de-duplicate while preserving order
+    normalized_ids = []
+    seen = set()
+    for eid in exp_ids:
+        try:
+            eid_int = int(eid)
+        except (TypeError, ValueError):
+            continue
+        if eid_int not in seen:
+            normalized_ids.append(eid_int)
+            seen.add(eid_int)
+
+    if not normalized_ids:
+        flash("No experiments selected for deletion.", "warning")
+        return redirect(url_for("experiments.settings"))
+
+    deleted_count = 0
+    failed_ids = []
+
+    for eid in normalized_ids:
+        deleted, _ = _delete_simulation_internal(eid)
+        if deleted:
+            deleted_count += 1
+        else:
+            failed_ids.append(eid)
+
+    if deleted_count:
+        flash(f"Deleted {deleted_count} experiment(s).", "success")
+    if failed_ids:
+        flash(
+            f"Failed to delete {len(failed_ids)} experiment(s): {', '.join(map(str, failed_ids[:10]))}",
+            "warning",
+        )
+
+    return redirect(url_for("experiments.settings"))
 
 
 @experiments.route("/admin/experiments_data")
