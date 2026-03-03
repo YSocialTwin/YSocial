@@ -957,6 +957,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         "perspective_api_key": perspective_api_key,
     }
 
+    # Tie churn/new-agents runtime toggles and probabilities to HPC form inputs.
+    # The form exposes daily percentages for both dynamics; zero means disabled.
+    churn_enabled = percentage_removed_agents_iteration > 0.0
+    new_agents_enabled = percentage_new_agents_iteration > 0.0
+
     # Build agents config
     agents_config = {
         "reading_from_follower_ratio": reading_from_follower_ratio,
@@ -973,15 +978,15 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         },
         "batch_size": batch_size,
         "churn": {
-            "enabled": True,
-            "churn_probability": 0.01,
+            "enabled": churn_enabled,
+            "churn_probability": percentage_removed_agents_iteration,
             "inactivity_threshold": 5,
-            "churn_percentage": 0.1,
+            "churn_percentage": percentage_removed_agents_iteration,
         },
         "new_agents": {
-            "enabled": True,
-            "probability_new_agents": 0.01,
-            "percentage_new_agents": 0.01,
+            "enabled": new_agents_enabled,
+            "probability_new_agents": percentage_new_agents_iteration,
+            "percentage_new_agents": percentage_new_agents_iteration,
         },
     }
 
