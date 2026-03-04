@@ -6,7 +6,16 @@ about page, and administrative functions for managing experiments, clients,
 and system status monitoring.
 """
 
-from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    current_app,
+    flash,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from flask_login import current_user, login_required
 
 from y_web.utils import (
@@ -33,7 +42,10 @@ from .utils import (
     get_db_server,
     get_db_type,
 )
-from .utils.experiment_access import get_visible_experiment_query, user_can_manage_experiment
+from .utils.experiment_access import (
+    get_visible_experiment_query,
+    user_can_manage_experiment,
+)
 
 admin = Blueprint("admin", __name__)
 

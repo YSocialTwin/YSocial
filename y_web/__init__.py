@@ -448,11 +448,15 @@ def create_app(db_type="sqlite", desktop_mode=False):
         try:
             if not current_user.is_authenticated:
                 return dict(active_experiments=[])
-            admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+            admin_user = Admin_users.query.filter_by(
+                username=current_user.username
+            ).first()
             if not admin_user:
                 return dict(active_experiments=[])
             if admin_user.role in ("admin", "researcher"):
-                active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
+                active_exps = (
+                    get_visible_experiment_query(admin_user).filter_by(status=1).all()
+                )
             else:
                 active_exps = Exps.query.filter_by(status=1).all()
             return dict(active_experiments=active_exps)
