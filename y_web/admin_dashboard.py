@@ -6,7 +6,7 @@ about page, and administrative functions for managing experiments, clients,
 and system status monitoring.
 """
 
-from flask import Blueprint, current_app, jsonify, render_template, request
+from flask import Blueprint, current_app, flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web.utils import (
@@ -33,6 +33,7 @@ from .utils import (
     get_db_server,
     get_db_type,
 )
+from .utils.experiment_access import get_visible_experiment_query, user_can_manage_experiment
 
 admin = Blueprint("admin", __name__)
 
@@ -100,13 +101,9 @@ def dashboard():
 
     llm_backend = llm_backend_status()
 
-    # Filter experiments based on user role
-    if user.role == "admin":
-        # Admin sees all experiments
-        all_experiments = Exps.query.all()
-    elif user.role == "researcher":
-        # Researcher sees only experiments they own
-        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    # Filter experiments based on user role + visibility grants
+    if user.role in ("admin", "researcher"):
+        all_experiments = get_visible_experiment_query(user).all()
     else:
         # Regular users should not access this page
         # They are redirected to their experiment feed
@@ -230,6 +227,9 @@ def dashboard():
     # Check if admin needs to see telemetry notice (first login)
     show_telemetry_notice = user.role == "admin" and not user.telemetry_notice_shown
 
+    def can_manage_experiment_for_current_user(experiment):
+        return user_can_manage_experiment(user, experiment)
+
     return render_template(
         "admin/dashboard.html",
         running_experiments=active_exps,
@@ -256,6 +256,7 @@ def dashboard():
         total_experiments=total_experiments,
         # Telemetry notice
         show_telemetry_notice=show_telemetry_notice,
+        can_manage_experiment=can_manage_experiment_for_current_user,
     )
 
 
@@ -283,11 +284,9 @@ def dashboard_experiments_by_status(status):
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 5, type=int)
 
-    # Filter experiments based on user role
-    if user.role == "admin":
-        all_experiments = Exps.query.all()
-    elif user.role == "researcher":
-        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    # Filter experiments based on role + visibility grants
+    if user.role in ("admin", "researcher"):
+        all_experiments = get_visible_experiment_query(user).all()
     else:
         return jsonify({"error": "Access denied"}), 403
 
@@ -343,6 +342,7 @@ def dashboard_experiments_by_status(status):
                 "simulator_type": (
                     exp.simulator_type if hasattr(exp, "simulator_type") else "Standard"
                 ),
+                "can_manage": user_can_manage_experiment(user, exp),
                 "clients": client_data,
             }
         )
@@ -370,11 +370,9 @@ def dashboard_status():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # Filter experiments based on user role
-    if user.role == "admin":
-        all_experiments = Exps.query.all()
-    elif user.role == "researcher":
-        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    # Filter experiments based on role + visibility grants
+    if user.role in ("admin", "researcher"):
+        all_experiments = get_visible_experiment_query(user).all()
     else:
         return jsonify({"error": "Access denied"}), 403
 

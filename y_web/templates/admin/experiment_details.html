@@ -109,9 +109,9 @@
                             </div>
                             <div class="box-line">
                                 <span class="left">Delete Experiment</span>
-                                <span class="right"> <a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
+                                <span class="right"> {% if can_manage_experiment %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
                                                         title="Delete"><i
-                                 class="mdi mdi-delete" style="font-size: 24px;"></i></a></span>
+                                 class="mdi mdi-delete" style="font-size: 24px;"></i></a>{% else %}<i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
                                 </div>
                             </div>
@@ -289,11 +289,11 @@
                                                 <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
                                             </a>
                                             {% endif %}
-                                            {% if experiment.running == 1 %}
+                                        {% if experiment.running == 1 and can_manage_experiment %}
                                             <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiment.idexp }}'); return false;" title="Stop Experiment">
                                                 <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
                                             </a>
-                                            {% endif %}
+                                        {% endif %}
                                             <a id="load-experiment-btn" class="link-tooltip" href="#" onclick="selectExperiment('{{ experiment.idexp }}'); return false;" title="Load Experiment">
                                                 <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
                                             </a>

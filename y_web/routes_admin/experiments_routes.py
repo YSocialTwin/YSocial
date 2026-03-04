@@ -94,6 +94,11 @@ from y_web.utils.miscellanea import (
     reload_current_user,
 )
 from y_web.utils.path_utils import get_resource_path
+from y_web.utils.experiment_access import (
+    get_visible_experiment_query,
+    user_can_manage_experiment,
+    user_can_view_experiment,
+)
 
 experiments = Blueprint("experiments", __name__)
 
@@ -143,6 +148,14 @@ def _sanitize_filename(name, fallback):
 def _current_admin_user():
     """Resolve current authenticated admin user record."""
     return Admin_users.query.filter_by(username=current_user.username).first()
+
+
+def _current_admin_user_or_none():
+    """Resolve current admin user or None if unavailable."""
+    try:
+        return _current_admin_user()
+    except Exception:
+        return None
 
 
 def _notifications_temp_data_dir():
@@ -338,17 +351,11 @@ def settings():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # Filter experiments based on user role
-    if user.role == "admin":
-        # Admin sees all experiments (limit 5 for initial display)
-        experiments = Exps.query.limit(5).all()
-        # All experiments for copy dropdown (no limit)
-        all_experiments = Exps.query.all()
-    elif user.role == "researcher":
-        # Researcher sees only experiments they own (limit 5 for initial display)
-        experiments = Exps.query.filter_by(owner=user.username).limit(5).all()
-        # All experiments owned by researcher for copy dropdown (no limit)
-        all_experiments = Exps.query.filter_by(owner=user.username).all()
+    # Filter experiments based on role + visibility grants
+    if user.role in ("admin", "researcher"):
+        visible_query = get_visible_experiment_query(user)
+        experiments = visible_query.limit(5).all()
+        all_experiments = visible_query.all()
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
@@ -409,6 +416,265 @@ def settings():
     )
 
 
+@experiments.route("/admin/visibility_settings", methods=["GET"])
+@login_required
+def visibility_settings():
+    """Configure experiment/group visibility for researcher users."""
+    check_privileges(current_user.username)
+    user = _current_admin_user_or_none()
+    role = (user.role or "").strip().lower() if user else ""
+    is_admin = role == "admin"
+    is_researcher = role == "researcher"
+    if not user or (not is_admin and not is_researcher):
+        flash("Access denied.", "error")
+        return redirect(url_for("admin.dashboard"))
+
+    if is_admin:
+        manageable_experiments = Exps.query.order_by(Exps.exp_name.asc()).all()
+    else:
+        manageable_experiments = (
+            Exps.query.filter_by(owner=user.username).order_by(Exps.exp_name.asc()).all()
+        )
+
+    researcher_users = (
+        Admin_users.query.filter_by(role="researcher")
+        .order_by(Admin_users.username.asc())
+        .all()
+    )
+
+    group_names = sorted(
+        {
+            exp.exp_group.strip()
+            for exp in manageable_experiments
+            if exp.exp_group and exp.exp_group.strip()
+        }
+    )
+
+    shared_rows = (
+        db.session.query(User_Experiment, Admin_users, Exps)
+        .join(Admin_users, Admin_users.id == User_Experiment.user_id)
+        .join(Exps, Exps.idexp == User_Experiment.exp_id)
+        .filter(Admin_users.role == "researcher")
+    )
+    if not is_admin:
+        shared_rows = shared_rows.filter(Exps.owner == user.username)
+    shared_rows = shared_rows.order_by(Exps.exp_name.asc(), Admin_users.username.asc()).all()
+
+    return render_template(
+        "admin/visibility_settings.html",
+        manageable_experiments=manageable_experiments,
+        researcher_users=researcher_users,
+        group_names=group_names,
+        shared_rows=shared_rows,
+        current_admin_user=user,
+    )
+
+
+def _get_selected_researcher_ids():
+    """Parse and validate selected researcher IDs from form payload."""
+    selected_ids = []
+    for uid in request.form.getlist("researcher_ids"):
+        try:
+            selected_ids.append(int(uid))
+        except (TypeError, ValueError):
+            continue
+    if not selected_ids:
+        return []
+
+    valid_users = (
+        Admin_users.query.filter(Admin_users.id.in_(selected_ids))
+        .filter(Admin_users.role == "researcher")
+        .all()
+    )
+    return [u.id for u in valid_users]
+
+
+@experiments.route("/admin/visibility_settings/experiment", methods=["POST"])
+@login_required
+def visibility_settings_add_experiment():
+    """Grant or revoke visibility/management for a single experiment to selected researchers."""
+    check_privileges(current_user.username)
+    user = _current_admin_user_or_none()
+    if not user:
+        flash("Invalid user session.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+    is_admin = (user.role or "").strip().lower() == "admin"
+
+    exp_id = request.form.get("exp_id", type=int)
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    if not is_admin and experiment.owner != user.username:
+        flash("You can only share experiments you own.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    action = (request.form.get("action") or "grant").strip().lower()
+    if action not in ("grant", "revoke"):
+        action = "grant"
+
+    researcher_ids = _get_selected_researcher_ids()
+    if not researcher_ids:
+        flash("Select at least one researcher user.", "warning")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    changed = 0
+    if action == "grant":
+        newly_granted_user_ids = []
+        for researcher_id in researcher_ids:
+            existing = User_Experiment.query.filter_by(
+                user_id=researcher_id, exp_id=experiment.idexp
+            ).first()
+            if existing:
+                continue
+            db.session.add(User_Experiment(user_id=researcher_id, exp_id=experiment.idexp))
+            changed += 1
+            newly_granted_user_ids.append(researcher_id)
+
+        for researcher_id in newly_granted_user_ids:
+            _enqueue_user_notification(
+                researcher_id,
+                title=f"Experiment shared: {experiment.exp_name}",
+                message=f"{user.username} granted you visibility to experiment '{experiment.exp_name}'.",
+                status="ready",
+                related_exp_ids=[experiment.idexp],
+            )
+        success_msg = (
+            f"Granted access to {changed} researcher(s) for experiment '{experiment.exp_name}'."
+        )
+    else:
+        deleted_count = (
+            User_Experiment.query.filter(User_Experiment.exp_id == experiment.idexp)
+            .filter(User_Experiment.user_id.in_(researcher_ids))
+            .delete(synchronize_session=False)
+        )
+        changed = int(deleted_count or 0)
+        success_msg = (
+            f"Revoked access for {changed} researcher(s) from experiment '{experiment.exp_name}'."
+        )
+
+    db.session.commit()
+    flash(success_msg, "success")
+    return redirect(url_for("experiments.visibility_settings"))
+
+
+@experiments.route("/admin/visibility_settings/group", methods=["POST"])
+@login_required
+def visibility_settings_add_group():
+    """Grant or revoke visibility/management for all experiments in a group to selected researchers."""
+    check_privileges(current_user.username)
+    user = _current_admin_user_or_none()
+    if not user:
+        flash("Invalid user session.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+    is_admin = (user.role or "").strip().lower() == "admin"
+
+    group_name = (request.form.get("group_name") or "").strip()
+    if not group_name:
+        flash("Select a valid group.", "warning")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    experiments_query = Exps.query.filter(Exps.exp_group == group_name)
+    if not is_admin:
+        experiments_query = experiments_query.filter(Exps.owner == user.username)
+    group_experiments = experiments_query.all()
+
+    if not group_experiments:
+        flash("No experiments found in the selected group.", "warning")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    action = (request.form.get("action") or "grant").strip().lower()
+    if action not in ("grant", "revoke"):
+        action = "grant"
+
+    researcher_ids = _get_selected_researcher_ids()
+    if not researcher_ids:
+        flash("Select at least one researcher user.", "warning")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    changed = 0
+    if action == "grant":
+        newly_granted_group_users = set()
+        for researcher_id in researcher_ids:
+            user_got_new_visibility = False
+            for exp in group_experiments:
+                existing = User_Experiment.query.filter_by(
+                    user_id=researcher_id, exp_id=exp.idexp
+                ).first()
+                if existing:
+                    continue
+                db.session.add(User_Experiment(user_id=researcher_id, exp_id=exp.idexp))
+                changed += 1
+                user_got_new_visibility = True
+            if user_got_new_visibility:
+                newly_granted_group_users.add(researcher_id)
+
+        for researcher_id in newly_granted_group_users:
+            _enqueue_user_notification(
+                researcher_id,
+                title=f"Experiment group shared: {group_name}",
+                message=f"{user.username} granted you visibility to group '{group_name}'.",
+                status="ready",
+            )
+        success_msg = (
+            f"Granted group '{group_name}' visibility to selected researchers ({changed} new assignment(s))."
+        )
+    else:
+        group_exp_ids = [exp.idexp for exp in group_experiments]
+        deleted_count = (
+            User_Experiment.query.filter(User_Experiment.exp_id.in_(group_exp_ids))
+            .filter(User_Experiment.user_id.in_(researcher_ids))
+            .delete(synchronize_session=False)
+        )
+        changed = int(deleted_count or 0)
+        success_msg = (
+            f"Revoked group '{group_name}' visibility from selected researchers ({changed} assignment(s) removed)."
+        )
+
+    db.session.commit()
+    flash(success_msg, "success")
+    return redirect(url_for("experiments.visibility_settings"))
+
+
+@experiments.route("/admin/visibility_settings/revoke_assignment", methods=["POST"])
+@login_required
+def visibility_settings_revoke_assignment():
+    """Revoke visibility for one specific experiment/researcher assignment."""
+    check_privileges(current_user.username)
+    user = _current_admin_user_or_none()
+    if not user:
+        flash("Invalid user session.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+    is_admin = (user.role or "").strip().lower() == "admin"
+
+    exp_id = request.form.get("exp_id", type=int)
+    researcher_id = request.form.get("researcher_id", type=int)
+    if not exp_id or not researcher_id:
+        flash("Invalid revoke request.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    experiment = Exps.query.filter_by(idexp=exp_id).first()
+    if not experiment:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+    if not is_admin and experiment.owner != user.username:
+        flash("You can only revoke visibility for experiments you own.", "error")
+        return redirect(url_for("experiments.visibility_settings"))
+
+    deleted_count = (
+        User_Experiment.query.filter_by(user_id=researcher_id, exp_id=exp_id).delete(
+            synchronize_session=False
+        )
+    )
+    db.session.commit()
+    if deleted_count:
+        flash("Visibility assignment revoked.", "success")
+    else:
+        flash("No matching visibility assignment found.", "warning")
+    return redirect(url_for("experiments.visibility_settings"))
+
+
 @experiments.route("/admin/join_simulation")
 @login_required
 def join_simulation():
@@ -418,8 +684,13 @@ def join_simulation():
     If only one experiment is active, redirect directly.
     If multiple experiments are active, show selection menu.
     """
-    # Get all active experiments
-    active_exps = Exps.query.filter_by(status=1).all()
+    admin_user = _current_admin_user_or_none()
+    if not admin_user:
+        flash("Unable to resolve current user.")
+        return redirect(url_for("experiments.settings"))
+
+    # Get visible active experiments
+    active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
 
     if not active_exps:
         flash("No active experiment. Please activate an experiment first.")
@@ -454,6 +725,11 @@ def join_experiment(exp_id):
     exp = Exps.query.filter_by(idexp=exp_id, status=1).first()
     if exp is None:
         flash("Experiment not found or not active.")
+        return redirect("/admin/experiments")
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_view_experiment(admin_user, exp):
+        flash("You are not allowed to access this experiment.", "error")
         return redirect("/admin/experiments")
 
     # Get user id - need to check in the experiment database
@@ -516,6 +792,11 @@ def change_active_experiment(exp_id):
     if not exp:
         flash("Experiment not found.")
         return redirect(request.referrer)
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_view_experiment(admin_user, exp):
+        flash("You are not allowed to access this experiment.", "error")
+        return redirect(url_for("experiments.settings"))
 
     # Toggle experiment status
     if exp.status == 1:
@@ -2037,6 +2318,11 @@ def create_experiment():
 def delete_simulation(exp_id):
     """Delete a single simulation."""
     check_privileges(current_user.username)
+    admin_user = _current_admin_user_or_none()
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+    if exp and not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to delete this experiment.", "error")
+        return settings()
 
     deleted, error_message = _delete_simulation_internal(exp_id)
     if not deleted and error_message:
@@ -2203,8 +2489,13 @@ def delete_simulations_bulk():
 
     deleted_count = 0
     failed_ids = []
+    admin_user = _current_admin_user_or_none()
 
     for eid in normalized_ids:
+        exp = Exps.query.filter_by(idexp=eid).first()
+        if exp and not user_can_manage_experiment(admin_user, exp):
+            failed_ids.append(eid)
+            continue
         deleted, _ = _delete_simulation_internal(eid)
         if deleted:
             deleted_count += 1
@@ -2237,12 +2528,9 @@ def experiments_data():
     # Get current user
     user = Admin_users.query.filter_by(username=current_user.username).first()
 
-    # Filter experiments based on user role
-    if user.role == "admin":
-        query = Exps.query
-    elif user.role == "researcher":
-        # Researcher sees only experiments they own
-        query = Exps.query.filter_by(owner=user.username)
+    # Filter experiments based on role + visibility grants
+    if user.role in ("admin", "researcher"):
+        query = get_visible_experiment_query(user)
     else:
         # Regular users should not access this endpoint
         return {"data": [], "total": 0}
@@ -2373,6 +2661,7 @@ def experiments_data():
                 "exp_group": exp.exp_group if exp.exp_group else "No group",
                 "simulator_type": getattr(exp, "simulator_type", "Standard"),
                 "is_remote": getattr(exp, "is_remote", 0),
+                "can_manage": user_can_manage_experiment(user, exp),
             }
             for exp in res
         ],
@@ -2396,7 +2685,7 @@ def experiment_clients(exp_id):
 
         # Check user permissions
         user = Admin_users.query.filter_by(username=current_user.username).first()
-        if user.role == "researcher" and experiment.owner != user.username:
+        if not user_can_view_experiment(user, experiment):
             return jsonify({"error": "Access denied"}), 403
 
         # Import log metrics function and path utilities
@@ -2512,6 +2801,10 @@ def experiment_details(uid):
 
     # get experiment details
     experiment = Exps.query.filter_by(idexp=uid).first()
+    admin_user = _current_admin_user_or_none()
+    if not user_can_view_experiment(admin_user, experiment):
+        flash("You are not allowed to view this experiment.", "error")
+        return redirect(url_for("experiments.settings"))
 
     # get experiment populations along with population names and ids
     experiment_populations = (
@@ -2568,6 +2861,7 @@ def experiment_details(uid):
         jupyter_instance=jupyter_instance,
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
         telemetry_enabled=telemetry_enabled,
+        can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
     )
 
 
@@ -3266,6 +3560,10 @@ def start_experiment(uid):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=uid).first()
+    admin_user = _current_admin_user_or_none()
+    if not user_can_view_experiment(admin_user, exp):
+        flash("You are not allowed to start this experiment.", "error")
+        return redirect(url_for("experiments.settings"))
 
     # check if the experiment is already running
     if exp.running == 1:
@@ -3304,6 +3602,10 @@ def stop_experiment(uid):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=uid).first()
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to stop this experiment.", "error")
+        return redirect(url_for("experiments.settings"))
 
     # check if the experiment is already running
     if exp.running == 0:
@@ -3753,6 +4055,23 @@ def _create_download_notification(user_id, title, message):
     )
     db.session.add(notification)
     db.session.commit()
+    return notification
+
+
+def _enqueue_user_notification(
+    user_id, title, message, status="ready", related_exp_ids=None
+):
+    """Queue a generic user notification record in current transaction."""
+    if related_exp_ids:
+        message = _inject_related_experiment_ids(message, related_exp_ids)
+    notification = DownloadNotification(
+        user_id=user_id,
+        title=title,
+        message=message,
+        status=status,
+        is_read=False,
+    )
+    db.session.add(notification)
     return notification
 
 

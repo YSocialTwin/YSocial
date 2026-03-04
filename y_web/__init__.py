@@ -440,10 +440,21 @@ def create_app(db_type="sqlite", desktop_mode=False):
     @app.context_processor
     def inject_active_experiments():
         """Inject active experiments into all admin templates."""
-        from .models import Exps
+        from flask_login import current_user
+
+        from .models import Admin_users, Exps
+        from .utils.experiment_access import get_visible_experiment_query
 
         try:
-            active_exps = Exps.query.filter_by(status=1).all()
+            if not current_user.is_authenticated:
+                return dict(active_experiments=[])
+            admin_user = Admin_users.query.filter_by(username=current_user.username).first()
+            if not admin_user:
+                return dict(active_experiments=[])
+            if admin_user.role in ("admin", "researcher"):
+                active_exps = get_visible_experiment_query(admin_user).filter_by(status=1).all()
+            else:
+                active_exps = Exps.query.filter_by(status=1).all()
             return dict(active_experiments=active_exps)
         except Exception:
             return dict(active_experiments=[])

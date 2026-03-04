@@ -69,6 +69,40 @@
         justify-content: space-between;
         align-items: center;
         transition: all 0.2s;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .group-header-main {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+    .group-header-title {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.9em;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .group-header-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 100%;
+    }
+    .group-header-actions:empty {
+        display: none;
+    }
+    .group-header-hint {
+        font-size: 0.7em;
+        color: #999;
+        white-space: nowrap;
     }
     .group-header:hover {
         background: #e9ecef;
@@ -104,11 +138,17 @@
         align-items: center;
         gap: 8px;
         flex: 1;
+        min-width: 0;
+        flex-wrap: wrap;
     }
     .exp-item-name {
         color: #0d95e8;
         font-weight: 600;
         font-size: 0.9em;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
     .exp-tag {
         display: inline-block;
@@ -279,6 +319,58 @@
         justify-content: center;
         font-size: 0.95em;
     }
+    .exp-action-btn .exp-btn-label,
+    .download-group-btn .group-btn-label,
+    .delete-group-btn .group-btn-label,
+    .box-action-link .action-text {
+        display: inline;
+    }
+    @media (max-width: 1024px) {
+        .exp-action-btn {
+            width: 28px;
+            min-width: 28px;
+            height: 28px;
+            padding: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em !important;
+        }
+        .exp-action-btn .exp-btn-label,
+        .download-group-btn .group-btn-label,
+        .delete-group-btn .group-btn-label,
+        .box-action-link .action-text {
+            display: none !important;
+        }
+        .download-group-btn,
+        .delete-group-btn {
+            width: 24px;
+            min-width: 24px;
+            height: 24px;
+            padding: 0 !important;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 6px;
+        }
+        .group-header-hint {
+            display: none !important;
+        }
+        .group-header {
+            padding: 8px 10px;
+        }
+        .group-header-main {
+            min-width: 0;
+        }
+        .group-header-actions {
+            width: 100%;
+            justify-content: flex-start;
+            gap: 4px;
+        }
+        .exp-item-name {
+            max-width: 150px;
+        }
+    }
 </style>
 
 <div class="view-wrapper is-dashboard">
@@ -319,20 +411,20 @@
                                     Completed
                                 </span>
                                 <span style="display: flex; gap: 8px;">
-                                    <button id="download-all-btn" onclick="downloadAllExperiments()" 
+                                    <button id="download-all-btn" onclick="downloadAllExperiments()" class="exp-action-btn"
                                             style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
                                             title="Download all completed experiments as a ZIP file">
-                                        <i class="mdi mdi-download-multiple"></i> Download All
+                                        <i class="mdi mdi-download-multiple"></i><span class="exp-btn-label"> Download All</span>
                                     </button>
-                                    <button id="delete-all-completed-btn" onclick="deleteAllExperiments('completed', 'delete-all-completed-btn', 'completed')"
+                                    <button id="delete-all-completed-btn" onclick="deleteAllExperiments('completed', 'delete-all-completed-btn', 'completed')" class="exp-action-btn"
                                             style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
                                             title="Delete all completed experiments">
-                                        <i class="mdi mdi-delete-sweep"></i> Delete All
+                                        <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
                                     </button>
-                                    <button id="download-selected-btn" onclick="downloadSelectedExperiments()" 
+                                    <button id="download-selected-btn" onclick="downloadSelectedExperiments()" class="exp-action-btn"
                                             style="background-color: #17a2b8; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem; display: none;"
                                             title="Download selected experiments as a ZIP file">
-                                        <i class="mdi mdi-download"></i> Download Selected
+                                        <i class="mdi mdi-download"></i><span class="exp-btn-label"> Download Selected</span>
                                     </button>
                                 </span>
                             </h3>
@@ -348,10 +440,10 @@
                                     <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
                                     Stopped / Scheduled
                                 </span>
-                                <button id="delete-all-stopped-btn" onclick="deleteAllExperiments('stopped_scheduled', 'delete-all-stopped-btn', 'stopped/scheduled')"
+                                <button id="delete-all-stopped-btn" onclick="deleteAllExperiments('stopped_scheduled', 'delete-all-stopped-btn', 'stopped/scheduled')" class="exp-action-btn"
                                         style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
                                         title="Delete all stopped/scheduled experiments">
-                                    <i class="mdi mdi-delete-sweep"></i> Delete All
+                                    <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
                                 </button>
                             </h3>
                             <div class="box-content" style="flex: 1;">
@@ -565,13 +657,13 @@
                     const id = row.cells[0].data;
                     return gridjs.html(`
                         <div style="display: flex; flex-direction: column; gap: 3px; align-items: center;">
-                            <a href="/admin/experiment_details/${id}"
+                            <a href="/admin/experiment_details/${id}" class="box-action-link"
                                style="background-color: #28a745; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                View
+                                <i class="mdi mdi-open-in-new"></i><span class="action-text"> View</span>
                             </a>
-                            <a href="/admin/delete_simulation/${id}"
+                            <a href="/admin/delete_simulation/${id}" class="box-action-link"
                                style="background-color: #dc3545; color: white; padding: 3px 6px; border-radius: 3px; text-decoration: none; font-size: 0.7rem; width: 100%; text-align: center;">
-                                Delete
+                                <i class="mdi mdi-delete"></i><span class="action-text"> Delete</span>
                             </a>
                         </div>
                     `);
@@ -685,7 +777,7 @@
         if (btn) {
             if (selectedExperiments.size > 0) {
                 btn.style.display = 'inline-block';
-                btn.innerHTML = `<i class="mdi mdi-download"></i> Download Selected (${selectedExperiments.size})`;
+                btn.innerHTML = `<i class="mdi mdi-download"></i><span class="exp-btn-label"> Download Selected (${selectedExperiments.size})</span>`;
             } else {
                 btn.style.display = 'none';
             }
@@ -742,7 +834,7 @@
         // Show loading indicator
         const btn = document.getElementById('download-selected-btn');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Preparing...';
+        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> Preparing...</span>';
         btn.disabled = true;
 
         // Submit a form to download (to properly handle file download)
@@ -772,7 +864,7 @@
         // Show loading indicator
         const btn = document.getElementById('download-all-btn');
         const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Preparing...';
+        btn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i><span class="exp-btn-label"> Preparing...</span>';
         btn.disabled = true;
 
         // Submit a form to download all (empty array or 'all' signal to backend)
@@ -1118,13 +1210,13 @@
                         `<button onclick="event.stopPropagation(); downloadGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
                                  class="download-group-btn ${iconOnlyCompletedGroupActions ? 'group-action-icononly' : ''}"
                                  title="Download all experiments in this group">
-                            <i class="mdi mdi-download"></i>${iconOnlyCompletedGroupActions ? '' : ' Download Group'}
+                            <i class="mdi mdi-download"></i><span class="group-btn-label">${iconOnlyCompletedGroupActions ? '' : ' Download Group'}</span>
                         </button>` : '';
                     const deleteBtn = statusFilter !== EXP_STATUS.ACTIVE ?
                         `<button onclick="event.stopPropagation(); deleteGroupExperiments('${group.replace(/'/g, "\\'")}', '${statusFilter}')" 
                                  class="delete-group-btn ${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? 'group-action-icononly' : ''}"
                                  title="Delete all experiments in this group">
-                            <i class="mdi mdi-delete"></i>${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? '' : ' Delete Group'}
+                            <i class="mdi mdi-delete"></i><span class="group-btn-label">${iconOnlyCompletedGroupActions && statusFilter === EXP_STATUS.COMPLETED ? '' : ' Delete Group'}</span>
                         </button>` : '';
                     
                     // Determine if group should be collapsed by default (for completed and stopped)
@@ -1135,14 +1227,13 @@
                         <div class="experiment-group">
                             <div class="group-header" onclick="toggleGroup('${groupId}')" 
                                  style="border-left: 3px solid ${statusFilter === EXP_STATUS.ACTIVE ? '#28a745' : statusFilter === EXP_STATUS.COMPLETED ? '#17a2b8' : '#6c757d'}">
-                                <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="group-header-main">
                                     <i class="mdi mdi-chevron-down chevron${collapsedClass}" id="chevron-${groupId}"></i>
-                                    <span style="font-weight: 600; color: #333; font-size: 0.9em;">${group}</span>
+                                    <span class="group-header-title">${group}</span>
                                     <span class="count-badge ${badgeClass}">${count}</span>
-                                    ${downloadBtn}
-                                    ${deleteBtn}
                                 </div>
-                                <span style="font-size: 0.7em; color: #999;">Click to expand/collapse</span>
+                                <div class="group-header-actions">${downloadBtn}${deleteBtn}</div>
+                                <span class="group-header-hint">Click to expand/collapse</span>
                             </div>
                             <div id="content-${groupId}" class="group-content${collapsedClass}">
                     `;
@@ -1168,9 +1259,9 @@
                                         ${exp.has_infinite_client ? '<span class="exp-tag infinite">∞</span>' : ''}
                                         ${statusFilter === EXP_STATUS.ACTIVE && exp.progress !== undefined ? `<span class="exp-tag" style="background: #039be5;">${exp.progress}%</span>` : ''}
                                     </div>
-                                    <div style="display: flex; gap: 4px;">
+                                    <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; max-width: 100%;">
                                         ${exp.running === 'Running' ? 
-                                            `<a href="#" onclick="stopExperimentServer(${exp.idexp}); return false;" title="Stop Server"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>` : 
+                                            (exp.can_manage ? `<a href="#" onclick="stopExperimentServer(${exp.idexp}); return false;" title="Stop Server"><i class="mdi mdi-stop" style="font-size: 18px; color: #dc3545;"></i></a>` : '') : 
                                             `<a href="#" onclick="startExperimentServer(${exp.idexp}); return false;" title="Start Server"><i class="mdi mdi-play-box-outline" style="font-size: 18px; color: #28a745;"></i></a>`
                                         }
                                         ${exp.web === 'Loaded' ? 
@@ -1178,7 +1269,7 @@
                                             `<a href="/admin/select_experiment/${exp.idexp}" title="Load Web Interface"><i class="mdi mdi-select-all" style="font-size: 18px; color: #6c757d;"></i></a>`
                                         }
                                         <a href="/admin/experiment_details/${exp.idexp}" title="View Details"><i class="mdi mdi-open-in-new" style="font-size: 18px; color: #039be5;"></i></a>
-                                        <a href="/admin/delete_simulation/${exp.idexp}" onclick="return confirm('Delete this experiment?')" title="Delete"><i class="mdi mdi-delete" style="font-size: 18px; color: #dc3545;"></i></a>
+                                        ${exp.can_manage ? `<a href="/admin/delete_simulation/${exp.idexp}" onclick="return confirm('Delete this experiment?')" title="Delete"><i class="mdi mdi-delete" style="font-size: 18px; color: #dc3545;"></i></a>` : ''}
                                     </div>
                                 </div>
                                 ${statusFilter === EXP_STATUS.ACTIVE ? `<div id="progress-section-${exp.idexp}" class="client-progress-section" style="display: none;"></div>` : ''}

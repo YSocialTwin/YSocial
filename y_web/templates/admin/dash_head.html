@@ -280,6 +280,9 @@ function dismissBlogPost(postId) {
                             My Profile
                         </a>
                         {% endif %}
+                        <a class="dropdown-item" href="/admin/visibility_settings">
+                            Share Experiments
+                        </a>
                         <a class="dropdown-item" href="/logout">
                             Log Out
                         </a>
@@ -378,6 +381,27 @@ async function refreshDownloadNotifications() {
 document.addEventListener('DOMContentLoaded', () => {
     refreshDownloadNotifications();
     setInterval(refreshDownloadNotifications, 15000);
+
+    // On touch/tablet layouts, make header dropdowns tap-open (hover is unreliable).
+    if (window.matchMedia('(max-width: 1024px)').matches) {
+        const menus = document.querySelectorAll('.dashboard-toolbar .header-buttons .toolbar-menu');
+        menus.forEach((menu) => {
+            const trigger = menu.querySelector('.dropdown-trigger > button');
+            if (!trigger) return;
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                const shouldOpen = !menu.classList.contains('is-active');
+                menus.forEach((m) => m.classList.remove('is-active'));
+                if (shouldOpen) {
+                    menu.classList.add('is-active');
+                }
+            });
+        });
+        document.addEventListener('click', () => {
+            menus.forEach((m) => m.classList.remove('is-active'));
+        });
+    }
 });
 </script>
 
@@ -537,7 +561,7 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 /* Mobile header button styles */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
     .dashboard-toolbar {
         flex-wrap: wrap;
         padding: 10px 15px;
@@ -555,30 +579,35 @@ document.addEventListener('DOMContentLoaded', () => {
         gap: 6px;
         width: 100%;
         justify-content: flex-end;
-        overflow-x: auto;
+        overflow: visible;
     }
     
+    .dashboard-toolbar .header-buttons .btn-text {
+        display: none;
+    }
+
     .dashboard-toolbar .header-buttons .button {
-        padding: 6px 10px;
+        padding: 8px;
         font-size: 0.8em;
         white-space: nowrap;
         flex-shrink: 0;
+        min-width: 40px;
     }
     
     .dashboard-toolbar .header-buttons .button svg {
         width: 16px;
         height: 16px;
     }
-    
-    /* Hide button text on very small screens, show only icons */
-    @media screen and (max-width: 480px) {
-        .dashboard-toolbar .header-buttons .btn-text {
-            display: none;
-        }
-        
-        .dashboard-toolbar .header-buttons .button {
-            padding: 8px;
-        }
+
+    .dashboard-toolbar .header-buttons .toolbar-menu .dropdown-menu {
+        right: 0 !important;
+        left: auto !important;
+        width: min(280px, calc(100vw - 18px)) !important;
+        min-width: 210px !important;
+    }
+
+    .dashboard-toolbar .header-buttons .toolbar-menu.is-active .dropdown-menu {
+        display: block;
     }
 }
 </style>
