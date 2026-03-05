@@ -94,6 +94,10 @@ from y_web.utils.miscellanea import (
     reload_current_user,
 )
 from y_web.utils.path_utils import get_resource_path
+from y_web.utils.hpc_population_backup import (
+    backup_population_for_hpc_client,
+    restore_population_for_hpc_client,
+)
 from y_web.utils.experiment_access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -1801,6 +1805,7 @@ def generate_standard_config(
     sentiment_annotation,
     emotion_annotation,
     opinions_enabled,
+    opinion_dynamics_enabled,
     db_uri,
     topics,
     data_path,
@@ -1821,6 +1826,7 @@ def generate_standard_config(
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "opinions_enabled": opinions_enabled,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
@@ -1843,6 +1849,8 @@ def generate_hpc_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
+    opinions_enabled,
+    opinion_dynamics_enabled,
     topics,
     data_path,
     db_config_dict=None,
@@ -1926,6 +1934,8 @@ def generate_hpc_config(
         "perspective_api": perspective_api,
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
+        "opinions_enabled": opinions_enabled,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
@@ -2186,6 +2196,8 @@ def create_experiment():
             ),
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
+            opinions_enabled=opinions_enabled,
+            opinion_dynamics_enabled=opinions_enabled,
             topics=topics,
             data_path=data_path,
             db_config_dict=db_config_dict,
@@ -2206,6 +2218,7 @@ def create_experiment():
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
             opinions_enabled=opinions_enabled,
+            opinion_dynamics_enabled=opinions_enabled,
             db_uri=db_uri,
             topics=topics,
             data_path=data_path,
@@ -2831,6 +2844,18 @@ def experiment_details(uid):
         # Client has been run at least once if execution exists and elapsed_time > 0
         client_executions[client.id] = execution and execution.elapsed_time > 0
 
+    # HPC reset is allowed only for stopped experiments that have already started once.
+    has_started_once = (
+        any(client_executions.values())
+        or ServerLogMetrics.query.filter_by(exp_id=uid).first() is not None
+        or ClientLogMetrics.query.filter_by(exp_id=uid).first() is not None
+    )
+    hpc_reset_available = (
+        experiment.simulator_type == "HPC"
+        and experiment.running == 0
+        and has_started_once
+    )
+
     # Check if any client has infinite duration (days = -1)
     has_infinite_client = any(client.days == -1 for client in clients)
 
@@ -2849,6 +2874,36 @@ def experiment_details(uid):
     # User is already authenticated due to @login_required decorator
     telemetry_enabled = getattr(current_user, "telemetry_enabled", True)
 
+    # Load current server config to expose toggle values/editable fields in UI.
+    current_perspective_api = ""
+    opinion_dynamics_enabled = False
+    try:
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE_DIR = get_writable_path()
+        exp_folder = _get_experiment_folder(BASE_DIR, experiment, _get_database_type())
+        cfg_name = (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        )
+        cfg_path = os.path.join(exp_folder, cfg_name)
+        if os.path.exists(cfg_path):
+            with open(cfg_path, "r") as f:
+                config = json.load(f)
+            current_perspective_api = (config.get("perspective_api") or "").strip()
+            opinion_dynamics_enabled = bool(
+                config.get(
+                    "opinion_dynamics_enabled",
+                    bool(experiment.annotations and "opinions" in experiment.annotations),
+                )
+            )
+    except Exception:
+        current_perspective_api = ""
+        opinion_dynamics_enabled = bool(
+            experiment.annotations and "opinions" in experiment.annotations
+        )
+
     return render_template(
         "admin/experiment_details.html",
         experiment=experiment,
@@ -2862,7 +2917,355 @@ def experiment_details(uid):
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
         telemetry_enabled=telemetry_enabled,
         can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
+        current_perspective_api=current_perspective_api,
+        opinion_dynamics_enabled=opinion_dynamics_enabled,
+        hpc_reset_available=hpc_reset_available,
     )
+
+
+@experiments.route("/admin/update_experiment_config/<int:uid>", methods=["POST"])
+@login_required
+def update_experiment_config(uid):
+    """Update annotation toggles for an experiment and persist to server config JSON."""
+    check_privileges(current_user.username)
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to update this experiment.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    def _is_checked(field_name):
+        return str(request.form.get(field_name, "")).strip().lower() in (
+            "on",
+            "true",
+            "1",
+            "yes",
+        )
+
+    emotion_enabled = _is_checked("emotion_annotation")
+    toxicity_enabled = _is_checked("toxicity_annotation")
+    sentiment_enabled = _is_checked("sentiment_annotation")
+    opinion_dynamics_enabled = _is_checked("opinion_dynamics_enabled")
+    perspective_api = (request.form.get("perspective_api") or "").strip()
+    llm_agents_enabled = bool(getattr(exp, "llm_agents_enabled", 0))
+    if not llm_agents_enabled:
+        # Rule-based experiments cannot use these annotation pipelines.
+        emotion_enabled = False
+        toxicity_enabled = False
+        sentiment_enabled = False
+        perspective_api = ""
+    # Opinion dynamics toggle controls opinion-annotation runtime support.
+    opinions_enabled = opinion_dynamics_enabled
+
+    # Update Exps.annotations while preserving unrelated flags (e.g., sentiment).
+    existing = [a.strip() for a in (exp.annotations or "").split(",") if a.strip()]
+    annotation_set = set(existing)
+    for key, enabled in (
+        ("emotion", emotion_enabled),
+        ("toxicity", toxicity_enabled),
+        ("sentiment", sentiment_enabled),
+        ("opinions", opinions_enabled),
+    ):
+        if enabled:
+            annotation_set.add(key)
+        else:
+            annotation_set.discard(key)
+    exp.annotations = ",".join(sorted(annotation_set))
+
+    try:
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE_DIR = get_writable_path()
+        exp_folder = _get_experiment_folder(BASE_DIR, exp, _get_database_type())
+        cfg_name = "server_config.json" if exp.simulator_type == "HPC" else "config_server.json"
+        cfg_path = os.path.join(exp_folder, cfg_name)
+        if not os.path.exists(cfg_path):
+            flash(f"Configuration file not found: {cfg_name}", "error")
+            return redirect(url_for("experiments.experiment_details", uid=uid))
+
+        with open(cfg_path, "r") as f:
+            config = json.load(f)
+
+        config["emotion_annotation"] = emotion_enabled
+        config["sentiment_annotation"] = sentiment_enabled
+        config["opinions_enabled"] = opinions_enabled
+        config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
+        config["perspective_api"] = perspective_api if toxicity_enabled else None
+
+        with open(cfg_path, "w") as f:
+            json.dump(config, f, indent=4)
+
+        # Align existing client configuration files to updated annotation toggles.
+        # HPC clients consume these flags from their own config files.
+        clients = Client.query.filter_by(id_exp=uid).all()
+        for client in clients:
+            population = Population.query.filter_by(id=client.population_id).first()
+            if not population:
+                continue
+            pop_name = population.name
+            pop_name_compact = population.name.replace(" ", "")
+            client_config_candidates = [
+                os.path.join(exp_folder, f"client_{client.name}-{pop_name}.json"),
+                os.path.join(exp_folder, f"client_{client.name}-{pop_name_compact}.json"),
+                os.path.join(exp_folder, f"{client.name}_config.json"),
+            ]
+            client_config_file = None
+            for candidate in client_config_candidates:
+                if os.path.exists(candidate):
+                    client_config_file = candidate
+                    break
+            if not client_config_file:
+                continue
+
+            try:
+                with open(client_config_file, "r") as f:
+                    client_config = json.load(f)
+
+                if exp.simulator_type == "HPC":
+                    if not isinstance(client_config.get("simulation"), dict):
+                        client_config["simulation"] = {}
+                    client_config["simulation"]["enable_sentiment"] = sentiment_enabled
+                    client_config["simulation"]["emotion_annotation"] = emotion_enabled
+                    client_config["simulation"]["enable_toxicity"] = toxicity_enabled
+                    client_config["simulation"]["perspective_api_key"] = (
+                        perspective_api if toxicity_enabled else None
+                    )
+
+                    if not isinstance(client_config.get("opinion_dynamics"), dict):
+                        client_config["opinion_dynamics"] = {}
+                    client_config["opinion_dynamics"][
+                        "enabled"
+                    ] = opinion_dynamics_enabled
+                else:
+                    if not isinstance(client_config.get("simulation"), dict):
+                        client_config["simulation"] = {}
+                    if not isinstance(
+                        client_config["simulation"].get("opinion_dynamics"), dict
+                    ):
+                        client_config["simulation"]["opinion_dynamics"] = {}
+                    client_config["simulation"]["opinion_dynamics"][
+                        "enabled"
+                    ] = opinion_dynamics_enabled
+
+                with open(client_config_file, "w") as f:
+                    json.dump(client_config, f, indent=4)
+            except Exception:
+                current_app.logger.warning(
+                    f"Failed to align client config: {client_config_file}",
+                    exc_info=True,
+                )
+
+        db.session.commit()
+        flash("Experiment configuration updated.", "success")
+    except Exception as exc:
+        db.session.rollback()
+        flash(f"Failed to update configuration: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
+@experiments.route("/admin/reset_hpc_experiment/<int:uid>", methods=["POST"])
+@login_required
+def reset_hpc_experiment(uid):
+    """Reset HPC experiment runtime state to initial conditions."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if exp.simulator_type != "HPC":
+        flash("Reset is available only for HPC experiments.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+    if exp.running == 1:
+        flash("HPC reset is available only when the experiment is stopped.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    # Reset is available only for experiments that have already started at least once.
+    clients = Client.query.filter_by(id_exp=uid).all()
+    has_started_once = False
+    for client in clients:
+        ce = Client_Execution.query.filter_by(client_id=client.id).first()
+        if ce and (ce.elapsed_time or 0) > 0:
+            has_started_once = True
+            break
+    if not has_started_once:
+        has_started_once = (
+            ServerLogMetrics.query.filter_by(exp_id=uid).first() is not None
+            or ClientLogMetrics.query.filter_by(exp_id=uid).first() is not None
+        )
+    if not has_started_once:
+        flash(
+            "HPC reset is available only for experiments that have been started at least once.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to reset this experiment.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    try:
+        # Stop running clients/server first.
+        for client in clients:
+            if client.status == 1 and client.pid:
+                try:
+                    stop_hpc_client(client)
+                except Exception:
+                    current_app.logger.warning(
+                        f"Failed to stop HPC client {client.id} during reset.",
+                        exc_info=True,
+                    )
+            client.status = 0
+            client.pid = None
+
+        if exp.running == 1:
+            try:
+                stop_hpc_server(uid)
+            except Exception:
+                current_app.logger.warning(
+                    f"Failed to stop HPC server for experiment {uid} during reset.",
+                    exc_info=True,
+                )
+
+        # Restore client population JSON files from one-time backups.
+        restored_count = 0
+        for client in clients:
+            population = Population.query.filter_by(id=client.population_id).first()
+            if restore_population_for_hpc_client(exp, client, population):
+                restored_count += 1
+
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE_DIR = get_writable_path()
+        exp_folder = _get_experiment_folder(BASE_DIR, exp, _get_database_type())
+
+        # Clear logs (root + dedicated logs subfolder when present).
+        for log_dir in [os.path.join(exp_folder, "logs"), exp_folder]:
+            if not os.path.isdir(log_dir):
+                continue
+            for root, _, files in os.walk(log_dir):
+                for filename in files:
+                    if (
+                        log_dir.endswith("logs")
+                        or filename.endswith(".log")
+                        or filename.endswith(".gz")
+                        or filename.endswith(".jsonl")
+                    ):
+                        try:
+                            os.remove(os.path.join(root, filename))
+                        except OSError:
+                            current_app.logger.warning(
+                                f"Could not delete log file {os.path.join(root, filename)}"
+                            )
+
+        # Delete experiment database artifacts (server recreates on next startup).
+        for db_filename in ("database_server.db", "simulation.db"):
+            db_path = os.path.join(exp_folder, db_filename)
+            if os.path.exists(db_path):
+                try:
+                    os.remove(db_path)
+                except OSError:
+                    current_app.logger.warning(
+                        f"Could not delete db file during reset: {db_path}"
+                    )
+        # For PostgreSQL experiments, also drop the experiment database if available.
+        if exp.db_name.startswith("experiments_"):
+            try:
+                from urllib.parse import urlparse
+
+                from sqlalchemy import create_engine, text
+
+                current_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+                parsed_uri = urlparse(current_uri)
+                user = parsed_uri.username or "postgres"
+                password = parsed_uri.password or "password"
+                host = parsed_uri.hostname or "localhost"
+                port_db = parsed_uri.port or 5432
+
+                admin_engine = create_engine(
+                    f"postgresql://{user}:{password}@{host}:{port_db}/postgres"
+                )
+                with admin_engine.connect().execution_options(
+                    isolation_level="AUTOCOMMIT"
+                ) as conn:
+                    conn.execute(
+                        text(
+                            """
+                            SELECT pg_terminate_backend(pg_stat_activity.pid)
+                            FROM pg_stat_activity
+                            WHERE pg_stat_activity.datname = :dbname
+                            AND pid <> pg_backend_pid()
+                            """
+                        ),
+                        {"dbname": exp.db_name},
+                    )
+                    conn.execute(text(f'DROP DATABASE IF EXISTS "{exp.db_name}"'))
+                admin_engine.dispose()
+            except Exception:
+                current_app.logger.warning(
+                    f"Could not drop PostgreSQL DB during reset: {exp.db_name}",
+                    exc_info=True,
+                )
+
+        # Reset client execution entries to expected initial values.
+        for client in clients:
+            expected_rounds = -1 if client.days == -1 else max(int(client.days), 0) * 24
+            client_exec = Client_Execution.query.filter_by(client_id=client.id).first()
+            if client_exec:
+                client_exec.elapsed_time = 0
+                client_exec.last_active_day = -1
+                client_exec.last_active_hour = -1
+                client_exec.expected_duration_rounds = expected_rounds
+            else:
+                db.session.add(
+                    Client_Execution(
+                        client_id=client.id,
+                        elapsed_time=0,
+                        last_active_day=-1,
+                        last_active_hour=-1,
+                        expected_duration_rounds=expected_rounds,
+                    )
+                )
+
+        # Reset experiment + dashboard aggregate rows.
+        exp.running = 0
+        exp.status = 0
+        exp.exp_status = "stopped"
+
+        exp_stats = Exp_stats.query.filter_by(exp_id=uid).first()
+        if not exp_stats:
+            exp_stats = Exp_stats(exp_id=uid, rounds=0, agents=0, posts=0, reactions=0, mentions=0)
+            db.session.add(exp_stats)
+        else:
+            exp_stats.rounds = 0
+            exp_stats.agents = 0
+            exp_stats.posts = 0
+            exp_stats.reactions = 0
+            exp_stats.mentions = 0
+
+        # Clear derived metrics/cache tables so dashboards restart cleanly.
+        db.session.query(LogFileOffset).filter_by(exp_id=uid).delete()
+        db.session.query(ServerLogMetrics).filter_by(exp_id=uid).delete()
+        db.session.query(ClientLogMetrics).filter_by(exp_id=uid).delete()
+        db.session.query(OpinionEvolutionCache).filter_by(exp_id=uid).delete()
+        db.session.query(OpinionEvolutionSampledAgents).filter_by(exp_id=uid).delete()
+
+        db.session.commit()
+        flash(
+            f"HPC experiment reset completed. Restored {restored_count} population backup file(s).",
+            "success",
+        )
+    except Exception as exc:
+        db.session.rollback()
+        flash(f"Failed to reset HPC experiment: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
 @experiments.route("/admin/test_remote_server/<int:exp_id>", methods=["POST"])
@@ -6504,6 +6907,7 @@ def start_schedule():
                     ).first()
                     if population:
                         if exp.simulator_type == "HPC":
+                            backup_population_for_hpc_client(exp, client, population)
                             start_hpc_client(exp, client, population)
                         else:
                             start_client(exp, client, population, resume=True)
@@ -6808,6 +7212,7 @@ def _do_check_schedule_progress():
                         ).first()
                         if population:
                             if exp.simulator_type == "HPC":
+                                backup_population_for_hpc_client(exp, client, population)
                                 start_hpc_client(exp, client, population)
                             else:
                                 start_client(exp, client, population, resume=True)

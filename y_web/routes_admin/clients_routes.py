@@ -61,6 +61,7 @@ from y_web.utils import (
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
+from y_web.utils.hpc_population_backup import backup_population_for_hpc_client
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -402,6 +403,7 @@ def run_client(uid, idexp):
 
     try:
         if exp.simulator_type == "HPC":
+            backup_population_for_hpc_client(exp, client, population)
             start_hpc_client(exp, client, population)
         else:
             start_client(exp, client, population, resume=True)
@@ -449,6 +451,7 @@ def resume_client(uid, idexp):
 
     try:
         if exp.simulator_type == "HPC":
+            backup_population_for_hpc_client(exp, client, population)
             start_hpc_client(exp, client, population)
         else:
             start_client(exp, client, population, resume=True)
@@ -3534,6 +3537,34 @@ def opinion_configuration(idexp):
     else:
         exp_folder = exp.db_name.removeprefix("experiments_")
 
+    # Read server config to resolve opinion dynamics global toggle.
+    server_cfg = os.path.join(
+        writable_base,
+        "y_web",
+        "experiments",
+        exp_folder,
+        "server_config.json" if exp.simulator_type == "HPC" else "config_server.json",
+    )
+    opinion_dynamics_global_enabled = False
+    if os.path.exists(server_cfg):
+        try:
+            with open(server_cfg, "r") as sf:
+                scfg = json.load(sf)
+            opinion_dynamics_global_enabled = bool(
+                scfg.get(
+                    "opinion_dynamics_enabled",
+                    bool(exp.annotations and "opinions" in exp.annotations),
+                )
+            )
+        except Exception:
+            opinion_dynamics_global_enabled = bool(
+                exp.annotations and "opinions" in exp.annotations
+            )
+    else:
+        opinion_dynamics_global_enabled = bool(
+            exp.annotations and "opinions" in exp.annotations
+        )
+
     # For HPC experiments, look for client_{client.name}-{population.name}.json
     # For standard experiments, look for {population.name}.json
     if exp.simulator_type == "HPC":
@@ -4035,10 +4066,11 @@ def set_opinion_distributions():
         else {}
     )
     opinions_enabled = "opinions" in annotations
+    opinion_dynamics_enabled = opinions_enabled and opinion_dynamics_global_enabled
 
     # Build opinion dynamics configuration for HPC clients
     if is_hpc:
-        if opinions_enabled:
+        if opinion_dynamics_enabled:
             # Get opinion update rule from form
             update_rule = request.form.get("update_rule", "bounded_confidence")
 
@@ -4105,7 +4137,8 @@ def set_opinion_distributions():
                 with open(client_config_file, "r") as f:
                     client_config = json.load(f)
 
-                # Add opinion_dynamics at root level for HPC clients
+                # Overwrite previous opinion dynamics configuration if present.
+                # This explicitly supports reconfiguring existing clients.
                 client_config["opinion_dynamics"] = opinion_dynamics
 
                 # Save updated configuration
@@ -4125,7 +4158,11 @@ def set_opinion_distributions():
         update_rule = request.form.get("update_rule", "bounded_confidence")
 
         # Build opinion dynamics configuration based on selected rule
-        opinion_dynamics = {"model_name": update_rule, "parameters": {}}
+        opinion_dynamics = {
+            "enabled": opinion_dynamics_enabled,
+            "model_name": update_rule,
+            "parameters": {},
+        }
 
         if update_rule == "bounded_confidence":
             # Collect bounded confidence parameters
