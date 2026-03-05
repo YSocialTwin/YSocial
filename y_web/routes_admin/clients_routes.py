@@ -4059,6 +4059,37 @@ def set_opinion_distributions():
     # Check if this is an HPC experiment
     is_hpc = exp.simulator_type == "HPC" if hasattr(exp, "simulator_type") else False
 
+    # Resolve experiment-level opinion dynamics toggle from server config.
+    server_cfg = os.path.join(
+        writable_base,
+        "y_web",
+        "experiments",
+        exp_folder,
+        "server_config.json" if is_hpc else "config_server.json",
+    )
+    opinion_dynamics_global_enabled = False
+    if os.path.exists(server_cfg):
+        try:
+            with open(server_cfg, "r") as sf:
+                scfg = json.load(sf)
+            opinion_dynamics_global_enabled = bool(
+                scfg.get(
+                    "opinion_dynamics_enabled",
+                    scfg.get(
+                        "opinions_enabled",
+                        bool(exp.annotations and "opinions" in exp.annotations),
+                    ),
+                )
+            )
+        except Exception:
+            opinion_dynamics_global_enabled = bool(
+                exp.annotations and "opinions" in exp.annotations
+            )
+    else:
+        opinion_dynamics_global_enabled = bool(
+            exp.annotations and "opinions" in exp.annotations
+        )
+
     # Check if opinions are enabled for the experiment
     annotations = (
         {an.strip(): None for an in exp.annotations.split(",")}

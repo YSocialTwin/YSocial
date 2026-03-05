@@ -201,21 +201,21 @@
                                             {% if experiment.llm_agents_enabled %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
-                                                    <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if experiment.annotations and 'toxicity' in experiment.annotations %}checked{% endif %}>
+                                                    <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
                                                     <span class="slider-small round"></span>
                                                 </label>
                                                 <span>Toxicity</span>
                                             </div>
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
-                                                    <input type="checkbox" name="emotion_annotation" {% if experiment.annotations and 'emotion' in experiment.annotations %}checked{% endif %}>
+                                                    <input type="checkbox" name="emotion_annotation" {% if emotion_annotation_enabled %}checked{% endif %}>
                                                     <span class="slider-small round"></span>
                                                 </label>
                                                 <span>Emotion</span>
                                             </div>
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
-                                                    <input type="checkbox" name="sentiment_annotation" {% if experiment.annotations and 'sentiment' in experiment.annotations %}checked{% endif %}>
+                                                    <input type="checkbox" name="sentiment_annotation" {% if sentiment_annotation_enabled %}checked{% endif %}>
                                                     <span class="slider-small round"></span>
                                                 </label>
                                                 <span>Sentiment</span>
