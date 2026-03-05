@@ -3043,7 +3043,11 @@ def update_experiment_config(uid):
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
-        cfg_name = "server_config.json" if exp.simulator_type == "HPC" else "config_server.json"
+        cfg_name = (
+            "server_config.json"
+            if exp.simulator_type == "HPC"
+            else "config_server.json"
+        )
         cfg_path = os.path.join(exp_folder, cfg_name)
         if not os.path.exists(cfg_path):
             flash(f"Configuration file not found: {cfg_name}", "error")
@@ -3070,7 +3074,9 @@ def update_experiment_config(uid):
             pop_name_compact = population.name.replace(" ", "")
             client_config_candidates = [
                 os.path.join(exp_folder, f"client_{client.name}-{pop_name}.json"),
-                os.path.join(exp_folder, f"client_{client.name}-{pop_name_compact}.json"),
+                os.path.join(
+                    exp_folder, f"client_{client.name}-{pop_name_compact}.json"
+                ),
                 os.path.join(exp_folder, f"{client.name}_config.json"),
             ]
             client_config_file = None
@@ -3097,15 +3103,19 @@ def update_experiment_config(uid):
 
                     if not isinstance(client_config.get("opinion_dynamics"), dict):
                         client_config["opinion_dynamics"] = {}
-                    client_config["opinion_dynamics"]["enabled"] = opinion_dynamics_enabled
+                    client_config["opinion_dynamics"][
+                        "enabled"
+                    ] = opinion_dynamics_enabled
                 else:
                     if not isinstance(client_config.get("simulation"), dict):
                         client_config["simulation"] = {}
-                    if not isinstance(client_config["simulation"].get("opinion_dynamics"), dict):
+                    if not isinstance(
+                        client_config["simulation"].get("opinion_dynamics"), dict
+                    ):
                         client_config["simulation"]["opinion_dynamics"] = {}
-                    client_config["simulation"]["opinion_dynamics"]["enabled"] = (
-                        opinion_dynamics_enabled
-                    )
+                    client_config["simulation"]["opinion_dynamics"][
+                        "enabled"
+                    ] = opinion_dynamics_enabled
 
                 with open(client_config_file, "w") as f:
                     json.dump(client_config, f, indent=4)
@@ -7205,7 +7215,9 @@ def _do_check_schedule_progress():
                         ).first()
                         if population:
                             if exp.simulator_type == "HPC":
-                                backup_population_for_hpc_client(exp, client, population)
+                                backup_population_for_hpc_client(
+                                    exp, client, population
+                                )
                                 start_hpc_client(exp, client, population)
                             else:
                                 start_client(exp, client, population, resume=True)
