@@ -59,9 +59,9 @@ from y_web.utils import (
     terminate_client,
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
+from y_web.utils.hpc_population_backup import backup_population_for_hpc_client
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
-from y_web.utils.hpc_population_backup import backup_population_for_hpc_client
 
 clientsr = Blueprint("clientsr", __name__)
 

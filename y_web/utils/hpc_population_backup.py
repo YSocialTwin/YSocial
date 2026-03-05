@@ -49,9 +49,10 @@ def _population_json_candidates(exp_dir, population_name):
 def _backup_file_path(exp_dir, client, population):
     """Return deterministic backup path for a client/population pair."""
     backup_dir = os.path.join(exp_dir, "_hpc_population_backups")
-    safe_pop = re.sub(r"[^A-Za-z0-9_.-]+", "_", population.name or "population").strip(
-        "_"
-    ) or "population"
+    safe_pop = (
+        re.sub(r"[^A-Za-z0-9_.-]+", "_", population.name or "population").strip("_")
+        or "population"
+    )
     filename = f"client_{client.id}_{safe_pop}.json"
     return backup_dir, os.path.join(backup_dir, filename)
 
