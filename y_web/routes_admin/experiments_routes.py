@@ -91,6 +91,10 @@ from y_web.utils.experiment_access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.utils.hpc_population_backup import (
+    backup_population_for_hpc_client,
+    restore_population_for_hpc_client,
+)
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import (
     check_privileges,
@@ -99,15 +103,6 @@ from y_web.utils.miscellanea import (
     reload_current_user,
 )
 from y_web.utils.path_utils import get_resource_path
-from y_web.utils.hpc_population_backup import (
-    backup_population_for_hpc_client,
-    restore_population_for_hpc_client,
-)
-from y_web.utils.experiment_access import (
-    get_visible_experiment_query,
-    user_can_manage_experiment,
-    user_can_view_experiment,
-)
 
 experiments = Blueprint("experiments", __name__)
 
@@ -442,7 +437,9 @@ def visibility_settings():
         manageable_experiments = Exps.query.order_by(Exps.exp_name.asc()).all()
     else:
         manageable_experiments = (
-            Exps.query.filter_by(owner=user.username).order_by(Exps.exp_name.asc()).all()
+            Exps.query.filter_by(owner=user.username)
+            .order_by(Exps.exp_name.asc())
+            .all()
         )
 
     researcher_users = (
@@ -467,7 +464,9 @@ def visibility_settings():
     )
     if not is_admin:
         shared_rows = shared_rows.filter(Exps.owner == user.username)
-    shared_rows = shared_rows.order_by(Exps.exp_name.asc(), Admin_users.username.asc()).all()
+    shared_rows = shared_rows.order_by(
+        Exps.exp_name.asc(), Admin_users.username.asc()
+    ).all()
 
     return render_template(
         "admin/visibility_settings.html",
@@ -537,7 +536,9 @@ def visibility_settings_add_experiment():
             ).first()
             if existing:
                 continue
-            db.session.add(User_Experiment(user_id=researcher_id, exp_id=experiment.idexp))
+            db.session.add(
+                User_Experiment(user_id=researcher_id, exp_id=experiment.idexp)
+            )
             changed += 1
             newly_granted_user_ids.append(researcher_id)
 
@@ -549,9 +550,7 @@ def visibility_settings_add_experiment():
                 status="ready",
                 related_exp_ids=[experiment.idexp],
             )
-        success_msg = (
-            f"Granted access to {changed} researcher(s) for experiment '{experiment.exp_name}'."
-        )
+        success_msg = f"Granted access to {changed} researcher(s) for experiment '{experiment.exp_name}'."
     else:
         deleted_count = (
             User_Experiment.query.filter(User_Experiment.exp_id == experiment.idexp)
@@ -559,9 +558,7 @@ def visibility_settings_add_experiment():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = (
-            f"Revoked access for {changed} researcher(s) from experiment '{experiment.exp_name}'."
-        )
+        success_msg = f"Revoked access for {changed} researcher(s) from experiment '{experiment.exp_name}'."
 
     db.session.commit()
     flash(success_msg, "success")
@@ -626,9 +623,7 @@ def visibility_settings_add_group():
                 message=f"{user.username} granted you visibility to group '{group_name}'.",
                 status="ready",
             )
-        success_msg = (
-            f"Granted group '{group_name}' visibility to selected researchers ({changed} new assignment(s))."
-        )
+        success_msg = f"Granted group '{group_name}' visibility to selected researchers ({changed} new assignment(s))."
     else:
         group_exp_ids = [exp.idexp for exp in group_experiments]
         deleted_count = (
@@ -637,9 +632,7 @@ def visibility_settings_add_group():
             .delete(synchronize_session=False)
         )
         changed = int(deleted_count or 0)
-        success_msg = (
-            f"Revoked group '{group_name}' visibility from selected researchers ({changed} assignment(s) removed)."
-        )
+        success_msg = f"Revoked group '{group_name}' visibility from selected researchers ({changed} assignment(s) removed)."
 
     db.session.commit()
     flash(success_msg, "success")
@@ -671,11 +664,9 @@ def visibility_settings_revoke_assignment():
         flash("You can only revoke visibility for experiments you own.", "error")
         return redirect(url_for("experiments.visibility_settings"))
 
-    deleted_count = (
-        User_Experiment.query.filter_by(user_id=researcher_id, exp_id=exp_id).delete(
-            synchronize_session=False
-        )
-    )
+    deleted_count = User_Experiment.query.filter_by(
+        user_id=researcher_id, exp_id=exp_id
+    ).delete(synchronize_session=False)
     db.session.commit()
     if deleted_count:
         flash("Visibility assignment revoked.", "success")
