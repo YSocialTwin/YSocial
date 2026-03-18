@@ -546,27 +546,27 @@ def stop_client(uid, idexp):
     return experiment_details(idexp)  # redirect(request.referrer)
 
 
-@clientsr.route("/admin/clients/<idexp>")
-@login_required
-def clients(idexp):
-    """Handle clients operation."""
-    check_privileges(current_user.username)
-
-    # get experiment
+def _build_client_creation_context(idexp, recsys_mode):
+    """Build the shared context used by client creation pages."""
     exp = Exps.query.filter_by(idexp=idexp).first()
 
-    # get only populations already associated with this experiment
     pop_exp_associations = Population_Experiment.query.filter_by(id_exp=idexp).all()
     population_ids = [pe.id_population for pe in pop_exp_associations]
 
-    # get only populations  that are not associated with this experiment
     pops = (
         Population.query.filter(~Population.id.in_(population_ids)).all()
         if population_ids
         else Population.query.all()
     )
+    all_unassigned_pops = list(pops)
+    pops = [
+        p
+        for p in pops
+        if (getattr(p, "username_type", "microblogging") or "microblogging")
+        == exp.platform_type
+    ]
+    incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
 
-    # Get experiment topics
     topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
     topics_ids = [t.topic_id for t in topics]
     topics_objs = (
@@ -574,40 +574,100 @@ def clients(idexp):
     )
     topics_list = [{"id": t.id, "name": t.name} for t in topics_objs]
 
-    # Check if LLM agents are enabled for this experiment
     llm_agents_enabled = (
         exp.llm_agents_enabled if hasattr(exp, "llm_agents_enabled") else True
     )
 
-    # Check simulator type to render appropriate template
-    simulator_type = (
-        exp.simulator_type if hasattr(exp, "simulator_type") else "Standard"
-    )
-
-    # Get all recsys and filter by enabled field based on simulator type
     crecsys_all = Content_Recsys.query.all()
     frecsys_all = Follow_Recsys.query.all()
+    crecsys = [r for r in crecsys_all if r.enabled and recsys_mode in r.enabled]
+    frecsys = [r for r in frecsys_all if r.enabled and recsys_mode in r.enabled]
 
-    if simulator_type == "HPC":
-        template_name = "admin/clients_hpc.html"
-        # Filter for HPC - only show recsys with "HPC" in enabled field
-        crecsys = [r for r in crecsys_all if r.enabled and "HPC" in r.enabled]
-        frecsys = [r for r in frecsys_all if r.enabled and "HPC" in r.enabled]
-    else:
-        template_name = "admin/clients.html"
-        # Filter for Standard - only show recsys with "Standard" in enabled field
-        crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
-        frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
+    return {
+        "experiment": exp,
+        "populations": pops,
+        "incompatible_population_count": incompatible_population_count,
+        "crecsys": crecsys,
+        "frecsys": frecsys,
+        "llm_agents_enabled": llm_agents_enabled,
+        "topics": topics_list,
+    }
 
-    return render_template(
-        template_name,
-        experiment=exp,
-        populations=pops,
-        crecsys=crecsys,
-        frecsys=frecsys,
-        llm_agents_enabled=llm_agents_enabled,
-        topics=topics_list,
-    )
+
+@clientsr.route("/admin/clients/<idexp>")
+@login_required
+def clients(idexp):
+    """Dispatch client creation to the route dedicated to the experiment modality."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    experiment_mode = _get_experiment_mode(exp)
+    if experiment_mode == "hpc":
+        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
+    if experiment_mode == "forum":
+        return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+    return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+
+
+@clientsr.route("/admin/clients_standard/<idexp>")
+@login_required
+def clients_standard(idexp):
+    """Render the standard microblogging client creation page."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "Standard")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
+    if exp.platform_type == "forum":
+        return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+
+    return render_template("admin/clients.html", **context)
+
+
+@clientsr.route("/admin/clients_forum/<idexp>")
+@login_required
+def clients_forum(idexp):
+    """Render the dedicated forum client creation page."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "Standard")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
+    if exp.platform_type != "forum":
+        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+
+    return render_template("admin/clients_forum.html", **context)
+
+
+@clientsr.route("/admin/clients_hpc/<idexp>")
+@login_required
+def clients_hpc(idexp):
+    """Render the dedicated HPC client creation page."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "HPC")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") != "HPC":
+        if exp.platform_type == "forum":
+            return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+        return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+
+    return render_template("admin/clients_hpc.html", **context)
 
 
 def generate_hpc_client_config(
@@ -1525,10 +1585,8 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     return redirect(f"/admin/experiment_details/{exp.idexp}")
 
 
-@clientsr.route("/admin/create_client", methods=["POST"])
-@login_required
-def create_client():
-    """Create client."""
+def _create_standard_client_internal():
+    """Create a standard microblogging client without forum-specific branching."""
     check_privileges(current_user.username)
 
     name = request.form.get("name")
@@ -1536,17 +1594,19 @@ def create_client():
     exp_id = request.form.get("id_exp")
     population_id = request.form.get("population_id")
 
-    # Check if this is an HPC client
-    is_hpc = request.form.get("is_hpc") == "true"
-
-    # Check if LLM agents are enabled for this experiment
     exp = Exps.query.filter_by(idexp=exp_id).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        flash("Use the dedicated HPC client creation route for this experiment.", "error")
+        return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
+    if exp.platform_type != "microblogging":
+        flash("Use the dedicated forum client creation route for this experiment.", "error")
+        if exp.platform_type == "forum":
+            return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
+        return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
 
-    # For HPC clients, use simplified config generation
-    if is_hpc:
-        return create_hpc_client(exp, name, descr, population_id, request.form)
-
-    # Continue with standard client creation for non-HPC
     days = request.form.get("days")
     percentage_new_agents_iteration = request.form.get(
         "percentage_new_agents_iteration"
@@ -2056,23 +2116,11 @@ def create_client():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    if exp.platform_type == "microblogging":
-        prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
-        shutil.copyfile(
-            prompts_src,
-            f"{data_base_path}prompts.json",
-        )
-
-    elif exp.platform_type == "forum":
-        prompts_src = get_resource_path(
-            os.path.join("data_schema", "prompts_forum.json")
-        )
-        shutil.copyfile(
-            prompts_src,
-            f"{data_base_path}prompts.json",
-        )
-    else:
-        raise Exception(f"unsupported platform: {exp.platform_type}")
+    prompts_src = get_resource_path(os.path.join("data_schema", "prompts.json"))
+    shutil.copyfile(
+        prompts_src,
+        f"{data_base_path}prompts.json",
+    )
 
     # Create agent population file
     writable_base = get_writable_path()
@@ -2481,7 +2529,6 @@ def create_client():
                 "probability_of_daily_follow": probability_of_daily_follow,
                 "attention_window": attention_window,
                 "visibility_rounds": visibility_rounds,
-                "recommendations_default_limit": recommendations_default_limit,
                 "actions": {
                     "post": post,
                     "share": share,
@@ -2511,6 +2558,1045 @@ def create_client():
     from .experiments_routes import experiment_details
 
     return experiment_details(int(exp_id))
+
+
+
+
+def _create_forum_client_internal():
+    """Create a forum client with its dedicated configuration pipeline."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    descr = request.form.get("descr")
+    exp_id = request.form.get("id_exp")
+    population_id = request.form.get("population_id")
+
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        flash("Use the dedicated HPC client creation route for this experiment.", "error")
+        return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
+    if exp.platform_type != "forum":
+        flash("Use the dedicated standard client creation route for this experiment.", "error")
+        return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
+
+    days = request.form.get("days")
+    percentage_new_agents_iteration = request.form.get(
+        "percentage_new_agents_iteration"
+    )
+    percentage_removed_agents_iteration = request.form.get(
+        "percentage_removed_agents_iteration"
+    )
+    max_length_thread_reading = request.form.get("max_length_thread_reading")
+    reading_from_follower_ratio = request.form.get("reading_from_follower_ratio")
+    probability_of_daily_follow = request.form.get("probability_of_daily_follow")
+    probability_of_secondary_follow = request.form.get(
+        "probability_of_secondary_follow"
+    )
+    attention_window = request.form.get("attention_window")
+    visibility_rounds = request.form.get("visibility_rounds")
+    post = request.form.get("post")
+    share = request.form.get("share")
+    image = request.form.get("image")
+    comment = request.form.get("comment")
+    read = request.form.get("read")
+    news = request.form.get("news")
+    search = request.form.get("search")
+    vote = request.form.get("vote")
+    share_link = request.form.get("share_link")
+
+    llm_agents_enabled = (
+        exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
+    )
+
+    annotations = {an: None for an in exp.annotations.split(",")}
+    if "opinions" in annotations:
+        opinions_enabled = True
+    else:
+        opinions_enabled = False
+
+    # Get LLM parameters from form, or use defaults if LLM agents are disabled
+    if llm_agents_enabled:
+        llm = request.form.get("llm")
+        llm_api_key = request.form.get("llm_api_key")
+        llm_max_tokens = request.form.get("llm_max_tokens")
+        llm_temperature = request.form.get("llm_temperature")
+        llm_v_agent = request.form.get("llm_v_agent")
+        llm_v = request.form.get("llm_v")
+        llm_v_api_key = request.form.get("llm_v_api_key")
+        llm_v_max_tokens = request.form.get("llm_v_max_tokens")
+        llm_v_temperature = request.form.get("llm_v_temperature")
+        user_type = request.form.get("user_type")
+    else:
+        # Use default values when LLM agents are disabled
+        llm = "http://127.0.0.1:11434/v1"
+        llm_api_key = "NULL"
+        llm_max_tokens = "-1"
+        llm_temperature = "1.5"
+        llm_v_agent = "minicpm-v"
+        llm_v = "http://127.0.0.1:11434/v1"
+        llm_v_api_key = "NULL"
+        llm_v_max_tokens = "300"
+        llm_v_temperature = "0.5"
+        user_type = ""
+
+    crecsys = request.form.get("recsys_type")
+    frecsys = request.form.get("frecsys_type")
+
+    # Get agent archetype enabled status
+    enable_archetypes = request.form.get("enable_archetypes") == "on"
+
+    # Get agent archetype values (optional, with defaults)
+    try:
+        archetype_validator = (
+            float(request.form.get("archetype_validator", "52")) / 100.0
+        )
+        archetype_broadcaster = (
+            float(request.form.get("archetype_broadcaster", "20")) / 100.0
+        )
+        archetype_explorer = float(request.form.get("archetype_explorer", "28")) / 100.0
+        trans_val_val = float(request.form.get("trans_val_val", "85.3")) / 100.0
+        trans_val_broad = float(request.form.get("trans_val_broad", "8.1")) / 100.0
+        trans_val_expl = float(request.form.get("trans_val_expl", "6.6")) / 100.0
+        trans_broad_broad = float(request.form.get("trans_broad_broad", "72.9")) / 100.0
+        trans_broad_val = float(request.form.get("trans_broad_val", "19.5")) / 100.0
+        trans_broad_expl = float(request.form.get("trans_broad_expl", "7.5")) / 100.0
+        trans_expl_expl = float(request.form.get("trans_expl_expl", "49.0")) / 100.0
+        trans_expl_val = float(request.form.get("trans_expl_val", "36.4")) / 100.0
+        trans_expl_broad = float(request.form.get("trans_expl_broad", "14.6")) / 100.0
+    except (ValueError, TypeError) as e:
+        flash(f"Invalid archetype values: {str(e)}", "error")
+        return redirect(request.referrer)
+
+    # Validate simulation parameters
+    errors = []
+    # Validate numeric fields
+    try:
+        days = int(days)
+        # days = -1 means infinite/run-until-stopped
+        if days != -1 and days < 1:
+            errors.append(
+                "Days must be at least 1, or use -1 for infinite duration (run until stopped)"
+            )
+    except (ValueError, TypeError):
+        errors.append("Days must be a valid integer")
+    try:
+        max_length_thread_reading = int(max_length_thread_reading)
+    except (ValueError, TypeError):
+        errors.append("Max Length Thread Reading must be a valid integer")
+    try:
+        attention_window = int(attention_window)
+    except (ValueError, TypeError):
+        errors.append("Attention Window must be a valid integer")
+    try:
+        visibility_rounds = int(visibility_rounds)
+    except (ValueError, TypeError):
+        errors.append("Visibility Rounds must be a valid integer")
+
+    # Validate probability fields (must be float in [0, 1])
+    try:
+        percentage_new_agents_iteration = float(percentage_new_agents_iteration)
+    except (ValueError, TypeError):
+        errors.append("% New Agents (daily) must be a valid number")
+        percentage_new_agents_iteration = None
+    try:
+        percentage_removed_agents_iteration = float(percentage_removed_agents_iteration)
+    except (ValueError, TypeError):
+        errors.append("% Daily Churn must be a valid number")
+        percentage_removed_agents_iteration = None
+    try:
+        reading_from_follower_ratio = float(reading_from_follower_ratio)
+    except (ValueError, TypeError):
+        errors.append("Timeline Follower Ratio must be a valid number")
+        reading_from_follower_ratio = None
+    try:
+        probability_of_daily_follow = float(probability_of_daily_follow)
+    except (ValueError, TypeError):
+        errors.append("Probability Daily Follow must be a valid number")
+        probability_of_daily_follow = None
+    try:
+        probability_of_secondary_follow = float(probability_of_secondary_follow)
+    except (ValueError, TypeError):
+        errors.append("Probability Secondary Follow must be a valid number")
+        probability_of_secondary_follow = None
+
+    # Check probability ranges
+    probabilities = {
+        "% New Agents (daily)": percentage_new_agents_iteration,
+        "% Daily Churn": percentage_removed_agents_iteration,
+        "Timeline Follower Ratio": reading_from_follower_ratio,
+        "Probability Daily Follow": probability_of_daily_follow,
+        "Probability Secondary Follow": probability_of_secondary_follow,
+    }
+    for field_name, value in probabilities.items():
+        if value is not None and not (0 <= value <= 1):
+            errors.append(f"{field_name} must be between 0 and 1")
+
+    if errors:
+        for error in errors:
+            flash(error)
+        return redirect(request.referrer)
+
+    # Fetch optional network configuration
+    network_model = request.form.get("network_model")
+    network_p = request.form.get("network_p")
+    network_m = request.form.get("network_m")
+    network_file = request.files.get("network_file")
+
+    # Fetch optional hourly activity rates
+    hourly_activity_custom = {}
+    for hour in range(24):
+        hourly_val = request.form.get(f"hourly_{hour}")
+        if hourly_val and hourly_val.strip():
+            try:
+                hourly_activity_custom[str(hour)] = float(hourly_val)
+            except ValueError:
+                pass  # Ignore invalid values, use defaults
+
+    # get experiment topics
+    topics = Exp_Topic.query.filter_by(exp_id=exp_id).all()
+    topics_ids = [t.topic_id for t in topics]
+    # get the topics names from the Topic_list table
+    topics_objs = (
+        db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
+    )
+    topics = [t.name for t in topics_objs]
+
+    # Get topic interest percentages from form
+    topic_percentages = {}
+    for topic_obj in topics_objs:
+        percentage_key = f"topic_interest_{topic_obj.id}"
+        percentage_value = request.form.get(percentage_key, "100")
+        try:
+            topic_percentages[topic_obj.name] = float(percentage_value)
+        except (ValueError, TypeError):
+            topic_percentages[topic_obj.name] = 100.0  # Default to 100% if invalid
+
+    # if name already exists, return to the previous page
+    if Client.query.filter_by(name=name).first():
+        flash("Client name already exists.", "error")
+        return redirect(request.referrer)
+
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+
+    # get population
+    population = Population.query.filter_by(id=population_id).first()
+
+    if population is None:
+        flash("Population not found.", "error")
+        return redirect(request.referrer)
+
+    # check if the population is already assigned to the experiment
+    # if not, add it
+    pop_exp = Population_Experiment.query.filter_by(
+        id_population=population_id, id_exp=exp_id
+    ).first()
+    if not pop_exp:
+        pop_exp = Population_Experiment(id_population=population_id, id_exp=exp_id)
+        db.session.add(pop_exp)
+        db.session.commit()
+
+    # create the Client object
+    client = Client(
+        name=name,
+        descr=descr,
+        id_exp=exp_id,
+        population_id=population_id,
+        days=days,
+        percentage_new_agents_iteration=percentage_new_agents_iteration,
+        percentage_removed_agents_iteration=percentage_removed_agents_iteration,
+        max_length_thread_reading=max_length_thread_reading,
+        reading_from_follower_ratio=reading_from_follower_ratio,
+        probability_of_daily_follow=probability_of_daily_follow,
+        attention_window=attention_window,
+        visibility_rounds=visibility_rounds,
+        post=post,
+        share=share,
+        image=image,
+        comment=comment,
+        read=read,
+        news=news,
+        search=search,
+        vote=vote,
+        share_link=share_link,
+        llm=llm,
+        llm_api_key=llm_api_key,
+        llm_max_tokens=llm_max_tokens,
+        llm_temperature=llm_temperature,
+        llm_v_agent=llm_v_agent,
+        llm_v=llm_v,
+        llm_v_api_key=llm_v_api_key,
+        llm_v_max_tokens=llm_v_max_tokens,
+        llm_v_temperature=llm_v_temperature,
+        probability_of_secondary_follow=probability_of_secondary_follow,
+        crecsys=crecsys,
+        frecsys=frecsys,
+        status=0,
+        archetype_validator=archetype_validator,
+        archetype_broadcaster=archetype_broadcaster,
+        archetype_explorer=archetype_explorer,
+        trans_val_val=trans_val_val,
+        trans_val_broad=trans_val_broad,
+        trans_val_expl=trans_val_expl,
+        trans_broad_broad=trans_broad_broad,
+        trans_broad_val=trans_broad_val,
+        trans_broad_expl=trans_broad_expl,
+        trans_expl_expl=trans_expl_expl,
+        trans_expl_val=trans_expl_val,
+        trans_expl_broad=trans_expl_broad,
+    )
+
+    db.session.add(client)
+    db.session.commit()
+
+    # If experiment was completed, reset status to stopped since a new client was added
+    if exp.exp_status == "completed":
+        exp.exp_status = "stopped"
+        db.session.commit()
+
+    # Get LLM URL from environment (set by y_social.py)
+    import os
+
+    # get population activity profiles
+    activity_profiles = (
+        db.session.query(PopulationActivityProfile)
+        .filter(PopulationActivityProfile.population == population_id)
+        .all()
+    )
+
+    activity_profiles = [a.activity_profile for a in activity_profiles]
+
+    # get all activity profiles from the db where id in activity_profiles
+    activity_profiles = (
+        db.session.query(ActivityProfile)
+        .filter(ActivityProfile.id.in_([a for a in activity_profiles]))
+        .all()
+    )
+
+    profiles = {ap.name: ap.hours for ap in activity_profiles}
+
+    annotations = exp.annotations.split(",")
+    emotion_annotation = "emotion" in annotations
+
+    default_hourly_activity = {
+        "0": 0.023,
+        "1": 0.021,
+        "2": 0.020,
+        "3": 0.020,
+        "4": 0.018,
+        "5": 0.017,
+        "6": 0.017,
+        "7": 0.018,
+        "8": 0.020,
+        "9": 0.020,
+        "10": 0.021,
+        "11": 0.022,
+        "12": 0.024,
+        "13": 0.027,
+        "14": 0.030,
+        "15": 0.032,
+        "16": 0.032,
+        "17": 0.032,
+        "18": 0.032,
+        "19": 0.031,
+        "20": 0.030,
+        "21": 0.029,
+        "22": 0.027,
+        "23": 0.025,
+    }
+
+    hourly_activity = {
+        str(h): (
+            hourly_activity_custom.get(str(h), default_hourly_activity[str(h)])
+            if hourly_activity_custom
+            else default_hourly_activity[str(h)]
+        )
+        for h in range(24)
+    }
+
+    config = {
+        "servers": {
+            "llm": llm,
+            "llm_api_key": llm_api_key,
+            "llm_max_tokens": int(llm_max_tokens),
+            "llm_temperature": float(llm_temperature),
+            "llm_v": llm_v,
+            "llm_v_api_key": llm_v_api_key,
+            "llm_v_max_tokens": int(llm_v_max_tokens),
+            "llm_v_temperature": float(llm_v_temperature),
+            "api": f"http://{exp.server}:{exp.port}/",
+        },
+        "simulation": {
+            "name": name,
+            "population": population.name,
+            "client": "YClientWeb",
+            "days": int(days),
+            "slots": 24,
+            "percentage_new_agents_iteration": float(percentage_new_agents_iteration),
+            "percentage_removed_agents_iteration": float(
+                percentage_removed_agents_iteration
+            ),
+            "activity_profiles": profiles,
+            "hourly_activity": hourly_activity,
+            "actions_likelihood": {
+                "post": float(post),
+                "image": float(image) if image is not None else 0,
+                "news": float(news) if news is not None else 0,
+                "comment": float(comment) if comment is not None else 0,
+                "read": float(read) if read is not None else 0,
+                "share": float(share) if share is not None else 0,
+                "search": float(search) if search is not None else 0,
+                "cast": float(vote) if vote is not None else 0,
+                "share_link": float(share_link) if share_link is not None else 0,
+            },
+            "emotion_annotation": emotion_annotation,
+            "agent_archetypes": {
+                "enabled": enable_archetypes,
+                "distribution": {
+                    "validator": archetype_validator,
+                    "broadcaster": archetype_broadcaster,
+                    "explorer": archetype_explorer,
+                },
+                "transitions": {
+                    "validator": {
+                        "validator": trans_val_val,
+                        "broadcaster": trans_val_broad,
+                        "explorer": trans_val_expl,
+                    },
+                    "broadcaster": {
+                        "validator": trans_broad_val,
+                        "broadcaster": trans_broad_broad,
+                        "explorer": trans_broad_expl,
+                    },
+                    "explorer": {
+                        "validator": trans_expl_val,
+                        "broadcaster": trans_expl_broad,
+                        "explorer": trans_expl_expl,
+                    },
+                },
+            },
+        },
+        "posts": {
+            "visibility_rounds": int(visibility_rounds),
+            "emotions": {
+                "admiration": None,
+                "amusement": None,
+                "anger": None,
+                "annoyance": None,
+                "approval": None,
+                "caring": None,
+                "confusion": None,
+                "curiosity": None,
+                "desire": None,
+                "disappointment": None,
+                "disapproval": None,
+                "disgust": None,
+                "embarrassment": None,
+                "excitement": None,
+                "fear": None,
+                "gratitude": None,
+                "grief": None,
+                "joy": None,
+                "love": None,
+                "nervousness": None,
+                "optimism": None,
+                "pride": None,
+                "realization": None,
+                "relief": None,
+                "remorse": None,
+                "sadness": None,
+                "surprise": None,
+                "trust": None,
+            },
+        },
+        "agents": {
+            "llm_v_agent": "minicpm-v",
+            "reading_from_follower_ratio": float(reading_from_follower_ratio),
+            "max_length_thread_reading": int(max_length_thread_reading),
+            "attention_window": int(attention_window),
+            "probability_of_daily_follow": float(probability_of_daily_follow),
+            "probability_of_secondary_follow": float(probability_of_secondary_follow),
+            "age": {"min": 18, "max": 65},
+            "political_leaning": [],
+            "toxicity_levels": [],
+            "languages": [],
+            "llm_agents": [],
+            "education_levels": [],
+            "round_actions": {"min": 1, "max": 3},
+            "n_interests": {"min": 1, "max": 5},
+            "interests": [],
+            "big_five": {
+                "oe": ["inventive/curious", "consistent/cautious"],
+                "co": ["extravagant/careless", "efficient/organized"],
+                "ex": ["outgoing/energetic", "solitary/reserved"],
+                "ag": ["critical/judgmental", "friendly/compassionate"],
+                "ne": ["resilient/confident", "sensitive/nervous"],
+            },
+        },
+    }
+
+    # get population agents
+    agents = Agent_Population.query.filter_by(population_id=population_id).all()
+    # get agents political leaning
+    political_leaning = set(
+        [Agent.query.filter_by(id=a.agent_id).first().leaning for a in agents]
+    )
+    # get agents' age
+    age = set([Agent.query.filter_by(id=a.agent_id).first().age for a in agents])
+    # get agents toxicity levels
+    toxicity = set(
+        [Agent.query.filter_by(id=a.agent_id).first().toxicity for a in agents]
+    )
+    # get agents' language
+    language = set(
+        [Agent.query.filter_by(id=a.agent_id).first().language for a in agents]
+    )
+    # get agents' type
+    ag_type = set(
+        [Agent.query.filter_by(id=a.agent_id).first().ag_type for a in agents]
+    )
+    # get agents' education level
+    education_level = set(
+        [Agent.query.filter_by(id=a.agent_id).first().education_level for a in agents]
+    )
+
+    config["agents"]["political_leanings"] = list(political_leaning)
+    config["agents"]["age"]["min"] = min(age)
+    config["agents"]["age"]["max"] = max(age)
+    config["agents"]["toxicity_levels"] = list(toxicity)
+    config["agents"]["languages"] = list(language)
+    config["agents"]["llm_agents"] = list(ag_type)
+    config["agents"]["education_levels"] = list(education_level)
+    config["agents"]["round_actions"] = {"min": 1, "max": 3}
+    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+
+    # check db type
+    if "database_server.db" in exp.db_name:  # sqlite
+        uid = exp.db_name.split(os.sep)[1]
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+
+    with open(
+        f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
+        "w",
+    ) as f:
+        json.dump(config, f, indent=4)
+
+    data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
+    # copy prompts.json into the experiment folder
+
+    prompts_src = get_resource_path(
+        os.path.join("data_schema", "prompts_forum.json")
+    )
+    shutil.copyfile(
+        prompts_src,
+        f"{data_base_path}prompts.json",
+    )
+
+    # Create agent population file
+    writable_base = get_writable_path()
+
+    if "database_server.db" in exp.db_name:
+        # exp.db_name is like "experiments/uid/database_server.db"
+        filename = os.path.join(
+            writable_base,
+            "y_web",
+            exp.db_name.split("database_server.db")[0],
+            f"{population.name.replace(' ', '')}.json",
+        )
+    else:
+        # Legacy format
+        filename = os.path.join(
+            writable_base,
+            "y_web",
+            "experiments",
+            exp.db_name.replace("experiments_", ""),
+            f"{population.name.replace(' ', '')}.json",
+        )
+
+    agents = Agent_Population.query.filter_by(population_id=population.id).all()
+    # get the agent details
+    agents = [Agent.query.filter_by(id=a.agent_id).first() for a in agents]
+
+    # Assign archetypes to agents based on distribution probabilities
+    num_agents = len(agents)
+    archetype_assignments = []
+
+    if enable_archetypes and num_agents > 0:
+        # Build list of active archetypes and their probabilities
+        active_archetypes = []
+        active_probabilities = []
+
+        if archetype_validator > 0:
+            active_archetypes.append("validator")
+            active_probabilities.append(archetype_validator)
+
+        if archetype_broadcaster > 0:
+            active_archetypes.append("broadcaster")
+            active_probabilities.append(archetype_broadcaster)
+
+        if archetype_explorer > 0:
+            active_archetypes.append("explorer")
+            active_probabilities.append(archetype_explorer)
+
+        # Normalize probabilities if they don't sum to 1
+        if len(active_probabilities) > 0:
+            total_prob = sum(active_probabilities)
+            if total_prob > 0:
+                active_probabilities = [p / total_prob for p in active_probabilities]
+                # Assign archetypes to agents using numpy random choice
+                archetype_assignments = np.random.choice(
+                    active_archetypes, size=num_agents, p=active_probabilities
+                ).tolist()
+            else:
+                # If all probabilities are 0, assign None
+                archetype_assignments = [None] * num_agents
+        else:
+            # No active archetypes
+            archetype_assignments = [None] * num_agents
+    else:
+        # Archetypes disabled, assign None to all agents
+        archetype_assignments = [None] * num_agents
+
+    res = {"agents": []}
+    for idx, a in enumerate(agents):
+        custom_prompt = Agent_Profile.query.filter_by(agent_id=a.id).first()
+
+        if custom_prompt:
+            custom_prompt = custom_prompt.profile
+
+        # Allocate topics based on specified percentages
+        interests = allocate_topics_by_percentage(topics, topic_percentages)
+
+        ints = [interests, len(interests)]
+
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=a.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
+
+        res["agents"].append(
+            {
+                "name": a.name,
+                "email": f"{a.name}@ysocial.it",
+                "password": f"{a.name}",
+                "age": a.age,
+                "type": user_type,  # ,a.ag_type,
+                "leaning": a.leaning,
+                "interests": ints,
+                "oe": a.oe,
+                "co": a.co,
+                "ex": a.ex,
+                "ag": a.ag,
+                "ne": a.ne,
+                "rec_sys": crecsys,
+                "frec_sys": frecsys,
+                "language": a.language,
+                "owner": exp.owner,
+                "education_level": a.education_level,
+                "round_actions": int(a.round_actions),
+                "gender": a.gender,
+                "nationality": a.nationality,
+                "toxicity": a.toxicity,
+                "is_page": 0,
+                "prompts": custom_prompt if custom_prompt else None,
+                "daily_activity_level": a.daily_activity_level,
+                "profession": a.profession,
+                "activity_profile": activity_profile_name,
+                "archetype": archetype_assignments[idx],
+                "opinions": (
+                    {i: random.random() for i in ints[0]} if opinions_enabled else None
+                ),  # @todo: check initial opinions
+            }
+        )
+
+    # get the pages associated with the population
+    pages = Page_Population.query.filter_by(population_id=population.id).all()
+    pages = [Page.query.filter_by(id=p.page_id).first() for p in pages]
+
+    for p in pages:
+        # get pages topics
+        page_topics = (
+            db.session.query(Exp_Topic, Topic_List)
+            .join(Topic_List)
+            .filter(Exp_Topic.exp_id == exp_id, Exp_Topic.topic_id == Topic_List.id)
+            .all()
+        )
+        page_topics = [t[1].name for t in page_topics]
+        page_topics = list(set(page_topics) & set(topics))
+
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=p.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
+
+        res["agents"].append(
+            {
+                "name": p.name,
+                "email": f"{p.name}@ysocial.it",
+                "password": f"{p.name}",
+                "age": 0,
+                "type": user_type,
+                "leaning": p.leaning,
+                "interests": [page_topics, len(page_topics)],
+                "oe": "",
+                "co": "",
+                "ex": "",
+                "ag": "",
+                "ne": "",
+                "rec_sys": "",
+                "frec_sys": "",
+                "language": "english",
+                "owner": exp.owner,
+                "education_level": "",
+                "round_actions": 3,
+                "gender": "",
+                "nationality": "",
+                "toxicity": "none",
+                "is_page": 1,
+                "feed_url": p.feed,
+                "activity_profile": activity_profile_name,
+            }
+        )
+
+    print(f"Saving agents to {filename}")
+    json.dump(res, open(filename, "w"), indent=4)
+
+    # Handle optional network configuration
+    if network_model or network_file:
+        # get populations for client
+        populations = Population.query.filter_by(id=client.population_id).all()
+        # get agents for the populations
+        agents = Agent_Population.query.filter(
+            Agent_Population.population_id.in_([p.id for p in populations])
+        ).all()
+        # get agent ids for all agents in populations
+        agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
+
+        from y_web.utils.path_utils import get_writable_path
+
+        BASE = get_writable_path()
+        dbtypte = get_db_type()
+
+        if dbtypte == "sqlite":
+            exp_folder = exp.db_name.split(os.sep)[1]
+        else:
+            exp_folder = exp.db_name.removeprefix("experiments_")
+
+        network_path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{client.name}_network.csv"
+
+        if network_file and network_file.filename:
+            # Handle uploaded network file
+            temp_path = network_path.replace("_network.csv", "_network_temp.csv")
+            network_file.save(temp_path)
+
+            try:
+                with open(network_path, "w") as o:
+                    error, error2 = False, False
+                    with open(temp_path, "r") as f:
+                        for l in f:
+                            l = l.rstrip().split(",")
+                            if len(l) < 2:
+                                continue
+
+                            agent_1 = Agent.query.filter_by(name=l[0]).all()
+                            aids = [a.id for a in agent_1]
+
+                            if agent_1 is not None:
+                                test = Agent_Population.query.filter(
+                                    Agent_Population.agent_id.in_(aids),
+                                    Agent_Population.population_id
+                                    == client.population_id,
+                                ).all()
+                                error = len(test) == 0
+                            else:
+                                agent_1 = Page.query.filter_by(name=l[0]).all()
+                                aids = [a.id for a in agent_1]
+
+                                if agent_1 is not None:
+                                    test = Page_Population.query.filter(
+                                        Page_Population.page_id.in_(aids),
+                                        Page_Population.population_id
+                                        == client.population_id,
+                                    ).all()
+                                    error = len(test) == 0
+                                if agent_1 is None:
+                                    error = True
+
+                            agent_2 = Agent.query.filter_by(name=l[1]).all()
+                            aids = [a.id for a in agent_2]
+
+                            if agent_2 is not None:
+                                test = Agent_Population.query.filter(
+                                    Agent_Population.agent_id.in_(aids),
+                                    Agent_Population.population_id
+                                    == client.population_id,
+                                ).all()
+                                error2 = len(test) == 0
+                            else:
+                                agent_2 = Page.query.filter_by(name=l[1]).all()
+                                aids = [a.id for a in agent_2]
+
+                                if agent_2 is not None:
+                                    test = Page_Population.query.filter(
+                                        Page_Population.page_id.in_(aids),
+                                        Page_Population.population_id
+                                        == client.population_id,
+                                    ).all()
+                                    error2 = len(test) == 0
+
+                                if agent_2 is None:
+                                    error2 = True
+
+                            if not error and not error2:
+                                o.write(f"{l[0]},{l[1]}\n")
+                            else:
+                                flash(
+                                    f"Agent {l[0]} or {l[1]} not found in network file.",
+                                    "warning",
+                                )
+
+                os.remove(temp_path)
+                client.network_type = "Custom Network"
+                db.session.commit()
+            except Exception as e:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                if os.path.exists(network_path):
+                    os.remove(network_path)
+                flash(
+                    "Network file format error: provide a csv file containing two columns with agent names. No header required.",
+                    "error",
+                )
+
+        elif network_model:
+            # Handle synthetic network generation
+            # Extract parameters with defaults
+            m = int(network_m) if network_m else 2
+            p = float(network_p) if network_p else 0.1
+            k = (
+                int(request.form.get("network_k"))
+                if request.form.get("network_k")
+                else 4
+            )
+            ws_p = (
+                float(request.form.get("network_ws_p"))
+                if request.form.get("network_ws_p")
+                else 0.3
+            )
+            plc_m = (
+                int(request.form.get("network_plc_m"))
+                if request.form.get("network_plc_m")
+                else 2
+            )
+            plc_p = (
+                float(request.form.get("network_plc_p"))
+                if request.form.get("network_plc_p")
+                else 0.5
+            )
+            blocks = (
+                int(request.form.get("network_blocks"))
+                if request.form.get("network_blocks")
+                else 3
+            )
+            p_in = (
+                float(request.form.get("network_p_in"))
+                if request.form.get("network_p_in")
+                else 0.3
+            )
+            p_out = (
+                float(request.form.get("network_p_out"))
+                if request.form.get("network_p_out")
+                else 0.05
+            )
+            tau1 = (
+                float(request.form.get("network_tau1"))
+                if request.form.get("network_tau1")
+                else 2.5
+            )
+            tau2 = (
+                float(request.form.get("network_tau2"))
+                if request.form.get("network_tau2")
+                else 1.5
+            )
+            mu = (
+                float(request.form.get("network_mu"))
+                if request.form.get("network_mu")
+                else 0.1
+            )
+            avg_degree = (
+                int(request.form.get("network_avg_degree"))
+                if request.form.get("network_avg_degree")
+                else 5
+            )
+
+            n = len(agent_ids)
+
+            # Generate network based on selected model
+            if network_model == "BA":
+                g = nx.barabasi_albert_graph(n, m=m)
+            elif network_model == "ER":
+                g = nx.erdos_renyi_graph(n, p=p)
+            elif network_model == "WS":
+                g = nx.watts_strogatz_graph(n, k=k, p=ws_p)
+            elif network_model == "PLC":
+                g = nx.powerlaw_cluster_graph(n, m=plc_m, p=plc_p)
+            elif network_model == "C":
+                g = nx.complete_graph(n)
+            elif network_model == "SBM":
+                # Divide nodes into blocks
+                block_sizes = [n // blocks] * blocks
+                # Add remaining nodes to last block
+                block_sizes[-1] += n % blocks
+                # Create probability matrix
+                probs = [
+                    [p_in if i == j else p_out for j in range(blocks)]
+                    for i in range(blocks)
+                ]
+                g = nx.stochastic_block_model(block_sizes, probs)
+            elif network_model == "LFR":
+                # LFR benchmark with community structure
+                # Calculate min_community: at least 5 nodes, at most n/3 to allow multiple communities
+                min_community = min(max(5, n // 10), n // 3)
+                g = nx.LFR_benchmark_graph(
+                    n=n,
+                    tau1=tau1,
+                    tau2=tau2,
+                    mu=mu,
+                    average_degree=avg_degree,
+                    min_community=min_community,
+                )
+            else:
+                g = None
+
+            if g:
+                # since the network is undirected and Y assume directed relations we need to write the edges in both directions
+                with open(network_path, "w") as f:
+                    for n in g.edges:
+                        f.write(f"{agent_ids[n[0]]},{agent_ids[n[1]]}\n")
+                        f.write(f"{agent_ids[n[1]]},{agent_ids[n[0]]}\n")
+                    f.flush()
+
+                client.network_type = network_model
+                db.session.commit()
+
+    from y_web.telemetry import Telemetry
+
+    telemetry = Telemetry(user=current_user)
+    telemetry.log_event(
+        data={
+            "action": "create_client",
+            "data": {
+                "llm_agents_enabled": llm_agents_enabled,
+                "days": days,
+                "percentage_new_agents_iteration": percentage_new_agents_iteration,
+                "percentage_removed_agents_iteration": percentage_removed_agents_iteration,
+                "max_length_thread_reading": max_length_thread_reading,
+                "reading_from_follower_ratio": reading_from_follower_ratio,
+                "probability_of_daily_follow": probability_of_daily_follow,
+                "attention_window": attention_window,
+                "visibility_rounds": visibility_rounds,
+                "actions": {
+                    "post": post,
+                    "share": share,
+                    "image": image,
+                    "comment": comment,
+                    "read": read,
+                    "news": news,
+                    "search": search,
+                    "vote": vote,
+                    "share_link": share_link,
+                },
+                "llm": user_type,
+                "probability_of_secondary_follow": probability_of_secondary_follow,
+                "crecsys": crecsys,
+                "frecsys": frecsys,
+            },
+        }
+    )
+
+    # Check if opinions annotation is present and redirect to opinion configuration
+    if opinions_enabled:
+        return redirect(
+            url_for("clientsr.opinion_configuration", idexp=exp_id, client_id=client.id)
+        )
+
+    # load experiment_details page
+    from .experiments_routes import experiment_details
+
+    return experiment_details(int(exp_id))
+
+
+
+
+@clientsr.route("/admin/create_standard_client", methods=["POST"])
+@login_required
+def create_standard_client():
+    """Create a standard microblogging client."""
+    return _create_standard_client_internal()
+
+
+@clientsr.route("/admin/create_forum_client", methods=["POST"])
+@login_required
+def create_forum_client():
+    """Create a forum client."""
+    return _create_forum_client_internal()
+
+
+@clientsr.route("/admin/create_hpc_client", methods=["POST"])
+@login_required
+def create_hpc_client_route():
+    """Create an HPC client."""
+    check_privileges(current_user.username)
+
+    name = request.form.get("name")
+    descr = request.form.get("descr")
+    exp_id = request.form.get("id_exp")
+    population_id = request.form.get("population_id")
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+    if getattr(exp, "simulator_type", "Standard") != "HPC":
+        flash(
+            "Use the dedicated standard or forum client creation route for this experiment.",
+            "error",
+        )
+        if exp.platform_type == "forum":
+            return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
+        return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
+
+    return create_hpc_client(exp, name, descr, population_id, request.form)
+
+
+@clientsr.route("/admin/create_client", methods=["POST"])
+@login_required
+def create_client():
+    """Backward-compatible dispatcher for client creation routes."""
+    check_privileges(current_user.username)
+
+    exp_id = request.form.get("id_exp")
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return create_hpc_client_route()
+    if exp.platform_type == "forum":
+        return create_forum_client()
+    return create_standard_client()
 
 
 @clientsr.route("/admin/delete_client/<int:uid>")
@@ -2560,6 +3646,63 @@ def delete_client(uid):
     return experiment_details(exp_id)
 
 
+def _get_experiment_mode(experiment):
+    """Return the route/template mode for the given experiment."""
+    if getattr(experiment, "simulator_type", "Standard") == "HPC":
+        return "hpc"
+    if getattr(experiment, "platform_type", "microblogging") == "forum":
+        return "forum"
+    return "standard"
+
+
+def _get_experiment_folder_name(experiment):
+    """Return the experiment folder name used under y_web/experiments."""
+    dbtype = get_db_type()
+    if dbtype == "sqlite":
+        return experiment.db_name.split(os.sep)[1]
+    return experiment.db_name.removeprefix("experiments_")
+
+
+def _read_json_if_exists(path):
+    """Load a JSON file if it exists, otherwise return None."""
+    if not os.path.exists(path):
+        return None
+    with open(path, "r") as handle:
+        return json.load(handle)
+
+
+def _get_client_population_pages(client):
+    """Fetch pages associated with the client's population."""
+    return (
+        db.session.query(Page, Page_Population)
+        .join(Page_Population)
+        .filter(Page_Population.population_id == client.population_id)
+        .all()
+    )
+
+
+def _extract_llm_names_from_population_payload(agents_payload):
+    """Collect unique non-page LLM names from a population payload."""
+    llms = []
+    if agents_payload is not None:
+        for agent in agents_payload.get("agents", []):
+            if not agent.get("is_page", 0):
+                agent_type = agent.get("type")
+                if agent_type:
+                    llms.append(agent_type)
+    return ",".join(list(set(llms)))
+
+
+def _build_hourly_activity_chart_series(activity):
+    """Convert hourly activity dict to plotting arrays."""
+    idx = []
+    data = []
+    for hour in range(24):
+        idx.append(str(hour))
+        data.append(activity.get(str(hour), 0))
+    return idx, data
+
+
 @clientsr.route("/admin/client_details/<int:uid>")
 @login_required
 def client_details(uid):
@@ -2577,65 +3720,39 @@ def client_details(uid):
         and experiment.simulator_type == "HPC"
     ):
         return redirect(url_for("clientsr.client_details_hpc", uid=uid))
+    if experiment and experiment.platform_type == "forum":
+        return redirect(url_for("clientsr.client_details_forum", uid=uid))
 
-    # get population for the client
     population = Population.query.filter_by(id=client.population_id).first()
-    # get the pages included to the population
-    pages = (
-        db.session.query(Page, Page_Population)
-        .join(Page_Population)
-        .filter(Page_Population.population_id == client.population_id)
-        .all()
-    )
+    pages = _get_client_population_pages(client)
 
-    # get the client configuration file
     from y_web.utils.path_utils import get_writable_path
 
-    BASE = get_writable_path()
+    base_dir = get_writable_path()
+    exp_folder = _get_experiment_folder_name(experiment)
+    config_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"client_{client.name}-{population.name}.json",
+    )
+    population_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"{population.name}.json",
+    )
 
-    dbtypte = get_db_type()
+    config = _read_json_if_exists(config_path)
+    agents = _read_json_if_exists(population_path)
+    llms = _extract_llm_names_from_population_payload(agents)
 
-    if dbtypte == "sqlite":
-        exp_folder = experiment.db_name.split(os.sep)[1]
-    else:
-        exp_folder = experiment.db_name.removeprefix("experiments_")
-
-    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
-
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            config = json.load(f)
-    else:
-        config = None
-
-    # open the agent population file to get the number of agents
-    path_agents = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json"
-
-    if os.path.exists(path_agents):
-        with open(path_agents, "r") as f:
-            agents = json.load(f)
-    else:
-        agents = None
-
-    llms = []
-    if agents is not None:
-        for agent in agents["agents"]:
-            # Skip page agents (is_page=1) as they don't have a type field
-            if not agent.get("is_page", 0):
-                agent_type = agent.get("type")
-                if agent_type:
-                    llms.append(agent_type)
-
-    llms = ",".join(list(set(llms)))
-
-    activity = config["simulation"]["hourly_activity"]
-
-    data = []
-    idx = []
-
-    for x in range(0, 24):
-        idx.append(str(x))
-        data.append(activity[str(x)])
+    activity = ((config or {}).get("simulation") or {}).get("hourly_activity") or {
+        str(hour): 0 for hour in range(24)
+    }
+    idx, data = _build_hourly_activity_chart_series(activity)
 
     models = get_llm_models()  # Use generic function for any LLM server
 
@@ -2651,6 +3768,83 @@ def client_details(uid):
 
     return render_template(
         "admin/client_details.html",
+        data=data,
+        idx=idx,
+        activity=activity,
+        client=client,
+        experiment=experiment,
+        population=population,
+        pages=pages,
+        models=models,
+        llm_backend=llm_backend,
+        frecsys=frecsys,
+        crecsys=crecsys,
+        llms=llms,
+    )
+
+
+@clientsr.route("/admin/client_details_forum/<int:uid>")
+@login_required
+def client_details_forum(uid):
+    """Handle forum client details operation."""
+    check_privileges(current_user.username)
+
+    client = Client.query.filter_by(id=uid).first()
+    if not client:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    experiment = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not experiment:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    if experiment.simulator_type == "HPC":
+        return redirect(url_for("clientsr.client_details_hpc", uid=uid))
+    if experiment.platform_type != "forum":
+        return redirect(url_for("clientsr.client_details", uid=uid))
+
+    population = Population.query.filter_by(id=client.population_id).first()
+    pages = _get_client_population_pages(client)
+
+    from y_web.utils.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    exp_folder = _get_experiment_folder_name(experiment)
+    config_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"client_{client.name}-{population.name}.json",
+    )
+    population_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"{population.name}.json",
+    )
+
+    config = _read_json_if_exists(config_path)
+    agents = _read_json_if_exists(population_path)
+    llms = _extract_llm_names_from_population_payload(agents)
+
+    activity = ((config or {}).get("simulation") or {}).get("hourly_activity") or {
+        str(hour): 0 for hour in range(24)
+    }
+    idx, data = _build_hourly_activity_chart_series(activity)
+
+    models = get_llm_models()
+    llm_backend = llm_backend_status()
+
+    frecsys_all = Follow_Recsys.query.all()
+    crecsys_all = Content_Recsys.query.all()
+    frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
+    crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
+
+    return render_template(
+        "admin/client_details_forum.html",
         data=data,
         idx=idx,
         activity=activity,
@@ -2683,57 +3877,34 @@ def client_details_hpc(uid):
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    # get population for the client
     population = Population.query.filter_by(id=client.population_id).first()
-    # get the pages included to the population
-    pages = (
-        db.session.query(Page, Page_Population)
-        .join(Page_Population)
-        .filter(Page_Population.population_id == client.population_id)
-        .all()
-    )
+    pages = _get_client_population_pages(client)
 
-    # get the client configuration file
     from y_web.utils.path_utils import get_writable_path
 
-    BASE = get_writable_path()
+    base_dir = get_writable_path()
+    exp_folder = _get_experiment_folder_name(experiment)
+    config_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"client_{client.name}-{population.name}.json",
+    )
+    population_path = os.path.join(
+        base_dir,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"{population.name}.json",
+    )
 
-    dbtype = get_db_type()
-
-    if dbtype == "sqlite":
-        exp_folder = experiment.db_name.split(os.sep)[1]
-    else:
-        exp_folder = experiment.db_name.removeprefix("experiments_")
-
-    # HPC clients use the same file naming pattern: client_{name}-{population}.json
-    path = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}client_{client.name}-{population.name}.json"
-
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            config = json.load(f)
-    else:
-        config = None
+    config = _read_json_if_exists(config_path)
+    if config is None:
         flash("HPC client configuration file not found.", "warning")
 
-    # open the agent population file to get the number of agents
-    path_agents = f"{BASE}{os.sep}y_web{os.sep}experiments{os.sep}{exp_folder}{os.sep}{population.name}.json"
-
-    if os.path.exists(path_agents):
-        with open(path_agents, "r") as f:
-            agents = json.load(f)
-    else:
-        agents = None
-
-    llms = []
-    if agents is not None:
-        for agent in agents["agents"]:
-            # Skip page agents (is_page=1) as they don't have a type field
-            if not agent.get("is_page", 0):
-                agent_type = agent.get("type")
-                if agent_type:
-                    llms.append(agent_type)
-
-    llms = ",".join(list(set(llms)))
+    agents = _read_json_if_exists(population_path)
+    llms = _extract_llm_names_from_population_payload(agents)
 
     # Extract activity data from HPC config structure
     data = []
@@ -2742,9 +3913,7 @@ def client_details_hpc(uid):
 
     if config and "simulation" in config and "hourly_activity" in config["simulation"]:
         activity = config["simulation"]["hourly_activity"]
-        for x in range(0, 24):
-            idx.append(str(x))
-            data.append(activity.get(str(x), 0))
+        idx, data = _build_hourly_activity_chart_series(activity)
     elif (
         config
         and "simulation" in config
@@ -2755,16 +3924,11 @@ def client_details_hpc(uid):
         if profiles:
             first_profile = list(profiles.values())[0]
             activity = first_profile
-            for x in range(0, 24):
-                idx.append(str(x))
-                data.append(activity.get(str(x), 0))
+            idx, data = _build_hourly_activity_chart_series(activity)
 
     if not activity:
-        # Default to empty data
-        for x in range(0, 24):
-            idx.append(str(x))
-            data.append(0)
         activity = {str(x): 0 for x in range(24)}
+        idx, data = _build_hourly_activity_chart_series(activity)
 
     models = get_llm_models()  # Use generic function for any LLM server
 
@@ -3412,16 +4576,31 @@ def reset_agent_archetypes(uid):
     return redirect(request.referrer)
 
 
-@clientsr.route("/admin/update_recsys/<int:uid>", methods=["POST"])
-@login_required
-def update_recsys(uid):
-    """Update recsys."""
+def _update_recsys_internal(uid, expected_mode):
+    """Update recsys using the modality-specific route."""
     check_privileges(current_user.username)
 
     recsys_type = request.form.get("recsys_type")
     frecsys_type = request.form.get("frecsys_type")
 
     client = Client.query.filter_by(id=uid).first()
+    if not client:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    actual_mode = _get_experiment_mode(exp)
+    if actual_mode != expected_mode:
+        flash("Update route does not match the experiment modality.", "error")
+        if actual_mode == "hpc":
+            return redirect(url_for("clientsr.client_details_hpc", uid=uid))
+        if actual_mode == "forum":
+            return redirect(url_for("clientsr.client_details_forum", uid=uid))
+        return redirect(url_for("clientsr.client_details", uid=uid))
 
     # Update client's recsys settings
     client.crecsys = recsys_type
@@ -3448,15 +4627,78 @@ def update_recsys(uid):
     return redirect(request.referrer)
 
 
-@clientsr.route("/admin/update_client_llm/<int:uid>", methods=["POST"])
+@clientsr.route("/admin/update_standard_recsys/<int:uid>", methods=["POST"])
 @login_required
-def update_llm(uid):
-    """Update llm."""
+def update_standard_recsys(uid):
+    """Update recommenders for a standard microblogging client."""
+    return _update_recsys_internal(uid, "standard")
+
+
+@clientsr.route("/admin/update_forum_recsys/<int:uid>", methods=["POST"])
+@login_required
+def update_forum_recsys(uid):
+    """Update recommenders for a forum client."""
+    return _update_recsys_internal(uid, "forum")
+
+
+@clientsr.route("/admin/update_hpc_recsys/<int:uid>", methods=["POST"])
+@login_required
+def update_hpc_recsys(uid):
+    """Update recommenders for an HPC client."""
+    return _update_recsys_internal(uid, "hpc")
+
+
+@clientsr.route("/admin/update_recsys/<int:uid>", methods=["POST"])
+@login_required
+def update_recsys(uid):
+    """Backward-compatible dispatcher for recommender updates."""
     check_privileges(current_user.username)
 
-    user_type = request.form.get("user_type")
+    client = Client.query.filter_by(id=uid).first()
+    if not client:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return update_hpc_recsys(uid)
+    if exp.platform_type == "forum":
+        return update_forum_recsys(uid)
+    return update_standard_recsys(uid)
+
+
+def _update_client_llm_internal(uid, expected_mode):
+    """Update client LLM using the modality-specific route."""
+    check_privileges(current_user.username)
 
     client = Client.query.filter_by(id=uid).first()
+    if not client:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    actual_mode = (
+        "hpc"
+        if getattr(exp, "simulator_type", "Standard") == "HPC"
+        else ("forum" if exp.platform_type == "forum" else "standard")
+    )
+    if actual_mode != expected_mode:
+        flash("Update route does not match the experiment modality.", "error")
+        if actual_mode == "hpc":
+            return redirect(url_for("clientsr.client_details_hpc", uid=uid))
+        if actual_mode == "forum":
+            return redirect(url_for("clientsr.client_details_forum", uid=uid))
+        return redirect(url_for("clientsr.client_details", uid=uid))
+
+    user_type = request.form.get("user_type")
 
     # get populations for client uid
     population = Population.query.filter_by(id=client.population_id).first()
@@ -3479,10 +4721,52 @@ def update_llm(uid):
     return redirect(request.referrer)
 
 
-@clientsr.route("/admin/opinion_configuration/<int:idexp>")
+@clientsr.route("/admin/update_standard_client_llm/<int:uid>", methods=["POST"])
 @login_required
-def opinion_configuration(idexp):
-    """Display opinion configuration page for experiments with opinions annotation."""
+def update_standard_client_llm(uid):
+    """Update LLM for a standard microblogging client."""
+    return _update_client_llm_internal(uid, "standard")
+
+
+@clientsr.route("/admin/update_forum_client_llm/<int:uid>", methods=["POST"])
+@login_required
+def update_forum_client_llm(uid):
+    """Update LLM for a forum client."""
+    return _update_client_llm_internal(uid, "forum")
+
+
+@clientsr.route("/admin/update_hpc_client_llm/<int:uid>", methods=["POST"])
+@login_required
+def update_hpc_client_llm(uid):
+    """Update LLM for an HPC client."""
+    return _update_client_llm_internal(uid, "hpc")
+
+
+@clientsr.route("/admin/update_client_llm/<int:uid>", methods=["POST"])
+@login_required
+def update_llm(uid):
+    """Backward-compatible dispatcher for client LLM updates."""
+    check_privileges(current_user.username)
+
+    client = Client.query.filter_by(id=uid).first()
+    if not client:
+        flash("Client not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    exp = Exps.query.filter_by(idexp=client.id_exp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.experiments"))
+
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return update_hpc_client_llm(uid)
+    if exp.platform_type == "forum":
+        return update_forum_client_llm(uid)
+    return update_standard_client_llm(uid)
+
+
+def _opinion_configuration_internal(idexp, expected_mode):
+    """Display opinion configuration page for the expected experiment modality."""
     check_privileges(current_user.username)
 
     # Get client_id from query parameters
@@ -3496,6 +4780,19 @@ def opinion_configuration(idexp):
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
+
+    actual_mode = (
+        "hpc"
+        if getattr(exp, "simulator_type", "Standard") == "HPC"
+        else ("forum" if exp.platform_type == "forum" else "standard")
+    )
+    if actual_mode != expected_mode:
+        flash("Opinion configuration route does not match the experiment modality.", "error")
+        if actual_mode == "hpc":
+            return redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+        if actual_mode == "forum":
+            return redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
+        return redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
 
     # Get client details
     client = Client.query.filter_by(id=client_id).first()
@@ -3696,8 +4993,14 @@ def opinion_configuration(idexp):
         {"id": "education_level", "name": "Education Level"},
     ]
 
+    template_name = {
+        "standard": "admin/opinion_configuration.html",
+        "forum": "admin/opinion_configuration_forum.html",
+        "hpc": "admin/opinion_configuration_hpc.html",
+    }[expected_mode]
+
     return render_template(
-        "admin/opinion_configuration.html",
+        template_name,
         experiment=exp,
         client=client,
         topics=topics,
@@ -3714,90 +5017,248 @@ def opinion_configuration(idexp):
     )
 
 
-@clientsr.route("/admin/set_opinion_distributions", methods=["POST"])
+@clientsr.route("/admin/opinion_configuration_standard/<int:idexp>")
 @login_required
-def set_opinion_distributions():
-    """Handle opinion distribution configuration submission and update population JSON."""
+def opinion_configuration_standard(idexp):
+    """Display opinion configuration for a standard microblogging experiment."""
+    return _opinion_configuration_internal(idexp, "standard")
+
+
+@clientsr.route("/admin/opinion_configuration_forum/<int:idexp>")
+@login_required
+def opinion_configuration_forum(idexp):
+    """Display opinion configuration for a forum experiment."""
+    return _opinion_configuration_internal(idexp, "forum")
+
+
+@clientsr.route("/admin/opinion_configuration_hpc/<int:idexp>")
+@login_required
+def opinion_configuration_hpc(idexp):
+    """Display opinion configuration for an HPC experiment."""
+    return _opinion_configuration_internal(idexp, "hpc")
+
+
+@clientsr.route("/admin/opinion_configuration/<int:idexp>")
+@login_required
+def opinion_configuration(idexp):
+    """Backward-compatible dispatcher for opinion configuration routes."""
     check_privileges(current_user.username)
 
-    # Get experiment ID and client ID from form
-    idexp = request.form.get("idexp")
-    client_id = request.form.get("client_id")
-
-    if not idexp:
-        flash("Experiment ID is missing.", "error")
-        return redirect(url_for("experiments.settings"))
-
-    if not client_id:
-        flash("Client ID is missing.", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
-
-    # Get experiment and client details
     exp = Exps.query.filter_by(idexp=idexp).first()
     if not exp:
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
 
-    client = Client.query.filter_by(id=client_id).first()
-    if not client or client.id_exp != int(idexp):
-        flash("Client not found or does not belong to this experiment.", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    client_id = request.args.get("client_id", type=int)
+    experiment_mode = _get_experiment_mode(exp)
+    if experiment_mode == "hpc":
+        return redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+    if experiment_mode == "forum":
+        return redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
+    return redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
 
-    # Get population
-    population = Population.query.filter_by(id=client.population_id).first()
-    if not population:
-        flash("Population not found.", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    # Get the selected segmentation dimensions
-    segmentation = request.form.get("segmentation", "")
-    selected_dimensions = [d.strip() for d in segmentation.split(",") if d.strip()]
-
-    # Parse form data to extract topic-segment-distribution mappings
-    # Form fields are named: dist_topic_{topic_id}_segment_{segment_index}
-    # Each select also has data-segment-name attribute with the actual segment name
+def _build_topic_segment_distributions():
+    """Parse topic/segment distribution selections from the submitted form."""
     topic_segment_distributions = {}
-
     for key, value in request.form.items():
         if key.startswith("dist_topic_"):
-            # Parse the field name: dist_topic_{topic_id}_segment_{segment_index}
             parts = key.split("_")
             if len(parts) >= 4:
                 topic_id = int(parts[2])
                 segment_index = int(parts[4])
-                distribution_name = value
+                topic_segment_distributions.setdefault(topic_id, {})[
+                    segment_index
+                ] = value
+    return topic_segment_distributions
 
-                if topic_id not in topic_segment_distributions:
-                    topic_segment_distributions[topic_id] = {}
 
-                topic_segment_distributions[topic_id][segment_index] = distribution_name
+def _sample_opinion_from_distribution(distribution_name, distributions_map):
+    """Sample a value from the named opinion distribution."""
+    if distribution_name not in distributions_map:
+        return random.random()
 
-    # Get experiment topics
+    dist_info = distributions_map[distribution_name]
+    dist_type = dist_info["type"]
+    params = dist_info["parameters"]
+
+    try:
+        if dist_type == "uniform":
+            return np.random.uniform(0, 1)
+        if dist_type == "normal":
+            value = np.random.normal(params.get("loc", 0.5), params.get("scale", 0.2))
+            return max(0.0, min(1.0, value))
+        if dist_type == "beta":
+            return np.random.beta(params.get("a", 2), params.get("b", 5))
+        if dist_type == "exponential":
+            value = np.random.exponential(params.get("scale", 1))
+            return max(0.0, min(1.0, value))
+        if dist_type == "gamma":
+            value = np.random.gamma(params.get("shape", 2), params.get("scale", 1))
+            return max(0.0, min(1.0, value / DISTRIBUTION_SCALE_FACTOR))
+        if dist_type == "lognormal":
+            value = np.random.lognormal(params.get("mean", 0), params.get("sigma", 1))
+            return max(0.0, min(1.0, value / DISTRIBUTION_SCALE_FACTOR))
+        if dist_type == "bimodal":
+            peak = params.get("peak1", 0.2)
+            if np.random.random() >= 0.5:
+                peak = params.get("peak2", 0.8)
+            value = np.random.normal(peak, params.get("sigma", 0.15))
+            return max(0.0, min(1.0, value))
+        if dist_type == "polarized":
+            value = np.random.normal(0.0, 0.1)
+            if np.random.random() >= 0.5:
+                value = np.random.normal(1.0, 0.1)
+            return max(0.0, min(1.0, value))
+        return np.random.uniform(0, 1)
+    except Exception as e:
+        flash(
+            f"Error sampling from distribution '{distribution_name}': {str(e)}",
+            "warning",
+        )
+        return random.random()
+
+
+def _get_agent_segment(agent_data, dimensions, age_class_map):
+    """Determine the segment label for an agent."""
+    if not dimensions:
+        return "All Population"
+
+    segment_parts = []
+    for dim in dimensions:
+        if dim == "age":
+            age = agent_data.get("age")
+            if age:
+                matched = False
+                for class_name, (start, end) in age_class_map.items():
+                    if start <= age <= end:
+                        segment_parts.append(class_name)
+                        matched = True
+                        break
+                if not matched:
+                    segment_parts.append(f"Age-{age}")
+        elif dim == "political_leaning" and agent_data.get("leaning"):
+            segment_parts.append(str(agent_data.get("leaning")))
+        elif dim == "gender" and agent_data.get("gender"):
+            segment_parts.append(str(agent_data.get("gender")))
+        elif dim == "education_level" and agent_data.get("education_level"):
+            segment_parts.append(str(agent_data.get("education_level")))
+
+    return " - ".join(segment_parts) if segment_parts else "All Population"
+
+
+def _get_segment_index(segment_name, dimensions, pop_data_agents, age_class_map):
+    """Map a segment label to the index used by the frontend."""
+    if not dimensions:
+        return 0
+
+    dimension_values = {dim: set() for dim in dimensions}
+    for agent in pop_data_agents:
+        if agent.get("is_page", 0):
+            continue
+        for dim in dimensions:
+            if dim == "age":
+                age = agent.get("age")
+                if age:
+                    for class_name, (start, end) in age_class_map.items():
+                        if start <= age <= end:
+                            dimension_values[dim].add(class_name)
+                            break
+            elif dim == "political_leaning" and agent.get("leaning"):
+                dimension_values[dim].add(str(agent.get("leaning")))
+            elif dim == "gender" and agent.get("gender"):
+                dimension_values[dim].add(str(agent.get("gender")))
+            elif dim == "education_level" and agent.get("education_level"):
+                dimension_values[dim].add(str(agent.get("education_level")))
+
+    dimension_values = {key: sorted(list(values)) for key, values in dimension_values.items()}
+    segments = [""]
+    for dim in dimensions:
+        values = dimension_values.get(dim, [])
+        if not values:
+            continue
+        next_segments = []
+        for segment in segments:
+            for value in values:
+                next_segments.append(segment + " - " + value if segment else value)
+        segments = next_segments
+
+    try:
+        return segments.index(segment_name)
+    except ValueError:
+        return 0
+
+
+def _build_opinion_groups_dict():
+    """Load opinion groups as config-friendly bounds."""
+    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups_dict = {}
+    for group in opinion_groups:
+        opinion_groups_dict[group.name.rstrip()] = [
+            group.lower_bound,
+            group.upper_bound,
+        ]
+    return opinion_groups_dict
+
+
+def _resolve_opinion_submission_context(expected_mode):
+    """Validate the submission and load common opinion-distribution state."""
+    check_privileges(current_user.username)
+
+    idexp = request.form.get("idexp")
+    client_id = request.form.get("client_id")
+    if not idexp:
+        return None, redirect(url_for("experiments.settings"))
+    if not client_id:
+        flash("Client ID is missing.", "error")
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return None, redirect(url_for("experiments.settings"))
+
+    actual_mode = (
+        "hpc"
+        if getattr(exp, "simulator_type", "Standard") == "HPC"
+        else ("forum" if exp.platform_type == "forum" else "standard")
+    )
+    if actual_mode != expected_mode:
+        flash("Opinion distribution update route does not match the experiment modality.", "error")
+        if actual_mode == "hpc":
+            return None, redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+        if actual_mode == "forum":
+            return None, redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
+        return None, redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
+
+    client = Client.query.filter_by(id=client_id).first()
+    if not client or client.id_exp != int(idexp):
+        flash("Client not found or does not belong to this experiment.", "error")
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    population = Population.query.filter_by(id=client.population_id).first()
+    if not population:
+        flash("Population not found.", "error")
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    selected_dimensions = [
+        value.strip()
+        for value in (request.form.get("segmentation", "")).split(",")
+        if value.strip()
+    ]
+    topic_segment_distributions = _build_topic_segment_distributions()
+
     topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
     topics_ids = [t.topic_id for t in topics]
-    topics_list = (
-        db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
-    )
+    topics_list = db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
     topic_id_to_name = {t.id: t.name for t in topics_list}
 
-    # Load age classes for segment identification
-    age_classes = AgeClass.query.all()
-    age_class_map = {}
-    for ac in age_classes:
-        age_class_map[ac.name] = (ac.age_start, ac.age_end)
+    age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in AgeClass.query.all()}
 
-    # Load population JSON file
-    from y_web.utils import get_db_type
     from y_web.utils.path_utils import get_writable_path
 
     writable_base = get_writable_path()
-    dbtype = get_db_type()
-
-    if dbtype == "sqlite":
-        exp_folder = exp.db_name.split(os.sep)[1]
-    else:
-        exp_folder = exp.db_name.removeprefix("experiments_")
-
+    exp_folder = _get_experiment_folder_name(exp)
     population_file = os.path.join(
         writable_base,
         "y_web",
@@ -3805,273 +5266,42 @@ def set_opinion_distributions():
         exp_folder,
         f"{population.name.replace(' ', '')}.json",
     )
-
     if not os.path.exists(population_file):
         flash(f"Population file not found: {population_file}", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    # Load population data
     try:
-        with open(population_file, "r") as f:
-            pop_data = json.load(f)
+        with open(population_file, "r") as handle:
+            pop_data = json.load(handle)
     except Exception as e:
         flash(f"Error loading population file: {str(e)}", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    # Get all opinion distributions from database
-    opinion_distributions = OpinionDistribution.query.all()
     distributions_map = {}
-    for dist in opinion_distributions:
+    for dist in OpinionDistribution.query.all():
         try:
-            params = json.loads(dist.parameters)
             distributions_map[dist.name] = {
                 "type": dist.distribution_type,
-                "parameters": params,
+                "parameters": json.loads(dist.parameters),
             }
         except json.JSONDecodeError as e:
-            error_msg = (
-                f"Invalid JSON parameters for distribution '{dist.name}': {str(e)}"
+            flash(
+                f"Invalid JSON parameters for distribution '{dist.name}': {str(e)}",
+                "warning",
             )
-            print(f"Warning: {error_msg}")
-            flash(error_msg, "warning")
 
-    # Helper function to identify segment for an agent
-    def get_agent_segment(agent_data, dimensions):
-        """Determine the segment for an agent based on selected dimensions."""
-        if not dimensions:
-            return "All Population"
-
-        segment_parts = []
-        for dim in dimensions:
-            if dim == "age":
-                age = agent_data.get("age")
-                if age:
-                    # Map age to age class
-                    age_class_found = False
-                    for class_name, (start, end) in age_class_map.items():
-                        if start <= age <= end:
-                            segment_parts.append(class_name)
-                            age_class_found = True
-                            break
-                    if not age_class_found:
-                        # Use "Other" for ages that don't fit any defined class
-                        segment_parts.append(f"Age-{age}")
-            elif dim == "political_leaning":
-                leaning = agent_data.get("leaning")
-                if leaning:
-                    segment_parts.append(str(leaning))
-            elif dim == "gender":
-                gender = agent_data.get("gender")
-                if gender:
-                    segment_parts.append(str(gender))
-            elif dim == "education_level":
-                education = agent_data.get("education_level")
-                if education:
-                    segment_parts.append(str(education))
-
-        return " - ".join(segment_parts) if segment_parts else "All Population"
-
-    # Helper function to get segment index
-    def get_segment_index(segment_name, dimensions, pop_data_agents):
-        """Get the segment index based on segment name and dimensions."""
-        # Generate all possible segments in the same order as the frontend
-        if not dimensions:
-            return 0
-
-        # Collect unique values for each dimension from the population
-        dimension_values = {dim: set() for dim in dimensions}
-
-        for agent in pop_data_agents:
-            if agent.get("is_page", 0):
-                continue
-
-            for dim in dimensions:
-                if dim == "age":
-                    age = agent.get("age")
-                    if age:
-                        for class_name, (start, end) in age_class_map.items():
-                            if start <= age <= end:
-                                dimension_values[dim].add(class_name)
-                                break
-                elif dim == "political_leaning":
-                    leaning = agent.get("leaning")
-                    if leaning:
-                        dimension_values[dim].add(str(leaning))
-                elif dim == "gender":
-                    gender = agent.get("gender")
-                    if gender:
-                        dimension_values[dim].add(str(gender))
-                elif dim == "education_level":
-                    education = agent.get("education_level")
-                    if education:
-                        dimension_values[dim].add(str(education))
-
-        # Sort values for each dimension
-        dimension_values = {k: sorted(list(v)) for k, v in dimension_values.items()}
-
-        # Generate all segments in order
-        segments = [""]
-        for dim in dimensions:
-            values = dimension_values.get(dim, [])
-            if not values:
-                continue
-
-            new_segments = []
-            for segment in segments:
-                for value in values:
-                    new_segments.append(segment + " - " + value if segment else value)
-            segments = new_segments
-
-        # Find the index of our segment
-        try:
-            return segments.index(segment_name)
-        except ValueError:
-            return 0
-
-    # Helper function to sample from a distribution
-    def sample_from_distribution(distribution_name):
-        """Sample a value from the specified distribution."""
-        if distribution_name not in distributions_map:
-            # Default to uniform random if distribution not found
-            return random.random()
-
-        dist_info = distributions_map[distribution_name]
-        dist_type = dist_info["type"]
-        params = dist_info["parameters"]
-
-        try:
-            if dist_type == "uniform":
-                return np.random.uniform(0, 1)
-            elif dist_type == "normal":
-                loc = params.get("loc", 0.5)
-                scale = params.get("scale", 0.2)
-                # Clip to [0, 1] range
-                value = np.random.normal(loc, scale)
-                return max(0.0, min(1.0, value))
-            elif dist_type == "beta":
-                a = params.get("a", 2)
-                b = params.get("b", 5)
-                return np.random.beta(a, b)
-            elif dist_type == "exponential":
-                scale = params.get("scale", 1)
-                # Scale and clip to [0, 1]
-                value = np.random.exponential(scale)
-                return max(0.0, min(1.0, value))
-            elif dist_type == "gamma":
-                shape = params.get("shape", 2)
-                scale = params.get("scale", 1)
-                # Scale and clip to [0, 1] using DISTRIBUTION_SCALE_FACTOR
-                value = np.random.gamma(shape, scale)
-                return max(0.0, min(1.0, value / DISTRIBUTION_SCALE_FACTOR))
-            elif dist_type == "lognormal":
-                mean = params.get("mean", 0)
-                sigma = params.get("sigma", 1)
-                # Scale and clip to [0, 1] using DISTRIBUTION_SCALE_FACTOR
-                value = np.random.lognormal(mean, sigma)
-                return max(0.0, min(1.0, value / DISTRIBUTION_SCALE_FACTOR))
-            elif dist_type == "bimodal":
-                peak1 = params.get("peak1", 0.2)
-                peak2 = params.get("peak2", 0.8)
-                sigma = params.get("sigma", 0.15)
-                # Randomly choose one of the two peaks
-                if np.random.random() < 0.5:
-                    value = np.random.normal(peak1, sigma)
-                else:
-                    value = np.random.normal(peak2, sigma)
-                return max(0.0, min(1.0, value))
-            elif dist_type == "polarized":
-                # Sample from extremes (0 or 1 with some noise)
-                if np.random.random() < 0.5:
-                    value = np.random.normal(0.0, 0.1)
-                else:
-                    value = np.random.normal(1.0, 0.1)
-                return max(0.0, min(1.0, value))
-            else:
-                # Default to uniform if type not recognized
-                return np.random.uniform(0, 1)
-        except Exception as e:
-            error_msg = (
-                f"Error sampling from distribution '{distribution_name}': {str(e)}"
-            )
-            print(f"Warning: {error_msg}")
-            flash(error_msg, "warning")
-            return random.random()
-
-    # Process each agent in the population
-    updated_count = 0
-    for agent in pop_data.get("agents", []):
-        # Skip pages
-        if agent.get("is_page", 0):
-            continue
-
-        # Get agent's segment
-        agent_segment = get_agent_segment(agent, selected_dimensions)
-        segment_index = get_segment_index(
-            agent_segment, selected_dimensions, pop_data["agents"]
-        )
-
-        # Get agent's interests (topics)
-        interests = agent.get("interests", [])
-        if isinstance(interests, list) and len(interests) > 0:
-            topic_names = interests[0] if isinstance(interests[0], list) else interests
-        else:
-            topic_names = []
-
-        # Initialize or update opinions for this agent
-        if "opinions" not in agent or agent["opinions"] is None:
-            agent["opinions"] = {}
-
-        # For each topic the agent is interested in
-        for topic_name in topic_names:
-            # Find the topic ID
-            topic_id = None
-            for tid, tname in topic_id_to_name.items():
-                if tname == topic_name:
-                    topic_id = tid
-                    break
-
-            if topic_id is None:
-                continue
-
-            # Get the distribution for this topic-segment combination
-            if topic_id in topic_segment_distributions:
-                if segment_index in topic_segment_distributions[topic_id]:
-                    distribution_name = topic_segment_distributions[topic_id][
-                        segment_index
-                    ]
-                    # Sample a value from the distribution
-                    opinion_value = sample_from_distribution(distribution_name)
-                    agent["opinions"][topic_name] = opinion_value
-                    updated_count += 1
-
-    # Save the updated population JSON file
-    try:
-        with open(population_file, "w") as f:
-            json.dump(pop_data, f, indent=4)
-        flash(
-            f"Successfully updated opinions for {updated_count} agent-topic pairs.",
-            "success",
-        )
-    except Exception as e:
-        flash(f"Error saving population file: {str(e)}", "error")
-        return redirect(url_for("experiments.experiment_details", uid=idexp))
-
-    # Check if this is an HPC experiment
-    is_hpc = exp.simulator_type == "HPC" if hasattr(exp, "simulator_type") else False
-
-    # Resolve experiment-level opinion dynamics toggle from server config.
     server_cfg = os.path.join(
         writable_base,
         "y_web",
         "experiments",
         exp_folder,
-        "server_config.json" if is_hpc else "config_server.json",
+        "server_config.json" if actual_mode == "hpc" else "config_server.json",
     )
     opinion_dynamics_global_enabled = False
     if os.path.exists(server_cfg):
         try:
-            with open(server_cfg, "r") as sf:
-                scfg = json.load(sf)
+            with open(server_cfg, "r") as handle:
+                scfg = json.load(handle)
             opinion_dynamics_global_enabled = bool(
                 scfg.get(
                     "opinion_dynamics_enabled",
@@ -4090,177 +5320,260 @@ def set_opinion_distributions():
             exp.annotations and "opinions" in exp.annotations
         )
 
-    # Check if opinions are enabled for the experiment
     annotations = (
         {an.strip(): None for an in exp.annotations.split(",")}
         if exp.annotations and exp.annotations.strip()
         else {}
     )
-    opinions_enabled = "opinions" in annotations
-    opinion_dynamics_enabled = opinions_enabled and opinion_dynamics_global_enabled
+    opinion_dynamics_enabled = (
+        "opinions" in annotations and opinion_dynamics_global_enabled
+    )
 
-    # Build opinion dynamics configuration for HPC clients
-    if is_hpc:
-        if opinion_dynamics_enabled:
-            # Get opinion update rule from form
-            update_rule = request.form.get("update_rule", "bounded_confidence")
+    client_config_file = os.path.join(
+        writable_base,
+        "y_web",
+        "experiments",
+        exp_folder,
+        f"client_{client.name}-{population.name}.json",
+    )
 
-            # Build HPC-specific opinion dynamics configuration
-            opinion_dynamics = {"enabled": True, "model_name": update_rule}
+    return {
+        "idexp": idexp,
+        "client_id": client_id,
+        "exp": exp,
+        "client": client,
+        "population": population,
+        "selected_dimensions": selected_dimensions,
+        "topic_segment_distributions": topic_segment_distributions,
+        "topic_id_to_name": topic_id_to_name,
+        "age_class_map": age_class_map,
+        "pop_data": pop_data,
+        "population_file": population_file,
+        "distributions_map": distributions_map,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
+        "client_config_file": client_config_file,
+    }, None
 
-            if update_rule == "bounded_confidence":
-                # Collect bounded confidence parameters
-                bc_epsilon = request.form.get("bc_epsilon", "0.25")
-                bc_mu = request.form.get("bc_mu", "0.5")
-                bc_theta = request.form.get("bc_theta", "0.0")
-                bc_cold_start = request.form.get("bc_cold_start", "neutral")
 
-                opinion_dynamics["parameters"] = {
-                    "epsilon": float(bc_epsilon),
-                    "mu": float(bc_mu),
-                    "theta": float(bc_theta),
-                    "cold_start": bc_cold_start,
-                }
-            elif update_rule == "llm_evaluation":
-                # Collect LLM evaluation parameters
-                llm_cold_start = request.form.get("llm_cold_start", "neutral")
-                llm_evaluation_scope = request.form.get(
-                    "llm_evaluation_scope", "neighbors"
-                )
+def _apply_opinion_distributions_to_population(context):
+    """Update the population payload according to the submitted distributions."""
+    updated_count = 0
+    pop_data = context["pop_data"]
+    for agent in pop_data.get("agents", []):
+        if agent.get("is_page", 0):
+            continue
 
-                opinion_dynamics["note"] = (
-                    "Uses LLM-based opinion evaluation with natural language reasoning. Requires LLM agents."
-                )
-                opinion_dynamics["parameters"] = {
-                    "evaluation_scope": llm_evaluation_scope,
-                    "cold_start": llm_cold_start,
-                    "note": f"evaluation_scope='{llm_evaluation_scope}' considers opinions of followed users. cold_start='{llm_cold_start}' initializes new opinions at 0.5.",
-                }
-
-            # Add opinion groups from database
-            opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
-            opinion_groups_dict = {}
-            for group in opinion_groups:
-                opinion_groups_dict[group.name.rstrip()] = [
-                    group.lower_bound,
-                    group.upper_bound,
-                ]
-
-            opinion_dynamics["opinion_groups"] = opinion_groups_dict
-        else:
-            # Opinion dynamics disabled for HPC
-            opinion_dynamics = {
-                "enabled": False,
-                "note": "Opinion dynamics disabled for this experiment. No opinion evolution occurs during simulation.",
-            }
-
-        # Load and update HPC client configuration JSON file
-        client_config_file = os.path.join(
-            writable_base,
-            "y_web",
-            "experiments",
-            exp_folder,
-            f"client_{client.name}-{population.name}.json",
+        agent_segment = _get_agent_segment(
+            agent, context["selected_dimensions"], context["age_class_map"]
+        )
+        segment_index = _get_segment_index(
+            agent_segment,
+            context["selected_dimensions"],
+            pop_data["agents"],
+            context["age_class_map"],
         )
 
-        if os.path.exists(client_config_file):
-            try:
-                with open(client_config_file, "r") as f:
-                    client_config = json.load(f)
+        interests = agent.get("interests", [])
+        topic_names = interests[0] if isinstance(interests, list) and interests and isinstance(interests[0], list) else interests
+        if "opinions" not in agent or agent["opinions"] is None:
+            agent["opinions"] = {}
 
-                # Overwrite previous opinion dynamics configuration if present.
-                # This explicitly supports reconfiguring existing clients.
-                client_config["opinion_dynamics"] = opinion_dynamics
+        for topic_name in topic_names or []:
+            topic_id = None
+            for tid, tname in context["topic_id_to_name"].items():
+                if tname == topic_name:
+                    topic_id = tid
+                    break
+            if topic_id is None:
+                continue
+            selected = context["topic_segment_distributions"].get(topic_id, {})
+            if segment_index in selected:
+                agent["opinions"][topic_name] = _sample_opinion_from_distribution(
+                    selected[segment_index], context["distributions_map"]
+                )
+                updated_count += 1
 
-                # Save updated configuration
-                with open(client_config_file, "w") as f:
-                    json.dump(client_config, f, indent=4)
+    try:
+        with open(context["population_file"], "w") as handle:
+            json.dump(pop_data, handle, indent=4)
+        flash(
+            f"Successfully updated opinions for {updated_count} agent-topic pairs.",
+            "success",
+        )
+    except Exception as e:
+        flash(f"Error saving population file: {str(e)}", "error")
+        return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
+    return None
 
-                flash("Opinion dynamics configuration saved successfully.", "success")
-            except Exception as e:
-                flash(f"Error updating client configuration: {str(e)}", "warning")
-        else:
-            flash(
-                f"Client configuration file not found: {client_config_file}", "warning"
-            )
-    else:
-        # Standard client configuration (original behavior)
-        # Get opinion update rule from form
-        update_rule = request.form.get("update_rule", "bounded_confidence")
 
-        # Build opinion dynamics configuration based on selected rule
-        opinion_dynamics = {
-            "enabled": opinion_dynamics_enabled,
-            "model_name": update_rule,
-            "parameters": {},
+def _persist_non_hpc_opinion_dynamics(context):
+    """Persist standard/forum opinion dynamics configuration to client config."""
+    update_rule = request.form.get("update_rule", "bounded_confidence")
+    opinion_dynamics = {
+        "enabled": context["opinion_dynamics_enabled"],
+        "model_name": update_rule,
+        "parameters": {},
+        "opinion_groups": _build_opinion_groups_dict(),
+    }
+
+    if update_rule == "bounded_confidence":
+        opinion_dynamics["parameters"] = {
+            "epsilon": float(request.form.get("bc_epsilon", "0.25")),
+            "mu": float(request.form.get("bc_mu", "0.5")),
+            "theta": float(request.form.get("bc_theta", "0")),
+            "cold_start": request.form.get("bc_cold_start", "neutral"),
+        }
+    elif update_rule == "llm_evaluation":
+        opinion_dynamics["parameters"] = {
+            "cold_start": request.form.get("llm_cold_start", "neutral"),
+            "evaluation_scope": request.form.get(
+                "llm_evaluation_scope", "interlocutor_only"
+            ),
         }
 
-        if update_rule == "bounded_confidence":
-            # Collect bounded confidence parameters
-            bc_epsilon = request.form.get("bc_epsilon", "0.25")
-            bc_mu = request.form.get("bc_mu", "0.5")
-            bc_theta = request.form.get("bc_theta", "0")
-            bc_cold_start = request.form.get("bc_cold_start", "neutral")
-
-            opinion_dynamics["parameters"] = {
-                "epsilon": float(bc_epsilon),
-                "mu": float(bc_mu),
-                "theta": float(bc_theta),
-                "cold_start": bc_cold_start,
-            }
-        elif update_rule == "llm_evaluation":
-            # Collect LLM evaluation parameters
-            llm_cold_start = request.form.get("llm_cold_start", "neutral")
-            llm_evaluation_scope = request.form.get(
-                "llm_evaluation_scope", "interlocutor_only"
-            )
-
-            opinion_dynamics["parameters"] = {
-                "cold_start": llm_cold_start,
-                "evaluation_scope": llm_evaluation_scope,
-            }
-
-        # Add opinion groups from database
-        opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
-        opinion_groups_dict = {}
-        for group in opinion_groups:
-            opinion_groups_dict[group.name.rstrip()] = [
-                group.lower_bound,
-                group.upper_bound,
-            ]
-
-        opinion_dynamics["opinion_groups"] = opinion_groups_dict
-
-        # Load and update client configuration JSON file
-        client_config_file = os.path.join(
-            writable_base,
-            "y_web",
-            "experiments",
-            exp_folder,
-            f"client_{client.name}-{population.name}.json",
+    if os.path.exists(context["client_config_file"]):
+        try:
+            with open(context["client_config_file"], "r") as handle:
+                client_config = json.load(handle)
+            client_config.setdefault("simulation", {})[
+                "opinion_dynamics"
+            ] = opinion_dynamics
+            with open(context["client_config_file"], "w") as handle:
+                json.dump(client_config, handle, indent=4)
+            flash("Opinion dynamics configuration saved successfully.", "success")
+        except Exception as e:
+            flash(f"Error updating client configuration: {str(e)}", "warning")
+    else:
+        flash(
+            f"Client configuration file not found: {context['client_config_file']}",
+            "warning",
         )
 
-        if os.path.exists(client_config_file):
-            try:
-                with open(client_config_file, "r") as f:
-                    client_config = json.load(f)
 
-                # Add opinion_dynamics to simulation section
-                if "simulation" not in client_config:
-                    client_config["simulation"] = {}
-
-                client_config["simulation"]["opinion_dynamics"] = opinion_dynamics
-
-                # Save updated configuration
-                with open(client_config_file, "w") as f:
-                    json.dump(client_config, f, indent=4)
-
-                flash("Opinion dynamics configuration saved successfully.", "success")
-            except Exception as e:
-                flash(f"Error updating client configuration: {str(e)}", "warning")
-        else:
-            flash(
-                f"Client configuration file not found: {client_config_file}", "warning"
+def _persist_hpc_opinion_dynamics(context):
+    """Persist HPC opinion dynamics configuration to client config."""
+    if context["opinion_dynamics_enabled"]:
+        update_rule = request.form.get("update_rule", "bounded_confidence")
+        opinion_dynamics = {
+            "enabled": True,
+            "model_name": update_rule,
+            "opinion_groups": _build_opinion_groups_dict(),
+        }
+        if update_rule == "bounded_confidence":
+            opinion_dynamics["parameters"] = {
+                "epsilon": float(request.form.get("bc_epsilon", "0.25")),
+                "mu": float(request.form.get("bc_mu", "0.5")),
+                "theta": float(request.form.get("bc_theta", "0.0")),
+                "cold_start": request.form.get("bc_cold_start", "neutral"),
+            }
+        elif update_rule == "llm_evaluation":
+            llm_cold_start = request.form.get("llm_cold_start", "neutral")
+            llm_evaluation_scope = request.form.get(
+                "llm_evaluation_scope", "neighbors"
             )
+            opinion_dynamics["note"] = (
+                "Uses LLM-based opinion evaluation with natural language reasoning. Requires LLM agents."
+            )
+            opinion_dynamics["parameters"] = {
+                "evaluation_scope": llm_evaluation_scope,
+                "cold_start": llm_cold_start,
+                "note": f"evaluation_scope='{llm_evaluation_scope}' considers opinions of followed users. cold_start='{llm_cold_start}' initializes new opinions at 0.5.",
+            }
+    else:
+        opinion_dynamics = {
+            "enabled": False,
+            "note": "Opinion dynamics disabled for this experiment. No opinion evolution occurs during simulation.",
+        }
 
-    return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if os.path.exists(context["client_config_file"]):
+        try:
+            with open(context["client_config_file"], "r") as handle:
+                client_config = json.load(handle)
+            client_config["opinion_dynamics"] = opinion_dynamics
+            with open(context["client_config_file"], "w") as handle:
+                json.dump(client_config, handle, indent=4)
+            flash("Opinion dynamics configuration saved successfully.", "success")
+        except Exception as e:
+            flash(f"Error updating client configuration: {str(e)}", "warning")
+    else:
+        flash(
+            f"Client configuration file not found: {context['client_config_file']}",
+            "warning",
+        )
+
+
+def _set_standard_opinion_distributions_internal():
+    """Persist opinion distributions for standard microblogging experiments."""
+    context, error_response = _resolve_opinion_submission_context("standard")
+    if error_response is not None:
+        return error_response
+    save_error = _apply_opinion_distributions_to_population(context)
+    if save_error is not None:
+        return save_error
+    _persist_non_hpc_opinion_dynamics(context)
+    return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
+
+
+def _set_forum_opinion_distributions_internal():
+    """Persist opinion distributions for forum experiments."""
+    context, error_response = _resolve_opinion_submission_context("forum")
+    if error_response is not None:
+        return error_response
+    save_error = _apply_opinion_distributions_to_population(context)
+    if save_error is not None:
+        return save_error
+    _persist_non_hpc_opinion_dynamics(context)
+    return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
+
+
+def _set_hpc_opinion_distributions_internal():
+    """Persist opinion distributions for HPC experiments."""
+    context, error_response = _resolve_opinion_submission_context("hpc")
+    if error_response is not None:
+        return error_response
+    save_error = _apply_opinion_distributions_to_population(context)
+    if save_error is not None:
+        return save_error
+    _persist_hpc_opinion_dynamics(context)
+    return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
+
+
+@clientsr.route("/admin/set_standard_opinion_distributions", methods=["POST"])
+@login_required
+def set_standard_opinion_distributions():
+    """Persist opinion distributions for a standard microblogging experiment."""
+    return _set_standard_opinion_distributions_internal()
+
+
+@clientsr.route("/admin/set_forum_opinion_distributions", methods=["POST"])
+@login_required
+def set_forum_opinion_distributions():
+    """Persist opinion distributions for a forum experiment."""
+    return _set_forum_opinion_distributions_internal()
+
+
+@clientsr.route("/admin/set_hpc_opinion_distributions", methods=["POST"])
+@login_required
+def set_hpc_opinion_distributions():
+    """Persist opinion distributions for an HPC experiment."""
+    return _set_hpc_opinion_distributions_internal()
+
+
+@clientsr.route("/admin/set_opinion_distributions", methods=["POST"])
+@login_required
+def set_opinion_distributions():
+    """Backward-compatible dispatcher for opinion distribution persistence."""
+    check_privileges(current_user.username)
+
+    idexp = request.form.get("idexp")
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    experiment_mode = _get_experiment_mode(exp)
+    if experiment_mode == "hpc":
+        return set_hpc_opinion_distributions()
+    if experiment_mode == "forum":
+        return set_forum_opinion_distributions()
+    return set_standard_opinion_distributions()
