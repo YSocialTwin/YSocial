@@ -1900,7 +1900,7 @@ def _create_standard_client_internal():
         memory_digest_events_limit = int(memory_digest_events_limit)
         memory_cold_start_window = int(memory_cold_start_window)
     except (ValueError, TypeError):
-        errors.append("Forum memory settings must use valid numeric values")
+        errors.append("Memory settings must use valid numeric values")
     try:
         memory_social_decay_lambda = float(memory_social_decay_lambda)
         memory_social_corruption_rate = float(memory_social_corruption_rate)
@@ -1913,7 +1913,7 @@ def _create_standard_client_internal():
             memory_reflection_trigger_importance_sum
         )
     except (ValueError, TypeError):
-        errors.append("Forum memory weights must use valid numeric values")
+        errors.append("Memory weights must use valid numeric values")
 
     if clock_mode not in {"simulated", "real_time"}:
         errors.append("Experiment Clock Mode must be either simulated or real_time")
@@ -1954,7 +1954,7 @@ def _create_standard_client_internal():
         share_link = float(share_link)
         share_image = float(share_image)
     except (ValueError, TypeError):
-        errors.append("Forum action likelihood values must be valid numbers")
+        errors.append("Action likelihood values must be valid numbers")
     share = 0.0
     image = 0.0
     news = 0.0
@@ -2033,9 +2033,9 @@ def _create_standard_client_internal():
         return redirect(request.referrer)
 
     pop_type = infer_population_username_type(population)
-    if pop_type not in {None, "forum"}:
+    if pop_type not in {None, "microblogging"}:
         flash(
-            f"Population Username Type '{pop_type}' is incompatible with experiment platform 'forum'.",
+            f"Population Username Type '{pop_type}' is incompatible with experiment platform 'microblogging'.",
             "error",
         )
         return redirect(request.referrer)
