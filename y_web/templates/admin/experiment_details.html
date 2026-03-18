@@ -575,7 +575,7 @@
                                         <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         {{ client.name }}
                                         {% if opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations) %}
-                                        <a href="/admin/opinion_configuration/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
+                                        <a href="/admin/opinion_configuration_standard/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6; margin-left: 2px;"></i>
                                         </a>
                                         {% endif %}

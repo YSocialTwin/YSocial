@@ -11,7 +11,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }} </a>  > Client: {{ client.name }} <span class="tag is-info">HPC</span>
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }} </a>  > Client: {{ client.name }}
                     </div>
                 </div>
             </div>
@@ -90,38 +90,38 @@
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Simulation length and population dynamics.</p>
                                 <div class="box-line">
                                     <span class="left">Simulation Length (days)</span>
-                                    <span class="right">{{ config.simulation.num_days if config and config.simulation else client.days }}</span>
+                                    <span class="right">{{ client.days }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">% New Agents (daily)</span>
-                                    <span class="right">{{ config.simulation.percentage_new_agents_iteration if config and config.simulation else client.percentage_new_agents_iteration }}</span>
+                                    <span class="right">{{ client.percentage_new_agents_iteration }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">% Daily Churn</span>
-                                    <span class="right">{{ config.simulation.percentage_removed_agents_iteration if config and config.simulation else client.percentage_removed_agents_iteration }}</span>
+                                    <span class="right">{{ client.percentage_removed_agents_iteration }}</span>
                                 </div>
                                 <hr>
                                 <b>Behavioral Settings</b>
                                 <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent interaction and engagement parameters.</p>
                                 <div class="box-line">
                                     <span class="left">Thread Context Length</span>
-                                    <span class="right">{{ config.agents.max_length_thread_reading if config and config.agents else client.max_length_thread_reading }}</span>
+                                    <span class="right">{{ client.max_length_thread_reading }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Timeline Follower Ratio</span>
-                                    <span class="right">{{ config.agents.reading_from_follower_ratio if config and config.agents else client.reading_from_follower_ratio }}</span>
+                                    <span class="right">{{ client.reading_from_follower_ratio }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Probability Daily Follow</span>
-                                    <span class="right">{{ config.agents.probability_of_daily_follow if config and config.agents else client.probability_of_daily_follow }}</span>
+                                    <span class="right">{{ client.probability_of_daily_follow }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Agents' Memory (hours)</span>
-                                    <span class="right">{{ config.agents.attention_window if config and config.agents else client.attention_window }}</span>
+                                    <span class="right">{{ client.attention_window }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Content Visibility (hours)</span>
-                                    <span class="right">{{ config.simulation.visibility_rounds if config and config.simulation else client.visibility_rounds }}</span>
+                                    <span class="right">{{ client.visibility_rounds }}</span>
                                 </div>
                             </div>
                         </div>
@@ -150,35 +150,35 @@
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">Post new content</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.post if config and config.simulation and config.simulation.actions_likelihood else client.post }}</span>
+                                    <span class="right">{{ client.post }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Share and comment an Image</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.image if config and config.simulation and config.simulation.actions_likelihood else client.image }}</span>
+                                    <span class="right">{{ client.image }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Comment on a News</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.news if config and config.simulation and config.simulation.actions_likelihood else client.news }}</span>
+                                    <span class="right">{{ client.news }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Comment a Post</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.comment if config and config.simulation and config.simulation.actions_likelihood else client.comment }}</span>
+                                    <span class="right">{{ client.comment }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Read a content</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.read if config and config.simulation and config.simulation.actions_likelihood else client.read }}</span>
+                                    <span class="right">{{ client.read }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Share News from a Page</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.share if config and config.simulation and config.simulation.actions_likelihood else client.share }}</span>
+                                    <span class="right">{{ client.share }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Search a Hashtag</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.search if config and config.simulation and config.simulation.actions_likelihood else client.search }}</span>
+                                    <span class="right">{{ client.search }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Cast Vote</span>
-                                    <span class="right">{{ config.simulation.actions_likelihood.vote if config and config.simulation and config.simulation.actions_likelihood else client.vote }}</span>
+                                    <span class="right">{{ client.vote }}</span>
                                 </div>
                             </div>
                         </div>
@@ -190,75 +190,47 @@
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">LLM Model</span>
-                                    <span class="right">{{ config.llm.model if config and config.llm else llms }}</span>
+                                    <span class="right">{{ llms }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">LLM Server URL</span>
-                                    <span class="right">
-                                        {% if config and config.llm %}
-                                            {% if config.llm.address %}
-                                                {{ config.llm.address }}:{{ config.llm.port if config.llm.port else '' }}
-                                            {% else %}
-                                                {{ config.llm.backend if config.llm.backend else 'N/A' }}
-                                            {% endif %}
-                                        {% else %}
-                                            {{ client.llm }}
-                                        {% endif %}
-                                    </span>
+                                    <span class="right">{{ client.llm }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">API Key</span>
-                                    <span class="right">{{ config.llm.llm_api_key if config and config.llm and config.llm.llm_api_key else (client.llm_api_key if client.llm_api_key else 'NULL') }}</span>
+                                    <span class="right">{{ client.llm_api_key }}</span>
                                 </div>
 
                                 <div class="box-line">
                                     <span class="left">Max tokens</span>
-                                    <span class="right">
-                                        {% if config and config.llm %}
-                                            {{ config.llm.max_tokens if config.llm.max_tokens is defined else (config.llm.llm_max_tokens if config.llm.llm_max_tokens is defined else 'N/A') }}
-                                        {% else %}
-                                            {{ client.llm_max_tokens }}
-                                        {% endif %}
-                                    </span>
+                                    <span class="right">{{ client.llm_max_tokens }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Temperature</span>
-                                    <span class="right">{{ config.llm.temperature if config and config.llm else client.llm_temperature }}</span>
+                                    <span class="right">{{ client.llm_temperature }}</span>
                                 </div>
                                 <hr>
-                                 <h3 class="title is-5 is-thin">LLM (Image Transcription)</h3>
+                                 <h3 class="title is-5 is-thin">LLLM (Image Transcription)</h3>
                                 <div class="box-line">
                                     <span class="left">LLM Model</span>
-                                    <span class="right">{{ config.llm_v.model if config and config.llm_v and config.llm_v.model else (client.llm_v_agent if client.llm_v_agent else 'N/A') }}</span>
+                                    <span class="right">{{ client.llm_v_agent }}</span>
                                 </div>
                                  <div class="box-line">
                                     <span class="left">LLM Server</span>
-                                    <span class="right">
-                                        {% if config and config.llm_v and config.llm_v.address %}
-                                            {{ config.llm_v.address }}:{{ config.llm_v.port if config.llm_v.port else '' }}
-                                        {% else %}
-                                            {{ client.llm_v if client.llm_v else 'N/A' }}
-                                        {% endif %}
-                                    </span>
+                                    <span class="right">{{ client.llm_v }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">API Key</span>
-                                    <span class="right">{{ config.llm_v.llm_api_key if config and config.llm_v and config.llm_v.llm_api_key else (client.llm_v_api_key if client.llm_v_api_key else 'NULL') }}</span>
+                                    <span class="right">{{ client.llm_v_api_key }}</span>
                                 </div>
 
                                 <div class="box-line">
                                     <span class="left">Max tokens</span>
-                                    <span class="right">
-                                        {% if config and config.llm_v %}
-                                            {{ config.llm_v.max_tokens if config.llm_v.max_tokens is defined else (config.llm_v.llm_max_tokens if config.llm_v.llm_max_tokens is defined else 'N/A') }}
-                                        {% else %}
-                                            {{ client.llm_v_max_tokens if client.llm_v_max_tokens else 'N/A' }}
-                                        {% endif %}
-                                    </span>
+                                    <span class="right">{{ client.llm_v_max_tokens }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Temperature</span>
-                                    <span class="right">{{ config.llm_v.temperature if config and config.llm_v else (client.llm_v_temperature if client.llm_v_temperature else 'N/A') }}</span>
+                                    <span class="right">{{ client.llm_v_temperature }}</span>
                                 </div>
                             </div>
 
@@ -292,7 +264,7 @@
                                 </div>
                             </div>
                             <hr>
-                            <form action="/admin/update_hpc_recsys/{{ client.id }}" enctype="multipart/form-data" method="POST">
+                            <form action="/admin/update_forum_recsys/{{ client.id }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <h4 class="title is-5 is-thin">Set Recommenders</h4>
 
@@ -384,7 +356,7 @@
                                 </div>
 
                         <hr>
-                            <form action="/admin/update_hpc_client_llm/{{ client.id }}" enctype="multipart/form-data" method="POST">
+                            <form action="/admin/update_forum_client_llm/{{ client.id }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <h4 class="title is-5 is-thin">Set LLM</h4>
 

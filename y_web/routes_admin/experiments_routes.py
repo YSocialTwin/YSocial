@@ -18,6 +18,9 @@ import time
 import uuid
 from collections import defaultdict
 from datetime import datetime, timedelta
+from urllib.error import HTTPError, URLError
+from urllib.parse import quote, urlparse
+from urllib.request import Request, urlopen
 
 from flask import (
     Blueprint,
@@ -118,9 +121,125 @@ DEFAULT_FEED_LIMITS = {
     "image_entries_per_feed": 100,
 }
 
+FORUM_FEED_REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/rss+xml, application/xml, text/xml;q=0.9, */*;q=0.8",
+}
+
 # Lock to prevent concurrent schedule advancement (from HTTP endpoint and background monitor)
 _schedule_check_lock = threading.Lock()
 _EXP_IDS_MARKER_RE = re.compile(r"\[exp_ids:([0-9,\s]+)\]")
+
+
+def _normalize_rss_feed_item(item):
+    """Normalize a forum RSS feed definition."""
+    if not isinstance(item, dict):
+        return None
+
+    feed_url = str(item.get("feed_url", "")).strip()
+    parsed_url = urlparse(feed_url)
+    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+        return None
+
+    return {
+        "name": str(item.get("name") or parsed_url.netloc).strip()[:255],
+        "url_site": str(item.get("url_site") or parsed_url.netloc).strip()[:255],
+        "feed_url": feed_url,
+        "description": str(item.get("description") or "").strip()[:2000],
+    }
+
+
+def _normalize_rss_feeds_payload(feeds):
+    """Validate and sanitize the stored forum RSS feeds payload."""
+    if not isinstance(feeds, list):
+        raise ValueError("RSS feeds payload must be a JSON array.")
+
+    normalized_feeds = []
+    seen_urls = set()
+    for item in feeds:
+        normalized = _normalize_rss_feed_item(item)
+        if normalized is None:
+            continue
+        feed_url = normalized["feed_url"]
+        if feed_url in seen_urls:
+            continue
+        seen_urls.add(feed_url)
+        normalized_feeds.append(normalized)
+
+    return normalized_feeds
+
+
+def _normalize_image_feed_item(item):
+    """Normalize a forum image feed definition."""
+    if not isinstance(item, dict):
+        return None
+
+    subreddit = str(item.get("subreddit", "")).strip().lower()
+    subreddit = subreddit[2:] if subreddit.startswith("r/") else subreddit
+    if not subreddit:
+        return None
+
+    interests = item.get("interests") or []
+    if not isinstance(interests, list):
+        interests = [interests]
+
+    cleaned_interests = []
+    seen_interests = set()
+    for interest in interests:
+        label = str(interest).strip()
+        if not label or label in seen_interests:
+            continue
+        seen_interests.add(label)
+        cleaned_interests.append(label)
+
+    return {"subreddit": subreddit, "interests": cleaned_interests}
+
+
+def _normalize_image_feeds_payload(feeds):
+    """Validate and sanitize the stored forum image feeds payload."""
+    if not isinstance(feeds, list):
+        raise ValueError("Image feeds payload must be a JSON array.")
+
+    normalized_feeds = []
+    seen_subreddits = set()
+    for item in feeds:
+        normalized = _normalize_image_feed_item(item)
+        if normalized is None:
+            continue
+        subreddit = normalized["subreddit"]
+        if subreddit in seen_subreddits:
+            continue
+        seen_subreddits.add(subreddit)
+        normalized_feeds.append(normalized)
+
+    return normalized_feeds
+
+
+def _read_feed_with_headers(feed_url):
+    """Fetch a forum feed with explicit headers to avoid upstream blocks."""
+    request_obj = Request(feed_url, headers=FORUM_FEED_REQUEST_HEADERS)
+    with urlopen(request_obj, timeout=15) as response:
+        return response.read()
+
+
+def _parse_required_feed_limit(form_key, cast, label, minimum=None):
+    """Parse and validate a numeric feed limit field."""
+    raw_value = str(request.form.get(form_key, "")).strip()
+    if not raw_value:
+        raise ValueError(f"{label} is required.")
+
+    try:
+        value = cast(raw_value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a valid number.") from exc
+
+    if minimum is not None and value < minimum:
+        raise ValueError(f"{label} must be greater than or equal to {minimum}.")
+
+    return value
 
 
 def get_experiment_uid_from_db_name(db_name):
@@ -2136,6 +2255,13 @@ def create_experiment():
     )
     sentiment_annotation = request.form.get("sentiment_annotation") == "true"
     emotion_annotation = request.form.get("emotion_annotation") == "true"
+
+    if platform_type == "forum":
+        opinions_enabled = False
+        toxicity_annotation = False
+        perspective_api = None
+        sentiment_annotation = False
+        emotion_annotation = False
 
     topics = request.form.get("tags").split(",")
 
@@ -4462,9 +4588,12 @@ def update_rss_feeds(uid):
     feeds_json = request.form.get("rss_feeds_json", "[]")
 
     try:
-        feeds = json.loads(feeds_json)
+        feeds = _normalize_rss_feeds_payload(json.loads(feeds_json))
     except json.JSONDecodeError:
         flash("Invalid RSS feeds payload; changes were not saved.", "error")
+        return redirect(request.referrer or url_for("experiments.rss_feeds", uid=uid))
+    except ValueError as exc:
+        flash(str(exc), "error")
         return redirect(request.referrer or url_for("experiments.rss_feeds", uid=uid))
 
     with open(rss_feeds_path, "w") as handle:
@@ -4499,8 +4628,6 @@ def parse_rss_feed():
     """Parse an RSS URL and return basic feed metadata."""
     check_privileges(current_user.username)
 
-    from urllib.parse import urlparse
-
     import feedparser
 
     payload = request.get_json(silent=True) or {}
@@ -4509,10 +4636,10 @@ def parse_rss_feed():
         return jsonify({"error": "No URL provided"}), 400
 
     try:
-        feed = feedparser.parse(feed_url)
+        feed_content = _read_feed_with_headers(feed_url)
+        feed = feedparser.parse(feed_content)
         if feed.bozo and not feed.entries:
             return jsonify({"error": "Invalid RSS feed URL"}), 400
-
         parsed_url = urlparse(feed_url)
         return jsonify(
             {
@@ -4523,6 +4650,10 @@ def parse_rss_feed():
                 "entries_count": len(feed.entries),
             }
         )
+    except HTTPError as exc:
+        return jsonify({"error": f"Feed source returned HTTP {exc.code}."}), 400
+    except URLError:
+        return jsonify({"error": "Feed source could not be reached."}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -4545,25 +4676,21 @@ def upload_rss_feeds(uid):
 
     try:
         content = upload.read().decode("utf-8")
-        new_feeds = json.loads(content)
-        if not isinstance(new_feeds, list):
-            return jsonify({"error": "JSON must be an array of feeds"}), 400
+        new_feeds = _normalize_rss_feeds_payload(json.loads(content))
 
         mode = request.form.get("mode", "replace")
         if mode == "merge" and os.path.exists(rss_feeds_path):
             with open(rss_feeds_path, "r") as handle:
-                existing_feeds = json.load(handle)
-            existing_urls = {item.get("feed_url") for item in existing_feeds}
-            for feed in new_feeds:
-                if feed.get("feed_url") not in existing_urls:
-                    existing_feeds.append(feed)
-            new_feeds = existing_feeds
+                existing_feeds = _normalize_rss_feeds_payload(json.load(handle))
+            new_feeds = _normalize_rss_feeds_payload(existing_feeds + new_feeds)
 
         with open(rss_feeds_path, "w") as handle:
             json.dump(new_feeds, handle, indent=2)
         return jsonify({"success": True, "count": len(new_feeds)})
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON format"}), 400
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -4681,9 +4808,12 @@ def update_image_feeds(uid):
     image_feeds_path = os.path.join(experiment_dir, "image_feeds.json")
     feeds_json = request.form.get("image_feeds_json", "[]")
     try:
-        feeds = json.loads(feeds_json)
+        feeds = _normalize_image_feeds_payload(json.loads(feeds_json))
     except json.JSONDecodeError:
         flash("Invalid image feeds payload; changes were not saved.", "error")
+        return redirect(request.referrer or url_for("experiments.image_feeds", uid=uid))
+    except ValueError as exc:
+        flash(str(exc), "error")
         return redirect(request.referrer or url_for("experiments.image_feeds", uid=uid))
 
     with open(image_feeds_path, "w") as handle:
@@ -4711,41 +4841,12 @@ def upload_image_feeds(uid):
 
     try:
         content = upload.read().decode("utf-8")
-        new_feeds = json.loads(content)
-        if not isinstance(new_feeds, list):
-            return jsonify({"error": "JSON must be an array of image feeds"}), 400
-
-        normalized_feeds = []
-        seen_subreddits = set()
-        for item in new_feeds:
-            if not isinstance(item, dict):
-                continue
-            subreddit = str(item.get("subreddit", "")).strip().lower()
-            subreddit = subreddit[2:] if subreddit.startswith("r/") else subreddit
-            interests = item.get("interests") or []
-            if not subreddit:
-                continue
-            if not isinstance(interests, list):
-                interests = [str(interests).strip()] if str(interests).strip() else []
-            cleaned_interests = []
-            seen_interests = set()
-            for interest in interests:
-                label = str(interest).strip()
-                if not label or label in seen_interests:
-                    continue
-                seen_interests.add(label)
-                cleaned_interests.append(label)
-            if subreddit in seen_subreddits:
-                continue
-            seen_subreddits.add(subreddit)
-            normalized_feeds.append(
-                {"subreddit": subreddit, "interests": cleaned_interests}
-            )
+        normalized_feeds = _normalize_image_feeds_payload(json.loads(content))
 
         mode = request.form.get("mode", "replace")
         if mode == "merge" and os.path.exists(image_feeds_path):
             with open(image_feeds_path, "r") as handle:
-                existing_feeds = json.load(handle)
+                existing_feeds = _normalize_image_feeds_payload(json.load(handle))
 
             merged = []
             by_subreddit = {}
@@ -4784,6 +4885,8 @@ def upload_image_feeds(uid):
         return jsonify({"success": True, "count": len(normalized_feeds)})
     except json.JSONDecodeError:
         return jsonify({"error": "Invalid JSON format"}), 400
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -4804,19 +4907,13 @@ def parse_image_feed():
         return jsonify({"error": "No subreddit provided"}), 400
 
     subreddit = subreddit[2:] if subreddit.startswith("r/") else subreddit
-    feed_url = f"https://www.reddit.com/r/{subreddit}.rss"
+    feed_url = f"https://www.reddit.com/r/{quote(subreddit)}.rss"
 
     try:
-        feed = feedparser.parse(feed_url)
+        feed_content = _read_feed_with_headers(feed_url)
+        feed = feedparser.parse(feed_content)
         if feed.bozo and not feed.entries:
-            return (
-                jsonify(
-                    {
-                        "error": f"Could not parse r/{subreddit} - subreddit may not exist"
-                    }
-                ),
-                400,
-            )
+            return jsonify({"error": f"Could not parse r/{subreddit}."}), 400
         if not feed.entries:
             return jsonify({"error": f"No posts found in r/{subreddit}"}), 400
 
@@ -4872,6 +4969,22 @@ def parse_image_feed():
                 "sample_images": images[:5],
             }
         )
+    except HTTPError as exc:
+        if exc.code == 404:
+            return jsonify({"error": f"r/{subreddit} does not exist."}), 400
+        return (
+            jsonify(
+                {
+                    "error": (
+                        f"Reddit returned HTTP {exc.code} while loading r/{subreddit}. "
+                        "Retry later."
+                    )
+                }
+            ),
+            400,
+        )
+    except URLError:
+        return jsonify({"error": "Reddit could not be reached. Retry later."}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
 
@@ -4919,20 +5032,33 @@ def update_feed_limits(uid):
         except (json.JSONDecodeError, IOError):
             config = {}
 
-    config["feed_limits"] = {
-        "rss_entries_per_feed": int(request.form.get("rss_entries_per_feed", 100)),
-        "reddit_entries_per_feed": int(
-            request.form.get("reddit_entries_per_feed", 200)
-        ),
-        "reddit_pages": int(request.form.get("reddit_pages", 2)),
-        "reddit_rate_limit_seconds": float(
-            request.form.get("reddit_rate_limit_seconds", 2)
-        ),
-        "db_fallback_limit": int(request.form.get("db_fallback_limit", 50)),
-        "image_entries_per_feed": int(
-            request.form.get("image_entries_per_feed", 100)
-        ),
-    }
+    try:
+        config["feed_limits"] = {
+            "rss_entries_per_feed": _parse_required_feed_limit(
+                "rss_entries_per_feed", int, "RSS entries per feed", minimum=1
+            ),
+            "reddit_entries_per_feed": _parse_required_feed_limit(
+                "reddit_entries_per_feed", int, "Reddit entries per feed", minimum=1
+            ),
+            "reddit_pages": _parse_required_feed_limit(
+                "reddit_pages", int, "Reddit pages", minimum=1
+            ),
+            "reddit_rate_limit_seconds": _parse_required_feed_limit(
+                "reddit_rate_limit_seconds",
+                float,
+                "Reddit rate limit seconds",
+                minimum=0,
+            ),
+            "db_fallback_limit": _parse_required_feed_limit(
+                "db_fallback_limit", int, "Database fallback limit", minimum=1
+            ),
+            "image_entries_per_feed": _parse_required_feed_limit(
+                "image_entries_per_feed", int, "Image entries per feed", minimum=1
+            ),
+        }
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(request.referrer or url_for("experiments.feed_limits", uid=uid))
 
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)

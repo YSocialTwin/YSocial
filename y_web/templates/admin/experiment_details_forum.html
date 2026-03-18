@@ -31,116 +31,6 @@
     }
 }
 
-/* Match toggle look-and-feel from admin/experiments (settings page) */
-.switch-small {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-}
-.switch-small input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider-small {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #d1d5db;
-    transition: .4s;
-}
-.slider-small:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: #fff;
-    transition: .4s;
-}
-.switch-small input:checked + .slider-small {
-    background-color: #039be5;
-}
-.switch-small input:checked + .slider-small:before {
-    transform: translateX(18px);
-}
-.slider-small.round {
-    border-radius: 22px;
-}
-.slider-small.round:before {
-    border-radius: 50%;
-}
-
-.exp-config-card {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
-}
-.exp-config-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-}
-.exp-config-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 6px 8px;
-    min-width: 0;
-}
-.exp-config-item span {
-    font-size: 0.82rem;
-    color: #374151;
-    white-space: nowrap;
-}
-.perspective-field-disabled {
-    opacity: 0.6;
-}
-.forum-description-card {
-    margin-top: 12px;
-    padding: 10px;
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-}
-.forum-description-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-}
-.forum-description-text {
-    margin: 0;
-    font-size: 0.84rem;
-    line-height: 1.5;
-    color: #374151;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-.forum-description-edit {
-    display: none;
-}
-.forum-description-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-}
-@media (max-width: 768px) {
-    .exp-config-grid {
-        grid-template-columns: 1fr;
-    }
-    .forum-description-header {
-        align-items: flex-start;
-        flex-direction: column;
-    }
-}
 </style>
 
 <div class="view-wrapper is-dashboard">
@@ -198,31 +88,6 @@
                                     <span class="left">Owner</span>
                                     <span class="right">{{ experiment.owner }}</span>
                                 </div>
-                                <div class="forum-description-card">
-                                    <div class="forum-description-header">
-                                        <div>
-                                            <b>Forum Description</b>
-                                            <p style="font-size: 0.8em; color: #777; margin: 0.2em 0 0;">Community context shown to forum agents.</p>
-                                        </div>
-                                        {% if can_manage_experiment %}
-                                        <button id="forum-description-edit-btn" type="button" class="button is-small is-light" onclick="showForumDescriptionEditor(true);">
-                                            Edit
-                                        </button>
-                                        {% endif %}
-                                    </div>
-                                    <div id="forum-description-view">
-                                        <p id="forum-description-text" class="forum-description-text">{{ experiment.exp_descr or 'No description configured.' }}</p>
-                                    </div>
-                                    {% if can_manage_experiment %}
-                                    <div id="forum-description-edit" class="forum-description-edit">
-                                        <textarea id="forum-description-input" class="textarea is-small" maxlength="200" rows="4" placeholder="Describe the forum setting, tone, and topical scope.">{{ experiment.exp_descr or '' }}</textarea>
-                                        <div class="forum-description-actions">
-                                            <button type="button" class="button is-small is-info" onclick="saveForumDescription();">Save</button>
-                                            <button type="button" class="button is-small is-light" onclick="showForumDescriptionEditor(false);">Cancel</button>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
                                 <hr>
                                 <div id="actions-section">
                                     <b>Actions</b>
@@ -230,7 +95,7 @@
                             
                             {% if len(clients)>0 %}
                             <div class="box-line">
-                                <span class="left">Edit Forum Prompts</span>
+                                <span class="left">Edit LLM Prompts</span>
                                 <span class="right">
                                     <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="Edit">
                                         <i class="mdi mdi-credit-card" style="font-size: 24px;"></i></a>
@@ -286,129 +151,6 @@
                                  class="mdi mdi-delete" style="font-size: 24px;"></i></a>{% else %}<i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
 
-                            {% if can_manage_experiment %}
-                            <hr>
-                            <b>Experiment Configuration</b>
-                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Enable/disable runtime annotations.</p>
-                            <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
-                                <div class="exp-config-card">
-                                    <div class="exp-config-grid">
-                                            {% if experiment.llm_agents_enabled %}
-                                            <div class="exp-config-item">
-                                                <label class="switch-small">
-                                                    <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
-                                                    <span class="slider-small round"></span>
-                                                </label>
-                                                <span>Toxicity</span>
-                                            </div>
-                                            <div class="exp-config-item">
-                                                <label class="switch-small">
-                                                    <input type="checkbox" name="emotion_annotation" {% if emotion_annotation_enabled %}checked{% endif %}>
-                                                    <span class="slider-small round"></span>
-                                                </label>
-                                                <span>Emotion</span>
-                                            </div>
-                                            <div class="exp-config-item">
-                                                <label class="switch-small">
-                                                    <input type="checkbox" name="sentiment_annotation" {% if sentiment_annotation_enabled %}checked{% endif %}>
-                                                    <span class="slider-small round"></span>
-                                                </label>
-                                                <span>Sentiment</span>
-                                            </div>
-                                            {% endif %}
-                                            <div class="exp-config-item">
-                                                <label class="switch-small">
-                                                    <input type="checkbox" name="opinion_dynamics_enabled" {% if opinion_dynamics_enabled %}checked{% endif %}>
-                                                    <span class="slider-small round"></span>
-                                                </label>
-                                                <span>Opinion Dynamics</span>
-                                            </div>
-                                    </div>
-                                    {% if experiment.llm_agents_enabled %}
-                                    <div id="perspective_api_field_exp" style="margin-top: 8px;">
-                                        <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (required for toxicity)</label>
-                                        <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza..." style="font-size: 0.84rem;">
-                                    </div>
-                                    {% else %}
-                                    <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
-                                        LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based experiments.
-                                    </div>
-                                    {% endif %}
-                                </div>
-                                <button type="submit" class="button is-small is-info" style="margin-top: 8px;">Update Configuration</button>
-                            </form>
-                            {% if experiment.llm_agents_enabled %}
-                            <script>
-                                (function() {
-                                    const toxicityToggle = document.getElementById('toxicity_annotation_toggle_exp');
-                                    const perspectiveWrap = document.getElementById('perspective_api_field_exp');
-                                    const perspectiveInput = document.getElementById('perspective_api_input_exp');
-                                    if (!toxicityToggle || !perspectiveWrap || !perspectiveInput) return;
-                                    const syncPerspectiveState = () => {
-                                        const enabled = !!toxicityToggle.checked;
-                                        perspectiveInput.disabled = !enabled;
-                                        perspectiveWrap.classList.toggle('perspective-field-disabled', !enabled);
-                                        if (!enabled) {
-                                            perspectiveInput.value = '';
-                                        }
-                                    };
-                                    toxicityToggle.addEventListener('change', syncPerspectiveState);
-                                    syncPerspectiveState();
-                                })();
-                            </script>
-                            {% endif %}
-                            <script>
-                                function showForumDescriptionEditor(editing) {
-                                    const view = document.getElementById('forum-description-view');
-                                    const edit = document.getElementById('forum-description-edit');
-                                    const button = document.getElementById('forum-description-edit-btn');
-                                    if (!view || !edit) return;
-                                    view.style.display = editing ? 'none' : 'block';
-                                    edit.style.display = editing ? 'block' : 'none';
-                                    if (button) {
-                                        button.style.display = editing ? 'none' : 'inline-flex';
-                                    }
-                                }
-
-                                function saveForumDescription() {
-                                    const input = document.getElementById('forum-description-input');
-                                    const text = document.getElementById('forum-description-text');
-                                    if (!input || !text) return;
-
-                                    const expDescr = input.value.trim();
-                                    fetch('/admin/update_experiment_descr/{{ experiment.idexp }}', {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify({ exp_descr: expDescr })
-                                    })
-                                    .then(response => response.json().then(data => ({ ok: response.ok, data })))
-                                    .then(({ ok, data }) => {
-                                        if (!ok || !data.success) {
-                                            throw new Error(data.message || 'Failed to update forum description');
-                                        }
-                                        text.textContent = data.exp_descr || 'No description configured.';
-                                        input.value = data.exp_descr || '';
-                                        showForumDescriptionEditor(false);
-                                    })
-                                    .catch(error => {
-                                        showToast(error.message || 'Failed to update forum description', 'error');
-                                    });
-                                }
-                            </script>
-
-                            {% if hpc_reset_available %}
-                            <hr>
-                            <b>HPC Reset</b>
-                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
-                                Reset experiment to initial state: clear logs, delete DB, restore population backups, and reset dashboard counters.
-                            </p>
-                            <form method="POST" action="/admin/reset_hpc_experiment/{{ experiment.idexp }}" onsubmit="return confirm('Reset this HPC experiment? This will clear logs, delete DB files, reset statuses, and restore population backups.');">
-                                <button type="submit" class="button is-small is-warning">Reset HPC Experiment</button>
-                            </form>
-                            {% endif %}
-                            {% endif %}
                                 </div>
                             </div>
 
@@ -709,11 +451,6 @@
                                     <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
                                         <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         {{ client.name }}
-                                        {% if opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations) %}
-                                        <a href="/admin/opinion_configuration_forum/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
-                                            <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6; margin-left: 2px;"></i>
-                                        </a>
-                                        {% endif %}
                                         {% if client_executions.get(client.id, False) %}
                                         <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
                                             <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
@@ -843,33 +580,14 @@
                             <hr>
                             <p>
                                 <b>Forum Setup</b><br>
-                                Update the forum description and prompts to shape how agents perceive and use the community.<br><br>
-                                <i class="mdi mdi-pencil" style="font-size: 16px;"></i> Edit the forum description in the overview panel<br>
+                                Configure forum feeds, limits, and prompts to shape the experiment inputs and agent behavior.<br><br>
+                                <i class="mdi mdi-rss-box" style="font-size: 16px;"></i> Manage RSS feeds and image feeds<br>
+                                <i class="mdi mdi-tune" style="font-size: 16px;"></i> Adjust feed retrieval limits<br>
                                 <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> Adjust prompts to customize agent behavior
                             </p>
 
                         </div>
                     </div>
-
-                    {% if experiment.annotations and 'opinions' in experiment.annotations and experiment.is_remote == 0 %}
-                    <!--Opinion Evolution Box-->
-                    <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
-                        <h3 class="title is-5 is-thin">Opinion Evolution</h3>
-                        <div class="box-content" style="flex: 1;">
-                            <p style="font-size: 0.9em; margin-bottom: 1em;">
-                                Visualize how agent opinions evolve over time across different topics.
-                            </p>
-                            <div style="text-align: center;">
-                                <a href="/admin/opinion_evolution/{{ experiment.idexp }}" 
-                                   class="button is-info is-fullwidth" 
-                                   style="display: flex; align-items: center; justify-content: center; gap: 0.5em;">
-                                    <i class="mdi mdi-chart-line"></i>
-                                    <span>View Opinion Evolution</span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    {% endif %}
 
                 </div>
 

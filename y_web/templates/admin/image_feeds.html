@@ -165,6 +165,31 @@
 let imageFeeds = {{ image_feeds | tojson }};
 let currentSubreddit = '';
 
+function setParseStatus(state, message) {
+    const statusEl = document.getElementById('parse_status');
+    statusEl.replaceChildren();
+
+    const wrapper = document.createElement('span');
+    if (state === 'error') {
+        wrapper.style.color = '#e74c3c';
+    } else if (state === 'success') {
+        wrapper.style.color = '#27ae60';
+    }
+
+    const icon = document.createElement('i');
+    if (state === 'loading') {
+        icon.className = 'mdi mdi-loading mdi-spin';
+    } else if (state === 'success') {
+        icon.className = 'mdi mdi-check-circle';
+    } else {
+        icon.className = 'mdi mdi-alert-circle';
+    }
+
+    wrapper.appendChild(icon);
+    wrapper.appendChild(document.createTextNode(` ${message}`));
+    statusEl.appendChild(wrapper);
+}
+
 function parseSubreddit() {
     const subreddit = document.getElementById('subreddit_name').value.trim().toLowerCase();
     if (!subreddit) {
@@ -173,27 +198,29 @@ function parseSubreddit() {
     }
 
     currentSubreddit = subreddit;
-    document.getElementById('parse_status').innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Parsing...';
+    setParseStatus('loading', 'Parsing...');
     document.getElementById('parse_result').style.display = 'block';
-    document.getElementById('sample_images').innerHTML = '';
+    document.getElementById('sample_images').replaceChildren();
 
     fetch('/admin/api/parse_image_feed', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({subreddit: subreddit})
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.error) {
-            document.getElementById('parse_status').innerHTML = '<span style="color: #e74c3c;"><i class="mdi mdi-alert-circle"></i> ' + data.error + '</span>';
+    .then(r => r.json().then(data => ({ok: r.ok, data})))
+    .then(({ok, data}) => {
+        if (!ok || data.error) {
+            setParseStatus('error', data.error || 'Could not parse subreddit.');
             return;
         }
 
-        document.getElementById('parse_status').innerHTML =
-            '<span style="color: #27ae60;"><i class="mdi mdi-check-circle"></i> Found ' + data.image_count + ' images (' + data.nsfw_filtered + ' NSFW filtered)</span>';
+        setParseStatus(
+            'success',
+            `Found ${data.image_count} images (${data.nsfw_filtered} NSFW filtered)`
+        );
 
         const sampleDiv = document.getElementById('sample_images');
-        sampleDiv.innerHTML = '';
+        sampleDiv.replaceChildren();
         data.sample_images.forEach(url => {
             const img = document.createElement('img');
             img.src = url;
@@ -203,7 +230,7 @@ function parseSubreddit() {
         });
     })
     .catch(e => {
-        document.getElementById('parse_status').innerHTML = '<span style="color: #e74c3c;"><i class="mdi mdi-alert-circle"></i> Error: ' + e + '</span>';
+        setParseStatus('error', e.message || 'Unexpected error');
     });
 }
 
@@ -284,20 +311,68 @@ function updateFeedsDisplay() {
     const countSpan = document.getElementById('feed_count');
     document.getElementById('image_feeds_json').value = JSON.stringify(imageFeeds);
     countSpan.textContent = imageFeeds.length;
+    listDiv.replaceChildren();
 
     if (imageFeeds.length === 0) {
-        listDiv.innerHTML = '<p style="color: #999;">No image feeds configured.</p>';
+        const emptyState = document.createElement('p');
+        emptyState.style.color = '#999';
+        emptyState.textContent = 'No image feeds configured.';
+        listDiv.appendChild(emptyState);
         return;
     }
 
-    let html = '<table class="table is-fullwidth is-striped" style="font-size: 0.9em;">';
-    html += '<thead><tr><th>Subreddit</th><th>Interests</th><th style="width: 50px;"></th></tr></thead><tbody>';
-    imageFeeds.forEach((feed, index) => {
-        const tags = (feed.interests || []).map(interest => `<span class="tag is-info is-light" style="margin: 2px;">${interest}</span>`).join('');
-        html += `<tr><td>r/${feed.subreddit}</td><td>${tags}</td><td><a href="javascript:void(0)" onclick="removeFeed(${index})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td></tr>`;
+    const table = document.createElement('table');
+    table.className = 'table is-fullwidth is-striped';
+    table.style.fontSize = '0.9em';
+
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Subreddit', 'Interests', ''].forEach((label, index) => {
+        const th = document.createElement('th');
+        if (index === 2) {
+            th.style.width = '50px';
+        } else {
+            th.textContent = label;
+        }
+        headerRow.appendChild(th);
     });
-    html += '</tbody></table>';
-    listDiv.innerHTML = html;
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    imageFeeds.forEach((feed, index) => {
+        const row = document.createElement('tr');
+
+        const subredditCell = document.createElement('td');
+        subredditCell.textContent = `r/${feed.subreddit}`;
+        row.appendChild(subredditCell);
+
+        const interestsCell = document.createElement('td');
+        (feed.interests || []).forEach(interest => {
+            const tag = document.createElement('span');
+            tag.className = 'tag is-info is-light';
+            tag.style.margin = '2px';
+            tag.textContent = interest;
+            interestsCell.appendChild(tag);
+        });
+        row.appendChild(interestsCell);
+
+        const actionCell = document.createElement('td');
+        const actionLink = document.createElement('a');
+        actionLink.href = 'javascript:void(0)';
+        actionLink.style.color = '#e74c3c';
+        actionLink.addEventListener('click', () => removeFeed(index));
+        const icon = document.createElement('i');
+        icon.className = 'mdi mdi-delete';
+        actionLink.appendChild(icon);
+        actionCell.appendChild(actionLink);
+        row.appendChild(actionCell);
+
+        tbody.appendChild(row);
+    });
+
+    table.appendChild(tbody);
+    listDiv.appendChild(table);
 }
 </script>
 

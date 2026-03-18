@@ -32,11 +32,10 @@
                     <div class="dashboard-box" id="box-new-client">
                         <h3 class="title is-5 is-thin">New HPC Client</h3>
                         <div class="box-content">
-                            <form action="/admin/create_client" enctype="multipart/form-data"
+                            <form action="/admin/create_hpc_client" enctype="multipart/form-data"
                                   method="POST" onsubmit="showLoading('Creating HPC client...');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
-                                    <input type="hidden" name="is_hpc" value="true">
 
                                     <div class="box-line">
                                         <span class="left">Name</span>

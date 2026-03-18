@@ -220,38 +220,67 @@ function updateRssFeedsDisplay() {
     const hiddenInput = document.getElementById('rss_feeds_json');
     count.textContent = rssFeeds.length;
     hiddenInput.value = JSON.stringify(rssFeeds);
+    container.replaceChildren();
 
     if (!rssFeeds.length) {
-        container.innerHTML = '<p style="color: #999;">No RSS feeds configured.</p>';
+        const emptyState = document.createElement('p');
+        emptyState.style.color = '#999';
+        emptyState.textContent = 'No RSS feeds configured.';
+        container.appendChild(emptyState);
         return;
     }
 
-    let html = `
-        <table class="table is-fullwidth is-striped" style="font-size: 0.9em;">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Site</th>
-                    <th>Feed URL</th>
-                    <th style="width: 50px;"></th>
-                </tr>
-            </thead>
-            <tbody>
-    `;
+    const table = document.createElement('table');
+    table.className = 'table is-fullwidth is-striped';
+    table.style.fontSize = '0.9em';
 
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    ['Name', 'Site', 'Feed URL', ''].forEach((label, index) => {
+        const th = document.createElement('th');
+        if (index === 3) {
+            th.style.width = '50px';
+        } else {
+            th.textContent = label;
+        }
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
     rssFeeds.forEach((feed, index) => {
-        html += `
-            <tr>
-                <td>${feed.name || ''}</td>
-                <td>${feed.url_site || ''}</td>
-                <td style="word-break: break-all;">${feed.feed_url || ''}</td>
-                <td><a href="javascript:void(0)" onclick="removeRssFeed(${index})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td>
-            </tr>
-        `;
+        const row = document.createElement('tr');
+
+        const nameCell = document.createElement('td');
+        nameCell.textContent = feed.name || '';
+        row.appendChild(nameCell);
+
+        const siteCell = document.createElement('td');
+        siteCell.textContent = feed.url_site || '';
+        row.appendChild(siteCell);
+
+        const urlCell = document.createElement('td');
+        urlCell.style.wordBreak = 'break-all';
+        urlCell.textContent = feed.feed_url || '';
+        row.appendChild(urlCell);
+
+        const actionCell = document.createElement('td');
+        const actionLink = document.createElement('a');
+        actionLink.href = 'javascript:void(0)';
+        actionLink.style.color = '#e74c3c';
+        actionLink.addEventListener('click', () => removeRssFeed(index));
+        const icon = document.createElement('i');
+        icon.className = 'mdi mdi-delete';
+        actionLink.appendChild(icon);
+        actionCell.appendChild(actionLink);
+        row.appendChild(actionCell);
+
+        tbody.appendChild(row);
     });
 
-    html += '</tbody></table>';
-    container.innerHTML = html;
+    table.appendChild(tbody);
+    container.appendChild(table);
 }
 
 function uploadRssFeeds() {

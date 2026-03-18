@@ -583,6 +583,78 @@ def _build_client_creation_context(idexp, recsys_mode):
     crecsys = [r for r in crecsys_all if r.enabled and recsys_mode in r.enabled]
     frecsys = [r for r in frecsys_all if r.enabled and recsys_mode in r.enabled]
 
+    experiment_clock = {
+        "mode": "simulated",
+        "timezone": "Europe/Rome",
+        "feed_refresh": "hourly",
+    }
+    exp_llm_defaults = {
+        "llm": "http://127.0.0.1:11434/v1",
+        "llm_api_key": "NULL",
+        "llm_max_tokens": -1,
+        "llm_temperature": 1.5,
+        "llm_v_agent": "qwen3-vl:8b",
+        "llm_v": "http://127.0.0.1:11434/v1",
+        "llm_v_api_key": "NULL",
+        "llm_v_max_tokens": 300,
+        "llm_v_temperature": 0.5,
+    }
+
+    if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
+        try:
+            from y_web.utils.path_utils import get_writable_path
+
+            writable_base = get_writable_path()
+            if "database_server.db" in exp.db_name:
+                exp_uid = exp.db_name.split(os.sep)[1]
+            else:
+                exp_uid = exp.db_name.removeprefix("experiments_")
+            config_path = os.path.join(
+                writable_base, "y_web", "experiments", exp_uid, "config_server.json"
+            )
+            if os.path.exists(config_path):
+                with open(config_path, "r") as config_file:
+                    experiment_config = json.load(config_file)
+                raw_clock = experiment_config.get("clock", {}) or {}
+                experiment_clock["mode"] = raw_clock.get("mode", "simulated")
+                experiment_clock["timezone"] = raw_clock.get(
+                    "timezone", "Europe/Rome"
+                )
+                experiment_clock["feed_refresh"] = raw_clock.get(
+                    "feed_refresh", "hourly"
+                )
+        except Exception:
+            pass
+
+        latest_client = (
+            Client.query.filter_by(id_exp=idexp).order_by(Client.id.desc()).first()
+        )
+        if latest_client is not None:
+            exp_llm_defaults.update(
+                {
+                    "llm": latest_client.llm or exp_llm_defaults["llm"],
+                    "llm_api_key": latest_client.llm_api_key
+                    or exp_llm_defaults["llm_api_key"],
+                    "llm_max_tokens": latest_client.llm_max_tokens
+                    if latest_client.llm_max_tokens is not None
+                    else exp_llm_defaults["llm_max_tokens"],
+                    "llm_temperature": latest_client.llm_temperature
+                    if latest_client.llm_temperature is not None
+                    else exp_llm_defaults["llm_temperature"],
+                    "llm_v_agent": latest_client.llm_v_agent
+                    or exp_llm_defaults["llm_v_agent"],
+                    "llm_v": latest_client.llm_v or exp_llm_defaults["llm_v"],
+                    "llm_v_api_key": latest_client.llm_v_api_key
+                    or exp_llm_defaults["llm_v_api_key"],
+                    "llm_v_max_tokens": latest_client.llm_v_max_tokens
+                    if latest_client.llm_v_max_tokens is not None
+                    else exp_llm_defaults["llm_v_max_tokens"],
+                    "llm_v_temperature": latest_client.llm_v_temperature
+                    if latest_client.llm_v_temperature is not None
+                    else exp_llm_defaults["llm_v_temperature"],
+                }
+            )
+
     return {
         "experiment": exp,
         "populations": pops,
@@ -591,6 +663,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "frecsys": frecsys,
         "llm_agents_enabled": llm_agents_enabled,
         "topics": topics_list,
+        "experiment_clock": experiment_clock,
+        "exp_llm_defaults": exp_llm_defaults,
     }
 
 
@@ -1631,16 +1705,89 @@ def _create_standard_client_internal():
     search = request.form.get("search")
     vote = request.form.get("vote")
     share_link = request.form.get("share_link")
+    share_image = request.form.get("share_image", "0.15")
+    initial_agents = request.form.get("initial_agents")
+    clock_mode = (request.form.get("clock_mode") or "simulated").strip().lower()
+    clock_timezone = (request.form.get("clock_timezone") or "Europe/Rome").strip()
+    clock_feed_refresh = (
+        request.form.get("clock_feed_refresh") or "hourly"
+    ).strip().lower()
+    max_thread_context_chars = request.form.get("max_thread_context_chars", "3200")
+    max_replies_per_round = request.form.get("max_replies_per_round", "2")
+    reply_cooldown_rounds = request.form.get("reply_cooldown_rounds", "2")
+    memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
+    memory_pair_limit = request.form.get("memory_pair_limit", "5")
+    memory_prompt_max_chars = request.form.get("memory_prompt_max_chars", "1600")
+    memory_social_decay_lambda = request.form.get(
+        "memory_social_decay_lambda", "0.05"
+    )
+    memory_social_corruption_rate = request.form.get(
+        "memory_social_corruption_rate", "0.02"
+    )
+    memory_social_resummarize_every_events = request.form.get(
+        "memory_social_resummarize_every_events", "4"
+    )
+    memory_thread_decay_lambda = request.form.get(
+        "memory_thread_decay_lambda", "0.03"
+    )
+    memory_thread_corruption_rate = request.form.get(
+        "memory_thread_corruption_rate", "0.01"
+    )
+    memory_thread_resummarize_every_events = request.form.get(
+        "memory_thread_resummarize_every_events", "4"
+    )
+    memory_evidence_tail_max = request.form.get("memory_evidence_tail_max", "8")
+    memory_digest_update_cadence_rounds = request.form.get(
+        "memory_digest_update_cadence_rounds", "3"
+    )
+    memory_digest_events_limit = request.form.get("memory_digest_events_limit", "80")
+    memory_cold_start_window = request.form.get("memory_cold_start_window", "5")
+    memory_semantic_enabled = request.form.get("memory_semantic_enabled") in {
+        "on",
+        "true",
+        "1",
+        "yes",
+    }
+    memory_search_k = request.form.get("memory_search_k", "8")
+    memory_search_max_chars = request.form.get("memory_search_max_chars", "900")
+    memory_search_time_window_rounds = request.form.get(
+        "memory_search_time_window_rounds", "40"
+    )
+    memory_tier_a_max_chars = request.form.get("memory_tier_a_max_chars", "350")
+    memory_tier_b_max_chars = request.form.get("memory_tier_b_max_chars", "900")
+    memory_tier_c_max_chars = request.form.get("memory_tier_c_max_chars", "900")
+    memory_total_max_chars = request.form.get("memory_total_max_chars", "2200")
+    memory_tier_c_uncertainty_threshold = request.form.get(
+        "memory_tier_c_uncertainty_threshold", "0.45"
+    )
+    memory_reflection_cadence_rounds = request.form.get(
+        "memory_reflection_cadence_rounds", "3"
+    )
+    memory_reflection_min_events = request.form.get(
+        "memory_reflection_min_events", "12"
+    )
+    memory_reflection_trigger_importance_sum = request.form.get(
+        "memory_reflection_trigger_importance_sum", "3.5"
+    )
+    memory_reflection_max_items_per_run = request.form.get(
+        "memory_reflection_max_items_per_run", "60"
+    )
+    memory_embedding_model = request.form.get("memory_embedding_model", "BAAI/bge-m3")
+    memory_embedding_async = request.form.get("memory_embedding_async") in {
+        "on",
+        "true",
+        "1",
+        "yes",
+    }
+    memory_importance_mode = request.form.get(
+        "memory_importance_mode", "heuristic_then_batch_llm"
+    )
 
     llm_agents_enabled = (
         exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
     )
 
-    annotations = {an: None for an in exp.annotations.split(",")}
-    if "opinions" in annotations:
-        opinions_enabled = True
-    else:
-        opinions_enabled = False
+    opinions_enabled = False
 
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
@@ -1712,6 +1859,12 @@ def _create_standard_client_internal():
     except (ValueError, TypeError):
         errors.append("Max Length Thread Reading must be a valid integer")
     try:
+        max_thread_context_chars = int(max_thread_context_chars)
+        if max_thread_context_chars < 200 or max_thread_context_chars > 4800:
+            errors.append("Thread Context Max Chars must be between 200 and 4800")
+    except (ValueError, TypeError):
+        errors.append("Thread Context Max Chars must be a valid integer")
+    try:
         attention_window = int(attention_window)
     except (ValueError, TypeError):
         errors.append("Attention Window must be a valid integer")
@@ -1719,6 +1872,63 @@ def _create_standard_client_internal():
         visibility_rounds = int(visibility_rounds)
     except (ValueError, TypeError):
         errors.append("Visibility Rounds must be a valid integer")
+    try:
+        max_replies_per_round = int(max_replies_per_round)
+        if max_replies_per_round < 0:
+            errors.append("Max Replies per Round must be at least 0")
+    except (ValueError, TypeError):
+        errors.append("Max Replies per Round must be a valid integer")
+    try:
+        reply_cooldown_rounds = int(reply_cooldown_rounds)
+        if reply_cooldown_rounds < 0:
+            errors.append("Reply Cooldown must be at least 0")
+    except (ValueError, TypeError):
+        errors.append("Reply Cooldown must be a valid integer")
+    try:
+        memory_pair_limit = int(memory_pair_limit)
+        memory_prompt_max_chars = int(memory_prompt_max_chars)
+        memory_search_k = int(memory_search_k)
+        memory_search_max_chars = int(memory_search_max_chars)
+        memory_search_time_window_rounds = int(memory_search_time_window_rounds)
+        memory_tier_a_max_chars = int(memory_tier_a_max_chars)
+        memory_tier_b_max_chars = int(memory_tier_b_max_chars)
+        memory_tier_c_max_chars = int(memory_tier_c_max_chars)
+        memory_total_max_chars = int(memory_total_max_chars)
+        memory_reflection_cadence_rounds = int(memory_reflection_cadence_rounds)
+        memory_reflection_min_events = int(memory_reflection_min_events)
+        memory_reflection_max_items_per_run = int(memory_reflection_max_items_per_run)
+        memory_social_resummarize_every_events = int(
+            memory_social_resummarize_every_events
+        )
+        memory_thread_resummarize_every_events = int(
+            memory_thread_resummarize_every_events
+        )
+        memory_evidence_tail_max = int(memory_evidence_tail_max)
+        memory_digest_update_cadence_rounds = int(
+            memory_digest_update_cadence_rounds
+        )
+        memory_digest_events_limit = int(memory_digest_events_limit)
+        memory_cold_start_window = int(memory_cold_start_window)
+    except (ValueError, TypeError):
+        errors.append("Forum memory settings must use valid numeric values")
+    try:
+        memory_social_decay_lambda = float(memory_social_decay_lambda)
+        memory_social_corruption_rate = float(memory_social_corruption_rate)
+        memory_thread_decay_lambda = float(memory_thread_decay_lambda)
+        memory_thread_corruption_rate = float(memory_thread_corruption_rate)
+        memory_tier_c_uncertainty_threshold = float(
+            memory_tier_c_uncertainty_threshold
+        )
+        memory_reflection_trigger_importance_sum = float(
+            memory_reflection_trigger_importance_sum
+        )
+    except (ValueError, TypeError):
+        errors.append("Forum memory weights must use valid numeric values")
+
+    if clock_mode not in {"simulated", "real_time"}:
+        errors.append("Experiment Clock Mode must be either simulated or real_time")
+    if clock_feed_refresh not in {"hourly"}:
+        errors.append("Feed refresh must be hourly")
 
     # Validate probability fields (must be float in [0, 1])
     try:
@@ -1746,6 +1956,19 @@ def _create_standard_client_internal():
     except (ValueError, TypeError):
         errors.append("Probability Secondary Follow must be a valid number")
         probability_of_secondary_follow = None
+    try:
+        post = float(post)
+        comment = float(comment)
+        read = float(read)
+        search = float(search)
+        share_link = float(share_link)
+        share_image = float(share_image)
+    except (ValueError, TypeError):
+        errors.append("Forum action likelihood values must be valid numbers")
+    share = 0.0
+    image = 0.0
+    news = 0.0
+    vote = 0.0
 
     # Check probability ranges
     probabilities = {
@@ -1754,6 +1977,12 @@ def _create_standard_client_internal():
         "Timeline Follower Ratio": reading_from_follower_ratio,
         "Probability Daily Follow": probability_of_daily_follow,
         "Probability Secondary Follow": probability_of_secondary_follow,
+        "Post new content": post,
+        "Comment a Post": comment,
+        "Read a content": read,
+        "Search a Hashtag": search,
+        "Share Link": share_link,
+        "Share Image": share_image,
     }
     for field_name, value in probabilities.items():
         if value is not None and not (0 <= value <= 1):
@@ -1813,6 +2042,23 @@ def _create_standard_client_internal():
         flash("Population not found.", "error")
         return redirect(request.referrer)
 
+    pop_type = getattr(population, "username_type", "microblogging") or "microblogging"
+    if pop_type != "forum":
+        flash(
+            f"Population Username Type '{pop_type}' is incompatible with experiment platform 'forum'.",
+            "error",
+        )
+        return redirect(request.referrer)
+
+    initial_agents_int = None
+    if initial_agents and initial_agents.strip():
+        try:
+            initial_agents_int = int(initial_agents)
+            if initial_agents_int < 1:
+                initial_agents_int = None
+        except (ValueError, TypeError):
+            initial_agents_int = None
+
     # check if the population is already assigned to the experiment
     # if not, add it
     pop_exp = Population_Experiment.query.filter_by(
@@ -1848,13 +2094,13 @@ def _create_standard_client_internal():
         share_link=share_link,
         llm=llm,
         llm_api_key=llm_api_key,
-        llm_max_tokens=llm_max_tokens,
-        llm_temperature=llm_temperature,
+        llm_max_tokens=int(llm_max_tokens),
+        llm_temperature=float(llm_temperature),
         llm_v_agent=llm_v_agent,
         llm_v=llm_v,
         llm_v_api_key=llm_v_api_key,
-        llm_v_max_tokens=llm_v_max_tokens,
-        llm_v_temperature=llm_v_temperature,
+        llm_v_max_tokens=int(llm_v_max_tokens),
+        llm_v_temperature=float(llm_v_temperature),
         probability_of_secondary_follow=probability_of_secondary_follow,
         crecsys=crecsys,
         frecsys=frecsys,
@@ -1941,6 +2187,44 @@ def _create_standard_client_internal():
         for h in range(24)
     }
 
+    if "database_server.db" in exp.db_name:
+        uid = exp.db_name.split(os.sep)[1]
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+
+    from y_web.utils.path_utils import get_writable_path
+
+    BASE_DIR = get_writable_path()
+    experiment_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
+    experiment_config_path = os.path.join(experiment_folder, "config_server.json")
+    resolved_clock = {
+        "mode": clock_mode,
+        "timezone": clock_timezone or "Europe/Rome",
+        "feed_refresh": clock_feed_refresh,
+    }
+
+    try:
+        experiment_config = {}
+        if os.path.exists(experiment_config_path):
+            with open(experiment_config_path, "r") as config_file:
+                experiment_config = json.load(config_file)
+        experiment_config["clock"] = {
+            "mode": resolved_clock["mode"],
+            "timezone": resolved_clock["timezone"],
+            "feed_refresh": resolved_clock["feed_refresh"],
+        }
+        if (
+            resolved_clock["mode"] == "real_time"
+            and "anchor_date" not in experiment_config["clock"]
+        ):
+            experiment_config["clock"]["anchor_date"] = (
+                __import__("datetime").date.today().isoformat()
+            )
+        with open(experiment_config_path, "w") as config_file:
+            json.dump(experiment_config, config_file, indent=4)
+    except Exception:
+        pass
+
     config = {
         "servers": {
             "llm": llm,
@@ -1959,6 +2243,10 @@ def _create_standard_client_internal():
             "client": "YClientWeb",
             "days": int(days),
             "slots": 24,
+            "initial_agents": initial_agents_int,
+            "clock_mode": resolved_clock["mode"],
+            "clock_timezone": resolved_clock["timezone"],
+            "feed_refresh": resolved_clock["feed_refresh"],
             "percentage_new_agents_iteration": float(percentage_new_agents_iteration),
             "percentage_removed_agents_iteration": float(
                 percentage_removed_agents_iteration
@@ -1967,14 +2255,15 @@ def _create_standard_client_internal():
             "hourly_activity": hourly_activity,
             "actions_likelihood": {
                 "post": float(post),
-                "image": float(image) if image is not None else 0,
-                "news": float(news) if news is not None else 0,
+                "image": 0.0,
+                "news": 0.0,
                 "comment": float(comment) if comment is not None else 0,
                 "read": float(read) if read is not None else 0,
-                "share": float(share) if share is not None else 0,
+                "share": 0.0,
                 "search": float(search) if search is not None else 0,
-                "cast": float(vote) if vote is not None else 0,
+                "cast": 0.0,
                 "share_link": float(share_link) if share_link is not None else 0,
+                "share_image": float(share_image) if share_image is not None else 0,
             },
             "emotion_annotation": emotion_annotation,
             "agent_archetypes": {
@@ -2037,9 +2326,10 @@ def _create_standard_client_internal():
             },
         },
         "agents": {
-            "llm_v_agent": "minicpm-v",
+            "llm_v_agent": llm_v_agent or "qwen3-vl:8b",
             "reading_from_follower_ratio": float(reading_from_follower_ratio),
             "max_length_thread_reading": int(max_length_thread_reading),
+            "max_thread_context_chars": int(max_thread_context_chars),
             "attention_window": int(attention_window),
             "probability_of_daily_follow": float(probability_of_daily_follow),
             "probability_of_secondary_follow": float(probability_of_secondary_follow),
@@ -2059,6 +2349,64 @@ def _create_standard_client_internal():
                 "ag": ["critical/judgmental", "friendly/compassionate"],
                 "ne": ["resilient/confident", "sensitive/nervous"],
             },
+            "max_replies_per_round": int(max_replies_per_round),
+            "reply_cooldown_rounds": int(reply_cooldown_rounds),
+            "thread_browse_mode": "llm",
+            "thread_browse_order": "tree_dfs",
+            "thread_browse_max_nodes": 400,
+            "thread_browse_chunk_size": 20,
+            "thread_browse_top_k": 6,
+            "thread_browse_max_llm_steps": 3,
+            "thread_browse_snippet_chars": 220,
+            "thread_browse_context_window": 30,
+            "memory_enabled": bool(memory_enabled),
+            "memory_pair_limit": int(memory_pair_limit),
+            "memory_prompt_max_chars": int(memory_prompt_max_chars),
+            "memory_social_decay_lambda": float(memory_social_decay_lambda),
+            "memory_social_corruption_rate": float(memory_social_corruption_rate),
+            "memory_social_resummarize_every_events": int(
+                memory_social_resummarize_every_events
+            ),
+            "memory_thread_decay_lambda": float(memory_thread_decay_lambda),
+            "memory_thread_corruption_rate": float(memory_thread_corruption_rate),
+            "memory_thread_resummarize_every_events": int(
+                memory_thread_resummarize_every_events
+            ),
+            "memory_evidence_tail_max": int(memory_evidence_tail_max),
+            "memory_digest_update_cadence_rounds": int(
+                memory_digest_update_cadence_rounds
+            ),
+            "memory_digest_events_limit": int(memory_digest_events_limit),
+            "memory_cold_start_window": int(memory_cold_start_window),
+            "memory_semantic_enabled": bool(memory_semantic_enabled),
+            "memory_search_k": int(memory_search_k),
+            "memory_search_max_chars": int(memory_search_max_chars),
+            "memory_search_time_window_rounds": int(memory_search_time_window_rounds),
+            "memory_tier_a_max_chars": int(memory_tier_a_max_chars),
+            "memory_tier_b_max_chars": int(memory_tier_b_max_chars),
+            "memory_tier_c_max_chars": int(memory_tier_c_max_chars),
+            "memory_total_max_chars": int(memory_total_max_chars),
+            "memory_tier_c_uncertainty_threshold": float(
+                memory_tier_c_uncertainty_threshold
+            ),
+            "memory_reflection_cadence_rounds": int(
+                memory_reflection_cadence_rounds
+            ),
+            "memory_reflection_min_events": int(memory_reflection_min_events),
+            "memory_reflection_trigger_importance_sum": float(
+                memory_reflection_trigger_importance_sum
+            ),
+            "memory_reflection_max_items_per_run": int(
+                memory_reflection_max_items_per_run
+            ),
+            "memory_embedding_model": str(memory_embedding_model).strip(),
+            "memory_embedding_async": bool(memory_embedding_async),
+            "memory_importance_mode": str(memory_importance_mode).strip(),
+            "memory_prompt_mode": "subtle_forum",
+            "memory_reply_context_max_chars": 280,
+            "memory_vote_signal_only": True,
+            "forum_post_structure_strict": True,
+            "memory_cross_thread_callback_min_score": 0.8,
         },
     }
 
@@ -2096,16 +2444,6 @@ def _create_standard_client_internal():
     config["agents"]["education_levels"] = list(education_level)
     config["agents"]["round_actions"] = {"min": 1, "max": 3}
     config["agents"]["n_interests"] = {"min": 1, "max": 5}
-
-    # check db type
-    if "database_server.db" in exp.db_name:  # sqlite
-        uid = exp.db_name.split(os.sep)[1]
-    else:
-        uid = exp.db_name.removeprefix("experiments_")
-
-    from y_web.utils.path_utils import get_writable_path
-
-    BASE_DIR = get_writable_path()
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
@@ -2539,6 +2877,7 @@ def _create_standard_client_internal():
                     "search": search,
                     "vote": vote,
                     "share_link": share_link,
+                    "share_image": share_image,
                 },
                 "llm": user_type,
                 "probability_of_secondary_follow": probability_of_secondary_follow,
@@ -2547,12 +2886,6 @@ def _create_standard_client_internal():
             },
         }
     )
-
-    # Check if opinions annotation is present and redirect to opinion configuration
-    if opinions_enabled:
-        return redirect(
-            url_for("clientsr.opinion_configuration", idexp=exp_id, client_id=client.id)
-        )
 
     # load experiment_details page
     from .experiments_routes import experiment_details

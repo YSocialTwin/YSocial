@@ -2041,16 +2041,17 @@
                                 <div class="box-lines">
 
                                     <div class="box-line">
-                                        <span class="left">Simulator Type</span>
+                                        <span class="left">HPC Simulator</span>
                                         <span class="right" style="width: 70%; display: flex; align-items: flex-start; gap: 12px;">
-                                            <div class="select" style="width: 200px; flex-shrink: 0;">
-                                                <select id="simulator_type_select" name="simulator_type" style="width: 100%">
-                                                    <option value="Standard" selected>Standard</option>
-                                                    <option value="HPC">HPC (Experimental)</option>
-                                                </select>
+                                            <input type="hidden" id="simulator_type_input" name="simulator_type" value="Standard">
+                                            <div id="hpc-toggle-container" style="display: flex; align-items: center; gap: 8px; min-width: 200px; flex-shrink: 0;">
+                                                <label class="switch-small">
+                                                    <input type="checkbox" id="hpc_toggle">
+                                                    <span class="slider-small round"></span>
+                                                </label>
+                                                <span id="hpc-toggle-label" style="font-size: 0.9rem; color: #6b7280;">Disabled</span>
                                             </div>
-                                            
-                                            <!-- HPC Info Box (shown when HPC is selected, horizontal layout) -->
+
                                             <div id="hpc-info-inline" style="display: none; flex: 1; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; padding: 8px 10px; border-radius: 6px; font-size: 0.75em; line-height: 1.3; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                                 <div style="display: flex; align-items: flex-start; gap: 6px;">
                                                     <i class="mdi mdi-information" style="color: #ff9800; font-size: 1.1em; flex-shrink: 0; margin-top: 1px;"></i>
@@ -2069,7 +2070,7 @@
                                             <div class="select">
                                                 <select id="platform_type_select" name="platform_type" style="width: 100%">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
-                                                    <option value="forum" disabled>Forum (i.e., Reddit)</option>
+                                                    <option value="forum">Forum (i.e., Reddit)</option>
                                                 </select>
                                             </div>
                                         </span>
@@ -2194,7 +2195,7 @@
                                         </span>
                                     </div>
 
-                                    <div class="box-line">
+                                    <div class="box-line" id="annotation_settings_row">
                                         <span class="left">Generated Content Annotation</span>
                                         <span class="right" style="width: 70%;">
                                             <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
@@ -2438,6 +2439,8 @@
                             const llmAgentsToggle = document.getElementById('llm_agents_toggle');
                             const sentimentToggle = document.getElementById('sentiment_annotation_toggle');
                             const emotionToggle = document.getElementById('emotion_annotation_toggle');
+                            const opinionToggle = document.getElementById('opinion_annotation_toggle');
+                            const annotationSettingsRow = document.getElementById('annotation_settings_row');
                             const inputTag = document.getElementById('input-tag');
 
                             toxicityToggle.addEventListener('change', function() {
@@ -2460,6 +2463,8 @@
                                     sentimentToggle.disabled = true;
                                     emotionToggle.checked = false;
                                     emotionToggle.disabled = true;
+                                    opinionToggle.checked = false;
+                                    opinionToggle.disabled = true;
                                     perspectiveApiField.style.display = 'none';
 
                                     // Clear topics and show numeric input for topic count
@@ -2477,11 +2482,14 @@
                                     updateButtonState();
                                 } else {
                                     // Re-enable all annotation toggles
-                                    toxicityToggle.disabled = false;
-                                    sentimentToggle.checked = true;
-                                    sentimentToggle.disabled = false;
-                                    emotionToggle.checked = true;
-                                    emotionToggle.disabled = false;
+                                    const isForum = platformTypeSelect.value === 'forum';
+                                    toxicityToggle.disabled = isForum;
+                                    sentimentToggle.checked = !isForum;
+                                    sentimentToggle.disabled = isForum;
+                                    emotionToggle.checked = !isForum;
+                                    emotionToggle.disabled = isForum;
+                                    opinionToggle.checked = !isForum;
+                                    opinionToggle.disabled = isForum;
 
                                     // Re-enable topics input and clear default
                                     tagList.length = 0;
@@ -2495,6 +2503,7 @@
                                     topicCountInput.style.display = 'none';
                                     updateButtonState();
                                 }
+                                updateSimulatorTypeUI();
                             });
                             
                             // Function to generate topics
@@ -2537,8 +2546,10 @@
                                 }
                             });
 
-                            // Handle Simulator Type change
-                            const simulatorTypeSelect = document.getElementById('simulator_type_select');
+                            const simulatorTypeInput = document.getElementById('simulator_type_input');
+                            const hpcToggle = document.getElementById('hpc_toggle');
+                            const hpcToggleLabel = document.getElementById('hpc-toggle-label');
+                            const hpcToggleContainer = document.getElementById('hpc-toggle-container');
                             const hpcInfoInline = document.getElementById('hpc-info-inline');
                             const redisConfigBox = document.getElementById('redis-config-box');
                             const platformTypeSelect = document.getElementById('platform_type_select');
@@ -2568,29 +2579,68 @@
                             });
 
                             function updateSimulatorTypeUI() {
-                                const isHPC = simulatorTypeSelect.value === 'HPC';
+                                const isForum = platformTypeSelect.value === 'forum';
+                                const isHPC = !isForum && hpcToggle.checked;
                                 const remoteExperimentToggle = document.getElementById('remote_experiment_toggle');
                                 const remoteExperimentContainer = document.getElementById('remote-experiment-container');
                                 const remoteExperimentLabel = document.getElementById('remote-experiment-label');
+                                const llmEnabled = llmAgentsToggle.checked;
+
+                                simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
+
+                                if (isForum) {
+                                    hpcToggle.checked = false;
+                                    hpcToggle.disabled = true;
+                                    hpcToggleLabel.textContent = 'Unavailable for Forum';
+                                    if (hpcToggleContainer) {
+                                        hpcToggleContainer.style.opacity = '0.55';
+                                    }
+                                } else {
+                                    hpcToggle.disabled = false;
+                                    hpcToggleLabel.textContent = isHPC ? 'Enabled' : 'Disabled';
+                                    if (hpcToggleContainer) {
+                                        hpcToggleContainer.style.opacity = '1';
+                                    }
+                                }
+
+                                if (annotationSettingsRow) {
+                                    annotationSettingsRow.style.display = isForum ? 'none' : 'flex';
+                                }
+
+                                if (isForum) {
+                                    toxicityToggle.checked = false;
+                                    toxicityToggle.disabled = true;
+                                    sentimentToggle.checked = false;
+                                    sentimentToggle.disabled = true;
+                                    emotionToggle.checked = false;
+                                    emotionToggle.disabled = true;
+                                    opinionToggle.checked = false;
+                                    opinionToggle.disabled = true;
+                                    perspectiveApiField.style.display = 'none';
+                                } else {
+                                    toxicityToggle.disabled = !llmEnabled;
+                                    sentimentToggle.disabled = !llmEnabled;
+                                    emotionToggle.disabled = !llmEnabled;
+                                    opinionToggle.disabled = !llmEnabled;
+                                    if (llmEnabled) {
+                                        sentimentToggle.checked = true;
+                                        emotionToggle.checked = true;
+                                        opinionToggle.checked = true;
+                                    }
+                                    if (toxicityToggle.checked && llmEnabled) {
+                                        perspectiveApiField.style.display = 'flex';
+                                    } else {
+                                        perspectiveApiField.style.display = 'none';
+                                    }
+                                }
                                 
-                                // Show/hide HPC info box as overlay
                                 if (isHPC) {
                                     hpcInfoInline.style.display = 'block';
                                     redisConfigBox.style.display = 'flex';
-                                    
-                                    // Filter platform type to show only microblogging for HPC
-                                    platformTypeSelect.value = 'microblogging';
-                                    // Hide forum option for HPC
-                                    Array.from(platformTypeSelect.options).forEach(option => {
-                                        if (option.value === 'forum') {
-                                            option.style.display = 'none';
-                                        }
-                                    });
-                                    
+
                                     // Disable remote experiment toggle for HPC
                                     remoteExperimentToggle.disabled = true;
                                     remoteExperimentToggle.checked = false;
-                                    // Add visual styling for disabled state
                                     if (remoteExperimentContainer) {
                                         remoteExperimentContainer.style.opacity = '0.5';
                                         remoteExperimentContainer.style.cursor = 'not-allowed';
@@ -2611,15 +2661,8 @@
                                 } else {
                                     hpcInfoInline.style.display = 'none';
                                     redisConfigBox.style.display = 'none';
-                                    
-                                    // Show all platform type options for Standard
-                                    Array.from(platformTypeSelect.options).forEach(option => {
-                                        option.style.display = '';
-                                    });
-                                    
-                                    // Enable remote experiment toggle for Standard
+
                                     remoteExperimentToggle.disabled = false;
-                                    // Restore visual styling
                                     if (remoteExperimentContainer) {
                                         remoteExperimentContainer.style.opacity = '1';
                                         remoteExperimentContainer.style.cursor = 'pointer';
@@ -2630,7 +2673,8 @@
                                 }
                             }
 
-                            simulatorTypeSelect.addEventListener('change', updateSimulatorTypeUI);
+                            hpcToggle.addEventListener('change', updateSimulatorTypeUI);
+                            platformTypeSelect.addEventListener('change', updateSimulatorTypeUI);
                             
                             // Initialize on page load
                             updateSimulatorTypeUI();
