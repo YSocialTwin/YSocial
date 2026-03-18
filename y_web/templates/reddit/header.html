@@ -33,7 +33,75 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/app.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
     <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
+    <style>
+        .sim-clock-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            padding: 4px 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.3);
+            white-space: nowrap;
+        }
 
+        .sim-clock-pill .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            background: currentColor;
+        }
+
+        .sim-clock-pill .sim-clock-label {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+        }
+
+        .sim-clock-pill .sim-clock-label small {
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        .sim-clock-pill.is-success {
+            color: #38ef7d;
+            border-color: rgba(56, 239, 125, 0.6);
+        }
+
+        .sim-clock-pill.is-danger {
+            color: #ff7a7a;
+            border-color: rgba(255, 122, 122, 0.6);
+        }
+
+        .reply-notif-bell {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+        }
+
+        .reply-notif-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 6px;
+            border-radius: 999px;
+            background: #ff4500;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 18px;
+            text-align: center;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+    </style>
 </head>
 <body>
 <script id="__bs_script__">//<![CDATA[
@@ -80,7 +148,7 @@
 >
     <div class="container is-fluid">
         <div class="navbar-brand">
-            <a href="/" class="navbar-item">
+            <a href="{{ feed_home_url }}" class="navbar-item js-feed-home-link" data-feed-home-link="1">
                 <img
                         class="logo light-image"
                         src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
@@ -95,53 +163,34 @@
         </div>
         <div class="navbar-menu">
             <div class="navbar-end">
-
-                <div class="navbar-item is-account drop-trigger has-caret"
-                     style="{% if len(mentions)>0 %} color: red;{% endif %}">
-                    <i class="mdi mdi-message-text" style="{% if len(mentions)>0 %} color: red;{% endif %}"></i>
-                    {% if len(mentions)>0 %}
-                    <div class="nav-drop is-account-dropdown">
-                        <div class="inner">
-                            <div class="nav-drop-header">
-                                <span class="username">Mentioning Posts</span>
-
-                            </div>
-                            <div class="nav-drop-body account-items">
-                                {% for mention in mentions %}
-                                <span style="width: 90%; display: inline; float: left;"
-                                      id="left-{{ mention[0].post_id }}">
-        <a class="account-item" href="/{{exp_id}}/thread/{{ mention[0].post_id }}">
-          <div class="media">
-            <div class="icon-wrap">
-              <img
-                      src="https://via.placeholder.com/300x300"
-                       {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ str(mention[2]) +'.png') }}"
-                                    {% else %}
-                                        data-demo-src="{{ profile_pic }}"
-                                    {% endif %}
-                      data-user-popover="1"
-                      alt=""
-              />
-            </div>
-            <div class="media-content">
-             <h3>{{ mention[1] }}</h3>
-                <small>"{{ mention[3][:28] }}..."</small>
-            </div>
-          </div>
-        </a>
-        </span>
-                                <span style="width: 10%; display: inline; float: right;" val="{{ mention[0].post_id }}"
-                                      class="cancel-notification" id="right-{{ mention[0].post_id }}">
-                <i class="mdi mdi-close-circle-outline" val="{{ mention[0].post_id }}"></i>
-            </span>
-
-                                {% endfor %}
-                            </div>
+                {% if is_admin and active_sim_clock %}
+                <div class="navbar-item is-hidden-touch">
+                    <div class="sim-clock-pill {{ active_sim_clock.status_class }}">
+                        <span class="status-dot"></span>
+                        <div class="sim-clock-label">
+                            <span>{{ active_sim_clock.label }}</span>
+                            <small>{{ active_sim_clock.status_text }}</small>
                         </div>
                     </div>
-                    {% endif %}
                 </div>
+                {% endif %}
+
+                {% if exp_id and current_user_role in ['admin', 'researcher'] %}
+                <a class="navbar-item" href="/{{ exp_id }}/interview" aria-label="Interview" style="font-weight: 700;">
+                    <i class="mdi mdi-account-voice-outline"></i>
+                    <span style="margin-left: 6px;">INTERVIEW</span>
+                </a>
+                {% endif %}
+
+                {% if reply_notif_url %}
+                <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="Notifications">
+                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}"></i>
+                    {% if (reply_notif_unread_count|default(0))|int > 0 %}
+                    <span class="reply-notif-badge">{{ reply_notif_unread_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
+
                 <div
                         id="account-dropdown"
                         class="navbar-item is-account drop-trigger has-caret"
@@ -151,7 +200,7 @@
                         <img
                                 src="https://via.placeholder.com/400x400"
                                 {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
+                                        data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (logged_id|string) ~ '.png') }}"
                                     {% else %}
                                         data-demo-src="{{ profile_pic }}"
                                     {% endif %}
@@ -177,40 +226,7 @@
                                 </label>
                             </div>
                             <div class="nav-drop-body account-items">
-                                <a id="profile-link" href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="account-item">
-                                    <div class="media">
-                                        <div class="media-left">
-                                            <div class="image">
-                                                <img
-                                                        src="https://via.placeholder.com/400x400"
-                                                         {% if profile_pic =="" %}
-                                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
-                                                    {% else %}
-                                                        data-demo-src="{{ profile_pic }}"
-                                                    {% endif %}
-                                                        alt=""
-                                                />
-                                            </div>
-                                        </div>
-                                        <div class="media-content">
-                                            <h3>{{ logged_username }} </h3>
-                                        </div>
-                                        <div class="media-right">
-                                            <i data-feather="check"></i>
-                                        </div>
-                                    </div>
-                                </a>
-                                <a href="/{{exp_id}}/edit_profile/{{ logged_id }}" class="account-item">
-                                    <div class="media">
-                                        <div class="icon-wrap">
-                                            <i data-feather="edit"></i>
-                                        </div>
-                                        <div class="media-content">
-                                            <h3>Edit Profile</h3>
-                                            <small>Let's make some updates!</small>
-                                        </div>
-                                    </div>
-                                </a>
+                                <!-- Forum mode: user profiles are disabled -->
 
                                 {% if is_admin==True %}
                                 <hr class="account-divider"/>
@@ -260,7 +276,7 @@
 <nav class="navbar mobile-navbar is-hidden-desktop" aria-label="main navigation">
     <!-- Brand -->
     <div class="navbar-brand">
-        <a class="navbar-item" href="/">
+        <a class="navbar-item js-feed-home-link" data-feed-home-link="1" href="{{ feed_home_url }}">
             <img
                     class="light-image"
                     src="{{ url_for('static', filename='assets/img/vector/logo/Ysocial_orange.png') }}"
@@ -272,9 +288,17 @@
                     alt=""
             />
         </a>
-    </div>
-    </div>
-    </div>
+        {% if is_admin and active_sim_clock %}
+        <div class="navbar-item">
+            <div class="sim-clock-pill {{ active_sim_clock.status_class }}">
+                <span class="status-dot"></span>
+                <div class="sim-clock-label">
+                    <span>{{ active_sim_clock.label }}</span>
+                    <small>{{ active_sim_clock.status_text }}</small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Mobile menu toggler icon -->
@@ -283,16 +307,15 @@
         <span></span>
         <span></span>
     </div>
-    </div>
     <!-- Navbar mobile menu -->
     <div class="navbar-menu">
         <!-- Account -->
         <div class="navbar-item has-dropdown is-active">
-            <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1" class="navbar-link">
+            <a href="javascript:void(0)" class="navbar-link">
                 <img
                         src="https://via.placeholder.com/150x150"
                          {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
+                                        data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (logged_id|string) ~ '.png') }}"
                                     {% else %}
                                         data-demo-src="{{ profile_pic }}"
                                     {% endif %}
@@ -304,11 +327,31 @@
             <!-- Mobile Dropdown -->
             <div class="navbar-dropdown">
                 <a
-                        href="{{ url_for('main.feeed_logged') }}"
+                        href="{{ feed_home_url }}"
+                        data-feed-home-link="1"
                         class="navbar-item is-flex is-mobile-icon"
                 >
                     <span><i data-feather="activity"></i>Feed</span>
                 </a>
+                {% if exp_id and current_user_role in ['admin', 'researcher'] %}
+                <a
+                        href="/{{ exp_id }}/interview"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i class="mdi mdi-account-voice-outline"></i>Interview</span>
+                </a>
+                {% endif %}
+                {% if reply_notif_url %}
+                <a
+                        href="{{ reply_notif_url }}"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i class="mdi mdi-bell-outline"></i>Notifications</span>
+                    {% if (reply_notif_unread_count|default(0))|int > 0 %}
+                    <span class="menu-badge">{{ reply_notif_unread_count }}</span>
+                    {% endif %}
+                </a>
+                {% endif %}
                 {% if is_admin == True %}
                 <a
                         href="/admin/dashboard"
@@ -317,12 +360,7 @@
                     <span><i data-feather="settings"></i>Admin Dashboard</span>
                 </a>
                 {% endif %}
-                <a
-                        href="/{{exp_id}}/profile/{{ logged_id }}/recent/1"
-                        class="navbar-item is-flex is-mobile-icon"
-                >
-                    <span><i data-feather="user"></i>Profile</span>
-                </a>
+                <!-- Forum mode: user profiles are disabled -->
 
             </div>
         </div>

@@ -73,6 +73,12 @@ class Post(db.Model):
     thread_id = db.Column(db.Integer)
     news_id = db.Column(db.String(50), db.ForeignKey("articles.id"), default=None)
     image_id = db.Column(db.Integer(), db.ForeignKey("images.id"), default=None)
+    image_post_id = db.Column(
+        db.Integer(), db.ForeignKey("image_posts.id"), default=None
+    )
+    dedupe_key = db.Column(db.String(64), nullable=True, default=None)
+    client_action_id = db.Column(db.String(96), nullable=True, default=None)
+    created_at = db.Column(db.DateTime, nullable=True, default=db.func.now())
     shared_from = db.Column(db.Integer, default=-1)
     reaction_count = db.Column(db.Integer, default=0)
 
@@ -126,6 +132,23 @@ class Mentions(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
     round = db.Column(db.Integer, nullable=False)
     answered = db.Column(db.Integer, default=0)
+
+
+class ReplyInboxState(db.Model):
+    """
+    Tracks the last seen reply notification for a user.
+
+    This provides Reddit-style unread notifications without storing one row per
+    reply event inside the experiment database.
+    """
+
+    __bind_key__ = "db_exp"
+    __tablename__ = "reply_inbox_state"
+
+    user_id = db.Column(
+        db.Integer, db.ForeignKey("user_mgmt.id"), primary_key=True, nullable=False
+    )
+    last_seen_reply_id = db.Column(db.Integer, nullable=False, default=0)
 
 
 class Reactions(db.Model):
@@ -282,6 +305,26 @@ class Images(db.Model):
     url = db.Column(db.String(200), nullable=True)
     description = db.Column(db.String(400), nullable=True)
     article_id = db.Column(db.Integer, db.ForeignKey("articles.id"), nullable=True)
+    remote_article_id = db.Column(db.Integer, nullable=True)
+
+
+class ImagePosts(db.Model):
+    """
+    Pre-fetched standalone images that forum agents can share.
+    """
+
+    __tablename__ = "image_posts"
+    __bind_key__ = "db_exp"
+    id = db.Column(db.Integer, primary_key=True)
+    url = db.Column(db.String(500), nullable=False)
+    source_url = db.Column(db.String(500), nullable=True)
+    title = db.Column(db.String(300), nullable=True)
+    subreddit = db.Column(db.String(100), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    fetched_on = db.Column(db.String(20), nullable=True)
+    used = db.Column(db.Boolean, default=False)
+    local_path = db.Column(db.String(500), nullable=True)
+    high_res_url = db.Column(db.String(500), nullable=True)
 
 
 class Article_topics(db.Model):
@@ -401,6 +444,66 @@ class Admin_users(UserMixin, db.Model):
     def get_id(self):
         """Return user ID with 'admin_' prefix for Flask-Login."""
         return f"admin_{self.id}"
+
+
+class AdminInterviewSession(db.Model):
+    """
+    Stores an admin interview session for a specific experiment and agent.
+    """
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "admin_interview_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    exp_id = db.Column(db.Integer, nullable=False, index=True)
+    admin_username = db.Column(db.String(50), nullable=False, index=True)
+
+    agent_user_id = db.Column(db.Integer, nullable=False)
+    agent_username = db.Column(db.String(50), nullable=False)
+
+    run_id = db.Column(db.Text, nullable=True, index=True)
+
+    backend_mode = db.Column(db.String(20), nullable=False, default="agent_runtime")
+    llm_model = db.Column(db.String(200), nullable=True)
+    llm_base_url = db.Column(db.String(300), nullable=True)
+
+    persona_snapshot = db.Column(db.Text, nullable=True)
+    interests_snapshot_json = db.Column(db.Text, nullable=True)
+    memory_snapshot_json = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=db.func.now(),
+        onupdate=db.func.now(),
+    )
+
+    messages = db.relationship(
+        "AdminInterviewMessage",
+        backref="session",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class AdminInterviewMessage(db.Model):
+    """Stores one message in an admin interview session."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "admin_interview_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("admin_interview_sessions.id"),
+        nullable=False,
+        index=True,
+    )
+    role = db.Column(db.String(12), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    meta_json = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
 
 
 class Exps(db.Model):
@@ -550,6 +653,7 @@ class Population(db.Model):
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
     llm_url = db.Column(db.String(100))
+    username_type = db.Column(db.String(50), nullable=False, default="microblogging")
 
 
 class Agent(db.Model):

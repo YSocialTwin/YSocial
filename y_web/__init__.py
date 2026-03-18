@@ -376,6 +376,10 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
     from .models import Admin_users, User_mgmt
+    from y_web.utils.population_platform import ensure_population_username_type_column
+
+    with app.app_context():
+        ensure_population_username_type_column()
 
     @login_manager.user_loader
     def load_user(user_id):
@@ -436,6 +440,52 @@ def create_app(db_type="sqlite", desktop_mode=False):
     def inject_exp_id():
         """Inject exp_id into all templates."""
         return dict(exp_id=get_current_experiment_id())
+
+    @app.context_processor
+    def inject_feed_home_url():
+        """Inject the canonical home URL for the active experiment feed."""
+        from flask_login import current_user
+
+        from .models import Exps, User_mgmt
+
+        try:
+            if not current_user.is_authenticated:
+                return dict(feed_home_url="/")
+
+            exp = None
+            exp_id = get_current_experiment_id()
+            if exp_id is not None:
+                exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+
+            if exp is None:
+                active_exps = Exps.query.filter(Exps.status != 0).all()
+                if not active_exps:
+                    return dict(feed_home_url="/")
+                if len(active_exps) > 1:
+                    return dict(feed_home_url="/admin/join_simulation")
+                exp = active_exps[0]
+
+            if exp.platform_type == "forum":
+                return dict(
+                    feed_home_url=f"/{exp.idexp}/rfeed/all/feed/rf/1?feed_type=new"
+                )
+
+            feed_user_id = None
+            user_id_str = str(current_user.get_id() or "")
+            if user_id_str.isdigit():
+                feed_user_id = int(user_id_str)
+            else:
+                exp_user = User_mgmt.query.filter_by(
+                    username=getattr(current_user, "username", None)
+                ).first()
+                if exp_user is not None:
+                    feed_user_id = int(exp_user.id)
+
+            if feed_user_id is None:
+                return dict(feed_home_url=f"/{exp.idexp}/feed/all/feed/rf/1")
+            return dict(feed_home_url=f"/{exp.idexp}/feed/{feed_user_id}/feed/rf/1")
+        except Exception:
+            return dict(feed_home_url="/feed")
 
     @app.context_processor
     def inject_active_experiments():
@@ -607,6 +657,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
     from .routes_admin.tutorial_routes import tutorial as tutorial_blueprint
 
     app.register_blueprint(tutorial_blueprint)
+
+    from .routes_api.reddit import api_reddit as api_reddit_blueprint
+
+    app.register_blueprint(api_reddit_blueprint)
+
+    from .routes_api.interview import api_interview as api_interview_blueprint
+
+    app.register_blueprint(api_interview_blueprint)
 
     # Add context processor to detect PyInstaller mode
     @app.context_processor

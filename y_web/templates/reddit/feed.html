@@ -126,11 +126,46 @@
                             <div class="select">
                                 <select id="feed-type-select">
                                     <option value="new" {% if feed_type == 'new' %}selected{% endif %}>New</option>
+                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>Hot</option>
                                     <option value="top" {% if feed_type == 'top' %}selected{% endif %}>Top</option>
                                     <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>Most Commented</option>
                                 </select>
                             </div>
                         </div>
+                        <div class="column">
+                            <form
+                                id="feed-search-form"
+                                action="{{ url_for('main.search_reddit', exp_id=exp_id) }}"
+                                method="get"
+                                style="display: flex; gap: 8px; align-items: center;"
+                            >
+                                <input
+                                    id="feed-search-input"
+                                    name="q"
+                                    class="input"
+                                    type="search"
+                                    placeholder="Search posts, users, links..."
+                                    value="{{ search_query|default('', true) }}"
+                                    style="max-width: 420px;"
+                                />
+                                <input
+                                    id="feed-search-feed-type"
+                                    type="hidden"
+                                    name="feed_type"
+                                    value="{{ feed_type }}"
+                                />
+                                <button id="feed-search-button" class="button is-light" type="submit">
+                                    Search
+                                </button>
+                            </form>
+                        </div>
+                        {% if view_mode == 'search' %}
+                        <div class="column is-narrow">
+                            <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
+                                Back to Feed
+                            </a>
+                        </div>
+                        {% else %}
                         <div class="column">
                             <div id="create-post-trigger" class="card is-create-trigger" style="cursor: pointer; padding: 15px; border: 1px dashed #dbdbdb; text-align: center; color: #7a7a7a;">
                                 <div class="create-post-prompt">
@@ -139,18 +174,51 @@
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
                     </div>
-                    
+                    {% if view_mode == 'search' %}
+                    <div id="search-summary" class="notification is-light" style="margin-bottom: 16px;">
+                        <span id="search-summary-results" {% if not search_query %}style="display: none;"{% endif %}>
+                            Search results for <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
+                        </span>
+                        <span id="search-summary-empty" {% if search_query %}style="display: none;"{% endif %}>
+                            Enter a query to search posts, users, and shared links.
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if view_mode != 'search' %}
+                    <div id="new-posts-indicator" class="notification is-link is-light" style="display: none; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+                            <span>New posts available</span>
+                            <button id="new-posts-refresh-button" class="button is-small is-link" type="button">
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Expandable Compose Card (initially hidden) -->
                     <div id="compose-card" class="card is-new-content" style="display: none; position: relative;">
                         <!-- Top tabs -->
                         <div class="tabs-wrapper">
                             <div class="tabs is-boxed is-fullwidth">
                                 <ul>
-                                    <li class="is-active">
-                                        <a>
+                                    <li class="is-active" data-post-type-tab="text">
+                                        <a href="#" role="button">
                                             <span class="icon is-small"><i data-feather="edit-3"></i></span>
-                                            <span>Publish</span>
+                                            <span>Text</span>
+                                        </a>
+                                    </li>
+                                    <li data-post-type-tab="link">
+                                        <a href="#" role="button">
+                                            <span class="icon is-small"><i data-feather="link-2"></i></span>
+                                            <span>Link</span>
+                                        </a>
+                                    </li>
+                                    <li data-post-type-tab="image">
+                                        <a href="#" role="button">
+                                            <span class="icon is-small"><i data-feather="image"></i></span>
+                                            <span>Media</span>
                                         </a>
                                     </li>
                                     <!-- Close X button always visible -->
@@ -170,7 +238,7 @@
                                         <img
                                                 src="https://via.placeholder.com/300x300"
                                                 {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
+                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ str(logged_id) +'.png') }}"
                                     {% else %}
                                         data-demo-src="{{ profile_pic }}"
                                     {% endif %}
@@ -199,24 +267,44 @@
                                                     rows="4"
                                                 ></textarea>
                                             </div>
-                                            
-                                            <!-- Link URL Field -->
-                                            <div class="reddit-field">
+
+                                            <!-- Link URL Field (Link posts) -->
+                                            <div id="link-url-wrapper" class="reddit-field is-hidden">
                                                 <input
                                                     id="link-url"
                                                     type="url"
                                                     class="reddit-input url-input"
-                                                    placeholder="Url (optional)"
+                                                    placeholder="Link URL*"
                                                 />
                                             </div>
-                                            
-                                            <!-- Image URL Field -->
-                                            <div class="reddit-field">
+
+                                            <!-- Media attachment controls (Media posts) -->
+                                            <div id="image-source-toggle" class="reddit-field is-hidden" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                                                    <input type="radio" name="image-source" value="url" />
+                                                    <span>Media URL</span>
+                                                </label>
+                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                                                    <input type="radio" name="image-source" value="upload" checked />
+                                                    <span>Upload</span>
+                                                </label>
+                                            </div>
+
+                                            <div id="image-url-wrapper" class="reddit-field is-hidden">
                                                 <input
                                                     id="image-url"
                                                     type="url"
                                                     class="reddit-input image-input"
-                                                    placeholder="Image URL (optional)"
+                                                    placeholder="Media URL*"
+                                                />
+                                            </div>
+
+                                            <div id="image-upload-wrapper" class="reddit-field is-hidden">
+                                                <input
+                                                    id="image-file"
+                                                    type="file"
+                                                    accept="image/*,video/mp4"
+                                                    class="reddit-input image-input"
                                                 />
                                             </div>
                                         </div>
@@ -488,27 +576,25 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
 
-                    <!-- Post 1 -->
-                    <!-- /partials/pages/feed/posts/feed-post1.html -->
-                    <!-- POST #1 -->
-                    <div id="posts-container">
+                    <div
+                            id="feed-container"
+                            class="reddit-feed-container"
+                            data-current-page="{{ page }}"
+                            data-per-page="{{ per_page }}"
+                            data-feed-type="{{ feed_type }}"
+                            data-user-id="{{ '' if not feed_user_id else feed_user_id }}"
+                            data-has-more="{{ 'true' if has_more else 'false' }}"
+                    >
                         {% include "reddit/components/posts.html" %}
                     </div>
-                    <!-- POST #1 -->
-
-                    <!-- Load more posts -->
-                    <div class="load-more-wrap narrow-top has-text-centered">
-                        {% if page-1>0 %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
-                            Page</a>
-                        {% endif %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/rfeed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
-                            Page</a>
+                    <div id="loading-indicator" class="feed-loading-indicator has-text-centered" style="display: none;">
+                        <p>Loading more posts...</p>
                     </div>
-                    <!-- /Load more posts -->
+                    <div id="end-of-feed" class="feed-end-indicator has-text-centered" style="display: none;">
+                        <p>You've reached the end!</p>
+                    </div>
                 </div>
                 <!-- /Middle column -->
 
@@ -521,11 +607,23 @@
 </div>
 
 
-<!-- Experiment context -->
 <script>
-    // Make exp_id available globally for AJAX requests
-    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
-    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id }},
+    loggedUsername: {{ logged_username|tojson }},
+    profilePic: {{ profile_pic|tojson }},
+    profilePicFeed: {{ profile_pic_feed|tojson }}
+});
+window.redditFeedConfig = Object.freeze({
+    currentPage: {{ page }},
+    perPage: {{ per_page }},
+    feedType: {{ feed_type|tojson }},
+    searchQuery: {{ search_query|default('', true)|tojson }},
+    userId: {{ feed_user_id|tojson }},
+    hasMore: {{ has_more|tojson }},
+    viewMode: {{ view_mode|default('feed', true)|tojson }},
+    expId: {{ exp_id }}
+});
 </script>
 
 <!-- Concatenated js plugins and jQuery -->
@@ -565,6 +663,7 @@
 <script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 
 <!-- profile js -->
 
@@ -584,61 +683,10 @@
 
 <!-- inbox js -->
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
 <!-- settings js -->
 
 <!-- map page js -->
 
 <!-- elements page js -->
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const titleInput = document.getElementById('post-title');
-    const postBtn = document.getElementById('publish-button');
-    if (titleInput && postBtn) {
-        titleInput.addEventListener('input', function() {
-            postBtn.disabled = !titleInput.value.trim();
-        });
-        // Initial state
-        postBtn.disabled = !titleInput.value.trim();
-    }
-    
-    // Initialize infinite scroll for Reddit feed
-    if (window.InfiniteScroll) {
-        const feedType = '{{ feed_type }}' || 'new';
-        InfiniteScroll.init({
-            apiEndpoint: '/{{exp_id}}/api/rfeed/{{user_id}}/{{timeline}}/{{mode}}?feed_type=' + feedType,
-            postsContainerId: 'posts-container',
-            initialPage: {{ page }}
-        });
-    }
-});
-</script>
-
-<script>
-$(document).ready(function() {
-    $('#create-post-trigger').on('click', function() {
-        $(this).hide();
-        $('#compose-card').show();
-    });
-    $('.close-publish').on('click', function() {
-        $('#compose-card').hide();
-        $('#create-post-trigger').show();
-    });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  const select = document.getElementById('feed-type-select');
-  if (select) {
-    select.addEventListener('change', function() {
-      const params = new URLSearchParams(window.location.search);
-      params.set('feed_type', select.value);
-      window.location.search = params.toString();
-    });
-  }
-});
-</script>
 </body>
 </html>

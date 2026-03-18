@@ -130,7 +130,21 @@ CREATE TABLE images (
     id          SERIAL PRIMARY KEY,
     url         TEXT,
     description TEXT,
-    article_id  INTEGER REFERENCES articles(id) ON DELETE CASCADE
+    article_id  INTEGER REFERENCES articles(id) ON DELETE CASCADE,
+    remote_article_id INTEGER
+);
+
+CREATE TABLE image_posts (
+    id SERIAL PRIMARY KEY,
+    url VARCHAR(500) NOT NULL,
+    source_url VARCHAR(500),
+    title VARCHAR(300),
+    subreddit VARCHAR(100),
+    description TEXT,
+    fetched_on VARCHAR(20),
+    used BOOLEAN DEFAULT FALSE,
+    local_path VARCHAR(500),
+    high_res_url VARCHAR(500)
 );
 
 -- -----------------------------
@@ -147,7 +161,16 @@ CREATE TABLE post (
     news_id        INTEGER DEFAULT -1 REFERENCES articles(id) ON DELETE CASCADE,
     shared_from    INTEGER DEFAULT -1,
     image_id       INTEGER REFERENCES images(id) ON DELETE CASCADE,
+    image_post_id  INTEGER REFERENCES image_posts(id) ON DELETE SET NULL,
+    dedupe_key     VARCHAR(64),
+    client_action_id VARCHAR(96),
+    created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reaction_count INTEGER DEFAULT 0
+);
+
+CREATE TABLE reply_inbox_state (
+    user_id INTEGER PRIMARY KEY REFERENCES user_mgmt(id) ON DELETE CASCADE,
+    last_seen_reply_id INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE mentions (

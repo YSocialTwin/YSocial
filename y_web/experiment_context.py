@@ -56,6 +56,10 @@ def register_experiment_database(app, exp_id, db_name):
     else:
         raise ValueError("Unsupported database type")
 
+    from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+
+    ensure_experiment_schema_for_uri(db_uri)
+
     # Add to binds with experiment-specific key
     app.config["SQLALCHEMY_BINDS"][bind_key] = db_uri
 
@@ -94,7 +98,10 @@ def setup_experiment_context():
             # Bind doesn't exist, need to register it
             from y_web.models import Exps
 
-            exp = Exps.query.filter_by(idexp=exp_id, status=1).first()
+            # Bind the explicit experiment referenced by the route even if it is not
+            # currently active, so direct admin/forum routes never fall back to the
+            # legacy dummy bind.
+            exp = Exps.query.filter_by(idexp=exp_id).first()
             if exp:
                 register_experiment_database(current_app, exp_id, exp.db_name)
 

@@ -1375,7 +1375,6 @@ def upload_experiment():
 
                     # Insert initial admin user
                     hashed_pw = generate_password_hash("admin", method="pbkdf2:sha256")
-
                     stmt = text("""
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
@@ -1408,6 +1407,13 @@ def upload_experiment():
                 experiment_engine.dispose()
 
             admin_engine.dispose()
+
+        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+
+        if db_type == "sqlite":
+            ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
+        elif db_type == "postgresql":
+            ensure_experiment_schema_for_uri(db_uri)
 
         # Update config_server.json with new port, name, database_uri, and data_path
         experiment_config["name"] = name
@@ -2382,6 +2388,13 @@ def create_experiment():
                 experiment_engine.dispose()
 
             admin_engine.dispose()
+
+        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+
+        if db_type == "sqlite" and simulator_type == "Standard":
+            ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
+        elif db_type == "postgresql":
+            ensure_experiment_schema_for_uri(db_uri)
 
         else:
             raise NotImplementedError(f"Unsupported dbms {db_type}")
@@ -6833,7 +6846,6 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
                             :language, :owner, :joined_on, :frecsys_type,
                             :round_actions, :toxicity, :is_page, :daily_activity_level)
                     """)
-
                 conn.execute(
                     stmt,
                     {
@@ -6857,6 +6869,13 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
             experiment_engine.dispose()
 
         admin_engine.dispose()
+
+    from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+
+    if db_type == "sqlite" and not is_hpc:
+        ensure_experiment_schema_for_uri(f"sqlite:///{new_db_uri}")
+    elif db_type == "postgresql":
+        ensure_experiment_schema_for_uri(new_db_uri)
 
     # Update configuration file with new name, port, and database_uri
     # is_hpc was already detected earlier (before database copying)

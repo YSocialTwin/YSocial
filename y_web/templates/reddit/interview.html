@@ -1,0 +1,128 @@
+{%  include "reddit/header.html" %}
+
+<div class="view-wrapper">
+    <div class="container is-fluid" style="max-width: 1400px;">
+        <div class="columns">
+            <div class="column is-3">
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">Interview</p>
+                    </header>
+                    <div class="card-content">
+                        <div class="field">
+                            <label class="label">Agent</label>
+                            <div class="control">
+                                <div class="select is-fullwidth">
+                                    <select id="interview-agent-select"></select>
+                                </div>
+                            </div>
+                            <p class="help">Only LLM agents are listed.</p>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Run ID (optional)</label>
+                            <div class="control">
+                                <input id="interview-run-id" class="input" placeholder="auto-detect from logs"/>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label class="label">Backend</label>
+                            <div class="control">
+                                <label class="radio">
+                                    <input type="radio" name="backend_mode" value="agent_runtime" checked>
+                                    Agent runtime
+                                </label>
+                                <label class="radio" style="margin-left: 10px;">
+                                    <input type="radio" name="backend_mode" value="admin">
+                                    Admin
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="buttons" style="width: 100%;">
+                            <button id="interview-start-session" class="button is-primary is-fullwidth">Start Session</button>
+                            <button id="interview-refresh-memory" class="button is-light is-fullwidth" disabled>Refresh Memory</button>
+                        </div>
+
+                        <p id="interview-status" class="help"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-6">
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">Conversation</p>
+                    </header>
+                    <div class="card-content" style="height: 560px; overflow: auto;">
+                        <div id="interview-messages"></div>
+                    </div>
+                    <div class="card-content" style="border-top: 1px solid #eee;">
+                        <div class="field">
+                            <label class="label">Message</label>
+                            <div class="control">
+                                <textarea id="interview-input" class="textarea" rows="3" placeholder="Ask the agent about their experiences, relationships, or the community..." disabled></textarea>
+                            </div>
+                        </div>
+                        <div class="field is-grouped is-grouped-right">
+                            <div class="control">
+                                <button id="interview-send" class="button is-link" disabled>Send</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-3">
+                <div class="card">
+                    <header class="card-header">
+                        <p class="card-header-title">Context</p>
+                    </header>
+                    <div class="card-content">
+                        <p class="title is-6" style="margin-bottom: 0.5rem;">Persona</p>
+                        <pre id="interview-persona" style="white-space: pre-wrap; font-size: 0.85em;"></pre>
+
+                        <p class="title is-6" style="margin-top: 1rem; margin-bottom: 0.5rem;">Interests</p>
+                        <div id="interview-interests" style="font-size: 0.9em;"></div>
+
+                        <p class="title is-6" style="margin-top: 1rem; margin-bottom: 0.5rem;">Memory</p>
+                        <pre id="interview-memory" style="white-space: pre-wrap; font-size: 0.85em;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+    window.INTERVIEW_EXP_ID = window.EXP_ID;
+</script>
+
+<!-- Concatenated js plugins and jQuery -->
+<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+
+<!-- Interview module -->
+<script src="{{ url_for('static', filename='assets/js/interview.js') }}"></script>
+
+</body>
+</html>
+

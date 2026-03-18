@@ -56,6 +56,7 @@ from y_web.routes_admin.experiments_routes import get_suggested_port
 from y_web.utils import generate_population
 from y_web.utils.miscellanea import check_privileges
 from y_web.utils.path_utils import get_resource_path, get_writable_path
+from y_web.utils.population_platform import ensure_population_username_type_column
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -204,6 +205,7 @@ def create_tutorial_experiment():
         return jsonify({"success": False, "message": "No data provided"}), 400
 
     try:
+        ensure_population_username_type_column()
         # Extract population data
         population_name = data.get("population_name", "").strip()
         population_size = int(data.get("population_size", 50))
@@ -358,6 +360,7 @@ def create_tutorial_experiment():
             interests="",
             toxicity=toxicity_str,
             llm_url=None,
+            username_type="microblogging",
         )
 
         db.session.add(pop)
@@ -514,6 +517,13 @@ def create_tutorial_experiment():
                 experiment_engine.dispose()
 
             admin_engine.dispose()
+
+        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+
+        if db_type == "sqlite":
+            ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
+        else:
+            ensure_experiment_schema_for_uri(db_uri)
 
         # Determine topics list (use provided topics if LLM enabled, otherwise "General")
         experiment_topics = topics if llm_enabled and topics else ["General"]

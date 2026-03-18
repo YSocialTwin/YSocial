@@ -242,29 +242,164 @@ def strip_tags(html):
     return s.get_data()
 
 
-def process_reddit_post(text):
+def strip_markdown_artifacts(text):
+    """
+    Remove markdown headers and common article structure artifacts.
+    """
+    if not text:
+        return text
+
+    text = re.sub(
+        r"^#+\s*(Conclusion|Call to Action|Key Points?|Summary|Overview|"
+        r"Introduction|Background|TL;?DR|Final Thoughts?|Takeaway|"
+        r"What\'s Next|Next Steps?|Resources?)[:\s]*",
+        "",
+        text,
+        flags=re.MULTILINE | re.IGNORECASE,
+    )
+    text = re.sub(r"^#+\s+", "", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def calculate_text_similarity(text1, text2):
+    """
+    Calculate similarity between two texts using Jaccard word overlap.
+    """
+    if not text1 or not text2:
+        return 0.0
+
+    words1 = set(re.findall(r"\b\w+\b", text1.lower()))
+    words2 = set(re.findall(r"\b\w+\b", text2.lower()))
+    if not words1 or not words2:
+        return 0.0
+
+    intersection = len(words1 & words2)
+    union = len(words1 | words2)
+    return intersection / union if union > 0 else 0.0
+
+
+def strip_reproduced_article_content(
+    post_body, article_summary, similarity_threshold=0.6
+):
+    """
+    Strip post body fragments that substantially reproduce the article summary.
+    """
+    if not post_body or not article_summary:
+        return post_body, False
+
+    article_words = set(re.findall(r"\b\w+\b", article_summary.lower()))
+    similarity = calculate_text_similarity(post_body, article_summary)
+    if similarity < similarity_threshold:
+        return post_body, False
+
+    sentences = re.split(r"(?<=[.!?])\s+", post_body)
+    filtered_sentences = []
+    sentence_threshold = similarity_threshold * 0.6
+
+    for sentence in sentences:
+        sentence_similarity = calculate_text_similarity(sentence, article_summary)
+        sentence_words = set(re.findall(r"\b\w+\b", sentence.lower()))
+        overlap_ratio = (
+            len(sentence_words & article_words) / len(sentence_words)
+            if sentence_words
+            else 0
+        )
+        if sentence_similarity < sentence_threshold and overlap_ratio < 0.7:
+            filtered_sentences.append(sentence)
+
+    if filtered_sentences:
+        return " ".join(filtered_sentences), True
+    return "", True
+
+
+def normalize_punctuation_spacing(text):
+    """
+    Add a single missing space after common punctuation marks.
+    """
+    if not text:
+        return text
+
+    preserved = {}
+
+    def _preserve(match):
+        key = f"__URL_{len(preserved)}__"
+        preserved[key] = match.group(0)
+        return key
+
+    normalized = re.sub(r"https?://\S+", _preserve, str(text))
+    normalized = re.sub(
+        r"(?<!\d)([.!?;:])(?!\s|$)(?=[A-Za-z])",
+        r"\1 ",
+        normalized,
+    )
+    normalized = re.sub(
+        r"(?<!\d),(?!\s|$)(?=[A-Za-z])",
+        ", ",
+        normalized,
+    )
+
+    for key, url in preserved.items():
+        normalized = normalized.replace(key, url)
+
+    return normalized
+
+
+def process_reddit_post(text, allow_legacy_blankline_title=True):
     """
     Process and format Reddit-style post text.
 
-    Handles posts with "TITLE: " prefix by splitting into title and content,
-    and removes leading whitespace from content.
-
-    Args:
-        text: Raw post text to process
-
-    Returns:
-        Tuple of (title, content) where title is None if no TITLE prefix exists
+    Handles TITLE prefix variants and strips markdown artifacts from the body.
     """
-    if text.startswith("TITLE: "):
-        # Split on first newline after title
-        lines = text.split("\n", 1)
-        title = lines[0].replace("TITLE: ", "").strip()
+    if not text:
+        return None, ""
+
+    text = text.strip()
+    title_match = re.match(
+        r"^[\*_]{0,2}(TITLE|TITTLE|TITEL)\s*:\s*", text, re.IGNORECASE
+    )
+
+    if title_match:
+        remaining = text[title_match.end() :]
+        lines = remaining.split("\n", 1)
+        title = re.sub(r"[\*_]{1,2}$", "", lines[0].strip()).strip()
         if len(lines) > 1:
-            # Remove all leading whitespace from the content
             content = lines[1].lstrip()
         else:
             content = ""
-        return title, content
+            if len(title) >= 200:
+                t = title
+                min_idx, max_idx = 40, 160
+                split_at = None
+                for pat in [r"\.\s+", r"!\s+", r"\?\s+", r"\.\.\.\s+"]:
+                    match = re.search(pat, t)
+                    if match and min_idx <= match.end() <= max_idx:
+                        split_at = match.end()
+                        break
+                if split_at is None:
+                    cut = t.rfind(" ", 0, max_idx)
+                    if cut >= min_idx:
+                        split_at = cut + 1
+                if split_at is not None and split_at < len(t) - 1:
+                    title = t[:split_at].strip()
+                    content = t[split_at:].lstrip()
     else:
-        # For non-title posts, still remove leading whitespace
-        return None, text.lstrip()
+        title = None
+        content = text.lstrip()
+        if allow_legacy_blankline_title:
+            blocks = re.split(r"\n\s*\n", text, maxsplit=1)
+            if len(blocks) > 1:
+                candidate_title = blocks[0].strip()
+                candidate_body = blocks[1].lstrip()
+                if candidate_title and candidate_body and len(candidate_title) <= 300:
+                    title = candidate_title
+                    content = candidate_body
+
+    content = strip_markdown_artifacts(content)
+    content = re.sub(
+        r"^[\*_]{0,2}(TITLE|TITTLE|TITEL)\s*:\s*",
+        "",
+        content,
+        flags=re.IGNORECASE,
+    ).lstrip()
+    return title, content

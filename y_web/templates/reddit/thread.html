@@ -113,7 +113,7 @@
         </div>
 
         <!-- Feed page main wrapper -->
-        <div id="profile-main" class="view-wrap is-headless">
+        <div id="profile-main" class="view-wrap is-headless thread-view">
             <!-- <div id="activity-feed" class="view-wrap true-dom is-hidden"> -->
             <div class="columns">
                 <!-- Left side column - REMOVED FOR REDDIT STYLE -->
@@ -121,25 +121,23 @@
                 <!-- Main column - Full width Reddit style -->
                 <div class="column is-8 is-offset-2">
                     <!-- Reddit-style navigation -->
-                    <div style="margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #e1e8ed;">
-                        <a href="javascript:history.back()" style="color: #0079d3; text-decoration: none; font-size: 14px;">
+                    <div class="reddit-thread-nav" style="margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #e1e8ed;">
+                        <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" style="color: #0079d3; text-decoration: none; font-size: 14px;">
                             ← Back to feed
                         </a>
                     </div>
 
-                    <div class="profile-timeline">
+                    <div class="profile-timeline reddit-thread-timeline">
 
                         <!-- inizio -->
                         {% include "reddit/components/thread-post.html" %}
                         <div id="child-{{ thread['post_id'] }}">
-                            {% set data = thread['children'] %}
-                            {% for c in data %}
-                            <div style="padding-left: 20px;">
-                                {% with thread=c %}
+                            {% for child_comment in thread['children'] %}
+                            <div class="reddit-thread-children" style="padding-left: 20px;">
+                                {% with thread=child_comment, depth=1 %}
                                 {% include "reddit/components/list.html" %}
                                 {% endwith %}
                             </div>
-
                             {% endfor %}
                         </div>
                     </div>
@@ -171,6 +169,12 @@
 <script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
+<script>
+window.redditFeedConfig = Object.freeze({
+    expId: {{ exp_id }}
+});
+</script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 </body>
 </html>
