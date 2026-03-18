@@ -28,6 +28,18 @@ from y_web.models import (
 INFINITE_CLIENT_ITERATION_DAYS = 365
 
 
+def _get_client_archetypes(client):
+    """Return a normalized archetype config for clients that may not implement it."""
+    archetypes = getattr(client, "agent_archetypes", None)
+    if archetypes:
+        return archetypes
+    return {
+        "enabled": False,
+        "distribution": {},
+        "transitions": {},
+    }
+
+
 def _resolve_client_package_dir(base_path, platform_type):
     """Resolve the external client package directory for a platform."""
     if platform_type == "microblogging":
@@ -309,7 +321,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
 
         if not os.path.exists(filename):
             # Ensure all agents have archetype before saving
-            ensure_agents_have_archetype(cl.agents.agents, cl.agent_archetypes)
+            ensure_agents_have_archetype(cl.agents.agents, _get_client_archetypes(cl))
             cl.save_agents(filename)
 
         run_simulation(cl, cli.id, filename, exp, population, db_type)
@@ -618,7 +630,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
     hour_to_page = get_users_per_hour(population, page_agents, session)
 
-    archetypes = cl.agent_archetypes
+    archetypes = _get_client_archetypes(cl)
 
     for d1 in range(total_days):
         common_agents = [p for p in cl.agents.agents if not p.is_page]
