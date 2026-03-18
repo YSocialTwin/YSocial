@@ -97,7 +97,7 @@
                             <div class="box-line">
                                 <span class="left">Edit LLM Prompts</span>
                                 <span class="right">
-                                    <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="Edit">
+                                    <a class="link-tooltip" href="/admin/prompts_forum/{{ experiment.idexp }}" title="Edit">
                                         <i class="mdi mdi-credit-card" style="font-size: 24px;"></i></a>
                                 </span>
                             </div>
@@ -452,7 +452,7 @@
                                         <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
                                         {{ client.name }}
                                         {% if client_executions.get(client.id, False) %}
-                                        <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
+                                        <a href="/admin/client_details_forum/{{client.id}}" class="link-tooltip" title="View Client Details">
                                             <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
                                         </a>
                                         {% endif %}
@@ -552,7 +552,7 @@
 
                             <div style="text-align: center; margin-top: 10px;">
                                  <hr style="margin-bottom: 5px; margin-top: 5px;">
-                                <a class="link-tooltip" href="/admin/clients/{{ experiment.idexp }}" title="Add Client">
+                                <a class="link-tooltip" href="/admin/clients_forum/{{ experiment.idexp }}" title="Add Client">
                                     <i class="mdi mdi-plus-circle-outline" style="font-size: 24px;"></i>
                                 </a>
                             </div>
