@@ -343,7 +343,18 @@
                                             </small>
                                         </span>
                                     </div>
-                                    <input type="hidden" name="memory_semantic_enabled" value="on">
+                                    <div class="box-line">
+                                        <span class="left">Semantic Retrieval</span>
+                                        <span class="right" style="width: 70%;">
+                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                <input type="checkbox" name="memory_semantic_enabled" id="memory_semantic_enabled">
+                                                <span style="color: #039be5;">Enable embedding-backed retrieval</span>
+                                            </label>
+                                            <small style="color: #666; display: block; margin-top: 4px;">
+                                                Requires an available Ollama embedding model. Leave disabled for the safest default setup.
+                                            </small>
+                                        </span>
+                                    </div>
 
                                     <div class="box-line">
                                         <span class="left">Pair Limit</span>
@@ -413,15 +424,6 @@
                                                    min="1" max="1000" step="1" value="5" required>
                                             <small style="color: #666; display: block; margin-top: 4px;">
                                                 Number of initial interactions treated as full memory imprint before progressive decay starts.
-                                            </small>
-                                        </span>
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Semantic Retrieval</span>
-                                        <span class="right" style="width: 70%;">
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Enabled by default (semantic-first memory). Advanced overrides are optional below.
                                             </small>
                                         </span>
                                     </div>
@@ -553,15 +555,18 @@
                                             <div class="box-line">
                                                 <span class="left">Embedding Model</span>
                                                 <span class="right" style="width: 70%;">
-                                                    <input type="text" name="memory_embedding_model" class="input"
-                                                           value="BAAI/bge-m3">
+                                                    <input type="text" name="memory_embedding_model" id="memory_embedding_model" class="input"
+                                                           value="snowflake-arctic-embed:110m" disabled>
+                                                    <small style="color: #666; display: block; margin-top: 4px;">
+                                                        Used only when semantic retrieval is enabled.
+                                                    </small>
                                                 </span>
                                             </div>
                                             <div class="box-line">
                                                 <span class="left">Async Embedding</span>
                                                 <span class="right" style="width: 70%;">
                                                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                        <input type="checkbox" name="memory_embedding_async" checked>
+                                                        <input type="checkbox" name="memory_embedding_async" id="memory_embedding_async" checked disabled>
                                                         <span style="color: #039be5;">Background indexing</span>
                                                     </label>
                                                 </span>
@@ -1309,6 +1314,23 @@ function displayNetworkFileNameCreate(input) {
     updateNetworkInputStates();
 }
 
+function syncForumMemoryControls() {
+    const semanticToggle = document.getElementById('memory_semantic_enabled');
+    const embeddingModel = document.getElementById('memory_embedding_model');
+    const embeddingAsync = document.getElementById('memory_embedding_async');
+    const enabled = !!(semanticToggle && semanticToggle.checked);
+
+    if (embeddingModel) {
+        embeddingModel.disabled = !enabled;
+    }
+    if (embeddingAsync) {
+        embeddingAsync.disabled = !enabled;
+        if (!enabled) {
+            embeddingAsync.checked = false;
+        }
+    }
+}
+
 // On page load, disable image action by default and setup form validation
 document.addEventListener('DOMContentLoaded', function() {
     {% if llm_agents_enabled %}
@@ -1354,9 +1376,15 @@ document.addEventListener('DOMContentLoaded', function() {
             displayNetworkFileNameCreate(this);
         });
     }
+
+    const semanticToggle = document.getElementById('memory_semantic_enabled');
+    if (semanticToggle) {
+        semanticToggle.addEventListener('change', syncForumMemoryControls);
+    }
     
     // Initial state
     updateNetworkInputStates();
+    syncForumMemoryControls();
 });
                                             </script>
 {% include "admin/tutorials/clients_tutorial.html" %}

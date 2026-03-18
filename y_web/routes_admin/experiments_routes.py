@@ -112,6 +112,11 @@ DEFAULT_FEED_LIMITS = {
     "db_fallback_limit": 50,
     "image_entries_per_feed": 100,
 }
+DEFAULT_FORUM_EMBEDDING_SETTINGS = {
+    "service": "",
+    "host": "",
+    "model": "",
+}
 
 FORUM_FEED_REQUEST_HEADERS = {
     "User-Agent": (
@@ -395,6 +400,49 @@ def _load_forum_experiment_context(uid, require_manage=True):
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
     os.makedirs(experiment_dir, exist_ok=True)
     return experiment, experiment_dir, None
+
+
+def _normalize_forum_embedding_service(value):
+    """Normalize forum memory embedding provider name."""
+    service = str(value or "").strip().lower()
+    if service in {"ollama"}:
+        return service
+    return ""
+
+
+def _normalize_forum_embedding_host(value):
+    """Normalize forum memory embedding host input."""
+    host = str(value or "").strip()
+    if not host:
+        return ""
+    if not host.startswith("http://") and not host.startswith("https://"):
+        host = f"http://{host}"
+    host = host.rstrip("/")
+    if host.endswith("/v1"):
+        host = host[:-3].rstrip("/")
+    return host
+
+
+def _read_forum_embedding_settings(experiment_dir):
+    """Load persisted forum memory embedding settings from config_server.json."""
+    config_path = os.path.join(experiment_dir, "config_server.json")
+    settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
+    if not os.path.exists(config_path):
+        return settings
+    try:
+        with open(config_path, "r") as handle:
+            config = json.load(handle)
+    except (json.JSONDecodeError, IOError):
+        return settings
+
+    persisted = config.get("memory_embeddings")
+    if not isinstance(persisted, dict):
+        return settings
+
+    settings["service"] = _normalize_forum_embedding_service(persisted.get("service"))
+    settings["host"] = _normalize_forum_embedding_host(persisted.get("host"))
+    settings["model"] = str(persisted.get("model") or "").strip()
+    return settings
 
 
 def _serialize_download_notification(notification):
@@ -3102,6 +3150,7 @@ def experiment_details(uid):
 
     # Resolve current toggle values from persisted server config.
     current_perspective_api = ""
+    forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -3144,6 +3193,18 @@ def experiment_details(uid):
                     config.get("opinions_enabled", opinion_dynamics_enabled),
                 )
             )
+            if experiment.platform_type == "forum":
+                persisted_embedding = config.get("memory_embeddings")
+                if isinstance(persisted_embedding, dict):
+                    forum_embedding_settings = {
+                        "service": _normalize_forum_embedding_service(
+                            persisted_embedding.get("service")
+                        ),
+                        "host": _normalize_forum_embedding_host(
+                            persisted_embedding.get("host")
+                        ),
+                        "model": str(persisted_embedding.get("model") or "").strip(),
+                    }
     except Exception:
         current_perspective_api = ""
 
@@ -3171,6 +3232,7 @@ def experiment_details(uid):
         sentiment_annotation_enabled=sentiment_annotation_enabled,
         emotion_annotation_enabled=emotion_annotation_enabled,
         opinion_dynamics_enabled=opinion_dynamics_enabled,
+        forum_embedding_settings=forum_embedding_settings,
         hpc_reset_available=hpc_reset_available,
     )
 
@@ -5005,6 +5067,70 @@ def feed_limits(uid):
         experiment=experiment,
         feed_limits=feed_limits_data,
     )
+
+
+@experiments.route("/admin/embedding_settings/<int:uid>", methods=["GET"])
+@login_required
+def embedding_settings(uid):
+    """Display and edit forum memory embedding backend settings."""
+    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    if error_response is not None:
+        return error_response
+
+    return render_template(
+        "admin/embedding_settings.html",
+        experiment=experiment,
+        embedding_settings=_read_forum_embedding_settings(experiment_dir),
+    )
+
+
+@experiments.route("/admin/update_embedding_settings/<int:uid>", methods=["POST"])
+@login_required
+def update_embedding_settings(uid):
+    """Persist forum memory embedding backend settings to config_server.json."""
+    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    if error_response is not None:
+        return error_response
+
+    config_path = os.path.join(experiment_dir, "config_server.json")
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as handle:
+                config = json.load(handle)
+        except (json.JSONDecodeError, IOError):
+            config = {}
+
+    service = _normalize_forum_embedding_service(request.form.get("embedding_service"))
+    host = _normalize_forum_embedding_host(request.form.get("embedding_host"))
+    model = str(request.form.get("embedding_model") or "").strip()
+
+    if service == "ollama":
+        if not host:
+            flash("An Ollama host is required when memory embeddings are enabled.", "error")
+            return redirect(
+                request.referrer
+                or url_for("experiments.embedding_settings", uid=uid)
+            )
+        if not model:
+            flash("Select an embedding model before saving the configuration.", "error")
+            return redirect(
+                request.referrer
+                or url_for("experiments.embedding_settings", uid=uid)
+            )
+        config["memory_embeddings"] = {
+            "service": service,
+            "host": host,
+            "model": model,
+        }
+    else:
+        config["memory_embeddings"] = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
+
+    with open(config_path, "w") as handle:
+        json.dump(config, handle, indent=2)
+
+    flash("Embedding settings updated successfully.", "success")
+    return redirect(request.referrer or url_for("experiments.embedding_settings", uid=uid))
 
 
 @experiments.route("/admin/update_feed_limits/<int:uid>", methods=["POST"])

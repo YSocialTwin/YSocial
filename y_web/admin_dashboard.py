@@ -50,6 +50,40 @@ from .utils.experiment_access import (
 admin = Blueprint("admin", __name__)
 
 
+def _normalize_llm_models_url(llm_url: str) -> str:
+    """Normalize a user-provided OpenAI-compatible models endpoint base URL."""
+    llm_url = str(llm_url or "").strip()
+    if not llm_url:
+        return ""
+    if not llm_url.startswith("http"):
+        llm_url = f"http://{llm_url}"
+    if llm_url.endswith("/"):
+        llm_url = llm_url[:-1]
+    if llm_url.endswith("/v1/models"):
+        return llm_url[:-7]
+    if not llm_url.endswith("/v1"):
+        llm_url = f"{llm_url}/v1"
+    return llm_url
+
+
+def _is_embedding_model_name(model_name: str) -> bool:
+    """Heuristic filter for embedding-capable models exposed by Ollama/OpenAI-compatible APIs."""
+    lowered = str(model_name or "").strip().lower()
+    if not lowered:
+        return False
+    embedding_markers = (
+        "embed",
+        "embedding",
+        "bge",
+        "e5",
+        "gte",
+        "snowflake-arctic",
+        "nomic-embed",
+        "mxbai",
+    )
+    return any(marker in lowered for marker in embedding_markers)
+
+
 @admin.route("/admin/api/fetch_models")
 @login_required
 def fetch_models():
@@ -64,15 +98,9 @@ def fetch_models():
     """
     from flask import jsonify
 
-    llm_url = request.args.get("llm_url")
+    llm_url = _normalize_llm_models_url(request.args.get("llm_url"))
     if not llm_url:
         return jsonify({"error": "llm_url parameter is required"}), 400
-
-    # Normalize URL
-    if not llm_url.startswith("http"):
-        llm_url = f"http://{llm_url}"
-    if not llm_url.endswith("/v1"):
-        llm_url = f"{llm_url}/v1"
 
     try:
         models = get_llm_models(llm_url)
@@ -83,6 +111,29 @@ def fetch_models():
                 jsonify({"success": False, "message": f"No models found at {llm_url}"}),
                 404,
             )
+    except Exception as e:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Failed to connect to {llm_url}: {str(e)}",
+                }
+            ),
+            500,
+        )
+
+
+@admin.route("/admin/api/fetch_embedding_models")
+@login_required
+def fetch_embedding_models():
+    """AJAX endpoint to fetch only embedding models from a compatible LLM/Ollama server."""
+    llm_url = _normalize_llm_models_url(request.args.get("llm_url"))
+    if not llm_url:
+        return jsonify({"error": "llm_url parameter is required"}), 400
+
+    try:
+        models = [model for model in get_llm_models(llm_url) if _is_embedding_model_name(model)]
+        return jsonify({"success": True, "models": models, "url": llm_url})
     except Exception as e:
         return (
             jsonify(
