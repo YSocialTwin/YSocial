@@ -49,6 +49,11 @@ from y_web.utils import (
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.utils.population_platform import (
+    ensure_population_username_type_column,
+    infer_population_username_type,
+    normalize_population_username_type,
+)
 
 population = Blueprint("population", __name__)
 
@@ -67,12 +72,16 @@ def create_population_empty():
         Redirect to populations list
     """
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
 
     name = request.form.get("empty_population_name")
     descr = request.form.get("empty_population_descr")
+    username_type = normalize_population_username_type(
+        request.form.get("empty_population_type")
+    )
 
     # add the experiment to the database
-    pop = Population(name=name, descr=descr)
+    pop = Population(name=name, descr=descr, username_type=username_type)
 
     db.session.add(pop)
     db.session.commit()
@@ -101,12 +110,14 @@ def create_population():
         Redirect to populations list
     """
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
     name = request.form.get("pop_name")
     descr = request.form.get("pop_descr")
     n_agents = request.form.get("n_agents")
     user_type = request.form.get("user_type")
 
     llm = request.form.get("host_llm")
+    username_type = normalize_population_username_type(request.form.get("username_type"))
 
     # Get gender distribution
     male_percentage = int(request.form.get("male_percentage", "50"))
@@ -200,6 +211,7 @@ def create_population():
         interests=interests,
         toxicity=toxicity_levels,
         llm_url=llm,
+        username_type=username_type,
     )
 
     db.session.add(population)
@@ -239,6 +251,7 @@ def populations_data():
     Returns:
         Rendered populations data template
     """
+    ensure_population_username_type_column()
     query = Population.query
 
     # search filter
@@ -316,6 +329,8 @@ def populations_data():
                     for t_id in (pop.toxicity or "").split(",")
                     if t_id.strip()
                 ],
+                "username_type": infer_population_username_type(pop)
+                or "microblogging",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
             for pop in res
@@ -334,6 +349,7 @@ def populations():
         Rendered populations template with all populations
     """
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
 
     # Regular expression to match model values
 
@@ -714,6 +730,7 @@ def delete_population(uid):
 def download_population(uid):
     """Download population."""
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
 
     # get all agents in the population
     agents = (
@@ -737,6 +754,8 @@ def download_population(uid):
         "population_data": {
             "name": population.name,
             "descr": population.descr,
+            "username_type": infer_population_username_type(population)
+            or "microblogging",
         },
         "agents": [],
         "pages": [],
@@ -830,6 +849,7 @@ def upload_population():
         Redirect to populations page
     """
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
 
     population_file = request.files["population_file"]
 
@@ -845,9 +865,14 @@ def upload_population():
     population_file.save(filename)
 
     data = json.load(open(filename, "r"))
+    population_type = normalize_population_username_type(
+        data.get("population_data", {}).get("username_type")
+        or request.form.get("upload_population_type")
+    )
 
     # Handle population name duplicates by adding incremental suffix
-    base_name = data["population_data"]["name"]
+    population_data = data.get("population_data", {})
+    base_name = population_data["name"]
     population_name = base_name
     suffix = 0
     while Population.query.filter_by(name=population_name).first():
@@ -856,13 +881,15 @@ def upload_population():
 
     # add the population to the database
     population = Population(
-        name=population_name, descr=data["population_data"]["descr"]
+        name=population_name,
+        descr=population_data.get("descr", ""),
+        username_type=population_type,
     )
     db.session.add(population)
     db.session.commit()
 
     # add the agents to the database
-    for a in data["agents"]:
+    for a in data.get("agents", []):
         # check if the agent already exists
         agent = Agent.query.filter_by(name=a["name"]).first()
         if not agent:
@@ -913,7 +940,7 @@ def upload_population():
         db.session.commit()
 
     # add the pages to the database
-    for p in data["pages"]:
+    for p in data.get("pages", []):
         # check if the page already exists
         page = Page.query.filter_by(name=p["name"]).first()
         if not page:
@@ -1016,9 +1043,13 @@ def merge_populations():
         Redirect to populations page
     """
     check_privileges(current_user.username)
+    ensure_population_username_type_column()
 
     merged_name = request.form.get("merged_population_name")
     selected_ids = request.form.get("selected_population_ids")
+    merged_population_type = normalize_population_username_type(
+        request.form.get("merged_population_type")
+    )
 
     if not merged_name or not selected_ids:
         flash(
@@ -1053,6 +1084,18 @@ def merge_populations():
             flash(f"Population with ID {pop_id} not found.")
             return redirect(request.referrer)
         source_populations.append(pop)
+
+    source_types = {
+        infer_population_username_type(pop)
+        for pop in source_populations
+        if infer_population_username_type(pop)
+    }
+    if len(source_types) > 1:
+        flash("Selected populations have incompatible platform types and cannot be merged.")
+        return redirect(request.referrer)
+    if source_types and merged_population_type not in source_types:
+        flash("Merged population type must match the selected population platform type.")
+        return redirect(request.referrer)
 
     # Collect unique agent IDs from all selected populations (optimized query)
     agent_populations = Agent_Population.query.filter(
@@ -1136,6 +1179,7 @@ def merge_populations():
         crecsys=crecsys,
         frecsys=frecsys,
         llm_url=llm_url,
+        username_type=merged_population_type,
     )
     db.session.add(merged_population)
     db.session.flush()  # Flush to get the ID without committing

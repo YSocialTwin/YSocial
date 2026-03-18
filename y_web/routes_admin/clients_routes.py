@@ -62,6 +62,11 @@ from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.hpc_population_backup import backup_population_for_hpc_client
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
+from y_web.utils.population_platform import (
+    ensure_population_username_type_column,
+    infer_population_username_type,
+    population_matches_platform,
+)
 
 clientsr = Blueprint("clientsr", __name__)
 
@@ -548,6 +553,7 @@ def stop_client(uid, idexp):
 
 def _build_client_creation_context(idexp, recsys_mode):
     """Build the shared context used by client creation pages."""
+    ensure_population_username_type_column()
     exp = Exps.query.filter_by(idexp=idexp).first()
 
     pop_exp_associations = Population_Experiment.query.filter_by(id_exp=idexp).all()
@@ -562,8 +568,7 @@ def _build_client_creation_context(idexp, recsys_mode):
     pops = [
         p
         for p in pops
-        if (getattr(p, "username_type", "microblogging") or "microblogging")
-        == exp.platform_type
+        if population_matches_platform(p, exp.platform_type)
     ]
     incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
 
@@ -2042,8 +2047,8 @@ def _create_standard_client_internal():
         flash("Population not found.", "error")
         return redirect(request.referrer)
 
-    pop_type = getattr(population, "username_type", "microblogging") or "microblogging"
-    if pop_type != "forum":
+    pop_type = infer_population_username_type(population)
+    if pop_type not in {None, "forum"}:
         flash(
             f"Population Username Type '{pop_type}' is incompatible with experiment platform 'forum'.",
             "error",

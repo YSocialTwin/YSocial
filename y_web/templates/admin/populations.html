@@ -351,6 +351,17 @@
                                         <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
+                                        <span class="left">Population Platform <span style="color: red;">*</span></span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="select is-fullwidth">
+                                                <select name="username_type" class="input" required>
+                                                    <option value="microblogging">Microblogging</option>
+                                                    <option value="forum">Forum</option>
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
                                         <span class="left">Population Size <span style="color: red;">*</span></span>
                                         <div class="slider-timeline">
                                             <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
@@ -1646,6 +1657,17 @@
                                     </label>
                                     <div id="file-name-display" class="file-name-display"></div>
                                 </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="upload_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
                                         Upload
@@ -1675,6 +1697,17 @@
                                     <span class="left">Description</span>
                                     <span class="right"><input type="text" name="empty_population_descr" class="input" placeholder="Enter description"></span>
                                 </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="empty_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
+                                </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
                                         Create
@@ -1693,6 +1726,17 @@
                                 <div class="box-line">
                                     <span class="left">New Population Name</span>
                                     <span class="right"><input type="text" name="merged_population_name" class="input" placeholder="Enter name" required></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Population Platform</span>
+                                    <span class="right">
+                                        <div class="select is-fullwidth">
+                                            <select name="merged_population_type" id="merged_population_type" class="input">
+                                                <option value="microblogging">Microblogging</option>
+                                                <option value="forum">Forum</option>
+                                            </select>
+                                        </div>
+                                    </span>
                                 </div>
 
                                         <style>
@@ -1814,7 +1858,8 @@
                                         mergeAvailablePopulations = data.data.map(pop => ({
                                             id: pop.id,
                                             name: pop.name,
-                                            size: pop.size || 0
+                                            size: pop.size || 0,
+                                            username_type: pop.username_type || 'microblogging'
                                         }));
                                         renderMergeAvailablePopulations();
                                     })
@@ -1827,10 +1872,12 @@
 
                             function renderMergeAvailablePopulations() {
                                 const container = document.getElementById('merge-available-populations');
+                                const selectedType = document.getElementById('merged_population_type').value;
                                 
                                 // Filter out already selected populations
                                 const available = mergeAvailablePopulations.filter(pop => 
-                                    !mergeSelectedPopulations.find(selected => selected.id === pop.id)
+                                    !mergeSelectedPopulations.find(selected => selected.id === pop.id) &&
+                                    pop.username_type === selectedType
                                 );
 
                                 if (available.length === 0) {
@@ -1843,9 +1890,10 @@
                                          draggable="true" 
                                          data-pop-id="${pop.id}"
                                          data-pop-name="${pop.name}"
-                                         data-pop-size="${pop.size}">
+                                         data-pop-size="${pop.size}"
+                                         data-pop-type="${pop.username_type}">
                                         <span class="merge-population-name">${pop.name}</span>
-                                        <span class="merge-population-size">${pop.size} agents</span>
+                                        <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
                                     </div>
                                 `).join('');
 
@@ -1867,7 +1915,7 @@
                                 container.innerHTML = mergeSelectedPopulations.map(pop => `
                                     <div class="merge-population-item">
                                         <span class="merge-population-name">${pop.name}</span>
-                                        <span class="merge-population-size">${pop.size} agents</span>
+                                        <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
                                         <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(${pop.id})">×</button>
                                     </div>
                                 `).join('');
@@ -1883,7 +1931,8 @@
                                 e.dataTransfer.setData('text/plain', JSON.stringify({
                                     id: e.currentTarget.dataset.popId,
                                     name: e.currentTarget.dataset.popName,
-                                    size: e.currentTarget.dataset.popSize
+                                    size: e.currentTarget.dataset.popSize,
+                                    username_type: e.currentTarget.dataset.popType
                                 }));
                             }
 
@@ -1910,11 +1959,13 @@
                                 const data = JSON.parse(e.dataTransfer.getData('text/plain'));
                                 
                                 // Add to selected if not already there
-                                if (!mergeSelectedPopulations.find(p => p.id === data.id)) {
+                                const parsedId = parseInt(data.id, 10);
+                                if (!mergeSelectedPopulations.find(p => p.id === parsedId)) {
                                     mergeSelectedPopulations.push({
-                                        id: data.id,
+                                        id: parsedId,
                                         name: data.name,
-                                        size: data.size
+                                        size: parseInt(data.size, 10) || 0,
+                                        username_type: data.username_type || document.getElementById('merged_population_type').value
                                     });
                                     renderMergeSelectedPopulations();
                                     renderMergeAvailablePopulations();
@@ -1930,6 +1981,11 @@
                             // Initialize merge drag and drop
                             document.addEventListener('DOMContentLoaded', function() {
                                 loadMergePopulations();
+                                document.getElementById('merged_population_type').addEventListener('change', function() {
+                                    mergeSelectedPopulations = [];
+                                    renderMergeSelectedPopulations();
+                                    renderMergeAvailablePopulations();
+                                });
                                 
                                 const selectedContainer = document.getElementById('merge-selected-populations');
                                 selectedContainer.addEventListener('dragover', handleMergeDragOver);
