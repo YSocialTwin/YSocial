@@ -48,6 +48,17 @@ WATCHDOG_ENABLED = True
 _process_registry = {}
 
 
+def _resolve_server_runtime_paths(base_path, platform_type):
+    """Resolve the server package directory and entry script for a platform."""
+    if platform_type == "microblogging":
+        server_dir = os.path.join(base_path, "external", "YServer")
+    elif platform_type == "forum":
+        server_dir = os.path.join(base_path, "external", "YServerReddit")
+    else:
+        raise NotImplementedError(f"Unsupported platform {platform_type}")
+    return server_dir, os.path.join(server_dir, "y_server_run.py")
+
+
 def _register_process(process_id, process, stdout_file=None, stderr_file=None):
     """
     Register a subprocess.Popen object to prevent garbage collection.
@@ -1154,7 +1165,6 @@ def start_server(exp):
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
     yserver_path = base_path
-    sys.path.append(os.path.join(yserver_path, "external", "YServer"))
 
     # Get writable path for experiments directory
     writable_base = get_writable_path()
@@ -1173,19 +1183,9 @@ def start_server(exp):
         exp_uid = f"{uid}{os.sep}"
         config = os.path.join(y_web_dir, "experiments", uid, "config_server.json")
 
-    # Determine the server directory and script path based on platform type
-    if exp.platform_type == "microblogging":
-        server_dir = os.path.join(yserver_path, "external", "YServer")
-        script_path = os.path.join(
-            yserver_path, "external", "YServer", "y_server_run.py"
-        )
-    elif exp.platform_type == "forum":
-        server_dir = os.path.join(yserver_path, "external", "YServerReddit")
-        script_path = os.path.join(
-            yserver_path, "external", "YServerReddit", "y_server_run.py"
-        )
-    else:
-        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+    server_dir, script_path = _resolve_server_runtime_paths(
+        yserver_path, exp.platform_type
+    )
 
     # Validate that script_path exists (skip check for PyInstaller bundles)
     # Check multiple PyInstaller indicators

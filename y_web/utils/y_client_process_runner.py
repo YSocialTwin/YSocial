@@ -28,6 +28,15 @@ from y_web.models import (
 INFINITE_CLIENT_ITERATION_DAYS = 365
 
 
+def _resolve_client_package_dir(base_path, platform_type):
+    """Resolve the external client package directory for a platform."""
+    if platform_type == "microblogging":
+        return os.path.join(base_path, "external", "YClient")
+    if platform_type == "forum":
+        return os.path.join(base_path, "external", "YClientReddit")
+    raise NotImplementedError(f"Unsupported platform {platform_type}")
+
+
 def main():
     """Main entry point for client process runner."""
     parser = argparse.ArgumentParser(
@@ -113,15 +122,12 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         # Get writable path for experiment data (where experiments are stored)
         writable_base = get_writable_path()
 
-        # Add external client modules to path
-        if exp.platform_type == "microblogging":
-            sys.path.append(os.path.join(base_path, "external", "YClient"))
-            from y_client.clients import YClientWeb
-        elif exp.platform_type == "forum":
-            sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
-            from y_client.clients import YClientWeb
-        else:
-            raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+        # Add platform-specific external client modules ahead of any other y_client package.
+        client_package_dir = _resolve_client_package_dir(base_path, exp.platform_type)
+        if client_package_dir in sys.path:
+            sys.path.remove(client_package_dir)
+        sys.path.insert(0, client_package_dir)
+        from y_client.clients import YClientWeb
 
         # Base directory for experiment data (writable location)
         BASE_DIR = os.path.join(writable_base, "y_web")

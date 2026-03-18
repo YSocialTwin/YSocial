@@ -77,27 +77,19 @@ from y_web.models import (
     User_Experiment,
     User_mgmt,
 )
-from y_web.utils import (
-    start_client,
-    start_hpc_client,
-    start_hpc_server,
-    start_server,
-    stop_hpc_client,
-    stop_hpc_server,
-    terminate_client,
-    terminate_process_on_port,
-    terminate_server_process,
-)
 from y_web.utils.desktop_file_handler import send_file_desktop
+from y_web.utils.execution_backend import (
+    start_client_for_experiment,
+    start_server_for_experiment,
+    stop_client_for_experiment,
+    stop_server_for_experiment,
+)
 from y_web.utils.experiment_access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
-from y_web.utils.hpc_population_backup import (
-    backup_population_for_hpc_client,
-    restore_population_for_hpc_client,
-)
+from y_web.utils.hpc_population_backup import restore_population_for_hpc_client
 from y_web.utils.jupyter_utils import stop_process
 from y_web.utils.miscellanea import (
     check_privileges,
@@ -3408,7 +3400,7 @@ def reset_hpc_experiment(uid):
         for client in clients:
             if client.status == 1 and client.pid:
                 try:
-                    stop_hpc_client(client)
+                    stop_client_for_experiment(exp, client, pause=False)
                 except Exception:
                     current_app.logger.warning(
                         f"Failed to stop HPC client {client.id} during reset.",
@@ -4220,11 +4212,7 @@ def start_experiment(uid):
     )
     db.session.commit()
 
-    if exp.simulator_type == "HPC":
-        start_hpc_server(exp)
-    else:
-        # start the yserver
-        start_server(exp)
+    start_server_for_experiment(exp)
 
     return experiment_details(uid)
 
@@ -4267,10 +4255,7 @@ def stop_experiment(uid):
                 print(
                     f"Stopping client {client.name} (ID: {client.id}, PID: {client.pid}) for experiment {uid}"
                 )
-                if exp.simulator_type == "HPC":
-                    stop_hpc_client(client)
-                else:
-                    terminate_client(client, pause=False)
+                stop_client_for_experiment(exp, client, pause=False)
 
             # Update client status in database
             client.status = 0
@@ -4279,13 +4264,7 @@ def stop_experiment(uid):
     # Step 3: Now stop the yserver after all clients are terminated
     # Try the new subprocess-based termination first
     # If that fails or no process is tracked, fall back to port-based termination
-    if exp.simulator_type == "HPC":
-        terminated = stop_hpc_server(uid)
-    else:
-        terminated = terminate_server_process(uid)
-    if not terminated:
-        # Fallback to port-based termination for backward compatibility
-        terminate_process_on_port(exp.port)
+    stop_server_for_experiment(exp)
 
     # Step 4: Check if all clients have completed to determine final status
     all_clients_completed, _ = _get_clients_to_start(exp)
@@ -7694,10 +7673,7 @@ def start_schedule():
             db.session.commit()
 
             # Start the server (use appropriate function for HPC vs Standard)
-            if exp.simulator_type == "HPC":
-                start_hpc_server(exp)
-            else:
-                start_server(exp)
+            start_server_for_experiment(exp)
             started_count += 1
 
             # Wait for server to be ready
@@ -7716,11 +7692,9 @@ def start_schedule():
                         id=client.population_id
                     ).first()
                     if population:
-                        if exp.simulator_type == "HPC":
-                            backup_population_for_hpc_client(exp, client, population)
-                            start_hpc_client(exp, client, population)
-                        else:
-                            start_client(exp, client, population, resume=True)
+                        start_client_for_experiment(
+                            exp, client, population, resume=True
+                        )
                         # Mark client as running
                         client.status = 1
                         db.session.commit()
@@ -7784,20 +7758,12 @@ def stop_schedule():
                 for client in clients:
                     if client.status == 1:
                         if client.pid:
-                            if exp.simulator_type == "HPC":
-                                stop_hpc_client(client)
-                            else:
-                                terminate_client(client, pause=False)
+                            stop_client_for_experiment(exp, client, pause=False)
                         client.status = 0
                         db.session.commit()
 
                 # Stop server
-                if exp.simulator_type == "HPC":
-                    terminated = stop_hpc_server(exp.idexp)
-                else:
-                    terminated = terminate_server_process(exp.idexp)
-                if not terminated:
-                    terminate_process_on_port(exp.port)
+                stop_server_for_experiment(exp)
 
                 # Check if all clients have completed to determine final status
                 all_clients_completed, _ = _get_clients_to_start(exp)
@@ -7894,20 +7860,12 @@ def _do_check_schedule_progress():
                 for client in clients:
                     if client.status == 1:
                         if client.pid:
-                            if exp.simulator_type == "HPC":
-                                stop_hpc_client(client)
-                            else:
-                                terminate_client(client, pause=False)
+                            stop_client_for_experiment(exp, client, pause=False)
                         client.status = 0
                         db.session.commit()
 
                 # Stop server
-                if exp.simulator_type == "HPC":
-                    terminated = stop_hpc_server(exp.idexp)
-                else:
-                    terminated = terminate_server_process(exp.idexp)
-                if not terminated:
-                    terminate_process_on_port(exp.port)
+                stop_server_for_experiment(exp)
 
                 exp.running = 0
                 db.session.commit()
@@ -7998,10 +7956,7 @@ def _do_check_schedule_progress():
                 db.session.commit()
 
                 # Start the server (use appropriate function for HPC vs Standard)
-                if exp.simulator_type == "HPC":
-                    start_hpc_server(exp)
-                else:
-                    start_server(exp)
+                start_server_for_experiment(exp)
 
                 # Wait for server to be ready
                 logs.append(f"Waiting for server '{exp.exp_name}' to be ready...")
@@ -8021,13 +7976,9 @@ def _do_check_schedule_progress():
                             id=client.population_id
                         ).first()
                         if population:
-                            if exp.simulator_type == "HPC":
-                                backup_population_for_hpc_client(
-                                    exp, client, population
-                                )
-                                start_hpc_client(exp, client, population)
-                            else:
-                                start_client(exp, client, population, resume=True)
+                            start_client_for_experiment(
+                                exp, client, population, resume=True
+                            )
                             client.status = 1
                             db.session.commit()
 

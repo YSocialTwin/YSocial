@@ -53,13 +53,12 @@ from y_web.utils import (
     get_db_type,
     get_llm_models,
     get_ollama_models,
-    start_client,
-    start_hpc_client,
-    stop_hpc_client,
-    terminate_client,
 )
 from y_web.utils.desktop_file_handler import send_file_desktop
-from y_web.utils.hpc_population_backup import backup_population_for_hpc_client
+from y_web.utils.execution_backend import (
+    start_client_for_experiment,
+    stop_client_for_experiment,
+)
 from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 from y_web.utils.path_utils import get_resource_path
 from y_web.utils.population_platform import (
@@ -407,11 +406,7 @@ def run_client(uid, idexp):
     population = Population.query.filter_by(id=client.population_id).first()
 
     try:
-        if exp.simulator_type == "HPC":
-            backup_population_for_hpc_client(exp, client, population)
-            start_hpc_client(exp, client, population)
-        else:
-            start_client(exp, client, population, resume=True)
+        start_client_for_experiment(exp, client, population, resume=True)
 
         # set the client running status
         db.session.query(Client).filter_by(id=uid).update({Client.status: 1})
@@ -455,11 +450,7 @@ def resume_client(uid, idexp):
     population = Population.query.filter_by(id=client.population_id).first()
 
     try:
-        if exp.simulator_type == "HPC":
-            backup_population_for_hpc_client(exp, client, population)
-            start_hpc_client(exp, client, population)
-        else:
-            start_client(exp, client, population, resume=True)
+        start_client_for_experiment(exp, client, population, resume=True)
 
         # set the client running status
         db.session.query(Client).filter_by(id=uid).update({Client.status: 1})
@@ -497,10 +488,7 @@ def pause_client(uid, idexp):
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=idexp).first()
 
-    if exp.simulator_type == "HPC":
-        stop_hpc_client(client)
-    else:
-        terminate_client(client, pause=True)
+    stop_client_for_experiment(exp, client, pause=True)
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:
@@ -532,10 +520,7 @@ def stop_client(uid, idexp):
     client = Client.query.filter_by(id=uid).first()
     exp = Exps.query.filter_by(idexp=idexp).first()
 
-    if exp.simulator_type == "HPC":
-        stop_hpc_client(client)
-    else:
-        terminate_client(client, pause=False)
+    stop_client_for_experiment(exp, client, pause=False)
 
     # For remote experiments, check if all clients are stopped
     if exp.is_remote == 1:
