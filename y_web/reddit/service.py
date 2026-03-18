@@ -7,6 +7,7 @@ import re
 import sys
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 from zoneinfo import ZoneInfo
@@ -40,7 +41,6 @@ from y_web.utils.experiment_clock import (
     ensure_experiment_clock,
     parse_anchor_date,
 )
-from y_web.utils.experiment_helpers import get_experiment_dir
 from y_web.utils.text_utils import (
     augment_text,
     normalize_punctuation_spacing,
@@ -48,6 +48,17 @@ from y_web.utils.text_utils import (
     strip_reproduced_article_content,
     strip_tags,
 )
+
+_Y_WEB_DIR = Path(__file__).resolve().parents[1]
+
+
+def _get_experiment_dir(experiment: Exps) -> Path:
+    """Locate the on-disk directory that stores experiment artifacts."""
+    db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep)
+    if os.sep in db_name:
+        return _Y_WEB_DIR / Path(db_name).parent
+    folder = db_name.removeprefix("experiments_")
+    return _Y_WEB_DIR / "experiments" / folder
 
 
 def clean_reddit_formatting(text: str) -> str:
@@ -460,7 +471,7 @@ def _resolve_experiment_clock() -> Dict[str, Any]:
         if not experiment:
             return default_clock_config()
 
-        config_path = get_experiment_dir(experiment) / "config_server.json"
+        config_path = _get_experiment_dir(experiment) / "config_server.json"
         mtime = config_path.stat().st_mtime if config_path.exists() else -1.0
         cached = _clock_config_cache.get(exp_id)
         if cached and cached[0] == mtime:

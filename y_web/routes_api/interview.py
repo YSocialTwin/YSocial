@@ -4,6 +4,7 @@ import json
 import os
 import re
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import requests
@@ -25,10 +26,10 @@ from y_web.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.utils.experiment_helpers import get_experiment_uid_from_db_name
 from y_web.utils.path_utils import get_writable_path
 
 api_interview = Blueprint("api_interview", __name__, url_prefix="/api/interview")
+_Y_WEB_DIR = Path(__file__).resolve().parents[1]
 
 _MEMORY_MODE_LEGACY = "legacy"
 _MEMORY_MODE_SEMANTIC = "semantic"
@@ -41,6 +42,19 @@ _INTERVIEW_MEMORY_MODE_DEFAULT = (
 if _INTERVIEW_MEMORY_MODE_DEFAULT not in {_MEMORY_MODE_LEGACY, _MEMORY_MODE_SEMANTIC}:
     _INTERVIEW_MEMORY_MODE_DEFAULT = _MEMORY_MODE_SEMANTIC
 _INTERVIEW_MEMORY_DEFAULT_QUERY = "Most important recent memories, relationships, norms, and ongoing threads for this agent."
+
+
+def _get_experiment_uid_from_db_name(db_name: str) -> Optional[str]:
+    """Extract the experiment UID from SQLite/PostgreSQL experiment db names."""
+    if not db_name:
+        return None
+    if db_name.startswith("experiments_"):
+        return db_name.replace("experiments_", "")
+    if db_name.startswith("experiments/") or db_name.startswith("experiments\\"):
+        parts = re.split(r"[/\\\\]", db_name)
+        if len(parts) >= 2:
+            return parts[1]
+    return None
 
 
 def _parse_timeout_series(
@@ -220,7 +234,7 @@ def _iter_run_ids_from_server_log(
     max_bytes: int = 2_000_000,
     max_candidates: int = 12,
 ) -> List[str]:
-    uid = get_experiment_uid_from_db_name(getattr(exp, "db_name", "") or "")
+    uid = _get_experiment_uid_from_db_name(getattr(exp, "db_name", "") or "")
     if not uid:
         return []
 
