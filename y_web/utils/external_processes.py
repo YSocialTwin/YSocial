@@ -338,13 +338,20 @@ def detect_env_handler():
     Returns:
         String: Python executable path or command prefix (e.g., 'pipenv run python')
     """
-    python_exe = Path(sys.executable)
+    python_exe = Path(sys.executable).resolve()
 
     # Determine platform-specific directory and executable names
     is_windows = sys.platform.startswith("win")
 
+    # Prefer the interpreter that is already running this process.
+    # Environment variables such as CONDA_PREFIX can point to a different
+    # installation than sys.executable in desktop/IDE shells, which breaks
+    # child process launches by switching them onto the wrong dependency set.
+    if python_exe.exists():
+        return str(python_exe)
+
     if is_windows:
-        return python_exe
+        return str(python_exe)
 
     bin_dir = "bin"
     python_name = "python"
