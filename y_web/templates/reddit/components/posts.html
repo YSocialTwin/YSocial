@@ -1,5 +1,5 @@
 {% for index, item in enumerate(items) %}
-<div id="feed-post-1" class="card is-post" style="margin-bottom: 20px; border: 1px solid #e1e8ed; border-radius: 8px; cursor: pointer;" onclick="window.location.href='/rthread/{{ item['post_id'] }}'">
+<div id="feed-post-1" class="card is-post" style="margin-bottom: 20px; border: 1px solid #e1e8ed; border-radius: 8px; cursor: pointer;" onclick="window.location.href='/{{exp_id}}/rthread/{{ item['post_id'] }}'">
 
     <div class="content-wrap" id="post-{{ item['post_id'] }}" style="padding: 0;">
         <!-- Post header -->
@@ -172,7 +172,7 @@
             
             <!-- Comments button (right side) -->
             <button style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;"
-                    onclick="event.stopPropagation(); window.location.href='/rthread/{{ item['post_id'] }}'">
+                    onclick="event.stopPropagation(); window.location.href='/{{exp_id}}/rthread/{{ item['post_id'] }}'">
                 <i data-feather="message-square" style="width: 16px; height: 16px;"></i>
                 <span>{{ item["t_comments"] }} Comments</span>
             </button>

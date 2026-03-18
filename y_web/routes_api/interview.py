@@ -17,6 +17,7 @@ from y_web.models import (
     Admin_users,
     AdminInterviewMessage,
     AdminInterviewSession,
+    Client,
     Exps,
     Interests,
     Post,
@@ -2524,6 +2525,32 @@ def _resolve_llm_backend(
         max_tokens = int(getattr(exp, "llm_max_tokens_default", 450) or 450)
     except Exception:
         max_tokens = 450
+
+    if not base_url:
+        runtime_client = (
+            Client.query.filter_by(id_exp=int(exp.idexp))
+            .order_by(Client.status.desc(), Client.id.desc())
+            .first()
+        )
+        if runtime_client is not None:
+            base_url = _normalize_llm_base_url(getattr(runtime_client, "llm", "") or "")
+            api_key = (
+                (getattr(runtime_client, "llm_api_key", "") or "").strip() or "NULL"
+            )
+            try:
+                temperature = float(
+                    getattr(runtime_client, "llm_temperature", temperature)
+                    or temperature
+                )
+            except Exception:
+                pass
+            try:
+                runtime_max_tokens = getattr(runtime_client, "llm_max_tokens", max_tokens)
+                if runtime_max_tokens is not None:
+                    max_tokens = int(runtime_max_tokens)
+            except Exception:
+                pass
+
     return mode, model, base_url, api_key, temperature, max_tokens
 
 
