@@ -1643,8 +1643,9 @@ def get_thread_reddit(exp_id, post_id):
     tree = __expand_tree(post_to_child, post_to_data)
     discussion_tree = tree[root]
     trending_ht = get_trending_hashtags()
-    mentions = get_unanswered_mentions(current_user.id)
     logged_user = _forum_logged_user()
+    mention_user_id = logged_user.id if logged_user is not None else None
+    mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
 
     return render_template(
         "reddit/thread.html",
@@ -1718,9 +1719,31 @@ def rnotifications(exp_id):
     per_page = 25
     offset = (page - 1) * per_page
 
-    state = ReplyInboxState.query.filter_by(user_id=current_user.id).first()
+    logged_user = _forum_logged_user()
+    exp_user_id = logged_user.id if logged_user is not None else None
+
+    if exp_user_id is None:
+        return render_template(
+            "reddit/notifications.html",
+            items=[],
+            page=page,
+            has_more=False,
+            unread_before_open=0,
+            profile_pic=get_safe_profile_pic(current_user.username, 0),
+            logged_username=current_user.username,
+            logged_id=current_user.id,
+            mentions=[],
+            is_admin=is_admin(current_user.username),
+            exp_id=exp_id,
+            len=len,
+            str=str,
+            bool=bool,
+            enumerate=enumerate,
+        )
+
+    state = ReplyInboxState.query.filter_by(user_id=exp_user_id).first()
     if not state:
-        state = ReplyInboxState(user_id=current_user.id, last_seen_reply_id=0)
+        state = ReplyInboxState(user_id=exp_user_id, last_seen_reply_id=0)
         db.session.add(state)
         db.session.commit()
 
@@ -1731,8 +1754,8 @@ def rnotifications(exp_id):
     Author = aliased(User_mgmt)
 
     base_filters = (
-        Parent.user_id == current_user.id,
-        Reply.user_id != current_user.id,
+        Parent.user_id == exp_user_id,
+        Reply.user_id != exp_user_id,
         Reply.comment_to != -1,
     )
 
@@ -1797,8 +1820,8 @@ def rnotifications(exp_id):
         unread_before_open=unread_before_open,
         profile_pic=get_safe_profile_pic(current_user.username, 0),
         logged_username=current_user.username,
-        logged_id=current_user.id,
-        mentions=get_unanswered_mentions(current_user.id),
+        logged_id=exp_user_id,
+        mentions=get_unanswered_mentions(exp_user_id),
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
         len=len,
@@ -1837,6 +1860,7 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     )
     logged_user = _forum_logged_user()
     exp_user_id = logged_user.id if logged_user else current_user.id
+    mentions = get_unanswered_mentions(logged_user.id) if logged_user else []
     res = [post.to_dict() for post in page_obj.posts]
     suggested_users = (
         get_suggested_users(logged_user.username, pages=False) if logged_user else []
@@ -1871,7 +1895,7 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         trending_ht=get_trending_hashtags(),
         str=str,
         bool=bool,
-        mentions=get_unanswered_mentions(current_user.id),
+        mentions=mentions,
         is_admin=is_admin(current_user.username),
         sfollow=suggested_users,
         spages=suggested_pages,
@@ -1895,6 +1919,7 @@ def search_reddit(exp_id):
 
     logged_user = _forum_logged_user()
     exp_user_id = logged_user.id if logged_user else current_user.id
+    mentions = get_unanswered_mentions(logged_user.id) if logged_user else []
     suggested_users = (
         get_suggested_users(logged_user.username, pages=False) if logged_user else []
     )
@@ -1942,7 +1967,7 @@ def search_reddit(exp_id):
         trending_ht=get_trending_hashtags(),
         str=str,
         bool=bool,
-        mentions=get_unanswered_mentions(current_user.id),
+        mentions=mentions,
         is_admin=is_admin(current_user.username),
         sfollow=suggested_users,
         spages=suggested_pages,
