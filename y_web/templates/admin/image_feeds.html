@@ -1,0 +1,304 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Image Feeds
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    {% for message in get_flashed_messages() %}
+                    <div class="alert alert-warning">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Image Feed Configuration</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configure Reddit image subreddits for standalone image sharing during simulation. Images from these subreddits will be processed by the Vision Language Model and shared by agents.
+                        </p>
+
+                        <div class="box-content">
+                            <h4 class="title is-6 is-thin">Add Subreddit</h4>
+                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
+                                Enter a subreddit name to automatically parse its RSS feed and extract images.
+                            </p>
+                            <div class="box-line">
+                                <span class="left">Subreddit</span>
+                                <span class="right" style="width: 70%; display: flex; gap: 10px;">
+                                    <span style="line-height: 38px;">r/</span>
+                                    <input type="text" id="subreddit_name" class="input" placeholder="memes" style="flex: 1;">
+                                    <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">Parse</button>
+                                </span>
+                            </div>
+                            <div id="parse_result" style="margin-bottom: 1em; display: none;">
+                                <div class="box-line">
+                                    <span class="left">Status</span>
+                                    <span class="right" style="width: 70%;" id="parse_status"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Sample Images</span>
+                                    <span class="right" style="width: 70%;">
+                                        <div id="sample_images" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Interests</span>
+                                    <span class="right" style="width: 70%;">
+                                        <select id="parsed_interests" class="input" multiple size="4" style="min-height: 100px;">
+                                            {% for interest in available_interests %}
+                                            <option value="{{ interest }}">{{ interest }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <p style="font-size: 0.8em; color: #888; margin-top: 5px;">Hold Ctrl/Cmd to select multiple interests</p>
+                                    </span>
+                                </div>
+                                <div class="button-wrap" style="margin-top: 10px;">
+                                    <button type="button" class="button is-solid primary-button" onclick="addParsedSubreddit()">Add Subreddit</button>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h4 class="title is-6 is-thin">Bulk Upload</h4>
+                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
+                                Upload a JSON file with image feed definitions from another experiment.
+                            </p>
+                            <div class="box-line">
+                                <span class="left">JSON File</span>
+                                <span class="right" style="width: 70%; display: flex; gap: 10px; align-items: center;">
+                                    <input type="file" id="image_upload_file" accept=".json" class="input">
+                                    <select id="image_upload_mode" class="input" style="width: auto;">
+                                        <option value="replace">Replace</option>
+                                        <option value="merge">Merge</option>
+                                    </select>
+                                    <button type="button" class="button is-solid primary-button" onclick="uploadImageFeeds()">Upload</button>
+                                </span>
+                            </div>
+
+                            <hr>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <h4 class="title is-6 is-thin" style="margin-bottom: 0;">Current Image Feeds (<span id="feed_count">{{ image_feeds|length }}</span>)</h4>
+                                <button type="button" class="button is-small" onclick="exportImageFeeds()" title="Export image feeds as JSON">
+                                    <i class="mdi mdi-download"></i> Export JSON
+                                </button>
+                            </div>
+                            <div id="image_feeds_list" style="max-height: 400px; overflow-y: auto;">
+                                {% if image_feeds %}
+                                <table class="table is-fullwidth is-striped" style="font-size: 0.9em;">
+                                    <thead>
+                                        <tr>
+                                            <th>Subreddit</th>
+                                            <th>Interests</th>
+                                            <th style="width: 50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="feeds_table_body">
+                                        {% for feed in image_feeds %}
+                                        <tr data-index="{{ loop.index0 }}">
+                                            <td>r/{{ feed.subreddit }}</td>
+                                            <td>
+                                                {% for interest in feed.interests %}
+                                                <span class="tag is-info is-light" style="margin: 2px;">{{ interest }}</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td><a href="javascript:void(0)" onclick="removeFeed({{ loop.index0 }})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <p style="color: #999;">No image feeds configured.</p>
+                                {% endif %}
+                            </div>
+
+                            <form id="feeds_save_form" action="/admin/update_image_feeds/{{ experiment.idexp }}" method="POST" style="margin-top: 1em;">
+                                <input type="hidden" name="image_feeds_json" id="image_feeds_json" value='{{ image_feeds | tojson }}'>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Image Feeds</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Image Feeds</b><br>
+                                Image feeds pull images from Reddit subreddits. The Vision Language Model analyzes each image and generates a description that agents use to create captions.<br><br>
+                                <em>Subreddit:</em> The subreddit name (for example "memes", "pics")<br>
+                                <em>Interests:</em> Agent interests that match this subreddit
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Interest Matching</b><br>
+                                Agents with matching interests are more likely to share images from that subreddit.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>NSFW Filtering</b><br>
+                                Posts marked as NSFW on Reddit are automatically filtered out during image ingestion.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let imageFeeds = {{ image_feeds | tojson }};
+let currentSubreddit = '';
+
+function parseSubreddit() {
+    const subreddit = document.getElementById('subreddit_name').value.trim().toLowerCase();
+    if (!subreddit) {
+        alert('Please enter a subreddit name');
+        return;
+    }
+
+    currentSubreddit = subreddit;
+    document.getElementById('parse_status').innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Parsing...';
+    document.getElementById('parse_result').style.display = 'block';
+    document.getElementById('sample_images').innerHTML = '';
+
+    fetch('/admin/api/parse_image_feed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({subreddit: subreddit})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            document.getElementById('parse_status').innerHTML = '<span style="color: #e74c3c;"><i class="mdi mdi-alert-circle"></i> ' + data.error + '</span>';
+            return;
+        }
+
+        document.getElementById('parse_status').innerHTML =
+            '<span style="color: #27ae60;"><i class="mdi mdi-check-circle"></i> Found ' + data.image_count + ' images (' + data.nsfw_filtered + ' NSFW filtered)</span>';
+
+        const sampleDiv = document.getElementById('sample_images');
+        sampleDiv.innerHTML = '';
+        data.sample_images.forEach(url => {
+            const img = document.createElement('img');
+            img.src = url;
+            img.style.cssText = 'width: 60px; height: 60px; object-fit: cover; border-radius: 4px;';
+            img.onerror = function() { this.style.display = 'none'; };
+            sampleDiv.appendChild(img);
+        });
+    })
+    .catch(e => {
+        document.getElementById('parse_status').innerHTML = '<span style="color: #e74c3c;"><i class="mdi mdi-alert-circle"></i> Error: ' + e + '</span>';
+    });
+}
+
+function addParsedSubreddit() {
+    if (!currentSubreddit) {
+        alert('Please parse a subreddit first');
+        return;
+    }
+
+    const interestsSelect = document.getElementById('parsed_interests');
+    const selectedInterests = Array.from(interestsSelect.selectedOptions).map(opt => opt.value);
+
+    if (selectedInterests.length === 0) {
+        alert('Please select at least one interest');
+        return;
+    }
+
+    if (imageFeeds.some(f => f.subreddit === currentSubreddit)) {
+        alert('This subreddit is already added');
+        return;
+    }
+
+    imageFeeds.push({
+        subreddit: currentSubreddit,
+        interests: selectedInterests,
+    });
+    updateFeedsDisplay();
+
+    document.getElementById('subreddit_name').value = '';
+    document.getElementById('parse_result').style.display = 'none';
+    currentSubreddit = '';
+}
+
+function removeFeed(index) {
+    imageFeeds.splice(index, 1);
+    updateFeedsDisplay();
+}
+
+function uploadImageFeeds() {
+    const fileInput = document.getElementById('image_upload_file');
+    const mode = document.getElementById('image_upload_mode').value;
+
+    if (!fileInput.files[0]) {
+        alert('Please select a file');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('mode', mode);
+
+    fetch('/admin/upload_image_feeds/{{ experiment.idexp }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json().then(data => ({ok: r.ok, data})))
+    .then(({ok, data}) => {
+        if (!ok || data.error) {
+            throw new Error(data.error || 'Upload failed');
+        }
+        window.location.reload();
+    })
+    .catch(error => alert(error.message || 'Upload failed'));
+}
+
+function exportImageFeeds() {
+    const blob = new Blob([JSON.stringify(imageFeeds, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'image_feeds.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function updateFeedsDisplay() {
+    const listDiv = document.getElementById('image_feeds_list');
+    const countSpan = document.getElementById('feed_count');
+    document.getElementById('image_feeds_json').value = JSON.stringify(imageFeeds);
+    countSpan.textContent = imageFeeds.length;
+
+    if (imageFeeds.length === 0) {
+        listDiv.innerHTML = '<p style="color: #999;">No image feeds configured.</p>';
+        return;
+    }
+
+    let html = '<table class="table is-fullwidth is-striped" style="font-size: 0.9em;">';
+    html += '<thead><tr><th>Subreddit</th><th>Interests</th><th style="width: 50px;"></th></tr></thead><tbody>';
+    imageFeeds.forEach((feed, index) => {
+        const tags = (feed.interests || []).map(interest => `<span class="tag is-info is-light" style="margin: 2px;">${interest}</span>`).join('');
+        html += `<tr><td>r/${feed.subreddit}</td><td>${tags}</td><td><a href="javascript:void(0)" onclick="removeFeed(${index})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td></tr>`;
+    });
+    html += '</tbody></table>';
+    listDiv.innerHTML = html;
+}
+</script>
+
+{% include "admin/footer.html" %}

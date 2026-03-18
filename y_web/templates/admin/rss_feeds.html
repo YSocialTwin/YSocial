@@ -1,0 +1,286 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > RSS Feeds
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    {% for message in get_flashed_messages() %}
+                    <div class="alert alert-warning">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Forum Feed Sources</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configure RSS sources and direct article URLs for forum experiments. These sources are used to ingest external content into the simulation.
+                        </p>
+
+                        <div class="box-content">
+                            <h4 class="title is-6 is-thin">Add RSS Feed</h4>
+                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
+                                Enter an RSS feed URL to inspect it before adding it to the experiment.
+                            </p>
+                            <div class="box-line">
+                                <span class="left">RSS Feed URL</span>
+                                <span class="right" style="width: 70%; display: flex; gap: 10px; align-items: center;">
+                                    <input type="url" id="rss_feed_url" class="input" placeholder="https://example.com/feed.xml" style="flex: 1;">
+                                    <button type="button" class="button is-solid primary-button" onclick="parseRssFeed()">Parse</button>
+                                </span>
+                            </div>
+                            <div id="rss_parse_result" style="display: none; margin-bottom: 1em;">
+                                <div class="box-line">
+                                    <span class="left">Feed Name</span>
+                                    <span class="right" style="width: 70%;" id="rss_parse_name"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Website</span>
+                                    <span class="right" style="width: 70%;" id="rss_parse_site"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right" style="width: 70%;" id="rss_parse_description"></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Entries</span>
+                                    <span class="right" style="width: 70%;" id="rss_parse_entries"></span>
+                                </div>
+                                <div class="button-wrap" style="margin-top: 10px;">
+                                    <button type="button" class="button is-solid primary-button" onclick="addParsedRssFeed()">Add RSS Feed</button>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <h4 class="title is-6 is-thin">Bulk Upload RSS Feeds</h4>
+                            <div class="box-line">
+                                <span class="left">JSON File</span>
+                                <span class="right" style="width: 70%; display: flex; gap: 10px; align-items: center;">
+                                    <input type="file" id="rss_upload_file" accept=".json" class="input">
+                                    <select id="rss_upload_mode" class="input" style="width: auto;">
+                                        <option value="replace">Replace</option>
+                                        <option value="merge">Merge</option>
+                                    </select>
+                                    <button type="button" class="button is-solid primary-button" onclick="uploadRssFeeds()">Upload</button>
+                                </span>
+                            </div>
+
+                            <hr>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em; gap: 10px; flex-wrap: wrap;">
+                                <h4 class="title is-6 is-thin" style="margin-bottom: 0;">Current RSS Feeds (<span id="rss_feed_count">{{ rss_feeds|length }}</span>)</h4>
+                            </div>
+                            <div id="rss_feeds_list" style="max-height: 320px; overflow-y: auto;">
+                                {% if rss_feeds %}
+                                <table class="table is-fullwidth is-striped" style="font-size: 0.9em;">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Site</th>
+                                            <th>Feed URL</th>
+                                            <th style="width: 50px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="rss_table_body">
+                                        {% for feed in rss_feeds %}
+                                        <tr data-index="{{ loop.index0 }}">
+                                            <td>{{ feed.name }}</td>
+                                            <td>{{ feed.url_site }}</td>
+                                            <td style="word-break: break-all;">{{ feed.feed_url }}</td>
+                                            <td><a href="javascript:void(0)" onclick="removeRssFeed({{ loop.index0 }})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% else %}
+                                <p style="color: #999;">No RSS feeds configured.</p>
+                                {% endif %}
+                            </div>
+
+                            <form action="/admin/update_rss_feeds/{{ experiment.idexp }}" method="POST" style="margin-top: 1em;">
+                                <input type="hidden" name="rss_feeds_json" id="rss_feeds_json" value='{{ rss_feeds | tojson }}'>
+                                <div class="button-wrap">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save RSS Feeds</button>
+                                </div>
+                            </form>
+
+                            <hr>
+
+                            <h4 class="title is-6 is-thin">Direct Article URLs</h4>
+                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
+                                Provide one URL per line for sources that do not expose a suitable RSS feed.
+                            </p>
+                            <form action="/admin/update_url_feeds/{{ experiment.idexp }}" method="POST">
+                                <textarea name="url_feeds_text" id="url_feeds_text" class="textarea" rows="8" placeholder="https://example.com/article-1&#10;https://example.com/article-2">{{ url_feeds | join('\n') }}</textarea>
+                                <div class="button-wrap" style="margin-top: 1em;">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save URL Feeds</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>RSS Feeds</b><br>
+                                Use RSS feeds for sources that publish structured article streams. The feed metadata is stored in <code>rss_feeds.json</code> inside the experiment folder.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Direct URLs</b><br>
+                                Use direct article URLs when you want to pin a specific reading list or when a source does not provide a reliable RSS endpoint.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Forum Alignment</b><br>
+                                These controls mirror the forum experiment tools available in the Reddit codebase, while preserving the YWeb admin layout.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let rssFeeds = {{ rss_feeds | tojson }};
+let parsedRssFeed = null;
+
+function parseRssFeed() {
+    const feedUrl = document.getElementById('rss_feed_url').value.trim();
+    if (!feedUrl) {
+        alert('Please enter an RSS feed URL');
+        return;
+    }
+
+    fetch('/admin/api/parse_rss_feed', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({feed_url: feedUrl})
+    })
+    .then(r => r.json().then(data => ({ok: r.ok, data})))
+    .then(({ok, data}) => {
+        if (!ok || data.error) {
+            throw new Error(data.error || 'Could not parse RSS feed');
+        }
+        parsedRssFeed = data;
+        document.getElementById('rss_parse_name').textContent = data.name || '-';
+        document.getElementById('rss_parse_site').textContent = data.url_site || '-';
+        document.getElementById('rss_parse_description').textContent = data.description || 'No description available';
+        document.getElementById('rss_parse_entries').textContent = data.entries_count;
+        document.getElementById('rss_parse_result').style.display = 'block';
+    })
+    .catch(error => {
+        alert(error.message || 'Could not parse RSS feed');
+    });
+}
+
+function addParsedRssFeed() {
+    if (!parsedRssFeed) {
+        alert('Please parse a feed first');
+        return;
+    }
+
+    if (rssFeeds.some(feed => feed.feed_url === parsedRssFeed.feed_url)) {
+        alert('This RSS feed is already configured');
+        return;
+    }
+
+    rssFeeds.push(parsedRssFeed);
+    updateRssFeedsDisplay();
+    document.getElementById('rss_feed_url').value = '';
+    document.getElementById('rss_parse_result').style.display = 'none';
+    parsedRssFeed = null;
+}
+
+function removeRssFeed(index) {
+    rssFeeds.splice(index, 1);
+    updateRssFeedsDisplay();
+}
+
+function updateRssFeedsDisplay() {
+    const container = document.getElementById('rss_feeds_list');
+    const count = document.getElementById('rss_feed_count');
+    const hiddenInput = document.getElementById('rss_feeds_json');
+    count.textContent = rssFeeds.length;
+    hiddenInput.value = JSON.stringify(rssFeeds);
+
+    if (!rssFeeds.length) {
+        container.innerHTML = '<p style="color: #999;">No RSS feeds configured.</p>';
+        return;
+    }
+
+    let html = `
+        <table class="table is-fullwidth is-striped" style="font-size: 0.9em;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Site</th>
+                    <th>Feed URL</th>
+                    <th style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    rssFeeds.forEach((feed, index) => {
+        html += `
+            <tr>
+                <td>${feed.name || ''}</td>
+                <td>${feed.url_site || ''}</td>
+                <td style="word-break: break-all;">${feed.feed_url || ''}</td>
+                <td><a href="javascript:void(0)" onclick="removeRssFeed(${index})" style="color: #e74c3c;"><i class="mdi mdi-delete"></i></a></td>
+            </tr>
+        `;
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function uploadRssFeeds() {
+    const fileInput = document.getElementById('rss_upload_file');
+    const mode = document.getElementById('rss_upload_mode').value;
+    if (!fileInput.files[0]) {
+        alert('Please select a file');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('mode', mode);
+
+    fetch('/admin/upload_rss_feeds/{{ experiment.idexp }}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json().then(data => ({ok: r.ok, data})))
+    .then(({ok, data}) => {
+        if (!ok || data.error) {
+            throw new Error(data.error || 'Upload failed');
+        }
+        window.location.reload();
+    })
+    .catch(error => {
+        alert(error.message || 'Upload failed');
+    });
+}
+</script>
+
+{% include "admin/footer.html" %}

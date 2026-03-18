@@ -1,0 +1,125 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Feed Limits
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    {% for message in get_flashed_messages() %}
+                    <div class="alert alert-warning">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Feed Retrieval Limits</h3>
+                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+                            Configure how many entries are retrieved from RSS feeds, Reddit endpoints, and database fallbacks during forum simulations.
+                        </p>
+
+                        <form action="/admin/update_feed_limits/{{ experiment.idexp }}" method="POST">
+                            <div class="box-content">
+                                <h4 class="title is-6 is-thin">RSS Feed Limits</h4>
+                                <div class="box-line">
+                                    <span class="left">Entries per RSS Feed</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="rss_entries_per_feed" class="input" value="{{ feed_limits.rss_entries_per_feed }}" min="1" max="500">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Maximum articles to process from each standard RSS feed.</p>
+
+                                <hr>
+
+                                <h4 class="title is-6 is-thin">Reddit Retrieval</h4>
+                                <div class="box-line">
+                                    <span class="left">Entries per Reddit Feed</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="reddit_entries_per_feed" class="input" value="{{ feed_limits.reddit_entries_per_feed }}" min="1" max="1000">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 0.5em;">Maximum posts to retrieve from Reddit subreddit feeds.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Reddit Pages to Fetch</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="reddit_pages" class="input" value="{{ feed_limits.reddit_pages }}" min="1" max="10">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 0.5em;">Number of pages to fetch at 100 entries per page.</p>
+
+                                <div class="box-line">
+                                    <span class="left">Rate Limit (seconds)</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="reddit_rate_limit_seconds" class="input" value="{{ feed_limits.reddit_rate_limit_seconds }}" min="1" max="10" step="0.5">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Delay between Reddit requests to reduce throttling risk.</p>
+
+                                <hr>
+
+                                <h4 class="title is-6 is-thin">Image Feed Limits</h4>
+                                <div class="box-line">
+                                    <span class="left">Entries per Image Feed</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="image_entries_per_feed" class="input" value="{{ feed_limits.image_entries_per_feed }}" min="1" max="500">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Maximum images to retrieve from each subreddit-based image feed.</p>
+
+                                <hr>
+
+                                <h4 class="title is-6 is-thin">Database Fallback</h4>
+                                <div class="box-line">
+                                    <span class="left">DB Fallback Limit</span>
+                                    <span class="right" style="width: 50%;">
+                                        <input type="number" name="db_fallback_limit" class="input" value="{{ feed_limits.db_fallback_limit }}" min="1" max="200">
+                                    </span>
+                                </div>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Maximum entries to load from the database when live feeds are unavailable.</p>
+
+                                <div class="button-wrap" style="margin-top: 1.5em;">
+                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Feed Limits</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>Feed Limits</b><br>
+                                These settings control how much external content is ingested during a forum simulation. Higher values increase variety but also startup and refresh costs.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Recommended Use</b><br>
+                                Keep defaults for small and medium experiments. Increase limits only when you need broader topical variety or longer-running content pools.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Rate Limiting</b><br>
+                                The Reddit delay should stay conservative enough to avoid throttling when multiple feeds are refreshed in sequence.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include "admin/footer.html" %}
