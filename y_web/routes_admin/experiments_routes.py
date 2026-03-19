@@ -427,6 +427,94 @@ def _normalize_forum_embedding_host(value):
     return host
 
 
+def _read_forum_feed_health(experiment, experiment_dir):
+    """Return configured and loaded forum feed counts for the experiment."""
+    health = {
+        "rss_feed_count": 0,
+        "image_feed_count": 0,
+        "article_count": 0,
+        "image_post_count": 0,
+        "rss_post_count": 0,
+        "image_share_post_count": 0,
+    }
+
+    rss_path = os.path.join(experiment_dir, "rss_feeds.json")
+    image_path = os.path.join(experiment_dir, "image_feeds.json")
+
+    try:
+        if os.path.exists(rss_path):
+            with open(rss_path, "r") as handle:
+                data = json.load(handle)
+            if isinstance(data, list):
+                health["rss_feed_count"] = len(data)
+    except Exception:
+        pass
+
+    try:
+        if os.path.exists(image_path):
+            with open(image_path, "r") as handle:
+                data = json.load(handle)
+            if isinstance(data, list):
+                health["image_feed_count"] = len(data)
+    except Exception:
+        pass
+
+    try:
+        if _get_database_type() == "sqlite":
+            import sqlite3
+
+            db_path = os.path.join(experiment_dir, "database_server.db")
+            if not os.path.exists(db_path):
+                return health
+            conn = sqlite3.connect(db_path)
+            try:
+                health["article_count"] = int(
+                    conn.execute("SELECT COUNT(*) FROM articles").fetchone()[0]
+                )
+                health["image_post_count"] = int(
+                    conn.execute("SELECT COUNT(*) FROM image_posts").fetchone()[0]
+                )
+                health["rss_post_count"] = int(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM post WHERE news_id IS NOT NULL AND news_id NOT IN (-1, 0)"
+                    ).fetchone()[0]
+                )
+                health["image_share_post_count"] = int(
+                    conn.execute(
+                        "SELECT COUNT(*) FROM post WHERE image_post_id IS NOT NULL AND image_post_id NOT IN (-1, 0)"
+                    ).fetchone()[0]
+                )
+            finally:
+                conn.close()
+        else:
+            from sqlalchemy import create_engine, text
+
+            admin_uri = current_app.config["SQLALCHEMY_DATABASE_URI"]
+            db_name = str(experiment.db_name or "").strip()
+            if not db_name:
+                return health
+            db_uri = admin_uri.rsplit("/", 1)[0] + "/" + db_name
+            engine = create_engine(db_uri)
+            try:
+                with engine.connect() as conn:
+                    health["article_count"] = int(conn.execute(text("SELECT COUNT(*) FROM articles")).scalar() or 0)
+                    health["image_post_count"] = int(conn.execute(text("SELECT COUNT(*) FROM image_posts")).scalar() or 0)
+                    health["rss_post_count"] = int(
+                        conn.execute(text("SELECT COUNT(*) FROM post WHERE news_id IS NOT NULL AND news_id NOT IN (-1, 0)")).scalar()
+                        or 0
+                    )
+                    health["image_share_post_count"] = int(
+                        conn.execute(text("SELECT COUNT(*) FROM post WHERE image_post_id IS NOT NULL AND image_post_id NOT IN (-1, 0)")).scalar()
+                        or 0
+                    )
+            finally:
+                engine.dispose()
+    except Exception:
+        pass
+
+    return health
+
+
 def _read_forum_embedding_settings(experiment_dir):
     """Load persisted forum memory embedding settings from config_server.json."""
     config_path = os.path.join(experiment_dir, "config_server.json")
@@ -3174,6 +3262,7 @@ def experiment_details(uid):
     current_perspective_api = ""
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
+    forum_feed_health = None
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -3234,6 +3323,16 @@ def experiment_details(uid):
     except Exception:
         current_perspective_api = ""
 
+    if experiment.platform_type == "forum":
+        try:
+            from y_web.utils.path_utils import get_writable_path
+
+            base_dir = get_writable_path()
+            exp_folder = _get_experiment_folder(base_dir, experiment, _get_database_type())
+            forum_feed_health = _read_forum_feed_health(experiment, exp_folder)
+        except Exception:
+            forum_feed_health = None
+
     template_name = (
         "admin/experiment_details_forum.html"
         if experiment.platform_type == "forum"
@@ -3260,6 +3359,7 @@ def experiment_details(uid):
         opinion_dynamics_enabled=opinion_dynamics_enabled,
         forum_embedding_settings=forum_embedding_settings,
         forum_avatar_settings=forum_avatar_settings,
+        forum_feed_health=forum_feed_health,
         hpc_reset_available=hpc_reset_available,
     )
 

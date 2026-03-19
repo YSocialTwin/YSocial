@@ -595,20 +595,8 @@
                                             <input type="number" name="post" id="post" class="input" step="0.001" min="0" max="1" value="0.3">
                                         </span>
                                     </div>
-                                    {% if experiment.platform_type == "microblogging" %}
-                                    <div class="box-line">
-                                        <span class="left">Share and comment an Image</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="image" id="image" class="input" step="0.001" min="0" max="1" value="0.0">
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Comment on a News</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="news" id="news" class="input" step="0.001" min="0" max="1" value="0.0">
-                                        </span>
-                                    </div>
-                                    {% endif %}
+                                    <input type="hidden" name="image" id="image" value="0.0">
+                                    <input type="hidden" name="news" id="news" value="0.0">
                                     <div class="box-line">
                                         <span class="left">Comment a Post</span>
                                         <span class="right" style="width: 70%;">
@@ -657,9 +645,12 @@
                                     {% endif %}
                                     {% if experiment.platform_type == "forum" %}
                                     <div class="box-line">
-                                        <span class="left">Share Link</span>
+                                        <span class="left">Share RSS / Feed Link</span>
                                         <span class="right" style="width: 70%;">
-                                            <input type="number" name="share_link" id="share_link" class="input" step="0.001" min="0" max="1" value="0.0">
+                                            <input type="number" name="share_link" id="share_link" class="input" step="0.001" min="0" max="1" value="0.15">
+                                            <small style="color: #666; display: block; margin-top: 4px;">
+                                                Forum uses link-sharing to publish content imported from RSS and feed sources.
+                                            </small>
                                         </span>
                                     </div>
                                     <div class="box-line">

@@ -73,6 +73,20 @@ clientsr = Blueprint("clientsr", __name__)
 DISTRIBUTION_SCALE_FACTOR = 10.0  # Scale factor for gamma/lognormal distributions
 
 
+
+
+def _forum_effective_link_share(news, share_link):
+    """Forum uses link-sharing for feed-backed articles; keep legacy news weights compatible."""
+    try:
+        news_value = float(news or 0)
+    except (TypeError, ValueError):
+        news_value = 0.0
+    try:
+        share_link_value = float(share_link or 0)
+    except (TypeError, ValueError):
+        share_link_value = 0.0
+    return max(news_value, share_link_value)
+
 def allocate_topics_by_percentage(topics, topic_percentages):
     """
     Allocate topics to an agent based on specified interest percentages.
@@ -3202,11 +3216,13 @@ def _create_forum_client_internal():
         search = float(search)
         share_link = float(share_link)
         share_image = float(share_image)
+        news = float(news or 0.0)
     except (ValueError, TypeError):
         errors.append("Action likelihood values must be valid numbers")
     share = 0.0
     image = 0.0
-    news = 0.0
+    share_link = _forum_effective_link_share(news, share_link)
+    news = share_link
     vote = 0.0
 
     # Check probability ranges
@@ -3463,7 +3479,7 @@ def _create_forum_client_internal():
             "actions_likelihood": {
                 "post": float(post),
                 "image": 0.0,
-                "news": 0.0,
+                "news": float(share_link) if share_link is not None else 0,
                 "comment": float(comment) if comment is not None else 0,
                 "read": float(read) if read is not None else 0,
                 "share": 0.0,
@@ -4121,7 +4137,7 @@ def _create_forum_client_internal():
                     "image": image,
                     "comment": comment,
                     "read": read,
-                    "news": news,
+                    "news": share_link,
                     "search": search,
                     "vote": vote,
                     "share_link": share_link,
@@ -4452,6 +4468,15 @@ def client_details_forum(uid):
     frecsys = [r for r in frecsys_all if r.enabled and "Standard" in r.enabled]
     crecsys = [r for r in crecsys_all if r.enabled and "Standard" in r.enabled]
 
+    forum_action_weights = {
+        "post": client.post,
+        "comment": client.comment,
+        "read": client.read,
+        "search": client.search,
+        "share_link": _forum_effective_link_share(client.news, client.share_link),
+        "share_image": ((config or {}).get("simulation") or {}).get("actions_likelihood", {}).get("share_image", 0.0),
+    }
+
     return render_template(
         "admin/client_details_forum.html",
         data=data,
@@ -4466,6 +4491,7 @@ def client_details_forum(uid):
         frecsys=frecsys,
         crecsys=crecsys,
         llms=llms,
+        forum_action_weights=forum_action_weights,
     )
 
 

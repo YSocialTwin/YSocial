@@ -187,6 +187,20 @@
                                 {% endif %}
                             </div>
 
+                            {% if forum_feed_health %}
+                            <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
+                                <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">Feed Health</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.75em; font-size: 0.78em; color: #5b6472;">
+                                    <span>Configured RSS feeds</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.rss_feed_count }}</span>
+                                    <span>Configured image feeds</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.image_feed_count }}</span>
+                                    <span>Loaded articles</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.article_count }}</span>
+                                    <span>Loaded image posts</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.image_post_count }}</span>
+                                    <span>RSS-derived posts emitted</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.rss_post_count }}</span>
+                                    <span>Image-share posts emitted</span><span style="text-align: right; color: #2f3a4a;">{{ forum_feed_health.image_share_post_count }}</span>
+                                </div>
+                            </div>
+                            {% endif %}
+
                             <div class="box-line">
                                 <span class="left">Download Experiment</span>
                                 <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i

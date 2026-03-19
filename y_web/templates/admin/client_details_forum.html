@@ -150,35 +150,27 @@
                             <div class="box-lines">
                                 <div class="box-line">
                                     <span class="left">Post new content</span>
-                                    <span class="right">{{ client.post }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Share and comment an Image</span>
-                                    <span class="right">{{ client.image }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Comment on a News</span>
-                                    <span class="right">{{ client.news }}</span>
+                                    <span class="right">{{ forum_action_weights.post }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Comment a Post</span>
-                                    <span class="right">{{ client.comment }}</span>
+                                    <span class="right">{{ forum_action_weights.comment }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Read a content</span>
-                                    <span class="right">{{ client.read }}</span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Share News from a Page</span>
-                                    <span class="right">{{ client.share }}</span>
+                                    <span class="right">{{ forum_action_weights.read }}</span>
                                 </div>
                                 <div class="box-line">
                                     <span class="left">Search a Hashtag</span>
-                                    <span class="right">{{ client.search }}</span>
+                                    <span class="right">{{ forum_action_weights.search }}</span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Cast Vote</span>
-                                    <span class="right">{{ client.vote }}</span>
+                                    <span class="left">Share RSS / Feed Link</span>
+                                    <span class="right">{{ forum_action_weights.share_link }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Share Image</span>
+                                    <span class="right">{{ forum_action_weights.share_image }}</span>
                                 </div>
                             </div>
                         </div>
