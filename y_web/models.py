@@ -246,6 +246,8 @@ class Websites(db.Model):
     last_fetched = db.Column(db.Integer, nullable=False)
     language = db.Column(db.String(10), nullable=False)
     country = db.Column(db.String(10), nullable=False)
+    fetch_images_from_url = db.Column(db.Boolean, default=False)
+    fetch_images_timeout = db.Column(db.Integer, default=10)
 
 
 class Voting(db.Model):

@@ -100,14 +100,16 @@ CREATE TABLE voting (
 -- Content sources
 -- -----------------------------
 CREATE TABLE websites (
-    id           SERIAL PRIMARY KEY,
-    name         TEXT,
-    rss          TEXT,
-    leaning      TEXT,
-    category     TEXT,
-    last_fetched INTEGER,
-    country      TEXT,
-    language     TEXT
+    id                    SERIAL PRIMARY KEY,
+    name                  TEXT,
+    rss                   TEXT,
+    leaning               TEXT,
+    category              TEXT,
+    last_fetched          INTEGER,
+    country               TEXT,
+    language              TEXT,
+    fetch_images_from_url BOOLEAN DEFAULT FALSE,
+    fetch_images_timeout  INTEGER DEFAULT 10
 );
 
 CREATE TABLE articles (

@@ -35,6 +35,10 @@ _SQLITE_COLUMNS = {
     "images": {
         "remote_article_id": "INTEGER",
     },
+    "websites": {
+        "fetch_images_from_url": "BOOLEAN DEFAULT 0",
+        "fetch_images_timeout": "INTEGER DEFAULT 10",
+    },
 }
 
 _POSTGRES_TABLES = {
@@ -69,6 +73,10 @@ _POSTGRES_COLUMNS = {
     },
     "images": {
         "remote_article_id": "INTEGER",
+    },
+    "websites": {
+        "fetch_images_from_url": "BOOLEAN DEFAULT FALSE",
+        "fetch_images_timeout": "INTEGER DEFAULT 10",
     },
 }
 
