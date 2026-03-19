@@ -234,12 +234,14 @@ def _upload_media_response(exp_id: int):
     return _json_success({"url": url})
 
 
-
-
 def _forum_posts_html(exp_id: int, items, user_id=None):
-    logged_user = User_mgmt.query.filter_by(username=getattr(current_user, "username", "")).first()
+    logged_user = User_mgmt.query.filter_by(
+        username=getattr(current_user, "username", "")
+    ).first()
     logged_id = logged_user.id if logged_user else current_user.id
-    admin_user = Admin_users.query.filter_by(username=getattr(current_user, "username", "")).first()
+    admin_user = Admin_users.query.filter_by(
+        username=getattr(current_user, "username", "")
+    ).first()
     is_admin_user = bool(admin_user and getattr(admin_user, "role", "") == "admin")
     return render_template(
         "reddit/components/posts.html",
@@ -253,6 +255,7 @@ def _forum_posts_html(exp_id: int, items, user_id=None):
         bool=bool,
         len=len,
     )
+
 
 @api_reddit.post("/<int:exp_id>/upload_image")
 @login_required
@@ -647,12 +650,14 @@ def api_feed(exp_id: int):
             "has_more": has_more,
             "total": page_obj.total,
         }
-        return jsonify({
-            "success": True,
-            "data": items,
-            "meta": meta,
-            "html": _forum_posts_html(exp_id, items, target_user_id),
-        })
+        return jsonify(
+            {
+                "success": True,
+                "data": items,
+                "meta": meta,
+                "html": _forum_posts_html(exp_id, items, target_user_id),
+            }
+        )
 
     page_obj = fetch_feed_page(
         viewer_id=current_user.id,
@@ -669,12 +674,14 @@ def api_feed(exp_id: int):
         "has_more": has_more,
         "total": page_obj.total,
     }
-    return jsonify({
-        "success": True,
-        "data": items,
-        "meta": meta,
-        "html": _forum_posts_html(exp_id, items, target_user_id),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "data": items,
+            "meta": meta,
+            "html": _forum_posts_html(exp_id, items, target_user_id),
+        }
+    )
 
 
 @api_reddit.get("/<int:exp_id>/search")
@@ -711,12 +718,14 @@ def api_search(exp_id: int):
         "total": page_obj.total,
         "query": search_query,
     }
-    return jsonify({
-        "success": True,
-        "data": items,
-        "meta": meta,
-        "html": _forum_posts_html(exp_id, items),
-    })
+    return jsonify(
+        {
+            "success": True,
+            "data": items,
+            "meta": meta,
+            "html": _forum_posts_html(exp_id, items),
+        }
+    )
 
 
 @api_reddit.get("/<int:exp_id>/thread/<int:post_id>")
