@@ -353,7 +353,11 @@
     function applyFeedResponse(response, options) {
         options = options || {};
         var posts = response.data || [];
-        renderPosts(posts, { replace: !!options.replace });
+        if (response.html) {
+            renderPostsFromHtml(response.html, { replace: !!options.replace });
+        } else {
+            renderPosts(posts, { replace: !!options.replace });
+        }
         var meta = response.meta || {};
         feedState.currentPage = meta.page || options.page || 1;
         feedState.hasMore = !!meta.has_more;
@@ -942,6 +946,50 @@
         ].join("");
 
         return $(postHtml);
+    }
+
+
+    function hydrateRenderedPosts($nodes) {
+        $nodes.each(function () {
+            var $post = $(this);
+            var state = parseVoteState($post);
+            setVoteState($post, state);
+
+            $post.find("[data-demo-src]").each(function () {
+                var newSrc = $(this).attr("data-demo-src");
+                if (newSrc) {
+                    $(this).attr("src", newSrc);
+                }
+            });
+
+            enhanceRedditMedia($post);
+        });
+
+        if (window.feather && window.feather.replace) {
+            window.feather.replace();
+        }
+    }
+
+    function renderPostsFromHtml(html, options) {
+        options = options || {};
+        var $container = $(FEED_SELECTORS.container);
+        if (!$container.length) {
+            return;
+        }
+
+        var $wrapper = $("<div></div>").append($.parseHTML(html || "", document, true));
+        var $nodes = $wrapper.children('[data-reddit-post]');
+        if (!$nodes.length) {
+            $nodes = $wrapper.find('[data-reddit-post]');
+        }
+
+        if (options.replace) {
+            $container.empty();
+            hideNewPostsNotice();
+        }
+
+        $container.append($wrapper.contents());
+        hydrateRenderedPosts($container.find('[data-reddit-post]'));
     }
 
     function renderPosts(posts, options) {
