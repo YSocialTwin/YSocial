@@ -1276,6 +1276,33 @@
             });
     }
 
+    window.redditInlineDeletePost = function (event, trigger) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        var $btn = $(trigger);
+        var postId = $btn.data("post-id");
+        if (!postId) {
+            return false;
+        }
+        if (!window.confirm("Delete this post? This action cannot be undone.")) {
+            return false;
+        }
+        var $post = getPostElement($btn);
+        Api.deletePost(postId)
+            .then(function () {
+                $post.remove();
+            })
+            .fail(function (err) {
+                notify(
+                    (err && err.message) || "Unable to delete post right now.",
+                    "error",
+                );
+            });
+        return false;
+    };
+
     function handleDeletePost(event) {
         event.preventDefault();
         var $btn = $(event.currentTarget);

@@ -35,7 +35,7 @@
             </div>
             <div class="dropdown-menu" role="menu">
                 <div class="dropdown-content">
-                    <a class="dropdown-item delete-post-trigger" data-post-id="{{ thread['post_id'] }}" href="#">
+                    <a class="dropdown-item delete-post-trigger" data-post-id="{{ thread['post_id'] }}" href="#" onclick="return window.redditInlineDeletePost ? window.redditInlineDeletePost(event, this) : false;">
                         <div class="media">
                             <i data-feather="trash-2"></i>
                             <div class="media-content">

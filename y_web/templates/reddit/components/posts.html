@@ -59,7 +59,7 @@
                         </a>
                         {% if item['author_id'] == logged_id or is_admin %}
                         <a class="dropdown-item delete-post-trigger" data-post-id="{{ item['post_id'] }}" href="#"
-                           {% if profile_delete_inline %}onclick="return window.redditProfileDeletePost ? window.redditProfileDeletePost(event, this) : false;"{% endif %}>
+                           onclick="{% if profile_delete_inline %}return window.redditProfileDeletePost ? window.redditProfileDeletePost(event, this) : false;{% else %}return window.redditInlineDeletePost ? window.redditInlineDeletePost(event, this) : false;{% endif %}">
                             <div class="media">
                                 <i data-feather="trash-2"></i>
                                 <div class="media-content">
