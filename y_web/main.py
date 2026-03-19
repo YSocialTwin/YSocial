@@ -21,8 +21,17 @@ from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.reddit.service import fetch_feed_page
+from y_web.experiment_context import get_current_experiment_id
+from y_web.reddit.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
+    fetch_feed_page,
+)
 from y_web.recsys_support import get_suggested_posts, get_suggested_users
+from y_web.utils.avatars import (
+    resolve_forum_profile_pic,
+    resolve_forum_username_avatar,
+)
 
 from .data_access import *
 from .models import Admin_users, Exps, Images, Page, ReplyInboxState
@@ -169,12 +178,21 @@ def profile():
 @login_required
 def profile_logged(exp_id, user_id, page=1, mode="recent"):
     """Handle profile logged operation."""
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp:
+        flash("Experiment not found", "error")
+        return redirect(url_for("main.index"))
+
     # Get experiment user (not admin user) for logged_id
     logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
     if not logged_user:
-        flash("User not found in experiment", "error")
-        return redirect(url_for("main.index"))
-    logged_id = logged_user.id
+        if getattr(exp, "platform_type", "") == "forum":
+            logged_id = current_user.id
+        else:
+            flash("User not found in experiment", "error")
+            return redirect(url_for("main.index"))
+    else:
+        logged_id = logged_user.id
 
     # Handle both int and UUID user_id formats (Standard vs HPC experiments)
     try:
@@ -245,19 +263,21 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         Follow.follower_id == user_id, Follow.user_id != user_id
     ).count()
 
-    # Profile pic logic
-    profile_pic = ""
-    if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
-        if pg:
-            profile_pic = pg.logo
+    if getattr(exp, "platform_type", "") == "forum":
+        profile_pic = _forum_profile_pic(user)
     else:
-        ag = Agent.query.filter_by(name=user.username).first()
-        if ag and ag.profile_pic:
-            profile_pic = ag.profile_pic
+        profile_pic = ""
+        if user.is_page == 1:
+            pg = Page.query.filter_by(name=user.username).first()
+            if pg:
+                profile_pic = pg.logo
         else:
-            admin = Admin_users.query.filter_by(username=user.username).first()
-            profile_pic = admin.profile_pic if admin else ""
+            ag = Agent.query.filter_by(name=user.username).first()
+            if ag and ag.profile_pic:
+                profile_pic = ag.profile_pic
+            else:
+                admin = Admin_users.query.filter_by(username=user.username).first()
+                profile_pic = admin.profile_pic if admin else ""
 
     # Other functions as before
     rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
@@ -266,9 +286,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     interests = get_user_recent_interests(user_id, 5)
     mentions = get_unanswered_mentions(current_user.id)
 
-    return render_template(
-        "profile.html",
-        profile_pic=profile_pic,
+    common_context = dict(
         is_page=user.is_page,
         user={
             "user_data": user,
@@ -299,6 +317,40 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         bool=bool,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
+        exp_id=exp_id,
+    )
+
+    if getattr(exp, "platform_type", "") == "forum":
+        forum_logged_user = _forum_logged_user()
+        mention_user_id = forum_logged_user.id if forum_logged_user else None
+        forum_mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
+        suggested_users = (
+            get_suggested_users(forum_logged_user.username, pages=False)
+            if forum_logged_user else []
+        )
+        suggested_pages = (
+            get_suggested_users(forum_logged_user.username, pages=True)
+            if forum_logged_user else []
+        )
+        forum_context = dict(common_context)
+        forum_context["mentions"] = forum_mentions
+        return render_template(
+            "reddit/profile.html",
+            profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
+            viewed_profile_pic=profile_pic,
+            profile_pic_feed=_forum_current_profile_pic(exp_id, forum_logged_user),
+            profile_delete_inline=True,
+            feed_user_id=None,
+            timeline="profile",
+            sfollow=suggested_users,
+            spages=suggested_pages,
+            **forum_context,
+        )
+
+    return render_template(
+        "profile.html",
+        profile_pic=profile_pic,
+        **common_context,
     )
 
 
@@ -1035,6 +1087,13 @@ def get_thread(exp_id, post_id):
             day = c.day
             hour = c.hour
 
+        display_time = _format_display_time_from_created_at(
+            getattr(post, "created_at", None)
+        ) or _format_display_time(
+            str(day),
+            f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+        )
+
         user = User_mgmt.query.filter_by(id=post.user_id).first()
         profile_pic = ""
         if user.is_page == 1:
@@ -1157,6 +1216,8 @@ def recursive_visit(data):
 def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
     """Handle   get discussions operation."""
     res = []
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    is_forum = getattr(exp, "platform_type", "") == "forum"
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
@@ -1186,24 +1247,24 @@ def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
             else:
                 text = c.tweet.split(":")[-1]
 
-            profile_pic = ""
-
             user = User_mgmt.query.filter_by(id=c.user_id).first()
-
-            if user.is_page == 1:
-                pg = Page.query.filter_by(name=user.username).first()
-                if page is not None:
-                    profile_pic = pg.logo
+            if is_forum:
+                profile_pic = _forum_profile_pic(user)
             else:
-                ag = Agent.query.filter_by(name=user.username).first()
-
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=user.username)
-                    .first()
-                    .profile_pic
-                )
+                profile_pic = ""
+                if user.is_page == 1:
+                    pg = Page.query.filter_by(name=user.username).first()
+                    if page is not None and pg is not None:
+                        profile_pic = pg.logo
+                else:
+                    ag = Agent.query.filter_by(name=user.username).first()
+                    profile_pic = (
+                        ag.profile_pic
+                        if ag is not None and ag.profile_pic is not None
+                        else Admin_users.query.filter_by(username=user.username)
+                        .first()
+                        .profile_pic
+                    )
 
             topics = get_topics(c.id, c.user_id)
             if len(topics) == 0:
@@ -1288,23 +1349,26 @@ def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
             # Skip this post if the author doesn't exist in user_mgmt
             continue
 
-        profile_pic = ""
-        if aa.is_page == 1:
-            pg = Page.query.filter_by(name=aa.username).first()
-            if pg is not None:
-                profile_pic = pg.logo
+        if is_forum:
+            profile_pic = _forum_profile_pic(aa)
         else:
-            try:
-                ag = Agent.query.filter_by(name=aa.username).first()
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=aa.username)
-                    .first()
-                    .profile_pic
-                )
-            except:
-                profile_pic = ""
+            profile_pic = ""
+            if aa.is_page == 1:
+                pg = Page.query.filter_by(name=aa.username).first()
+                if pg is not None:
+                    profile_pic = pg.logo
+            else:
+                try:
+                    ag = Agent.query.filter_by(name=aa.username).first()
+                    profile_pic = (
+                        ag.profile_pic
+                        if ag is not None and ag.profile_pic is not None
+                        else Admin_users.query.filter_by(username=aa.username)
+                        .first()
+                        .profile_pic
+                    )
+                except:
+                    profile_pic = ""
 
         topics = get_topics(post.id, post.user_id)
         if len(topics) == 0:
@@ -1313,6 +1377,8 @@ def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
         # Get author username safely
         author_user = User_mgmt.query.filter_by(id=post.user_id).first()
         author_username = author_user.username if author_user else "Unknown"
+        title, body = process_reddit_post(post.tweet)
+        processed_body = augment_text(body, exp_id) if body else ""
 
         # Get shared post info safely
         if post.shared_from == -1:
@@ -1340,10 +1406,12 @@ def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "post_id": post.id,
                 "author": author_username,
                 "author_id": post.user_id,
-                "post": augment_text(post.tweet.split(":")[-1], exp_id),
+                "title": title,
+                "post": processed_body,
                 "round": post.round,
                 "day": day,
                 "hour": hour,
+                "display_time": display_time,
                 "likes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="like"))
                 ),
@@ -1380,19 +1448,13 @@ def _forum_logged_user():
 
 
 def _forum_profile_pic(user):
-    if not user:
-        return ""
-    if user.is_page == 1:
-        pg = Page.query.filter_by(name=user.username).first()
-        return pg.logo if pg is not None else ""
-    try:
-        ag = Agent.query.filter_by(name=user.username).first()
-        if ag is not None and ag.profile_pic is not None:
-            return ag.profile_pic
-        admin = Admin_users.query.filter_by(username=user.username).first()
-        return admin.profile_pic if admin is not None else ""
-    except Exception:
-        return ""
+    return resolve_forum_profile_pic(user, get_current_experiment_id())
+
+
+def _forum_current_profile_pic(exp_id, forum_user=None):
+    if forum_user is not None:
+        return resolve_forum_profile_pic(forum_user, exp_id)
+    return resolve_forum_username_avatar(current_user.username, exp_id)
 
 
 def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
@@ -1477,7 +1539,7 @@ def interview(exp_id):
         "reddit/interview.html",
         logged_username=current_user.username,
         logged_id=logged_id,
-        profile_pic=get_safe_profile_pic(current_user.username, 0),
+        profile_pic=_forum_current_profile_pic(exp_id, _forum_logged_user()),
         mentions=mentions,
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
@@ -1650,7 +1712,7 @@ def get_thread_reddit(exp_id, post_id):
     return render_template(
         "reddit/thread.html",
         thread=discussion_tree,
-        profile_pic=_forum_profile_pic(logged_user),
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
         user_id=current_user.id,
         username=current_user.username,
         logged_username=current_user.username,
@@ -1729,7 +1791,7 @@ def rnotifications(exp_id):
             page=page,
             has_more=False,
             unread_before_open=0,
-            profile_pic=get_safe_profile_pic(current_user.username, 0),
+            profile_pic=_forum_current_profile_pic(exp_id, logged_user),
             logged_username=current_user.username,
             logged_id=current_user.id,
             mentions=[],
@@ -1818,7 +1880,7 @@ def rnotifications(exp_id):
         page=page,
         has_more=has_more,
         unread_before_open=unread_before_open,
-        profile_pic=get_safe_profile_pic(current_user.username, 0),
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
         logged_username=current_user.username,
         logged_id=exp_user_id,
         mentions=get_unanswered_mentions(exp_user_id),
@@ -1874,8 +1936,8 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             f"/{exp_id}/rfeed/{user_id}/{timeline}/{mode}/{page - 1}?feed_type={feed_type}"
         )
 
-    profile_pic = get_safe_profile_pic(current_user.username, 0)
-    profile_pic_feed = _forum_profile_pic(logged_user)
+    profile_pic = _forum_current_profile_pic(exp_id, logged_user)
+    profile_pic_feed = _forum_current_profile_pic(exp_id, logged_user)
 
     return render_template(
         "reddit/feed.html",
@@ -1953,8 +2015,8 @@ def search_reddit(exp_id):
         "reddit/feed.html",
         items=res,
         page=current_page,
-        profile_pic=get_safe_profile_pic(current_user.username, 0),
-        profile_pic_feed=_forum_profile_pic(logged_user),
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
+        profile_pic_feed=_forum_current_profile_pic(exp_id, logged_user),
         user_id="all",
         feed_user_id=None,
         timeline="feed",
@@ -2267,13 +2329,30 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
         pass
 
     rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
-    html = render_template(
-        "components/posts.html",
-        items=rp,
-        enumerate=enumerate,
-        user_id=user_id,
-        str=str,
-        bool=bool,
-        len=len,
-    )
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if getattr(exp, "platform_type", "") == "forum":
+        logged_user = _forum_logged_user()
+        html = render_template(
+            "reddit/components/posts.html",
+            items=rp,
+            enumerate=enumerate,
+            user_id=(logged_user.id if logged_user else current_user.id),
+            logged_id=(logged_user.id if logged_user else current_user.id),
+            is_admin=is_admin(current_user.username),
+            profile_delete_inline=True,
+            str=str,
+            bool=bool,
+            len=len,
+            exp_id=exp_id,
+        )
+    else:
+        html = render_template(
+            "components/posts.html",
+            items=rp,
+            enumerate=enumerate,
+            user_id=user_id,
+            str=str,
+            bool=bool,
+            len=len,
+        )
     return jsonify({"html": html, "has_more": len(rp) > 0})

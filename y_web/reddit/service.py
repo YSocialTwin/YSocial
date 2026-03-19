@@ -416,9 +416,9 @@ def _fetch_viewer_vote_map(viewer_id: int, post_ids: List[int]) -> Dict[int, str
 
 
 def _get_profile_pic(user: User_mgmt) -> str:
-    from y_web.utils.avatars import deterministic_forum_avatar_url
+    from y_web.utils.avatars import resolve_forum_profile_pic
 
-    return deterministic_forum_avatar_url(user.username)
+    return resolve_forum_profile_pic(user, get_current_experiment_id())
 
 
 def _is_agent_or_page_author(user: Optional[User_mgmt]) -> bool:
@@ -491,11 +491,21 @@ def _resolve_experiment_clock() -> Dict[str, Any]:
 
 def _format_display_time(day: str, hour: str) -> str:
     """
-    Return a calendar timestamp label for feed items.
-
-    Simulation day/hour is mapped onto the experiment anchor date in the configured timezone.
+    Return the user-facing timestamp label for feed items.
     """
     clock = _resolve_experiment_clock()
+    clock_mode = str(clock.get("mode", DEFAULT_CLOCK_MODE) or DEFAULT_CLOCK_MODE)
+
+    if clock_mode != "real_time":
+        if day == "None":
+            return ""
+        try:
+            day_num = int(day)
+            hour_num = int(hour)
+            return f"Day {max(day_num, 0)} · Hour {min(max(hour_num, 0), 23):02d}"
+        except (TypeError, ValueError):
+            return str(day or "").strip()
+
     timezone_name = str(
         clock.get("timezone", DEFAULT_CLOCK_TIMEZONE) or DEFAULT_CLOCK_TIMEZONE
     )
@@ -546,6 +556,10 @@ def _format_display_time_from_created_at(
         return None
 
     clock = _resolve_experiment_clock()
+    clock_mode = str(clock.get("mode", DEFAULT_CLOCK_MODE) or DEFAULT_CLOCK_MODE)
+    if clock_mode != "real_time":
+        return None
+
     timezone_name = str(
         clock.get("timezone", DEFAULT_CLOCK_TIMEZONE) or DEFAULT_CLOCK_TIMEZONE
     )

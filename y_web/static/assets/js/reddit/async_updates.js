@@ -515,6 +515,19 @@
         return "/rthread/" + postId + query;
     }
 
+    function buildProfileUrl(authorId) {
+        var expId = getExpId();
+        if (expId) {
+            return "/" + expId + "/profile/" + authorId + "/recent/1";
+        }
+        return "/profile/" + authorId + "/recent/1";
+    }
+
+    function currentViewerCanDelete(authorId, loggedUserId) {
+        var isAdmin = !!(window.redditContext && window.redditContext.isAdmin);
+        return isAdmin || (loggedUserId && Number(authorId) === Number(loggedUserId));
+    }
+
     function parseVoteState($post) {
         var likes = parseInt($post.attr("data-likes"), 10) || 0;
         var dislikes = parseInt($post.attr("data-dislikes"), 10) || 0;
@@ -701,8 +714,7 @@
         var dislikes = post.dislikes || 0;
         var score = likes - dislikes;
         var threadId = post.thread_id || post.post_id;
-        var hasDeletePrivilege =
-            loggedUserId && Number(post.author_id) === Number(loggedUserId);
+        var hasDeletePrivilege = currentViewerCanDelete(post.author_id, loggedUserId);
 
         var articleSection = "";
         if (post.article && post.article !== 0) {
@@ -853,19 +865,19 @@
             '      <div class="user-block" style="display: flex; align-items: center; gap: 12px;">',
             '        <div class="image" style="width: 40px; height: 40px;">',
             '          <img src="https://via.placeholder.com/300x300" ' +
-                (post.profile_pic === ""
-                    ? 'data-demo-src="/static/assets/img/users/' +
-                      post.author_id +
-                      '.png"'
-                    : 'data-demo-src="' + post.profile_pic + '"') +
+                'data-demo-src="' +
+                escapeHtml(post.profile_pic || "https://via.placeholder.com/300x300") +
+                '"' +
                 ' alt="' +
                 escapeHtml(post.author || "") +
                 '" style="border-radius: 50%; width: 40px; height: 40px;">',
             "        </div>",
             '        <div class="user-info" style="display: flex; flex-direction: column;">',
-            '          <span class="post-author-link">' +
+            '          <a class="post-author-link" href="' +
+                buildProfileUrl(post.author_id) +
+                '" style="color: inherit; text-decoration: none; font-weight: 500;">' +
                 escapeHtml(post.author || "") +
-                "</span>",
+                "</a>",
             '          <span class="time">' +
                 formatDisplayTime(post) +
                 "</span>",
@@ -917,12 +929,14 @@
                 "</span>",
             '      <button class="vote-button" type="button" data-action="dislike" aria-label="Downvote" style="background: none; border: none; cursor: pointer; padding: 2px;"><i data-feather="arrow-down" style="width: 16px; height: 16px;"></i></button>',
             "    </div>",
-            '    <button class="open-thread-button" type="button" data-role="open-thread" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;">',
+            '    <a class="open-thread-button" data-role="open-thread" href="' +
+                buildThreadUrl(post.post_id) +
+                '" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">',
             '      <i data-feather="message-square" style="width: 16px; height: 16px;"></i>',
             '      <span><span data-role="comment-count">' +
                 (post.t_comments || 0) +
                 "</span> Comments</span>",
-            "    </button>",
+            "    </a>",
             "  </div>",
             "</div>",
         ].join("");
@@ -1472,10 +1486,35 @@
     }
 
     function buildCommentNode(comment) {
+        var loggedUserId = window.redditContext
+            ? window.redditContext.loggedUserId
+            : null;
+        var hasDeletePrivilege = currentViewerCanDelete(comment.author_id, loggedUserId);
         var profilePicUrl = "https://via.placeholder.com/300x300";
         var profilePicSrc =
-            comment.profile_pic ||
-            "/static/assets/img/users/" + comment.author_id + ".png";
+            comment.profile_pic || "https://via.placeholder.com/300x300";
+
+        var dropdownHtml = "";
+        if (hasDeletePrivilege) {
+            dropdownHtml = [
+                '<div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">',
+                '  <div><div class="button"><i data-feather="more-vertical"></i></div></div>',
+                '  <div class="dropdown-menu" role="menu">',
+                '    <div class="dropdown-content">',
+                '      <a class="dropdown-item delete-post-trigger" data-post-id="' + comment.post_id + '" href="#">',
+                '        <div class="media">',
+                '          <i data-feather="trash-2"></i>',
+                '          <div class="media-content">',
+                '            <h3>Delete</h3>',
+                '            <small>Remove this comment</small>',
+                "          </div>",
+                "        </div>",
+                "      </a>",
+                "    </div>",
+                "  </div>",
+                "</div>",
+            ].join("");
+        }
 
         var html = [
             '<div class="reddit-comment post-detail-card" data-reddit-post data-post-id="' +
@@ -1484,19 +1523,24 @@
                 comment.thread_id +
                 '" data-vote="neutral" data-likes="0" data-dislikes="0" data-score="0" style="padding: 12px; margin-bottom: 8px; background: white; border-radius: 4px; border-left: 2px solid transparent;">',
             '  <div style="display: flex; align-items: center; margin-bottom: 4px;">',
+            '    <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">',
             '    <img src="' +
                 profilePicUrl +
                 '" data-demo-src="' +
                 profilePicSrc +
                 '" style="width: 20px; height: 20px; border-radius: 50%; margin-right: 6px;" alt="">',
             '    <span class="comment-meta-author" style="font-weight: 500; color: #1c1c1c; margin-right: 6px; font-size: 12px;">',
-            '      <span style="color: inherit; text-decoration: none;">' +
+            '      <a href="' +
+                buildProfileUrl(comment.author_id) +
+                '" style="color: inherit; text-decoration: none;">' +
                 escapeHtml(comment.author) +
-                "</span>",
+                "</a>",
             "    </span>",
             '    <span class="comment-meta-time" style="color: #7c7c7c; font-size: 11px;">' +
                 formatDisplayTime(comment) +
                 "</span>",
+            "    </div>",
+            dropdownHtml,
             "  </div>",
             '  <div class="post-body comment-body" style="color: #1c1c1c; font-size: 15px; line-height: 1.4; margin-bottom: 6px;">',
             '    <div class="comment-content" style="white-space: pre-wrap; word-wrap: break-word;">' +
@@ -1731,6 +1775,34 @@
         );
     }
 
+    function initializeProfileCards() {
+        var $postsRoot = $("#posts-container");
+        if (!$postsRoot.length) {
+            return;
+        }
+
+        bindFeedEvents();
+
+        $postsRoot.find("[data-reddit-post]").each(function () {
+            var $post = $(this);
+            var state = parseVoteState($post);
+            setVoteState($post, state);
+        });
+
+        $postsRoot.find("[data-demo-src]").each(function () {
+            var newSrc = $(this).attr("data-demo-src");
+            if (newSrc) {
+                $(this).attr("src", newSrc);
+            }
+        });
+
+        enhanceRedditMedia($postsRoot);
+
+        if (window.feather && window.feather.replace) {
+            window.feather.replace();
+        }
+    }
+
     function maybeEnrichThreadDom($threadRoot) {
         if (!$threadRoot || !$threadRoot.length) {
             return;
@@ -1778,6 +1850,7 @@
     $(document).ready(function () {
         initializeFeed();
         initializeThreadHelpers();
+        initializeProfileCards();
     });
 
     var MEDIA_RULES = Object.freeze({

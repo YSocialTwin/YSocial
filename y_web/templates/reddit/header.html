@@ -199,11 +199,7 @@
                     <div class="user-image">
                         <img
                                 src="https://via.placeholder.com/400x400"
-                                {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (logged_id|string) ~ '.png') }}"
-                                    {% else %}
-                                        data-demo-src="{{ profile_pic }}"
-                                    {% endif %}
+                                data-demo-src="{{ profile_pic or 'https://via.placeholder.com/400x400' }}"
                                 alt=""
                         />
                         <span class="indicator"></span>
@@ -314,11 +310,7 @@
             <a href="javascript:void(0)" class="navbar-link">
                 <img
                         src="https://via.placeholder.com/150x150"
-                         {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ (logged_id|string) ~ '.png') }}"
-                                    {% else %}
-                                        data-demo-src="{{ profile_pic }}"
-                                    {% endif %}
+                        data-demo-src="{{ profile_pic or 'https://via.placeholder.com/150x150' }}"
                         alt=""
                 />
                 <span class="is-heading">{{ logged_username }}</span>

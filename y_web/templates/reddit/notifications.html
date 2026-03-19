@@ -73,11 +73,7 @@
                                     <p class="image is-48x48">
                                         <img
                                                 src="https://via.placeholder.com/96x96"
-                                                {% if item.author_profile_pic == "" %}
-                                                    data-demo-src="{{ url_for('static', filename='assets/img/users/' ~ item.author_id ~ '.png') }}"
-                                                {% else %}
-                                                    data-demo-src="{{ item.author_profile_pic }}"
-                                                {% endif %}
+                                                data-demo-src="{{ item.author_profile_pic or 'https://via.placeholder.com/96x96' }}"
                                                 alt=""
                                         />
                                     </p>
@@ -150,4 +146,3 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
 </body>
 </html>
-

@@ -237,11 +237,7 @@
                                     <div class="compose-form">
                                         <img
                                                 src="https://via.placeholder.com/300x300"
-                                                {% if profile_pic =="" %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ str(logged_id) +'.png') }}"
-                                    {% else %}
-                                        data-demo-src="{{ profile_pic }}"
-                                    {% endif %}
+                                                data-demo-src="{{ profile_pic or 'https://via.placeholder.com/300x300' }}"
                                                 alt=""
                                         />
                                         <!-- Reddit-style form fields -->
@@ -610,6 +606,7 @@
 <script>
 window.redditContext = Object.freeze({
     loggedUserId: {{ logged_id }},
+    isAdmin: {{ 'true' if is_admin else 'false' }},
     loggedUsername: {{ logged_username|tojson }},
     profilePic: {{ profile_pic|tojson }},
     profilePicFeed: {{ profile_pic_feed|tojson }}

@@ -787,7 +787,16 @@ def api_delete_post(exp_id: int, post_id: int):
     if post is None:
         return _json_error("Post not found.", 404)
 
-    if int(post.user_id) != int(current_user.id):
+    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    is_admin_user = (
+        Admin_users.query.filter_by(username=current_user.username, role="admin").first()
+        is not None
+    )
+    actor_ids = {int(current_user.id)}
+    if exp_user is not None:
+        actor_ids.add(int(exp_user.id))
+
+    if not is_admin_user and int(post.user_id) not in actor_ids:
         return _json_error("Not authorized to delete this post.", 403)
 
     target_post_ids = set()

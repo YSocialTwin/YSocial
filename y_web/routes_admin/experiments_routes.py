@@ -97,6 +97,7 @@ from y_web.utils.miscellanea import (
     ollama_status,
     reload_current_user,
 )
+from y_web.utils.avatars import normalize_forum_avatar_mode
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
@@ -116,6 +117,9 @@ DEFAULT_FORUM_EMBEDDING_SETTINGS = {
     "service": "",
     "host": "",
     "model": "",
+}
+DEFAULT_FORUM_AVATAR_SETTINGS = {
+    "mode": "placeholder",
 }
 
 FORUM_FEED_REQUEST_HEADERS = {
@@ -442,6 +446,24 @@ def _read_forum_embedding_settings(experiment_dir):
     settings["service"] = _normalize_forum_embedding_service(persisted.get("service"))
     settings["host"] = _normalize_forum_embedding_host(persisted.get("host"))
     settings["model"] = str(persisted.get("model") or "").strip()
+    return settings
+
+
+def _read_forum_avatar_settings(experiment_dir):
+    """Load persisted forum avatar settings from config_server.json."""
+    from y_web.utils.avatars import normalize_forum_avatar_mode
+
+    config_path = os.path.join(experiment_dir, "config_server.json")
+    settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
+    if not os.path.exists(config_path):
+        return settings
+    try:
+        with open(config_path, "r") as handle:
+            config = json.load(handle)
+    except (json.JSONDecodeError, IOError):
+        return settings
+
+    settings["mode"] = normalize_forum_avatar_mode(config.get("avatar_mode"))
     return settings
 
 
@@ -3151,6 +3173,7 @@ def experiment_details(uid):
     # Resolve current toggle values from persisted server config.
     current_perspective_api = ""
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
+    forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -3205,6 +3228,9 @@ def experiment_details(uid):
                         ),
                         "model": str(persisted_embedding.get("model") or "").strip(),
                     }
+                forum_avatar_settings["mode"] = normalize_forum_avatar_mode(
+                    config.get("avatar_mode")
+                )
     except Exception:
         current_perspective_api = ""
 
@@ -3233,6 +3259,7 @@ def experiment_details(uid):
         emotion_annotation_enabled=emotion_annotation_enabled,
         opinion_dynamics_enabled=opinion_dynamics_enabled,
         forum_embedding_settings=forum_embedding_settings,
+        forum_avatar_settings=forum_avatar_settings,
         hpc_reset_available=hpc_reset_available,
     )
 
@@ -5131,6 +5158,40 @@ def update_embedding_settings(uid):
 
     flash("Embedding settings updated successfully.", "success")
     return redirect(request.referrer or url_for("experiments.embedding_settings", uid=uid))
+
+
+@experiments.route("/admin/update_forum_avatar_mode/<int:uid>", methods=["POST"])
+@login_required
+def update_forum_avatar_mode(uid):
+    """Persist forum avatar mode to config_server.json."""
+    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    if error_response is not None:
+        return error_response
+
+    config_path = os.path.join(experiment_dir, "config_server.json")
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r") as handle:
+                config = json.load(handle)
+        except (json.JSONDecodeError, IOError):
+            config = {}
+
+    enabled_flag = str(request.form.get("use_actual_profile_pics") or "").strip().lower()
+    requested_mode = request.form.get("avatar_mode")
+    mode = normalize_forum_avatar_mode(requested_mode)
+    if enabled_flag in {"1", "true", "on", "yes"}:
+        mode = "actual"
+
+    config["avatar_mode"] = mode
+
+    with open(config_path, "w") as handle:
+        json.dump(config, handle, indent=2)
+
+    flash("Forum avatar mode updated successfully.", "success")
+    return redirect(
+        request.referrer or url_for("experiments.experiment_details", uid=uid)
+    )
 
 
 @experiments.route("/admin/update_feed_limits/<int:uid>", methods=["POST"])

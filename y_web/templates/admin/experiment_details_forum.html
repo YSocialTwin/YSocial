@@ -143,7 +143,7 @@
                                 <span class="right">
                                     {% if can_manage_experiment %}
                                     <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
-                                        <i class="mdi mdi-vector-link" style="font-size: 24px;"></i>
+                                        <i class="mdi mdi-tune" style="font-size: 24px;"></i>
                                     </a>
                                     {% else %}
                                     <i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
@@ -155,6 +155,35 @@
                                 {{ forum_embedding_settings.service|upper }} · {{ forum_embedding_settings.model }}
                                 {% else %}
                                 Not configured. Semantic memory falls back to lexical retrieval.
+                                {% endif %}
+                            </div>
+                            <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
+                                <div class="box-line" style="align-items: center;">
+                                    <span class="left">Actual Profile Pics</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <label class="switch is-rounded is-primary" style="margin-bottom: 0;">
+                                            <input
+                                                type="checkbox"
+                                                name="use_actual_profile_pics"
+                                                value="1"
+                                                {% if forum_avatar_settings.mode == 'actual' %}checked{% endif %}
+                                                onchange="this.form.submit()"
+                                            >
+                                            <span class="check"></span>
+                                        </label>
+                                        <input type="hidden" name="avatar_mode" value="{% if forum_avatar_settings.mode == 'actual' %}placeholder{% else %}actual{% endif %}">
+                                        {% else %}
+                                        <i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can edit avatar mode"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </form>
+                            <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
+                                {% if forum_avatar_settings.mode == 'actual' %}
+                                Actual profile pictures are enabled across the forum interface.
+                                {% else %}
+                                Reddit-like placeholders are enabled across the forum interface.
                                 {% endif %}
                             </div>
 

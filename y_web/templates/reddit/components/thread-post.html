@@ -1,19 +1,53 @@
 <!-- Reddit-style thread main post -->
-<div class="reddit-thread-post" style="padding: 16px; margin-bottom: 20px; background: white; border-radius: 4px;">
+{% set thread_vote = 'neutral' %}
+{% if thread.get('is_liked', False) %}
+    {% set thread_vote = 'like' %}
+{% elif thread.get('is_disliked', False) %}
+    {% set thread_vote = 'dislike' %}
+{% endif %}
+<div class="reddit-thread-post"
+     data-reddit-post
+     data-post-id="{{ thread['post_id'] }}"
+     data-thread-id="{{ thread.get('thread_id', thread['post_id']) }}"
+     data-vote="{{ thread_vote }}"
+     data-likes="{{ thread.get('likes', 0) }}"
+     data-dislikes="{{ thread.get('dislikes', 0) }}"
+     data-score="{{ thread.get('likes', 0) - thread.get('dislikes', 0) }}"
+     style="padding: 16px; margin-bottom: 20px; background: white; border-radius: 4px;">
     <!-- Post header -->
     <div style="display: flex; align-items: center; margin-bottom: 8px;">
-        <img src="https://via.placeholder.com/300x300"
-             {% if thread['profile_pic'] == "" %}
-             data-demo-src="{{ url_for('static', filename='assets/img/users/'+ thread['author_id']|user_image_id +'.png') }}"
-             {% else %}
-             data-demo-src="{{ thread['profile_pic'] }}"
-             {% endif %}
-             style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;"
-             alt="">
-        <span style="font-weight: 500; color: #1c1c1c; margin-right: 8px;">
-            <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" style="color: inherit; text-decoration: none;">{{ thread["author"] }}</a>
-        </span>
-        <span style="color: #7c7c7c; font-size: 12px;">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>
+        <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+            <img src="https://via.placeholder.com/300x300"
+                 data-demo-src="{{ thread['profile_pic'] or 'https://via.placeholder.com/300x300' }}"
+                 style="width: 24px; height: 24px; border-radius: 50%;"
+                 alt="">
+            <span style="font-weight: 500; color: #1c1c1c; margin-right: 8px;">
+                <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" style="color: inherit; text-decoration: none;">{{ thread["author"] }}</a>
+            </span>
+            <span style="color: #7c7c7c; font-size: 12px;">{{ thread.get("display_time", "") }}</span>
+        </div>
+        {% if thread['author_id'] == logged_id or is_admin %}
+        <div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">
+            <div>
+                <div class="button">
+                    <i data-feather="more-vertical"></i>
+                </div>
+            </div>
+            <div class="dropdown-menu" role="menu">
+                <div class="dropdown-content">
+                    <a class="dropdown-item delete-post-trigger" data-post-id="{{ thread['post_id'] }}" href="#">
+                        <div class="media">
+                            <i data-feather="trash-2"></i>
+                            <div class="media-content">
+                                <h3>Delete</h3>
+                                <small>Remove this post</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
     
     <!-- Post title -->
@@ -65,22 +99,20 @@
     <div style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
         <!-- Reddit-style voting (consistent with feed) -->
         <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
-            <button class="like-button" id="l{{ thread['post_id']}}" 
-                    style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px; {% if thread.get('is_liked', False) %}color: #ff4500;{% else %}color: #878a8c;{% endif %}"
-                    onclick="handleLikeClick('{{ thread['post_id'] }}', this); event.stopPropagation();">
+            <button class="vote-button" type="button" data-action="like"
+                    style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px;">
                 <i data-feather="arrow-up" style="width: 16px; height: 16px;"></i>
             </button>
-            <span style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 2px 0;">
-                {{ thread['likes'] - thread['dislikes'] }}
+            <span data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 2px 0;">
+                {{ thread.get('likes', 0) - thread.get('dislikes', 0) }}
             </span>
-            <button class="dislike-button" id="d{{ thread['post_id'] }}" 
-                    style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px; {% if thread.get('is_disliked', False) %}color: #7193ff;{% else %}color: #878a8c;{% endif %}"
-                    onclick="handleDislikeClick('{{ thread['post_id'] }}', this); event.stopPropagation();">
+            <button class="vote-button" type="button" data-action="dislike"
+                    style="background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px;">
                 <i data-feather="arrow-down" style="width: 16px; height: 16px;"></i>
             </button>
         </div>
         
-        <button style="display: flex; align-items: center; gap: 4px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 4px 8px; border-radius: 2px; font-size: 12px; font-weight: 700;" id='{{ thread["post_id"] }}' onClick="editLink(this.id)">
+        <button class="toggle-reply-button" type="button" data-reply-target="{{ thread['post_id'] }}" style="display: flex; align-items: center; gap: 4px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 4px 8px; border-radius: 2px; font-size: 12px; font-weight: 700;">
             <i data-feather="message-square" style="width: 16px; height: 16px;"></i>
             Reply
         </button>
@@ -92,10 +124,10 @@
         <form class="comment_form" id="comment_form-{{ thread['post_id'] }}" style="display: none;">
             <textarea rows="3" class="reply_comment" id="comment-{{ thread['post_id'] }}" 
                       style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical; margin-bottom: 8px;">@{{ thread["author"] }} </textarea>
-            <button id="add_comment" type="button" 
+            <button type="button" class="add-comment-button" data-parent-id="{{ thread['post_id'] }}"
                     style="background: #0079d3; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: 600;"
-                    val="{{ thread['post_id'] }}">
-                Comment
+                    >
+                Reply
             </button>
         </form>
     </div>

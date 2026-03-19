@@ -28,6 +28,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.utils.path_utils import get_writable_path
+from y_web.utils.avatars import resolve_forum_profile_pic
 
 api_interview = Blueprint("api_interview", __name__, url_prefix="/api/interview")
 _Y_WEB_DIR = Path(__file__).resolve().parents[1]
@@ -129,9 +130,127 @@ def _safe_json_loads(text: str) -> Optional[dict]:
         return None
 
 
+def _pick_listening_port(
+    ports: List[int], *, preferred_port: Optional[int] = None
+) -> Optional[int]:
+    cleaned: List[int] = []
+    for port in ports:
+        try:
+            value = int(port)
+        except Exception:
+            continue
+        if value > 0 and value not in cleaned:
+            cleaned.append(value)
+    if not cleaned:
+        return None
+    if preferred_port:
+        try:
+            preferred_value = int(preferred_port)
+        except Exception:
+            preferred_value = None
+        if preferred_value in cleaned:
+            return preferred_value
+    ranged = [port for port in cleaned if 5000 <= port <= 6000]
+    if ranged:
+        return ranged[0]
+    return cleaned[0]
+
+
+def _listening_ports_for_pid(pid: Optional[int]) -> List[int]:
+    try:
+        import psutil
+    except Exception:
+        return []
+
+    try:
+        proc = psutil.Process(int(pid or 0))
+    except Exception:
+        return []
+
+    ports: List[int] = []
+    try:
+        connections = proc.net_connections(kind="tcp")
+    except Exception:
+        return []
+
+    listen_status = getattr(psutil, "CONN_LISTEN", "LISTEN")
+    for conn in connections:
+        try:
+            status = getattr(conn, "status", None)
+            if status not in {listen_status, "LISTEN"}:
+                continue
+            laddr = getattr(conn, "laddr", None)
+            port = getattr(laddr, "port", None) if laddr is not None else None
+            if port:
+                ports.append(int(port))
+        except Exception:
+            continue
+    return ports
+
+
+def _process_matches_experiment(
+    proc: Any, *, exp: Exps, exp_uid: Optional[str]
+) -> bool:
+    try:
+        cmdline = [str(part or "") for part in (proc.cmdline() or [])]
+    except Exception:
+        cmdline = []
+    haystack = " ".join(cmdline)
+    if exp_uid and exp_uid in haystack:
+        return True
+    db_name = str(getattr(exp, "db_name", "") or "").strip()
+    if db_name and db_name in haystack:
+        return True
+    return False
+
+
+def _discover_runtime_port_for_experiment_process(
+    exp: Exps, *, preferred_port: Optional[int] = None
+) -> Optional[int]:
+    exp_uid = _get_experiment_uid_from_db_name(getattr(exp, "db_name", "") or "")
+
+    pid_ports = _listening_ports_for_pid(getattr(exp, "server_pid", None))
+    chosen = _pick_listening_port(pid_ports, preferred_port=preferred_port)
+    if chosen:
+        return chosen
+
+    try:
+        import psutil
+    except Exception:
+        return None
+
+    for proc in psutil.process_iter(["pid", "name"]):
+        if not _process_matches_experiment(proc, exp=exp, exp_uid=exp_uid):
+            continue
+        chosen = _pick_listening_port(
+            _listening_ports_for_pid(getattr(proc, "pid", None)),
+            preferred_port=preferred_port,
+        )
+        if chosen:
+            return chosen
+    return None
+
+
+def _get_latest_experiment_runtime(exp: Exps) -> Exps:
+    exp_id = int(getattr(exp, "idexp", 0) or 0)
+    if not exp_id:
+        return exp
+    try:
+        db.session.expire_all()
+    except Exception:
+        pass
+    latest = Exps.query.filter_by(idexp=exp_id).first()
+    return latest or exp
+
+
 def _server_base_url(exp: Exps) -> str:
-    host = (getattr(exp, "server", "") or "").strip() or "127.0.0.1"
-    port = int(getattr(exp, "port", 0) or 0)
+    latest = _get_latest_experiment_runtime(exp)
+    host = (getattr(latest, "server", "") or "").strip() or "127.0.0.1"
+    configured_port = int(getattr(latest, "port", 0) or 0)
+    runtime_port = _discover_runtime_port_for_experiment_process(
+        latest, preferred_port=configured_port
+    )
+    port = int(runtime_port or configured_port or 0)
     if host.startswith(("http://", "https://")):
         return host.rstrip("/")
     return f"http://{host}:{port}"
@@ -226,6 +345,39 @@ def _ensure_experiment_server_db_binding(exp: Exps) -> Dict[str, Any]:
     except Exception as exc:
         out["error"] = str(exc)
         return out
+
+
+def _memory_server_unavailable(db_binding: Optional[Dict[str, Any]]) -> bool:
+    if not isinstance(db_binding, dict):
+        return True
+    return not bool(db_binding.get("ok"))
+
+
+def _build_unavailable_memory_snapshot(
+    *,
+    run_id: Optional[str],
+    agent_user_id: int,
+    memory_mode: Optional[str] = None,
+    reason: str = "forum_server_unavailable",
+) -> Dict[str, Any]:
+    requested_mode = _normalize_memory_mode(memory_mode)
+    return {
+        "run_id": run_id,
+        "agent_user_id": int(agent_user_id),
+        "fetched_at": datetime.now(timezone.utc).isoformat(),
+        "memory_mode_requested": requested_mode,
+        "memory_mode_used": "unavailable",
+        "load_state": "unavailable",
+        "unavailable_reason": str(reason or "forum_server_unavailable"),
+        "note": (
+            "Forum memory retrieval is unavailable because the experiment server is not reachable. "
+            "Interview replies may still be grounded by persona, transcript history, and facts snapshots from the experiment database."
+        ),
+        "relationships": [],
+        "threads": [],
+        "recent_events_tail": [],
+        "agent_events_tail": [],
+    }
 
 
 def _iter_run_ids_from_server_log(
@@ -795,6 +947,29 @@ def _build_deferred_memory_snapshot(
         "recent_events_tail": [],
         "agent_events_tail": [],
     }
+
+
+def _memory_snapshot_has_structured_content(snapshot: Optional[Dict[str, Any]]) -> bool:
+    if not isinstance(snapshot, dict):
+        return False
+    for key in (
+        "semantic_items",
+        "relationships",
+        "threads",
+        "agent_events_tail",
+        "recent_events_tail",
+        "retrieval_meta",
+        "community_digest",
+        "memory_brief",
+    ):
+        value = snapshot.get(key)
+        if isinstance(value, list) and value:
+            return True
+        if isinstance(value, dict) and value:
+            return True
+        if isinstance(value, str) and value.strip():
+            return True
+    return False
 
 
 def _build_memory_snapshot(
@@ -2634,6 +2809,7 @@ def api_interview_agents(exp_id: int):
                 "leaning": getattr(u, "leaning", None),
                 "toxicity": getattr(u, "toxicity", None),
                 "profession": getattr(u, "profession", None),
+                "profile_pic": resolve_forum_profile_pic(u, exp_id),
             }
         )
 
@@ -2670,7 +2846,7 @@ def api_interview_create_session(exp_id: int):
     if backend_mode not in {"agent_runtime", "admin"}:
         backend_mode = "agent_runtime"
     memory_mode = _normalize_memory_mode(payload.get("memory_mode"))
-    preload_memory = _as_bool(payload.get("preload_memory"), False)
+    preload_memory = _as_bool(payload.get("preload_memory"), True)
 
     run_id = (payload.get("run_id") or "").strip() or None
     run_id_source = "override" if run_id else "log_scan"
@@ -2694,7 +2870,13 @@ def api_interview_create_session(exp_id: int):
 
     interests = _get_top_interests_for_user(agent_user_id)
     persona = _build_persona_snapshot(agent_user, interests, exp)
-    if preload_memory:
+    if _memory_server_unavailable(db_binding):
+        memory_snapshot = _build_unavailable_memory_snapshot(
+            run_id=run_id,
+            agent_user_id=agent_user_id,
+            memory_mode=memory_mode,
+        )
+    elif preload_memory:
         memory_snapshot = _build_memory_snapshot(
             exp,
             run_id=run_id,
@@ -2708,6 +2890,33 @@ def api_interview_create_session(exp_id: int):
             agent_user_id=agent_user_id,
             memory_mode=memory_mode,
         )
+
+    if (
+        preload_memory
+        and run_id
+        and not _memory_server_unavailable(db_binding)
+        and not _memory_snapshot_has_structured_content(memory_snapshot)
+        and run_id_source == "override"
+    ):
+        run_pick = _detect_run_id_from_server_log(
+            exp,
+            agent_user_id=int(agent_user_id),
+            probe_memory_coverage=True,
+        )
+        retry_run_id = str(run_pick.get("run_id") or "").strip() or None
+        if retry_run_id and retry_run_id != run_id:
+            retry_snapshot = _build_memory_snapshot(
+                exp,
+                run_id=retry_run_id,
+                agent_user_id=agent_user_id,
+                memory_mode=memory_mode,
+                query_text=_INTERVIEW_MEMORY_DEFAULT_QUERY,
+            )
+            if _memory_snapshot_has_structured_content(retry_snapshot):
+                run_id = retry_run_id
+                run_id_source = str(run_pick.get("source") or "log_scan_latest")
+                run_id_selected_reason = "override_replaced_with_detected_run"
+                memory_snapshot = retry_snapshot
 
     mode, model, base_url, _api_key, temperature, max_tokens = _resolve_llm_backend(
         backend_mode=backend_mode,
@@ -2874,13 +3083,20 @@ def api_interview_refresh_context(exp_id: int, session_id: int):
     ).strip() or _INTERVIEW_MEMORY_DEFAULT_QUERY
     memory_mode = _extract_requested_memory_mode(sess.memory_snapshot_json)
 
-    memory_snapshot = _build_memory_snapshot(
-        exp,
-        run_id=(sess.run_id or "").strip() or None,
-        agent_user_id=int(sess.agent_user_id),
-        memory_mode=memory_mode,
-        query_text=query_text,
-    )
+    if _memory_server_unavailable(db_binding):
+        memory_snapshot = _build_unavailable_memory_snapshot(
+            run_id=(sess.run_id or "").strip() or None,
+            agent_user_id=int(sess.agent_user_id),
+            memory_mode=memory_mode,
+        )
+    else:
+        memory_snapshot = _build_memory_snapshot(
+            exp,
+            run_id=(sess.run_id or "").strip() or None,
+            agent_user_id=int(sess.agent_user_id),
+            memory_mode=memory_mode,
+            query_text=query_text,
+        )
     sess.memory_snapshot_json = json.dumps(memory_snapshot)
     db.session.commit()
 
@@ -2937,13 +3153,20 @@ def api_interview_send_message(exp_id: int, session_id: int):
         )
 
         if auto_refresh:
-            memory_snapshot = _build_memory_snapshot(
-                exp,
-                run_id=(sess.run_id or "").strip() or None,
-                agent_user_id=int(sess.agent_user_id),
-                memory_mode=memory_mode,
-                query_text=contextual_query_text,
-            )
+            if _memory_server_unavailable(db_binding):
+                memory_snapshot = _build_unavailable_memory_snapshot(
+                    run_id=(sess.run_id or "").strip() or None,
+                    agent_user_id=int(sess.agent_user_id),
+                    memory_mode=memory_mode,
+                )
+            else:
+                memory_snapshot = _build_memory_snapshot(
+                    exp,
+                    run_id=(sess.run_id or "").strip() or None,
+                    agent_user_id=int(sess.agent_user_id),
+                    memory_mode=memory_mode,
+                    query_text=contextual_query_text,
+                )
             sess.memory_snapshot_json = json.dumps(memory_snapshot)
             db.session.commit()
         else:

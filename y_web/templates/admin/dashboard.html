@@ -53,6 +53,7 @@
                 <span class="left" style="display: flex; align-items: center; gap: 10px;">
                     Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong>
                     <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Microblogging' }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
                     <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>
@@ -260,6 +261,7 @@
                     {% if experiments[exp]['experiment'].owner %}
                     <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">{{ experiments[exp]['experiment'].owner }}</span>
                     {% endif %}
+                    <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Microblogging' }}</span>
 
                     {% if experiments[exp]['experiment'].simulator_type == 'HPC' %}
                     <span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>
@@ -670,6 +672,8 @@
         
         const ownerBadge = exp.owner ? 
             `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Owner">${exp.owner}</span>` : '';
+
+        const platformBadge = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
         
         const hpcBadge = exp.simulator_type === 'HPC' ?
             `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.6em; padding: 0 4px; border-radius: 6px; font-weight: 600; line-height: 1.4;" title="HPC">HPC</span>` : '';
@@ -684,6 +688,7 @@
                     <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">
                         <strong style="color: #0d95e8; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="${exp.exp_name}">${exp.exp_name}</strong>
                         ${ownerBadge}
+                        ${platformBadge}
                         ${hpcBadge}
                         ${remoteBadge}
                         ${clientCountBadge}
@@ -789,6 +794,8 @@
         
         const ownerBadgeFull = exp.owner ?
             `<span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">${exp.owner}</span>` : '';
+
+        const platformBadgeFull = `<span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">${exp.platform_type === 'forum' ? 'Forum' : 'Microblogging'}</span>`;
         
         const hpcBadgeFull = exp.simulator_type === 'HPC' ?
             `<span style="background: linear-gradient(90deg, #f59e0b 0%, #f97316 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="HPC Simulator">HPC</span>` : '';
@@ -803,6 +810,7 @@
                     <span class="left" style="display: flex; align-items: center; gap: 10px;">
                         Experiment: <strong style="color: #0d95e8">${exp.exp_name}</strong>
                         ${ownerBadgeFull}
+                        ${platformBadgeFull}
                         ${hpcBadgeFull}
                         ${remoteBadgeFull}
                         ${infiniteBadge}

@@ -170,6 +170,10 @@
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
 <script>
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id }},
+    isAdmin: {{ 'true' if is_admin else 'false' }}
+});
 window.redditFeedConfig = Object.freeze({
     expId: {{ exp_id }}
 });
