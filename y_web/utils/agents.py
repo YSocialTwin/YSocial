@@ -9,6 +9,7 @@ based on population configuration parameters.
 import json
 import math
 import random
+import re
 
 import faker
 import numpy as np
@@ -182,45 +183,67 @@ def __sample_pareto(values, alpha=2.0):
     return values[int(np.floor(normalized_sample * len(values)))]
 
 
-def _generate_unique_name(fake, gender, used_names, max_attempts=100):
+def _normalize_generated_username(raw_name: str, username_type: str) -> str:
+    value = str(raw_name or "").strip()
+    if username_type == "forum":
+        lowered = value.lower()
+        lowered = re.sub(r"[^a-z0-9_]+", "_", lowered)
+        lowered = re.sub(r"_+", "_", lowered).strip("_")
+        return lowered or "forum_user"
+    return value.replace(" ", "")
+
+
+def _generate_unique_name(
+    fake,
+    gender,
+    used_names,
+    username_type="microblogging",
+    max_attempts=100,
+):
     """
-    Generate a unique name that hasn't been used yet (module-level private function).
+    Generate a unique name that hasn't been used yet.
 
-    Attempts to generate a unique name using the faker library. If after max_attempts
-    the name is still not unique, appends a progressive number to make it unique.
-
-    Args:
-        fake (faker.Faker): Faker instance configured with appropriate locale
-        gender (str): Gender to generate name for ("male" or "female")
-        used_names (set): Set of names already used (both in current population and database)
-        max_attempts (int): Maximum number of attempts to generate a unique name before
-                           falling back to appending a number (default: 100)
-
-    Returns:
-        str: A unique name (without spaces) that is not in used_names
+    Username creation is platform-aware:
+    - microblogging keeps the legacy full-name-without-spaces behavior
+    - forum uses a dedicated forum-safe username path
     """
+
+    username_type = (username_type or "microblogging").strip().lower()
+
+    def _fake_attr(preferred, fallback):
+        if hasattr(fake, preferred):
+            return getattr(fake, preferred)()
+        return getattr(fake, fallback)()
 
     def generate_name(gender_type):
-        """Helper to generate a name based on gender and remove spaces."""
+        if username_type == "forum":
+            if hasattr(fake, "user_name"):
+                return _normalize_generated_username(fake.user_name(), username_type)
+
+            if gender_type == "male":
+                first_name = _fake_attr("first_name_male", "first_name")
+            elif gender_type == "female":
+                first_name = _fake_attr("first_name_female", "first_name")
+            else:
+                first_name = _fake_attr("first_name", "name")
+            last_name = _fake_attr("last_name", "last_name")
+            return _normalize_generated_username(f"{first_name}_{last_name}", username_type)
+
         if gender_type == "male":
             raw_name = fake.name_male()
         elif gender_type == "female":
             raw_name = fake.name_female()
         else:
-            # Fallback to male names for unexpected gender values
             raw_name = fake.name_male()
-        return raw_name.replace(" ", "")
+        return _normalize_generated_username(raw_name, username_type)
 
-    # Try to generate a unique name naturally
     last_name = None
     for _ in range(max_attempts):
         name = generate_name(gender)
-        last_name = name  # Store the last generated name
+        last_name = name
         if name not in used_names:
             return name
 
-    # If we couldn't generate a unique name naturally, append a number
-    # Use the last generated name to avoid an extra call to generate_name
     base_name = last_name if last_name else generate_name(gender)
     counter = 1
     unique_name = f"{base_name}{counter}"
@@ -343,7 +366,12 @@ def generate_population(
         fake = faker.Faker(__locales[nationality])
 
         # Generate a unique name
-        name = _generate_unique_name(fake, gender, used_names)
+        name = _generate_unique_name(
+            fake,
+            gender,
+            used_names,
+            getattr(population, "username_type", "microblogging"),
+        )
         # Add the name to used_names to prevent duplicates within this population
         used_names.add(name)
 

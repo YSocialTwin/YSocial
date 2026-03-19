@@ -193,6 +193,27 @@
                                                                                        required></span>
                                     </div>
                                     <div class="box-line">
+                                        <span class="left">Show Advanced Parameters</span>
+                                        <span class="right" style="width: 70%;">
+                                            <input type="checkbox" id="show_simulation_advanced_params" onchange="toggleSimulationAdvancedParams()">
+                                        </span>
+                                    </div>
+                                    <div id="simulation_advanced_params_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+                                    <div class="box-line">
+                                        <span class="left">Initial Number of Agents</span>
+                                        <span class="right" style="width: 70%;">
+                                            <input type="number"
+                                                   name="initial_agents"
+                                                   class="input"
+                                                   min="1"
+                                                   step="1"
+                                                   placeholder="Leave empty for all agents">
+                                            <small style="color: #666; display: block; margin-top: 4px;">
+                                                Subset of population to activate initially. Leave empty to use all agents.
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
                                         <span class="left">Thread Context Length</span>
                                         <span class="right" style="width: 70%;">
                                             <input type="number"
@@ -294,7 +315,287 @@
                                                                                        value="36"
                                                                                        required></span>
                                     </div>
+                                    </div>
                                     </div><!-- End section-simulation-params -->
+
+                                    <div id="section-agent-memory" class="tutorial-section">
+                                    <div class="form-section-header">Agent Memory (Run-Scoped)</div>
+                                    <div class="form-section-description">
+                                        Configure lightweight, run-scoped memory. Agents remember who they interacted with,
+                                        how it went (agreement/conflict/trust/humor), and a gist of threads/community.
+                                        Memory resets between separate runs.
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Enable Memory</span>
+                                        <span class="right" style="width: 70%;">
+                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                <input type="checkbox" id="memory_enabled" name="memory_enabled" onchange="toggleForumMemorySettings()">
+                                                <span style="color: #039be5;">Enable run-scoped memory</span>
+                                            </label>
+                                            <small style="color: #666; display: block; margin-top: 4px;">
+                                                When enabled, memory can influence posting, commenting, and voting.
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div id="forum_memory_config_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+                                        <div class="box-line">
+                                            <span class="left">Semantic Retrieval</span>
+                                            <span class="right" style="width: 70%;">
+                                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                    <input type="checkbox" name="memory_semantic_enabled" id="memory_semantic_enabled">
+                                                    <span style="color: #039be5;">Enable embedding-backed retrieval</span>
+                                                </label>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Requires an available Ollama embedding model. Leave disabled for the safest default setup.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Pair Limit</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_pair_limit" class="input"
+                                                       min="1" max="50" step="1" value="5" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    How many recent interaction events to include in LLM context per user/thread pair.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Prompt Max Chars</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_prompt_max_chars" class="input"
+                                                       min="200" max="3200" step="50" value="1600" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Character cap for injected memory context (24B/Ollama-safe default).
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Search K</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_search_k" class="input"
+                                                       min="1" max="40" step="1" value="8" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Number of top semantic memory items considered per retrieval.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Search Window (rounds)</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_search_time_window_rounds" class="input"
+                                                       min="0" max="10000" step="1" value="40" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Recency horizon for semantic search candidates.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Total Memory Chars</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_total_max_chars" class="input"
+                                                       min="800" max="5000" step="50" value="2200" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Overall cap for injected memory context across tiers.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Reflection Cadence</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_reflection_cadence_rounds" class="input"
+                                                       min="1" max="200" step="1" value="3" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    How often memory reflections are generated.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Cold-Start Window</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="number" name="memory_cold_start_window" class="input"
+                                                       min="1" max="1000" step="1" value="5" required>
+                                                <small style="color: #666; display: block; margin-top: 4px;">
+                                                    Number of initial interactions treated as full memory imprint before progressive decay starts.
+                                                </small>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Show Advanced Parameters</span>
+                                            <span class="right" style="width: 70%;">
+                                                <input type="checkbox" id="show_memory_advanced_params" onchange="toggleForumMemoryAdvancedParams()">
+                                            </span>
+                                        </div>
+                                        <div id="memory_advanced_params_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+                                            <div class="box-line"><span class="left">Social Decay (lambda)</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.05" required></span></div>
+                                            <div class="box-line"><span class="left">Social Corruption Rate</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.02" required></span></div>
+                                            <div class="box-line"><span class="left">Social Resummarize Every (events)</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+                                            <div class="box-line"><span class="left">Thread Decay (lambda)</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.03" required></span></div>
+                                            <div class="box-line"><span class="left">Thread Corruption Rate</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.01" required></span></div>
+                                            <div class="box-line"><span class="left">Thread Resummarize Every (events)</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+                                            <div class="box-line"><span class="left">Evidence Tail Max</span><span class="right" style="width: 70%;"><input type="number" name="memory_evidence_tail_max" class="input" min="0" max="100" step="1" value="8" required></span></div>
+                                            <div class="box-line"><span class="left">Digest Update Cadence (rounds)</span><span class="right" style="width: 70%;"><input type="number" name="memory_digest_update_cadence_rounds" class="input" min="1" max="100" step="1" value="3" required></span></div>
+                                            <div class="box-line"><span class="left">Digest Events Limit</span><span class="right" style="width: 70%;"><input type="number" name="memory_digest_events_limit" class="input" min="10" max="1000" step="5" value="80" required></span></div>
+                                            <div class="box-line"><span class="left">Search Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_search_max_chars" class="input" min="300" max="1800" step="50" value="900" required></span></div>
+                                            <div class="box-line"><span class="left">Tier A Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_a_max_chars" class="input" min="100" max="2000" step="25" value="350" required></span></div>
+                                            <div class="box-line"><span class="left">Tier B Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_b_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+                                            <div class="box-line"><span class="left">Tier C Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_c_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+                                            <div class="box-line"><span class="left">Tier C Uncertainty</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_c_uncertainty_threshold" class="input" min="0" max="1" step="0.01" value="0.45" required></span></div>
+                                            <div class="box-line"><span class="left">Reflection Min Events</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_min_events" class="input" min="1" max="500" step="1" value="12" required></span></div>
+                                            <div class="box-line"><span class="left">Reflection Trigger Sum</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_trigger_importance_sum" class="input" min="0" max="20" step="0.1" value="3.5" required></span></div>
+                                            <div class="box-line"><span class="left">Reflection Max Items</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_max_items_per_run" class="input" min="1" max="5000" step="1" value="60" required></span></div>
+                                            <div class="box-line"><span class="left">Embedding Model</span><span class="right" style="width: 70%;"><input type="text" name="memory_embedding_model" id="memory_embedding_model" class="input" value="snowflake-arctic-embed:110m" disabled><small style="color: #666; display: block; margin-top: 4px;">Used only when semantic retrieval is enabled.</small></span></div>
+                                            <div class="box-line"><span class="left">Async Embedding</span><span class="right" style="width: 70%;"><label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" name="memory_embedding_async" id="memory_embedding_async" checked disabled><span style="color: #039be5;">Background indexing</span></label></span></div>
+                                            <div class="box-line"><span class="left">Importance Mode</span><span class="right" style="width: 70%;"><input type="text" name="memory_importance_mode" class="input" value="heuristic_then_batch_llm"></span></div>
+                                        </div>
+                                    </div>
+                                    </div><!-- End section-agent-memory -->
+
+                                    
+
+                                    <div id="section-actions-likelihood" class="tutorial-section">
+                                    <div class="form-section-header">Agents' Actions Relevance</div>
+                                    <div class="form-section-description">
+                                        All actions are scored from 0 to 10, where 0 means that the action is never performed.
+                                        Scores greater than 0 are relative to each other. For example, if "Post new content" has a score of 3
+                                        and "Comment a Post" has a score of 6, then the agent will comment twice as much as posting new content.
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Post new content</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box selected" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="post" id="post" value="0.3">
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <input type="hidden" name="image" id="image" value="0.0">
+                                    <input type="hidden" name="news" id="news" value="0.0">
+                                    <div class="box-line">
+                                        <span class="left">Comment a Post</span>
+                                         <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box selected" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="comment" id="comment" value="0.5">
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Read a content</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box selected" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="read" id="read" value="0.2">
+                                            </div>
+                                        </span>
+
+                                    </div>
+                                    {% if experiment.db_name.startswith('database_') %}
+                                    <div class="box-line">
+                                        <span class="left">Search a Hashtag</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box selected" data-value="1">1</div>
+                                                  <div class="number-box" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="search" id="search" value="0.1">
+                                            </div>
+                                        </span>
+                                    </div>
+                                    {% else %}
+                                    <input type="hidden" name="search" id="search" value="0">
+                                    {% endif %}
+                                    <div class="box-line">
+                                        <span class="left">Share RSS / Feed Link</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box selected" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="share_link" id="share_link" value="0.2">
+                                            </div>
+                                            <small style="color: #666; display: block; margin-top: 4px;">
+                                                Forum uses link-sharing to publish content imported from RSS and feed sources.
+                                            </small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Share Image</span>
+                                        <span class="right" style="width: 70%;">
+                                            <div class="scale-wrapper" data-scale-factor="0.1">
+                                            <div class="number-scale">
+                                                  <div class="number-box" data-value="0">0</div>
+                                                  <div class="number-box" data-value="1">1</div>
+                                                  <div class="number-box selected" data-value="2">2</div>
+                                                  <div class="number-box" data-value="3">3</div>
+                                                  <div class="number-box" data-value="4">4</div>
+                                                  <div class="number-box" data-value="5">5</div>
+                                                  <div class="number-box" data-value="6">6</div>
+                                                  <div class="number-box" data-value="7">7</div>
+                                                  <div class="number-box" data-value="8">8</div>
+                                                  <div class="number-box" data-value="9">9</div>
+                                                  <div class="number-box" data-value="10">10</div>
+                                            </div>
+                                            <input type="hidden" name="share_image" id="share_image" value="0.2">
+                                            </div>
+                                        </span>
+                                    </div>
 
                                     <div id="section-reply-controls" class="tutorial-section">
                                     <div class="form-section-header">Reply Behavior Controls</div>
@@ -323,343 +624,6 @@
                                         </span>
                                     </div>
                                     </div><!-- End section-reply-controls -->
-
-                                    <div id="section-agent-memory" class="tutorial-section">
-                                    <div class="form-section-header">Agent Memory (Run-Scoped)</div>
-                                    <div class="form-section-description">
-                                        Configure lightweight, run-scoped memory. Agents remember who they interacted with,
-                                        how it went (agreement/conflict/trust/humor), and a gist of threads/community.
-                                        Memory resets between separate runs.
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Enable Memory</span>
-                                        <span class="right" style="width: 70%;">
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                <input type="checkbox" name="memory_enabled" checked>
-                                                <span style="color: #039be5;">Enable run-scoped memory</span>
-                                            </label>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                When enabled, memory can influence posting, commenting, and voting.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Semantic Retrieval</span>
-                                        <span class="right" style="width: 70%;">
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                <input type="checkbox" name="memory_semantic_enabled" id="memory_semantic_enabled">
-                                                <span style="color: #039be5;">Enable embedding-backed retrieval</span>
-                                            </label>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Requires an available Ollama embedding model. Leave disabled for the safest default setup.
-                                            </small>
-                                        </span>
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Pair Limit</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_pair_limit" class="input"
-                                                   min="1" max="50" step="1" value="5" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                How many recent interaction events to include in LLM context per user/thread pair.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Prompt Max Chars</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_prompt_max_chars" class="input"
-                                                   min="200" max="3200" step="50" value="1600" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Character cap for injected memory context (24B/Ollama-safe default).
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Search K</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_search_k" class="input"
-                                                   min="1" max="40" step="1" value="8" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Number of top semantic memory items considered per retrieval.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Search Window (rounds)</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_search_time_window_rounds" class="input"
-                                                   min="0" max="10000" step="1" value="40" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Recency horizon for semantic search candidates.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Total Memory Chars</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_total_max_chars" class="input"
-                                                   min="800" max="5000" step="50" value="2200" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Overall cap for injected memory context across tiers.
-                                            </small>
-                                        </span>
-                                    </div>
-
-                                    <div class="box-line">
-                                        <span class="left">Reflection Cadence</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_reflection_cadence_rounds" class="input"
-                                                   min="1" max="200" step="1" value="3" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                How often memory reflections are generated.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Cold-Start Window</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="memory_cold_start_window" class="input"
-                                                   min="1" max="1000" step="1" value="5" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Number of initial interactions treated as full memory imprint before progressive decay starts.
-                                            </small>
-                                        </span>
-                                    </div>
-
-                                    <details style="margin-top: 12px;">
-                                        <summary style="cursor: pointer; color: #666; font-weight: 600;">
-                                            Advanced Memory Settings (Optional)
-                                        </summary>
-                                        <div style="margin-top: 12px;">
-                                            <div class="box-line">
-                                                <span class="left">Social Decay (lambda)</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_social_decay_lambda" class="input"
-                                                           min="0" max="5" step="0.001" value="0.05" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Social Corruption Rate</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_social_corruption_rate" class="input"
-                                                           min="0" max="1" step="0.001" value="0.02" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Social Resummarize Every (events)</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_social_resummarize_every_events" class="input"
-                                                           min="1" max="100" step="1" value="4" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Thread Decay (lambda)</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_thread_decay_lambda" class="input"
-                                                           min="0" max="5" step="0.001" value="0.03" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Thread Corruption Rate</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_thread_corruption_rate" class="input"
-                                                           min="0" max="1" step="0.001" value="0.01" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Thread Resummarize Every (events)</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_thread_resummarize_every_events" class="input"
-                                                           min="1" max="100" step="1" value="4" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Evidence Tail Max</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_evidence_tail_max" class="input"
-                                                           min="0" max="100" step="1" value="8" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Digest Update Cadence (rounds)</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_digest_update_cadence_rounds" class="input"
-                                                           min="1" max="100" step="1" value="3" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Digest Events Limit</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_digest_events_limit" class="input"
-                                                           min="10" max="1000" step="5" value="80" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Search Max Chars</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_search_max_chars" class="input"
-                                                           min="300" max="1800" step="50" value="900" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Tier A Max Chars</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_tier_a_max_chars" class="input"
-                                                           min="100" max="2000" step="25" value="350" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Tier B Max Chars</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_tier_b_max_chars" class="input"
-                                                           min="400" max="3200" step="50" value="900" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Tier C Max Chars</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_tier_c_max_chars" class="input"
-                                                           min="400" max="3200" step="50" value="900" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Tier C Uncertainty</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_tier_c_uncertainty_threshold" class="input"
-                                                           min="0" max="1" step="0.01" value="0.45" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Reflection Min Events</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_reflection_min_events" class="input"
-                                                           min="1" max="500" step="1" value="12" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Reflection Trigger Sum</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_reflection_trigger_importance_sum" class="input"
-                                                           min="0" max="20" step="0.1" value="3.5" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Reflection Max Items</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="number" name="memory_reflection_max_items_per_run" class="input"
-                                                           min="1" max="5000" step="1" value="60" required>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Embedding Model</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="text" name="memory_embedding_model" id="memory_embedding_model" class="input"
-                                                           value="snowflake-arctic-embed:110m" disabled>
-                                                    <small style="color: #666; display: block; margin-top: 4px;">
-                                                        Used only when semantic retrieval is enabled.
-                                                    </small>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Async Embedding</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                        <input type="checkbox" name="memory_embedding_async" id="memory_embedding_async" checked disabled>
-                                                        <span style="color: #039be5;">Background indexing</span>
-                                                    </label>
-                                                </span>
-                                            </div>
-                                            <div class="box-line">
-                                                <span class="left">Importance Mode</span>
-                                                <span class="right" style="width: 70%;">
-                                                    <input type="text" name="memory_importance_mode" class="input"
-                                                           value="heuristic_then_batch_llm">
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </details>
-                                    </div><!-- End section-agent-memory -->
-
-                                    <div id="section-actions-likelihood" class="tutorial-section">
-                                    <div class="form-section-header">Agents' Actions Likelihood</div>
-                                    <div class="form-section-description">
-                                        Configure relative action weights from 0.0 to 1.0. A value of 0.0 means the action is never performed.
-                                        Values are relative weights that get normalized. For example, if "Post new content" has weight 0.3
-                                        and "Comment a Post" has weight 0.6, agents will comment roughly twice as much as posting.
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Post new content</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="post" id="post" class="input" step="0.001" min="0" max="1" value="0.3">
-                                        </span>
-                                    </div>
-                                    <input type="hidden" name="image" id="image" value="0.0">
-                                    <input type="hidden" name="news" id="news" value="0.0">
-                                    <div class="box-line">
-                                        <span class="left">Comment a Post</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="comment" id="comment" class="input" step="0.001" min="0" max="1" value="0.5">
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Read a content</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="read" id="read" class="input" step="0.001" min="0" max="1" value="0.2">
-                                        </span>
-                                    </div>
-                                    {% if experiment.platform_type == "microblogging" %}
-                                    <div class="box-line">
-                                        <span class="left">Share News from a Page</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="share" id="share" class="input" step="0.001" min="0" max="1" value="0.0">
-                                        </span>
-                                    </div>
-                                    {% endif %}
-                                    {% if experiment.db_name.startswith('database_') %}
-                                    {# SQLite database - show Search a Hashtag field #}
-                                    <div class="box-line">
-                                        <span class="left">Search a Hashtag</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="search" id="search" class="input" step="0.001" min="0" max="1" value="0.1">
-                                        </span>
-                                    </div>
-                                    {% else %}
-                                    {# PostgreSQL database - hide field and set default to 0 #}
-                                    <input type="hidden" name="search" id="search" value="0">
-                                    {% endif %}
-                                    {% if experiment.platform_type == "microblogging" %}
-                                    {% if experiment.db_name.startswith('database_') %}
-                                    {# SQLite database - show Cast Vote field #}
-                                    <div class="box-line">
-                                        <span class="left">Cast Vote</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="vote" id="vote" class="input" step="0.001" min="0" max="1" value="0.0">
-                                        </span>
-                                    </div>
-                                    {% else %}
-                                    {# PostgreSQL database - hide field and set default to 0 #}
-                                    <input type="hidden" name="vote" id="vote" value="0">
-                                    {% endif %}
-                                    {% endif %}
-                                    {% if experiment.platform_type == "forum" %}
-                                    <div class="box-line">
-                                        <span class="left">Share RSS / Feed Link</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="share_link" id="share_link" class="input" step="0.001" min="0" max="1" value="0.15">
-                                            <small style="color: #666; display: block; margin-top: 4px;">
-                                                Forum uses link-sharing to publish content imported from RSS and feed sources.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <span class="left">Share Image</span>
-                                        <span class="right" style="width: 70%;">
-                                            <input type="number" name="share_image" id="share_image" class="input" step="0.001" min="0" max="1" value="0.15">
-                                        </span>
-                                    </div>
-                                    {% endif %}
                                     {% if llm_agents_enabled %}
                                     <div class="form-section-header">Large Language Models</div>
                                     <div class="form-section-description">
@@ -768,6 +732,8 @@
                                     {% endif %}
                                     </div><!-- End section-actions-relevance -->
 
+                                    
+
                                     <div id="section-recsys" class="tutorial-section">
                                     <div class="form-section-header">Recommendation Systems</div>
                                     <div class="form-section-description">
@@ -778,9 +744,32 @@
                                         <span class="left">Content RecSys</span>
                                         <div class="select">
                                             <select name="recsys_type">
+                                                {% set uncategorized = [] %}
+                                                {% set categorized = {} %}
                                                 {% for recsys in crecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% if recsys.category %}
+                                                        {% if recsys.category not in categorized %}
+                                                            {% set _ = categorized.update({recsys.category: []}) %}
+                                                        {% endif %}
+                                                        {% set _ = categorized[recsys.category].append(recsys) %}
+                                                    {% else %}
+                                                        {% set _ = uncategorized.append(recsys) %}
+                                                    {% endif %}
                                                 {% endfor %}
+                                                
+                                                {% for category, items in categorized.items() %}
+                                                <optgroup label="{{ category }}">
+                                                    {% for recsys in items %}
+                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% endfor %}
+                                                </optgroup>
+                                                {% endfor %}
+                                                
+                                                {% if uncategorized %}
+                                                    {% for recsys in uncategorized %}
+                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
                                             </select>
                                         </div>
                                     </div>
@@ -788,9 +777,32 @@
                                         <span class="left">Friendship RecSys</span>
                                         <div class="select">
                                             <select name="frecsys_type">
+                                                {% set uncategorized = [] %}
+                                                {% set categorized = {} %}
                                                 {% for recsys in frecsys %}
-                                                <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% if recsys.category %}
+                                                        {% if recsys.category not in categorized %}
+                                                            {% set _ = categorized.update({recsys.category: []}) %}
+                                                        {% endif %}
+                                                        {% set _ = categorized[recsys.category].append(recsys) %}
+                                                    {% else %}
+                                                        {% set _ = uncategorized.append(recsys) %}
+                                                    {% endif %}
                                                 {% endfor %}
+                                                
+                                                {% for category, items in categorized.items() %}
+                                                <optgroup label="{{ category }}">
+                                                    {% for recsys in items %}
+                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% endfor %}
+                                                </optgroup>
+                                                {% endfor %}
+                                                
+                                                {% if uncategorized %}
+                                                    {% for recsys in uncategorized %}
+                                                    <option value="{{ recsys.name }}">{{ recsys.value }}</option>
+                                                    {% endfor %}
+                                                {% endif %}
                                             </select>
                                         </div>
                                     </div>
@@ -839,59 +851,209 @@
                                     <div class="form-section-header">Social Network Structure <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
                                     <div class="form-section-description">
                                         Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
-                                        <strong>Note:</strong> These options are mutually exclusive - selecting one will disable the other.
                                     </div>
 
                                     <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 8px 0; color: #374151; list-style: none;">
-                                            <span>Click to expand/collapse network configuration</span>
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
+                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                Network Configuration
+                                            </span>
                                         </summary>
-                                        <div style="padding: 15px 0; margin-top: 10px;">
+                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                            
+                                            <style>
+                                                details[open] .details-arrow {
+                                                    transform: rotate(180deg);
+                                                }
+                                                .network-option-card {
+                                                    background: #f9fafb;
+                                                    border: 2px solid #e5e7eb;
+                                                    border-radius: 8px;
+                                                    padding: 20px;
+                                                    margin-bottom: 16px;
+                                                    transition: all 0.3s ease;
+                                                }
+                                                .network-option-card:hover {
+                                                    border-color: #d1d5db;
+                                                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                                                }
+                                                .network-option-card.active {
+                                                    border-color: #3b82f6;
+                                                    background: #eff6ff;
+                                                }
+                                                .network-card-title {
+                                                    font-size: 1em;
+                                                    font-weight: 600;
+                                                    color: #1f2937;
+                                                    margin-bottom: 12px;
+                                                    display: flex;
+                                                    align-items: center;
+                                                    gap: 8px;
+                                                }
+                                                .network-card-icon {
+                                                    font-size: 1.2em;
+                                                }
+                                                .network-params-container {
+                                                    display: grid;
+                                                    gap: 12px;
+                                                    margin-top: 16px;
+                                                    padding-top: 16px;
+                                                    border-top: 1px solid #e5e7eb;
+                                                }
+                                                .network-param-row {
+                                                    display: grid;
+                                                    grid-template-columns: 200px 1fr;
+                                                    gap: 12px;
+                                                    align-items: center;
+                                                }
+                                                .network-param-label {
+                                                    font-size: 0.875em;
+                                                    font-weight: 500;
+                                                    color: #4b5563;
+                                                }
+                                                .network-param-input {
+                                                    width: 100%;
+                                                    max-width: 300px;
+                                                }
+                                                .network-divider {
+                                                    display: flex;
+                                                    align-items: center;
+                                                    text-align: center;
+                                                    margin: 20px 0;
+                                                    color: #9ca3af;
+                                                    font-size: 0.875em;
+                                                    font-weight: 500;
+                                                }
+                                                .network-divider::before,
+                                                .network-divider::after {
+                                                    content: '';
+                                                    flex: 1;
+                                                    border-bottom: 1px solid #e5e7eb;
+                                                }
+                                                .network-divider::before {
+                                                    margin-right: 16px;
+                                                }
+                                                .network-divider::after {
+                                                    margin-left: 16px;
+                                                }
+                                            </style>
 
                                             <!-- Synthetic Network Section -->
-                                            <div id="synthetic_network_section" style="margin-bottom: 20px;">
-                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Synthetic Network</h4>
+                                            <div class="network-option-card" id="synthetic_network_card">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">🔗</span>
+                                                    Generate Synthetic Network
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 12px;">
+                                                    Choose from various network topologies with configurable parameters.
+                                                </p>
 
                                                 <div class="box-line">
-                                                    <span class="left">Model</span>
+                                                    <span class="left" style="font-weight: 500;">Network Model</span>
                                                     <span class="right">
-                                                        <div class="select">
-                                                            <select name="network_model" id="network_model_select">
-                                                                <option value="">None</option>
-                                                                <option value="ER">Random Network</option>
-                                                                <option value="BA">Scale Free</option>
+                                                        <div class="select" style="width: 100%; max-width: 400px;">
+                                                            <select name="network_model" id="network_model_select" style="width: 100%;">
+                                                                <option value="">Select a network model...</option>
+                                                                <optgroup label="Basic Models">
+                                                                    <option value="ER">Random Network (Erdős-Rényi)</option>
+                                                                    <option value="BA">Scale Free (Barabási-Albert)</option>
+                                                                    <option value="C">Complete Graph</option>
+                                                                </optgroup>
+                                                                <optgroup label="Structured Models">
+                                                                    <option value="WS">Small World (Watts-Strogatz)</option>
+                                                                    <option value="PLC">Powerlaw Cluster</option>
+                                                                </optgroup>
+                                                                <optgroup label="Community Models">
+                                                                    <option value="SBM">Stochastic Block Model</option>
+                                                                    <option value="LFR">LFR Benchmark</option>
+                                                                </optgroup>
                                                             </select>
                                                         </div>
                                                     </span>
                                                 </div>
 
-                                                <div class="box-line" id="er_param_field" style="display: none;">
-                                                    <span class="left">Rewiring probability</span>
-                                                    <span class="right">
-                                                        <input type="number" name="network_p" class="input" value="0.1" min="0" max="1" step="0.00001">
-                                                    </span>
-                                                </div>
-                                                <div class="box-line" id="ba_param_field" style="display: none;">
-                                                    <span class="left">Connections per new node</span>
-                                                    <span class="right">
-                                                        <input type="number" name="network_m" class="input" value="2">
-                                                    </span>
+                                                <!-- Parameter fields with improved layout -->
+                                                <div class="network-params-container">
+                                                    <div class="network-param-row" id="er_param_field" style="display: none;">
+                                                        <span class="network-param-label">Edge probability (p)</span>
+                                                        <input type="number" name="network_p" class="input network-param-input" value="0.1" min="0" max="1" step="0.00001">
+                                                    </div>
+                                                    
+                                                    <div class="network-param-row" id="ba_param_field" style="display: none;">
+                                                        <span class="network-param-label">Edges per node (m)</span>
+                                                        <input type="number" name="network_m" class="input network-param-input" value="2" min="1">
+                                                    </div>
+                                                    
+                                                    <div class="network-param-row" id="ws_param_field" style="display: none;">
+                                                        <span class="network-param-label">Nearest neighbors (k)</span>
+                                                        <input type="number" name="network_k" class="input network-param-input" value="4" min="2">
+                                                    </div>
+                                                    <div class="network-param-row" id="ws_param_field2" style="display: none;">
+                                                        <span class="network-param-label">Rewiring probability (p)</span>
+                                                        <input type="number" name="network_ws_p" class="input network-param-input" value="0.3" min="0" max="1" step="0.01">
+                                                    </div>
+                                                    
+                                                    <div class="network-param-row" id="plc_param_field" style="display: none;">
+                                                        <span class="network-param-label">Edges per node (m)</span>
+                                                        <input type="number" name="network_plc_m" class="input network-param-input" value="2" min="1">
+                                                    </div>
+                                                    <div class="network-param-row" id="plc_param_field2" style="display: none;">
+                                                        <span class="network-param-label">Triangle probability (p)</span>
+                                                        <input type="number" name="network_plc_p" class="input network-param-input" value="0.5" min="0" max="1" step="0.01">
+                                                    </div>
+                                                    
+                                                    <div class="network-param-row" id="sbm_param_field" style="display: none;">
+                                                        <span class="network-param-label">Number of blocks</span>
+                                                        <input type="number" name="network_blocks" class="input network-param-input" value="3" min="2">
+                                                    </div>
+                                                    <div class="network-param-row" id="sbm_param_field2" style="display: none;">
+                                                        <span class="network-param-label">Intra-block edge probability</span>
+                                                        <input type="number" name="network_p_in" class="input network-param-input" value="0.3" min="0" max="1" step="0.01">
+                                                    </div>
+                                                    <div class="network-param-row" id="sbm_param_field3" style="display: none;">
+                                                        <span class="network-param-label">Inter-block edge probability</span>
+                                                        <input type="number" name="network_p_out" class="input network-param-input" value="0.05" min="0" max="1" step="0.01">
+                                                    </div>
+                                                    
+                                                    <div class="network-param-row" id="lfr_param_field" style="display: none;">
+                                                        <span class="network-param-label">Degree exponent (tau1)</span>
+                                                        <input type="number" name="network_tau1" class="input network-param-input" value="2.5" min="1" step="0.1">
+                                                    </div>
+                                                    <div class="network-param-row" id="lfr_param_field2" style="display: none;">
+                                                        <span class="network-param-label">Community size exponent (tau2)</span>
+                                                        <input type="number" name="network_tau2" class="input network-param-input" value="1.5" min="1" step="0.1">
+                                                    </div>
+                                                    <div class="network-param-row" id="lfr_param_field3" style="display: none;">
+                                                        <span class="network-param-label">Mixing parameter (mu)</span>
+                                                        <input type="number" name="network_mu" class="input network-param-input" value="0.1" min="0" max="1" step="0.05">
+                                                    </div>
+                                                    <div class="network-param-row" id="lfr_param_field4" style="display: none;">
+                                                        <span class="network-param-label">Average degree</span>
+                                                        <input type="number" name="network_avg_degree" class="input network-param-input" value="5" min="2">
+                                                    </div>
                                                 </div>
                                             </div>
 
-                                            <div style="border-top: 1px solid #d1d5db; padding-top: 15px; margin-top: 15px;">
-                                                <p style="text-align: center; font-size: 0.85em; color: #666; margin: 10px 0;">OR</p>
-                                            </div>
+                                            <div class="network-divider">OR</div>
 
                                             <!-- Upload Custom Network Section -->
-                                            <div id="upload_network_section" style="margin-top: 20px;">
-                                                <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 8px; color: #333; border-bottom: 1px solid #e0e0e0; padding-bottom: 3px;">Upload Custom Network</h4>
+                                            <div class="network-option-card" id="upload_network_card">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">📤</span>
+                                                    Upload Custom Network
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+                                                    Upload a CSV file with edges (one per line: source,target).
+                                                </p>
+                                                
                                                 <style>
                                                     .file-upload-wrapper-network-create {
                                                         position: relative;
                                                         overflow: hidden;
                                                         display: block;
-                                                        margin-bottom: 12px;
                                                     }
                                                     .file-upload-wrapper-network-create input[type=file] {
                                                         position: absolute;
@@ -901,34 +1063,39 @@
                                                         display: flex;
                                                         align-items: center;
                                                         justify-content: center;
-                                                        padding: 10px 12px;
-                                                        background: #f9fafb;
-                                                        border: 1px dashed #d1d5db;
-                                                        border-radius: 4px;
+                                                        padding: 16px 20px;
+                                                        background: #ffffff;
+                                                        border: 2px dashed #d1d5db;
+                                                        border-radius: 8px;
                                                         cursor: pointer;
-                                                        transition: all 0.2s;
-                                                        font-size: 0.85em;
+                                                        transition: all 0.3s;
+                                                        font-size: 0.9em;
                                                     }
                                                     .file-upload-label-network-create:hover {
-                                                        background: #f3f4f6;
-                                                        border-color: #22c55e;
+                                                        background: #f9fafb;
+                                                        border-color: #3b82f6;
                                                     }
                                                     .file-upload-label-network-create.disabled {
                                                         opacity: 0.5;
                                                         cursor: not-allowed;
                                                         pointer-events: none;
+                                                        background: #f3f4f6;
                                                     }
                                                     .file-upload-icon-network-create {
-                                                        margin-right: 8px;
-                                                        font-size: 1.1em;
+                                                        margin-right: 10px;
+                                                        font-size: 1.4em;
                                                     }
                                                     .file-upload-text-network-create {
                                                         color: #6b7280;
+                                                        font-weight: 500;
                                                     }
                                                     .file-name-display-network-create {
-                                                        margin-top: 6px;
-                                                        font-size: 0.8em;
-                                                        color: #22c55e;
+                                                        margin-top: 12px;
+                                                        padding: 8px 12px;
+                                                        font-size: 0.85em;
+                                                        color: #059669;
+                                                        background: #ecfdf5;
+                                                        border-radius: 6px;
                                                         font-weight: 500;
                                                         text-align: center;
                                                     }
@@ -939,12 +1106,468 @@
                                                         <span class="file-upload-icon-network-create">📊</span>
                                                         <span class="file-upload-text-network-create">Choose edge list file (CSV)...</span>
                                                     </label>
-                                                    <div id="network-file-name-display-create" class="file-name-display-network-create"></div>
+                                                    <div id="network-file-name-display-create" class="file-name-display-network-create" style="display: none;"></div>
                                                 </div>
                                             </div>
                                         </div>
                                     </details>
                                     </div><!-- End section-network -->
+
+                                    <div id="section-activity-rates" class="tutorial-section">
+                                    <div class="form-section-header">Hourly Activity Rates <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure hourly activity rates for the simulation. Default values are based on
+                                        <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
+                                        Leave empty to use defaults.
+                                    </div>
+
+                                    <details style="margin-bottom: 20px;">
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
+                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                Activity Rates Configuration
+                                            </span>
+                                        </summary>
+                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+
+                                            <!-- Bar Chart Visualization Card -->
+                                            <div class="network-option-card" style="background: #ffffff; border: 2px solid #e5e7eb; padding: 20px; margin-bottom: 16px;">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">📊</span>
+                                                    Activity Rates Visualization
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 12px;">
+                                                    Real-time preview of hourly activity distribution.
+                                                </p>
+                                                <div style="height: 200px; position: relative; background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                                    <canvas id="activity_rates_create"></canvas>
+                                                </div>
+                                            </div>
+
+                                            <!-- Activity Rates Input Fields Card -->
+                                            <div class="network-option-card" style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 20px;">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">⏰</span>
+                                                    Customize Hourly Rates
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+                                                    Enter custom values for specific hours (leave empty to use defaults shown in placeholders).
+                                                </p>
+
+                                            <style>
+                                                .activity-grid-create {
+                                                    display: grid;
+                                                    grid-template-columns: repeat(12, 1fr);
+                                                    gap: 8px;
+                                                    margin-bottom: 16px;
+                                                }
+                                                .activity-hour-create {
+                                                    display: flex;
+                                                    flex-direction: column;
+                                                    align-items: center;
+                                                }
+                                                .activity-hour-create label {
+                                                    font-size: 0.75em;
+                                                    color: #666;
+                                                    margin-bottom: 4px;
+                                                    font-weight: 500;
+                                                }
+                                                .activity-hour-create input {
+                                                    width: 100%;
+                                                    padding: 4px 6px;
+                                                    text-align: center;
+                                                    font-size: 0.85em;
+                                                    border: 1px solid #d1d5db;
+                                                    border-radius: 4px;
+                                                }
+                                                .activity-hour-create input:focus {
+                                                    outline: none;
+                                                    border-color: #22c55e;
+                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                                }
+                                            </style>
+
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>0h</label>
+                                                    <input type="number" name="hourly_0" placeholder="0.023" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>1h</label>
+                                                    <input type="number" name="hourly_1" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>2h</label>
+                                                    <input type="number" name="hourly_2" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>3h</label>
+                                                    <input type="number" name="hourly_3" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>4h</label>
+                                                    <input type="number" name="hourly_4" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>5h</label>
+                                                    <input type="number" name="hourly_5" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>6h</label>
+                                                    <input type="number" name="hourly_6" placeholder="0.017" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>7h</label>
+                                                    <input type="number" name="hourly_7" placeholder="0.018" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>8h</label>
+                                                    <input type="number" name="hourly_8" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>9h</label>
+                                                    <input type="number" name="hourly_9" placeholder="0.020" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>10h</label>
+                                                    <input type="number" name="hourly_10" placeholder="0.021" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>11h</label>
+                                                    <input type="number" name="hourly_11" placeholder="0.022" value="">
+                                                </div>
+                                            </div>
+                                            <div class="activity-grid-create">
+                                                <div class="activity-hour-create">
+                                                    <label>12h</label>
+                                                    <input type="number" name="hourly_12" placeholder="0.024" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>13h</label>
+                                                    <input type="number" name="hourly_13" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>14h</label>
+                                                    <input type="number" name="hourly_14" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>15h</label>
+                                                    <input type="number" name="hourly_15" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>16h</label>
+                                                    <input type="number" name="hourly_16" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>17h</label>
+                                                    <input type="number" name="hourly_17" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>18h</label>
+                                                    <input type="number" name="hourly_18" placeholder="0.032" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>19h</label>
+                                                    <input type="number" name="hourly_19" placeholder="0.031" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>20h</label>
+                                                    <input type="number" name="hourly_20" placeholder="0.030" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>21h</label>
+                                                    <input type="number" name="hourly_21" placeholder="0.029" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>22h</label>
+                                                    <input type="number" name="hourly_22" placeholder="0.027" value="">
+                                                </div>
+                                                <div class="activity-hour-create">
+                                                    <label>23h</label>
+                                                    <input type="number" name="hourly_23" placeholder="0.025" value="">
+                                                </div>
+                                            </div>
+
+                                            <script>
+                                                // Initialize chart with default data
+                                                function initActivityChart() {
+                                                    const defaultData = [
+                                                        0.023, 0.021, 0.020, 0.020, 0.018, 0.017, 0.017, 0.018,
+                                                        0.020, 0.020, 0.021, 0.022, 0.024, 0.027, 0.030, 0.032,
+                                                        0.032, 0.032, 0.032, 0.031, 0.030, 0.029, 0.027, 0.025
+                                                    ];
+                                                    const labels = Array.from({length: 24}, (_, i) => i.toString());
+                                                    
+                                                    // Convert to percentages
+                                                    const activityData = defaultData.map(v => v * 100);
+                                                    const maxValue = Math.max(...activityData);
+                                                    const yAxisMax = Math.ceil(maxValue * 1.1);
+
+                                                    const ctx = document.getElementById('activity_rates_create');
+                                                    if (!ctx) return;
+
+                                                    new Chart(ctx, {
+                                                        type: 'bar',
+                                                        data: {
+                                                            labels: labels,
+                                                            datasets: [{
+                                                                label: 'Activity %',
+                                                                data: activityData,
+                                                                backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                                                                borderColor: 'rgba(34, 197, 94, 1)',
+                                                                borderWidth: 1,
+                                                                borderRadius: 4
+                                                            }]
+                                                        },
+                                                        options: {
+                                                            responsive: true,
+                                                            maintainAspectRatio: false,
+                                                            plugins: {
+                                                                legend: {
+                                                                    display: false
+                                                                },
+                                                                tooltip: {
+                                                                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                                                    padding: 8,
+                                                                    titleFont: { size: 12 },
+                                                                    bodyFont: { size: 11 },
+                                                                    callbacks: {
+                                                                        label: function(context) {
+                                                                            return 'Active: ' + context.parsed.y.toFixed(2) + '%';
+                                                                        }
+                                                                    }
+                                                                }
+                                                            },
+                                                            scales: {
+                                                                y: {
+                                                                    beginAtZero: true,
+                                                                    suggestedMax: yAxisMax,
+                                                                    ticks: {
+                                                                        font: { size: 10 },
+                                                                        callback: function(value) {
+                                                                            return value + '%';
+                                                                        }
+                                                                    },
+                                                                    grid: {
+                                                                        color: 'rgba(0, 0, 0, 0.05)'
+                                                                    }
+                                                                },
+                                                                x: {
+                                                                    ticks: {
+                                                                        font: { size: 9 }
+                                                                    },
+                                                                    grid: {
+                                                                        display: false
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    });
+                                                }
+
+                                                // Initialize chart when details are expanded
+                                                document.addEventListener('DOMContentLoaded', function() {
+                                                    const detailsElements = document.querySelectorAll('details');
+                                                    detailsElements.forEach(details => {
+                                                        details.addEventListener('toggle', function() {
+                                                            if (this.open && this.querySelector('#activity_rates_create')) {
+                                                                setTimeout(initActivityChart, 100);
+                                                            }
+                                                        });
+                                                    });
+                                                });
+                                            </script>
+                                            </div><!-- End customize hourly rates card -->
+                                        </div>
+                                    </details>
+                                    </div><!-- End section-activity-rates -->
+
+                                    <div id="section-agent-archetypes" class="tutorial-section">
+                                    <div class="form-section-header">Agent Archetypes and Transitions <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+                                    <div class="form-section-description">
+                                        Configure the behavioral archetypes and transition probabilities for agents.
+                                    </div>
+
+                                    <div style="margin: 15px 0; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.9em; font-weight: 500; color: #374151;">
+                                            <input type="checkbox" id="enable_archetypes" name="enable_archetypes" checked style="margin-right: 8px; cursor: pointer;">
+                                            <span>Enable Agent Archetypes Distribution</span>
+                                        </label>
+                                        <p style="font-size: 0.8em; color: #6b7280; margin: 8px 0 0 28px; line-height: 1.4;">
+                                            When disabled, all agents will be able to perform all actions without archetype restrictions.
+                                        </p>
+                                    </div>
+
+                                    <details style="margin-bottom: 20px;" id="archetype-details">
+                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
+                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
+                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                                Archetype Configuration
+                                            </span>
+                                        </summary>
+                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+                                            <style>
+                                                .archetype-boxes {
+                                                    display: grid;
+                                                    grid-template-columns: repeat(3, 1fr);
+                                                    gap: 16px;
+                                                    margin-bottom: 24px;
+                                                }
+                                                .archetype-box {
+                                                    background: #f9fafb;
+                                                    border: 2px solid #e5e7eb;
+                                                    border-radius: 8px;
+                                                    padding: 16px;
+                                                    transition: all 0.3s ease;
+                                                }
+                                                .archetype-box:hover {
+                                                    border-color: #d1d5db;
+                                                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                                                }
+                                                .archetype-box h4 {
+                                                    font-size: 0.9em;
+                                                    font-weight: 600;
+                                                    color: #1f2937;
+                                                    margin-bottom: 8px;
+                                                }
+                                                .archetype-box p {
+                                                    font-size: 0.8em;
+                                                    color: #6b7280;
+                                                    line-height: 1.4;
+                                                    margin-bottom: 12px;
+                                                }
+                                                .archetype-box input {
+                                                    width: 80px;
+                                                    padding: 6px 10px;
+                                                    text-align: center;
+                                                    font-size: 0.9em;
+                                                    border: 1px solid #d1d5db;
+                                                    border-radius: 6px;
+                                                }
+                                                .archetype-box input:focus {
+                                                    outline: none;
+                                                    border-color: #3b82f6;
+                                                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                                                }
+                                                .transition-table-compact {
+                                                    width: 100%;
+                                                    border-collapse: collapse;
+                                                    font-size: 0.8em;
+                                                    margin-top: 16px;
+                                                }
+                                                .transition-table-compact th,
+                                                .transition-table-compact td {
+                                                    padding: 4px 6px;
+                                                    text-align: center;
+                                                    border: 1px solid #e5e7eb;
+                                                }
+                                                .transition-table-compact th {
+                                                    background-color: #f9fafb;
+                                                    color: #374151;
+                                                    font-weight: 600;
+                                                    font-size: 0.7em;
+                                                }
+                                                .transition-table-compact td:first-child {
+                                                    background-color: #f9fafb;
+                                                    font-weight: 500;
+                                                    text-align: left;
+                                                    color: #374151;
+                                                    font-size: 0.7em;
+                                                }
+                                                .transition-table-compact input {
+                                                    width: 50px;
+                                                    padding: 3px 4px;
+                                                    text-align: center;
+                                                    font-size: 0.75em;
+                                                    border: 1px solid #d1d5db;
+                                                    border-radius: 3px;
+                                                }
+                                                .transition-table-compact input:focus {
+                                                    outline: none;
+                                                    border-color: #22c55e;
+                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+                                                }
+                                                .archetype-box.disabled {
+                                                    opacity: 0.5;
+                                                    background: #f3f4f6;
+                                                }
+                                                .archetype-box.disabled input {
+                                                    background: #e5e7eb;
+                                                    cursor: not-allowed;
+                                                }
+                                            </style>
+                                            <div class="network-option-card" style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 20px; margin-bottom: 16px;">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">👥</span>
+                                                    Archetype Distribution (%)
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+                                                    Define the percentage of agents in each behavioral archetype (must sum to 100%).
+                                                </p>
+                                                <div class="archetype-boxes">
+                                                    <div class="archetype-box" id="archetype-validator-box">
+                                                        <h4>The Validator</h4>
+                                                        <p>Active Audience - ~70% of activity is validating others</p>
+                                                        <input type="number" id="archetype_validator" name="archetype_validator" value="52" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+                                                    </div>
+                                                    <div class="archetype-box" id="archetype-broadcaster-box">
+                                                        <h4>The Broadcaster</h4>
+                                                        <p>Content Creator - ~75% of actions are posts/comments</p>
+                                                        <input type="number" id="archetype_broadcaster" name="archetype_broadcaster" value="20" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+                                                    </div>
+                                                    <div class="archetype-box" id="archetype-explorer-box">
+                                                        <h4>The Explorer</h4>
+                                                        <p>Network Growth - Focused on expanding social graph</p>
+                                                        <input type="number" id="archetype_explorer" name="archetype_explorer" value="28" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="network-option-card" style="background: #ffffff; border: 2px solid #e5e7eb; padding: 20px;">
+                                                <div class="network-card-title">
+                                                    <span class="network-card-icon">🔄</span>
+                                                    Transition Probabilities (%)
+                                                </div>
+                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+                                                    Probability that an agent transitions from one archetype to another (each row must sum to 100%).
+                                                </p>
+                                                <table class="transition-table-compact">
+                                                    <thead>
+                                                        <tr>
+                                                            <th style="text-align: left;">From / To</th>
+                                                            <th>Validator</th>
+                                                            <th>Broadcaster</th>
+                                                            <th>Explorer</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Validator</td>
+                                                            <td><input type="number" id="trans_val_val" name="trans_val_val" value="85.3" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_val_broad" name="trans_val_broad" value="8.1" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_val_expl" name="trans_val_expl" value="6.6" step="0.1" min="0" max="100"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Broadcaster</td>
+                                                            <td><input type="number" id="trans_broad_val" name="trans_broad_val" value="19.5" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_broad_broad" name="trans_broad_broad" value="72.9" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_broad_expl" name="trans_broad_expl" value="7.5" step="0.1" min="0" max="100"></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Explorer</td>
+                                                            <td><input type="number" id="trans_expl_val" name="trans_expl_val" value="36.4" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_expl_broad" name="trans_expl_broad" value="14.6" step="0.1" min="0" max="100"></td>
+                                                            <td><input type="number" id="trans_expl_expl" name="trans_expl_expl" value="49.0" step="0.1" min="0" max="100"></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </details>
+                                    </div><!-- End section-agent-archetypes -->
 
                                 </div>
                                 <div class="button-wrap">
@@ -997,8 +1620,8 @@
                             </p>
                             <hr>
                             <p>
-                                <b>Agents' Actions Likelihood</b><br>
-                                Set relative weights (0.0-1.0) for each action type. Higher values mean more frequent actions. Use 0.0 to disable an action. Values are normalized relative to each other.<br><br>
+                                <b>Agents' Actions Relevance</b><br>
+                                Set relative probabilities (0-10) for each action type. Higher values mean more frequent actions. Use 0 to disable an action.<br><br>
                                 Actions include posting, commenting, reading, searching, and platform-specific features.
                             </p>
                             <hr>
@@ -1022,6 +1645,21 @@
                                 <em>Custom Network:</em> Upload a CSV edge list file<br><br>
                                 <em>Note:</em> These options are mutually exclusive.
                             </p>
+                            <hr>
+                            <p>
+                                <b>Hourly Activity Rates (Optional)</b><br>
+                                Customize agent activity patterns by hour.<br><br>
+                                Leave fields empty to use the default activity profile.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Agent Archetypes and Transitions (Optional)</b><br>
+                                Configure behavioral archetypes and transition probabilities for agents.<br><br>
+                                <em>Enable/Disable Toggle:</em> When disabled, all agents can perform all actions without archetype restrictions.<br><br>
+                                <em>The Validator:</em> Active Audience (~70% validation activity)<br>
+                                <em>The Broadcaster:</em> Content Creator (~75% posts/comments)<br>
+                                <em>The Explorer:</em> Network Growth (focused on connections).
+                            </p>
 
                         </div>
                     </div>
@@ -1034,6 +1672,21 @@
 </div>
 
 <script>
+document.querySelectorAll('.number-scale').forEach(scale => {
+    const boxes = scale.querySelectorAll('.number-box');
+    const wrapper = scale.closest('.scale-wrapper');
+    const hiddenInput = wrapper.querySelector('input[type="hidden"]');
+    const scaleFactor = parseFloat(wrapper.dataset.scaleFactor || '1');
+
+    boxes.forEach(box => {
+        box.addEventListener('click', () => {
+            boxes.forEach(b => b.classList.remove('selected'));
+            box.classList.add('selected');
+            hiddenInput.value = String(parseFloat(box.dataset.value) * scaleFactor);
+        });
+    });
+});
+
 // Track if models have been fetched and validated
 let llmModelsFetched = false;
 let llmModelSelected = false;
@@ -1257,6 +1910,17 @@ function updateNetworkInputStates() {
     const networkFileLabel = document.querySelector('.file-upload-label-network-create');
     const erParamField = document.getElementById('er_param_field');
     const baParamField = document.getElementById('ba_param_field');
+    const wsParamField = document.getElementById('ws_param_field');
+    const wsParamField2 = document.getElementById('ws_param_field2');
+    const plcParamField = document.getElementById('plc_param_field');
+    const plcParamField2 = document.getElementById('plc_param_field2');
+    const sbmParamField = document.getElementById('sbm_param_field');
+    const sbmParamField2 = document.getElementById('sbm_param_field2');
+    const sbmParamField3 = document.getElementById('sbm_param_field3');
+    const lfrParamField = document.getElementById('lfr_param_field');
+    const lfrParamField2 = document.getElementById('lfr_param_field2');
+    const lfrParamField3 = document.getElementById('lfr_param_field3');
+    const lfrParamField4 = document.getElementById('lfr_param_field4');
     
     if (!networkModelSelect || !networkFileInput) return;
     
@@ -1286,12 +1950,39 @@ function updateNetworkInputStates() {
     // Show/hide parameter fields based on model selection
     if (erParamField) erParamField.style.display = 'none';
     if (baParamField) baParamField.style.display = 'none';
+    if (wsParamField) wsParamField.style.display = 'none';
+    if (wsParamField2) wsParamField2.style.display = 'none';
+    if (plcParamField) plcParamField.style.display = 'none';
+    if (plcParamField2) plcParamField2.style.display = 'none';
+    if (sbmParamField) sbmParamField.style.display = 'none';
+    if (sbmParamField2) sbmParamField2.style.display = 'none';
+    if (sbmParamField3) sbmParamField3.style.display = 'none';
+    if (lfrParamField) lfrParamField.style.display = 'none';
+    if (lfrParamField2) lfrParamField2.style.display = 'none';
+    if (lfrParamField3) lfrParamField3.style.display = 'none';
+    if (lfrParamField4) lfrParamField4.style.display = 'none';
     
     if (networkModelSelect.value === 'ER' && erParamField) {
         erParamField.style.display = 'block';
     } else if (networkModelSelect.value === 'BA' && baParamField) {
         baParamField.style.display = 'block';
+    } else if (networkModelSelect.value === 'WS') {
+        if (wsParamField) wsParamField.style.display = 'block';
+        if (wsParamField2) wsParamField2.style.display = 'block';
+    } else if (networkModelSelect.value === 'PLC') {
+        if (plcParamField) plcParamField.style.display = 'block';
+        if (plcParamField2) plcParamField2.style.display = 'block';
+    } else if (networkModelSelect.value === 'SBM') {
+        if (sbmParamField) sbmParamField.style.display = 'block';
+        if (sbmParamField2) sbmParamField2.style.display = 'block';
+        if (sbmParamField3) sbmParamField3.style.display = 'block';
+    } else if (networkModelSelect.value === 'LFR') {
+        if (lfrParamField) lfrParamField.style.display = 'block';
+        if (lfrParamField2) lfrParamField2.style.display = 'block';
+        if (lfrParamField3) lfrParamField3.style.display = 'block';
+        if (lfrParamField4) lfrParamField4.style.display = 'block';
     }
+    // C (Complete graph) has no parameters
 }
 
 // Display network file name when selected
@@ -1299,17 +1990,77 @@ function displayNetworkFileNameCreate(input) {
     const display = document.getElementById('network-file-name-display-create');
     if (input.files && input.files[0]) {
         display.textContent = '✓ ' + input.files[0].name;
+        display.style.display = 'block';
     } else {
         display.textContent = '';
+        display.style.display = 'none';
     }
     updateNetworkInputStates();
 }
 
+function toggleSimulationAdvancedParams() {
+    const checkbox = document.getElementById('show_simulation_advanced_params');
+    const fields = document.getElementById('simulation_advanced_params_fields');
+
+    if (checkbox && fields) {
+        fields.style.display = checkbox.checked ? 'block' : 'none';
+    }
+}
+
+function toggleForumMemorySettings() {
+    const checkbox = document.getElementById('memory_enabled');
+    const fields = document.getElementById('forum_memory_config_fields');
+    const advancedCheckbox = document.getElementById('show_memory_advanced_params');
+    const advancedFields = document.getElementById('memory_advanced_params_fields');
+
+    if (!checkbox || !fields) {
+        return;
+    }
+
+    const enabled = checkbox.checked;
+    fields.style.display = enabled ? 'block' : 'none';
+
+    const controls = fields.querySelectorAll('input, select, textarea, button');
+    controls.forEach(control => {
+        if (control.id === 'memory_enabled') {
+            return;
+        }
+        control.disabled = !enabled;
+    });
+
+    if (enabled) {
+        syncForumMemoryControls();
+        toggleForumMemoryAdvancedParams();
+    } else {
+        if (advancedCheckbox) {
+            advancedCheckbox.checked = false;
+        }
+        if (advancedFields) {
+            advancedFields.style.display = 'none';
+        }
+    }
+}
+
+function toggleForumMemoryAdvancedParams() {
+    const checkbox = document.getElementById('show_memory_advanced_params');
+    const memoryToggle = document.getElementById('memory_enabled');
+    const fields = document.getElementById('memory_advanced_params_fields');
+
+    if (!checkbox || !fields) {
+        return;
+    }
+
+    const enabled = !!(memoryToggle && memoryToggle.checked && checkbox.checked);
+    fields.style.display = enabled ? 'block' : 'none';
+}
+
 function syncForumMemoryControls() {
+    const memoryToggle = document.getElementById('memory_enabled');
     const semanticToggle = document.getElementById('memory_semantic_enabled');
     const embeddingModel = document.getElementById('memory_embedding_model');
     const embeddingAsync = document.getElementById('memory_embedding_async');
-    const enabled = !!(semanticToggle && semanticToggle.checked);
+    const memoryEnabled = !!(memoryToggle && memoryToggle.checked);
+    const enabled = memoryEnabled && !!(semanticToggle && semanticToggle.checked);
 
     if (embeddingModel) {
         embeddingModel.disabled = !enabled;
@@ -1375,7 +2126,32 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initial state
     updateNetworkInputStates();
+    toggleForumMemorySettings();
+    toggleForumMemoryAdvancedParams();
     syncForumMemoryControls();
+
+    const archetypeToggle = document.getElementById('enable_archetypes');
+    const archetypeDetails = document.getElementById('archetype-details');
+
+    function updateArchetypeToggle() {
+        if (!archetypeToggle || !archetypeDetails) return;
+
+        if (archetypeToggle.checked) {
+            archetypeDetails.style.opacity = '1';
+            archetypeDetails.style.pointerEvents = 'auto';
+        } else {
+            archetypeDetails.style.opacity = '0.5';
+            archetypeDetails.style.pointerEvents = 'none';
+            archetypeDetails.open = false;
+        }
+    }
+
+    if (archetypeToggle) {
+        archetypeToggle.addEventListener('change', updateArchetypeToggle);
+        updateArchetypeToggle();
+    }
+
+    toggleSimulationAdvancedParams();
 });
                                             </script>
 {% include "admin/tutorials/clients_tutorial.html" %}
