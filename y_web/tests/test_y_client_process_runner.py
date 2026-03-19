@@ -6,7 +6,11 @@ class DummyClient:
 
 
 class ClientWithArchetypes:
-    agent_archetypes = {"enabled": True, "distribution": {"validator": 1.0}, "transitions": {}}
+    agent_archetypes = {
+        "enabled": True,
+        "distribution": {"validator": 1.0},
+        "transitions": {},
+    }
 
 
 def test_get_client_archetypes_defaults_to_disabled():
@@ -18,4 +22,7 @@ def test_get_client_archetypes_defaults_to_disabled():
 
 
 def test_get_client_archetypes_preserves_existing_config():
-    assert _get_client_archetypes(ClientWithArchetypes()) == ClientWithArchetypes.agent_archetypes
+    assert (
+        _get_client_archetypes(ClientWithArchetypes())
+        == ClientWithArchetypes.agent_archetypes
+    )

@@ -132,7 +132,11 @@ def fetch_embedding_models():
         return jsonify({"error": "llm_url parameter is required"}), 400
 
     try:
-        models = [model for model in get_llm_models(llm_url) if _is_embedding_model_name(model)]
+        models = [
+            model
+            for model in get_llm_models(llm_url)
+            if _is_embedding_model_name(model)
+        ]
         return jsonify({"success": True, "models": models, "url": llm_url})
     except Exception as e:
         return (

@@ -77,6 +77,7 @@ from y_web.models import (
     User_Experiment,
     User_mgmt,
 )
+from y_web.utils.avatars import normalize_forum_avatar_mode
 from y_web.utils.desktop_file_handler import send_file_desktop
 from y_web.utils.execution_backend import (
     start_client_for_experiment,
@@ -97,7 +98,6 @@ from y_web.utils.miscellanea import (
     ollama_status,
     reload_current_user,
 )
-from y_web.utils.avatars import normalize_forum_avatar_mode
 from y_web.utils.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
@@ -4949,7 +4949,9 @@ def upload_image_feeds(uid):
                 if subreddit in by_subreddit:
                     combined = []
                     seen = set()
-                    for label in list(by_subreddit[subreddit].get("interests") or []) + list(feed.get("interests") or []):
+                    for label in list(
+                        by_subreddit[subreddit].get("interests") or []
+                    ) + list(feed.get("interests") or []):
                         label = str(label).strip()
                         if not label or label in seen:
                             continue
@@ -5027,7 +5029,9 @@ def parse_image_feed():
             if not image_url and hasattr(entry, "media_content"):
                 for media in entry.media_content:
                     media_url = media.get("url", "")
-                    if image_pattern.search(media_url) or any(host in media_url for host in image_hosts):
+                    if image_pattern.search(media_url) or any(
+                        host in media_url for host in image_hosts
+                    ):
                         image_url = media_url
                         break
 
@@ -5134,16 +5138,17 @@ def update_embedding_settings(uid):
 
     if service == "ollama":
         if not host:
-            flash("An Ollama host is required when memory embeddings are enabled.", "error")
+            flash(
+                "An Ollama host is required when memory embeddings are enabled.",
+                "error",
+            )
             return redirect(
-                request.referrer
-                or url_for("experiments.embedding_settings", uid=uid)
+                request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )
         if not model:
             flash("Select an embedding model before saving the configuration.", "error")
             return redirect(
-                request.referrer
-                or url_for("experiments.embedding_settings", uid=uid)
+                request.referrer or url_for("experiments.embedding_settings", uid=uid)
             )
         config["memory_embeddings"] = {
             "service": service,
@@ -5157,7 +5162,9 @@ def update_embedding_settings(uid):
         json.dump(config, handle, indent=2)
 
     flash("Embedding settings updated successfully.", "success")
-    return redirect(request.referrer or url_for("experiments.embedding_settings", uid=uid))
+    return redirect(
+        request.referrer or url_for("experiments.embedding_settings", uid=uid)
+    )
 
 
 @experiments.route("/admin/update_forum_avatar_mode/<int:uid>", methods=["POST"])
@@ -5177,7 +5184,9 @@ def update_forum_avatar_mode(uid):
         except (json.JSONDecodeError, IOError):
             config = {}
 
-    enabled_flag = str(request.form.get("use_actual_profile_pics") or "").strip().lower()
+    enabled_flag = (
+        str(request.form.get("use_actual_profile_pics") or "").strip().lower()
+    )
     requested_mode = request.form.get("avatar_mode")
     mode = normalize_forum_avatar_mode(requested_mode)
     if enabled_flag in {"1", "true", "on", "yes"}:

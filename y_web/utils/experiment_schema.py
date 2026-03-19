@@ -1,5 +1,6 @@
 import os
 import sqlite3
+
 from sqlalchemy import create_engine, text
 
 _SQLITE_TABLES = {
@@ -107,13 +108,11 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
 
 def _postgres_existing_columns(conn, table: str) -> set[str]:
     rows = conn.execute(
-        text(
-            """
+        text("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = :table_name
-            """
-        ),
+            """),
         {"table_name": table},
     ).fetchall()
     return {str(row[0]) for row in rows}

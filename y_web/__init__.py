@@ -375,8 +375,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
-    from .models import Admin_users, User_mgmt
     from y_web.utils.population_platform import ensure_population_username_type_column
+
+    from .models import Admin_users, User_mgmt
 
     with app.app_context():
         ensure_population_username_type_column()

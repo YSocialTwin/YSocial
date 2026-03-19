@@ -34,7 +34,9 @@ def discover_forum_avatar_urls():
             name
             for name in os.listdir(avatars_dir)
             if os.path.isfile(os.path.join(avatars_dir, name))
-            and name.lower().endswith((".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"))
+            and name.lower().endswith(
+                (".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg")
+            )
             and not name.startswith(".")
         ]
         files.sort()
@@ -59,7 +61,9 @@ def _deterministic_color(username: str) -> str:
 
 
 def _initials(username: str) -> str:
-    cleaned = " ".join(str(username or "").replace("_", " ").replace("-", " ").split()).strip()
+    cleaned = " ".join(
+        str(username or "").replace("_", " ").replace("-", " ").split()
+    ).strip()
     if not cleaned:
         return "?"
     parts = cleaned.split()

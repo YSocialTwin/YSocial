@@ -550,11 +550,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         else Population.query.all()
     )
     all_unassigned_pops = list(pops)
-    pops = [
-        p
-        for p in pops
-        if population_matches_platform(p, exp.platform_type)
-    ]
+    pops = [p for p in pops if population_matches_platform(p, exp.platform_type)]
     incompatible_population_count = max(0, len(all_unassigned_pops) - len(pops))
 
     topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
@@ -607,9 +603,7 @@ def _build_client_creation_context(idexp, recsys_mode):
                     experiment_config = json.load(config_file)
                 raw_clock = experiment_config.get("clock", {}) or {}
                 experiment_clock["mode"] = raw_clock.get("mode", "simulated")
-                experiment_clock["timezone"] = raw_clock.get(
-                    "timezone", "Europe/Rome"
-                )
+                experiment_clock["timezone"] = raw_clock.get("timezone", "Europe/Rome")
                 experiment_clock["feed_refresh"] = raw_clock.get(
                     "feed_refresh", "hourly"
                 )
@@ -625,23 +619,31 @@ def _build_client_creation_context(idexp, recsys_mode):
                     "llm": latest_client.llm or exp_llm_defaults["llm"],
                     "llm_api_key": latest_client.llm_api_key
                     or exp_llm_defaults["llm_api_key"],
-                    "llm_max_tokens": latest_client.llm_max_tokens
-                    if latest_client.llm_max_tokens is not None
-                    else exp_llm_defaults["llm_max_tokens"],
-                    "llm_temperature": latest_client.llm_temperature
-                    if latest_client.llm_temperature is not None
-                    else exp_llm_defaults["llm_temperature"],
+                    "llm_max_tokens": (
+                        latest_client.llm_max_tokens
+                        if latest_client.llm_max_tokens is not None
+                        else exp_llm_defaults["llm_max_tokens"]
+                    ),
+                    "llm_temperature": (
+                        latest_client.llm_temperature
+                        if latest_client.llm_temperature is not None
+                        else exp_llm_defaults["llm_temperature"]
+                    ),
                     "llm_v_agent": latest_client.llm_v_agent
                     or exp_llm_defaults["llm_v_agent"],
                     "llm_v": latest_client.llm_v or exp_llm_defaults["llm_v"],
                     "llm_v_api_key": latest_client.llm_v_api_key
                     or exp_llm_defaults["llm_v_api_key"],
-                    "llm_v_max_tokens": latest_client.llm_v_max_tokens
-                    if latest_client.llm_v_max_tokens is not None
-                    else exp_llm_defaults["llm_v_max_tokens"],
-                    "llm_v_temperature": latest_client.llm_v_temperature
-                    if latest_client.llm_v_temperature is not None
-                    else exp_llm_defaults["llm_v_temperature"],
+                    "llm_v_max_tokens": (
+                        latest_client.llm_v_max_tokens
+                        if latest_client.llm_v_max_tokens is not None
+                        else exp_llm_defaults["llm_v_max_tokens"]
+                    ),
+                    "llm_v_temperature": (
+                        latest_client.llm_v_temperature
+                        if latest_client.llm_v_temperature is not None
+                        else exp_llm_defaults["llm_v_temperature"]
+                    ),
                 }
             )
 
@@ -1663,10 +1665,15 @@ def _create_standard_client_internal():
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.experiments"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
-        flash("Use the dedicated HPC client creation route for this experiment.", "error")
+        flash(
+            "Use the dedicated HPC client creation route for this experiment.", "error"
+        )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "microblogging":
-        flash("Use the dedicated forum client creation route for this experiment.", "error")
+        flash(
+            "Use the dedicated forum client creation route for this experiment.",
+            "error",
+        )
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=exp_id))
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
@@ -1700,26 +1707,22 @@ def _create_standard_client_internal():
     clock_mode = (request.form.get("clock_mode") or "simulated").strip().lower()
     clock_timezone = (request.form.get("clock_timezone") or "Europe/Rome").strip()
     clock_feed_refresh = (
-        request.form.get("clock_feed_refresh") or "hourly"
-    ).strip().lower()
+        (request.form.get("clock_feed_refresh") or "hourly").strip().lower()
+    )
     max_thread_context_chars = request.form.get("max_thread_context_chars", "3200")
     max_replies_per_round = request.form.get("max_replies_per_round", "2")
     reply_cooldown_rounds = request.form.get("reply_cooldown_rounds", "2")
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_pair_limit = request.form.get("memory_pair_limit", "5")
     memory_prompt_max_chars = request.form.get("memory_prompt_max_chars", "1600")
-    memory_social_decay_lambda = request.form.get(
-        "memory_social_decay_lambda", "0.05"
-    )
+    memory_social_decay_lambda = request.form.get("memory_social_decay_lambda", "0.05")
     memory_social_corruption_rate = request.form.get(
         "memory_social_corruption_rate", "0.02"
     )
     memory_social_resummarize_every_events = request.form.get(
         "memory_social_resummarize_every_events", "4"
     )
-    memory_thread_decay_lambda = request.form.get(
-        "memory_thread_decay_lambda", "0.03"
-    )
+    memory_thread_decay_lambda = request.form.get("memory_thread_decay_lambda", "0.03")
     memory_thread_corruption_rate = request.form.get(
         "memory_thread_corruption_rate", "0.01"
     )
@@ -1899,9 +1902,7 @@ def _create_standard_client_internal():
             memory_thread_resummarize_every_events
         )
         memory_evidence_tail_max = int(memory_evidence_tail_max)
-        memory_digest_update_cadence_rounds = int(
-            memory_digest_update_cadence_rounds
-        )
+        memory_digest_update_cadence_rounds = int(memory_digest_update_cadence_rounds)
         memory_digest_events_limit = int(memory_digest_events_limit)
         memory_cold_start_window = int(memory_cold_start_window)
     except (ValueError, TypeError):
@@ -1911,9 +1912,7 @@ def _create_standard_client_internal():
         memory_social_corruption_rate = float(memory_social_corruption_rate)
         memory_thread_decay_lambda = float(memory_thread_decay_lambda)
         memory_thread_corruption_rate = float(memory_thread_corruption_rate)
-        memory_tier_c_uncertainty_threshold = float(
-            memory_tier_c_uncertainty_threshold
-        )
+        memory_tier_c_uncertainty_threshold = float(memory_tier_c_uncertainty_threshold)
         memory_reflection_trigger_importance_sum = float(
             memory_reflection_trigger_importance_sum
         )
@@ -2384,9 +2383,7 @@ def _create_standard_client_internal():
             "memory_tier_c_uncertainty_threshold": float(
                 memory_tier_c_uncertainty_threshold
             ),
-            "memory_reflection_cadence_rounds": int(
-                memory_reflection_cadence_rounds
-            ),
+            "memory_reflection_cadence_rounds": int(memory_reflection_cadence_rounds),
             "memory_reflection_min_events": int(memory_reflection_min_events),
             "memory_reflection_trigger_importance_sum": float(
                 memory_reflection_trigger_importance_sum
@@ -2888,8 +2885,6 @@ def _create_standard_client_internal():
     return experiment_details(int(exp_id))
 
 
-
-
 def _create_forum_client_internal():
     """Create a forum client with its dedicated configuration pipeline."""
     check_privileges(current_user.username)
@@ -2904,10 +2899,15 @@ def _create_forum_client_internal():
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.experiments"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
-        flash("Use the dedicated HPC client creation route for this experiment.", "error")
+        flash(
+            "Use the dedicated HPC client creation route for this experiment.", "error"
+        )
         return redirect(url_for("clientsr.clients_hpc", idexp=exp_id))
     if exp.platform_type != "forum":
-        flash("Use the dedicated standard client creation route for this experiment.", "error")
+        flash(
+            "Use the dedicated standard client creation route for this experiment.",
+            "error",
+        )
         return redirect(url_for("clientsr.clients_standard", idexp=exp_id))
 
     days = request.form.get("days")
@@ -2939,26 +2939,22 @@ def _create_forum_client_internal():
     clock_mode = (request.form.get("clock_mode") or "simulated").strip().lower()
     clock_timezone = (request.form.get("clock_timezone") or "Europe/Rome").strip()
     clock_feed_refresh = (
-        request.form.get("clock_feed_refresh") or "hourly"
-    ).strip().lower()
+        (request.form.get("clock_feed_refresh") or "hourly").strip().lower()
+    )
     max_thread_context_chars = request.form.get("max_thread_context_chars", "3200")
     max_replies_per_round = request.form.get("max_replies_per_round", "2")
     reply_cooldown_rounds = request.form.get("reply_cooldown_rounds", "2")
     memory_enabled = request.form.get("memory_enabled") in {"on", "true", "1", "yes"}
     memory_pair_limit = request.form.get("memory_pair_limit", "5")
     memory_prompt_max_chars = request.form.get("memory_prompt_max_chars", "1600")
-    memory_social_decay_lambda = request.form.get(
-        "memory_social_decay_lambda", "0.05"
-    )
+    memory_social_decay_lambda = request.form.get("memory_social_decay_lambda", "0.05")
     memory_social_corruption_rate = request.form.get(
         "memory_social_corruption_rate", "0.02"
     )
     memory_social_resummarize_every_events = request.form.get(
         "memory_social_resummarize_every_events", "4"
     )
-    memory_thread_decay_lambda = request.form.get(
-        "memory_thread_decay_lambda", "0.03"
-    )
+    memory_thread_decay_lambda = request.form.get("memory_thread_decay_lambda", "0.03")
     memory_thread_corruption_rate = request.form.get(
         "memory_thread_corruption_rate", "0.01"
     )
@@ -3142,9 +3138,7 @@ def _create_forum_client_internal():
             memory_thread_resummarize_every_events
         )
         memory_evidence_tail_max = int(memory_evidence_tail_max)
-        memory_digest_update_cadence_rounds = int(
-            memory_digest_update_cadence_rounds
-        )
+        memory_digest_update_cadence_rounds = int(memory_digest_update_cadence_rounds)
         memory_digest_events_limit = int(memory_digest_events_limit)
         memory_cold_start_window = int(memory_cold_start_window)
     except (ValueError, TypeError):
@@ -3154,9 +3148,7 @@ def _create_forum_client_internal():
         memory_social_corruption_rate = float(memory_social_corruption_rate)
         memory_thread_decay_lambda = float(memory_thread_decay_lambda)
         memory_thread_corruption_rate = float(memory_thread_corruption_rate)
-        memory_tier_c_uncertainty_threshold = float(
-            memory_tier_c_uncertainty_threshold
-        )
+        memory_tier_c_uncertainty_threshold = float(memory_tier_c_uncertainty_threshold)
         memory_reflection_trigger_importance_sum = float(
             memory_reflection_trigger_importance_sum
         )
@@ -3596,9 +3588,7 @@ def _create_forum_client_internal():
             "memory_tier_c_uncertainty_threshold": float(
                 memory_tier_c_uncertainty_threshold
             ),
-            "memory_reflection_cadence_rounds": int(
-                memory_reflection_cadence_rounds
-            ),
+            "memory_reflection_cadence_rounds": int(memory_reflection_cadence_rounds),
             "memory_reflection_min_events": int(memory_reflection_min_events),
             "memory_reflection_trigger_importance_sum": float(
                 memory_reflection_trigger_importance_sum
@@ -3700,9 +3690,7 @@ def _create_forum_client_internal():
     data_base_path = f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}"
     # copy prompts.json into the experiment folder
 
-    prompts_src = get_resource_path(
-        os.path.join("data_schema", "prompts_forum.json")
-    )
+    prompts_src = get_resource_path(os.path.join("data_schema", "prompts_forum.json"))
     shutil.copyfile(
         prompts_src,
         f"{data_base_path}prompts.json",
@@ -4144,8 +4132,6 @@ def _create_forum_client_internal():
     from .experiments_routes import experiment_details
 
     return experiment_details(int(exp_id))
-
-
 
 
 @clientsr.route("/admin/create_standard_client", methods=["POST"])
@@ -5396,12 +5382,33 @@ def _opinion_configuration_internal(idexp, expected_mode):
         else ("forum" if exp.platform_type == "forum" else "standard")
     )
     if actual_mode != expected_mode:
-        flash("Opinion configuration route does not match the experiment modality.", "error")
+        flash(
+            "Opinion configuration route does not match the experiment modality.",
+            "error",
+        )
         if actual_mode == "hpc":
-            return redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+            return redirect(
+                url_for(
+                    "clientsr.opinion_configuration_hpc",
+                    idexp=idexp,
+                    client_id=client_id,
+                )
+            )
         if actual_mode == "forum":
-            return redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
-        return redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
+            return redirect(
+                url_for(
+                    "clientsr.opinion_configuration_forum",
+                    idexp=idexp,
+                    client_id=client_id,
+                )
+            )
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_standard",
+                idexp=idexp,
+                client_id=client_id,
+            )
+        )
 
     # Get client details
     client = Client.query.filter_by(id=client_id).first()
@@ -5661,10 +5668,22 @@ def opinion_configuration(idexp):
     client_id = request.args.get("client_id", type=int)
     experiment_mode = _get_experiment_mode(exp)
     if experiment_mode == "hpc":
-        return redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id
+            )
+        )
     if experiment_mode == "forum":
-        return redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
-    return redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id
+            )
+        )
+    return redirect(
+        url_for(
+            "clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id
+        )
+    )
 
 
 def _build_topic_segment_distributions():
@@ -5780,7 +5799,9 @@ def _get_segment_index(segment_name, dimensions, pop_data_agents, age_class_map)
             elif dim == "education_level" and agent.get("education_level"):
                 dimension_values[dim].add(str(agent.get("education_level")))
 
-    dimension_values = {key: sorted(list(values)) for key, values in dimension_values.items()}
+    dimension_values = {
+        key: sorted(list(values)) for key, values in dimension_values.items()
+    }
     segments = [""]
     for dim in dimensions:
         values = dimension_values.get(dim, [])
@@ -5833,12 +5854,33 @@ def _resolve_opinion_submission_context(expected_mode):
         else ("forum" if exp.platform_type == "forum" else "standard")
     )
     if actual_mode != expected_mode:
-        flash("Opinion distribution update route does not match the experiment modality.", "error")
+        flash(
+            "Opinion distribution update route does not match the experiment modality.",
+            "error",
+        )
         if actual_mode == "hpc":
-            return None, redirect(url_for("clientsr.opinion_configuration_hpc", idexp=idexp, client_id=client_id))
+            return None, redirect(
+                url_for(
+                    "clientsr.opinion_configuration_hpc",
+                    idexp=idexp,
+                    client_id=client_id,
+                )
+            )
         if actual_mode == "forum":
-            return None, redirect(url_for("clientsr.opinion_configuration_forum", idexp=idexp, client_id=client_id))
-        return None, redirect(url_for("clientsr.opinion_configuration_standard", idexp=idexp, client_id=client_id))
+            return None, redirect(
+                url_for(
+                    "clientsr.opinion_configuration_forum",
+                    idexp=idexp,
+                    client_id=client_id,
+                )
+            )
+        return None, redirect(
+            url_for(
+                "clientsr.opinion_configuration_standard",
+                idexp=idexp,
+                client_id=client_id,
+            )
+        )
 
     client = Client.query.filter_by(id=client_id).first()
     if not client or client.id_exp != int(idexp):
@@ -5859,7 +5901,9 @@ def _resolve_opinion_submission_context(expected_mode):
 
     topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
     topics_ids = [t.topic_id for t in topics]
-    topics_list = db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
+    topics_list = (
+        db.session.query(Topic_List).filter(Topic_List.id.in_(topics_ids)).all()
+    )
     topic_id_to_name = {t.id: t.name for t in topics_list}
 
     age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in AgeClass.query.all()}
@@ -5983,7 +6027,13 @@ def _apply_opinion_distributions_to_population(context):
         )
 
         interests = agent.get("interests", [])
-        topic_names = interests[0] if isinstance(interests, list) and interests and isinstance(interests[0], list) else interests
+        topic_names = (
+            interests[0]
+            if isinstance(interests, list)
+            and interests
+            and isinstance(interests[0], list)
+            else interests
+        )
         if "opinions" not in agent or agent["opinions"] is None:
             agent["opinions"] = {}
 
@@ -6077,9 +6127,7 @@ def _persist_hpc_opinion_dynamics(context):
             }
         elif update_rule == "llm_evaluation":
             llm_cold_start = request.form.get("llm_cold_start", "neutral")
-            llm_evaluation_scope = request.form.get(
-                "llm_evaluation_scope", "neighbors"
-            )
+            llm_evaluation_scope = request.form.get("llm_evaluation_scope", "neighbors")
             opinion_dynamics["note"] = (
                 "Uses LLM-based opinion evaluation with natural language reasoning. Requires LLM agents."
             )

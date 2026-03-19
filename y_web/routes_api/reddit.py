@@ -13,6 +13,7 @@ from werkzeug.utils import safe_join
 
 from y_web import db
 from y_web.data_access import get_elicited_emotions, get_topics
+
 try:
     from y_web.llm_annotations import Annotator
 except Exception:
@@ -789,7 +790,9 @@ def api_delete_post(exp_id: int, post_id: int):
 
     exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
     is_admin_user = (
-        Admin_users.query.filter_by(username=current_user.username, role="admin").first()
+        Admin_users.query.filter_by(
+            username=current_user.username, role="admin"
+        ).first()
         is not None
     )
     actor_ids = {int(current_user.id)}

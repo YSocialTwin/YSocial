@@ -117,7 +117,9 @@ def create_population():
     user_type = request.form.get("user_type")
 
     llm = request.form.get("host_llm")
-    username_type = normalize_population_username_type(request.form.get("username_type"))
+    username_type = normalize_population_username_type(
+        request.form.get("username_type")
+    )
 
     # Get gender distribution
     male_percentage = int(request.form.get("male_percentage", "50"))
@@ -329,8 +331,7 @@ def populations_data():
                     for t_id in (pop.toxicity or "").split(",")
                     if t_id.strip()
                 ],
-                "username_type": infer_population_username_type(pop)
-                or "microblogging",
+                "username_type": infer_population_username_type(pop) or "microblogging",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
             for pop in res
@@ -1091,10 +1092,14 @@ def merge_populations():
         if infer_population_username_type(pop)
     }
     if len(source_types) > 1:
-        flash("Selected populations have incompatible platform types and cannot be merged.")
+        flash(
+            "Selected populations have incompatible platform types and cannot be merged."
+        )
         return redirect(request.referrer)
     if source_types and merged_population_type not in source_types:
-        flash("Merged population type must match the selected population platform type.")
+        flash(
+            "Merged population type must match the selected population platform type."
+        )
         return redirect(request.referrer)
 
     # Collect unique agent IDs from all selected populations (optimized query)
