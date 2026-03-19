@@ -22,12 +22,12 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db
 from y_web.experiment_context import get_current_experiment_id
+from y_web.recsys_support import get_suggested_posts, get_suggested_users
 from y_web.reddit.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_feed_page,
 )
-from y_web.recsys_support import get_suggested_posts, get_suggested_users
 from y_web.utils.avatars import (
     resolve_forum_profile_pic,
     resolve_forum_username_avatar,
@@ -323,14 +323,18 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     if getattr(exp, "platform_type", "") == "forum":
         forum_logged_user = _forum_logged_user()
         mention_user_id = forum_logged_user.id if forum_logged_user else None
-        forum_mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
+        forum_mentions = (
+            get_unanswered_mentions(mention_user_id) if mention_user_id else []
+        )
         suggested_users = (
             get_suggested_users(forum_logged_user.username, pages=False)
-            if forum_logged_user else []
+            if forum_logged_user
+            else []
         )
         suggested_pages = (
             get_suggested_users(forum_logged_user.username, pages=True)
-            if forum_logged_user else []
+            if forum_logged_user
+            else []
         )
         forum_context = dict(common_context)
         forum_context["mentions"] = forum_mentions
@@ -1498,7 +1502,9 @@ def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
     else:
         query = base_query.order_by(desc(Post.id))
 
-    return normalized_feed, query.paginate(page=page, per_page=per_page, error_out=False)
+    return normalized_feed, query.paginate(
+        page=page, per_page=per_page, error_out=False
+    )
 
 
 def _forum_resolve_back_url(exp_id):

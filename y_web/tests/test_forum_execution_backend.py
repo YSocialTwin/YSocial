@@ -124,7 +124,9 @@ def test_stop_client_for_forum_uses_standard_terminate(monkeypatch):
 
 
 def test_stop_server_for_forum_uses_standard_termination(monkeypatch):
-    exp = SimpleNamespace(idexp=24, port=5555, simulator_type="Standard", platform_type="forum")
+    exp = SimpleNamespace(
+        idexp=24, port=5555, simulator_type="Standard", platform_type="forum"
+    )
     mock_standard = MagicMock(return_value=True)
     mock_hpc = MagicMock()
     mock_port_fallback = MagicMock()
@@ -144,7 +146,9 @@ def test_stop_server_for_forum_uses_standard_termination(monkeypatch):
 
 
 def test_stop_server_for_forum_falls_back_to_port_termination(monkeypatch):
-    exp = SimpleNamespace(idexp=24, port=5555, simulator_type="Standard", platform_type="forum")
+    exp = SimpleNamespace(
+        idexp=24, port=5555, simulator_type="Standard", platform_type="forum"
+    )
     mock_standard = MagicMock(return_value=False)
     mock_port_fallback = MagicMock()
 

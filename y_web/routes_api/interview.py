@@ -27,8 +27,8 @@ from y_web.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.utils.path_utils import get_writable_path
 from y_web.utils.avatars import resolve_forum_profile_pic
+from y_web.utils.path_utils import get_writable_path
 
 api_interview = Blueprint("api_interview", __name__, url_prefix="/api/interview")
 _Y_WEB_DIR = Path(__file__).resolve().parents[1]
@@ -2710,8 +2710,8 @@ def _resolve_llm_backend(
         if runtime_client is not None:
             base_url = _normalize_llm_base_url(getattr(runtime_client, "llm", "") or "")
             api_key = (
-                (getattr(runtime_client, "llm_api_key", "") or "").strip() or "NULL"
-            )
+                getattr(runtime_client, "llm_api_key", "") or ""
+            ).strip() or "NULL"
             try:
                 temperature = float(
                     getattr(runtime_client, "llm_temperature", temperature)
@@ -2720,7 +2720,9 @@ def _resolve_llm_backend(
             except Exception:
                 pass
             try:
-                runtime_max_tokens = getattr(runtime_client, "llm_max_tokens", max_tokens)
+                runtime_max_tokens = getattr(
+                    runtime_client, "llm_max_tokens", max_tokens
+                )
                 if runtime_max_tokens is not None:
                     max_tokens = int(runtime_max_tokens)
             except Exception:

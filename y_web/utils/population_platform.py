@@ -50,7 +50,9 @@ def infer_population_username_type(population):
     if explicit in VALID_POPULATION_TYPES:
         return explicit
 
-    associations = Population_Experiment.query.filter_by(id_population=population.id).all()
+    associations = Population_Experiment.query.filter_by(
+        id_population=population.id
+    ).all()
     if not associations:
         return None
 
