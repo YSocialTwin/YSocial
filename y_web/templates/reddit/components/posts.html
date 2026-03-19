@@ -1,5 +1,21 @@
 {% for index, item in enumerate(items) %}
-<div id="feed-post-1" class="card is-post" style="margin-bottom: 20px; border: 1px solid #e1e8ed; border-radius: 8px; cursor: pointer;" onclick="window.location.href='/{{exp_id}}/rthread/{{ item['post_id'] }}'">
+{% set item_vote = 'neutral' %}
+{% if item.get('is_liked', False) %}
+    {% set item_vote = 'like' %}
+{% elif item.get('is_disliked', False) %}
+    {% set item_vote = 'dislike' %}
+{% endif %}
+<div id="feed-post-{{ item['post_id'] }}" class="card is-post reddit-post"
+     data-reddit-post
+     data-post-id="{{ item['post_id'] }}"
+     data-thread-id="{{ item.get('thread_id', item['post_id']) }}"
+     data-vote="{{ item_vote }}"
+     data-likes="{{ item.get('likes', 0) }}"
+     data-dislikes="{{ item.get('dislikes', 0) }}"
+     data-score="{{ item.get('likes', 0) - item.get('dislikes', 0) }}"
+     data-comment-count="{{ item.get('t_comments', 0) }}"
+     data-thread-url="/{{exp_id}}/rthread/{{ item['post_id'] }}"
+     style="margin-bottom: 20px; border: 1px solid #e1e8ed; border-radius: 8px;">
 
     <div class="content-wrap" id="post-{{ item['post_id'] }}" style="padding: 0;">
         <!-- Post header -->
@@ -8,25 +24,23 @@
             <div class="user-block">
                 <div class="image">
                     <img
-                            src="https://via.placeholder.com/300x300"
-                            {% if item['profile_pic'] == "" %}
-                                data-demo-src="{{ url_for('static', filename='assets/img/users/'+ item['author_id']|user_image_id +'.png') }}"
-                            {% else %}
-                                data-demo-src="{{ item['profile_pic'] }}"
-                            {% endif %}
+                            src=""
+                            data-demo-src="{{ item['profile_pic'] or '' }}"
+                            data-author-name="{{ item['author'] }}"
                             data-user-popover="1"
                             alt=""
                     />
 
                 </div>
                 <div class="user-info">
-                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1" onclick="event.stopPropagation()">{{ item["author"] }}</a>
-                    <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
+                    <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
+                    <span class="time">{{ item.get("display_time", "") }}</span>
                 </div>
             </div>
             <!-- Right side dropdown -->
             <!-- /partials/pages/feed/dropdowns/feed-post-dropdown.html -->
-            <div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">
+            <div class="dropdown is-spaced is-right is-neutral dropdown-trigger"
+                 onclick="{% if profile_delete_inline %}return window.redditProfileToggleDropdown ? window.redditProfileToggleDropdown(event, this) : false;{% else %}event.stopPropagation(){% endif %}">
                 <div>
                     <div class="button">
                         <i data-feather="more-vertical"></i>
@@ -43,17 +57,17 @@
                                 </div>
                             </div>
                         </a>
-                        {% if item['author_id'] == user_id %}
-                        <a class="dropdown-item" id="delete_post" val="{{ item['post_id'] }}">
+                        {% if item['author_id'] == logged_id or is_admin %}
+                        <a class="dropdown-item delete-post-trigger" data-post-id="{{ item['post_id'] }}" href="#"
+                           {% if profile_delete_inline %}onclick="return window.redditProfileDeletePost ? window.redditProfileDeletePost(event, this) : false;"{% endif %}>
                             <div class="media">
-                                <i data-feather="bell"></i>
+                                <i data-feather="trash-2"></i>
                                 <div class="media-content">
-                                    <h3 val="{{ item['post_id'] }}">Delete</h3>
-                                    <small></small>
+                                    <h3>Delete</h3>
+                                    <small>Remove this post</small>
                                 </div>
                             </div>
                         </a>
-                        <!-- <hr class="dropdown-divider"/> -->
                         {% endif %}
                         <!-- <a href="#" class="dropdown-item">
                             <div class="media">
@@ -155,27 +169,24 @@
         <div style="display: flex; padding: 4px; border-top: 1px solid #e1e8ed;" onclick="event.stopPropagation()">
             <!-- Left side voting box (Reddit style gray box) -->
             <div style="background: #f8f9fa; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 4px; margin-right: 8px; min-width: 40px;">
-                <button class="like-button" id="l{{ item['post_id']}}" 
-                        style="background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px; {% if item.get('is_liked', False) %}color: #ff4500;{% else %}color: #878a8c;{% endif %}"
-                        onclick="handleLikeClick('{{ item['post_id'] }}', this); event.stopPropagation();">
+                <button class="vote-button" type="button" data-action="like"
+                        style="background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px;">
                     <i data-feather="arrow-up" style="width: 16px; height: 16px;"></i>
                 </button>
-                <span style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 1px 0; line-height: 1;">
-                    {{ item['likes'] - item['dislikes'] }}
+                <span data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 1px 0; line-height: 1;">
+                    {{ item.get('likes', 0) - item.get('dislikes', 0) }}
                 </span>
-                <button class="dislike-button" id="d{{ item['post_id'] }}" 
-                        style="background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px; {% if item.get('is_disliked', False) %}color: #7193ff;{% else %}color: #878a8c;{% endif %}"
-                        onclick="handleDislikeClick('{{ item['post_id'] }}', this); event.stopPropagation();">
+                <button class="vote-button" type="button" data-action="dislike"
+                        style="background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px;">
                     <i data-feather="arrow-down" style="width: 16px; height: 16px;"></i>
                 </button>
             </div>
             
             <!-- Comments button (right side) -->
-            <button style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px;"
-                    onclick="event.stopPropagation(); window.location.href='/{{exp_id}}/rthread/{{ item['post_id'] }}'">
+            <a class="open-thread-button" data-role="open-thread" href="/{{exp_id}}/rthread/{{ item['post_id'] }}" style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">
                 <i data-feather="message-square" style="width: 16px; height: 16px;"></i>
-                <span>{{ item["t_comments"] }} Comments</span>
-            </button>
+                <span><span data-role="comment-count">{{ item.get("t_comments", 0) }}</span> Comments</span>
+            </a>
             
             <!-- Topics and emotions (moved to right side, smaller) -->
             <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 10px;">
@@ -277,12 +288,9 @@
                 <div class="media-left">
                     <div class="image">
                         <img
-                                src="https://via.placeholder.com/300x300"
-                                {% if cm['profile_pic'] == "" %}
-                                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ cm['author_id']|user_image_id +'.png') }}"
-                                {% else %}
-                                    data-demo-src="{{ cm['profile_pic'] }}"
-                                {% endif %}
+                                src=""
+                                data-demo-src="{{ cm['profile_pic'] or '' }}"
+                                data-author-name="{{ cm['author'] }}"
                                    data-user-popover="1"
                                 alt=""
                         />

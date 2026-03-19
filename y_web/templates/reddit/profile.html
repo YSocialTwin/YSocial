@@ -1,0 +1,416 @@
+{% include "reddit/header.html" %}
+
+<style>
+    .forum-profile-shell {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .forum-profile-hero {
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        background: #ffffff;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.05);
+    }
+    .forum-profile-banner {
+        height: 72px;
+        background:
+            radial-gradient(circle at top left, rgba(59, 130, 246, 0.1), transparent 48%),
+            radial-gradient(circle at top right, rgba(148, 163, 184, 0.16), transparent 42%),
+            linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .forum-profile-summary {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        padding: 0 1.25rem 1.25rem;
+        margin-top: -28px;
+        flex-wrap: wrap;
+    }
+    .forum-profile-avatar {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        border: 4px solid #fff;
+        background: #fff;
+        overflow: hidden;
+        flex: 0 0 88px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+    .forum-profile-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .forum-profile-meta {
+        flex: 1 1 260px;
+        min-width: 0;
+    }
+    .forum-profile-name {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #111827;
+        line-height: 1.1;
+        letter-spacing: -0.02em;
+    }
+    .forum-profile-subline {
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
+        color: #64748b;
+    }
+    .forum-profile-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        margin-top: 1rem;
+    }
+    .forum-profile-stat {
+        min-width: 104px;
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        padding: 0.6rem 0.75rem;
+    }
+    .forum-profile-stat strong {
+        display: block;
+        font-size: 1rem;
+        color: #111827;
+    }
+    .forum-profile-stat span {
+        font-size: 0.78rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .forum-profile-layout {
+        display: grid;
+        grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+        gap: 1rem;
+    }
+    .forum-profile-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        background: #fff;
+        padding: 1rem;
+    }
+    .forum-profile-card h3 {
+        margin: 0 0 0.75rem;
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: #111827;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+    .forum-profile-about {
+        display: grid;
+        gap: 0.65rem;
+    }
+    .forum-profile-about-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        font-size: 0.88rem;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 0.55rem;
+    }
+    .forum-profile-about-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+    .forum-profile-about-row span:first-child {
+        color: #6b7280;
+        font-weight: 600;
+    }
+    .forum-profile-about-row span:last-child {
+        color: #111827;
+        text-align: right;
+    }
+    .forum-profile-interest-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+    .forum-profile-interest {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        background: #eef2ff;
+        color: #3730a3;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .forum-profile-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+        margin-bottom: 1rem;
+    }
+    .forum-profile-tab {
+        border: 1px solid #dbe2ea;
+        background: #fff;
+        color: #475569;
+        border-radius: 999px;
+        padding: 0.5rem 0.85rem;
+        font-size: 0.84rem;
+        font-weight: 700;
+        text-decoration: none;
+    }
+    .forum-profile-tab.is-active {
+        background: #ff4500;
+        border-color: #ff4500;
+        color: #fff;
+    }
+    .forum-profile-empty {
+        font-size: 0.86rem;
+        color: #6b7280;
+    }
+    @media (max-width: 1023px) {
+        .forum-profile-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="view-wrapper">
+    <div class="container is-fluid forum-profile-shell">
+        <div class="forum-profile-hero">
+            <div class="forum-profile-banner"></div>
+            <div class="forum-profile-summary">
+                <div class="forum-profile-avatar">
+                    <img src="{{ viewed_profile_pic or 'https://via.placeholder.com/300x300' }}" alt="{{ user['user_data']['username'] }} avatar"/>
+                </div>
+                <div class="forum-profile-meta">
+                    <div class="forum-profile-name">{{ user['user_data']['username'] }}</div>
+                    <div class="forum-profile-subline">
+                        {% if user['user_data'].is_page == 1 %}
+                        Community Page
+                        {% else %}
+                        {{ user['user_data']['profession'] or 'Forum participant' }}{% if user['user_data']['leaning'] %} · {{ user['user_data']['leaning'] }}{% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="forum-profile-stats">
+                        <div class="forum-profile-stat"><strong>{{ user['total_posts'] }}</strong><span>Posts</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_comments'] }}</strong><span>Comments</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_likes'] }}</strong><span>Likes</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_dislikes'] }}</strong><span>Dislikes</span></div>
+                        <div class="forum-profile-stat"><strong>{{ user['total_followers'] }}</strong><span>Followers</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="forum-profile-layout">
+            <aside>
+                <div class="forum-profile-card">
+                    <h3>About</h3>
+                    <div class="forum-profile-about">
+                        {% if user['user_data'].is_page != 1 %}
+                        <div class="forum-profile-about-row"><span>Age</span><span>{{ user['user_data']['age'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Gender</span><span>{{ user['user_data']['gender'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Nationality</span><span>{{ user['user_data']['nationality'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Languages</span><span>{{ user['user_data']['language'].replace('|', ', ') if user['user_data']['language'] else 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Education</span><span>{{ user['user_data']['education_level'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Profession</span><span>{{ user['user_data']['profession'] or 'n/a' }}</span></div>
+                        <div class="forum-profile-about-row"><span>Political Leaning</span><span>{{ user['user_data']['leaning'] or 'n/a' }}</span></div>
+                        {% else %}
+                        <div class="forum-profile-empty">This page represents a forum community page.</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="forum-profile-card" style="margin-top: 1rem;">
+                    <h3>Interests</h3>
+                    {% if interests %}
+                    <div class="forum-profile-interest-list">
+                        {% for interest in interests %}
+                        <a href="/{{exp_id}}/interest/{{ interest[1] }}/1" class="forum-profile-interest">{{ interest[0] }} ({{ interest[2] }})</a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="forum-profile-empty">No recent interests available.</div>
+                    {% endif %}
+                </div>
+            </aside>
+
+            <section>
+                <div class="forum-profile-card">
+                    <div class="forum-profile-tabs">
+                        <a class="forum-profile-tab {% if mode == 'recent' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1">Posts</a>
+                        {% if is_page != 1 %}
+                        <a class="forum-profile-tab {% if mode == 'comments' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1">Comments</a>
+                        <a class="forum-profile-tab {% if mode == 'liked' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/liked/1">Likes</a>
+                        <a class="forum-profile-tab {% if mode == 'disliked' %}is-active{% endif %}" href="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1">Dislikes</a>
+                        {% endif %}
+                    </div>
+
+                    <div id="posts-container">
+                        {% include "reddit/components/posts.html" %}
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
+    window.redditContext = Object.freeze({
+        loggedUserId: {{ logged_id }},
+        isAdmin: {{ 'true' if is_admin else 'false' }},
+        loggedUsername: {{ logged_username|tojson }},
+        profilePic: {{ profile_pic|tojson }},
+        profilePicFeed: {{ profile_pic_feed|tojson }}
+    });
+    window.redditFeedConfig = Object.freeze({
+        expId: {{ exp_id }},
+        currentPage: {{ page }},
+        perPage: 10,
+        feedType: 'new',
+        searchQuery: '',
+        userId: {{ user_id }},
+        hasMore: false,
+        viewMode: 'profile'
+    });
+    window.redditProfileToggleDropdown = function(event, trigger) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        if (!trigger) {
+            return false;
+        }
+        document.querySelectorAll('#posts-container .dropdown-trigger.is-active').forEach(function(node) {
+            if (node !== trigger) {
+                node.classList.remove('is-active');
+            }
+        });
+        trigger.classList.toggle('is-active');
+        return false;
+    };
+
+    window.redditProfileDeletePost = function(event, trigger) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const postId = trigger && trigger.getAttribute ? trigger.getAttribute('data-post-id') : '';
+        if (!postId || !window.RedditApi) {
+            return false;
+        }
+        if (!window.confirm('Delete this post? This action cannot be undone.')) {
+            return false;
+        }
+        window.RedditApi.deletePost(postId)
+            .then(function() {
+                const card = trigger.closest('[data-reddit-post]');
+                if (card) {
+                    card.remove();
+                }
+            })
+            .fail(function(err) {
+                window.alert((err && err.message) || 'Unable to delete post right now.');
+            });
+        return false;
+    };
+</script>
+<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const postsContainer = document.getElementById('posts-container');
+
+        function initialsForName(name) {
+            const cleaned = String(name || '').trim();
+            if (!cleaned) {
+                return 'U';
+            }
+            const parts = cleaned.split(/\s+/).filter(Boolean).slice(0, 2);
+            return parts.map(function(part) { return part.charAt(0).toUpperCase(); }).join('') || 'U';
+        }
+
+        function colorForName(name) {
+            const palette = ['#0f766e', '#0369a1', '#1d4ed8', '#6d28d9', '#be123c', '#b45309', '#15803d', '#334155'];
+            const source = String(name || 'user');
+            let hash = 0;
+            for (let i = 0; i < source.length; i += 1) {
+                hash = ((hash << 5) - hash) + source.charCodeAt(i);
+                hash |= 0;
+            }
+            return palette[Math.abs(hash) % palette.length];
+        }
+
+        function buildLocalAvatar(name) {
+            const initials = initialsForName(name);
+            const fill = colorForName(name);
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80">
+                    <rect width="80" height="80" rx="40" fill="${fill}"/>
+                    <text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle"
+                          font-family="Arial, sans-serif" font-size="28" font-weight="700" fill="#ffffff">${initials}</text>
+                </svg>`;
+            return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg.replace(/\s+/g, ' ').trim());
+        }
+
+        function resolvedProfileImage(img) {
+            const configured = (img.getAttribute('data-demo-src') || '').trim();
+            if (configured && !configured.includes('via.placeholder.com')) {
+                return configured;
+            }
+            return buildLocalAvatar(img.getAttribute('data-author-name') || img.getAttribute('alt') || 'User');
+        }
+
+        function hydrateProfileImages(root) {
+            const scope = root || postsContainer;
+            if (!scope) return;
+            scope.querySelectorAll('[data-demo-src]').forEach(function(img) {
+                const newSrc = resolvedProfileImage(img);
+                img.setAttribute('src', newSrc);
+                img.onerror = function() {
+                    img.onerror = null;
+                    img.setAttribute('src', buildLocalAvatar(img.getAttribute('data-author-name') || img.getAttribute('alt') || 'User'));
+                };
+            });
+            if (window.feather && window.feather.replace) {
+                window.feather.replace();
+            }
+        }
+
+        hydrateProfileImages(postsContainer);
+
+        document.addEventListener('click', function(event) {
+            const trigger = event.target.closest('.dropdown-trigger');
+            if (!trigger || !postsContainer || !postsContainer.contains(trigger)) {
+                document.querySelectorAll('#posts-container .dropdown-trigger.is-active').forEach(function(node) {
+                    node.classList.remove('is-active');
+                });
+            }
+        });
+
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/{{exp_id}}/api/profile/{{user_id}}/{{mode}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
+</body>
+</html>
