@@ -14,7 +14,6 @@ import re
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -158,7 +157,9 @@ class TestOldLocationsGone:
         ],
     )
     def test_root_level_templates_removed(self, old_path):
-        assert not _exists(old_path), f"{old_path} still exists at root — should have been moved"
+        assert not _exists(
+            old_path
+        ), f"{old_path} still exists at root — should have been moved"
 
     @pytest.mark.parametrize(
         "old_path",
@@ -171,7 +172,9 @@ class TestOldLocationsGone:
         ],
     )
     def test_root_components_removed(self, old_path):
-        assert not _exists(old_path), f"{old_path} still exists at root components/ — should have been moved"
+        assert not _exists(
+            old_path
+        ), f"{old_path} still exists at root components/ — should have been moved"
 
     @pytest.mark.parametrize(
         "old_path",
@@ -189,7 +192,9 @@ class TestOldLocationsGone:
         ],
     )
     def test_reddit_templates_removed(self, old_path):
-        assert not _exists(old_path), f"{old_path} still exists under reddit/ — should have been renamed to forum/"
+        assert not _exists(
+            old_path
+        ), f"{old_path} still exists under reddit/ — should have been renamed to forum/"
 
 
 # ---------------------------------------------------------------------------
@@ -230,9 +235,9 @@ class TestNoStaleTemplatePaths:
             for f, tpl in _collect_template_strings(Y_WEB_DIR)
             if tpl.startswith(stale_prefix)
         ]
-        assert offenders == [], (
-            f"Found stale '{stale_prefix}' template references: {offenders}"
-        )
+        assert (
+            offenders == []
+        ), f"Found stale '{stale_prefix}' template references: {offenders}"
 
     def test_no_bare_login_html(self):
         """render_template('login.html') must not appear — use 'login/login.html'."""
@@ -268,9 +273,9 @@ class TestNoStaleTemplatePaths:
             for f, tpl in _collect_template_strings(Y_WEB_DIR)
             if tpl.startswith("components/")
         ]
-        assert offenders == [], (
-            f"Found stale 'components/' template references: {offenders}"
-        )
+        assert (
+            offenders == []
+        ), f"Found stale 'components/' template references: {offenders}"
 
     def test_all_render_template_paths_exist(self):
         """Every template string in render_template() must resolve to an actual file."""
@@ -279,9 +284,10 @@ class TestNoStaleTemplatePaths:
             full = os.path.join(TEMPLATES_DIR, tpl)
             if not os.path.exists(full):
                 missing.append((fpath, tpl))
-        assert missing == [], (
-            "render_template() references that do not exist on disk:\n"
-            + "\n".join(f"  {f}: '{t}'" for f, t in missing)
+        assert (
+            missing == []
+        ), "render_template() references that do not exist on disk:\n" + "\n".join(
+            f"  {f}: '{t}'" for f, t in missing
         )
 
 
@@ -423,15 +429,15 @@ class TestRouteIntegration:
 
     def test_login_route_returns_200(self, client):
         response = client.get("/login")
-        assert response.status_code == 200, (
-            f"GET /login returned {response.status_code}, expected 200"
-        )
+        assert (
+            response.status_code == 200
+        ), f"GET /login returned {response.status_code}, expected 200"
 
     def test_login_route_returns_html(self, client):
         response = client.get("/login")
-        assert b"<html" in response.data.lower() or b"<!doctype" in response.data.lower(), (
-            "GET /login did not return an HTML document"
-        )
+        assert (
+            b"<html" in response.data.lower() or b"<!doctype" in response.data.lower()
+        ), "GET /login did not return an HTML document"
 
     def test_404_returns_error_page(self, client):
         response = client.get("/nonexistent-route-xyz")
@@ -439,15 +445,19 @@ class TestRouteIntegration:
 
     def test_404_returns_html(self, client):
         response = client.get("/nonexistent-route-xyz")
-        assert b"<html" in response.data.lower() or b"<!doctype" in response.data.lower()
+        assert (
+            b"<html" in response.data.lower() or b"<!doctype" in response.data.lower()
+        )
 
     def test_render_microblogging_feed_template(self, flask_app):
         """Verify microblogging/feed.html can be loaded by Jinja2 without errors."""
         with flask_app.test_request_context():
             from flask import render_template
+
             # We can't render the full template (missing context vars) but we
             # can confirm Jinja2 can locate and load it.
             from jinja2 import TemplateNotFound
+
             try:
                 env = flask_app.jinja_env
                 env.get_template("microblogging/feed.html")
@@ -458,6 +468,7 @@ class TestRouteIntegration:
         """Verify forum/feed.html can be located by Jinja2."""
         with flask_app.test_request_context():
             from jinja2 import TemplateNotFound
+
             try:
                 flask_app.jinja_env.get_template("forum/feed.html")
             except TemplateNotFound as e:
@@ -467,6 +478,7 @@ class TestRouteIntegration:
         """Verify login/login.html can be located by Jinja2."""
         with flask_app.test_request_context():
             from jinja2 import TemplateNotFound
+
             try:
                 flask_app.jinja_env.get_template("login/login.html")
             except TemplateNotFound as e:
@@ -499,6 +511,7 @@ class TestRouteIntegration:
         """Verify every refactored template can be located by Jinja2."""
         with flask_app.test_request_context():
             from jinja2 import TemplateNotFound
+
             try:
                 flask_app.jinja_env.get_template(template)
             except TemplateNotFound as e:
@@ -519,9 +532,9 @@ class TestForumHeaderInterviewLink:
         with open(header_path) as fh:
             content = fh.read()
 
-        assert 'href="/{{ exp_id }}/interview"' in content, (
-            "forum/header.html must contain an interview link href"
-        )
+        assert (
+            'href="/{{ exp_id }}/interview"' in content
+        ), "forum/header.html must contain an interview link href"
 
     def test_forum_header_interview_gated_on_memory_enabled(self):
         """Interview link must be guarded by forum_memory_enabled (not always shown)."""
@@ -529,9 +542,9 @@ class TestForumHeaderInterviewLink:
         with open(header_path) as fh:
             content = fh.read()
 
-        assert "forum_memory_enabled" in content, (
-            "forum/header.html must reference forum_memory_enabled"
-        )
+        assert (
+            "forum_memory_enabled" in content
+        ), "forum/header.html must reference forum_memory_enabled"
 
     def test_forum_header_interview_in_desktop_dropdown(self):
         """Interview link must be present inside the desktop nav-drop account-items dropdown."""
@@ -539,13 +552,15 @@ class TestForumHeaderInterviewLink:
         with open(header_path) as fh:
             content = fh.read()
 
-        nav_drop_start = content.find('nav-drop-body account-items')
+        nav_drop_start = content.find("nav-drop-body account-items")
         assert nav_drop_start != -1, "nav-drop-body account-items section not found"
 
-        interview_in_dropdown = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
-        assert interview_in_dropdown != -1, (
-            "Interview link must be present inside the desktop nav-drop account-items dropdown"
+        interview_in_dropdown = content.find(
+            'href="/{{ exp_id }}/interview"', nav_drop_start
         )
+        assert (
+            interview_in_dropdown != -1
+        ), "Interview link must be present inside the desktop nav-drop account-items dropdown"
 
     def test_forum_header_interview_in_mobile_hamburger_menu(self):
         """Interview link must also be present inside the mobile hamburger navbar-menu."""
@@ -554,16 +569,18 @@ class TestForumHeaderInterviewLink:
             content = fh.read()
 
         # The mobile navbar-menu starts after the desktop nav-drop-body section
-        nav_drop_start = content.find('nav-drop-body account-items')
+        nav_drop_start = content.find("nav-drop-body account-items")
         assert nav_drop_start != -1, "nav-drop-body account-items section not found"
 
-        mobile_menu_start = content.find('navbar-burger', nav_drop_start)
+        mobile_menu_start = content.find("navbar-burger", nav_drop_start)
         assert mobile_menu_start != -1, "Mobile navbar-burger section not found"
 
-        interview_in_mobile = content.find('href="/{{ exp_id }}/interview"', mobile_menu_start)
-        assert interview_in_mobile != -1, (
-            "Interview link must also appear in the mobile hamburger navbar-menu"
+        interview_in_mobile = content.find(
+            'href="/{{ exp_id }}/interview"', mobile_menu_start
         )
+        assert (
+            interview_in_mobile != -1
+        ), "Interview link must also appear in the mobile hamburger navbar-menu"
 
     def test_forum_header_interview_not_in_top_navbar(self):
         """Interview link must NOT appear in the top (desktop) navbar before the dropdown."""
@@ -571,11 +588,11 @@ class TestForumHeaderInterviewLink:
         with open(header_path) as fh:
             content = fh.read()
 
-        nav_drop_start = content.find('nav-drop-body account-items')
+        nav_drop_start = content.find("nav-drop-body account-items")
         assert nav_drop_start != -1, "nav-drop-body account-items section not found"
 
         # First occurrence of the interview link must be inside the dropdown, not before it
         first_interview = content.find('href="/{{ exp_id }}/interview"')
-        assert first_interview >= nav_drop_start, (
-            "Interview link must not appear in the top navbar before the account dropdown"
-        )
+        assert (
+            first_interview >= nav_drop_start
+        ), "Interview link must not appear in the top navbar before the account dropdown"

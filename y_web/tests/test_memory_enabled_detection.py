@@ -16,7 +16,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers — build minimal config files in a temp directory
 # ---------------------------------------------------------------------------
@@ -85,7 +84,9 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
     with patch("y_web.main.Exps") as mock_exps:
         mock_exps.query.filter_by.return_value.first.return_value = mock_exp
         # Redirect the base-dir to our tmpdir so all paths resolve correctly
-        with patch("y_web.main.os.path.abspath", return_value=os.path.join(base_dir, "main.py")):
+        with patch(
+            "y_web.main.os.path.abspath", return_value=os.path.join(base_dir, "main.py")
+        ):
             return _experiment_memory_enabled(1)
 
 
@@ -151,11 +152,14 @@ class TestExperimentMemoryEnabledMainPy:
         """Forum client_1.json with flat "memory_enabled": true → True."""
         exp_dir, write_config, write_client = exp_tmpdir
         write_config({"memory": {"enabled": False}})
-        write_client(1, {
-            "memory_enabled": True,
-            "memory_pair_limit": 5,
-            "forum_post_structure_strict": True,
-        })
+        write_client(
+            1,
+            {
+                "memory_enabled": True,
+                "memory_pair_limit": 5,
+                "forum_post_structure_strict": True,
+            },
+        )
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is True
 
     def test_forum_client_file_flat_memory_disabled(self, exp_tmpdir):
@@ -178,13 +182,16 @@ class TestExperimentMemoryEnabledMainPy:
         """The exact user-reported flat config in a forum client file → True."""
         exp_dir, write_config, write_client = exp_tmpdir
         write_config({})
-        write_client(1, {
-            "memory_enabled": True,
-            "memory_pair_limit": 5,
-            "memory_prompt_max_chars": 1600,
-            "memory_prompt_mode": "subtle_forum",
-            "forum_post_structure_strict": True,
-        })
+        write_client(
+            1,
+            {
+                "memory_enabled": True,
+                "memory_pair_limit": 5,
+                "memory_prompt_max_chars": 1600,
+                "memory_prompt_mode": "subtle_forum",
+                "forum_post_structure_strict": True,
+            },
+        )
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is True
 
 
@@ -258,7 +265,9 @@ class TestMemoryEnabledLogicDirect:
         assert self._is_memory_enabled_in_client({"agents": {"memory_enabled": True}})
 
     def test_client_agents_nested_disabled(self):
-        assert not self._is_memory_enabled_in_client({"agents": {"memory_enabled": False}})
+        assert not self._is_memory_enabled_in_client(
+            {"agents": {"memory_enabled": False}}
+        )
 
     def test_client_flat_enabled(self):
         """Forum-style flat client config."""
@@ -314,10 +323,10 @@ class TestMemoryEnabledLogicDirect:
             "memory_cross_thread_callback_min_score": 0.8,
         }
         # Should be detected both as config_server.json flat format ...
-        assert self._is_memory_enabled_in_config(user_config), (
-            "User-reported config with flat 'memory_enabled: true' must be detected"
-        )
+        assert self._is_memory_enabled_in_config(
+            user_config
+        ), "User-reported config with flat 'memory_enabled: true' must be detected"
         # ... and as a client config flat format
-        assert self._is_memory_enabled_in_client(user_config), (
-            "User-reported config detected as client file flat format"
-        )
+        assert self._is_memory_enabled_in_client(
+            user_config
+        ), "User-reported config detected as client file flat format"
