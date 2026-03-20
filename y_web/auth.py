@@ -24,7 +24,7 @@ def login():
     Returns:
         Rendered login template
     """
-    return render_template("login.html")
+    return render_template("login/login.html")
 
 
 @auth.route("/login", methods=["POST"])
@@ -40,7 +40,7 @@ def login_post():
         Redirect to appropriate page based on role, or back to login on failure
     """
     if request.method == "GET":
-        return render_template("login.html")
+        return render_template("login/login.html")
 
     email = request.form.get("email")
     password = request.form.get("password")
@@ -104,7 +104,7 @@ def login_post():
 
         # Return to login page with experiment selection
         return render_template(
-            "login.html",
+            "login/login.html",
             show_exp_selection=True,
             experiments=active_exps,
             auth_token=auth_token,
@@ -238,4 +238,4 @@ def logout():
 
     logout_user()
 
-    return render_template("login.html")
+    return render_template("login/login.html")

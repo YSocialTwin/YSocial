@@ -1,4 +1,4 @@
-{%  include "header.html" %}
+{%  include "microblogging/header.html" %}
 
 <div class="view-wrapper">
     <!-- Container -->
@@ -278,7 +278,8 @@
                                 <span>{{ username }}</span>
                             </div>
                             <div style="text-align: center">
-                                <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1">
+
+                                    <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
                                      <div class="avatar">
                                         <img
                                                 id="user-avatar"
@@ -292,8 +293,13 @@
                                                 width="50%"
 
                                         />
+
                                      </div>
+
+
+
                                 </a>
+
                             </div>
 
                             <div class="current-date-location has-text-centered">
@@ -321,7 +327,7 @@
 
                         </div>
                         <div class="card-body no-padding">
-
+                            <!-- Hashtag block -->
                             {% for ht in trending_ht %}
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
@@ -338,33 +344,36 @@
 
                 <!-- Middle column -->
                 <div class="column is-8" style="padding: 0 0.5rem;">
-                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); font-weight: 500;"> Are you looking for the full discussion thread?</div>
-
-                    <div class="profile-timeline">
-
-                        <!-- inizio -->
-                        {% include "components/thread-post.html" %}
-                        <div id="child-{{ thread['post_id'] }}">
-                            {% set data = thread['children'] %}
-                            {% for c in data %}
-                            <div style="padding-left: 20px;">
-                                {% with thread=c %}
-                                {% include "components/list.html" %}
-                                {% endwith %}
-                            </div>
-
-                            {% endfor %}
-                        </div>
+                    <!-- Publishing Area -->
+                    <!-- /partials/pages/feed/compose-card.html -->
+                    <!-- Post 1 -->
+                    <!-- /partials/pages/feed/posts/feed-post1.html -->
+                    <!-- POST #1 -->
+                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"> Let's see what are we saying about <a style="color: white; font-weight: 600; text-decoration: underline;">{{ current_hashtag }}</a>
+                        today...
                     </div>
 
-                    <!-- fine -->
+                    <div class="profile-timeline" id="posts-container">
+                        {% include "microblogging/components/posts.html" %}
+                    </div>
+                    <!-- POST #1 -->
 
+                    <!-- Load more posts -->
+                    <div class="load-more-wrap narrow-top has-text-centered">
+                        {% if page-1>0 %}
+                        <a href="#" class="load-more-button"
+                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page-1 }}';">Previous
+                            Page</a>
+                        {% endif %}
+                        <a href="#" class="load-more-button"
+                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page+1 }}';">Next Page</a>
+                    </div>
+                    <!-- /Load more posts  -->
                 </div>
-                <!-- POST #1 -->
             </div>
         </div>
+        <!-- /Feed page main wrapper -->
     </div>
-    <!-- /Feed page main wrapper -->
 </div>
 
 
@@ -377,19 +386,79 @@
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script src="https://js.stripe.com/v3/"></script>
+
+<!-- Core js -->
 <script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
+
+<!-- Navigation options js -->
 <script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
+
+<!-- Core instance js -->
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script> -->
+
+<!-- Components js -->
+<!-- <script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
+<!-- <script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script> -->
+<!-- <script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
+
+<!-- Landing page js -->
+
+<!-- Signup page js -->
+
+<!-- Feed pages js -->
+<!-- <script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script> -->
+
+<!-- profile js -->
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for hashtag posts
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/{{exp_id}}/api/hashtag_posts/{{hashtag_id}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
+
+<!-- profile js -->
+
+<!-- stories js -->
+
+<!-- friends js -->
+
+<!-- questions js -->
+
+<!-- video js -->
+
+<!-- events js -->
+
+<!-- news js -->
+
+<!-- shop js -->
+
+<!-- inbox js -->
+
+<!-- settings js -->
+
+<!-- map page js -->
+
+<!-- elements page js -->
+
 </body>
 </html>

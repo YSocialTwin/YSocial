@@ -1,4 +1,4 @@
-{%  include "reddit/header.html" %}
+{%  include "forum/header.html" %}
 
 <div class="view-wrapper">
     <!-- Container -->
@@ -130,12 +130,12 @@
                     <div class="profile-timeline reddit-thread-timeline">
 
                         <!-- inizio -->
-                        {% include "reddit/components/thread-post.html" %}
+                        {% include "forum/components/thread-post.html" %}
                         <div id="child-{{ thread['post_id'] }}">
                             {% for child_comment in thread['children'] %}
                             <div class="reddit-thread-children" style="padding-left: 20px;">
                                 {% with thread=child_comment, depth=1 %}
-                                {% include "reddit/components/list.html" %}
+                                {% include "forum/components/list.html" %}
                                 {% endwith %}
                             </div>
                             {% endfor %}

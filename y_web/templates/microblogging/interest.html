@@ -1,4 +1,4 @@
-{%  include "header.html" %}
+{%  include "microblogging/header.html" %}
 
 <div class="view-wrapper">
     <!-- Container -->
@@ -278,8 +278,8 @@
                                 <span>{{ username }}</span>
                             </div>
                             <div style="text-align: center">
+                                <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1">
 
-                                    <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
                                      <div class="avatar">
                                         <img
                                                 id="user-avatar"
@@ -295,11 +295,7 @@
                                         />
 
                                      </div>
-
-
-
                                 </a>
-
                             </div>
 
                             <div class="current-date-location has-text-centered">
@@ -323,7 +319,7 @@
 
                     <div class="card" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
                         <div class="card-heading is-bordered" style="padding: 1rem;">
-                            <h4 style="margin: 0; font-weight: 600;">Trending Hashtags</h4>
+                            <h4 style="margin: 0; font-weight: 600;">Trending Topics</h4>
 
                         </div>
                         <div class="card-body no-padding">
@@ -332,7 +328,7 @@
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
-                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
+                                    <span><a href="/{{exp_id}}/interest/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['topic'] }}</a></span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -349,12 +345,12 @@
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
-                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"> Let's see what are we saying about <a style="color: white; font-weight: 600; text-decoration: underline;">{{ current_hashtag }}</a>
+                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"> Let's see what are we saying about <a style="color: white; font-weight: 600; text-decoration: underline;">{{ current_interest }}</a>
                         today...
                     </div>
 
                     <div class="profile-timeline" id="posts-container">
-                        {% include "components/posts.html" %}
+                        {% include "microblogging/components/posts.html" %}
                     </div>
                     <!-- POST #1 -->
 
@@ -362,11 +358,10 @@
                     <div class="load-more-wrap narrow-top has-text-centered">
                         {% if page-1>0 %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page-1 }}';">Previous
-                            Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/interest/{{interest_id}}/{{ page-1 }}';">Previous Page</a>
                         {% endif %}
                         <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/hashtag_posts/{{hashtag_id}}/{{ page+1 }}';">Next Page</a>
+                           onclick="window.location.href = '/{{exp_id}}/interest/{{interest_id}}/{{ page+1 }}';">Next Page</a>
                     </div>
                     <!-- /Load more posts  -->
                 </div>
@@ -421,22 +416,22 @@
 <!-- profile js -->
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
+<!-- profile js -->
+
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
 <script>
-    // Initialize infinite scroll for hashtag posts
+    // Initialize infinite scroll for interest posts
     document.addEventListener('DOMContentLoaded', function() {
         if (window.InfiniteScroll) {
             InfiniteScroll.init({
-                apiEndpoint: '/{{exp_id}}/api/hashtag_posts/{{hashtag_id}}',
+                apiEndpoint: '/{{exp_id}}/api/interest/{{interest_id}}',
                 postsContainerId: 'posts-container',
                 initialPage: {{ page }}
             });
         }
     });
 </script>
-
-<!-- profile js -->
 
 <!-- stories js -->
 
