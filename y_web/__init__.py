@@ -535,7 +535,12 @@ def create_app(db_type="sqlite", desktop_mode=False):
             if enabled:
                 return dict(experiment_memory_enabled=True)
 
-            if getattr(exp, "platform_type", "") == "microblogging":
+            # Also handle flat format written by client config routes: {"memory_enabled": true, ...}
+            if bool(config.get("memory_enabled", False)):
+                return dict(experiment_memory_enabled=True)
+
+            platform_type = getattr(exp, "platform_type", "")
+            if platform_type in {"microblogging", "forum"}:
                 exp_dir = os.path.dirname(config_path)
                 for entry in os.listdir(exp_dir):
                     if not entry.startswith("client_") or not entry.endswith(".json"):
@@ -544,10 +549,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     try:
                         with open(client_path, "r", encoding="utf-8") as client_handle:
                             client_config = json.load(client_handle) or {}
+                        # Microblogging client configs nest under "agents"
                         agents_cfg = client_config.get("agents")
                         if isinstance(agents_cfg, dict) and bool(
                             agents_cfg.get("memory_enabled")
                         ):
+                            return dict(experiment_memory_enabled=True)
+                        # Forum client configs use a flat "memory_enabled" key
+                        if bool(client_config.get("memory_enabled", False)):
                             return dict(experiment_memory_enabled=True)
                     except Exception:
                         continue

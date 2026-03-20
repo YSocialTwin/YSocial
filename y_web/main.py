@@ -1517,7 +1517,12 @@ def _experiment_memory_enabled(exp_id):
         if bool(memory_cfg.get("enabled")):
             return True
 
-    if getattr(exp, "platform_type", "") == "microblogging":
+    # Also handle flat format written by client config routes: {"memory_enabled": true, ...}
+    if bool(config.get("memory_enabled", False)):
+        return True
+
+    platform = getattr(exp, "platform_type", "")
+    if platform in {"microblogging", "forum"}:
         exp_dir = os.path.dirname(config_path)
         try:
             for entry in os.listdir(exp_dir):
@@ -1527,10 +1532,14 @@ def _experiment_memory_enabled(exp_id):
                 try:
                     with open(client_path, "r", encoding="utf-8") as client_handle:
                         client_config = json.load(client_handle) or {}
+                    # Microblogging client configs nest under "agents"
                     agents_cfg = client_config.get("agents")
                     if isinstance(agents_cfg, dict) and bool(
                         agents_cfg.get("memory_enabled")
                     ):
+                        return True
+                    # Forum client configs use a flat "memory_enabled" key
+                    if bool(client_config.get("memory_enabled", False)):
                         return True
                 except Exception:
                     continue
