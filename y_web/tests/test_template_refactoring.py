@@ -503,3 +503,67 @@ class TestRouteIntegration:
                 flask_app.jinja_env.get_template(template)
             except TemplateNotFound as e:
                 pytest.fail(f"Jinja2 could not find {template}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# 6. Forum header — interview link present in account dropdown
+# ---------------------------------------------------------------------------
+
+
+class TestForumHeaderInterviewLink:
+    """Verify the interview link exists in the forum header's account dropdown."""
+
+    def test_forum_header_dropdown_has_interview_link(self):
+        """forum/header.html account dropdown must contain the interview link."""
+        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        # Must have the interview href inside the nav-drop-body account-items section
+        assert 'href="/{{ exp_id }}/interview"' in content, (
+            "forum/header.html must contain an interview link href"
+        )
+        assert 'class="account-item"' in content or 'account-item' in content, (
+            "forum/header.html must have account-item classed links in dropdown"
+        )
+
+    def test_forum_header_dropdown_interview_gated_on_memory_enabled(self):
+        """Interview link must be guarded by forum_memory_enabled (not always shown)."""
+        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        # The interview link must be inside a {% if forum_memory_enabled ... %} block
+        assert "forum_memory_enabled" in content, (
+            "forum/header.html must reference forum_memory_enabled"
+        )
+
+    def test_forum_header_interview_in_nav_drop(self):
+        """Interview link in the forum header must appear inside the nav-drop section."""
+        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        # Find the nav-drop-body section and ensure interview link is inside it
+        nav_drop_start = content.find('nav-drop-body account-items')
+        assert nav_drop_start != -1, "nav-drop-body account-items section not found"
+
+        # The interview href should appear after the nav-drop-body starts
+        interview_pos = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
+        assert interview_pos != -1, (
+            "Interview link must be present inside the nav-drop account-items dropdown"
+        )
+
+    def test_microblogging_header_also_has_interview_in_dropdown(self):
+        """Sanity check: microblogging/header.html has interview in account dropdown."""
+        header_path = os.path.join(TEMPLATES_DIR, "microblogging", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        nav_drop_start = content.find('nav-drop-body account-items')
+        assert nav_drop_start != -1
+
+        interview_pos = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
+        assert interview_pos != -1, (
+            "microblogging/header.html interview link not found in account dropdown"
+        )
