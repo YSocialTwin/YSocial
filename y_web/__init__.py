@@ -689,59 +689,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
             # Map to range 1-1000 for available profile images
             return str((hash_value % 1000) + 1)
 
-    # Register your blueprints here as before
-    from .auth import auth as auth_blueprint
-
-    app.register_blueprint(auth_blueprint)
-    from .main import main as main_blueprint
-
-    app.register_blueprint(main_blueprint)
-    from .user_interaction import user as user_blueprint
-
-    app.register_blueprint(user_blueprint)
-    from .admin_dashboard import admin as admin_blueprint
-
-    app.register_blueprint(admin_blueprint)
-    from .routes_admin.ollama_routes import ollama as ollama_blueprint
-
-    app.register_blueprint(ollama_blueprint)
-    from .routes_admin.populations_routes import population as population_blueprint
-
-    app.register_blueprint(population_blueprint)
-    from .routes_admin.pages_routes import pages as pages_blueprint
-
-    app.register_blueprint(pages_blueprint)
-    from .routes_admin.agents_routes import agents as agents_blueprint
-
-    app.register_blueprint(agents_blueprint)
-    from .routes_admin.users_routes import users as users_blueprint
-
-    app.register_blueprint(users_blueprint)
-    from .routes_admin.experiments_routes import experiments as experiments_blueprint
-
-    app.register_blueprint(experiments_blueprint)
-    from .routes_admin.clients_routes import clientsr as clients_blueprint
-
-    app.register_blueprint(clients_blueprint)
-    from .error_routes import errors as errors_blueprint
-
-    app.register_blueprint(errors_blueprint)
-
-    from .routes_admin.jupyterlab_routes import lab as lab_blueprint
-
-    app.register_blueprint(lab_blueprint)
-
-    from .routes_admin.tutorial_routes import tutorial as tutorial_blueprint
-
-    app.register_blueprint(tutorial_blueprint)
-
-    from .routes_api.reddit import api_reddit as api_reddit_blueprint
-
-    app.register_blueprint(api_reddit_blueprint)
-
-    from .routes_api.interview import api_interview as api_interview_blueprint
-
-    app.register_blueprint(api_interview_blueprint)
+    from y_web.routes import register_blueprints
+    register_blueprints(app)
 
     # Add context processor to detect PyInstaller mode
     @app.context_processor

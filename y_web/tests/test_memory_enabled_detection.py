@@ -69,7 +69,7 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
     is patched to point one level *above* exp_dir_path, so the constructed path
     resolves to the real temp directory.
     """
-    from y_web.main import _experiment_memory_enabled  # noqa: PLC0415
+    from y_web.routes.social.helpers import _experiment_memory_enabled  # noqa: PLC0415
 
     uid = "test-uid-xyz"
     # exp_dir_path is e.g. /tmp/abc/experiments/test-uid-xyz
@@ -81,11 +81,11 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
     mock_exp.platform_type = platform_type
     mock_exp.db_name = f"experiments/{uid}"
 
-    with patch("y_web.main.Exps") as mock_exps:
+    with patch("y_web.routes.social.helpers.Exps") as mock_exps:
         mock_exps.query.filter_by.return_value.first.return_value = mock_exp
         # Redirect the base-dir to our tmpdir so all paths resolve correctly
         with patch(
-            "y_web.main.os.path.abspath", return_value=os.path.join(base_dir, "main.py")
+            "y_web.routes.social.helpers.os.path.abspath", return_value=os.path.join(base_dir, "helpers.py")
         ):
             return _experiment_memory_enabled(1)
 
@@ -110,7 +110,7 @@ def exp_tmpdir(tmp_path):
 
 
 class TestExperimentMemoryEnabledMainPy:
-    """Integration tests for y_web.main._experiment_memory_enabled."""
+    """Integration tests for y_web.routes.social.helpers._experiment_memory_enabled."""
 
     # -- nested format (already worked, regression guard) --------------------
 

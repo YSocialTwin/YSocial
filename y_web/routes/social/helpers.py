@@ -375,18 +375,7 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
 
 
 def _experiment_memory_enabled(exp_id):
-    # Support legacy test patching via y_web.main.Exps.
-    # When tests patch "y_web.main.Exps", they replace the Exps name in the
-    # y_web.main module's namespace. We look it up at call-time so that the
-    # mock is picked up correctly.
-    import sys as _sys
-
-    _main = _sys.modules.get("y_web.main")
-    _Exps = getattr(_main, "Exps", None) if _main is not None else None
-    if _Exps is None:
-        _Exps = Exps  # fall back to module-level import
-
-    exp = _Exps.query.filter_by(idexp=int(exp_id)).first()
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
         return False
 
