@@ -343,6 +343,14 @@
                     {% endif %}
                 </a>
                 {% endif %}
+                {% if exp_id and current_user_role in ['admin', 'researcher'] and forum_memory_enabled %}
+                <a
+                        href="/{{ exp_id }}/interview"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i class="mdi mdi-account-voice-outline"></i>Interview</span>
+                </a>
+                {% endif %}
                 {% if is_admin == True %}
                 <a
                         href="/admin/dashboard"

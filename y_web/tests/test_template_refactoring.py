@@ -506,12 +506,12 @@ class TestRouteIntegration:
 
 
 # ---------------------------------------------------------------------------
-# 6. Forum header — interview link present in the account dropdown menu only
+# 6. Forum header — interview link in account dropdown AND mobile hamburger menu
 # ---------------------------------------------------------------------------
 
 
 class TestForumHeaderInterviewLink:
-    """Verify the interview link is in the forum header account dropdown (not top navbar)."""
+    """Verify the interview link is in the desktop dropdown and mobile hamburger menu."""
 
     def test_forum_header_has_interview_link(self):
         """forum/header.html must contain an interview link href."""
@@ -533,24 +533,49 @@ class TestForumHeaderInterviewLink:
             "forum/header.html must reference forum_memory_enabled"
         )
 
-    def test_forum_header_interview_in_dropdown_not_top_navbar(self):
-        """Interview link must be in the account dropdown, not in the top navbar."""
+    def test_forum_header_interview_in_desktop_dropdown(self):
+        """Interview link must be present inside the desktop nav-drop account-items dropdown."""
         header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
-        # The account dropdown starts after the top navbar closes
         nav_drop_start = content.find('nav-drop-body account-items')
         assert nav_drop_start != -1, "nav-drop-body account-items section not found"
 
-        # Interview link must exist inside the account dropdown
         interview_in_dropdown = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
         assert interview_in_dropdown != -1, (
-            "Interview link must be present inside the nav-drop account-items dropdown"
+            "Interview link must be present inside the desktop nav-drop account-items dropdown"
         )
 
-        # Interview link must NOT appear before the dropdown (i.e. not in the top navbar)
-        interview_before_dropdown = content.find('href="/{{ exp_id }}/interview"')
-        assert interview_before_dropdown == interview_in_dropdown, (
-            "Interview link must only appear inside the account dropdown, not in the top navbar"
+    def test_forum_header_interview_in_mobile_hamburger_menu(self):
+        """Interview link must also be present inside the mobile hamburger navbar-menu."""
+        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        # The mobile navbar-menu starts after the desktop nav-drop-body section
+        nav_drop_start = content.find('nav-drop-body account-items')
+        assert nav_drop_start != -1, "nav-drop-body account-items section not found"
+
+        mobile_menu_start = content.find('navbar-burger', nav_drop_start)
+        assert mobile_menu_start != -1, "Mobile navbar-burger section not found"
+
+        interview_in_mobile = content.find('href="/{{ exp_id }}/interview"', mobile_menu_start)
+        assert interview_in_mobile != -1, (
+            "Interview link must also appear in the mobile hamburger navbar-menu"
+        )
+
+    def test_forum_header_interview_not_in_top_navbar(self):
+        """Interview link must NOT appear in the top (desktop) navbar before the dropdown."""
+        header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
+        with open(header_path) as fh:
+            content = fh.read()
+
+        nav_drop_start = content.find('nav-drop-body account-items')
+        assert nav_drop_start != -1, "nav-drop-body account-items section not found"
+
+        # First occurrence of the interview link must be inside the dropdown, not before it
+        first_interview = content.find('href="/{{ exp_id }}/interview"')
+        assert first_interview >= nav_drop_start, (
+            "Interview link must not appear in the top navbar before the account dropdown"
         )
