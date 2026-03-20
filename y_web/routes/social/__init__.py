@@ -10,3 +10,8 @@ platform views.  The sub-package is assembled from:
   microblogging.py – Twitter-style feed / thread / hashtag routes
   forum.py        – Reddit-style feed / thread / search routes
 """
+
+from ._blueprint import main
+from . import helpers, common, microblogging, forum  # side-effect: registers routes
+
+__all__ = ["main"]
