@@ -54,9 +54,7 @@ def _candidate_memory_package_dirs(base_path, client_package_dir):
     candidates = []
 
     if client_package_dir:
-        candidates.append(
-            os.path.join(client_package_dir, "y_memory_subsystem", "src")
-        )
+        candidates.append(os.path.join(client_package_dir, "y_memory_subsystem", "src"))
 
     if base_path:
         project_root = os.path.abspath(os.path.join(base_path, os.pardir))

@@ -39,10 +39,14 @@ def test_server_base_url_falls_back_to_configured_port(monkeypatch):
 
 
 def test_discover_runtime_port_uses_server_pid_connections(monkeypatch):
-    exp = SimpleNamespace(idexp=39, db_name="experiments/demo/database_server.db", server_pid=8888)
+    exp = SimpleNamespace(
+        idexp=39, db_name="experiments/demo/database_server.db", server_pid=8888
+    )
 
     monkeypatch.setattr(
-        interview, "_listening_ports_for_pid", lambda pid: [5044, 6010] if pid == 8888 else []
+        interview,
+        "_listening_ports_for_pid",
+        lambda pid: [5044, 6010] if pid == 8888 else [],
     )
 
     chosen = interview._discover_runtime_port_for_experiment_process(

@@ -5312,8 +5312,8 @@ def feed_limits(uid):
 @login_required
 def embedding_settings(uid):
     """Display and edit memory embedding backend settings for standard/forum experiments."""
-    experiment, experiment_dir, error_response = _load_memory_capable_experiment_context(
-        uid
+    experiment, experiment_dir, error_response = (
+        _load_memory_capable_experiment_context(uid)
     )
     if error_response is not None:
         return error_response
@@ -5335,8 +5335,8 @@ def embedding_settings(uid):
 @login_required
 def update_embedding_settings(uid):
     """Persist memory embedding backend settings to config_server.json."""
-    experiment, experiment_dir, error_response = _load_memory_capable_experiment_context(
-        uid
+    experiment, experiment_dir, error_response = (
+        _load_memory_capable_experiment_context(uid)
     )
     if error_response is not None:
         return error_response
