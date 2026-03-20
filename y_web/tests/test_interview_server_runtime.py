@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from y_web.routes_api import interview
+from y_web.routes.api import interview
 
 
 def test_pick_listening_port_prefers_configured_port():
