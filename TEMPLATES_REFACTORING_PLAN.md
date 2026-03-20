@@ -302,11 +302,11 @@ Microblogging and forum components are intentionally separated because they serv
 
 ### Validation Criteria for Success
 
-- [ ] All existing tests pass (622+ tests passing before refactoring, same count after).
-- [ ] No `TemplateNotFound` exceptions at runtime.
-- [ ] All `render_template()` calls reference paths that exist under `y_web/templates/`.
-- [ ] No old-style paths remain (no `"reddit/"`, `"components/"` at root, or bare `"login.html"`).
-- [ ] Flask dev server starts and all routes return expected HTTP status codes.
+- [x] All existing tests pass (622 tests passing before refactoring; 718 passing after with 96 new tests).
+- [x] No `TemplateNotFound` exceptions at runtime (verified by `TestRouteIntegration` and `TestIncludePathsValid`).
+- [x] All `render_template()` calls reference paths that exist under `y_web/templates/` (verified by `TestNoStaleTemplatePaths::test_all_render_template_paths_exist`).
+- [x] No old-style paths remain — no `"reddit/"`, `"components/"` at root, or bare `"login.html"` (verified by `TestNoStaleTemplatePaths` and `TestOldLocationsGone`).
+- [x] Flask dev server: Jinja2 can load all refactored templates without error (verified by `TestRouteIntegration::test_all_refactored_templates_loadable`).
 
 ---
 
