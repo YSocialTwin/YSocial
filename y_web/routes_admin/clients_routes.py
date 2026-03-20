@@ -73,8 +73,6 @@ clientsr = Blueprint("clientsr", __name__)
 DISTRIBUTION_SCALE_FACTOR = 10.0  # Scale factor for gamma/lognormal distributions
 
 
-
-
 def _forum_effective_link_share(news, share_link):
     """Forum uses link-sharing for feed-backed articles; keep legacy news weights compatible."""
     try:
@@ -86,6 +84,7 @@ def _forum_effective_link_share(news, share_link):
     except (TypeError, ValueError):
         share_link_value = 0.0
     return max(news_value, share_link_value)
+
 
 def allocate_topics_by_percentage(topics, topic_percentages):
     """
@@ -4529,7 +4528,9 @@ def client_details_forum(uid):
         "read": client.read,
         "search": client.search,
         "share_link": _forum_effective_link_share(client.news, client.share_link),
-        "share_image": ((config or {}).get("simulation") or {}).get("actions_likelihood", {}).get("share_image", 0.0),
+        "share_image": ((config or {}).get("simulation") or {})
+        .get("actions_likelihood", {})
+        .get("share_image", 0.0),
     }
 
     return render_template(

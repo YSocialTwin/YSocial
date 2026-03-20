@@ -222,7 +222,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         data_base_path = os.path.join(BASE_DIR, "experiments", uid) + os.sep
 
         from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
-        ensure_experiment_schema_for_uri(f"sqlite:///{data_base_path}database_server.db")
+
+        ensure_experiment_schema_for_uri(
+            f"sqlite:///{data_base_path}database_server.db"
+        )
 
         # Try to find the population file
         # The expected filename is {population.name}.json

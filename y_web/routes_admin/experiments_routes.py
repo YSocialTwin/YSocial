@@ -548,14 +548,28 @@ def _read_forum_feed_health(experiment, experiment_dir):
             engine = create_engine(db_uri)
             try:
                 with engine.connect() as conn:
-                    health["article_count"] = int(conn.execute(text("SELECT COUNT(*) FROM articles")).scalar() or 0)
-                    health["image_post_count"] = int(conn.execute(text("SELECT COUNT(*) FROM image_posts")).scalar() or 0)
+                    health["article_count"] = int(
+                        conn.execute(text("SELECT COUNT(*) FROM articles")).scalar()
+                        or 0
+                    )
+                    health["image_post_count"] = int(
+                        conn.execute(text("SELECT COUNT(*) FROM image_posts")).scalar()
+                        or 0
+                    )
                     health["rss_post_count"] = int(
-                        conn.execute(text("SELECT COUNT(*) FROM post WHERE news_id IS NOT NULL AND news_id NOT IN (-1, 0)")).scalar()
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM post WHERE news_id IS NOT NULL AND news_id NOT IN (-1, 0)"
+                            )
+                        ).scalar()
                         or 0
                     )
                     health["image_share_post_count"] = int(
-                        conn.execute(text("SELECT COUNT(*) FROM post WHERE image_post_id IS NOT NULL AND image_post_id NOT IN (-1, 0)")).scalar()
+                        conn.execute(
+                            text(
+                                "SELECT COUNT(*) FROM post WHERE image_post_id IS NOT NULL AND image_post_id NOT IN (-1, 0)"
+                            )
+                        ).scalar()
                         or 0
                     )
             finally:
@@ -3412,7 +3426,9 @@ def experiment_details(uid):
             from y_web.utils.path_utils import get_writable_path
 
             base_dir = get_writable_path()
-            exp_folder = _get_experiment_folder(base_dir, experiment, _get_database_type())
+            exp_folder = _get_experiment_folder(
+                base_dir, experiment, _get_database_type()
+            )
             forum_feed_health = _read_forum_feed_health(experiment, exp_folder)
         except Exception:
             forum_feed_health = None

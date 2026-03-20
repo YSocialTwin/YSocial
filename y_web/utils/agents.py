@@ -227,7 +227,9 @@ def _generate_unique_name(
             else:
                 first_name = _fake_attr("first_name", "name")
             last_name = _fake_attr("last_name", "last_name")
-            return _normalize_generated_username(f"{first_name}_{last_name}", username_type)
+            return _normalize_generated_username(
+                f"{first_name}_{last_name}", username_type
+            )
 
         if gender_type == "male":
             raw_name = fake.name_male()
