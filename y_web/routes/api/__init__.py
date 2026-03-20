@@ -8,3 +8,8 @@ Contains two Blueprints:
   api_interview – interview server management and proxy endpoints
                   (moved from routes_api/interview.py)
 """
+
+from .reddit import api_reddit
+from .interview import api_interview
+
+__all__ = ["api_reddit", "api_interview"]
