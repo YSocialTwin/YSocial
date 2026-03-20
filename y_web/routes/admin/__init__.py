@@ -8,3 +8,8 @@ about page) and a ``sub/`` package that re-exports all existing
   dashboard.py  – Blueprint("admin") routes (moved from admin_dashboard.py)
   sub/          – re-exports agents, clients, experiments, jupyterlab, …
 """
+
+from . import dashboard
+from .dashboard import admin
+
+__all__ = ["admin"]

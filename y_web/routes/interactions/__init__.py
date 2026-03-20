@@ -10,3 +10,8 @@ deletions, and notification cancellations.
   microblogging.py – publish_post (microblogging platform)
   forum.py        – publish_post_reddit, publish_comment (forum platform)
 """
+
+from ._blueprint import user
+from . import common, microblogging, forum  # registers all routes
+
+__all__ = ["user"]
