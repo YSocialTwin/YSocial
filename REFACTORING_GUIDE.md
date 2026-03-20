@@ -67,7 +67,7 @@ y_web/routes/
 
   | Blueprint name | Used in |
   |---|---|
-  | `auth` | Python code and templates (`url_for("auth.login")`, `url_for("auth.logout")`, `url_for("auth.signup")`) |
+  | `auth` | Python code and templates (`url_for("auth.login")`, `url_for("auth.logout")`); `url_for("auth.signup")` appears in `templates/login/register.html` but **has no matching route in `auth.py`** — this is a pre-existing bug; do not add a `signup` route during the refactoring, but note it for a follow-up fix |
   | `main` | Python code and templates (`url_for("main.index")`, `url_for("main.feeed_logged")`, `url_for("main.search_reddit")`) |
   | `user_actions` | Redirect targets inside `user_interaction.py` itself |
   | `admin` | `url_for("admin.dashboard")` |
