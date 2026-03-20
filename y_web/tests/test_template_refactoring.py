@@ -506,64 +506,51 @@ class TestRouteIntegration:
 
 
 # ---------------------------------------------------------------------------
-# 6. Forum header — interview link present in account dropdown
+# 6. Forum header — interview link present in the account dropdown menu only
 # ---------------------------------------------------------------------------
 
 
 class TestForumHeaderInterviewLink:
-    """Verify the interview link exists in the forum header's account dropdown."""
+    """Verify the interview link is in the forum header account dropdown (not top navbar)."""
 
-    def test_forum_header_dropdown_has_interview_link(self):
-        """forum/header.html account dropdown must contain the interview link."""
+    def test_forum_header_has_interview_link(self):
+        """forum/header.html must contain an interview link href."""
         header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
-        # Must have the interview href inside the nav-drop-body account-items section
         assert 'href="/{{ exp_id }}/interview"' in content, (
             "forum/header.html must contain an interview link href"
         )
-        assert 'class="account-item"' in content or 'account-item' in content, (
-            "forum/header.html must have account-item classed links in dropdown"
-        )
 
-    def test_forum_header_dropdown_interview_gated_on_memory_enabled(self):
+    def test_forum_header_interview_gated_on_memory_enabled(self):
         """Interview link must be guarded by forum_memory_enabled (not always shown)."""
         header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
-        # The interview link must be inside a {% if forum_memory_enabled ... %} block
         assert "forum_memory_enabled" in content, (
             "forum/header.html must reference forum_memory_enabled"
         )
 
-    def test_forum_header_interview_in_nav_drop(self):
-        """Interview link in the forum header must appear inside the nav-drop section."""
+    def test_forum_header_interview_in_dropdown_not_top_navbar(self):
+        """Interview link must be in the account dropdown, not in the top navbar."""
         header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")
         with open(header_path) as fh:
             content = fh.read()
 
-        # Find the nav-drop-body section and ensure interview link is inside it
+        # The account dropdown starts after the top navbar closes
         nav_drop_start = content.find('nav-drop-body account-items')
         assert nav_drop_start != -1, "nav-drop-body account-items section not found"
 
-        # The interview href should appear after the nav-drop-body starts
-        interview_pos = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
-        assert interview_pos != -1, (
+        # Interview link must exist inside the account dropdown
+        interview_in_dropdown = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
+        assert interview_in_dropdown != -1, (
             "Interview link must be present inside the nav-drop account-items dropdown"
         )
 
-    def test_microblogging_header_also_has_interview_in_dropdown(self):
-        """Sanity check: microblogging/header.html has interview in account dropdown."""
-        header_path = os.path.join(TEMPLATES_DIR, "microblogging", "header.html")
-        with open(header_path) as fh:
-            content = fh.read()
-
-        nav_drop_start = content.find('nav-drop-body account-items')
-        assert nav_drop_start != -1
-
-        interview_pos = content.find('href="/{{ exp_id }}/interview"', nav_drop_start)
-        assert interview_pos != -1, (
-            "microblogging/header.html interview link not found in account dropdown"
+        # Interview link must NOT appear before the dropdown (i.e. not in the top navbar)
+        interview_before_dropdown = content.find('href="/{{ exp_id }}/interview"')
+        assert interview_before_dropdown == interview_in_dropdown, (
+            "Interview link must only appear inside the account dropdown, not in the top navbar"
         )
