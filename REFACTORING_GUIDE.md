@@ -51,13 +51,28 @@ y_web/routes/
 ├── admin/
 │   ├── __init__.py               # assembles admin sub-packages
 │   ├── dashboard.py              # Blueprint("admin") – moved from admin_dashboard.py
-│   └── sub/                      # thin re-exports of routes_admin/* (keep existing files in place)
-│       └── __init__.py
+│   └── sub/
+│       ├── __init__.py           # intermediate state: thin re-exports of routes_admin/*
+│       │                         # (Step 12 replaces this with real source files)
+│       ├── agents.py             # moved from routes_admin/agents_routes.py   (after Step 12)
+│       ├── clients.py            # moved from routes_admin/clients_routes.py  (after Step 12)
+│       ├── experiments.py        # moved from routes_admin/experiments_routes.py
+│       ├── jupyterlab.py         # moved from routes_admin/jupyterlab_routes.py
+│       ├── ollama.py             # moved from routes_admin/ollama_routes.py
+│       ├── pages.py              # moved from routes_admin/pages_routes.py
+│       ├── populations.py        # moved from routes_admin/populations_routes.py
+│       ├── tutorial.py           # moved from routes_admin/tutorial_routes.py
+│       └── users.py              # moved from routes_admin/users_routes.py
 └── api/
     ├── __init__.py
-    ├── reddit.py                 # thin re-export of routes_api/reddit.py
-    └── interview.py              # thin re-export of routes_api/interview.py
+    ├── reddit.py                 # moved from routes_api/reddit.py   (already done in Step 8)
+    └── interview.py              # moved from routes_api/interview.py (already done in Step 8)
 ```
+
+> **Phases still pending after Steps 1–11:**  
+> Steps 12–14 below complete the migration by physically moving `routes_admin/`
+> source files into `routes/admin/sub/` and removing the now-redundant legacy
+> `routes_admin/` and `routes_api/` directories.
 
 ### 1.3 Constraints that must be preserved
 
@@ -643,6 +658,240 @@ git rm y_web/main.py
 
 ---
 
+### Step 12 — Fix `y_web/routes_admin/__init__.py` star-imports
+
+The current `routes_admin/__init__.py` re-exports every sub-module via `from
+.X import *`.  This forces Python to import *all* sub-modules (and all their
+heavy dependencies — `numpy`, `faker`, `networkx`, `ollama`) whenever any
+single module under `routes_admin` is imported.  This breaks the test suite in
+CI environments that lack those packages.
+
+Replace the whole file with explicit named imports:
+
+```python
+"""
+Administrative route modules.
+
+Each name is imported directly so that importing one module does not
+force the import of all others.
+"""
+
+from .agents_routes import agents
+from .clients_routes import clientsr
+from .experiments_routes import experiments
+from .jupyterlab_routes import lab
+from .ollama_routes import ollama
+from .pages_routes import pages
+from .populations_routes import population
+from .tutorial_routes import tutorial
+from .users_routes import users
+
+__all__ = [
+    "agents", "clientsr", "experiments", "lab",
+    "ollama", "pages", "population", "tutorial", "users",
+]
+```
+
+**Validation**
+
+```bash
+# Importing a single module must NOT cascade into the others
+python3 -c "import y_web.routes_admin.populations_routes; print('OK')"
+# Expected: OK  (no ImportError even without numpy/networkx installed)
+
+python -m pytest y_web/tests/test_routes_admin_basic.py::TestRoutesAdminIntegration::test_all_admin_routes_importable -v
+# Expected: PASSED
+```
+
+---
+
+### Step 13 — Move `routes_admin/` source files into `routes/admin/sub/`
+
+This replaces the thin re-export shim (`routes/admin/sub/__init__.py`) with the
+actual source code living under the canonical `routes/` tree.  The old
+`routes_admin/` directory then becomes a backward-compat shim package,
+exactly like `auth.py`, `error_routes.py`, etc. were before Step 11.
+
+#### 13.1 — Create the per-module files under `routes/admin/sub/`
+
+For each module, copy its source file, updating only the Blueprint declaration
+line and any intra-package cross-references:
+
+| Old file | New file | Blueprint variable |
+|---|---|---|
+| `routes_admin/agents_routes.py` | `routes/admin/sub/agents.py` | `agents` |
+| `routes_admin/clients_routes.py` | `routes/admin/sub/clients.py` | `clientsr` |
+| `routes_admin/experiments_routes.py` | `routes/admin/sub/experiments.py` | `experiments` |
+| `routes_admin/jupyterlab_routes.py` | `routes/admin/sub/jupyterlab.py` | `lab` |
+| `routes_admin/ollama_routes.py` | `routes/admin/sub/ollama.py` | `ollama` |
+| `routes_admin/pages_routes.py` | `routes/admin/sub/pages.py` | `pages` |
+| `routes_admin/populations_routes.py` | `routes/admin/sub/populations.py` | `population` |
+| `routes_admin/tutorial_routes.py` | `routes/admin/sub/tutorial.py` | `tutorial` |
+| `routes_admin/users_routes.py` | `routes/admin/sub/users.py` | `users` |
+
+For each file, keep the Blueprint declaration **unchanged** (the Blueprint object
+name and its string name must stay the same).  The only changes needed are
+two cross-references that use the old `routes_admin` package path:
+
+* `jupyterlab_routes.py` line 6:
+  ```python
+  # OLD:
+  from y_web.routes_admin.experiments_routes import experiment_details
+  # NEW:
+  from y_web.routes.admin.sub.experiments import experiment_details
+  ```
+
+* `tutorial_routes.py` line 55:
+  ```python
+  # OLD:
+  from y_web.routes_admin.experiments_routes import get_suggested_port
+  # NEW:
+  from y_web.routes.admin.sub.experiments import get_suggested_port
+  ```
+
+> The helper `_do_check_schedule_progress` imported by
+> `y_web/utils/experiment_schedule_monitor.py` lives in `experiments_routes.py`.
+> Update that import too:
+> ```python
+> # OLD:
+> from y_web.routes_admin.experiments_routes import _do_check_schedule_progress
+> # NEW:
+> from y_web.routes.admin.sub.experiments import _do_check_schedule_progress
+> ```
+
+#### 13.2 — Update `routes/admin/sub/__init__.py`
+
+Replace the current re-export shim (which imports from `routes_admin`) with
+direct imports from the new sibling modules:
+
+```python
+"""
+Admin sub-blueprint package.
+
+Each file here is the canonical source for one administrative Blueprint.
+"""
+
+from .agents import agents
+from .clients import clientsr
+from .experiments import experiments
+from .jupyterlab import lab
+from .ollama import ollama
+from .pages import pages
+from .populations import population
+from .tutorial import tutorial
+from .users import users
+
+__all__ = [
+    "agents", "clientsr", "experiments", "lab",
+    "ollama", "pages", "population", "tutorial", "users",
+]
+```
+
+#### 13.3 — Turn `routes_admin/` into a backward-compat shim package
+
+Replace every `routes_admin/X_routes.py` with a one-line shim so that
+existing tests whose `@patch` targets use `y_web.routes_admin.X_routes.*`
+continue to work:
+
+```python
+# routes_admin/agents_routes.py  (shim)
+from y_web.routes.admin.sub.agents import *  # noqa: F401, F403
+from y_web.routes.admin.sub.agents import agents  # noqa: F401
+
+# routes_admin/clients_routes.py  (shim)
+from y_web.routes.admin.sub.clients import *  # noqa: F401, F403
+from y_web.routes.admin.sub.clients import clientsr  # noqa: F401
+
+# … repeat for all nine modules …
+```
+
+> **Patch-target note.** Tests that use
+> `@patch("y_web.routes_admin.clients_routes.reset_hpc_client_metrics")` rely on
+> the name `reset_hpc_client_metrics` being looked up in the
+> `y_web.routes_admin.clients_routes` module namespace.  The wildcard re-export
+> (`from y_web.routes.admin.sub.clients import *`) makes that name available in
+> the shim module, so existing `@patch` decorators keep working without
+> modification.  For a cleaner long-term fix, update those tests to patch
+> `y_web.routes.admin.sub.clients.*` directly.
+
+Replace `routes_admin/__init__.py` with:
+
+```python
+"""Backward-compatibility shim — source files have moved to routes/admin/sub/."""
+from y_web.routes.admin.sub import (  # noqa: F401
+    agents, clientsr, experiments, lab,
+    ollama, pages, population, tutorial, users,
+)
+```
+
+**Validation**
+
+```bash
+# Blueprint imports still work via old paths
+python3 -c "
+from y_web.routes_admin.agents_routes import agents
+from y_web.routes_admin.clients_routes import clientsr
+from y_web.routes_admin.experiments_routes import experiments
+print(agents.name, clientsr.name, experiments.name)
+"
+# Expected: agents clientsr experiments
+
+# New canonical paths also work
+python3 -c "
+from y_web.routes.admin.sub import agents, clientsr, experiments
+print(agents.name, clientsr.name, experiments.name)
+"
+# Expected: agents clientsr experiments
+
+python -m pytest y_web/tests/test_routes_admin_basic.py \
+                 y_web/tests/test_extend_simulation_metrics_reset.py \
+                 y_web/tests/test_hpc_schedule_start.py -v 2>&1 | tail -10
+# Expected: all PASSED (or same skip/pass ratio as baseline)
+```
+
+---
+
+### Step 14 — Remove the legacy `routes_api/` shim files
+
+`routes_api/reddit.py` and `routes_api/interview.py` are already thin
+`sys.modules` shims pointing at `routes/api/reddit.py` and
+`routes/api/interview.py` respectively (added in Step 8).  The only remaining
+consumer of the old paths is one test:
+
+```
+y_web/tests/test_interview_server_runtime.py:  from y_web.routes_api import interview
+```
+
+Update that import first:
+
+```python
+# OLD:
+from y_web.routes_api import interview
+# NEW:
+from y_web.routes.api import interview
+```
+
+Then remove the shim files and the now-empty package:
+
+```bash
+git rm y_web/routes_api/reddit.py
+git rm y_web/routes_api/interview.py
+git rm y_web/routes_api/__init__.py
+git rm -r y_web/routes_api/
+```
+
+**Validation**
+
+```bash
+python3 -c "from y_web.routes.api import api_reddit, api_interview; print(api_reddit.name, api_interview.name)"
+# Expected: api_reddit api_interview
+
+python -m pytest y_web/tests/test_interview_server_runtime.py -v 2>&1 | tail -5
+# Expected: PASSED
+```
+
+---
+
 ## 4. Full test validation sequence
 
 Run these after completing all steps:
@@ -812,39 +1061,43 @@ Each commit should leave the test suite green (or at worst no worse than the
 pre-refactoring baseline).
 
 ```
-feat: fix routes_admin __init__ wildcard imports → named imports
-feat: create y_web/routes/ skeleton with empty packages
-feat: add Blueprint singleton files for all route packages
-feat: migrate y_web/auth.py → y_web/routes/auth/
-feat: migrate y_web/error_routes.py → y_web/routes/errors/
-feat: migrate y_web/admin_dashboard.py → y_web/routes/admin/
-feat: migrate y_web/user_interaction.py → y_web/routes/interactions/
-feat: migrate y_web/main.py → y_web/routes/social/
-feat: migrate y_web/routes_api/ → y_web/routes/api/
-feat: add y_web/routes/__init__.py register_blueprints() factory
-refactor: update y_web/__init__.py to use register_blueprints()
-chore: remove backward-compat shims (auth, error_routes, admin_dashboard, user_interaction, main)
+feat: fix routes_admin __init__ wildcard imports → named imports          (Step 12)
+feat: create y_web/routes/ skeleton with empty packages                   (Step 1)
+feat: add Blueprint singleton files for all route packages                (Step 2)
+feat: migrate y_web/auth.py → y_web/routes/auth/                         (Step 3)
+feat: migrate y_web/error_routes.py → y_web/routes/errors/               (Step 4)
+feat: migrate y_web/admin_dashboard.py → y_web/routes/admin/             (Step 5)
+feat: migrate y_web/user_interaction.py → y_web/routes/interactions/     (Step 6)
+feat: migrate y_web/main.py → y_web/routes/social/                       (Step 7)
+feat: migrate y_web/routes_api/ → y_web/routes/api/                      (Step 8)
+feat: add y_web/routes/__init__.py register_blueprints() factory          (Step 9)
+refactor: update y_web/__init__.py to use register_blueprints()           (Step 10)
+chore: remove backward-compat shims (auth, error_routes, admin_dashboard, user_interaction, main) (Step 11)
+feat: move routes_admin/ source files into routes/admin/sub/             (Step 13)
+chore: turn routes_admin/ into a backward-compat shim package            (Step 13)
+chore: remove legacy routes_api/ shim files                              (Step 14)
 ```
 
 ---
 
 ## 8. Quick reference: Blueprint names and their new home
 
-| Blueprint name | Old import path | New import path |
+| Blueprint name | Intermediate import path (after Step 5) | Final import path (after Step 13) |
 |---|---|---|
-| `auth` | `y_web.auth.auth` | `y_web.routes.auth.auth` |
-| `errors` | `y_web.error_routes.errors` | `y_web.routes.errors.errors` |
-| `admin` | `y_web.admin_dashboard.admin` | `y_web.routes.admin.admin` |
-| `main` | `y_web.main.main` | `y_web.routes.social.main` |
-| `user_actions` | `y_web.user_interaction.user` | `y_web.routes.interactions.user` |
-| `agents` | `y_web.routes_admin.agents_routes.agents` | `y_web.routes.admin.sub.agents` |
-| `clientsr` | `y_web.routes_admin.clients_routes.clientsr` | `y_web.routes.admin.sub.clientsr` |
-| `experiments` | `y_web.routes_admin.experiments_routes.experiments` | `y_web.routes.admin.sub.experiments` |
-| `lab` | `y_web.routes_admin.jupyterlab_routes.lab` | `y_web.routes.admin.sub.lab` |
-| `ollama` | `y_web.routes_admin.ollama_routes.ollama` | `y_web.routes.admin.sub.ollama` |
-| `pages` | `y_web.routes_admin.pages_routes.pages` | `y_web.routes.admin.sub.pages` |
-| `population` | `y_web.routes_admin.populations_routes.population` | `y_web.routes.admin.sub.population` |
-| `tutorial` | `y_web.routes_admin.tutorial_routes.tutorial` | `y_web.routes.admin.sub.tutorial` |
-| `users` | `y_web.routes_admin.users_routes.users` | `y_web.routes.admin.sub.users` |
-| `api_reddit` | `y_web.routes_api.reddit.api_reddit` | `y_web.routes.api.api_reddit` |
-| `api_interview` | `y_web.routes_api.interview.api_interview` | `y_web.routes.api.api_interview` |
+| `auth` | `y_web.routes.auth.auth` | `y_web.routes.auth.auth` |
+| `errors` | `y_web.routes.errors.errors` | `y_web.routes.errors.errors` |
+| `admin` | `y_web.routes.admin.admin` | `y_web.routes.admin.admin` |
+| `main` | `y_web.routes.social.main` | `y_web.routes.social.main` |
+| `user_actions` | `y_web.routes.interactions.user` | `y_web.routes.interactions.user` |
+| `agents` | `y_web.routes.admin.sub.agents` (re-export of `routes_admin`) | `y_web.routes.admin.sub.agents` (canonical) |
+| `clientsr` | `y_web.routes.admin.sub.clientsr` (re-export) | `y_web.routes.admin.sub.clientsr` (canonical) |
+| `experiments` | `y_web.routes.admin.sub.experiments` (re-export) | `y_web.routes.admin.sub.experiments` (canonical) |
+| `lab` | `y_web.routes.admin.sub.lab` (re-export) | `y_web.routes.admin.sub.lab` (canonical) |
+| `ollama` | `y_web.routes.admin.sub.ollama` (re-export) | `y_web.routes.admin.sub.ollama` (canonical) |
+| `pages` | `y_web.routes.admin.sub.pages` (re-export) | `y_web.routes.admin.sub.pages` (canonical) |
+| `population` | `y_web.routes.admin.sub.population` (re-export) | `y_web.routes.admin.sub.population` (canonical) |
+| `tutorial` | `y_web.routes.admin.sub.tutorial` (re-export) | `y_web.routes.admin.sub.tutorial` (canonical) |
+| `users` | `y_web.routes.admin.sub.users` (re-export) | `y_web.routes.admin.sub.users` (canonical) |
+| `api_reddit` | `y_web.routes.api.api_reddit` (canonical since Step 8) | `y_web.routes.api.api_reddit` |
+| `api_interview` | `y_web.routes.api.api_interview` (canonical since Step 8) | `y_web.routes.api.api_interview` |
+
