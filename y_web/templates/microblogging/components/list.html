@@ -1,12 +1,12 @@
 <div>
-    {% include "components/thread-post.html" %}
+    {% include "microblogging/components/thread-post.html" %}
     <div id="child-{{ thread['post_id'] }}">
         {% if len(thread['children'])>0 %}
         {% set data = thread['children'] %}
         {% for c in data %}
         <div style="padding-left: 20px;">
             {% with thread=c %}
-            {% include "components/list.html" %}
+            {% include "microblogging/components/list.html" %}
             {% endwith %}
         </div>
         {% endfor %}

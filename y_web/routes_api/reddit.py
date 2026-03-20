@@ -244,7 +244,7 @@ def _forum_posts_html(exp_id: int, items, user_id=None):
     ).first()
     is_admin_user = bool(admin_user and getattr(admin_user, "role", "") == "admin")
     return render_template(
-        "reddit/components/posts.html",
+        "forum/components/posts.html",
         items=items,
         enumerate=enumerate,
         user_id=(user_id if user_id is not None else logged_id),

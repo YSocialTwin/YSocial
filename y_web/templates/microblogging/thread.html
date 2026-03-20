@@ -1,4 +1,4 @@
-{%  include "header.html" %}
+{%  include "microblogging/header.html" %}
 
 <div class="view-wrapper">
     <!-- Container -->
@@ -279,7 +279,6 @@
                             </div>
                             <div style="text-align: center">
                                 <a href="/{{exp_id}}/profile/{{ logged_id }}/recent/1">
-
                                      <div class="avatar">
                                         <img
                                                 id="user-avatar"
@@ -293,7 +292,6 @@
                                                 width="50%"
 
                                         />
-
                                      </div>
                                 </a>
                             </div>
@@ -319,16 +317,16 @@
 
                     <div class="card" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
                         <div class="card-heading is-bordered" style="padding: 1rem;">
-                            <h4 style="margin: 0; font-weight: 600;">Trending Topics</h4>
+                            <h4 style="margin: 0; font-weight: 600;">Trending Hashtags</h4>
 
                         </div>
                         <div class="card-body no-padding">
-                            <!-- Hashtag block -->
+
                             {% for ht in trending_ht %}
                             <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
                                 <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
                                     <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
-                                    <span><a href="/{{exp_id}}/interest/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['topic'] }}</a></span>
+                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -340,35 +338,33 @@
 
                 <!-- Middle column -->
                 <div class="column is-8" style="padding: 0 0.5rem;">
-                    <!-- Publishing Area -->
-                    <!-- /partials/pages/feed/compose-card.html -->
-                    <!-- Post 1 -->
-                    <!-- /partials/pages/feed/posts/feed-post1.html -->
-                    <!-- POST #1 -->
-                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"> Let's see what are we saying about <a style="color: white; font-weight: 600; text-decoration: underline;">{{ current_interest }}</a>
-                        today...
+                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); font-weight: 500;"> Are you looking for the full discussion thread?</div>
+
+                    <div class="profile-timeline">
+
+                        <!-- inizio -->
+                        {% include "microblogging/components/thread-post.html" %}
+                        <div id="child-{{ thread['post_id'] }}">
+                            {% set data = thread['children'] %}
+                            {% for c in data %}
+                            <div style="padding-left: 20px;">
+                                {% with thread=c %}
+                                {% include "microblogging/components/list.html" %}
+                                {% endwith %}
+                            </div>
+
+                            {% endfor %}
+                        </div>
                     </div>
 
-                    <div class="profile-timeline" id="posts-container">
-                        {% include "components/posts.html" %}
-                    </div>
-                    <!-- POST #1 -->
+                    <!-- fine -->
 
-                    <!-- Load more posts -->
-                    <div class="load-more-wrap narrow-top has-text-centered">
-                        {% if page-1>0 %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/interest/{{interest_id}}/{{ page-1 }}';">Previous Page</a>
-                        {% endif %}
-                        <a href="#" class="load-more-button"
-                           onclick="window.location.href = '/{{exp_id}}/interest/{{interest_id}}/{{ page+1 }}';">Next Page</a>
-                    </div>
-                    <!-- /Load more posts  -->
                 </div>
+                <!-- POST #1 -->
             </div>
         </div>
-        <!-- /Feed page main wrapper -->
     </div>
+    <!-- /Feed page main wrapper -->
 </div>
 
 
@@ -381,79 +377,19 @@
 <!-- Concatenated js plugins and jQuery -->
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script src="https://js.stripe.com/v3/"></script>
-
-<!-- Core js -->
 <script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
-
-<!-- Navigation options js -->
 <script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
-
-<!-- Core instance js -->
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script> -->
-
-<!-- Components js -->
-<!-- <script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script> -->
-<!-- <script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
-
-<!-- Landing page js -->
-
-<!-- Signup page js -->
-
-<!-- Feed pages js -->
-<!-- <script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script> -->
-
-<!-- profile js -->
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
-<!-- profile js -->
-
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
-<script>
-    // Initialize infinite scroll for interest posts
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.InfiniteScroll) {
-            InfiniteScroll.init({
-                apiEndpoint: '/{{exp_id}}/api/interest/{{interest_id}}',
-                postsContainerId: 'posts-container',
-                initialPage: {{ page }}
-            });
-        }
-    });
-</script>
-
-<!-- stories js -->
-
-<!-- friends js -->
-
-<!-- questions js -->
-
-<!-- video js -->
-
-<!-- events js -->
-
-<!-- news js -->
-
-<!-- shop js -->
-
-<!-- inbox js -->
-
-<!-- settings js -->
-
-<!-- map page js -->
-
-<!-- elements page js -->
-
 </body>
 </html>

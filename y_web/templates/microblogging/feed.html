@@ -1,4 +1,4 @@
-{%  include "reddit/header.html" %}
+{%  include "microblogging/header.html" %}
 
 <div class="view-wrapper">
     <!-- Container -->
@@ -7,7 +7,64 @@
         <!-- this holds the animated content placeholders that show up before content -->
         <div id="shadow-dom" class="view-wrap">
             <div class="columns">
-                <div class="column is-8 is-offset-2">
+                <div class="column is-3">
+                    <!-- Placeload element -->
+                    <div class="placeload weather-widget-placeload">
+                        <div class="header">
+                            <div class="inner-wrap">
+                                <div class="img loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                        <div class="body">
+                            <div class="inner-wrap">
+                                <div class="rect loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload list-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-6">
                     <!-- Placeload element -->
                     <div class="placeload compose-placeload">
                         <div class="header">
@@ -108,122 +165,264 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="column is-3">
+                    <!-- Placeload element -->
+                    <div class="placeload stories-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload mini-widget-placeload">
+                        <div class="body">
+                            <div class="inner-wrap">
+                                <div class="img loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="content-shape loads"></div>
+                                <div class="button-shape loads"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Placeload element -->
+                    <div class="placeload list-placeload">
+                        <div class="header">
+                            <div class="content-shape loads"></div>
+                        </div>
+                        <div class="body">
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                            <div class="flex-block">
+                                <div class="img loads"></div>
+                                <div class="inner-wrap">
+                                    <div class="content-shape loads"></div>
+                                    <div class="content-shape loads"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Feed page main wrapper -->
         <div id="activity-feed" class="view-wrap true-dom is-hidden">
-            <div class="columns">
-                <!-- Left side column - REMOVED FOR REDDIT STYLE -->
+            <div class="columns" style="margin: 0 -0.5rem;">
+                <!-- Left side column -->
+                <div class="column is-3 is-hidden-mobile" style="padding: 0 0.5rem;">
+                    <!-- Weather widget -->
+                    <!-- /partials/widgets/weather-widget.html -->
+                    {% if username != "" %}
+                    <div
+                            class="card is-weather-card"
+                            style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;"
+                    >
+                        <div class="card-heading">
 
-                <!-- Main column - Full width Reddit style -->
-                <div class="column is-8 is-offset-2">
-                    <!-- Publishing Area -->
-                    <!-- /partials/pages/feed/compose-card.html -->
-                    <!-- Create Post Button -->
-                    <div class="columns is-vcentered" style="margin-bottom: 20px;">
-                        <div class="column is-narrow">
-                            <div class="select">
-                                <select id="feed-type-select">
-                                    <option value="new" {% if feed_type == 'new' %}selected{% endif %}>New</option>
-                                    <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>Hot</option>
-                                    <option value="top" {% if feed_type == 'top' %}selected{% endif %}>Top</option>
-                                    <option value="most_commented" {% if feed_type == 'most_commented' %}selected{% endif %}>Most Commented</option>
-                                </select>
+                        </div>
+                        <div class="card-body" style="padding: 1.5rem;">
+
+                            <div style="text-align: center">
+                                <div class="temperature">
+                                        <span>{{ username }}</span>
+                                    </div>
+
+                                <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
+                                     <div class="avatar">
+                                        <img
+                                                id="user-avatar"
+                                                class="avatar-image"
+                                                {% if profile_pic_feed =="" %}
+                                                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ user_id|user_image_id +'.png') }}"
+                                                {% else %}
+                                                    data-demo-src="{{ profile_pic_feed }}"
+                                                {% endif %}
+                                                alt=""
+                                                width="50%"
+
+                                        />
+
+                                     </div>
+
+
+
+                                </a>
+
+                                <!-- <a href="profile-about.html" class="button has-min-width">About</a> -->
+                            </div>
+                            <!--
+                          <div class="weather-icon">
+                            <div>
+                              <i data-feather="sun"></i>
+                              <h4>Sunny</h4>
+                              <div class="details">
+                                <span>Real Feel: 78° </span>
+                                <span>Rain Chance: 5%</span>
+                              </div>
+                            </div>
+                          </div>
+                         <div class="previsions">
+                            <div class="day">
+                              <span>Mon</span>
+                              <i data-feather="sun"></i>
+                              <span>69°</span>
+                            </div>
+                            <div class="day">
+                              <span>Tue</span>
+                              <i data-feather="cloud-lightning"></i>
+                              <span>74°</span>
+                            </div>
+                            <div class="day">
+                              <span>Wed</span>
+                              <i data-feather="cloud-lightning"></i>
+                              <span>73°</span>
+                            </div>
+                            <div class="day">
+                              <span>Thu</span>
+                              <i data-feather="sun"></i>
+                              <span>68°</span>
+                            </div>
+                            <div class="day">
+                              <span>Fri</span>
+                              <i data-feather="cloud-drizzle"></i>
+                              <span>55°</span>
+                            </div>
+                            <div class="day">
+                              <span>Sat</span>
+                              <i data-feather="cloud-rain"></i>
+                              <span>58°</span>
+                            </div>
+                            <div class="day">
+                              <span>Sun</span>
+                              <i data-feather="sun"></i>
+                              <span>64°</span>
+                            </div>
+                          </div> -->
+                            <div class="current-date-location has-text-centered">
+                                <!--<span class="location">
+                                <i data-feather="map-pin"></i>
+                                  Welcome Back on Y!</span> -->
+                                <span class="location"></span>
+                                <span class="date" id="date"></span>
+                                <script>
+                                    // Get current date and time
+                                    var now = new Date();
+                                    var datetime = now.toLocaleString();
+
+                                    // Insert date and time into HTML
+                                    document.getElementById("date").innerHTML = datetime;
+                                </script>
+
+
                             </div>
                         </div>
-                        <div class="column">
-                            <form
-                                id="feed-search-form"
-                                action="{{ url_for('main.search_reddit', exp_id=exp_id) }}"
-                                method="get"
-                                style="display: flex; gap: 8px; align-items: center;"
-                            >
-                                <input
-                                    id="feed-search-input"
-                                    name="q"
-                                    class="input"
-                                    type="search"
-                                    placeholder="Search posts, users, links..."
-                                    value="{{ search_query|default('', true) }}"
-                                    style="max-width: 420px;"
-                                />
-                                <input
-                                    id="feed-search-feed-type"
-                                    type="hidden"
-                                    name="feed_type"
-                                    value="{{ feed_type }}"
-                                />
-                                <button id="feed-search-button" class="button is-light" type="submit">
-                                    Search
-                                </button>
-                            </form>
-                        </div>
-                        {% if view_mode == 'search' %}
-                        <div class="column is-narrow">
-                            <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
-                                Back to Feed
-                            </a>
-                        </div>
-                        {% else %}
-                        <div class="column">
-                            <div id="create-post-trigger" class="card is-create-trigger" style="cursor: pointer; padding: 15px; border: 1px dashed #dbdbdb; text-align: center; color: #7a7a7a;">
-                                <div class="create-post-prompt">
-                                    <i data-feather="plus" style="margin-right: 8px;"></i>
-                                    <span>Create Post</span>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    {% if view_mode == 'search' %}
-                    <div id="search-summary" class="notification is-light" style="margin-bottom: 16px;">
-                        <span id="search-summary-results" {% if not search_query %}style="display: none;"{% endif %}>
-                            Search results for <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
-                        </span>
-                        <span id="search-summary-empty" {% if search_query %}style="display: none;"{% endif %}>
-                            Enter a query to search posts, users, and shared links.
-                        </span>
+
                     </div>
                     {% endif %}
 
-                    {% if view_mode != 'search' %}
-                    <div id="new-posts-indicator" class="notification is-link is-light" style="display: none; margin-bottom: 16px;">
-                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                            <span>New posts available</span>
-                            <button id="new-posts-refresh-button" class="button is-small is-link" type="button">
-                                Refresh
-                            </button>
+                    <div class="card" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
+                        <div class="card-heading is-bordered" style="padding: 1rem;">
+                            <h4 style="margin: 0; font-weight: 600;">Trending Hashtags</h4>
+
+                        </div>
+                        <div class="card-body no-padding">
+                            <!-- Hashtag block -->
+                            {% for ht in trending_ht %}
+                            <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
+                                <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
+                                    <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
 
-                    <!-- Expandable Compose Card (initially hidden) -->
-                    <div id="compose-card" class="card is-new-content" style="display: none; position: relative;">
+                </div>
+                <!-- /Left side column -->
+
+                <!-- Middle column -->
+                <div class="column is-6" style="padding: 0 0.5rem;">
+                    <!-- Publishing Area -->
+                    <!-- /partials/pages/feed/compose-card.html -->
+                    <div id="compose-card" class="card is-new-content" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
                         <!-- Top tabs -->
                         <div class="tabs-wrapper">
                             <div class="tabs is-boxed is-fullwidth">
                                 <ul>
-                                    <li class="is-active" data-post-type-tab="text">
-                                        <a href="#" role="button">
+                                    <li class="is-active">
+                                        <a>
                                             <span class="icon is-small"><i data-feather="edit-3"></i></span>
-                                            <span>Text</span>
+                                            <span>Publish</span>
                                         </a>
                                     </li>
-                                    <li data-post-type-tab="link">
-                                        <a href="#" role="button">
-                                            <span class="icon is-small"><i data-feather="link-2"></i></span>
-                                            <span>Link</span>
-                                        </a>
-                                    </li>
-                                    <li data-post-type-tab="image">
-                                        <a href="#" role="button">
-                                            <span class="icon is-small"><i data-feather="image"></i></span>
-                                            <span>Media</span>
-                                        </a>
-                                    </li>
-                                    <!-- Close X button always visible -->
+                                    <!-- <li>
+                                       <a class="modal-trigger" data-modal="albums-help-modal">
+                                         <span class="icon is-small"><i data-feather="image"></i></span>
+                                         <span>Albums</span>
+                                       </a>
+                                     </li>
+                                     <li>
+                                       <a class="modal-trigger" data-modal="videos-help-modal">
+                                         <span class="icon is-small"><i data-feather="video"></i></span>
+                                         <span>Video</span>
+                                       </a>
+                                     </li> -->
+                                    <!-- Close X button -->
                                     <li class="close-wrap">
-                    <span class="close-publish" style="cursor:pointer;">
+                  <span class="close-publish">
                     <i data-feather="x"></i>
                   </span>
                                     </li>
@@ -237,72 +436,20 @@
                                     <div class="compose-form">
                                         <img
                                                 src="https://via.placeholder.com/300x300"
-                                                data-demo-src="{{ profile_pic or 'https://via.placeholder.com/300x300' }}"
+                                                {% if profile_pic =="" %}
+                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ logged_id|user_image_id +'.png') }}"
+                                    {% else %}
+                                        data-demo-src="{{ profile_pic }}"
+                                    {% endif %}
                                                 alt=""
                                         />
-                                        <!-- Reddit-style form fields -->
-                                        <div class="reddit-form-fields">
-                                            <!-- Title Field -->
-                                            <div class="reddit-field">
-                                                <input
-                                                    id="post-title"
-                                                    type="text"
-                                                    class="reddit-input title-input"
-                                                    placeholder="Title*"
-                                                    maxlength="300"
-                                                    required
-                                                />
-                                            </div>
-                                            
-                                            <!-- Body Text Field -->
-                                            <div class="reddit-field">
-                                                <textarea
-                                                    id="publish"
-                                                    class="reddit-textarea body-textarea"
-                                                    placeholder="Text (optional)"
-                                                    rows="4"
-                                                ></textarea>
-                                            </div>
-
-                                            <!-- Link URL Field (Link posts) -->
-                                            <div id="link-url-wrapper" class="reddit-field is-hidden">
-                                                <input
-                                                    id="link-url"
-                                                    type="url"
-                                                    class="reddit-input url-input"
-                                                    placeholder="Link URL*"
-                                                />
-                                            </div>
-
-                                            <!-- Media attachment controls (Media posts) -->
-                                            <div id="image-source-toggle" class="reddit-field is-hidden" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                                                    <input type="radio" name="image-source" value="url" />
-                                                    <span>Media URL</span>
-                                                </label>
-                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                                                    <input type="radio" name="image-source" value="upload" checked />
-                                                    <span>Upload</span>
-                                                </label>
-                                            </div>
-
-                                            <div id="image-url-wrapper" class="reddit-field is-hidden">
-                                                <input
-                                                    id="image-url"
-                                                    type="url"
-                                                    class="reddit-input image-input"
-                                                    placeholder="Media URL*"
-                                                />
-                                            </div>
-
-                                            <div id="image-upload-wrapper" class="reddit-field is-hidden">
-                                                <input
-                                                    id="image-file"
-                                                    type="file"
-                                                    accept="image/*,video/mp4"
-                                                    class="reddit-input image-input"
-                                                />
-                                            </div>
+                                        <div class="control">
+                    <textarea
+                            id="publish"
+                            class="textarea"
+                            rows="3"
+                            placeholder="Write something about you..."
+                    ></textarea>
                                         </div>
                                     </div>
 
@@ -516,6 +663,7 @@
                                 </div>
                                 <!-- /Compose form -->
 
+
                                 <!-- General extended options -->
                                 <div id="extended-options" class="compose-options is-hidden">
                                     <div class="columns is-multiline is-full">
@@ -534,14 +682,13 @@
                                         -->
 
                                         <!-- Share link action -->
-                                        <!--
                                         <div class="column is-6 is-narrower">
                                             <div id="open-link-suboption" class="compose-option is-centered">
                                                 <i data-feather="link-2"></i>
                                                 <span>Share Image</span>
                                             </div>
                                         </div>
-                                        -->
+
                                     </div>
                                 </div>
                                 <!-- /General extended options -->
@@ -565,36 +712,62 @@
 
                                 <!-- Hidden Options -->
 
-                                <!-- Add Post button immediately below fields -->
-                                <div class="reddit-field" style="text-align: right; margin-top: 1rem;">
-                                    <button id="publish-button" type="button" class="button is-solid accent-button" disabled>Post</button>
+                                <!-- Footer buttons -->
+                                <div class="more-wrap">
+                                    <!-- View more button -->
+
+                                    <!-- Publish button -->
+                                    <button
+                                            id="publish-button"
+                                            type="button"
+                                            class="button is-solid accent-button is-fullwidth is-disabled"
+                                    >
+                                        Publish
+                                    </button>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    {% endif %}
 
-                    <div
-                            id="feed-container"
-                            class="reddit-feed-container"
-                            data-current-page="{{ page }}"
-                            data-per-page="{{ per_page }}"
-                            data-feed-type="{{ feed_type }}"
-                            data-user-id="{{ '' if not feed_user_id else feed_user_id }}"
-                            data-has-more="{{ 'true' if has_more else 'false' }}"
-                    >
-                        {% include "reddit/components/posts.html" %}
+                    <!-- Post 1 -->
+                    <!-- /partials/pages/feed/posts/feed-post1.html -->
+                    <!-- POST #1 -->
+                    <div id="posts-container">
+                        {% include "microblogging/components/posts.html" %}
                     </div>
-                    <div id="loading-indicator" class="feed-loading-indicator has-text-centered" style="display: none;">
-                        <p>Loading more posts...</p>
+                    <!-- POST #1 -->
+
+                    <!-- Load more posts -->
+                    <div class="load-more-wrap narrow-top has-text-centered">
+                        {% if page-1>0 %}
+                        <a href="#" class="load-more-button"
+                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page-1 }}';">Previous
+                            Page</a>
+                        {% endif %}
+                        <a href="#" class="load-more-button"
+                           onclick="window.location.href = '/{{exp_id}}/feed/{{user_id}}/{{timeline}}/{{mode}}/{{ page+1 }}';">Next
+                            Page</a>
                     </div>
-                    <div id="end-of-feed" class="feed-end-indicator has-text-centered" style="display: none;">
-                        <p>You've reached the end!</p>
-                    </div>
+                    <!-- /Load more posts -->
                 </div>
                 <!-- /Middle column -->
 
-                <!-- Right side column - REMOVED FOR REDDIT STYLE -->
+                <!-- Right side column -->
+                <div class="column is-3" style="padding: 0 0.5rem;">
+                    <!-- Stories widget -->
+                    <!-- /partials/widgets/stories-widget.html -->
+
+                {% if username != "" %}
+                  {% include "microblogging/components/suggested_friends.html" %}
+                    {% endif %}
+
+
+                    {% if username != "" %}
+                  {% include "microblogging/components/suggested_pages.html" %}
+                    {% endif %}
+
+                </div>
+                <!-- /Right side column -->
             </div>
         </div>
         <!-- /Feed page main wrapper -->
@@ -603,28 +776,15 @@
 </div>
 
 
+<!-- Experiment context -->
 <script>
-window.redditContext = Object.freeze({
-    loggedUserId: {{ logged_id }},
-    isAdmin: {{ 'true' if is_admin else 'false' }},
-    loggedUsername: {{ logged_username|tojson }},
-    profilePic: {{ profile_pic|tojson }},
-    profilePicFeed: {{ profile_pic_feed|tojson }}
-});
-window.redditFeedConfig = Object.freeze({
-    currentPage: {{ page }},
-    perPage: {{ per_page }},
-    feedType: {{ feed_type|tojson }},
-    searchQuery: {{ search_query|default('', true)|tojson }},
-    userId: {{ feed_user_id|tojson }},
-    hasMore: {{ has_more|tojson }},
-    viewMode: {{ view_mode|default('feed', true)|tojson }},
-    expId: {{ exp_id }}
-});
+    // Make exp_id available globally for AJAX requests
+    window.EXP_ID = {{ exp_id if exp_id else 'null' }};
+    window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
 </script>
 
 <!-- Concatenated js plugins and jQuery -->
-<script src="{{ url_for('static', filename='assets/js/reddit/app.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script src="https://js.stripe.com/v3/"></script>
 
 <!-- Core js -->
@@ -658,9 +818,21 @@ window.redditFeedConfig = Object.freeze({
 <!-- Feed pages js -->
 <script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
-<script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
+<script>
+    // Initialize infinite scroll for feed
+    document.addEventListener('DOMContentLoaded', function() {
+        if (window.InfiniteScroll) {
+            InfiniteScroll.init({
+                apiEndpoint: '/{{exp_id}}/api/feed/{{user_id}}/{{timeline}}/{{mode}}',
+                postsContainerId: 'posts-container',
+                initialPage: {{ page }}
+            });
+        }
+    });
+</script>
 
 <!-- profile js -->
 
@@ -679,11 +851,12 @@ window.redditFeedConfig = Object.freeze({
 <!-- shop js -->
 
 <!-- inbox js -->
-<script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
 <!-- settings js -->
 
 <!-- map page js -->
 
 <!-- elements page js -->
+
 </body>
 </html>

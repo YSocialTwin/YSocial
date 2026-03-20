@@ -155,7 +155,7 @@ def index():
                 return redirect(f"/{exp.idexp}/feed/{exp_user_id}/feed/rf/1")
             elif exp.platform_type == "forum":
                 return redirect(f"/{exp.idexp}/rfeed/{exp_user_id}/rfeed/rf/1")
-    return render_template("login.html")
+    return render_template("login/login.html")
 
 
 @main.get("/profile")
@@ -341,7 +341,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         forum_context = dict(common_context)
         forum_context["mentions"] = forum_mentions
         return render_template(
-            "reddit/profile.html",
+            "forum/profile.html",
             profile_pic=_forum_current_profile_pic(exp_id, forum_logged_user),
             viewed_profile_pic=profile_pic,
             profile_pic_feed=_forum_current_profile_pic(exp_id, forum_logged_user),
@@ -355,7 +355,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         )
 
     return render_template(
-        "profile.html",
+        "microblogging/profile.html",
         profile_pic=profile_pic,
         **common_context,
     )
@@ -397,7 +397,7 @@ def edit_profile(exp_id, user_id):
     logged_id = logged_user.id
 
     return render_template(
-        "edit_profile.html",
+        "microblogging/edit_profile.html",
         user=user,
         profile_pic=profile_pic,
         is_page=user.is_page,
@@ -628,7 +628,7 @@ def feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     logged_id = logged_user.id
 
     return render_template(
-        "feed.html",
+        "microblogging/feed.html",
         items=res,
         page=page,
         profile_pic=profile_pic,
@@ -705,7 +705,7 @@ def get_post_hashtags(exp_id, hashtag_id, page=1):
     logged_id = user.id
 
     return render_template(
-        "hashtag.html",
+        "microblogging/hashtag.html",
         items=res,
         page=page,
         profile_pic=profile_pic,
@@ -778,7 +778,7 @@ def get_post_interest(exp_id, interest_id, page=1):
     logged_id = user.id
 
     return render_template(
-        "interest.html",
+        "microblogging/interest.html",
         items=res,
         page=page,
         profile_pic=profile_pic,
@@ -852,7 +852,7 @@ def get_post_emotion(exp_id, emotion_id, page=1):
     logged_id = user.id
 
     return render_template(
-        "emotions.html",
+        "microblogging/emotions.html",
         items=res,
         page=page,
         profile_pic=profile_pic,
@@ -945,7 +945,7 @@ def get_friends(exp_id, user_id, page=1):
     logged_id = cu.id
 
     return render_template(
-        "friends.html",
+        "microblogging/friends.html",
         followers=followers,
         profile_pic=profile_pic,
         profile_pic_follower=profile_pic_follower,
@@ -1194,7 +1194,7 @@ def get_thread(exp_id, post_id):
     logged_id = user.id
 
     return render_template(
-        "thread.html",
+        "microblogging/thread.html",
         thread=discussion_tree,
         profile_pic=profile_pic,
         user_id=logged_id,
@@ -1640,7 +1640,7 @@ def interview(exp_id):
 
     if platform_type == "forum":
         return render_template(
-            "reddit/interview.html",
+            "forum/interview.html",
             logged_username=current_user.username,
             logged_id=logged_id,
             profile_pic=_forum_current_profile_pic(exp_id, _forum_logged_user()),
@@ -1662,7 +1662,7 @@ def interview(exp_id):
         profile_pic = ""
 
     return render_template(
-        "interview.html",
+        "microblogging/interview.html",
         logged_username=current_user.username,
         logged_id=logged_id,
         profile_pic=profile_pic,
@@ -1852,7 +1852,7 @@ def get_thread_reddit(exp_id, post_id):
     mentions = get_unanswered_mentions(mention_user_id) if mention_user_id else []
 
     return render_template(
-        "reddit/thread.html",
+        "forum/thread.html",
         thread=discussion_tree,
         profile_pic=_forum_current_profile_pic(exp_id, logged_user),
         user_id=current_user.id,
@@ -1929,7 +1929,7 @@ def rnotifications(exp_id):
 
     if exp_user_id is None:
         return render_template(
-            "reddit/notifications.html",
+            "forum/notifications.html",
             items=[],
             page=page,
             has_more=False,
@@ -2019,7 +2019,7 @@ def rnotifications(exp_id):
         db.session.commit()
 
     return render_template(
-        "reddit/notifications.html",
+        "forum/notifications.html",
         items=items,
         page=page,
         has_more=has_more,
@@ -2085,7 +2085,7 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     profile_pic_feed = _forum_current_profile_pic(exp_id, logged_user)
 
     return render_template(
-        "reddit/feed.html",
+        "forum/feed.html",
         items=res,
         page=page_obj.page,
         profile_pic=profile_pic,
@@ -2158,7 +2158,7 @@ def search_reddit(exp_id):
         return redirect(f"/{exp_id}/rsearch?{urlencode(query)}")
 
     return render_template(
-        "reddit/feed.html",
+        "forum/feed.html",
         items=res,
         page=current_page,
         profile_pic=_forum_current_profile_pic(exp_id, logged_user),
@@ -2239,7 +2239,7 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
             res.append(add)
 
     html = render_template(
-        "components/posts.html",
+        "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
         user_id=user_id if user_id != "all" else current_user.id,
@@ -2358,7 +2358,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
             res.append(add)
 
     html = render_template(
-        "reddit/components/posts.html",
+        "forum/components/posts.html",
         items=res,
         enumerate=enumerate,
         user_id=user_id if user_id != "all" else current_user.id,
@@ -2387,7 +2387,7 @@ def api_hashtag_posts(exp_id, hashtag_id, page=1):
         hashtag_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
-        "components/posts.html",
+        "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
         user_id=current_user.id,
@@ -2416,7 +2416,7 @@ def api_interest_posts(exp_id, interest_id, page=1):
         interest_id, page, per_page=10, current_user=current_user.id, exp_id=exp_id
     )
     html = render_template(
-        "components/posts.html",
+        "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
         user_id=current_user.id,
@@ -2449,7 +2449,7 @@ def api_emotion_posts(exp_id, emotion_id, page=1):
         exp_id=exp_id,
     )
     html = render_template(
-        "components/posts.html",
+        "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
         user_id=current_user.id,
@@ -2480,7 +2480,7 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
     if getattr(exp, "platform_type", "") == "forum":
         logged_user = _forum_logged_user()
         html = render_template(
-            "reddit/components/posts.html",
+            "forum/components/posts.html",
             items=rp,
             enumerate=enumerate,
             user_id=(logged_user.id if logged_user else current_user.id),
@@ -2494,7 +2494,7 @@ def api_profile_posts(exp_id, user_id, page=1, mode="recent"):
         )
     else:
         html = render_template(
-            "components/posts.html",
+            "microblogging/components/posts.html",
             items=rp,
             enumerate=enumerate,
             user_id=user_id,
