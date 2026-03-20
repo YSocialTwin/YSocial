@@ -113,11 +113,12 @@ DEFAULT_FEED_LIMITS = {
     "db_fallback_limit": 50,
     "image_entries_per_feed": 100,
 }
-DEFAULT_FORUM_EMBEDDING_SETTINGS = {
+DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS = {
     "service": "",
     "host": "",
     "model": "",
 }
+DEFAULT_FORUM_EMBEDDING_SETTINGS = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
 DEFAULT_FORUM_AVATAR_SETTINGS = {
     "mode": "placeholder",
 }
@@ -406,6 +407,48 @@ def _load_forum_experiment_context(uid, require_manage=True):
     return experiment, experiment_dir, None
 
 
+def _load_memory_capable_experiment_context(uid, require_manage=True):
+    """Load a standard/forum experiment and its writable directory."""
+    check_privileges(current_user.username)
+
+    experiment = Exps.query.filter_by(idexp=uid).first()
+    if not experiment:
+        flash("Experiment not found", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    if getattr(experiment, "simulator_type", "Standard") == "HPC":
+        flash(
+            "This page is only available for Standard and Forum experiments.",
+            "warning",
+        )
+        return (
+            None,
+            None,
+            redirect(url_for("experiments.experiment_details", uid=uid)),
+        )
+
+    admin_user = _current_admin_user_or_none()
+    if require_manage and not user_can_manage_experiment(admin_user, experiment):
+        flash("You do not have permission to manage this experiment.", "error")
+        return (
+            None,
+            None,
+            redirect(url_for("experiments.experiment_details", uid=uid)),
+        )
+
+    from y_web.utils.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
+    if not exp_folder:
+        flash("Invalid experiment database configuration", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
+    os.makedirs(experiment_dir, exist_ok=True)
+    return experiment, experiment_dir, None
+
+
 def _normalize_forum_embedding_service(value):
     """Normalize forum memory embedding provider name."""
     service = str(value or "").strip().lower()
@@ -425,6 +468,14 @@ def _normalize_forum_embedding_host(value):
     if host.endswith("/v1"):
         host = host[:-3].rstrip("/")
     return host
+
+
+def _normalize_embedding_service(value):
+    return _normalize_forum_embedding_service(value)
+
+
+def _normalize_embedding_host(value):
+    return _normalize_forum_embedding_host(value)
 
 
 def _read_forum_feed_health(experiment, experiment_dir):
@@ -533,6 +584,28 @@ def _read_forum_embedding_settings(experiment_dir):
 
     settings["service"] = _normalize_forum_embedding_service(persisted.get("service"))
     settings["host"] = _normalize_forum_embedding_host(persisted.get("host"))
+    settings["model"] = str(persisted.get("model") or "").strip()
+    return settings
+
+
+def _read_experiment_embedding_settings(experiment_dir):
+    """Load persisted memory embedding settings from config_server.json."""
+    config_path = os.path.join(experiment_dir, "config_server.json")
+    settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
+    if not os.path.exists(config_path):
+        return settings
+    try:
+        with open(config_path, "r") as handle:
+            config = json.load(handle)
+    except (json.JSONDecodeError, IOError):
+        return settings
+
+    persisted = config.get("memory_embeddings")
+    if not isinstance(persisted, dict):
+        return settings
+
+    settings["service"] = _normalize_embedding_service(persisted.get("service"))
+    settings["host"] = _normalize_embedding_host(persisted.get("host"))
     settings["model"] = str(persisted.get("model") or "").strip()
     return settings
 
@@ -736,6 +809,7 @@ def settings():
         visible_query = get_visible_experiment_query(user)
         experiments = visible_query.limit(5).all()
         all_experiments = visible_query.all()
+        active_experiments = visible_query.filter_by(status=1).all()
     else:
         # Regular users should not access this page
         flash("Access denied. Please use the experiment feed.")
@@ -759,14 +833,6 @@ def settings():
     for exp in experiments:
         clients = Client.query.filter_by(id_exp=exp.idexp).all()
         exp_has_infinite[exp.idexp] = any(client.days == -1 for client in clients)
-
-    # check if current db is the same of the active experiment
-    exp = Exps.query.filter_by(status=1).first()
-    if exp:
-        active_db = current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
-        if exp.exp_name not in active_db:
-            # change the active experiment
-            db.session.query(Exps).filter_by(status=1).update({Exps.status: 0})
 
     dbtype = current_app.config["SQLALCHEMY_DATABASE_URI"].split(":")[0]
 
@@ -793,6 +859,7 @@ def settings():
         enable_notebook=current_app.config.get("ENABLE_NOTEBOOK", False),
         exp_has_infinite=exp_has_infinite,
         exp_groups=exp_groups,
+        active_experiments=active_experiments,
     )
 
 
@@ -3260,9 +3327,11 @@ def experiment_details(uid):
 
     # Resolve current toggle values from persisted server config.
     current_perspective_api = ""
+    embedding_settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     forum_feed_health = None
+    memory_module_enabled = False
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -3305,6 +3374,21 @@ def experiment_details(uid):
                     config.get("opinions_enabled", opinion_dynamics_enabled),
                 )
             )
+            memory_cfg = config.get("memory")
+            if isinstance(memory_cfg, dict):
+                memory_module_enabled = bool(memory_cfg.get("enabled"))
+            if experiment.platform_type in {"forum", "microblogging"}:
+                persisted_embedding = config.get("memory_embeddings")
+                if isinstance(persisted_embedding, dict):
+                    embedding_settings = {
+                        "service": _normalize_embedding_service(
+                            persisted_embedding.get("service")
+                        ),
+                        "host": _normalize_embedding_host(
+                            persisted_embedding.get("host")
+                        ),
+                        "model": str(persisted_embedding.get("model") or "").strip(),
+                    }
             if experiment.platform_type == "forum":
                 persisted_embedding = config.get("memory_embeddings")
                 if isinstance(persisted_embedding, dict):
@@ -3357,6 +3441,8 @@ def experiment_details(uid):
         sentiment_annotation_enabled=sentiment_annotation_enabled,
         emotion_annotation_enabled=emotion_annotation_enabled,
         opinion_dynamics_enabled=opinion_dynamics_enabled,
+        memory_module_enabled=memory_module_enabled,
+        embedding_settings=embedding_settings,
         forum_embedding_settings=forum_embedding_settings,
         forum_avatar_settings=forum_avatar_settings,
         forum_feed_health=forum_feed_health,
@@ -3434,6 +3520,7 @@ def update_experiment_config(uid):
     emotion_enabled = _is_checked("emotion_annotation")
     sentiment_enabled = _is_checked("sentiment_annotation")
     opinion_dynamics_enabled = _is_checked("opinion_dynamics_enabled")
+    memory_enabled = _is_checked("memory_enabled")
     perspective_api = (request.form.get("perspective_api") or "").strip()
 
     if not bool(getattr(exp, "llm_agents_enabled", 0)):
@@ -3481,6 +3568,11 @@ def update_experiment_config(uid):
         config["opinions_enabled"] = opinions_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
         config["perspective_api"] = perspective_api if toxicity_enabled else None
+        memory_config = config.get("memory")
+        if not isinstance(memory_config, dict):
+            memory_config = {}
+        memory_config["enabled"] = bool(memory_enabled)
+        config["memory"] = memory_config
 
         with open(cfg_path, "w") as f:
             json.dump(config, f, indent=4)
@@ -5203,23 +5295,33 @@ def feed_limits(uid):
 @experiments.route("/admin/embedding_settings/<int:uid>", methods=["GET"])
 @login_required
 def embedding_settings(uid):
-    """Display and edit forum memory embedding backend settings."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    """Display and edit memory embedding backend settings for standard/forum experiments."""
+    experiment, experiment_dir, error_response = _load_memory_capable_experiment_context(
+        uid
+    )
     if error_response is not None:
         return error_response
 
     return render_template(
         "admin/embedding_settings.html",
         experiment=experiment,
-        embedding_settings=_read_forum_embedding_settings(experiment_dir),
+        embedding_settings=_read_experiment_embedding_settings(experiment_dir),
+        platform_label=(
+            "Forum" if experiment.platform_type == "forum" else "Microblogging"
+        ),
+        server_label=(
+            "YServerReddit" if experiment.platform_type == "forum" else "YServer"
+        ),
     )
 
 
 @experiments.route("/admin/update_embedding_settings/<int:uid>", methods=["POST"])
 @login_required
 def update_embedding_settings(uid):
-    """Persist forum memory embedding backend settings to config_server.json."""
-    experiment, experiment_dir, error_response = _load_forum_experiment_context(uid)
+    """Persist memory embedding backend settings to config_server.json."""
+    experiment, experiment_dir, error_response = _load_memory_capable_experiment_context(
+        uid
+    )
     if error_response is not None:
         return error_response
 
@@ -5232,8 +5334,8 @@ def update_embedding_settings(uid):
         except (json.JSONDecodeError, IOError):
             config = {}
 
-    service = _normalize_forum_embedding_service(request.form.get("embedding_service"))
-    host = _normalize_forum_embedding_host(request.form.get("embedding_host"))
+    service = _normalize_embedding_service(request.form.get("embedding_service"))
+    host = _normalize_embedding_host(request.form.get("embedding_host"))
     model = str(request.form.get("embedding_model") or "").strip()
 
     if service == "ollama":
@@ -5256,7 +5358,7 @@ def update_embedding_settings(uid):
             "model": model,
         }
     else:
-        config["memory_embeddings"] = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
+        config["memory_embeddings"] = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
 
     with open(config_path, "w") as handle:
         json.dump(config, handle, indent=2)

@@ -279,6 +279,19 @@ function openExternalUrl(event, url) {
                                         </div>
                                     </div>
                                 </a>
+                                {% if experiment_memory_enabled and current_user_role in ['admin', 'researcher'] %}
+                                <a href="/{{ exp_id }}/interview" class="account-item">
+                                    <div class="media">
+                                        <div class="icon-wrap">
+                                            <i data-feather="message-square"></i>
+                                        </div>
+                                        <div class="media-content">
+                                            <h3>Interview</h3>
+                                            <small>Interview an LLM agent with memory context.</small>
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endif %}
 
                                 {% if is_admin==True %}
                                 <hr class="account-divider"/>
@@ -387,6 +400,14 @@ function openExternalUrl(event, url) {
                 >
                     <span><i data-feather="user"></i>Profile</span>
                 </a>
+                {% if experiment_memory_enabled and current_user_role in ['admin', 'researcher'] %}
+                <a
+                        href="/{{ exp_id }}/interview"
+                        class="navbar-item is-flex is-mobile-icon"
+                >
+                    <span><i data-feather="message-square"></i>Interview</span>
+                </a>
+                {% endif %}
 
             </div>
         </div>

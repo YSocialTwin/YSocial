@@ -234,7 +234,7 @@
             <div class="original-post">
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
-                    <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
+                    <span class="time">{{ item.get("display_time", "") }}</span>
                     <div class="post-text" style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
                         {{ item["post"]|safe }}
                     </div>
@@ -299,7 +299,7 @@
                 <!-- Content -->
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
-                    <span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>
+                    <span class="time">{{ cm.get("display_time", "") }}</span>
                     <div style="white-space: pre-wrap; word-wrap: break-word; line-height: 1.5;">
                         {{ cm["post"]|safe }}
                     </div>

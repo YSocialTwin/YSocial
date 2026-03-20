@@ -1362,6 +1362,7 @@ def start_server(exp):
         # Set environment variable for config file path
         env = os.environ.copy()
         env["YSERVER_CONFIG"] = config
+        env["YSERVER_LOG_FILE"] = str(Path(config).parent / "_server.log")
 
         # Create log files for server output
         log_dir = Path(config).parent
@@ -1473,6 +1474,8 @@ def start_server(exp):
         # Create log files for server output to avoid pipe buffering issues
         # The server process should run independently without blocking on PIPE
         log_dir = Path(config).parent
+        env = os.environ.copy()
+        env["YSERVER_LOG_FILE"] = str(log_dir / "_server.log")
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 
@@ -2965,6 +2968,7 @@ def start_client(exp, cli, population, resume=True):
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
     env = os.environ.copy()
+    env["YCLIENT_LOG_FILE"] = str(log_dir / f"{cli.name}_client.log")
 
     # Mark this as a client subprocess so the atexit handler doesn't run cleanup
     # This prevents the subprocess from killing all other experiments when it exits

@@ -588,6 +588,12 @@ def _build_client_creation_context(idexp, recsys_mode):
         "timezone": "Europe/Rome",
         "feed_refresh": "hourly",
     }
+    experiment_embedding_settings = {
+        "service": "",
+        "host": "",
+        "model": "",
+    }
+    experiment_memory_enabled = False
     exp_llm_defaults = {
         "llm": "http://127.0.0.1:11434/v1",
         "llm_api_key": "NULL",
@@ -600,7 +606,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         "llm_v_temperature": 0.5,
     }
 
-    if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
+    if exp is not None and getattr(exp, "simulator_type", "Standard") != "HPC":
         try:
             from y_web.utils.path_utils import get_writable_path
 
@@ -621,9 +627,24 @@ def _build_client_creation_context(idexp, recsys_mode):
                 experiment_clock["feed_refresh"] = raw_clock.get(
                     "feed_refresh", "hourly"
                 )
+                raw_memory = experiment_config.get("memory", {}) or {}
+                if isinstance(raw_memory, dict):
+                    experiment_memory_enabled = bool(raw_memory.get("enabled"))
+                raw_embeddings = experiment_config.get("memory_embeddings", {}) or {}
+                if isinstance(raw_embeddings, dict):
+                    experiment_embedding_settings["service"] = str(
+                        raw_embeddings.get("service") or ""
+                    ).strip()
+                    experiment_embedding_settings["host"] = str(
+                        raw_embeddings.get("host") or ""
+                    ).strip()
+                    experiment_embedding_settings["model"] = str(
+                        raw_embeddings.get("model") or ""
+                    ).strip()
         except Exception:
             pass
 
+    if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = (
             Client.query.filter_by(id_exp=idexp).order_by(Client.id.desc()).first()
         )
@@ -670,6 +691,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "llm_agents_enabled": llm_agents_enabled,
         "topics": topics_list,
         "experiment_clock": experiment_clock,
+        "experiment_memory_enabled": experiment_memory_enabled,
+        "experiment_embedding_settings": experiment_embedding_settings,
         "exp_llm_defaults": exp_llm_defaults,
     }
 
@@ -1707,16 +1730,16 @@ def _create_standard_client_internal():
     )
     attention_window = request.form.get("attention_window")
     visibility_rounds = request.form.get("visibility_rounds")
-    post = request.form.get("post")
-    share = request.form.get("share")
-    image = request.form.get("image")
-    comment = request.form.get("comment")
-    read = request.form.get("read")
-    news = request.form.get("news")
-    search = request.form.get("search")
-    vote = request.form.get("vote")
-    share_link = request.form.get("share_link")
-    share_image = request.form.get("share_image", "0.15")
+    post = request.form.get("post", "0")
+    share = request.form.get("share", "0")
+    image = request.form.get("image", "0")
+    comment = request.form.get("comment", "0")
+    read = request.form.get("read", "0")
+    news = request.form.get("news", "0")
+    search = request.form.get("search", "0")
+    vote = request.form.get("vote", "0")
+    share_link = request.form.get("share_link", "0")
+    share_image = request.form.get("share_image", "0")
     initial_agents = request.form.get("initial_agents")
     clock_mode = (request.form.get("clock_mode") or "simulated").strip().lower()
     clock_timezone = (request.form.get("clock_timezone") or "Europe/Rome").strip()
@@ -1964,27 +1987,7 @@ def _create_standard_client_internal():
     except (ValueError, TypeError):
         errors.append("Probability Secondary Follow must be a valid number")
         probability_of_secondary_follow = None
-    try:
-        post = float(post)
-        comment = float(comment)
-        read = float(read)
-        search = float(search)
-        share_link = float(share_link)
-        share_image = float(share_image)
-    except (ValueError, TypeError):
-        errors.append("Action likelihood values must be valid numbers")
-    share = 0.0
-    image = 0.0
-    news = 0.0
-    vote = 0.0
-
-    # Check probability ranges
-    probabilities = {
-        "% New Agents (daily)": percentage_new_agents_iteration,
-        "% Daily Churn": percentage_removed_agents_iteration,
-        "Timeline Follower Ratio": reading_from_follower_ratio,
-        "Probability Daily Follow": probability_of_daily_follow,
-        "Probability Secondary Follow": probability_of_secondary_follow,
+    action_probability_values = {
         "Post new content": post,
         "Comment a Post": comment,
         "Read a content": read,
@@ -1992,9 +1995,49 @@ def _create_standard_client_internal():
         "Share Link": share_link,
         "Share Image": share_image,
     }
+    parsed_action_values = {}
+    for field_name, raw_value in action_probability_values.items():
+        try:
+            parsed_action_values[field_name] = float(raw_value)
+        except (ValueError, TypeError):
+            errors.append(f"{field_name} must be a valid number")
+            parsed_action_values[field_name] = None
+
+    post = parsed_action_values["Post new content"]
+    comment = parsed_action_values["Comment a Post"]
+    read = parsed_action_values["Read a content"]
+    search = parsed_action_values["Search a Hashtag"]
+    share_link = parsed_action_values["Share Link"]
+    share_image = parsed_action_values["Share Image"]
+    share = 0.0
+    image = 0.0
+    news = 0.0
+    vote = 0.0
+
+    # Check probability ranges for true probabilities.
+    probabilities = {
+        "% New Agents (daily)": percentage_new_agents_iteration,
+        "% Daily Churn": percentage_removed_agents_iteration,
+        "Timeline Follower Ratio": reading_from_follower_ratio,
+        "Probability Daily Follow": probability_of_daily_follow,
+        "Probability Secondary Follow": probability_of_secondary_follow,
+    }
     for field_name, value in probabilities.items():
         if value is not None and not (0 <= value <= 1):
             errors.append(f"{field_name} must be between 0 and 1")
+
+    # Standard action relevance fields use relative weights in [0, 10].
+    action_scores = {
+        "Post new content": post,
+        "Comment a Post": comment,
+        "Read a content": read,
+        "Search a Hashtag": search,
+        "Share Link": share_link,
+        "Share Image": share_image,
+    }
+    for field_name, value in action_scores.items():
+        if value is not None and not (0 <= value <= 10):
+            errors.append(f"{field_name} must be between 0 and 10")
 
     if errors:
         for error in errors:
@@ -2408,11 +2451,12 @@ def _create_standard_client_internal():
             "memory_embedding_model": str(memory_embedding_model).strip(),
             "memory_embedding_async": bool(memory_embedding_async),
             "memory_importance_mode": str(memory_importance_mode).strip(),
-            "memory_prompt_mode": "subtle_forum",
-            "memory_reply_context_max_chars": 280,
-            "memory_vote_signal_only": True,
-            "forum_post_structure_strict": True,
-            "memory_cross_thread_callback_min_score": 0.8,
+            "memory_backend": (
+                "hybrid_semantic" if bool(memory_semantic_enabled) else "simple_recent"
+            ),
+            "memory_prompt_mode": "subtle_timeline",
+            "memory_reply_context_max_chars": int(max_thread_context_chars),
+            "memory_vote_signal_only": False,
         },
     }
 
@@ -2939,16 +2983,16 @@ def _create_forum_client_internal():
     )
     attention_window = request.form.get("attention_window")
     visibility_rounds = request.form.get("visibility_rounds")
-    post = request.form.get("post")
-    share = request.form.get("share")
-    image = request.form.get("image")
-    comment = request.form.get("comment")
-    read = request.form.get("read")
-    news = request.form.get("news")
-    search = request.form.get("search")
-    vote = request.form.get("vote")
-    share_link = request.form.get("share_link")
-    share_image = request.form.get("share_image", "0.15")
+    post = request.form.get("post", "0")
+    share = request.form.get("share", "0")
+    image = request.form.get("image", "0")
+    comment = request.form.get("comment", "0")
+    read = request.form.get("read", "0")
+    news = request.form.get("news", "0")
+    search = request.form.get("search", "0")
+    vote = request.form.get("vote", "0")
+    share_link = request.form.get("share_link", "0")
+    share_image = request.form.get("share_image", "0")
     initial_agents = request.form.get("initial_agents")
     clock_mode = (request.form.get("clock_mode") or "simulated").strip().lower()
     clock_timezone = (request.form.get("clock_timezone") or "Europe/Rome").strip()
@@ -3201,29 +3245,7 @@ def _create_forum_client_internal():
         errors.append("Probability Secondary Follow must be a valid number")
         probability_of_secondary_follow = None
 
-    try:
-        post = float(post)
-        comment = float(comment)
-        read = float(read)
-        search = float(search)
-        share_link = float(share_link)
-        share_image = float(share_image)
-        news = float(news or 0.0)
-    except (ValueError, TypeError):
-        errors.append("Action likelihood values must be valid numbers")
-    share = 0.0
-    image = 0.0
-    share_link = _forum_effective_link_share(news, share_link)
-    news = share_link
-    vote = 0.0
-
-    # Check probability ranges
-    probabilities = {
-        "% New Agents (daily)": percentage_new_agents_iteration,
-        "% Daily Churn": percentage_removed_agents_iteration,
-        "Timeline Follower Ratio": reading_from_follower_ratio,
-        "Probability Daily Follow": probability_of_daily_follow,
-        "Probability Secondary Follow": probability_of_secondary_follow,
+    action_probability_values = {
         "Post new content": post,
         "Comment a Post": comment,
         "Read a content": read,
@@ -3231,9 +3253,56 @@ def _create_forum_client_internal():
         "Share Link": share_link,
         "Share Image": share_image,
     }
+    parsed_action_values = {}
+    for field_name, raw_value in action_probability_values.items():
+        try:
+            parsed_action_values[field_name] = float(raw_value)
+        except (ValueError, TypeError):
+            errors.append(f"{field_name} must be a valid number")
+            parsed_action_values[field_name] = None
+
+    try:
+        news = float(news or 0.0)
+    except (ValueError, TypeError):
+        errors.append("News must be a valid number")
+        news = 0.0
+
+    post = parsed_action_values["Post new content"]
+    comment = parsed_action_values["Comment a Post"]
+    read = parsed_action_values["Read a content"]
+    search = parsed_action_values["Search a Hashtag"]
+    share_link = parsed_action_values["Share Link"]
+    share_image = parsed_action_values["Share Image"]
+    share = 0.0
+    image = 0.0
+    share_link = _forum_effective_link_share(news, share_link)
+    news = share_link
+    vote = 0.0
+
+    # Check probability ranges for true probabilities.
+    probabilities = {
+        "% New Agents (daily)": percentage_new_agents_iteration,
+        "% Daily Churn": percentage_removed_agents_iteration,
+        "Timeline Follower Ratio": reading_from_follower_ratio,
+        "Probability Daily Follow": probability_of_daily_follow,
+        "Probability Secondary Follow": probability_of_secondary_follow,
+    }
     for field_name, value in probabilities.items():
         if value is not None and not (0 <= value <= 1):
             errors.append(f"{field_name} must be between 0 and 1")
+
+    # Forum action relevance fields use relative weights in [0, 10].
+    action_scores = {
+        "Post new content": post,
+        "Comment a Post": comment,
+        "Read a content": read,
+        "Search a Hashtag": search,
+        "Share Link": share_link,
+        "Share Image": share_image,
+    }
+    for field_name, value in action_scores.items():
+        if value is not None and not (0 <= value <= 10):
+            errors.append(f"{field_name} must be between 0 and 10")
 
     if errors:
         for error in errors:

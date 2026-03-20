@@ -382,26 +382,36 @@ document.addEventListener('DOMContentLoaded', () => {
     refreshDownloadNotifications();
     setInterval(refreshDownloadNotifications, 15000);
 
-    // On touch/tablet layouts, make header dropdowns tap-open (hover is unreliable).
-    if (window.matchMedia('(max-width: 1024px)').matches) {
-        const menus = document.querySelectorAll('.dashboard-toolbar .header-buttons .toolbar-menu');
-        menus.forEach((menu) => {
-            const trigger = menu.querySelector('.dropdown-trigger > button');
-            if (!trigger) return;
-            trigger.addEventListener('click', (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                const shouldOpen = !menu.classList.contains('is-active');
-                menus.forEach((m) => m.classList.remove('is-active'));
-                if (shouldOpen) {
-                    menu.classList.add('is-active');
-                }
-            });
-        });
-        document.addEventListener('click', () => {
+    const menus = document.querySelectorAll('.dashboard-toolbar .header-buttons .toolbar-menu');
+    menus.forEach((menu) => {
+        const trigger = menu.querySelector('.dropdown-trigger > button');
+        const panel = menu.querySelector('.dropdown-menu');
+        if (!trigger || !panel) return;
+
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            const shouldOpen = !menu.classList.contains('is-active');
             menus.forEach((m) => m.classList.remove('is-active'));
+            if (shouldOpen) {
+                menu.classList.add('is-active');
+            }
         });
-    }
+
+        panel.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+    });
+
+    document.addEventListener('click', () => {
+        menus.forEach((m) => m.classList.remove('is-active'));
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            menus.forEach((m) => m.classList.remove('is-active'));
+        }
+    });
 });
 </script>
 
@@ -539,6 +549,10 @@ document.addEventListener('DOMContentLoaded', () => {
     border: 0 !important;
     box-shadow: none !important;
     background: transparent !important;
+}
+
+.dashboard-toolbar .header-buttons .toolbar-menu.is-active .dropdown-menu {
+    display: block;
 }
 
 .dashboard-toolbar .header-buttons .toolbar-menu .dropdown-content {

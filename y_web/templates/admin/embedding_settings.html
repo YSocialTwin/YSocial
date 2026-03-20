@@ -23,9 +23,9 @@
                     {% endfor %}
 
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Forum Memory Embeddings</h3>
+                        <h3 class="title is-5 is-thin">{{ platform_label }} Memory Embeddings</h3>
                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
-                            Configure the embedding backend used by YServerReddit for semantic memory indexing and retrieval. If left unconfigured, forum memory falls back to lexical search only.
+                            Configure the embedding backend used by {{ server_label }} for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.
                         </p>
 
                         <form action="/admin/update_embedding_settings/{{ experiment.idexp }}" method="POST">
@@ -41,7 +41,7 @@
                                         </div>
                                     </span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only Ollama is currently supported for forum memory embeddings.</p>
+                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only Ollama is currently supported for memory embeddings.</p>
 
                                 <div class="box-line">
                                     <span class="left">Ollama Host</span>
@@ -87,7 +87,7 @@
                         <div class="help-block">
                             <p>
                                 <b>Disabled by default</b><br>
-                                Forum experiments no longer assume any embedding backend. Without this configuration, semantic memory features degrade gracefully to lexical retrieval.
+                                Standard and Forum experiments do not assume any embedding backend. Without this configuration, semantic memory features degrade gracefully to lexical retrieval.
                             </p>
                             <hr>
                             <p>

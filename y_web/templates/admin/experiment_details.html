@@ -190,6 +190,25 @@
                                                         title="Delete"><i
                                  class="mdi mdi-delete" style="font-size: 24px;"></i></a>{% else %}<i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
+                            <div class="box-line">
+                                <span class="left">Memory Embeddings</span>
+                                <span class="right">
+                                    {% if can_manage_experiment %}
+                                    <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
+                                        <i class="mdi mdi-tune" style="font-size: 24px;"></i>
+                                    </a>
+                                    {% else %}
+                                    <i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div style="font-size: 0.8em; color: #777; margin: -0.2em 0 0.9em 0;">
+                                {% if embedding_settings.service and embedding_settings.model %}
+                                {{ embedding_settings.service|upper }} · {{ embedding_settings.model }}
+                                {% else %}
+                                Not configured. Semantic memory falls back to lexical retrieval.
+                                {% endif %}
+                            </div>
 
                             {% if can_manage_experiment %}
                             <hr>

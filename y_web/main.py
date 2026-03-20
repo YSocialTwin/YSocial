@@ -5,6 +5,8 @@ Handles the primary user-facing routes including the home feed, user profiles,
 hashtag pages, post details, and search functionality for the social media platform.
 """
 
+import json
+import os
 from urllib.parse import urlencode
 
 from flask import (
@@ -348,6 +350,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             timeline="profile",
             sfollow=suggested_users,
             spages=suggested_pages,
+            forum_memory_enabled=_forum_memory_enabled(exp_id),
             **forum_context,
         )
 
@@ -1009,6 +1012,13 @@ def get_thread(exp_id, post_id):
         day = c.day
         hour = c.hour
 
+    root_display_time = _format_display_time_from_created_at(
+        getattr(posts[0], "created_at", None)
+    ) or _format_display_time(
+        str(day),
+        f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+    )
+
     image = Images.query.filter_by(id=posts[0].image_id).first()
 
     user = User_mgmt.query.filter_by(id=posts[0].user_id).first()
@@ -1056,6 +1066,7 @@ def get_thread(exp_id, post_id):
         "author_id": posts[0].user_id,
         "day": day,
         "hour": hour,
+        "display_time": root_display_time,
         posts[0].id: None,
         "children": [],
         "likes": len(
@@ -1125,6 +1136,7 @@ def get_thread(exp_id, post_id):
             "profile_pic": profile_pic,
             "day": day,
             "hour": hour,
+            "display_time": display_time,
             "children": [],
             "likes": len(
                 list(Reactions.query.filter_by(post_id=post.id, type="like").all())
@@ -1343,6 +1355,12 @@ def __get_discussions(posts, username, page, exp_id, exp_user_id=None):
         else:
             day = c.day
             hour = c.hour
+        display_time = _format_display_time_from_created_at(
+            getattr(post, "created_at", None)
+        ) or _format_display_time(
+            str(day),
+            f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+        )
 
         # get elicited emotions names
         emotions = get_elicited_emotions(post.id)
@@ -1461,6 +1479,73 @@ def _forum_current_profile_pic(exp_id, forum_user=None):
     return resolve_forum_username_avatar(current_user.username, exp_id)
 
 
+def _experiment_memory_enabled(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
+        return False
+
+    uid = None
+    db_name = str(getattr(exp, "db_name", "") or "").replace("\\", "/")
+    parts = db_name.split("/")
+    if "experiments" in parts:
+        try:
+            uid = parts[parts.index("experiments") + 1]
+        except Exception:
+            uid = None
+    elif db_name.startswith("experiments_"):
+        uid = db_name.replace("experiments_", "")
+    if not uid:
+        return False
+
+    config_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "experiments",
+        str(uid),
+        "config_server.json",
+    )
+    if not os.path.exists(config_path):
+        return False
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            config = json.load(handle) or {}
+    except Exception:
+        return False
+
+    memory_cfg = config.get("memory")
+    if isinstance(memory_cfg, dict) and "enabled" in memory_cfg:
+        if bool(memory_cfg.get("enabled")):
+            return True
+
+    if getattr(exp, "platform_type", "") == "microblogging":
+        exp_dir = os.path.dirname(config_path)
+        try:
+            for entry in os.listdir(exp_dir):
+                if not entry.startswith("client_") or not entry.endswith(".json"):
+                    continue
+                client_path = os.path.join(exp_dir, entry)
+                try:
+                    with open(client_path, "r", encoding="utf-8") as client_handle:
+                        client_config = json.load(client_handle) or {}
+                    agents_cfg = client_config.get("agents")
+                    if isinstance(agents_cfg, dict) and bool(
+                        agents_cfg.get("memory_enabled")
+                    ):
+                        return True
+                except Exception:
+                    continue
+        except Exception:
+            return False
+    return False
+
+
+def _forum_memory_enabled(exp_id):
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp or getattr(exp, "platform_type", "") != "forum":
+        return False
+    return _experiment_memory_enabled(exp_id)
+
+
 def _forum_paginate_posts(page, per_page, feed_type, search_query=""):
     from sqlalchemy import desc, func, or_
 
@@ -1529,6 +1614,18 @@ def interview(exp_id):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if not exp:
         abort(404)
+    platform_type = str(getattr(exp, "platform_type", "") or "")
+    if platform_type not in {"forum", "microblogging"}:
+        abort(404)
+    if not _experiment_memory_enabled(exp_id):
+        flash(
+            "Interview is unavailable because memory is disabled for this experiment."
+        )
+        if platform_type == "forum":
+            return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+        exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+        feed_user_id = exp_user.id if exp_user else "all"
+        return redirect(f"/{exp_id}/feed/{feed_user_id}/feed/rf/1")
 
     exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
     logged_id = (
@@ -1541,14 +1638,39 @@ def interview(exp_id):
     except Exception:
         mentions = []
 
+    if platform_type == "forum":
+        return render_template(
+            "reddit/interview.html",
+            logged_username=current_user.username,
+            logged_id=logged_id,
+            profile_pic=_forum_current_profile_pic(exp_id, _forum_logged_user()),
+            mentions=mentions,
+            is_admin=is_admin(current_user.username),
+            exp_id=exp_id,
+            forum_memory_enabled=True,
+        )
+
+    profile_pic = ""
+    try:
+        ag = Agent.query.filter_by(name=current_user.username).first()
+        if ag is not None and ag.profile_pic is not None:
+            profile_pic = ag.profile_pic
+        else:
+            admin = Admin_users.query.filter_by(username=current_user.username).first()
+            profile_pic = admin.profile_pic if admin else ""
+    except Exception:
+        profile_pic = ""
+
     return render_template(
-        "reddit/interview.html",
+        "interview.html",
         logged_username=current_user.username,
         logged_id=logged_id,
-        profile_pic=_forum_current_profile_pic(exp_id, _forum_logged_user()),
+        profile_pic=profile_pic,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
+        experiment_memory_enabled=True,
+        len=len,
     )
 
 
@@ -1576,6 +1698,12 @@ def get_thread_reddit(exp_id, post_id):
     c = Rounds.query.filter_by(id=posts[0].round).first()
     day = c.day if c is not None else "None"
     hour = c.hour if c is not None else "00"
+    root_display_time = _format_display_time_from_created_at(
+        getattr(posts[0], "created_at", None)
+    ) or _format_display_time(
+        str(day),
+        f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+    )
 
     image = Images.query.filter_by(id=posts[0].image_id).first()
     user = User_mgmt.query.filter_by(id=posts[0].user_id).first()
@@ -1622,6 +1750,7 @@ def get_thread_reddit(exp_id, post_id):
         "author_id": posts[0].user_id,
         "day": day,
         "hour": hour,
+        "display_time": root_display_time,
         "article": art,
         posts[0].id: None,
         "children": [],
@@ -1651,6 +1780,12 @@ def get_thread_reddit(exp_id, post_id):
         c = Rounds.query.filter_by(id=post.round).first()
         day = c.day if c is not None else "None"
         hour = c.hour if c is not None else "00"
+        display_time = _format_display_time_from_created_at(
+            getattr(post, "created_at", None)
+        ) or _format_display_time(
+            str(day),
+            f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+        )
 
         user = User_mgmt.query.filter_by(id=post.user_id).first()
         profile_pic = _forum_profile_pic(user)
@@ -1681,6 +1816,7 @@ def get_thread_reddit(exp_id, post_id):
             "profile_pic": profile_pic,
             "day": day,
             "hour": hour,
+            "display_time": display_time,
             "article": art,
             "children": [],
             "likes": len(
@@ -1732,6 +1868,7 @@ def get_thread_reddit(exp_id, post_id):
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
         back_url=_forum_resolve_back_url(exp_id),
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
     )
 
 
@@ -1803,6 +1940,7 @@ def rnotifications(exp_id):
             mentions=[],
             is_admin=is_admin(current_user.username),
             exp_id=exp_id,
+            forum_memory_enabled=_forum_memory_enabled(exp_id),
             len=len,
             str=str,
             bool=bool,
@@ -1892,6 +2030,7 @@ def rnotifications(exp_id):
         mentions=get_unanswered_mentions(exp_user_id),
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
         len=len,
         str=str,
         bool=bool,
@@ -1974,6 +2113,7 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         per_page=max_post_per_page,
         has_more=(page_obj.page * page_obj.per_page) < page_obj.total,
         exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
     )
 
 
@@ -2046,6 +2186,7 @@ def search_reddit(exp_id):
         per_page=per_page,
         has_more=has_more,
         exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
     )
 
 

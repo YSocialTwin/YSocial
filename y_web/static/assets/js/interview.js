@@ -42,6 +42,7 @@
   let refreshBusy = false
   let currentAgentRecord = null
   let availableAgents = []
+  const interviewPlatform = String(window.INTERVIEW_PLATFORM_LABEL || 'experiment').trim().toLowerCase()
 
   function setStatus (msg, isError) {
     if (!statusEl) return
@@ -324,7 +325,7 @@
       const unavailable = document.createElement('div')
       unavailable.className = 'interview-memory-note'
       unavailable.style.marginBottom = '0'
-      unavailable.textContent = 'No live memory payload is available from the forum server for this session.'
+      unavailable.textContent = `No live memory payload is available from the ${interviewPlatform === 'forum' ? 'forum' : 'experiment'} server for this session.`
       memoryEl.appendChild(unavailable)
       return
     }

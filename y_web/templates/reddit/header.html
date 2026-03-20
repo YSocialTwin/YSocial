@@ -175,7 +175,7 @@
                 </div>
                 {% endif %}
 
-                {% if exp_id and current_user_role in ['admin', 'researcher'] %}
+                {% if exp_id and current_user_role in ['admin', 'researcher'] and forum_memory_enabled %}
                 <a class="navbar-item" href="/{{ exp_id }}/interview" aria-label="Interview" style="font-weight: 700;">
                     <i class="mdi mdi-account-voice-outline"></i>
                     <span style="margin-left: 6px;">INTERVIEW</span>
@@ -325,7 +325,7 @@
                 >
                     <span><i data-feather="activity"></i>Feed</span>
                 </a>
-                {% if exp_id and current_user_role in ['admin', 'researcher'] %}
+                {% if exp_id and current_user_role in ['admin', 'researcher'] and forum_memory_enabled %}
                 <a
                         href="/{{ exp_id }}/interview"
                         class="navbar-item is-flex is-mobile-icon"

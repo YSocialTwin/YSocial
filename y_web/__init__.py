@@ -14,6 +14,7 @@ Key components:
 """
 
 import atexit
+import json
 import os
 import shutil
 import sys
@@ -487,6 +488,66 @@ def create_app(db_type="sqlite", desktop_mode=False):
             return dict(feed_home_url=f"/{exp.idexp}/feed/{feed_user_id}/feed/rf/1")
         except Exception:
             return dict(feed_home_url="/feed")
+
+    @app.context_processor
+    def inject_experiment_memory_enabled():
+        """Inject whether the active Standard/Forum experiment has memory enabled."""
+        from .models import Exps
+        from .utils.experiment_helpers import get_experiment_uid_from_db_name
+        from .utils.path_utils import get_writable_path
+
+        try:
+            exp_id = get_current_experiment_id()
+            if exp_id is None:
+                return dict(experiment_memory_enabled=False)
+
+            exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+            if not exp or getattr(exp, "platform_type", "") not in {
+                "forum",
+                "microblogging",
+            }:
+                return dict(experiment_memory_enabled=False)
+
+            uid = get_experiment_uid_from_db_name(str(getattr(exp, "db_name", "") or ""))
+            if not uid:
+                return dict(experiment_memory_enabled=False)
+
+            config_path = os.path.join(
+                get_writable_path(),
+                "y_web",
+                "experiments",
+                str(uid),
+                "config_server.json",
+            )
+            if not os.path.exists(config_path):
+                return dict(experiment_memory_enabled=False)
+
+            with open(config_path, "r", encoding="utf-8") as handle:
+                config = json.load(handle) or {}
+            memory_cfg = config.get("memory")
+            enabled = bool(memory_cfg.get("enabled")) if isinstance(memory_cfg, dict) else False
+            if enabled:
+                return dict(experiment_memory_enabled=True)
+
+            if getattr(exp, "platform_type", "") == "microblogging":
+                exp_dir = os.path.dirname(config_path)
+                for entry in os.listdir(exp_dir):
+                    if not entry.startswith("client_") or not entry.endswith(".json"):
+                        continue
+                    client_path = os.path.join(exp_dir, entry)
+                    try:
+                        with open(client_path, "r", encoding="utf-8") as client_handle:
+                            client_config = json.load(client_handle) or {}
+                        agents_cfg = client_config.get("agents")
+                        if isinstance(agents_cfg, dict) and bool(
+                            agents_cfg.get("memory_enabled")
+                        ):
+                            return dict(experiment_memory_enabled=True)
+                    except Exception:
+                        continue
+            return dict(experiment_memory_enabled=False)
+        except Exception:
+            return dict(experiment_memory_enabled=False)
 
     @app.context_processor
     def inject_active_experiments():

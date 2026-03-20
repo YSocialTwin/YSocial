@@ -24,7 +24,13 @@
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 6px; font-size: 12px;">
                 <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" style="color: inherit; text-decoration: none;">{{ thread["author"] }}</a>
             </span>
-            <span style="color: #7c7c7c; font-size: 11px;">{{ thread.get("display_time", "") }}</span>
+            <span style="color: #7c7c7c; font-size: 11px;">
+                {% if thread.get("display_time") %}
+                    {{ thread.get("display_time") }}
+                {% elif thread.get("day") != "None" %}
+                    Day {{ thread.get("day") }} · Hour {{ "%02d"|format(thread.get("hour")|int) }}
+                {% endif %}
+            </span>
         </div>
         {% if thread['author_id'] == logged_id or is_admin %}
         <div class="dropdown is-spaced is-right is-neutral dropdown-trigger" onclick="event.stopPropagation()">

@@ -59,6 +59,13 @@ def main():
     log_file = os.path.join(config_dir, "_server.log")
 
     print(f"Server log file: {log_file}", file=sys.stderr)
+    os.environ["YSERVER_LOG_FILE"] = log_file
+    try:
+        os.makedirs(os.path.dirname(log_file), exist_ok=True)
+        with open(log_file, "a", encoding="utf-8"):
+            pass
+    except Exception:
+        pass
 
     # Import and start the server
     print(f"Starting YServer for {args.platform}...", config)

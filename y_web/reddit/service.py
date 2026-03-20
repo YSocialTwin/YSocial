@@ -451,7 +451,9 @@ def _format_round(round_id: Optional[int]) -> Tuple[str, str]:
 
 def _resolve_experiment_clock() -> Dict[str, Any]:
     """
-    Load experiment clock settings from config_server.json with a lightweight mtime cache.
+    Load experiment clock settings from config_server.json, with fallback to the
+    client JSON generated at creation time when the experiment-level clock config
+    is stale or missing.
     """
     try:
         exp_id_raw = get_current_experiment_id()
@@ -471,8 +473,16 @@ def _resolve_experiment_clock() -> Dict[str, Any]:
         if not experiment:
             return default_clock_config()
 
-        config_path = _get_experiment_dir(experiment) / "config_server.json"
-        mtime = config_path.stat().st_mtime if config_path.exists() else -1.0
+        experiment_dir = _get_experiment_dir(experiment)
+        config_path = experiment_dir / "config_server.json"
+        client_paths = sorted(experiment_dir.glob("client_*.json"))
+        newest_client_mtime = (
+            max(path.stat().st_mtime for path in client_paths) if client_paths else -1.0
+        )
+        mtime = max(
+            config_path.stat().st_mtime if config_path.exists() else -1.0,
+            newest_client_mtime,
+        )
         cached = _clock_config_cache.get(exp_id)
         if cached and cached[0] == mtime:
             return cached[1]
@@ -482,6 +492,35 @@ def _resolve_experiment_clock() -> Dict[str, Any]:
             with config_path.open("r", encoding="utf-8") as fh:
                 payload = json.load(fh)
             resolved_clock = ensure_experiment_clock(payload)
+
+        if client_paths:
+            latest_client_path = max(
+                client_paths, key=lambda path: path.stat().st_mtime
+            )
+            try:
+                with latest_client_path.open("r", encoding="utf-8") as fh:
+                    client_payload = json.load(fh)
+                simulation = client_payload.get("simulation", {})
+                raw_mode = simulation.get("clock_mode")
+                raw_timezone = simulation.get("clock_timezone") or simulation.get(
+                    "timezone"
+                )
+                raw_feed_refresh = simulation.get("feed_refresh")
+                raw_anchor_date = simulation.get("clock_anchor_date")
+                if raw_mode or raw_timezone or raw_feed_refresh or raw_anchor_date:
+                    candidate_payload = {
+                        "clock": {
+                            "mode": raw_mode or resolved_clock.get("mode"),
+                            "timezone": raw_timezone or resolved_clock.get("timezone"),
+                            "feed_refresh": raw_feed_refresh
+                            or resolved_clock.get("feed_refresh"),
+                            "anchor_date": raw_anchor_date
+                            or resolved_clock.get("anchor_date"),
+                        }
+                    }
+                    resolved_clock = ensure_experiment_clock(candidate_payload)
+            except Exception:
+                pass
 
         _clock_config_cache[exp_id] = (mtime, resolved_clock)
         return resolved_clock

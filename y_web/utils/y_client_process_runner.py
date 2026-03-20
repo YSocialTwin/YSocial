@@ -49,6 +49,65 @@ def _resolve_client_package_dir(base_path, platform_type):
     raise NotImplementedError(f"Unsupported platform {platform_type}")
 
 
+def _candidate_memory_package_dirs(base_path, client_package_dir):
+    """Return candidate y_memory_subsystem/src directories for memory-enabled clients."""
+    candidates = []
+
+    if client_package_dir:
+        candidates.append(
+            os.path.join(client_package_dir, "y_memory_subsystem", "src")
+        )
+
+    if base_path:
+        project_root = os.path.abspath(os.path.join(base_path, os.pardir))
+        candidates.append(os.path.join(project_root, "y_memory_subsystem", "src"))
+
+    seen = []
+    for path in candidates:
+        norm = os.path.abspath(path)
+        if norm not in seen:
+            seen.append(norm)
+    return seen
+
+
+def _repair_legacy_agent_file(agent_file_path, platform_type):
+    """Backfill agent-file fields expected by the current client runtime."""
+    try:
+        with open(agent_file_path, "r", encoding="utf-8") as fh:
+            payload = json.load(fh)
+    except Exception:
+        return
+
+    agents = payload.get("agents")
+    if not isinstance(agents, list):
+        return
+
+    changed = False
+    default_activity_profile = "Always On"
+
+    for agent in agents:
+        if not isinstance(agent, dict):
+            continue
+
+        defaults = {
+            "prompts": None,
+            "daily_activity_level": 1,
+            "profession": None,
+            "archetype": None,
+        }
+        if platform_type == "microblogging":
+            defaults["activity_profile"] = default_activity_profile
+
+        for key, default_value in defaults.items():
+            if key not in agent or agent.get(key) is None:
+                agent[key] = default_value
+                changed = True
+
+    if changed:
+        with open(agent_file_path, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, indent=4)
+
+
 def main():
     """Main entry point for client process runner."""
     parser = argparse.ArgumentParser(
@@ -139,6 +198,11 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         if client_package_dir in sys.path:
             sys.path.remove(client_package_dir)
         sys.path.insert(0, client_package_dir)
+        for memory_src in reversed(
+            _candidate_memory_package_dirs(base_path, client_package_dir)
+        ):
+            if os.path.isdir(memory_src) and memory_src not in sys.path:
+                sys.path.insert(0, memory_src)
         from y_client.clients import YClientWeb
 
         # Base directory for experiment data (writable location)
@@ -264,6 +328,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             session.commit()
 
         log_file = f"{data_base_path}{cli.name}_client.log"
+        os.environ["YCLIENT_LOG_FILE"] = log_file
+        try:
+            os.makedirs(os.path.dirname(log_file), exist_ok=True)
+            with open(log_file, "a", encoding="utf-8"):
+                pass
+        except Exception:
+            pass
 
         print(f"Log file for client {cli.name}: {log_file}", file=sys.stderr)
         print(f"Data base path: {data_base_path}", file=sys.stderr)
@@ -278,8 +349,6 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 data_base_path,
                 first_run=first_run,
                 network=path,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
             )
             print(f"First run (with network)", file=sys.stderr)
         else:
@@ -287,8 +356,6 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 config_file,
                 data_base_path,
                 first_run=first_run,
-                log_file=log_file,
-                llm=exp.llm_agents_enabled,
             )
             if first_run:
                 print(f"First run (without network)", file=sys.stderr)
@@ -314,13 +381,13 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             print(f"Infinite client - running until manually stopped", file=sys.stderr)
             cl.days = INFINITE_CLIENT_ITERATION_DAYS
 
+        _repair_legacy_agent_file(filename, exp.platform_type)
         cl.read_agents()
+        if first_run and cli.network_type and hasattr(cl, "add_network"):
+            cl.add_network()
         cl.add_feeds()
 
         print(f"Loaded {len(cl.agents.agents)} agents.", file=sys.stderr)
-
-        if first_run and cli.network_type:
-            cl.add_network()
 
         if not os.path.exists(filename):
             # Ensure all agents have archetype before saving
@@ -523,6 +590,14 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
     """
 
     try:
+        # Canonical client logs aggregate by simulation day/hour.
+        # Agents do not own a clock in the Standard branch, so bind the shared
+        # client clock before any decorated action method runs.
+        try:
+            g.sim_clock = cl.sim_clock
+        except Exception:
+            pass
+
         if archetypes["enabled"]:
             # filtering the actions based on the archetype
             # Use getattr with default to handle agents without archetype attribute (e.g., when resuming old simulations)
@@ -534,14 +609,14 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                     for a, v in cl.actions_likelihood.items()
                     if v > 0 and a in ["READ", "SHARE", "SEARCH"]
                 ]
-                if exp.platform_type == "microblogging":
-                    g.__class__ = FakeAgent  # change class to FakeAgent to limit actions (only for microblogging)
+                if exp.platform_type == "microblogging" and FakeAgent is not None:
+                    g.__class__ = FakeAgent
             elif agent_archetype == "broadcaster":
                 acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
             elif agent_archetype == "explorer":
                 acts = ["FOLLOW"]
-                if exp.platform_type == "microblogging":
-                    g.__class__ = FakeAgent  # change class to FakeAgent to limit actions (only for microblogging)
+                if exp.platform_type == "microblogging" and FakeAgent is not None:
+                    g.__class__ = FakeAgent
 
         else:
             acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
@@ -743,6 +818,10 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                     # Get current client to find experiment ID
                     client = session.query(Client).filter_by(id=cli_id).first()
                     if client:
+                        client.status = 0
+                        client.pid = None
+                        session.add(client)
+
                         # Use a single JOIN query to get all client execution records
                         # for this experiment. Exclude infinite clients (expected_duration_rounds = -1)
                         incomplete_clients = (
@@ -800,11 +879,14 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
                             )
                             if exp:
                                 exp.exp_status = "completed"
+                                exp.running = 0
                                 session.commit()
                                 print(
                                     f"Experiment {client.id_exp} marked as completed",
                                     file=sys.stderr,
                                 )
+                        else:
+                            session.commit()
 
                     # Clean up and exit
                     session.close()

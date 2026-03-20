@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -13,13 +14,16 @@ from flask_login import current_user, login_required
 from sqlalchemy import case, desc, func, or_
 
 from y_web import db
+from y_web.experiment_context import register_experiment_database
 from y_web.models import (
     Admin_users,
+    Agent,
     AdminInterviewMessage,
     AdminInterviewSession,
     Client,
     Exps,
     Interests,
+    Page,
     Post,
     Reactions,
     ReplyInboxState,
@@ -347,6 +351,29 @@ def _ensure_experiment_server_db_binding(exp: Exps) -> Dict[str, Any]:
         return out
 
 
+def _ensure_experiment_db_bind(exp: Exps) -> bool:
+    """
+    Ensure local db_exp-bound models query the selected experiment DB.
+
+    Interview helpers read directly from Post/User_mgmt/Reactions models, which all
+    use __bind_key__ = 'db_exp'. Relying only on request middleware is too fragile
+    here because these helpers are also reused outside normal page routes.
+    """
+    try:
+        exp_id = int(getattr(exp, "idexp", 0) or 0)
+        db_name = str(getattr(exp, "db_name", "") or "").strip()
+        if not exp_id or not db_name:
+            return False
+        register_experiment_database(current_app, exp_id, db_name)
+        bind_key = f"db_exp_{exp_id}"
+        binds = current_app.config.setdefault("SQLALCHEMY_BINDS", {})
+        if bind_key in binds:
+            binds["db_exp"] = binds[bind_key]
+        return True
+    except Exception:
+        return False
+
+
 def _memory_server_unavailable(db_binding: Optional[Dict[str, Any]]) -> bool:
     if not isinstance(db_binding, dict):
         return True
@@ -358,7 +385,7 @@ def _build_unavailable_memory_snapshot(
     run_id: Optional[str],
     agent_user_id: int,
     memory_mode: Optional[str] = None,
-    reason: str = "forum_server_unavailable",
+    reason: str = "experiment_server_unavailable",
 ) -> Dict[str, Any]:
     requested_mode = _normalize_memory_mode(memory_mode)
     return {
@@ -368,9 +395,9 @@ def _build_unavailable_memory_snapshot(
         "memory_mode_requested": requested_mode,
         "memory_mode_used": "unavailable",
         "load_state": "unavailable",
-        "unavailable_reason": str(reason or "forum_server_unavailable"),
+        "unavailable_reason": str(reason or "experiment_server_unavailable"),
         "note": (
-            "Forum memory retrieval is unavailable because the experiment server is not reachable. "
+            "Memory retrieval is unavailable because the experiment server is not reachable. "
             "Interview replies may still be grounded by persona, transcript history, and facts snapshots from the experiment database."
         ),
         "relationships": [],
@@ -378,6 +405,30 @@ def _build_unavailable_memory_snapshot(
         "recent_events_tail": [],
         "agent_events_tail": [],
     }
+
+
+def _resolve_interview_profile_pic(user: User_mgmt, exp: Exps) -> str:
+    if not user or not exp:
+        return ""
+    if str(getattr(exp, "platform_type", "") or "") == "forum":
+        return resolve_forum_profile_pic(user, int(getattr(exp, "idexp", 0) or 0))
+
+    username = str(getattr(user, "username", "") or "").strip()
+    if not username:
+        return ""
+
+    if bool(getattr(user, "is_page", False)):
+        page = Page.query.filter_by(name=username).first()
+        return getattr(page, "logo", "") if page else ""
+
+    agent = Agent.query.filter_by(name=username).first()
+    if agent and getattr(agent, "profile_pic", None):
+        return agent.profile_pic
+
+    admin = Admin_users.query.filter_by(username=username).first()
+    if admin and getattr(admin, "profile_pic", None):
+        return admin.profile_pic
+    return ""
 
 
 def _iter_run_ids_from_server_log(
@@ -561,6 +612,106 @@ def _detect_run_id_from_server_log(
             )
         ),
         "candidates_checked": candidates_checked,
+    }
+
+
+def _experiment_sqlite_db_path(exp: Exps) -> Optional[Path]:
+    db_uri_main = str(current_app.config.get("SQLALCHEMY_DATABASE_URI", "") or "")
+    if db_uri_main.startswith("postgresql"):
+        return None
+    db_name = str(getattr(exp, "db_name", "") or "").strip()
+    if not db_name:
+        return None
+    return Path(get_writable_path(os.path.join("y_web", db_name)))
+
+
+def _detect_run_id_from_experiment_db(
+    exp: Exps, *, agent_user_id: Optional[int] = None
+) -> Dict[str, Any]:
+    db_path = _experiment_sqlite_db_path(exp)
+    if db_path is None or not db_path.exists():
+        return {
+            "run_id": None,
+            "source": "none",
+            "selected_reason": "no_sqlite_experiment_db",
+            "candidates_checked": [],
+        }
+
+    queries: List[Tuple[str, Tuple[Any, ...], str]] = []
+    if agent_user_id is not None:
+        queries.extend(
+            [
+                (
+                    "select run_id, count(*) as cnt from memory_items where agent_user_id=? and run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
+                    (int(agent_user_id),),
+                    "memory_items_by_agent",
+                ),
+                (
+                    "select run_id, count(*) as cnt from memory_interaction_events where actor_user_id=? and run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
+                    (int(agent_user_id),),
+                    "memory_events_by_actor",
+                ),
+            ]
+        )
+    queries.extend(
+        [
+            (
+                "select run_id, count(*) as cnt from memory_items where run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
+                (),
+                "memory_items_global",
+            ),
+            (
+                "select run_id, count(*) as cnt from memory_interaction_events where run_id is not null and trim(run_id) != '' group by run_id order by cnt desc, max(round_id) desc",
+                (),
+                "memory_events_global",
+            ),
+        ]
+    )
+
+    checked: List[Dict[str, Any]] = []
+    try:
+        conn = sqlite3.connect(str(db_path))
+        try:
+            cur = conn.cursor()
+            for sql, params, source in queries:
+                try:
+                    rows = cur.execute(sql, params).fetchall()
+                except Exception as exc:
+                    checked.append({"source": source, "error": str(exc)})
+                    continue
+                if rows:
+                    rid = str(rows[0][0] or "").strip()
+                    checked.append(
+                        {
+                            "source": source,
+                            "candidate_run_id": rid,
+                            "candidate_count": int(rows[0][1] or 0),
+                        }
+                    )
+                    if rid:
+                        return {
+                            "run_id": rid,
+                            "source": source,
+                            "selected_reason": "sqlite_memory_rows_present",
+                            "candidates_checked": checked,
+                        }
+                else:
+                    checked.append({"source": source, "candidate_count": 0})
+        finally:
+            conn.close()
+    except Exception as exc:
+        return {
+            "run_id": None,
+            "source": "none",
+            "selected_reason": f"sqlite_probe_failed:{exc}",
+            "candidates_checked": checked,
+        }
+
+    return {
+        "run_id": None,
+        "source": "none",
+        "selected_reason": "no_memory_run_in_db",
+        "candidates_checked": checked,
     }
 
 
@@ -1299,6 +1450,7 @@ _INTERVIEW_TERM_STOPWORDS = {
     "upvoted",
     "upvotes",
     "what",
+    "was",
     "who",
     "which",
     "with",
@@ -1318,6 +1470,7 @@ _INTERVIEW_QUERY_TERM_ALIASES: Dict[str, List[str]] = {
 
 _INTERVIEW_WEAK_QUERY_TERMS = {
     "new",
+    "last",
     "latest",
     "lately",
     "latetly",
@@ -1328,6 +1481,8 @@ _INTERVIEW_WEAK_QUERY_TERMS = {
     "guy",
     "post",
     "posted",
+    "tweet",
+    "tweets",
     "comment",
     "commented",
     "thread",
@@ -1788,6 +1943,18 @@ def _build_facts_snapshot(
     except Exception:
         top_posts = []
 
+    # Most recent authored root posts (for "last post/tweet" questions).
+    try:
+        q_recent_roots = (
+            Post.query.filter(Post.user_id == int(agent_user_id))
+            .filter(Post.comment_to == -1)
+            .order_by(desc(Post.id))
+            .limit(max(int(top_posts_limit), 5))
+        )
+        recent_root_posts = q_recent_roots.all()
+    except Exception:
+        recent_root_posts = []
+
     # Recent comments.
     try:
         q_recent = (
@@ -2071,7 +2238,7 @@ def _build_facts_snapshot(
 
     # Batch counts for all referenced posts.
     all_posts: List[Post] = []
-    for lst in [top_posts, recent_comments, query_hits]:
+    for lst in [top_posts, recent_root_posts, recent_comments, query_hits]:
         for p in lst:
             if p is not None:
                 all_posts.append(p)
@@ -2086,6 +2253,9 @@ def _build_facts_snapshot(
 
     snap["top_posts"] = [
         _post_to_fact(p, counts, comment_context) for p in (top_posts or [])
+    ]
+    snap["recent_root_posts"] = [
+        _post_to_fact(p, counts, comment_context) for p in (recent_root_posts or [])
     ]
     snap["recent_comments"] = [
         _post_to_fact(p, counts, comment_context) for p in (recent_comments or [])
@@ -2167,6 +2337,7 @@ def _format_facts_pack(snapshot: Dict[str, Any], *, max_chars: int = 3500) -> st
                     parts.append(f"  thread_op_text: {op_text}")
 
     _fmt_posts("Top threads you started", snapshot.get("top_posts"), limit=3)
+    _fmt_posts("Recent posts you made", snapshot.get("recent_root_posts"), limit=5)
     _fmt_posts("Recent comments you made", snapshot.get("recent_comments"), limit=5)
 
     def _fmt_seen_replies(label: str, rows: Any, *, limit: int):
@@ -2263,8 +2434,14 @@ def _build_evidence_guard(
         memory_returned_k = 0
     memory_degraded = bool(retrieval_meta.get("degraded_mode", False))
 
+    has_direct_activity_evidence = bool(top_posts_n > 0 or recent_comments_n > 0)
     strict_no_inference = bool(
-        memory_degraded or (memory_returned_k <= 0 and query_hits_viable_n <= 0)
+        memory_degraded
+        or (
+            memory_returned_k <= 0
+            and query_hits_viable_n <= 0
+            and not has_direct_activity_evidence
+        )
     )
 
     lines = ["EVIDENCE STATUS (for this answer):"]
@@ -2291,6 +2468,7 @@ def _build_evidence_guard(
         "strict_no_inference": strict_no_inference,
         "query_hits": query_hits_n,
         "query_hits_viable": query_hits_viable_n,
+        "has_direct_activity_evidence": has_direct_activity_evidence,
         "memory_returned_k": memory_returned_k,
         "memory_degraded_mode": memory_degraded,
     }
@@ -2381,6 +2559,16 @@ def _extract_facts_candidates(
 ) -> List[Dict[str, Any]]:
     facts = facts_snapshot if isinstance(facts_snapshot, dict) else {}
     rows = facts.get("query_hits")
+    try:
+        viable_hits = int(facts.get("query_hits_viable_count") or 0)
+    except Exception:
+        viable_hits = 0
+    if viable_hits <= 0:
+        rows = facts.get("recent_root_posts")
+    if not isinstance(rows, list) or not rows:
+        rows = facts.get("recent_root_posts")
+    if not isinstance(rows, list) or not rows:
+        rows = facts.get("top_posts")
     if not isinstance(rows, list) or not rows:
         return []
     evals_raw = facts.get("query_hit_evaluations")
@@ -2425,6 +2613,95 @@ def _extract_facts_candidates(
         reverse=True,
     )
     return out[: max(1, int(max_candidates))]
+
+
+def _try_direct_recent_activity_reply(
+    *, admin_text: str, facts_snapshot: Dict[str, Any]
+) -> Optional[Tuple[str, Dict[str, Any]]]:
+    text = (admin_text or "").strip()
+    lowered = text.lower()
+    if not lowered:
+        return None
+
+    if not any(
+        token in lowered
+        for token in [
+            "last tweet",
+            "recent tweet",
+            "recent tweets",
+            "last post",
+            "recent post",
+            "recent posts",
+            "latest post",
+            "latest tweet",
+            "what did you post",
+            "what was your last",
+            "what were your recent",
+        ]
+    ):
+        return None
+
+    recent_posts = facts_snapshot.get("recent_root_posts")
+    if not isinstance(recent_posts, list):
+        recent_posts = []
+    recent_posts = [row for row in recent_posts if isinstance(row, dict)]
+
+    if recent_posts:
+        if any(
+            token in lowered
+            for token in ["recent posts", "recent tweets", "what were your recent"]
+        ):
+            items = []
+            for row in recent_posts[:3]:
+                snippet = (row.get("text") or "").strip()
+                if snippet:
+                    items.append(f'- "{snippet}"')
+            if items:
+                return (
+                    "My most recent posts were:\n"
+                    + "\n".join(items)
+                    + "\nDo you want me to expand on one of them?",
+                    {
+                        "direct_answer": True,
+                        "reason": "recent_root_posts_plural",
+                        "candidate_count": len(items),
+                    },
+                )
+
+        latest = recent_posts[0]
+        snippet = (latest.get("text") or "").strip()
+        if snippet:
+            return (
+                f'My most recent post was: "{snippet}" Do you want the previous one too?',
+                {
+                    "direct_answer": True,
+                    "reason": "recent_root_post_singular",
+                    "post_id": latest.get("post_id"),
+                },
+            )
+
+    recent_comments = facts_snapshot.get("recent_comments")
+    if not isinstance(recent_comments, list):
+        recent_comments = []
+    recent_comments = [row for row in recent_comments if isinstance(row, dict)]
+    if recent_comments:
+        latest = recent_comments[0]
+        snippet = (latest.get("text") or "").strip()
+        if snippet:
+            return (
+                "I don't see a recent standalone post in my records, but my latest recorded comment was: "
+                f'"{snippet}" Do you want me to look at my recent comments instead?',
+                {
+                    "direct_answer": True,
+                    "reason": "recent_comment_fallback",
+                    "post_id": latest.get("post_id"),
+                },
+            )
+
+    return (
+        "I don't see a recent post in my records right now. If you want, I can check my recent comments instead.",
+        {"direct_answer": True, "reason": "no_recent_activity_records"},
+    )
 
 
 def _build_retrieval_trace(
@@ -2789,6 +3066,11 @@ def api_interview_agents(exp_id: int):
     if not admin_user:
         return _json_error("Forbidden", 403, code="forbidden")
 
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first()
+    if not exp:
+        return _json_error("Experiment not found", 404, code="not_found")
+    _ensure_experiment_db_bind(exp)
+
     # LLM agents register their model name in user_type (anything other than "user").
     try:
         q = (
@@ -2811,7 +3093,7 @@ def api_interview_agents(exp_id: int):
                 "leaning": getattr(u, "leaning", None),
                 "toxicity": getattr(u, "toxicity", None),
                 "profession": getattr(u, "profession", None),
-                "profile_pic": resolve_forum_profile_pic(u, exp_id),
+                "profile_pic": _resolve_interview_profile_pic(u, exp),
             }
         )
 
@@ -2842,6 +3124,7 @@ def api_interview_create_session(exp_id: int):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     if not exp:
         return _json_error("Experiment not found", 404, code="not_found")
+    _ensure_experiment_db_bind(exp)
     db_binding = _ensure_experiment_server_db_binding(exp)
 
     backend_mode = (payload.get("backend_mode") or "agent_runtime").strip().lower()
@@ -2867,8 +3150,22 @@ def api_interview_create_session(exp_id: int):
         if isinstance(checked, list):
             run_id_candidates_checked = [c for c in checked if isinstance(c, dict)]
         if not run_id:
-            run_id_source = "none"
-            run_id_selected_reason = "no_run_detected"
+            run_pick = _detect_run_id_from_experiment_db(
+                exp, agent_user_id=int(agent_user_id)
+            )
+            run_id = str(run_pick.get("run_id") or "").strip() or None
+            run_id_source = str(run_pick.get("source") or "none")
+            run_id_selected_reason = str(
+                run_pick.get("selected_reason") or "no_run_detected"
+            )
+            checked = run_pick.get("candidates_checked")
+            if isinstance(checked, list):
+                run_id_candidates_checked.extend(
+                    [c for c in checked if isinstance(c, dict)]
+                )
+            if not run_id:
+                run_id_source = "none"
+                run_id_selected_reason = "no_run_detected"
 
     interests = _get_top_interests_for_user(agent_user_id)
     persona = _build_persona_snapshot(agent_user, interests, exp)
@@ -3125,7 +3422,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
             return _json_error("Session not found", 404, code="not_found")
 
         payload = request.get_json(silent=True) or {}
-        content = (payload.get("content") or "").strip()
+        content = (payload.get("content") or payload.get("message") or "").strip()
         if not content:
             return _json_error("content required", 400, code="bad_request")
 
@@ -3144,6 +3441,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
         exp = Exps.query.filter_by(idexp=int(exp_id)).first()
         if not exp:
             return _json_error("Experiment not found", 404, code="not_found")
+        _ensure_experiment_db_bind(exp)
         db_binding = _ensure_experiment_server_db_binding(exp)
 
         agent_user = User_mgmt.query.get(int(sess.agent_user_id))
@@ -3185,6 +3483,10 @@ def api_interview_send_message(exp_id: int, session_id: int):
             admin_text=contextual_query_text,
         )
         facts_pack = _format_facts_pack(facts_snapshot)
+        direct_reply = _try_direct_recent_activity_reply(
+            admin_text=content,
+            facts_snapshot=facts_snapshot,
+        )
 
         # Some read helpers can swallow SQL errors and leave PostgreSQL tx aborted.
         # Reset session state before lazy-loading ORM attributes for backend resolution.
@@ -3217,6 +3519,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
             "Truthfulness rules (very important):\n"
             "- Do NOT guess or invent actions, posts, comments, votes, or other users' replies.\n"
             "- Use FACTS PACK as ground truth for what you posted/commented, who replied to you, and how many likes/dislikes it got.\n"
+            "- In FACTS PACK, 'Recent posts you made', 'Top threads you started', and 'Recent comments you made' are direct evidence of your own activity.\n"
             '- Reply sections in FACTS PACK are "replies you\'ve seen" (read/commented/voted), so treat them as seen evidence only.\n'
             '- For "who did you reply to / who was OP" questions, use reply_target fields in FACTS PACK '
             "(parent=..., thread_op=...). If username is present, answer with it.\n"
@@ -3226,6 +3529,7 @@ def api_interview_send_message(exp_id: int, session_id: int):
             "  If that section is empty, you have no evidence that you wrote about it.\n"
             "- If FACTS PACK shows '(none)' for a section, treat it as no evidence. Do not invent.\n"
             "- Use MEMORY PACK for subjective context: retrieved memories, relationships, community vibe, and thread summaries.\n"
+            "- MEMORY PACK entries labeled '[event]' with text starting 'post |' or 'comment |' are also evidence of your own recorded actions.\n"
             "- If you cannot find evidence in FACTS PACK or MEMORY PACK, say you don't remember / can't confirm.\n"
             "- Never introduce a new specific title/name/event unless it appears in evidence or the admin's latest message.\n"
             "- If you previously said something wrong in this interview, explicitly correct yourself.\n\n"
@@ -3295,19 +3599,23 @@ def api_interview_send_message(exp_id: int, session_id: int):
             meta["memory_search_returned_k"] = retrieval_meta.get("returned_k")
             meta["memory_search_degraded_mode"] = retrieval_meta.get("degraded_mode")
 
-        try:
-            reply = _generate_reply(
-                model=model,
-                base_url=base_url,
-                api_key=api_key,
-                temperature=temperature,
-                max_tokens=max_tokens if max_tokens != -1 else 450,
-                system_message=system_message,
-                user_message=user_message,
-            )
-        except Exception as exc:
-            reply = f"(interview backend error: {exc})"
-            meta["error"] = str(exc)
+        if direct_reply is not None:
+            reply, direct_meta = direct_reply
+            meta["direct_answer"] = direct_meta
+        else:
+            try:
+                reply = _generate_reply(
+                    model=model,
+                    base_url=base_url,
+                    api_key=api_key,
+                    temperature=temperature,
+                    max_tokens=max_tokens if max_tokens != -1 else 450,
+                    system_message=system_message,
+                    user_message=user_message,
+                )
+            except Exception as exc:
+                reply = f"(interview backend error: {exc})"
+                meta["error"] = str(exc)
 
         try:
             strict_no_inference = bool(
