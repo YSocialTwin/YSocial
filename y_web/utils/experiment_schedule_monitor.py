@@ -84,7 +84,7 @@ class ExperimentScheduleMonitor:
 
     def _check_and_advance(self):
         """Check schedule progress and advance to next group if current is done."""
-        from y_web.routes_admin.experiments_routes import _do_check_schedule_progress
+        from y_web.routes.admin.sub.experiments import _do_check_schedule_progress
 
         _do_check_schedule_progress()
 
