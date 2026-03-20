@@ -17,7 +17,7 @@ class TestHPCLLMVConfig:
     def test_generate_hpc_client_config_with_llm_v(self):
         """Test that llm_v is included in config when llm_v_config is not None"""
         try:
-            from y_web.routes_admin.clients_routes import generate_hpc_client_config
+            from y_web.routes.admin.sub.clients import generate_hpc_client_config
 
             # Prepare test data
             llm_config = {"backend": "vllm", "model": "test-model"}
@@ -52,7 +52,7 @@ class TestHPCLLMVConfig:
     def test_generate_hpc_client_config_without_llm_v(self):
         """Test that llm_v is NOT included in config when llm_v_config is None"""
         try:
-            from y_web.routes_admin.clients_routes import generate_hpc_client_config
+            from y_web.routes.admin.sub.clients import generate_hpc_client_config
 
             # Prepare test data
             llm_config = {"backend": "vllm", "model": "test-model"}

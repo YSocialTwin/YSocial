@@ -10,8 +10,8 @@ import pytest
 class TestExtendSimulationMetricsReset:
     """Test that log metrics are reset when extending HPC simulations"""
 
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_client_metrics")
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_server_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_client_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_server_metrics")
     def test_metrics_reset_called_for_hpc_extension(
         self, mock_reset_server, mock_reset_client
     ):
@@ -36,8 +36,8 @@ class TestExtendSimulationMetricsReset:
         assert result_client is True
         assert result_server is True
 
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_client_metrics")
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_server_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_client_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_server_metrics")
     def test_metrics_reset_handles_client_failure(
         self, mock_reset_server, mock_reset_client
     ):
@@ -55,8 +55,8 @@ class TestExtendSimulationMetricsReset:
         assert result_server is True
         # In the actual code, this should trigger a warning flash message
 
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_client_metrics")
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_server_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_client_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_server_metrics")
     def test_metrics_reset_handles_server_failure(
         self, mock_reset_server, mock_reset_client
     ):
@@ -74,8 +74,8 @@ class TestExtendSimulationMetricsReset:
         assert result_server is False
         # In the actual code, this should trigger a warning flash message
 
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_client_metrics")
-    @patch("y_web.routes_admin.clients_routes.reset_hpc_server_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_client_metrics")
+    @patch("y_web.utils.log_metrics.reset_hpc_server_metrics")
     def test_metrics_reset_handles_both_failures(
         self, mock_reset_server, mock_reset_client
     ):
