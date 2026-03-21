@@ -4,7 +4,6 @@ import signal
 import subprocess
 import sys
 import time
-from idlelib.replace import replace
 from pathlib import Path
 
 import psutil
