@@ -24,6 +24,7 @@ pycparser>=2.21
 pygments
 pywebview
 Werkzeug==2.1.2
+detoxify
 
 # --------------------
 # AI Stack - Let Dockerfile handle the GPU-heavy vLLM/OpenAI
