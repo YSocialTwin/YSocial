@@ -1,9 +1,12 @@
 """
-Recommendation system support modules.
+Backward-compatibility shim for y_web.recsys_support.
 
-Provides content and follow recommendation algorithms for personalizing
-the user experience in the social media simulation.
+The canonical location is now ``y_web.src.recsys``.
+All existing ``from y_web.recsys_support import X`` call sites
+continue to work without modification.
+
+.. deprecated::
+    Import directly from ``y_web.src.recsys`` instead.
 """
 
-from .content_recsys import get_suggested_posts
-from .follow_recsys import get_suggested_users
+from y_web.src.recsys import *  # noqa: F401,F403

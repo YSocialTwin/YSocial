@@ -1,34 +1,10 @@
 """
-RSS feed parsing utilities.
+Backward-compatibility shim for y_web.utils.feeds.
 
-Provides functions to fetch and parse RSS feeds for news article extraction
-and content generation in the social media simulation.
+The canonical location is now ``y_web.src.content.feeds``.
+
+.. deprecated::
+    Import directly from ``y_web.src.content.feeds`` instead.
 """
 
-import feedparser
-
-
-def get_feed(url):
-    """
-    Fetch and parse an RSS feed from a given URL.
-
-    Args:
-        url: RSS feed URL to fetch
-
-    Returns:
-        List of dictionaries with keys: 'title', 'summary', 'link'
-        Returns empty list if entries lack required fields
-    """
-    feed = feedparser.parse(url)
-
-    res = []
-
-    for entry in feed.entries:
-        try:
-            res.append(
-                {"title": entry.title, "summary": entry.summary, "link": entry.link}
-            )
-        except:
-            pass
-
-    return res
+from y_web.src.content.feeds import *  # noqa: F401,F403
