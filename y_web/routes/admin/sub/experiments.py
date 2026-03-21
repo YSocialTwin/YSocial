@@ -2624,9 +2624,10 @@ def create_experiment():
 
         if db_type == "sqlite" and simulator_type == "Standard":
             ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
+        elif db_type == "sqlite" and simulator_type == "HPC":
+            pass  # HPC experiments: database is created automatically by the server on first startup
         elif db_type == "postgresql":
             ensure_experiment_schema_for_uri(db_uri)
-
         else:
             raise NotImplementedError(f"Unsupported dbms {db_type}")
     else:
