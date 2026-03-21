@@ -5,20 +5,19 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
         update_password.
 """
 
-from sqlalchemy import desc
-from sqlalchemy.sql.expression import func
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import desc
+from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.recsys_support import get_suggested_users
 from y_web.data_access import (
-    get_user_recent_posts,
     get_mutual_friends,
     get_top_user_hashtags,
-    get_user_recent_interests,
     get_unanswered_mentions,
+    get_user_recent_interests,
+    get_user_recent_posts,
 )
 from y_web.models import (
     Admin_users,
@@ -34,6 +33,7 @@ from y_web.models import (
     Reactions,
     User_mgmt,
 )
+from y_web.recsys_support import get_suggested_users
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _forum_current_profile_pic,

@@ -18,16 +18,23 @@ api/            Blueprints "api_reddit", "api_interview"
 
 def register_blueprints(app):
     """Register all application blueprints with *app*."""
-    from .social import main
-    from .interactions import user
-    from .auth import auth
-    from .errors import errors
     from .admin import admin
     from .admin.sub import (
-        agents, clientsr, experiments, lab,
-        ollama, pages, population, tutorial, users,
+        agents,
+        clientsr,
+        experiments,
+        lab,
+        ollama,
+        pages,
+        population,
+        tutorial,
+        users,
     )
-    from .api import api_reddit, api_interview
+    from .api import api_interview, api_reddit
+    from .auth import auth
+    from .errors import errors
+    from .interactions import user
+    from .social import main
 
     app.register_blueprint(auth)
     app.register_blueprint(main)

@@ -85,7 +85,8 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
         mock_exps.query.filter_by.return_value.first.return_value = mock_exp
         # Redirect the base-dir to our tmpdir so all paths resolve correctly
         with patch(
-            "y_web.routes.social.helpers.os.path.abspath", return_value=os.path.join(base_dir, "helpers.py")
+            "y_web.routes.social.helpers.os.path.abspath",
+            return_value=os.path.join(base_dir, "helpers.py"),
         ):
             return _experiment_memory_enabled(1)
 

@@ -10,7 +10,8 @@ if str(EXTERNAL_YCLIENT) not in sys.path:
     sys.path.insert(0, str(EXTERNAL_YCLIENT))
 
 YClientWeb = pytest.importorskip(
-    "y_client.clients.client_web", reason="y_client module not available in this environment"
+    "y_client.clients.client_web",
+    reason="y_client module not available in this environment",
 ).YClientWeb
 
 

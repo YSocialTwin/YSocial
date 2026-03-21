@@ -44,9 +44,7 @@ def test_generate_population_uses_bulk_insert():
 
     with (
         patch("y_web.utils.agents.Population") as mock_population_cls,
-        patch(
-            "y_web.utils.agents.PopulationActivityProfile"
-        ) as mock_profile_cls,
+        patch("y_web.utils.agents.PopulationActivityProfile") as mock_profile_cls,
         patch("y_web.utils.agents.db") as mock_db,
         patch("y_web.utils.agents.AgeClass") as mock_age_class,
         patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
@@ -57,7 +55,9 @@ def test_generate_population_uses_bulk_insert():
         mock_session = mock_db.session
 
         # Setup mocks
-        mock_population_cls.query.filter_by.return_value.first.return_value = mock_population
+        mock_population_cls.query.filter_by.return_value.first.return_value = (
+            mock_population
+        )
         mock_profile_cls.query.filter_by.return_value.all.return_value = []
 
         # Mock existing agents query (db.session.query(Agent.name).all())
@@ -145,9 +145,7 @@ def test_bulk_insert_preserves_agent_count():
 
     with (
         patch("y_web.utils.agents.Population") as mock_population_cls,
-        patch(
-            "y_web.utils.agents.PopulationActivityProfile"
-        ) as mock_profile_cls,
+        patch("y_web.utils.agents.PopulationActivityProfile") as mock_profile_cls,
         patch("y_web.utils.agents.db") as mock_db,
         patch("y_web.utils.agents.AgeClass") as mock_age_class,
         patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
@@ -158,7 +156,9 @@ def test_bulk_insert_preserves_agent_count():
         mock_session = mock_db.session
 
         # Setup mocks
-        mock_population_cls.query.filter_by.return_value.first.return_value = mock_population
+        mock_population_cls.query.filter_by.return_value.first.return_value = (
+            mock_population
+        )
         mock_profile_cls.query.filter_by.return_value.all.return_value = []
         mock_session.query.return_value.all.return_value = []
 

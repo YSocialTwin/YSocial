@@ -11,7 +11,7 @@ deletions, and notification cancellations.
   forum.py        – publish_post_reddit, publish_comment (forum platform)
 """
 
+from . import common, forum, microblogging  # registers all routes
 from ._blueprint import user
-from . import common, microblogging, forum  # registers all routes
 
 __all__ = ["user"]

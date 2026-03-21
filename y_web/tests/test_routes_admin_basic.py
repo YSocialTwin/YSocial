@@ -358,7 +358,9 @@ class TestRoutesAdminIntegration:
         importable_count = 0
         for module_name in admin_route_modules:
             try:
-                module = __import__(f"y_web.routes.admin.sub.{module_name}", fromlist=[""])
+                module = __import__(
+                    f"y_web.routes.admin.sub.{module_name}", fromlist=[""]
+                )
                 assert module is not None
                 importable_count += 1
             except ImportError:

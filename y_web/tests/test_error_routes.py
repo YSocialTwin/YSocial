@@ -203,6 +203,7 @@ class TestErrorRouteCount:
         """Test that errors blueprint has correct number of error handlers"""
         try:
             from y_web.routes.errors import errors
+
             handler_count = len(errors.deferred_functions)
 
             # Should have 4 error handlers (400, 403, 404, 500)

@@ -9,7 +9,7 @@ Contains two Blueprints:
                   (moved from routes_api/interview.py)
 """
 
-from .reddit import api_reddit
 from .interview import api_interview
+from .reddit import api_reddit
 
 __all__ = ["api_reddit", "api_interview"]

@@ -110,9 +110,9 @@ class TestHPCSQLiteNoSchemaCreation:
                 # Would copy clean DB here — must NOT run for HPC
                 open(db_path, "w").close()
 
-            assert not os.path.exists(db_path), (
-                "HPC experiment must NOT have a pre-created database_server.db file"
-            )
+            assert not os.path.exists(
+                db_path
+            ), "HPC experiment must NOT have a pre-created database_server.db file"
 
     def test_real_create_experiment_logic_no_notimplementederror(self):
         """

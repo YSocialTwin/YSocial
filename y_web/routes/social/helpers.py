@@ -16,18 +16,12 @@ from flask import request
 from flask_login import current_user
 
 from y_web import db
-from y_web.experiment_context import get_current_experiment_id
-from y_web.utils.avatars import (
-    resolve_forum_profile_pic,
-    resolve_forum_username_avatar,
-)
-from y_web.utils.text_utils import process_reddit_post, strip_tags
 from y_web.data_access import (
     augment_text,
     get_elicited_emotions,
     get_topics,
 )
-
+from y_web.experiment_context import get_current_experiment_id
 from y_web.models import (
     Admin_users,
     Agent,
@@ -41,6 +35,11 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
+from y_web.utils.avatars import (
+    resolve_forum_profile_pic,
+    resolve_forum_username_avatar,
+)
+from y_web.utils.text_utils import process_reddit_post, strip_tags
 
 
 def get_safe_profile_pic(username, is_page=0):

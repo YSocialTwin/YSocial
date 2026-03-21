@@ -19,7 +19,6 @@ from y_web.models import (
     Rounds,
     User_mgmt,
 )
-
 from y_web.routes.interactions._blueprint import user
 
 

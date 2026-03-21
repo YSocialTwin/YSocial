@@ -11,11 +11,6 @@ from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.recsys_support import get_suggested_posts, get_suggested_users
-from y_web.reddit.service import (
-    _format_display_time,
-    _format_display_time_from_created_at,
-)
 from y_web.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
@@ -40,6 +35,11 @@ from y_web.models import (
     Reactions,
     Rounds,
     User_mgmt,
+)
+from y_web.recsys_support import get_suggested_posts, get_suggested_users
+from y_web.reddit.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
 )
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (

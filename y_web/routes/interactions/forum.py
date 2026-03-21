@@ -30,10 +30,9 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
+from y_web.routes.interactions._blueprint import user
 from y_web.utils.article_extractor import extract_article_info
 from y_web.utils.text_utils import toxicity, vader_sentiment
-
-from y_web.routes.interactions._blueprint import user
 
 
 @user.route("/<int:exp_id>/publish_reddit")

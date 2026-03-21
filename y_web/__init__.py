@@ -690,6 +690,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
             return str((hash_value % 1000) + 1)
 
     from y_web.routes import register_blueprints
+
     register_blueprints(app)
 
     # Add context processor to detect PyInstaller mode
