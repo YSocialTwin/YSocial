@@ -249,6 +249,7 @@ class TestHPCExecutionLogMonitoring:
             db.session.commit()
 
             # Create multiple clients, all completed (status=0)
+            clients_created = []
             for i in range(3):
                 client = Client(
                     name=f"client_{i}",
@@ -258,6 +259,19 @@ class TestHPCExecutionLogMonitoring:
                     status=0,  # All completed
                 )
                 db.session.add(client)
+                clients_created.append(client)
+            db.session.commit()
+
+            # Create Client_Execution records indicating each client truly completed
+            from y_web.models import Client_Execution
+
+            for client in clients_created:
+                client_exec = Client_Execution(
+                    client_id=client.id,
+                    elapsed_time=10,
+                    expected_duration_rounds=10,
+                )
+                db.session.add(client_exec)
             db.session.commit()
 
             # Check and terminate

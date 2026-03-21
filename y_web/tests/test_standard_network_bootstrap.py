@@ -2,12 +2,16 @@ import os
 import sys
 from pathlib import Path
 
+import pytest
+
 ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
 EXTERNAL_YCLIENT = ROOT / "external" / "YClient"
 if str(EXTERNAL_YCLIENT) not in sys.path:
     sys.path.insert(0, str(EXTERNAL_YCLIENT))
 
-from y_client.clients.client_web import YClientWeb
+YClientWeb = pytest.importorskip(
+    "y_client.clients.client_web", reason="y_client module not available in this environment"
+).YClientWeb
 
 
 class _Resp:
