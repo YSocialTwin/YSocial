@@ -1,9 +1,12 @@
 """
-LLM-based content annotation modules.
+Backward-compatibility shim for y_web.llm_annotations.
 
-Provides interfaces for using Large Language Models to annotate and analyze
-social media content including text posts and images.
+The canonical location is now ``y_web.src.llm``.
+All existing ``from y_web.llm_annotations import X`` call sites
+continue to work without modification.
+
+.. deprecated::
+    Import directly from ``y_web.src.llm`` instead.
 """
 
-from .content_annotation import *
-from .image_annotator import *
+from y_web.src.llm import *  # noqa: F401,F403
