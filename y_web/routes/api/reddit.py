@@ -53,7 +53,7 @@ try:
 except ImportError:
     ContentShown = None
 
-api_reddit = Blueprint("api_reddit", __name__, url_prefix="/api/reddit")
+api_reddit = Blueprint("api_reddit", __name__)
 
 _ALLOWED_IMAGE_EXTS = (".jpg", ".jpeg", ".png", ".gif", ".webp")
 _ALLOWED_VIDEO_EXTS = (".mp4",)

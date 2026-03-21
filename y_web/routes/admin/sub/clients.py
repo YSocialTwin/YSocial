@@ -401,7 +401,7 @@ def extend_simulation(id_client):
 @login_required
 def run_client(uid, idexp):
     """Handle run client operation."""
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     check_privileges(current_user.username)
 
@@ -445,7 +445,7 @@ def run_client(uid, idexp):
 @login_required
 def resume_client(uid, idexp):
     """Handle resume client operation."""
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     check_privileges(current_user.username)
 
@@ -489,7 +489,7 @@ def resume_client(uid, idexp):
 @login_required
 def pause_client(uid, idexp):
     """Handle pause client operation."""
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     check_privileges(current_user.username)
 
@@ -521,7 +521,7 @@ def pause_client(uid, idexp):
 @login_required
 def stop_client(uid, idexp):
     """Handle stop client operation."""
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     check_privileges(current_user.username)
 
@@ -2937,7 +2937,7 @@ def _create_standard_client_internal():
     )
 
     # load experiment_details page
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     return experiment_details(int(exp_id))
 
@@ -4213,7 +4213,7 @@ def _create_forum_client_internal():
         )
 
     # load experiment_details page
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     return experiment_details(int(exp_id))
 
@@ -4320,7 +4320,7 @@ def delete_client(uid):
     Population_Experiment.query.filter_by(id_population=pop_id).delete()
     db.session.commit()
 
-    from .experiments_routes import experiment_details
+    from .experiments import experiment_details
 
     return experiment_details(exp_id)
 

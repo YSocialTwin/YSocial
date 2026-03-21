@@ -206,7 +206,7 @@ def test_mixed_experiments_auto_composition():
 
     # Total groups
     total_groups = len(hpc_groups) + len(standard_groups)
-    assert total_groups == 5, "Should have 5 total groups (2 HPC + 3 Standard)"
+    assert total_groups == 6, "Should have 6 total groups (3 HPC + 3 Standard)"
 
 
 if __name__ == "__main__":

@@ -93,11 +93,11 @@ class TestY_WebModuleImports:
     def test_import_y_web_auth(self):
         """Test importing y_web auth module"""
         try:
-            from y_web import auth
+            from y_web.routes import auth
 
             assert hasattr(auth, "auth")  # Blueprint name
         except ImportError as e:
-            pytest.skip(f"y_web.auth import failed: {e}")
+            pytest.skip(f"y_web.routes.auth import failed: {e}")
 
 
 class TestBlueprintStructure:

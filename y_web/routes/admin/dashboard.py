@@ -19,14 +19,22 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web.utils import (
+    check_connection,
+    check_privileges,
+    get_db_port,
+    get_db_server,
+    get_db_type,
     get_llm_models,
     get_ollama_models,
     get_vllm_models,
 )
 from y_web.utils.jupyter_utils import get_jupyter_instances
 from y_web.utils.miscellanea import llm_backend_status, ollama_status
-
-from .models import (
+from y_web.utils.experiment_access import (
+    get_visible_experiment_query,
+    user_can_manage_experiment,
+)
+from y_web.models import (
     Admin_users,
     Client,
     Client_Execution,
@@ -34,17 +42,6 @@ from .models import (
     Jupyter_instances,
     Ollama_Pull,
     User_Experiment,
-)
-from .utils import (
-    check_connection,
-    check_privileges,
-    get_db_port,
-    get_db_server,
-    get_db_type,
-)
-from .utils.experiment_access import (
-    get_visible_experiment_query,
-    user_can_manage_experiment,
 )
 
 admin = Blueprint("admin", __name__)
@@ -651,7 +648,7 @@ def dismiss_telemetry_notice():
     Returns:
         JSON response with success status
     """
-    from . import db
+    from y_web import db
 
     user = Admin_users.query.filter_by(username=current_user.username).first()
 

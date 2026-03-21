@@ -128,7 +128,7 @@ def test_delete_orphaned_agents_route_exists(app):
     """Test that the delete orphaned agents route exists"""
     # This test verifies the route exists in the codebase
     try:
-        from y_web.routes_admin.agents_routes import agents
+        from y_web.routes.admin.sub.agents import agents
 
         # Check that the blueprint has the new route
         route_found = False

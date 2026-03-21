@@ -13,7 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from y_web.models import Exps
-from y_web.routes_admin.experiments_routes import (
+from y_web.routes.admin.sub.experiments import (
     generate_hpc_config,
     generate_standard_config,
 )

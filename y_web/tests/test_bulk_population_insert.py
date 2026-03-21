@@ -43,26 +43,39 @@ def test_generate_population_uses_bulk_insert():
     }
 
     with (
-        patch("y_web.utils.agents.Population.query") as mock_pop_query,
+        patch("y_web.utils.agents.Population") as mock_population_cls,
         patch(
-            "y_web.utils.agents.PopulationActivityProfile.query"
-        ) as mock_profile_query,
-        patch("y_web.utils.agents.db.session") as mock_session,
+            "y_web.utils.agents.PopulationActivityProfile"
+        ) as mock_profile_cls,
+        patch("y_web.utils.agents.db") as mock_db,
         patch("y_web.utils.agents.AgeClass") as mock_age_class,
         patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
         patch("y_web.utils.agents.Leanings") as mock_leanings,
         patch("y_web.utils.agents.Profession") as mock_profession,
         patch("y_web.utils.agents.Education") as mock_education,
     ):
+        mock_session = mock_db.session
 
         # Setup mocks
-        mock_pop_query.filter_by.return_value.first.return_value = mock_population
-        mock_profile_query.filter_by.return_value.all.return_value = []
+        mock_population_cls.query.filter_by.return_value.first.return_value = mock_population
+        mock_profile_cls.query.filter_by.return_value.all.return_value = []
 
-        # Mock existing agents query
+        # Mock existing agents query (db.session.query(Agent.name).all())
         mock_session.query.return_value.all.return_value = []
 
-        # Mock age class
+        # Mock all db.session.query(Model).filter_by(...).first() results.
+        # The same mock chain is used for AgeClass, Toxicity_Levels and Leanings
+        # lookups, so a single result object with all required attributes is enough.
+        mock_query_result = MagicMock()
+        mock_query_result.age_start = 20
+        mock_query_result.age_end = 30
+        mock_query_result.toxicity_level = "none"
+        mock_query_result.leaning = "neutral"
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_query_result
+        )
+
+        # Mock age class (used for edu/profession sampling helpers)
         mock_age_obj = MagicMock()
         mock_age_obj.age_start = 20
         mock_age_obj.age_end = 30
@@ -131,22 +144,33 @@ def test_bulk_insert_preserves_agent_count():
     }
 
     with (
-        patch("y_web.utils.agents.Population.query") as mock_pop_query,
+        patch("y_web.utils.agents.Population") as mock_population_cls,
         patch(
-            "y_web.utils.agents.PopulationActivityProfile.query"
-        ) as mock_profile_query,
-        patch("y_web.utils.agents.db.session") as mock_session,
+            "y_web.utils.agents.PopulationActivityProfile"
+        ) as mock_profile_cls,
+        patch("y_web.utils.agents.db") as mock_db,
         patch("y_web.utils.agents.AgeClass") as mock_age_class,
         patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
         patch("y_web.utils.agents.Leanings") as mock_leanings,
         patch("y_web.utils.agents.Profession") as mock_profession,
         patch("y_web.utils.agents.Education") as mock_education,
     ):
+        mock_session = mock_db.session
 
         # Setup mocks
-        mock_pop_query.filter_by.return_value.first.return_value = mock_population
-        mock_profile_query.filter_by.return_value.all.return_value = []
+        mock_population_cls.query.filter_by.return_value.first.return_value = mock_population
+        mock_profile_cls.query.filter_by.return_value.all.return_value = []
         mock_session.query.return_value.all.return_value = []
+
+        # Mock all db.session.query(Model).filter_by(...).first() results
+        mock_query_result = MagicMock()
+        mock_query_result.age_start = 20
+        mock_query_result.age_end = 30
+        mock_query_result.toxicity_level = "none"
+        mock_query_result.leaning = "neutral"
+        mock_session.query.return_value.filter_by.return_value.first.return_value = (
+            mock_query_result
+        )
 
         # Mock objects
         mock_age_obj = MagicMock()

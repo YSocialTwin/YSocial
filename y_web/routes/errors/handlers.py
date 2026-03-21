@@ -7,10 +7,10 @@ including custom error pages for common HTTP errors (400, 403, 404, 500).
 
 import traceback
 
-from flask import Blueprint, render_template, request
+from flask import render_template, request
 from flask_login import current_user
 
-errors = Blueprint("errors", __name__)
+from y_web.routes.errors._blueprint import errors
 
 
 @errors.app_errorhandler(400)

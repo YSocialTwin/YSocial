@@ -13,7 +13,7 @@ class TestClientFormFields:
     def test_clients_routes_has_create_client(self):
         """Test that create_client route exists"""
         try:
-            from y_web.routes_admin import clients_routes
+            from y_web.routes.admin.sub import clients as clients_routes
 
             assert clients_routes is not None
             assert hasattr(clients_routes, "create_client")

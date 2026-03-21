@@ -6,14 +6,13 @@ researchers, and experiment participants. Manages session creation
 and validation for the YSocial platform.
 """
 
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import flash, redirect, render_template, request, url_for
 from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 
-from . import db
-from .models import Admin_users, Exps, User_Experiment, User_mgmt
-
-auth = Blueprint("auth", __name__)
+from y_web import db
+from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
+from y_web.routes.auth._blueprint import auth
 
 
 @auth.route("/login")
