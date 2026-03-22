@@ -458,6 +458,18 @@ def generate_population(
     db.session.commit()
 
 
+def generate_population_from_config(
+    population_name, percentages=None, actions_config=None, profession_backgrounds=None
+):
+    """Backward-compatible alias for generate_population."""
+    return generate_population(
+        population_name,
+        percentages=percentages,
+        actions_config=actions_config,
+        profession_backgrounds=profession_backgrounds,
+    )
+
+
 __locales = {
     "American": "en_US",
     "Argentine": "es_AR",

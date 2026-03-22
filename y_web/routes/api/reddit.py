@@ -46,7 +46,7 @@ from y_web.reddit.service import (
     fetch_feed_page,
     fetch_thread,
 )
-from y_web.utils.path_utils import get_writable_path
+from y_web.src.system.path_utils import get_writable_path
 
 try:
     from y_web.models import ContentShown

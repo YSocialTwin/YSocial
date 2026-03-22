@@ -8,5 +8,13 @@ continue to work without modification.
 .. deprecated::
     Import directly from ``y_web.src.experiment.access`` instead.
 """
+import warnings
+
+warnings.warn(
+    "y_web.utils.experiment_access is deprecated; use y_web.src.experiment.access instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 from y_web.src.experiment.access import *  # noqa: F401,F403

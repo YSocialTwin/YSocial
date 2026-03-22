@@ -4,8 +4,8 @@ from flask_login import login_required
 from y_web import db
 from y_web.models import Exps, Jupyter_instances
 from y_web.routes.admin.sub.experiments import experiment_details
-from y_web.utils.jupyter_utils import *
-from y_web.utils.miscellanea import ollama_status
+from y_web.src.system.jupyter_utils import *
+from y_web.src.system.miscellanea import ollama_status
 
 lab = Blueprint("lab", __name__)
 

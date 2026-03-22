@@ -497,7 +497,7 @@ def check_and_terminate_hpc_experiment(exp_id):
     """
     try:
         from y_web.models import Exps
-        from y_web.utils.external_processes import stop_hpc_server
+        from y_web.src.hpc.server import stop_hpc_server
 
         # Get the experiment
         exp = Exps.query.filter_by(idexp=exp_id).first()
@@ -637,7 +637,7 @@ def monitor_hpc_client_execution_logs():
     This function should be called periodically (e.g., every 5 seconds).
     """
     from y_web.models import Exps
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 

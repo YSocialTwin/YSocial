@@ -53,7 +53,7 @@ from y_web.routes.social.helpers import (
     _get_discussions,
     is_admin,
 )
-from y_web.utils.text_utils import process_reddit_post, strip_tags
+from y_web.src.content.text_utils import process_reddit_post, strip_tags
 
 
 @main.get("/<int:exp_id>/interview")

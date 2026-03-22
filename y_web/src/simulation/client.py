@@ -135,7 +135,7 @@ def terminate_client(cli, pause=False):
     # Unregister from watchdog first
     if WATCHDOG_ENABLED:
         try:
-            from y_web.utils.process_watchdog import get_watchdog
+            from y_web.src.simulation.watchdog import get_watchdog
 
             watchdog = get_watchdog()
             watchdog.unregister_process(f"client_{cli.id}")
@@ -391,7 +391,7 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
         pid: the process ID
         log_dir: directory containing log files
     """
-    from y_web.utils.process_watchdog import get_watchdog
+    from y_web.src.simulation.watchdog import get_watchdog
 
     # Use {client_name}_client.log as the heartbeat file
     log_file = os.path.join(log_dir, f"{cli.name}_client.log")

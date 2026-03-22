@@ -100,7 +100,7 @@ def create_postgresql_db(app):
         dashboard_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_admin"])
         with dashboard_engine.connect() as db_conn:
             # Load SQL schema
-            from y_web.utils.path_utils import get_resource_path
+            from y_web.src.system.path_utils import get_resource_path
 
             schema_path = get_resource_path(
                 os.path.join("data_schema", "postgre_dashboard.sql")
@@ -142,7 +142,7 @@ def create_postgresql_db(app):
 
         dummy_engine = create_engine(app.config["SQLALCHEMY_BINDS"]["db_exp"])
         with dummy_engine.connect() as dummy_conn:
-            from y_web.utils.path_utils import get_resource_path
+            from y_web.src.system.path_utils import get_resource_path
 
             schema_path = get_resource_path(
                 os.path.join("data_schema", "postgre_server.sql")
@@ -197,7 +197,7 @@ def cleanup_db_jupyter_with_new_app():
 
     # Stop the log sync scheduler
     try:
-        from y_web.utils.log_sync_scheduler import stop_log_sync_scheduler
+        from y_web.src.hpc.log_sync_scheduler import stop_log_sync_scheduler
 
         stop_log_sync_scheduler()
         print("Log sync scheduler stopped")
@@ -230,8 +230,8 @@ def cleanup_db_jupyter_with_new_app():
         if app_context_exists:
             # Use existing context
             from y_web import db
-            from y_web.utils.external_processes import stop_all_exps
-            from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+            from y_web.src.simulation.process_registry import stop_all_exps
+            from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
             stop_all_jupyter_instances()
             stop_all_exps()
@@ -252,8 +252,8 @@ def cleanup_db_jupyter_with_new_app():
                     app = create_app(dbms)
                     with app.app_context():
                         from y_web import db
-                        from y_web.utils.external_processes import stop_all_exps
-                        from y_web.utils.jupyter_utils import stop_all_jupyter_instances
+                        from y_web.src.simulation.process_registry import stop_all_exps
+                        from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
 
                         stop_all_jupyter_instances()
                         stop_all_exps()
@@ -310,7 +310,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         # Determine the database directory based on execution mode
         if getattr(sys, "frozen", False):
             # Running from PyInstaller - use writable location for database
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             db_dir = os.path.join(get_writable_path(), "y_web", "db")
         else:
@@ -325,7 +325,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         dummy_db_path = os.path.join(db_dir, "dummy.db")
 
         if not os.path.exists(dashboard_db_path):
-            from y_web.utils.path_utils import get_resource_path
+            from y_web.src.system.path_utils import get_resource_path
 
             dashboard_src = get_resource_path(
                 os.path.join("data_schema", "database_dashboard.db")
@@ -376,7 +376,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
-    from y_web.utils.population_platform import ensure_population_username_type_column
+    from y_web.src.agents.platform import ensure_population_username_type_column
 
     from .models import Admin_users, User_mgmt
 
@@ -1004,7 +1004,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
                     migrate_sqlite_server(dummy_db_path, quiet=True)
 
                 # Migrate all existing experiment databases
-                from y_web.utils.path_utils import get_writable_path
+                from y_web.src.system.path_utils import get_writable_path
 
                 BASE_DIR = get_writable_path()
                 experiments_dir = os.path.join(BASE_DIR, "y_web", "experiments")
@@ -1196,14 +1196,14 @@ def create_app(db_type="sqlite", desktop_mode=False):
     # Check for updates at startup
     with app.app_context():
         try:
-            from y_web.utils.check_release import update_release_info_in_db
+            from y_web.src.system.check_release import update_release_info_in_db
 
             update_release_info_in_db()
         except Exception as e:
             print(f"Failed to check for updates at startup: {e}")
 
         try:
-            from y_web.utils.check_blog import update_blog_info_in_db
+            from y_web.src.system.check_blog import update_blog_info_in_db
 
             update_blog_info_in_db()
         except Exception as e:
@@ -1220,7 +1220,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     # Start the log sync scheduler for automatic periodic log reading
     try:
-        from y_web.utils.log_sync_scheduler import init_log_sync_scheduler
+        from y_web.src.hpc.log_sync_scheduler import init_log_sync_scheduler
 
         init_log_sync_scheduler(app)
         print("✓ Log sync scheduler started")
@@ -1229,7 +1229,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     # Start the experiment schedule monitor for automatic group advancement
     try:
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             init_experiment_schedule_monitor,
         )
 

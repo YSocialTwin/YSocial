@@ -46,9 +46,11 @@ def reload_current_user(username):
 
 def _lazy_llm_helpers():
     """Lazily import LLM status helpers to avoid circular imports at module load time."""
-    from y_web.utils.external_processes import (  # noqa: PLC0415
+    from y_web.src.llm.ollama_manager import (  # noqa: PLC0415
         is_ollama_installed,
         is_ollama_running,
+    )
+    from y_web.src.llm.vllm_manager import (  # noqa: PLC0415
         is_vllm_installed,
         is_vllm_running,
     )

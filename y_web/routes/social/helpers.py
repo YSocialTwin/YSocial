@@ -35,11 +35,11 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.utils.avatars import (
+from y_web.src.content.avatars import (
     resolve_forum_profile_pic,
     resolve_forum_username_avatar,
 )
-from y_web.utils.text_utils import process_reddit_post, strip_tags
+from y_web.src.content.text_utils import process_reddit_post, strip_tags
 
 
 def get_safe_profile_pic(username, is_page=0):

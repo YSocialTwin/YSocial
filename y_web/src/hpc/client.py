@@ -35,7 +35,7 @@ def start_hpc_client(exp, cli, population):
     """
     # Import helpers from external_processes to avoid duplication.
     # These imports work because external_processes defines them before delegating here.
-    from y_web.utils.external_processes import detect_env_handler
+    from y_web.src.simulation.server import detect_env_handler
 
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
@@ -263,7 +263,7 @@ def stop_hpc_client(cli):
         bool: True if process was found and terminated, False otherwise
     """
     # Import here to avoid circular import issues.
-    from y_web.utils.external_processes import __terminate_process as _terminate_process
+    from y_web.src.simulation.port_manager import __terminate_process as _terminate_process
 
     try:
         if not cli.pid:

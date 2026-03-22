@@ -25,8 +25,8 @@ from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
 from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
-from y_web.utils.external_processes import get_llm_models
-from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.system.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 users = Blueprint("users", __name__)
 
@@ -231,7 +231,7 @@ def user_details(uid):
     watchdog_interval = 15  # Default
     if current_admin_user.role == "admin":
         try:
-            from y_web.utils.process_watchdog import get_watchdog
+            from y_web.src.simulation.watchdog import get_watchdog
 
             watchdog = get_watchdog()
             watchdog_interval = watchdog.run_interval_minutes
@@ -1030,7 +1030,7 @@ def check_for_updates_route():
         return redirect(url_for("admin.dashboard"))
 
     try:
-        from y_web.utils.check_release import update_release_info_in_db
+        from y_web.src.system.check_release import update_release_info_in_db
 
         has_update, release_info = update_release_info_in_db()
 
@@ -1155,7 +1155,7 @@ def watchdog_status():
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        from y_web.utils.process_watchdog import get_watchdog_status
+        from y_web.src.simulation.watchdog import get_watchdog_status
 
         status = get_watchdog_status()
         return jsonify(status), 200
@@ -1181,7 +1181,7 @@ def watchdog_run_now():
         return jsonify({"error": "Access denied"}), 403
 
     try:
-        from y_web.utils.process_watchdog import run_watchdog_once
+        from y_web.src.simulation.watchdog import run_watchdog_once
 
         results = run_watchdog_once()
         flash(
@@ -1223,7 +1223,7 @@ def watchdog_set_interval():
 
     # Get interval from form
     try:
-        from y_web.utils.process_watchdog import MAX_RUN_INTERVAL_MINUTES
+        from y_web.src.simulation.watchdog import MAX_RUN_INTERVAL_MINUTES
 
         interval_minutes = int(request.form.get("watchdog_interval", 15))
         if interval_minutes < 1:
@@ -1234,7 +1234,7 @@ def watchdog_set_interval():
         interval_minutes = 15
 
     try:
-        from y_web.utils.process_watchdog import set_watchdog_interval
+        from y_web.src.simulation.watchdog import set_watchdog_interval
 
         set_watchdog_interval(interval_minutes)
 
@@ -1281,7 +1281,7 @@ def watchdog_toggle():
         data = request.get_json()
         enabled = data.get("enabled", True) if data else True
 
-        from y_web.utils.process_watchdog import get_watchdog
+        from y_web.src.simulation.watchdog import get_watchdog
 
         watchdog = get_watchdog()
 

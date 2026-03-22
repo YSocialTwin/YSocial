@@ -199,7 +199,7 @@ def _download_image_to_uploads(remote_url: str, exp_id: int) -> Optional[str]:
         if not ext:
             return None
 
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         out_dir = os.path.join(
             get_writable_path(), "y_web", "uploads", "reddit", str(exp_id)

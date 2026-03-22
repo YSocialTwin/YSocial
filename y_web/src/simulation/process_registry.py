@@ -155,7 +155,7 @@ def stop_all_exps():
         # Stop watchdog first to prevent auto-restarts during shutdown
         if WATCHDOG_ENABLED:
             try:
-                from y_web.utils.process_watchdog import stop_watchdog
+                from y_web.src.simulation.watchdog import stop_watchdog
 
                 stop_watchdog()
             except Exception as e:

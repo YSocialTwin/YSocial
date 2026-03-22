@@ -5,6 +5,14 @@ Shim: y_client_process_runner — logic lives in y_web.src.simulation.process_ru
 This script is kept for backward compatibility. All imports and the main()
 entry point delegate to the canonical location.
 """
+import warnings
+
+warnings.warn(
+    "y_web.utils.y_client_process_runner is deprecated; use y_web.src.simulation.process_runner instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 from y_web.src.simulation.process_runner import (  # noqa: F401
     _candidate_memory_package_dirs,

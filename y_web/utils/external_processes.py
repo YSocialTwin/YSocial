@@ -5,6 +5,14 @@ Shim module: all logic has been extracted to y_web.src.simulation.* submodules.
 This file re-exports every public name so that existing callers continue to work
 without modification.
 """
+import warnings
+
+warnings.warn(
+    "y_web.utils.external_processes is deprecated; use y_web.src.simulation.*, y_web.src.hpc.*, and y_web.src.llm.* instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 import sys  # noqa: F401 — kept so tests can monkeypatch y_web.utils.external_processes.sys
 

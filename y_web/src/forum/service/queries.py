@@ -18,7 +18,7 @@ from y_web.models import (
     Rounds,
     User_mgmt,
 )
-from y_web.utils.text_utils import (
+from y_web.src.content.text_utils import (
     augment_text,
     normalize_punctuation_spacing,
     process_reddit_post,
@@ -416,7 +416,7 @@ def build_user_feed_posts(
     per_page: int,
     feed_type: str = "new",
 ) -> Tuple[List[FeedPost], bool]:
-    from y_web.recsys_support import get_suggested_posts
+    from y_web.src.recsys import get_suggested_posts
 
     sys.stderr.write(
         f"[DEBUG] build_user_feed_posts called with feed_type={feed_type}, target_user_id={target_user_id}\n"

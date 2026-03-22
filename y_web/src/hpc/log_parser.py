@@ -814,10 +814,8 @@ def parse_client_log_incremental(
 
                                 try:
                                     # Import here to avoid circular import
-                                    from y_web.utils.external_processes import (
-                                        stop_hpc_client,
-                                        stop_hpc_server,
-                                    )
+                                    from y_web.src.hpc.client import stop_hpc_client
+                                    from y_web.src.hpc.server import stop_hpc_server
 
                                     # Stop all clients that might still have running processes
                                     for c in all_clients:

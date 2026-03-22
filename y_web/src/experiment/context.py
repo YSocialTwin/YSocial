@@ -39,7 +39,7 @@ def register_experiment_database(app, exp_id, db_name):
     bind_key = get_db_bind_key_for_exp(exp_id)
 
     # Use get_writable_path to handle both development and PyInstaller modes
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     # Check database type
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):

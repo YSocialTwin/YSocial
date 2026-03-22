@@ -77,28 +77,28 @@ from y_web.models import (
     User_Experiment,
     User_mgmt,
 )
-from y_web.utils.avatars import normalize_forum_avatar_mode
-from y_web.utils.desktop_file_handler import send_file_desktop
-from y_web.utils.execution_backend import (
+from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.system.desktop_file_handler import send_file_desktop
+from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     start_server_for_experiment,
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
-from y_web.utils.experiment_access import (
+from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
-from y_web.utils.hpc_population_backup import restore_population_for_hpc_client
-from y_web.utils.jupyter_utils import stop_process
-from y_web.utils.miscellanea import (
+from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.system.jupyter_utils import stop_process
+from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
     ollama_status,
     reload_current_user,
 )
-from y_web.utils.path_utils import get_resource_path
+from y_web.src.system.path_utils import get_resource_path
 
 experiments = Blueprint("experiments", __name__)
 
@@ -293,7 +293,7 @@ def _current_admin_user_or_none():
 
 def _notifications_temp_data_dir():
     """Return temp_data directory used for async archive output."""
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     return os.path.join(base_dir, f"y_web{os.sep}experiments{os.sep}temp_data")
@@ -342,7 +342,7 @@ def _experiment_has_started_once(experiment, clients=None):
 
     # File-based fallback for experiments where metrics rows were never materialized.
     try:
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, experiment, _get_database_type())
@@ -394,7 +394,7 @@ def _load_forum_experiment_context(uid, require_manage=True):
             redirect(url_for("experiments.experiment_details", uid=uid)),
         )
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
@@ -436,7 +436,7 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
             redirect(url_for("experiments.experiment_details", uid=uid)),
         )
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
@@ -626,7 +626,7 @@ def _read_experiment_embedding_settings(experiment_dir):
 
 def _read_forum_avatar_settings(experiment_dir):
     """Load persisted forum avatar settings from config_server.json."""
-    from y_web.utils.avatars import normalize_forum_avatar_mode
+    from y_web.src.content.avatars import normalize_forum_avatar_mode
 
     config_path = os.path.join(experiment_dir, "config_server.json")
     settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
@@ -1283,7 +1283,7 @@ def change_active_experiment(exp_id):
             # Check database type
             if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("sqlite"):
                 # Check if the SQLite database file exists
-                from y_web.utils.path_utils import get_writable_path
+                from y_web.src.system.path_utils import get_writable_path
 
                 db_path = get_writable_path(os.path.join("y_web", exp.db_name))
                 if not os.path.exists(db_path):
@@ -1395,7 +1395,7 @@ def upload_experiment():
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
     uid = str(uuid.uuid4()).replace("-", "_")
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -1639,7 +1639,7 @@ def upload_experiment():
 
             admin_engine.dispose()
 
-        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+        from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
         if db_type == "sqlite":
             ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
@@ -2183,7 +2183,7 @@ def upload_database():
     """Upload database."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -2507,7 +2507,7 @@ def create_experiment():
     if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
         db_type = "postgresql"
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -2620,7 +2620,7 @@ def create_experiment():
 
             admin_engine.dispose()
 
-        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+        from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
         if db_type == "sqlite" and simulator_type == "Standard":
             ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
@@ -2827,7 +2827,7 @@ def _delete_simulation_internal(exp_id):
         # remove the experiment folder
         # check database type
         if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             BASE_DIR = get_writable_path()
             shutil.rmtree(
@@ -2839,7 +2839,7 @@ def _delete_simulation_internal(exp_id):
             )
         elif current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("postgresql"):
             # Remove experiment folder
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             BASE_DIR = get_writable_path()
             shutil.rmtree(
@@ -3172,8 +3172,8 @@ def experiment_clients(exp_id):
             return jsonify({"error": "Access denied"}), 403
 
         # Import log metrics function and path utilities
-        from y_web.utils.log_metrics import update_client_log_metrics
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.hpc.log_metrics import update_client_log_metrics
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -3360,7 +3360,7 @@ def experiment_details(uid):
         experiment.annotations and "opinions" in experiment.annotations
     )
     try:
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, experiment, _get_database_type())
@@ -3424,7 +3424,7 @@ def experiment_details(uid):
 
     if experiment.platform_type == "forum":
         try:
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             base_dir = get_writable_path()
             exp_folder = _get_experiment_folder(
@@ -3563,7 +3563,7 @@ def update_experiment_config(uid):
     exp.annotations = ",".join(sorted(annotation_set))
 
     try:
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
@@ -3713,7 +3713,7 @@ def reset_hpc_experiment(uid):
             if restore_population_for_hpc_client(exp, client, population):
                 restored_count += 1
 
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         base_dir = get_writable_path()
         exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
@@ -3857,7 +3857,7 @@ def update_remote_server(exp_id):
     """Update remote experiment server host and port."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     try:
         data = request.get_json()
@@ -3971,7 +3971,7 @@ def submit_experiment_logs(exp_id):
     check_privileges(current_user.username)
 
     from y_web.telemetry import Telemetry
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     # Get experiment details
     experiment = Exps.query.filter_by(idexp=exp_id).first()
@@ -4032,11 +4032,9 @@ def experiment_logs(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import (
-            has_server_log_files,
-            update_server_log_metrics,
-        )
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.hpc.log_metrics import update_server_log_metrics
+        from y_web.src.hpc.log_parser import has_server_log_files
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -4138,12 +4136,12 @@ def experiment_trends(exp_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import (
-            has_server_log_files,
+        from y_web.src.hpc.log_metrics import (
             update_client_log_metrics,
             update_server_log_metrics,
         )
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.hpc.log_parser import has_server_log_files
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -4401,8 +4399,8 @@ def client_logs(client_id):
         if not experiment:
             return jsonify({"error": "Experiment not found"}), 404
 
-        from y_web.utils.log_metrics import update_client_log_metrics
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.hpc.log_metrics import update_client_log_metrics
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE_DIR = get_writable_path()
 
@@ -4614,7 +4612,7 @@ def prompts(uid):
     """Handle prompts operation."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -4645,7 +4643,7 @@ def prompts_forum(uid):
     """Handle forum prompts operation."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -4679,7 +4677,7 @@ def prompts_hpc(uid):
     """Handle HPC prompts operation."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -4719,7 +4717,7 @@ def update_prompts(uid):
     """Update prompts."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -4750,7 +4748,7 @@ def update_prompts_hpc(uid):
     """Update HPC prompts."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -5565,7 +5563,7 @@ def _create_sqlite_copy_for_postgresql(experiment, folder):
 
 def _build_single_experiment_zip(eid, output_zip_path):
     """Build a single experiment zip file and return user-facing name."""
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     experiment = Exps.query.filter_by(idexp=eid).first()
@@ -5593,7 +5591,7 @@ def _build_single_experiment_zip(eid, output_zip_path):
 
 def _build_bulk_experiments_zip(exp_ids, output_zip_path):
     """Build a bulk zip containing one zip per experiment."""
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     db_type = _get_database_type()
@@ -6109,7 +6107,7 @@ def miscellanea():
     Returns:
         Rendered miscellaneous settings template
     """
-    from y_web.utils.external_processes import get_llm_models
+    from y_web.src.llm.vllm_manager import get_llm_models
 
     # Check if user is admin (researchers should not access this page)
     user = Admin_users.query.filter_by(username=current_user.username).first()
@@ -6125,7 +6123,7 @@ def miscellanea():
 
     # Try to get watchdog interval from the watchdog status
     try:
-        from y_web.utils.process_watchdog import get_watchdog_status
+        from y_web.src.simulation.watchdog import get_watchdog_status
 
         status = get_watchdog_status()
         watchdog_interval = status.get("run_interval_minutes", 15)
@@ -7083,7 +7081,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
         # PostgreSQL: experiments_old_uid -> old_uid
         source_uid = source_exp.db_name.replace("experiments_", "")
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -7264,7 +7262,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
 
         admin_engine.dispose()
 
-    from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+    from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
     if db_type == "sqlite" and not is_hpc:
         ensure_experiment_schema_for_uri(f"sqlite:///{new_db_uri}")

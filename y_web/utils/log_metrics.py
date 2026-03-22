@@ -12,6 +12,14 @@ continue to work without modification.
     Import directly from y_web.src.hpc.log_parser or
     y_web.src.hpc.log_metrics instead.
 """
+import warnings
+
+warnings.warn(
+    "y_web.utils.log_metrics is deprecated; use y_web.src.hpc.log_parser and y_web.src.hpc.log_metrics instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 
 from y_web.src.hpc.log_parser import *  # noqa: F401,F403
 from y_web.src.hpc.log_parser import (  # noqa: F401

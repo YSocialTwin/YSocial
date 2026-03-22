@@ -115,7 +115,7 @@ def _get_experiment_uid_from_db_name(db_name: str) -> str:
 
 def _forum_experiment_config_path(exp_id: int) -> str:
     from y_web.models import Exps
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     experiment = Exps.query.filter_by(idexp=exp_id).first()
     if not experiment:

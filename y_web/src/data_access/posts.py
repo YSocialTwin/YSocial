@@ -39,7 +39,7 @@ def _get_text_utils():
     can be imported in environments where faker is not installed, matching the
     behaviour of the original y_web/data_access.py.
     """
-    from y_web.utils.text_utils import extract_components, strip_tags  # noqa: PLC0415
+    from y_web.src.content.text_utils import extract_components, strip_tags  # noqa: PLC0415
 
     return extract_components, strip_tags
 
