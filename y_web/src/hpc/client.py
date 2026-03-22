@@ -195,6 +195,8 @@ def start_hpc_client(exp, cli, population):
     print(f"Agents: {agents_file}")
     print(f"Prompts: {prompts_file}")
 
+    env = os.environ.copy()
+
     try:
         # Start the process with Popen
         if sys.platform.startswith("win"):
@@ -206,12 +208,14 @@ def start_hpc_client(exp, cli, population):
                 cmd,
                 stdin=subprocess.DEVNULL,
                 creationflags=creationflags,
+                env=env,
             )
         else:
             process = subprocess.Popen(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 start_new_session=True,
+                env=env,
             )
         print(f"HPC client process started with PID: {process.pid}")
     except Exception as e:
