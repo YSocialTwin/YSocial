@@ -1,83 +1,17 @@
 #!/usr/bin/env python3
 """
-Server process runner script for YSocial.
-This script is invoked as a subprocess to run the YServer.
-It's designed to be called by start_server using subprocess.Popen.
+Shim: y_server_process_runner — logic lives in y_web.src.simulation.process_runner.
+
+This script is kept for backward compatibility. All imports and the main()
+entry point delegate to the canonical location.
 """
 
-import argparse
-import json
-import os
-import sys
+from y_web.src.simulation.process_runner import run_server_main  # noqa: F401
 
 
 def main():
-    """Main entry point for server process runner."""
-    parser = argparse.ArgumentParser(
-        description="Run YSocial server simulation process"
-    )
-    parser.add_argument(
-        "-c",
-        "--config",
-        required=True,
-        help="Path to server configuration JSON file",
-    )
-    parser.add_argument(
-        "--platform",
-        required=True,
-        choices=["microblogging", "forum"],
-        help="Platform type (microblogging or forum)",
-    )
-
-    args = parser.parse_args()
-
-    # Determine the correct server module based on platform
-    if args.platform == "microblogging":
-        # Add YServer to sys.path for imports
-        from y_web.utils.path_utils import get_base_path
-
-        base_path = get_base_path()
-        yserver_path = os.path.join(base_path, "external", "YServer")
-        sys.path.insert(0, yserver_path)
-    elif args.platform == "forum":
-        # Add YServerReddit to sys.path for imports
-        from y_web.utils.path_utils import get_base_path
-
-        base_path = get_base_path()
-        yserver_path = os.path.join(base_path, "external", "YServerReddit")
-        sys.path.insert(0, yserver_path)
-    else:
-        raise NotImplementedError(f"Unsupported platform {args.platform}")
-
-    # Load configuration
-    config = json.load(open(args.config, "r"))
-
-    # Calculate log file path using the same pattern as client runner
-    # The config file is at: {writable_path}/y_web/experiments/{uid}/config_server.json
-    # So the log file should be at: {writable_path}/y_web/experiments/{uid}/_server.log
-    config_dir = os.path.dirname(os.path.abspath(args.config))
-    log_file = os.path.join(config_dir, "_server.log")
-
-    print(f"Server log file: {log_file}", file=sys.stderr)
-    os.environ["YSERVER_LOG_FILE"] = log_file
-    try:
-        os.makedirs(os.path.dirname(log_file), exist_ok=True)
-        with open(log_file, "a", encoding="utf-8"):
-            pass
-    except Exception:
-        pass
-
-    # Import and start the server
-    print(f"Starting YServer for {args.platform}...", config)
-    from y_server import app
-
-    debug = False
-    app.config["perspective_api"] = config["perspective_api"]
-    app.config["sentiment_annotation"] = config["sentiment_annotation"]
-    app.config["emotion_annotation"] = config["emotion_annotation"]
-    # Pass the log file path to the server via app.config
-    app.config["log_file"] = log_file
-    app.run(debug=debug, port=int(config["port"]), host=config["host"])
+    """Backward-compatible entry point — delegates to run_server_main."""
+    run_server_main()
 
 
 if __name__ == "__main__":
