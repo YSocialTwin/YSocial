@@ -104,6 +104,9 @@ def start_hpc_server(exp):
     # Get the Python executable to use
     python_cmd = detect_env_handler()
 
+    # Set up environment (always needed, gunicorn branch adds extra vars)
+    env = os.environ.copy()
+
     if use_gunicorn:
         # Use gunicorn for PostgreSQL
         print(f"Starting server for experiment {exp_uid} with gunicorn (PostgreSQL)...")
@@ -176,7 +179,6 @@ def start_hpc_server(exp):
                     cmd = ["gunicorn"] + gunicorn_args
 
         # Set environment variable for config file path
-        env = os.environ.copy()
         env["YSERVER_CONFIG"] = config
 
         try:
