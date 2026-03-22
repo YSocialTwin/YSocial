@@ -11,8 +11,8 @@ from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 
 from y_web import db
-from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.routes.auth._blueprint import auth
+from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 
 
 @auth.route("/login")

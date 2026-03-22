@@ -14,7 +14,6 @@ import sys
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -51,9 +50,9 @@ def test_src_data_access_submodules_importable():
         # Use find_spec without triggering execution; after the package
         # __init__ has already been imported above, sub-module specs can be
         # located without side effects.
-        assert mod in sys.modules or importlib.util.find_spec(mod) is not None, (
-            f"Sub-module not found: {mod}"
-        )
+        assert (
+            mod in sys.modules or importlib.util.find_spec(mod) is not None
+        ), f"Sub-module not found: {mod}"
 
 
 # ---------------------------------------------------------------------------
@@ -326,7 +325,6 @@ class TestLegacyShimBackwardCompatibility:
         from y_web.src.data_access import augment_text as shim_aug
         from y_web.src.data_access import get_trending_hashtags as shim_th
         from y_web.src.data_access import get_user_recent_posts as shim_urp
-
         from y_web.src.data_access.posts import augment_text as src_aug
         from y_web.src.data_access.posts import get_user_recent_posts as src_urp
         from y_web.src.data_access.trends import get_trending_hashtags as src_th

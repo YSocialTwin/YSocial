@@ -24,9 +24,13 @@ from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
-from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.src.llm.vllm_manager import get_llm_models
-from y_web.src.system.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
+from y_web.src.system.miscellanea import (
+    check_privileges,
+    llm_backend_status,
+    ollama_status,
+)
 
 users = Blueprint("users", __name__)
 

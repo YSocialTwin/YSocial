@@ -12,16 +12,16 @@ import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from y_web.src.models import (
-    ClientLogMetrics,
-    LogFileOffset,
-    ServerLogMetrics,
-)
 from y_web.src.hpc.log_parser import (
     get_log_file_offset,
     parse_client_log_incremental,
     parse_server_log_incremental,
     update_log_file_offset,
+)
+from y_web.src.models import (
+    ClientLogMetrics,
+    LogFileOffset,
+    ServerLogMetrics,
 )
 
 

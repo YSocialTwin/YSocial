@@ -11,7 +11,6 @@ import logging
 import os
 
 from y_web import db
-from y_web.src.models import Client, Client_Execution, ClientLogMetrics, Exps, ServerLogMetrics
 from y_web.src.hpc.log_parser import (
     _commit_with_retry,
     _ensure_session_clean,
@@ -21,6 +20,13 @@ from y_web.src.hpc.log_parser import (
     reset_hpc_client_metrics,
     reset_hpc_server_metrics,
     update_log_file_offset,
+)
+from y_web.src.models import (
+    Client,
+    Client_Execution,
+    ClientLogMetrics,
+    Exps,
+    ServerLogMetrics,
 )
 
 logger = logging.getLogger(__name__)
@@ -496,8 +502,8 @@ def check_and_terminate_hpc_experiment(exp_id):
         bool: True if experiment was terminated, False otherwise
     """
     try:
-        from y_web.src.models import Exps
         from y_web.src.hpc.server import stop_hpc_server
+        from y_web.src.models import Exps
 
         # Get the experiment
         exp = Exps.query.filter_by(idexp=exp_id).first()

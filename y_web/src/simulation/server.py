@@ -25,21 +25,25 @@ from y_web.src.models import (
     Client_Execution,
     Exps,
 )
-from y_web.src.system.path_utils import get_base_path, get_resource_path, get_writable_path
 from y_web.src.simulation.port_manager import (
-    SERVER_PORT_MIN,
     SERVER_PORT_MAX,
+    SERVER_PORT_MIN,
     _find_new_available_port,
     _force_terminate_process_tree,
+    _terminate_process,
     _terminate_processes_holding_experiment_database,
     _terminate_processes_on_port,
-    _terminate_process,
     terminate_process_on_port,
 )
 from y_web.src.simulation.process_registry import (
     WATCHDOG_ENABLED,
     _register_process,
     _unregister_process,
+)
+from y_web.src.system.path_utils import (
+    get_base_path,
+    get_resource_path,
+    get_writable_path,
 )
 
 # Internal alias for the double-underscore name used in terminate_server_process
@@ -241,7 +245,6 @@ def build_screen_command(script_path, config_path, screen_name=None):
     return screen_cmd
 
 
-
 def terminate_server_process(exp_id):
     """
     Terminate a server process using the PID stored in the database.
@@ -309,7 +312,6 @@ def terminate_server_process(exp_id):
     except Exception as e:
         print(f"Error terminating server process: {e}")
         return False
-
 
 
 def _update_server_port_in_configs(exp, new_port):
@@ -928,6 +930,11 @@ def start_server(exp):
     return process
 
 
+from y_web.src.hpc.client import (  # noqa: E402,F401
+    start_hpc_client,
+    stop_hpc_client,
+)
+
 ##############
 # HPC Server/Client Functions — delegated to y_web.src.hpc.server / y_web.src.hpc.client
 ##############
@@ -937,11 +944,9 @@ from y_web.src.hpc.server import (  # noqa: E402,F401
     start_server_screen,
     stop_hpc_server,
 )
-from y_web.src.hpc.client import (  # noqa: E402,F401
-    start_hpc_client,
-    stop_hpc_client,
-)
+
 # fmt: on
+
 
 def _register_server_with_watchdog(exp, pid, log_dir):
     """
@@ -1017,5 +1022,3 @@ def _register_server_with_watchdog(exp, pid, log_dir):
     # Start watchdog if not already running
     if not watchdog.is_running:
         watchdog.start()
-
-

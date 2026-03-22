@@ -21,7 +21,6 @@ from y_web.src.models import (
     Exps,
     Population,
 )
-from y_web.src.system.path_utils import get_resource_path, get_writable_path
 from y_web.src.simulation.port_manager import _force_terminate_process_tree
 from y_web.src.simulation.process_registry import (
     WATCHDOG_ENABLED,
@@ -29,6 +28,8 @@ from y_web.src.simulation.process_registry import (
     _unregister_process,
 )
 from y_web.src.simulation.server import detect_env_handler
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
+
 
 def _is_client_process(pid):
     """
@@ -71,25 +72,15 @@ def _is_client_process(pid):
         return False
 
 
-# Server management — delegated to y_web.src.simulation.server
-# fmt: off
-from y_web.src.simulation.server import (  # noqa: E402,F401
-    _register_server_with_watchdog,
-    _update_server_port_in_configs,
-    get_server_process_status,
-    start_server,
+from y_web.src.hpc.client import (  # noqa: E402,F401
+    start_hpc_client,
+    stop_hpc_client,
 )
 from y_web.src.hpc.server import (  # noqa: E402,F401
     start_hpc_server,
     start_server_screen,
     stop_hpc_server,
 )
-from y_web.src.hpc.client import (  # noqa: E402,F401
-    start_hpc_client,
-    stop_hpc_client,
-)
-# fmt: on
-
 
 ##############
 # Ollama Functions — delegated to y_web.src.llm.ollama_manager
@@ -117,6 +108,19 @@ from y_web.src.llm.vllm_manager import (  # noqa: E402,F401
     is_vllm_running,
     start_vllm_server,
 )
+
+# Server management — delegated to y_web.src.simulation.server
+# fmt: off
+from y_web.src.simulation.server import (  # noqa: E402,F401
+    _register_server_with_watchdog,
+    _update_server_port_in_configs,
+    get_server_process_status,
+    start_server,
+)
+
+# fmt: on
+
+
 # fmt: on
 
 

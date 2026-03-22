@@ -676,9 +676,7 @@ def create_notebook_with_template(filename="start_here.ipynb", notebook_dir=None
 
         if not os.path.exists(base_notebook):
             # Try without get_resource_path for direct source-tree execution
-            base_notebook = (
-                f"y_web{os.sep}src{os.sep}system{os.sep}sample_notebook{os.sep}start_here.ipynb"
-            )
+            base_notebook = f"y_web{os.sep}src{os.sep}system{os.sep}sample_notebook{os.sep}start_here.ipynb"
             if not os.path.exists(base_notebook):
                 print(f"Warning: Template notebook not found at {base_notebook}")
                 return False, f"Template notebook not found"

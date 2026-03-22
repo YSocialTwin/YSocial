@@ -253,7 +253,9 @@ def cleanup_db_jupyter_with_new_app():
                     with app.app_context():
                         from y_web import db
                         from y_web.src.simulation.process_registry import stop_all_exps
-                        from y_web.src.system.jupyter_utils import stop_all_jupyter_instances
+                        from y_web.src.system.jupyter_utils import (
+                            stop_all_jupyter_instances,
+                        )
 
                         stop_all_jupyter_instances()
                         stop_all_exps()

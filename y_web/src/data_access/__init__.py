@@ -12,9 +12,6 @@ users     — follower/followee and interest queries
 trends    — trending hashtags, emotions, and topics
 """
 
-# profiles
-from y_web.src.data_access.profiles import get_safe_profile_pic  # noqa: F401
-
 # posts
 from y_web.src.data_access.posts import (  # noqa: F401
     augment_text,
@@ -27,12 +24,8 @@ from y_web.src.data_access.posts import (  # noqa: F401
     get_user_recent_posts,
 )
 
-# users
-from y_web.src.data_access.users import (  # noqa: F401
-    get_mutual_friends,
-    get_user_friends,
-    get_user_recent_interests,
-)
+# profiles
+from y_web.src.data_access.profiles import get_safe_profile_pic  # noqa: F401
 
 # trends
 from y_web.src.data_access.trends import (  # noqa: F401
@@ -40,4 +33,11 @@ from y_web.src.data_access.trends import (  # noqa: F401
     get_trending_emotions,
     get_trending_hashtags,
     get_trending_topics,
+)
+
+# users
+from y_web.src.data_access.users import (  # noqa: F401
+    get_mutual_friends,
+    get_user_friends,
+    get_user_recent_interests,
 )

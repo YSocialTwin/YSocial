@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import os
 import re
 import uuid
 from typing import Optional
 from urllib.parse import parse_qs, unquote, urlparse
+
 import requests
 
 _IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".svg")

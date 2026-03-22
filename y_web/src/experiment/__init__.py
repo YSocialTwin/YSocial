@@ -14,18 +14,6 @@ schema          — SQLite/PostgreSQL schema migration helpers
 schedule_monitor — background thread for automatic group advancement
 """
 
-# context
-from y_web.src.experiment.context import (  # noqa: F401
-    get_active_experiments,
-    get_current_experiment_bind,
-    get_current_experiment_id,
-    get_db_bind_key_for_exp,
-    initialize_active_experiment_databases,
-    register_experiment_database,
-    setup_experiment_context,
-    teardown_experiment_context,
-)
-
 # access
 from y_web.src.experiment.access import (  # noqa: F401
     get_shared_group_names,
@@ -53,6 +41,18 @@ from y_web.src.experiment.clock import (  # noqa: F401
     wall_clock_slot,
 )
 
+# context
+from y_web.src.experiment.context import (  # noqa: F401
+    get_active_experiments,
+    get_current_experiment_bind,
+    get_current_experiment_id,
+    get_db_bind_key_for_exp,
+    initialize_active_experiment_databases,
+    register_experiment_database,
+    setup_experiment_context,
+    teardown_experiment_context,
+)
+
 # helpers
 from y_web.src.experiment.helpers import (  # noqa: F401
     SimulationClock,
@@ -62,13 +62,6 @@ from y_web.src.experiment.helpers import (  # noqa: F401
     get_experiment_uid_from_db_name,
 )
 
-# schema
-from y_web.src.experiment.schema import (  # noqa: F401
-    ensure_experiment_schema_for_uri,
-    ensure_postgresql_experiment_schema,
-    ensure_sqlite_experiment_schema,
-)
-
 # schedule_monitor
 from y_web.src.experiment.schedule_monitor import (  # noqa: F401
     POLL_INTERVAL_SECONDS,
@@ -76,4 +69,11 @@ from y_web.src.experiment.schedule_monitor import (  # noqa: F401
     get_monitor,
     init_experiment_schedule_monitor,
     stop_experiment_schedule_monitor,
+)
+
+# schema
+from y_web.src.experiment.schema import (  # noqa: F401
+    ensure_experiment_schema_for_uri,
+    ensure_postgresql_experiment_schema,
+    ensure_sqlite_experiment_schema,
 )

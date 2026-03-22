@@ -11,7 +11,6 @@ Verifies that:
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Phase 0
 # ---------------------------------------------------------------------------
@@ -74,10 +73,29 @@ class TestCanonicalExperimentImports:
         )
 
         exp_classes = [
-            User_mgmt, Post, Hashtags, Emotions, Post_emotions, Post_hashtags,
-            Mentions, ReplyInboxState, Reactions, Follow, Rounds, Recommendations,
-            Articles, Websites, Voting, Interests, User_interest, Post_topics,
-            Images, ImagePosts, Article_topics, Post_Sentiment, Post_Toxicity,
+            User_mgmt,
+            Post,
+            Hashtags,
+            Emotions,
+            Post_emotions,
+            Post_hashtags,
+            Mentions,
+            ReplyInboxState,
+            Reactions,
+            Follow,
+            Rounds,
+            Recommendations,
+            Articles,
+            Websites,
+            Voting,
+            Interests,
+            User_interest,
+            Post_topics,
+            Images,
+            ImagePosts,
+            Article_topics,
+            Post_Sentiment,
+            Post_Toxicity,
             Agent_Opinion,
         ]
         for cls in exp_classes:
@@ -115,11 +133,11 @@ class TestCanonicalAdminImports:
             ClientLogMetrics,
             DownloadNotification,
             Exp_stats,
-            Exps,
             ExperimentScheduleGroup,
             ExperimentScheduleItem,
             ExperimentScheduleLog,
             ExperimentScheduleStatus,
+            Exps,
             HpcMonitorSettings,
             Jupyter_instances,
             LogFileOffset,
@@ -139,14 +157,39 @@ class TestCanonicalAdminImports:
         )
 
         admin_classes = [
-            Admin_users, AdminInterviewSession, AdminInterviewMessage, Exps,
-            ExperimentScheduleGroup, ExperimentScheduleItem, ExperimentScheduleStatus,
-            ExperimentScheduleLog, Exp_stats, Population, Agent, Agent_Population,
-            Agent_Profile, Page, Population_Experiment, Page_Population, User_Experiment,
-            Client, Client_Execution, Ollama_Pull, Jupyter_instances, ReleaseInfo,
-            BlogPost, DownloadNotification, LogFileOffset, ServerLogMetrics,
-            ClientLogMetrics, HpcMonitorSettings, WatchdogSettings, OpinionGroup,
-            OpinionDistribution, OpinionEvolutionCache, OpinionEvolutionSampledAgents,
+            Admin_users,
+            AdminInterviewSession,
+            AdminInterviewMessage,
+            Exps,
+            ExperimentScheduleGroup,
+            ExperimentScheduleItem,
+            ExperimentScheduleStatus,
+            ExperimentScheduleLog,
+            Exp_stats,
+            Population,
+            Agent,
+            Agent_Population,
+            Agent_Profile,
+            Page,
+            Population_Experiment,
+            Page_Population,
+            User_Experiment,
+            Client,
+            Client_Execution,
+            Ollama_Pull,
+            Jupyter_instances,
+            ReleaseInfo,
+            BlogPost,
+            DownloadNotification,
+            LogFileOffset,
+            ServerLogMetrics,
+            ClientLogMetrics,
+            HpcMonitorSettings,
+            WatchdogSettings,
+            OpinionGroup,
+            OpinionDistribution,
+            OpinionEvolutionCache,
+            OpinionEvolutionSampledAgents,
         ]
         for cls in admin_classes:
             assert hasattr(cls, "__bind_key__"), f"{cls.__name__} missing __bind_key__"
@@ -183,36 +226,48 @@ class TestCanonicalConfigImports:
         )
 
         config_classes = [
-            Profession, Nationalities, Education, Leanings, Languages,
-            Toxicity_Levels, AgeClass, Content_Recsys, Follow_Recsys,
-            Topic_List, Exp_Topic, Page_Topic, ActivityProfile,
+            Profession,
+            Nationalities,
+            Education,
+            Leanings,
+            Languages,
+            Toxicity_Levels,
+            AgeClass,
+            Content_Recsys,
+            Follow_Recsys,
+            Topic_List,
+            Exp_Topic,
+            Page_Topic,
+            ActivityProfile,
             PopulationActivityProfile,
         ]
         # Config models use either __bind__ or __bind_key__ depending on how
         # they were originally defined; just check they have a tablename.
         for cls in config_classes:
-            assert hasattr(cls, "__tablename__"), f"{cls.__name__} missing __tablename__"
+            assert hasattr(
+                cls, "__tablename__"
+            ), f"{cls.__name__} missing __tablename__"
 
 
 class TestSrcModelsPackageReExports:
     """y_web.src.models must re-export every class from all three sub-modules."""
 
     def test_experiment_classes_via_src_models(self):
-        from y_web.src.models import User_mgmt, Post, Agent_Opinion
+        from y_web.src.models import Agent_Opinion, Post, User_mgmt
 
         assert User_mgmt is not None
         assert Post is not None
         assert Agent_Opinion is not None
 
     def test_admin_classes_via_src_models(self):
-        from y_web.src.models import Admin_users, Exps, ClientLogMetrics
+        from y_web.src.models import Admin_users, ClientLogMetrics, Exps
 
         assert Admin_users is not None
         assert Exps is not None
         assert ClientLogMetrics is not None
 
     def test_config_classes_via_src_models(self):
-        from y_web.src.models import Profession, Education, ActivityProfile
+        from y_web.src.models import ActivityProfile, Education, Profession
 
         assert Profession is not None
         assert Education is not None
@@ -309,7 +364,6 @@ class TestLegacyShimBackwardCompatibility:
         from y_web.src.models import Admin_users as shim_admin
         from y_web.src.models import Post as shim_post
         from y_web.src.models import Profession as shim_prof
-
         from y_web.src.models.admin import Admin_users as src_admin
         from y_web.src.models.config import Profession as src_prof
         from y_web.src.models.experiment import Post as src_post

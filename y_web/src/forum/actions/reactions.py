@@ -5,8 +5,8 @@ from typing import Tuple
 from sqlalchemy import func
 
 from y_web import db
-from y_web.src.models import Post, Post_Sentiment, Post_topics, Reactions
 from y_web.src.forum.actions.posts import _ensure_experiment_context, _get_current_round
+from y_web.src.models import Post, Post_Sentiment, Post_topics, Reactions
 
 
 def _calculate_vote_tallies(post_id: int) -> Tuple[int, int]:

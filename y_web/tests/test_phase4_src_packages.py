@@ -12,7 +12,6 @@ import sys
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Phase 4 — package structure
 # ---------------------------------------------------------------------------
@@ -51,7 +50,11 @@ def test_src_system_package_importable():
 def test_src_agents_submodules_importable():
     import y_web.src.agents  # noqa: F401
 
-    for mod in ["y_web.src.agents", "y_web.src.agents.population", "y_web.src.agents.platform"]:
+    for mod in [
+        "y_web.src.agents",
+        "y_web.src.agents.population",
+        "y_web.src.agents.platform",
+    ]:
         assert mod in sys.modules, f"Expected module not in sys.modules: {mod}"
 
 
@@ -372,11 +375,9 @@ class TestLegacyShimBackwardCompatibility:
         assert nfam_shim is normalize_forum_avatar_mode
 
     def test_recsys_support_shim_identity(self):
-        from y_web.src.recsys import (
-            get_suggested_posts,
-            get_suggested_users,
-        )
+        from y_web.src.recsys import get_suggested_posts
         from y_web.src.recsys import get_suggested_posts as gsp_src
+        from y_web.src.recsys import get_suggested_users
         from y_web.src.recsys import get_suggested_users as gsu_src
 
         assert get_suggested_posts is gsp_src
@@ -384,8 +385,8 @@ class TestLegacyShimBackwardCompatibility:
 
     def test_recsys_submodule_shims_identity(self):
         from y_web.src.recsys.content_recsys import get_suggested_posts
-        from y_web.src.recsys.follow_recsys import get_suggested_users
         from y_web.src.recsys.content_recsys import get_suggested_posts as gsp_src
+        from y_web.src.recsys.follow_recsys import get_suggested_users
         from y_web.src.recsys.follow_recsys import get_suggested_users as gsu_src
 
         assert get_suggested_posts is gsp_src
@@ -464,7 +465,9 @@ class TestFunctionalSpotChecks:
     def test_normalize_username_microblogging(self):
         from y_web.src.agents.population import _normalize_generated_username
 
-        assert _normalize_generated_username("John Smith", "microblogging") == "JohnSmith"
+        assert (
+            _normalize_generated_username("John Smith", "microblogging") == "JohnSmith"
+        )
 
     def test_normalize_username_forum(self):
         from y_web.src.agents.population import _normalize_generated_username

@@ -1,6 +1,7 @@
 """
 Process registry and lifecycle management for YSocial simulation processes.
 """
+
 import os
 import signal
 import subprocess
@@ -21,6 +22,7 @@ _process_registry = {}
 # Uppercase alias for backward compatibility with the spec validation test
 # (BUSINESS_LOGIC_REFACTORING.md uses _PROCESS_REGISTRY)
 _PROCESS_REGISTRY = _process_registry
+
 
 def _register_process(process_id, process, stdout_file=None, stderr_file=None):
     """
@@ -88,6 +90,7 @@ def cleanup_server_processes_from_db():
                     # If we get here, process is still running, force kill
                     print(f"Process server {exp.server_pid} still running, terminating")
                     from y_web.src.simulation.port_manager import _terminate_process
+
                     _terminate_process(exp.server_pid)
                     # os.kill(exp.server_pid, signal.SIGKILL)
                 except OSError:
@@ -130,6 +133,7 @@ def cleanup_client_processes_from_db():
                     # If we get here, process is still running, force kill
                     print(f"Process {client.pid} still running, terminating")
                     from y_web.src.simulation.port_manager import _terminate_process
+
                     _terminate_process(client.pid)
                     # os.kill(client.pid, signal.SIGKILL)
                 except OSError:
@@ -209,4 +213,3 @@ def stop_all_exps():
             )
         except Exception as e2:
             print(f"Failed to clear PIDs even on retry: {e2}")
-

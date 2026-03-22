@@ -29,9 +29,7 @@ def get_base_path():
         # Get the repository root (three levels up from this file's location
         # y_web/src/system/path_utils.py → y_web/src/system/ → y_web/src/ → y_web/ → repo root)
         return os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         )
 
 

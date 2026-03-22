@@ -10,8 +10,8 @@ from y_web.src.simulation.execution_backend import (
     stop_server_for_experiment,
     uses_hpc_backend,
 )
-from y_web.src.simulation.server import _resolve_server_runtime_paths
 from y_web.src.simulation.process_runner import _resolve_client_package_dir
+from y_web.src.simulation.server import _resolve_server_runtime_paths
 
 
 @pytest.mark.parametrize(
@@ -58,7 +58,9 @@ def test_start_server_for_forum_uses_standard_server_path(monkeypatch):
     mock_standard = MagicMock(return_value="forum-server")
     mock_hpc = MagicMock()
 
-    monkeypatch.setattr("y_web.src.simulation.execution_backend.start_server", mock_standard)
+    monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.start_server", mock_standard
+    )
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.start_hpc_server", mock_hpc
     )
@@ -76,7 +78,9 @@ def test_start_client_for_forum_uses_standard_client_path(monkeypatch):
     mock_hpc = MagicMock()
     mock_backup = MagicMock()
 
-    monkeypatch.setattr("y_web.src.simulation.execution_backend.start_client", mock_standard)
+    monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.start_client", mock_standard
+    )
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.start_hpc_client", mock_hpc
     )
@@ -102,7 +106,9 @@ def test_hpc_client_start_keeps_backup_specificity(monkeypatch):
     mock_hpc = MagicMock(return_value="hpc-client")
     mock_backup = MagicMock()
 
-    monkeypatch.setattr("y_web.src.simulation.execution_backend.start_client", mock_standard)
+    monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.start_client", mock_standard
+    )
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.start_hpc_client", mock_hpc
     )
@@ -126,7 +132,9 @@ def test_stop_client_for_forum_uses_standard_terminate(monkeypatch):
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.terminate_client", mock_standard
     )
-    monkeypatch.setattr("y_web.src.simulation.execution_backend.stop_hpc_client", mock_hpc)
+    monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.stop_hpc_client", mock_hpc
+    )
 
     assert stop_client_for_experiment(exp, client, pause=True) == "stopped"
     mock_standard.assert_called_once_with(client, pause=True)
@@ -144,7 +152,9 @@ def test_stop_server_for_forum_uses_standard_termination(monkeypatch):
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.terminate_server_process", mock_standard
     )
-    monkeypatch.setattr("y_web.src.simulation.execution_backend.stop_hpc_server", mock_hpc)
+    monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.stop_hpc_server", mock_hpc
+    )
     monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.terminate_process_on_port",
         mock_port_fallback,

@@ -35,6 +35,13 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
+from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.experiment.access import (
+    get_visible_experiment_query,
+    user_can_manage_experiment,
+    user_can_view_experiment,
+)
+from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -77,20 +84,13 @@ from y_web.src.models import (
     User_Experiment,
     User_mgmt,
 )
-from y_web.src.content.avatars import normalize_forum_avatar_mode
-from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     start_server_for_experiment,
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
-from y_web.src.experiment.access import (
-    get_visible_experiment_query,
-    user_can_manage_experiment,
-    user_can_view_experiment,
-)
-from y_web.src.hpc.population_backup import restore_population_for_hpc_client
+from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
 from y_web.src.system.miscellanea import (
     check_privileges,
@@ -3970,8 +3970,8 @@ def submit_experiment_logs(exp_id):
     """Submit experiment logs to telemetry server for troubleshooting."""
     check_privileges(current_user.username)
 
-    from y_web.src.telemetry import Telemetry
     from y_web.src.system.path_utils import get_writable_path
+    from y_web.src.telemetry import Telemetry
 
     # Get experiment details
     experiment = Exps.query.filter_by(idexp=exp_id).first()

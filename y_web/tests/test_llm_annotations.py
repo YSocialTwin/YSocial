@@ -71,9 +71,7 @@ class TestContentAnnotation:
 
             from y_web.src.llm.content_annotation import ContentAnnotator
 
-            with patch(
-                "y_web.src.llm.content_annotation.AssistantAgent"
-            ) as mock_agent:
+            with patch("y_web.src.llm.content_annotation.AssistantAgent") as mock_agent:
                 # Mock the AssistantAgent
                 mock_agent_instance = Mock()
                 mock_agent.return_value = mock_agent_instance

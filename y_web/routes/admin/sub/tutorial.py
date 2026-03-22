@@ -30,6 +30,9 @@ from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.routes.admin.sub.experiments import get_suggested_port
+from y_web.src.agents.platform import ensure_population_username_type_column
+from y_web.src.agents.population import generate_population
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -52,11 +55,8 @@ from y_web.src.models import (
     Topic_List,
     Toxicity_Levels,
 )
-from y_web.routes.admin.sub.experiments import get_suggested_port
-from y_web.src.agents.population import generate_population
 from y_web.src.system.miscellanea import check_privileges
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
-from y_web.src.agents.platform import ensure_population_username_type_column
 
 tutorial = Blueprint("tutorial", __name__)
 

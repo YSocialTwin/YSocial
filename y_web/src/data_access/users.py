@@ -9,6 +9,7 @@ from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
 
 from y_web import db
+from y_web.src.data_access.trends import _compute_last_round
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -20,7 +21,6 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.src.data_access.trends import _compute_last_round
 
 
 def get_mutual_friends(user_a, user_b, limit=10):
@@ -137,9 +137,7 @@ def get_user_friends(user_id, limit=12, page=1):
                     ),
                     "number_followees": (
                         db.session.query(Follow.follower_id)
-                        .filter(
-                            Follow.user_id == uid_f, Follow.follower_id != uid_f
-                        )
+                        .filter(Follow.user_id == uid_f, Follow.follower_id != uid_f)
                         .group_by(Follow.follower_id)
                         .having(func.count(Follow.follower_id) % 2 == 1)
                         .count()
@@ -175,9 +173,7 @@ def get_user_friends(user_id, limit=12, page=1):
                     ),
                     "number_followees": (
                         db.session.query(Follow.follower_id)
-                        .filter(
-                            Follow.user_id == uid_f, Follow.follower_id != uid_f
-                        )
+                        .filter(Follow.user_id == uid_f, Follow.follower_id != uid_f)
                         .group_by(Follow.follower_id)
                         .having(func.count(Follow.follower_id) % 2 == 1)
                         .count()
@@ -220,6 +216,5 @@ def get_user_recent_interests(user_id, limit=5):
     )
 
     return [
-        (interest, interest_id, count)
-        for interest, interest_id, count in interests
+        (interest, interest_id, count) for interest, interest_id, count in interests
     ]

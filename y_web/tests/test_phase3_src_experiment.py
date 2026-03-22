@@ -15,7 +15,6 @@ import sys
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Phase 3 — package structure
 # ---------------------------------------------------------------------------
@@ -54,9 +53,9 @@ def test_src_experiment_and_experiments_data_dir_coexist():
 
     # The package file is inside src/experiment/, not at the top-level experiments/
     pkg_path = os.path.abspath(pkg.__file__)
-    assert "src" + os.sep + "experiment" in pkg_path, (
-        f"Package path {pkg_path!r} is not inside src/experiment/"
-    )
+    assert (
+        "src" + os.sep + "experiment" in pkg_path
+    ), f"Package path {pkg_path!r} is not inside src/experiment/"
 
     # The data directory must still exist and be a plain directory (not a package)
     data_dir = os.path.join(
@@ -270,8 +269,9 @@ class TestCanonicalSchemaImports:
 
 class TestCanonicalScheduleMonitorImports:
     def test_experiment_schedule_monitor_class(self):
-        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
         from unittest.mock import MagicMock
+
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -285,12 +285,16 @@ class TestCanonicalScheduleMonitorImports:
         assert callable(get_monitor)
 
     def test_init_experiment_schedule_monitor(self):
-        from y_web.src.experiment.schedule_monitor import init_experiment_schedule_monitor
+        from y_web.src.experiment.schedule_monitor import (
+            init_experiment_schedule_monitor,
+        )
 
         assert callable(init_experiment_schedule_monitor)
 
     def test_stop_experiment_schedule_monitor(self):
-        from y_web.src.experiment.schedule_monitor import stop_experiment_schedule_monitor
+        from y_web.src.experiment.schedule_monitor import (
+            stop_experiment_schedule_monitor,
+        )
 
         assert callable(stop_experiment_schedule_monitor)
 
@@ -316,7 +320,11 @@ class TestSrcExperimentPackageReExports:
             teardown_experiment_context,
         )
 
-        for fn in [setup_experiment_context, teardown_experiment_context, get_db_bind_key_for_exp]:
+        for fn in [
+            setup_experiment_context,
+            teardown_experiment_context,
+            get_db_bind_key_for_exp,
+        ]:
             assert callable(fn)
 
     def test_access_via_package(self):
@@ -335,7 +343,10 @@ class TestSrcExperimentPackageReExports:
         assert callable(default_clock_config)
 
     def test_helpers_via_package(self):
-        from y_web.src.experiment import SimulationClock, get_experiment_uid_from_db_name
+        from y_web.src.experiment import (
+            SimulationClock,
+            get_experiment_uid_from_db_name,
+        )
 
         assert callable(get_experiment_uid_from_db_name)
         assert SimulationClock is not None
@@ -347,8 +358,8 @@ class TestSrcExperimentPackageReExports:
 
     def test_schedule_monitor_via_package(self):
         from y_web.src.experiment import (
-            ExperimentScheduleMonitor,
             POLL_INTERVAL_SECONDS,
+            ExperimentScheduleMonitor,
         )
 
         assert ExperimentScheduleMonitor is not None
@@ -364,8 +375,8 @@ class TestLegacyShimBackwardCompatibility:
     """Canonical and legacy shims must export the same objects."""
 
     def test_context_shim_identity(self):
-        from y_web.src.experiment.context import setup_experiment_context as src
         from y_web.src.experiment.context import get_db_bind_key_for_exp as src2
+        from y_web.src.experiment.context import setup_experiment_context as src
 
         # Direct canonical comparison (avoids numpy-dependent utils/__init__.py)
         assert src is not None

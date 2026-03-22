@@ -15,7 +15,6 @@ from y_web.src.models import (
 )
 
 
-
 def check_privileges(username):
     """
     Verify if a user has admin or researcher privileges.

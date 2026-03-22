@@ -12,6 +12,14 @@ from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
+from y_web.routes.social._blueprint import main
+from y_web.routes.social.helpers import (
+    _forum_current_profile_pic,
+    _forum_logged_user,
+    _forum_memory_enabled,
+    _forum_profile_pic,
+    is_admin,
+)
 from y_web.src.data_access import (
     get_mutual_friends,
     get_top_user_hashtags,
@@ -34,14 +42,6 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_users
-from y_web.routes.social._blueprint import main
-from y_web.routes.social.helpers import (
-    _forum_current_profile_pic,
-    _forum_logged_user,
-    _forum_memory_enabled,
-    _forum_profile_pic,
-    is_admin,
-)
 
 
 @main.route("/")

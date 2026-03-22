@@ -145,7 +145,13 @@ class TestCanonicalSimulationPackageImports:
         assert callable(_get_client_archetypes)
 
     def test_simulation_init_lazy_exports(self):
-        from y_web.src.simulation import start_client, start_server, stop_all_exps, terminate_client, terminate_server_process
+        from y_web.src.simulation import (
+            start_client,
+            start_server,
+            stop_all_exps,
+            terminate_client,
+            terminate_server_process,
+        )
 
         assert callable(start_server)
         assert callable(terminate_server_process)
@@ -244,9 +250,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.port_manager import (
             terminate_process_on_port as canonical,
         )
-        from y_web.src.simulation.port_manager import (
-            terminate_process_on_port as shim,
-        )
+        from y_web.src.simulation.port_manager import terminate_process_on_port as shim
 
         assert shim is canonical
 
@@ -285,7 +289,9 @@ class TestLegacyShimIdentity:
         assert shim is canonical
 
     def test_y_client_runner_start_client_process_shim(self):
-        from y_web.src.simulation.process_runner import start_client_process as canonical
+        from y_web.src.simulation.process_runner import (
+            start_client_process as canonical,
+        )
         from y_web.src.simulation.process_runner import start_client_process as shim
 
         assert shim is canonical
@@ -294,7 +300,9 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.execution_backend import (
             start_server_for_experiment as canonical,
         )
-        from y_web.src.simulation.execution_backend import start_server_for_experiment as shim
+        from y_web.src.simulation.execution_backend import (
+            start_server_for_experiment as shim,
+        )
 
         assert shim is canonical
 

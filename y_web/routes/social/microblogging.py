@@ -11,6 +11,13 @@ from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.routes.social._blueprint import main
+from y_web.routes.social.helpers import (
+    _expand_tree,
+    _forum_logged_user,
+    _get_discussions,
+    is_admin,
+)
 from y_web.src.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
@@ -21,6 +28,10 @@ from y_web.src.data_access import (
     get_unanswered_mentions,
     get_user_friends,
     get_user_recent_posts,
+)
+from y_web.src.forum.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
 )
 from y_web.src.models import (
     Admin_users,
@@ -37,17 +48,6 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_posts, get_suggested_users
-from y_web.src.forum.service import (
-    _format_display_time,
-    _format_display_time_from_created_at,
-)
-from y_web.routes.social._blueprint import main
-from y_web.routes.social.helpers import (
-    _expand_tree,
-    _forum_logged_user,
-    _get_discussions,
-    is_admin,
-)
 
 
 @main.get("/feed")

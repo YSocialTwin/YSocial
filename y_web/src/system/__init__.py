@@ -11,9 +11,9 @@ desktop_file_handler — desktop-mode aware file serving and routing
 jupyter_utils        — Jupyter instance lifecycle management
 """
 
-from y_web.src.system.path_utils import *  # noqa: F401,F403
-from y_web.src.system.miscellanea import *  # noqa: F401,F403
-from y_web.src.system.check_release import *  # noqa: F401,F403
 from y_web.src.system.check_blog import *  # noqa: F401,F403
+from y_web.src.system.check_release import *  # noqa: F401,F403
 from y_web.src.system.desktop_file_handler import *  # noqa: F401,F403
 from y_web.src.system.jupyter_utils import *  # noqa: F401,F403
+from y_web.src.system.miscellanea import *  # noqa: F401,F403
+from y_web.src.system.path_utils import *  # noqa: F401,F403

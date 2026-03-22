@@ -13,6 +13,8 @@ from flask import Blueprint, flash, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     ActivityProfile,
     Agent,
@@ -28,9 +30,11 @@ from y_web.src.models import (
     Profession,
     Toxicity_Levels,
 )
-from y_web.src.llm.ollama_manager import get_ollama_models
-from y_web.src.llm.vllm_manager import get_llm_models
-from y_web.src.system.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.src.system.miscellanea import (
+    check_privileges,
+    llm_backend_status,
+    ollama_status,
+)
 
 agents = Blueprint("agents", __name__)
 

@@ -181,9 +181,9 @@ class TestCanonicalForumPackageImports:
 
     def test_service_package_importable(self):
         from y_web.src.forum.service import (
+            build_user_feed_posts,
             fetch_feed_page,
             fetch_thread,
-            build_user_feed_posts,
             serialize_feed_posts,
         )
 
@@ -412,26 +412,30 @@ class TestForumShimIdentity:
         assert shim is canonical
 
     def test_rank_posts_longtail_identity(self):
-        from y_web.src.forum.hot_rank import rank_posts_longtail as shim
         from y_web.src.forum.hot_rank import rank_posts_longtail as canonical
+        from y_web.src.forum.hot_rank import rank_posts_longtail as shim
 
         assert shim is canonical
 
     def test_base_hot_score_identity(self):
-        from y_web.src.forum.hot_rank import base_hot_score as shim
         from y_web.src.forum.hot_rank import base_hot_score as canonical
+        from y_web.src.forum.hot_rank import base_hot_score as shim
 
         assert shim is canonical
 
     def test_calculate_vote_tallies_identity(self):
         from y_web.src.forum.actions import _calculate_vote_tallies as shim
-        from y_web.src.forum.actions.reactions import _calculate_vote_tallies as canonical
+        from y_web.src.forum.actions.reactions import (
+            _calculate_vote_tallies as canonical,
+        )
 
         assert shim is canonical
 
     def test_clean_reddit_formatting_identity(self):
         from y_web.src.forum.service import clean_reddit_formatting as shim
-        from y_web.src.forum.service.formatters import clean_reddit_formatting as canonical
+        from y_web.src.forum.service.formatters import (
+            clean_reddit_formatting as canonical,
+        )
 
         assert shim is canonical
 
@@ -446,7 +450,9 @@ class TestForumDataClasses:
     def test_article_preview_instantiation(self):
         from y_web.src.forum.service.data_classes import ArticlePreview
 
-        ap = ArticlePreview(title="T", summary="S", url="http://example.com", source="src")
+        ap = ArticlePreview(
+            title="T", summary="S", url="http://example.com", source="src"
+        )
         assert ap.title == "T"
         assert ap.summary == "S"
         assert ap.url == "http://example.com"
@@ -463,7 +469,14 @@ class TestForumDataClasses:
     def test_post_stats_instantiation(self):
         from y_web.src.forum.service.data_classes import PostStats
 
-        ps = PostStats(likes=5, dislikes=2, score=3, comment_count=1, share_count=0, user_vote="like")
+        ps = PostStats(
+            likes=5,
+            dislikes=2,
+            score=3,
+            comment_count=1,
+            share_count=0,
+            user_vote="like",
+        )
         assert ps.likes == 5
         assert ps.dislikes == 2
         assert ps.score == 3
@@ -472,7 +485,9 @@ class TestForumDataClasses:
     def test_post_stats_no_vote(self):
         from y_web.src.forum.service.data_classes import PostStats
 
-        ps = PostStats(likes=0, dislikes=0, score=0, comment_count=0, share_count=0, user_vote=None)
+        ps = PostStats(
+            likes=0, dislikes=0, score=0, comment_count=0, share_count=0, user_vote=None
+        )
         assert ps.user_vote is None
 
     def test_feed_page_instantiation(self):
@@ -490,7 +505,10 @@ class TestForumDataClasses:
         assert _article_payload(None) == 0
 
     def test_article_payload_filled(self):
-        from y_web.src.forum.service.data_classes import ArticlePreview, _article_payload
+        from y_web.src.forum.service.data_classes import (
+            ArticlePreview,
+            _article_payload,
+        )
 
         ap = ArticlePreview(title="T", summary="S", url="u", source="s")
         payload = _article_payload(ap)

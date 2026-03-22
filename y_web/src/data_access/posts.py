@@ -28,6 +28,7 @@ from y_web.src.models import (
     User_mgmt,
     Websites,
 )
+
 from .trends import _compute_last_round  # noqa: F401 — re-used by augment_text
 
 
@@ -39,7 +40,10 @@ def _get_text_utils():
     can be imported in environments where faker is not installed, matching the
     behaviour of the original y_web/data_access.py.
     """
-    from y_web.src.content.text_utils import extract_components, strip_tags  # noqa: PLC0415
+    from y_web.src.content.text_utils import (  # noqa: PLC0415
+        extract_components,
+        strip_tags,
+    )
 
     return extract_components, strip_tags
 
@@ -430,9 +434,7 @@ def get_user_recent_posts(
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(
-                            post_id=post.id, type="dislike"
-                        ).all()
+                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
                     )
                 ),
                 "is_liked": Reactions.query.filter_by(
@@ -640,9 +642,7 @@ def get_posts_associated_to_hashtags(
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(
-                            post_id=post.id, type="dislike"
-                        ).all()
+                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
                     )
                 ),
                 "is_liked": Reactions.query.filter_by(
@@ -850,9 +850,7 @@ def get_posts_associated_to_interest(
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(
-                            post_id=post.id, type="dislike"
-                        ).all()
+                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
                     )
                 ),
                 "is_liked": Reactions.query.filter_by(
@@ -1060,9 +1058,7 @@ def get_posts_associated_to_emotion(
                 ),
                 "dislikes": len(
                     list(
-                        Reactions.query.filter_by(
-                            post_id=post.id, type="dislike"
-                        ).all()
+                        Reactions.query.filter_by(post_id=post.id, type="dislike").all()
                     )
                 ),
                 "is_liked": Reactions.query.filter_by(

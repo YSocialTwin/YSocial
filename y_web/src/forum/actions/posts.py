@@ -24,6 +24,16 @@ except Exception:
     Annotator = None
     ContentAnnotator = None
 
+from y_web.src.content.article_extractor import extract_article_info
+from y_web.src.content.text_utils import toxicity, vader_sentiment
+from y_web.src.forum.actions.media import (
+    _download_image_to_uploads,
+    _extract_candidate_media_url,
+    _looks_like_image_url,
+    _looks_like_media_url,
+    _normalize_external_url,
+    _remote_looks_like_image,
+)
 from y_web.src.models import (
     Admin_users,
     Articles,
@@ -43,16 +53,6 @@ from y_web.src.models import (
     User_interest,
     User_mgmt,
     Websites,
-)
-from y_web.src.content.article_extractor import extract_article_info
-from y_web.src.content.text_utils import toxicity, vader_sentiment
-from y_web.src.forum.actions.media import (
-    _normalize_external_url,
-    _extract_candidate_media_url,
-    _looks_like_media_url,
-    _looks_like_image_url,
-    _remote_looks_like_image,
-    _download_image_to_uploads,
 )
 
 

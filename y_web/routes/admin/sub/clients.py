@@ -27,6 +27,13 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.agents.platform import (
+    ensure_population_username_type_column,
+    infer_population_username_type,
+    population_matches_platform,
+)
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     ActivityProfile,
     AgeClass,
@@ -49,13 +56,11 @@ from y_web.src.models import (
     Topic_List,
     User_mgmt,
 )
-from y_web.src.llm.ollama_manager import get_ollama_models
-from y_web.src.llm.vllm_manager import get_llm_models
-from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     stop_client_for_experiment,
 )
+from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.miscellanea import (
     check_privileges,
     get_db_type,
@@ -63,11 +68,6 @@ from y_web.src.system.miscellanea import (
     ollama_status,
 )
 from y_web.src.system.path_utils import get_resource_path
-from y_web.src.agents.platform import (
-    ensure_population_username_type_column,
-    infer_population_username_type,
-    population_matches_platform,
-)
 
 clientsr = Blueprint("clientsr", __name__)
 

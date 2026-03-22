@@ -11,34 +11,6 @@ admin       — db_admin models (researcher accounts, experiments, clients …)
 config      — db_admin lookup/reference tables (professions, languages …)
 """
 
-# Experiment (db_exp) models
-from y_web.src.models.experiment import (  # noqa: F401
-    Agent_Opinion,
-    Article_topics,
-    Articles,
-    Emotions,
-    Follow,
-    Hashtags,
-    ImagePosts,
-    Images,
-    Interests,
-    Mentions,
-    Post,
-    Post_emotions,
-    Post_hashtags,
-    Post_Sentiment,
-    Post_topics,
-    Post_Toxicity,
-    Reactions,
-    Recommendations,
-    ReplyInboxState,
-    Rounds,
-    User_interest,
-    User_mgmt,
-    Voting,
-    Websites,
-)
-
 # Admin (db_admin) models
 from y_web.src.models.admin import (  # noqa: F401
     Admin_users,
@@ -53,11 +25,11 @@ from y_web.src.models.admin import (  # noqa: F401
     ClientLogMetrics,
     DownloadNotification,
     Exp_stats,
-    Exps,
     ExperimentScheduleGroup,
     ExperimentScheduleItem,
     ExperimentScheduleLog,
     ExperimentScheduleStatus,
+    Exps,
     HpcMonitorSettings,
     Jupyter_instances,
     LogFileOffset,
@@ -92,4 +64,32 @@ from y_web.src.models.config import (  # noqa: F401
     Profession,
     Topic_List,
     Toxicity_Levels,
+)
+
+# Experiment (db_exp) models
+from y_web.src.models.experiment import (  # noqa: F401
+    Agent_Opinion,
+    Article_topics,
+    Articles,
+    Emotions,
+    Follow,
+    Hashtags,
+    ImagePosts,
+    Images,
+    Interests,
+    Mentions,
+    Post,
+    Post_emotions,
+    Post_hashtags,
+    Post_Sentiment,
+    Post_topics,
+    Post_Toxicity,
+    Reactions,
+    Recommendations,
+    ReplyInboxState,
+    Rounds,
+    User_interest,
+    User_mgmt,
+    Voting,
+    Websites,
 )

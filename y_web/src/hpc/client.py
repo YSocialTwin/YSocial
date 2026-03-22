@@ -263,7 +263,9 @@ def stop_hpc_client(cli):
         bool: True if process was found and terminated, False otherwise
     """
     # Import here to avoid circular import issues.
-    from y_web.src.simulation.port_manager import __terminate_process as _terminate_process
+    from y_web.src.simulation.port_manager import (
+        __terminate_process as _terminate_process,
+    )
 
     try:
         if not cli.pid:

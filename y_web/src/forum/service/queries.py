@@ -8,8 +8,35 @@ from sqlalchemy import case, func, or_, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
+from y_web.src.content.text_utils import (
+    augment_text,
+    normalize_punctuation_spacing,
+    process_reddit_post,
+    strip_reproduced_article_content,
+)
 from y_web.src.data_access import get_elicited_emotions, get_topics
 from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.forum.hot_rank import rank_posts_longtail
+from y_web.src.forum.service.data_classes import (
+    ArticlePreview,
+    FeedPage,
+    FeedPost,
+    PostStats,
+    _article_payload,
+    _strip_article_title_from_body,
+)
+from y_web.src.forum.service.formatters import (
+    _article_summary_needs_enrichment,
+    _format_display_time,
+    _format_display_time_from_created_at,
+    _format_round,
+    _get_profile_pic,
+    _is_agent_or_page_author,
+    _resolve_article,
+    _resolve_image,
+    _resolve_image_post,
+    _shared_from,
+)
 from y_web.src.models import (
     Articles,
     Images,
@@ -17,33 +44,6 @@ from y_web.src.models import (
     Reactions,
     Rounds,
     User_mgmt,
-)
-from y_web.src.content.text_utils import (
-    augment_text,
-    normalize_punctuation_spacing,
-    process_reddit_post,
-    strip_reproduced_article_content,
-)
-from y_web.src.forum.hot_rank import rank_posts_longtail
-from y_web.src.forum.service.data_classes import (
-    ArticlePreview,
-    PostStats,
-    FeedPost,
-    FeedPage,
-    _article_payload,
-    _strip_article_title_from_body,
-)
-from y_web.src.forum.service.formatters import (
-    _format_round,
-    _format_display_time,
-    _format_display_time_from_created_at,
-    _resolve_article,
-    _resolve_image,
-    _resolve_image_post,
-    _shared_from,
-    _get_profile_pic,
-    _is_agent_or_page_author,
-    _article_summary_needs_enrichment,
 )
 
 

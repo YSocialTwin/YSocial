@@ -16,7 +16,6 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.src.models import Ollama_Pull
 from y_web.src.llm.ollama_manager import (
     delete_model_pull,
     delete_ollama_model,
@@ -25,6 +24,7 @@ from y_web.src.llm.ollama_manager import (
     pull_ollama_model,
     start_ollama_server,
 )
+from y_web.src.models import Ollama_Pull
 from y_web.src.system.miscellanea import check_privileges
 
 ollama = Blueprint("ollama", __name__)

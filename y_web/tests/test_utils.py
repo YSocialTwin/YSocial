@@ -226,7 +226,9 @@ class TestExternalProcesses:
     def test_database_based_process_management(self):
         """Test that process management now uses database instead of global dictionary"""
         try:
-            from y_web.src.simulation.process_registry import cleanup_server_processes_from_db
+            from y_web.src.simulation.process_registry import (
+                cleanup_server_processes_from_db,
+            )
             from y_web.src.simulation.server import get_server_process_status
 
             # Verify functions exist and are callable
