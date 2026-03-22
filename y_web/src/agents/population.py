@@ -461,7 +461,7 @@ def generate_population(
 def generate_population_from_config(
     population_name, percentages=None, actions_config=None, profession_backgrounds=None
 ):
-    """Backward-compatible alias for generate_population."""
+    """Configuration-oriented entrypoint for population generation."""
     return generate_population(
         population_name,
         percentages=percentages,

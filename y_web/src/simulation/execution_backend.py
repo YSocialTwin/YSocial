@@ -1,5 +1,10 @@
 """
-Canonical location for execution backend helpers.
+Backend routing helpers for experiment execution.
+
+This module selects between the standard local-process execution path and the
+HPC execution path based on ``experiment.simulator_type``. Standard experiments
+use ``src.simulation`` server/client lifecycle helpers; HPC experiments use the
+``src.hpc`` server/client helpers plus population backup handling.
 """
 
 from y_web.src.hpc.client import start_hpc_client, stop_hpc_client
