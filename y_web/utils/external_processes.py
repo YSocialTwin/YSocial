@@ -49,6 +49,18 @@ from y_web.src.simulation.process_registry import (  # noqa: F401
     stop_all_exps,
 )
 
+
+def _resolve_server_runtime_paths(base_path, platform_type):
+    """Resolve the server package directory and entry script for a platform."""
+    if platform_type == "microblogging":
+        server_dir = os.path.join(base_path, "external", "YServer")
+    elif platform_type == "forum":
+        server_dir = os.path.join(base_path, "external", "YServerReddit")
+    else:
+        raise NotImplementedError(f"Unsupported platform {platform_type}")
+    return server_dir, os.path.join(server_dir, "y_server_run.py")
+
+
 @deprecated
 def detect_env_handler_old():
     """Handle detect env handler old operation."""
