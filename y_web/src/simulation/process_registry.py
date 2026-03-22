@@ -18,6 +18,10 @@ WATCHDOG_ENABLED = True
 # Value: dict with 'process', 'stdout_file', 'stderr_file'
 _process_registry = {}
 
+# Uppercase alias for backward compatibility with the spec validation test
+# (BUSINESS_LOGIC_REFACTORING.md uses _PROCESS_REGISTRY)
+_PROCESS_REGISTRY = _process_registry
+
 def _register_process(process_id, process, stdout_file=None, stderr_file=None):
     """
     Register a subprocess.Popen object to prevent garbage collection.

@@ -14,6 +14,7 @@ import sys  # noqa: F401 — kept so tests can monkeypatch y_web.utils.external_
 from y_web.src.simulation.process_registry import (  # noqa: F401
     WATCHDOG_ENABLED,
     _process_registry,
+    _PROCESS_REGISTRY,
     _register_process,
     _unregister_process,
     cleanup_server_processes_from_db,

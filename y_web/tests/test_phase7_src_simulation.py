@@ -297,3 +297,19 @@ class TestLegacyShimIdentity:
         from y_web.utils.execution_backend import start_server_for_experiment as shim
 
         assert shim is canonical
+
+    def test_process_registry_uppercase_alias_identity(self):
+        """Spec validation: _PROCESS_REGISTRY (uppercase) must be the same dict as _process_registry."""
+        from y_web.src.simulation.process_registry import (
+            _PROCESS_REGISTRY,
+            _process_registry,
+        )
+
+        assert _PROCESS_REGISTRY is _process_registry
+
+    def test_process_registry_shim_uppercase_identity(self):
+        """Spec validation from BUSINESS_LOGIC_REFACTORING.md: registry identity via shim."""
+        from y_web.src.simulation.process_registry import _PROCESS_REGISTRY as canonical
+        from y_web.utils.external_processes import _PROCESS_REGISTRY as shim_reg
+
+        assert canonical is shim_reg, "Process registry identity mismatch!"
