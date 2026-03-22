@@ -11,7 +11,6 @@ import time
 from multiprocessing import Process
 
 import requests
-from ollama import Client as oclient
 
 from y_web import db
 from y_web.src.models import Ollama_Pull
@@ -87,6 +86,8 @@ def start_ollama_pull(model_name):
     Args:
         model_name: Name of model to download
     """
+    from ollama import Client as oclient
+
     ol_client = oclient(
         host="http://127.0.0.1:11434", headers={"x-some-header": "some-value"}
     )
@@ -115,6 +116,8 @@ def get_ollama_models():
     Returns:
         List of available model names
     """
+    from ollama import Client as oclient
+
     pattern = r"model='(.*?)'"
     models = []
 
@@ -137,6 +140,8 @@ def delete_ollama_model(model_name):
     Args:
         model_name: Name of model to delete
     """
+    from ollama import Client as oclient
+
     ol_client = oclient(
         host="http://0.0.0.0:11434", headers={"x-some-header": "some-value"}
     )

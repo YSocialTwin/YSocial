@@ -380,7 +380,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     from y_web.src.agents.platform import ensure_population_username_type_column
 
-    from .models import Admin_users, User_mgmt
+    from y_web.src.models import Admin_users, User_mgmt
 
     with app.app_context():
         ensure_population_username_type_column()
@@ -409,7 +409,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
             return User_mgmt.query.get(user_id)
 
     # Setup experiment context handler
-    from .experiment_context import (
+    from y_web.src.experiment.context import (
         get_current_experiment_id,
         initialize_active_experiment_databases,
         setup_experiment_context,
@@ -450,7 +450,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject the canonical home URL for the active experiment feed."""
         from flask_login import current_user
 
-        from .models import Exps, User_mgmt
+        from y_web.src.models import Exps, User_mgmt
 
         try:
             if not current_user.is_authenticated:
@@ -494,9 +494,9 @@ def create_app(db_type="sqlite", desktop_mode=False):
     @app.context_processor
     def inject_experiment_memory_enabled():
         """Inject whether the active Standard/Forum experiment has memory enabled."""
-        from .models import Exps
-        from .utils.experiment_helpers import get_experiment_uid_from_db_name
-        from .utils.path_utils import get_writable_path
+        from y_web.src.models import Exps
+        from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
+        from y_web.src.system.path_utils import get_writable_path
 
         try:
             exp_id = get_current_experiment_id()
@@ -571,8 +571,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject active experiments into all admin templates."""
         from flask_login import current_user
 
-        from .models import Admin_users, Exps
-        from .utils.experiment_access import get_visible_experiment_query
+        from y_web.src.models import Admin_users, Exps
+        from y_web.src.experiment.access import get_visible_experiment_query
 
         try:
             if not current_user.is_authenticated:
@@ -597,7 +597,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject current user role information into templates."""
         from flask_login import current_user
 
-        from .models import Admin_users
+        from y_web.src.models import Admin_users
 
         if current_user.is_authenticated:
             try:
@@ -617,7 +617,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject release update information for admin users."""
         from flask_login import current_user
 
-        from .models import Admin_users, ReleaseInfo
+        from y_web.src.models import Admin_users, ReleaseInfo
 
         if current_user.is_authenticated:
             try:
@@ -640,7 +640,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject latest blog post information for admin users."""
         from flask_login import current_user
 
-        from .models import Admin_users, BlogPost
+        from y_web.src.models import Admin_users, BlogPost
 
         if current_user.is_authenticated:
             try:

@@ -6,7 +6,6 @@ import sys
 import time
 from pathlib import Path
 
-import psutil
 from flask import current_app
 
 from y_web import db
@@ -73,6 +72,8 @@ def find_free_port(start_port=8889):
         # Check if port is in use by any external process
         port_in_use = False
         try:
+            import psutil
+
             for proc in psutil.process_iter(["pid", "name"]):
                 try:
                     for conn in proc.connections(kind="inet"):
@@ -154,6 +155,8 @@ def find_instance_by_notebook_dir(notebook_dir):
                 return None
 
             try:
+                import psutil
+
                 proc = psutil.Process(int(proc_pid))
                 if proc.is_running() and proc.status() != psutil.STATUS_ZOMBIE:
                     return instance_id
@@ -530,6 +533,8 @@ def start_jupyter(expid, notebook_dir=None, current_host=None, current_port=5000
 
 def stop_process(pid, instance_id):
     try:
+        import psutil
+
         proc = psutil.Process(pid)
     except psutil.NoSuchProcess:
         ysession = db.session.query(Jupyter_instances).filter_by(id=instance_id).first()
