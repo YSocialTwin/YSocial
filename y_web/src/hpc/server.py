@@ -48,7 +48,7 @@ def start_hpc_server(exp):
     yserver_path = base_path
     sys.path.append(
         os.path.join(yserver_path, "external", "YSimulator")
-    )  # @todo: update with the real name YSimulator
+    )
 
     # Get writable path for experiments directory
     writable_base = get_writable_path()
@@ -282,6 +282,7 @@ def start_hpc_server(exp):
                     cmd,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
+                    env=env,
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
@@ -289,6 +290,7 @@ def start_hpc_server(exp):
                     cmd,
                     stdin=subprocess.DEVNULL,
                     start_new_session=True,
+                    env=env,
                 )
             print(f"Server process started with PID: {process.pid}")
         except Exception as e:

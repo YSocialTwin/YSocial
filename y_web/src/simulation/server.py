@@ -809,6 +809,7 @@ def start_server(exp):
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     creationflags=creationflags,
+                    env=env,
                 )
             else:
                 # On Unix, use start_new_session for proper detachment
@@ -818,6 +819,7 @@ def start_server(exp):
                     stderr=err_file,
                     stdin=subprocess.DEVNULL,
                     start_new_session=True,
+                    env=env,
                 )
             print(f"Server process started with PID: {process.pid}")
             if out_file != subprocess.DEVNULL:
