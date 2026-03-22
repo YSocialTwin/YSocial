@@ -366,9 +366,9 @@ def test_create_all_with_new_models(app):
         assert user_count >= 0
 
 
-def test_import_y_web_models_via_shim_attribute_access(app):
-    """from y_web import models + models.User_mgmt must work (used in test_app_structure)."""
-    from y_web import models
+def test_import_y_web_src_models_exports(app):
+    """Canonical model exports should remain available from y_web.src.models."""
+    from y_web.src import models
 
     assert hasattr(models, "User_mgmt")
     assert hasattr(models, "Admin_users")

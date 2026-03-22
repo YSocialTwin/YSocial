@@ -243,14 +243,14 @@ def start_client(exp, cli, population, resume=True):
         # Running from source - use detected environment with script path
         python_cmd = detect_env_handler()
         runner_script = get_resource_path(
-            os.path.join("y_web", "utils", "y_client_process_runner.py")
+            os.path.join("y_web", "src", "simulation", "client_runner.py")
         )
 
         # Validate that runner script exists
         if not Path(runner_script).exists():
             raise FileNotFoundError(
                 f"Client runner script not found: {runner_script}\n"
-                f"Please ensure y_client_process_runner.py exists in the utils directory."
+                f"Please ensure client_runner.py exists in y_web/src/simulation."
             )
 
         if (

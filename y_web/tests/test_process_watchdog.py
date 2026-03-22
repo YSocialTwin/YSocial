@@ -483,7 +483,7 @@ class TestGlobalWatchdog:
 
         # After stop, getting watchdog should return None initially
         # but get_watchdog creates a new one
-        import y_web.utils.process_watchdog as pw
+        import y_web.src.simulation.watchdog as pw
 
         assert pw._watchdog is None
 

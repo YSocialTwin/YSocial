@@ -98,7 +98,7 @@ class TestExternalProcesses:
     def test_start_server_import(self):
         """Test that start_server can be imported"""
         try:
-            from y_web.utils.external_processes import start_server
+            from y_web.src.simulation.server import start_server
 
             assert callable(start_server)
         except ImportError as e:
@@ -107,7 +107,7 @@ class TestExternalProcesses:
     def test_terminate_process_on_port_import(self):
         """Test that terminate_process_on_port can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_process_on_port
+            from y_web.src.simulation.port_manager import terminate_process_on_port
 
             assert callable(terminate_process_on_port)
         except ImportError as e:
@@ -116,7 +116,7 @@ class TestExternalProcesses:
     def test_terminate_server_process_import(self):
         """Test that terminate_server_process can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_server_process
+            from y_web.src.simulation.server import terminate_server_process
 
             assert callable(terminate_server_process)
         except ImportError as e:
@@ -125,7 +125,7 @@ class TestExternalProcesses:
     def test_start_hpc_server_import(self):
         """Test that start_hpc_server can be imported"""
         try:
-            from y_web.utils.external_processes import start_hpc_server
+            from y_web.src.hpc.server import start_hpc_server
 
             assert callable(start_hpc_server)
         except ImportError as e:
@@ -134,7 +134,7 @@ class TestExternalProcesses:
     def test_stop_hpc_server_import(self):
         """Test that stop_hpc_server can be imported"""
         try:
-            from y_web.utils.external_processes import stop_hpc_server
+            from y_web.src.hpc.server import stop_hpc_server
 
             assert callable(stop_hpc_server)
         except ImportError as e:
@@ -143,7 +143,7 @@ class TestExternalProcesses:
     def test_start_hpc_client_import(self):
         """Test that start_hpc_client can be imported"""
         try:
-            from y_web.utils.external_processes import start_hpc_client
+            from y_web.src.hpc.client import start_hpc_client
 
             assert callable(start_hpc_client)
         except ImportError as e:
@@ -152,7 +152,7 @@ class TestExternalProcesses:
     def test_stop_hpc_client_import(self):
         """Test that stop_hpc_client can be imported"""
         try:
-            from y_web.utils.external_processes import stop_hpc_client
+            from y_web.src.hpc.client import stop_hpc_client
 
             assert callable(stop_hpc_client)
         except ImportError as e:
@@ -161,7 +161,7 @@ class TestExternalProcesses:
     def test_get_server_process_status_import(self):
         """Test that get_server_process_status can be imported"""
         try:
-            from y_web.utils.external_processes import get_server_process_status
+            from y_web.src.simulation.server import get_server_process_status
 
             assert callable(get_server_process_status)
         except ImportError as e:
@@ -170,7 +170,7 @@ class TestExternalProcesses:
     def test_start_server_screen_import(self):
         """Test that deprecated start_server_screen can be imported"""
         try:
-            from y_web.utils.external_processes import start_server_screen
+            from y_web.src.simulation.server import start_server_screen
 
             assert callable(start_server_screen)
         except ImportError as e:
@@ -179,7 +179,7 @@ class TestExternalProcesses:
     def test_get_server_process_status_not_found(self):
         """Test get_server_process_status when no process is tracked"""
         try:
-            from y_web.utils.external_processes import get_server_process_status
+            from y_web.src.simulation.server import get_server_process_status
 
             status = get_server_process_status(999)
             assert status["running"] is False
@@ -192,7 +192,7 @@ class TestExternalProcesses:
     def test_terminate_server_process_not_found(self):
         """Test terminate_server_process when no process is tracked"""
         try:
-            from y_web.utils.external_processes import terminate_server_process
+            from y_web.src.simulation.server import terminate_server_process
 
             result = terminate_server_process(999)
             assert result is False
@@ -203,7 +203,7 @@ class TestExternalProcesses:
     def test_stop_hpc_server_not_found(self):
         """Test stop_hpc_server when no process is tracked"""
         try:
-            from y_web.utils.external_processes import stop_hpc_server
+            from y_web.src.hpc.server import stop_hpc_server
 
             result = stop_hpc_server(999)
             assert result is False
@@ -214,7 +214,7 @@ class TestExternalProcesses:
     def test_terminate_server_process_with_db(self):
         """Test terminate_server_process using database PID"""
         try:
-            from y_web.utils.external_processes import terminate_server_process
+            from y_web.src.simulation.server import terminate_server_process
 
             # This test would require database mocking
             # For now, just verify the function can be imported
@@ -226,10 +226,8 @@ class TestExternalProcesses:
     def test_database_based_process_management(self):
         """Test that process management now uses database instead of global dictionary"""
         try:
-            from y_web.utils.external_processes import (
-                cleanup_server_processes_from_db,
-                get_server_process_status,
-            )
+            from y_web.src.simulation.process_registry import cleanup_server_processes_from_db
+            from y_web.src.simulation.server import get_server_process_status
 
             # Verify functions exist and are callable
             assert callable(cleanup_server_processes_from_db)
@@ -267,7 +265,7 @@ class TestUtilsFunctionExistence:
     def test_utils_init_imports(self):
         """Test that utils __init__.py can be imported"""
         try:
-            import y_web.utils
+            import y_web.src
 
             # The import should succeed
             assert True

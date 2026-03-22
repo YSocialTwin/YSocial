@@ -297,7 +297,7 @@ class TestIncrementalLogReading:
 
     def test_client_log_rotation_resets_offset(self, app, db):
         """Test that client log rotation is detected and offset is reset."""
-        from y_web.utils.log_metrics import update_client_log_metrics
+        from y_web.src.hpc.log_metrics import update_client_log_metrics
 
         with app.app_context():
             # Create a temporary log file

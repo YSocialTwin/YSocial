@@ -64,7 +64,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_message_found(self, app, db):
         """Test detecting 'Client shutdown complete' message in log."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a temporary log file with shutdown message
         with tempfile.NamedTemporaryFile(
@@ -91,7 +91,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_message_not_found(self, app, db):
         """Test when shutdown message is not present."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a temporary log file without shutdown message
         with tempfile.NamedTemporaryFile(
@@ -114,7 +114,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_empty_file(self, app, db):
         """Test handling of empty log file."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create an empty log file
         with tempfile.NamedTemporaryFile(
@@ -131,7 +131,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_invalid_json(self, app, db):
         """Test handling of invalid JSON in log."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a log file with invalid JSON
         with tempfile.NamedTemporaryFile(
@@ -152,7 +152,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_missing_file(self, app, db):
         """Test handling of missing log file."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         with app.app_context():
             result = check_hpc_client_execution_completion(

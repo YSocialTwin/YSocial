@@ -79,7 +79,7 @@ class TestContentRecsys:
     def test_get_suggested_posts_import(self):
         """Test that get_suggested_posts can be imported"""
         try:
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             assert callable(get_suggested_posts)
         except ImportError as e:
@@ -91,11 +91,11 @@ class TestContentRecsys:
             # Mock the database to use our test database
             from unittest.mock import patch
 
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Mock y_web.db with our test db
-                with patch("y_web.recsys_support.content_recsys.db") as mock_db:
+                with patch("y_web.src.recsys.content_recsys.db") as mock_db:
                     from y_web.tests.conftest import Post
 
                     # Mock the database session and query
@@ -125,11 +125,11 @@ class TestContentRecsys:
             # Mock the database to use our test database
             from unittest.mock import Mock, patch
 
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Mock y_web.db with our test db
-                with patch("y_web.recsys_support.content_recsys.db") as mock_db:
+                with patch("y_web.src.recsys.content_recsys.db") as mock_db:
                     # Mock the database session and query
                     mock_db.session.query.return_value.filter_by.return_value.order_by.return_value.paginate.return_value = (
                         Mock()
@@ -154,11 +154,11 @@ class TestContentRecsys:
             # Mock the database to use our test database
             from unittest.mock import Mock, patch
 
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Mock y_web.db with our test db
-                with patch("y_web.recsys_support.content_recsys.db") as mock_db:
+                with patch("y_web.src.recsys.content_recsys.db") as mock_db:
                     # Mock the database session and query
                     mock_result = Mock()
                     mock_result.items = []
@@ -187,7 +187,7 @@ class TestFollowRecsys:
     def test_get_suggested_users_import(self):
         """Test that get_suggested_users can be imported"""
         try:
-            from y_web.recsys_support.follow_recsys import get_suggested_users
+            from y_web.src.recsys.follow_recsys import get_suggested_users
 
             assert callable(get_suggested_users)
         except ImportError as e:
@@ -196,7 +196,7 @@ class TestFollowRecsys:
     def test_get_suggested_users_basic(self, app):
         """Test get_suggested_users basic functionality"""
         try:
-            from y_web.recsys_support.follow_recsys import get_suggested_users
+            from y_web.src.recsys.follow_recsys import get_suggested_users
 
             with app.app_context():
                 # Test with basic parameters using actual signature
@@ -220,8 +220,8 @@ class TestRecsysIntegration:
         try:
             import y_web.src.recsys
 
-            assert hasattr(y_web.recsys_support, "get_suggested_posts")
-            assert hasattr(y_web.recsys_support, "get_suggested_users")
+            assert hasattr(y_web.src.recsys, "get_suggested_posts")
+            assert hasattr(y_web.src.recsys, "get_suggested_users")
         except ImportError as e:
             pytest.skip(f"Could not import recsys_support module: {e}")
 
@@ -259,7 +259,7 @@ class TestRecsysMethods:
             # Mock the database to use our test database
             from unittest.mock import Mock, patch
 
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Test different modes that might exist
@@ -268,7 +268,7 @@ class TestRecsysMethods:
                 for mode in modes_to_test:
                     try:
                         # Mock y_web.db with our test db
-                        with patch("y_web.recsys_support.content_recsys.db") as mock_db:
+                        with patch("y_web.src.recsys.content_recsys.db") as mock_db:
                             # Mock the database session and query
                             mock_db.session.query.return_value.filter_by.return_value.order_by.return_value.paginate.return_value = (
                                 Mock()
@@ -290,7 +290,7 @@ class TestRecsysMethods:
     def test_follow_recsys_parameters(self, app):
         """Test follow recommendation system with different parameters"""
         try:
-            from y_web.recsys_support.follow_recsys import get_suggested_users
+            from y_web.src.recsys.follow_recsys import get_suggested_users
 
             with app.app_context():
                 # Test with different parameters based on actual signature
@@ -324,7 +324,7 @@ class TestRecsysErrorHandling:
     def test_content_recsys_invalid_user(self, app):
         """Test content recsys with invalid user"""
         try:
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Test with non-existent user
@@ -345,13 +345,13 @@ class TestRecsysErrorHandling:
             # Mock the database to use our test database
             from unittest.mock import Mock, patch
 
-            from y_web.recsys_support.content_recsys import get_suggested_posts
+            from y_web.src.recsys.content_recsys import get_suggested_posts
 
             with app.app_context():
                 # Test with invalid mode
                 try:
                     # Mock y_web.db with our test db
-                    with patch("y_web.recsys_support.content_recsys.db") as mock_db:
+                    with patch("y_web.src.recsys.content_recsys.db") as mock_db:
                         # Mock the database session and query
                         mock_db.session.query.return_value.filter_by.return_value.order_by.return_value.paginate.return_value = (
                             Mock()
@@ -373,7 +373,7 @@ class TestRecsysErrorHandling:
     def test_follow_recsys_invalid_parameters(self, app):
         """Test follow recsys with invalid parameters"""
         try:
-            from y_web.recsys_support.follow_recsys import get_suggested_users
+            from y_web.src.recsys.follow_recsys import get_suggested_users
 
             with app.app_context():
                 # Test with invalid parameters based on actual signature

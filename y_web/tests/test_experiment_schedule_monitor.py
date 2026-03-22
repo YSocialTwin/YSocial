@@ -77,7 +77,7 @@ class TestExperimentScheduleMonitor:
         monitor = ExperimentScheduleMonitor(app)
 
         with patch(
-            "y_web.utils.experiment_schedule_monitor.ExperimentScheduleMonitor"
+            "y_web.src.experiment.schedule_monitor.ExperimentScheduleMonitor"
             "._check_and_advance"
         ) as mock_check:
             monitor._check_and_advance = mock_check

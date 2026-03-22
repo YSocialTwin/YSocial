@@ -37,7 +37,7 @@ class TestAgentsUtils:
         except (ImportError, AttributeError):
             # Function might be private or named differently, try direct module access
             try:
-                import y_web.utils.agents as agents_module
+                import y_web.src.agents.population as agents_module
 
                 if hasattr(agents_module, "_agents__sample_age"):
                     sample_age_func = getattr(agents_module, "_agents__sample_age")
@@ -63,7 +63,7 @@ class TestAgentsUtils:
         except (ImportError, AttributeError):
             # Function might be private or named differently, try direct module access
             try:
-                import y_web.utils.agents as agents_module
+                import y_web.src.agents.population as agents_module
 
                 if hasattr(agents_module, "_agents__sample_pareto"):
                     sample_pareto_func = getattr(
@@ -88,8 +88,8 @@ class TestAgentsUtils:
             from y_web.src.agents.population import generate_population
 
             with (
-                patch("y_web.utils.agents.db") as mock_db,
-                patch("y_web.utils.agents.Population") as mock_population,
+                patch("y_web.src.agents.population.db") as mock_db,
+                patch("y_web.src.agents.population.Population") as mock_population,
             ):
 
                 # Mock the population query
@@ -160,7 +160,7 @@ class TestExternalProcesses:
     def test_start_server_import(self):
         """Test that start_server can be imported"""
         try:
-            from y_web.utils.external_processes import start_server
+            from y_web.src.simulation.server import start_server
 
             assert callable(start_server)
         except ImportError as e:
@@ -169,7 +169,7 @@ class TestExternalProcesses:
     def test_terminate_process_on_port_import(self):
         """Test that terminate_process_on_port can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_process_on_port
+            from y_web.src.simulation.port_manager import terminate_process_on_port
 
             assert callable(terminate_process_on_port)
         except ImportError as e:
@@ -178,7 +178,7 @@ class TestExternalProcesses:
     def test_start_client_import(self):
         """Test that start_client can be imported"""
         try:
-            from y_web.utils.external_processes import start_client
+            from y_web.src.simulation.client import start_client
 
             assert callable(start_client)
         except ImportError as e:
@@ -187,7 +187,7 @@ class TestExternalProcesses:
     def test_terminate_client_import(self):
         """Test that terminate_client can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_client
+            from y_web.src.simulation.client import terminate_client
 
             assert callable(terminate_client)
         except ImportError as e:
@@ -197,7 +197,7 @@ class TestExternalProcesses:
     def test_start_server_mocked(self, mock_popen):
         """Test start_server with mocked subprocess"""
         try:
-            from y_web.utils.external_processes import start_server
+            from y_web.src.simulation.server import start_server
 
             # Mock the subprocess
             mock_process = Mock()
@@ -221,7 +221,7 @@ class TestExternalProcesses:
         # Note: Full testing of start_client requires Flask application context
         # This test just verifies the function can be imported
         try:
-            from y_web.utils.external_processes import start_client
+            from y_web.src.simulation.client import start_client
 
             assert callable(start_client)
         except ImportError as e:
@@ -343,7 +343,7 @@ class TestMiscellanea:
 
             from y_web.src.system.miscellanea import check_privileges
 
-            with patch("y_web.utils.miscellanea.Admin_users") as mock_admin_users:
+            with patch("y_web.src.system.miscellanea.Admin_users") as mock_admin_users:
 
                 # Mock admin user
                 mock_user = Mock()
@@ -492,46 +492,46 @@ class TestTextUtils:
 
 
 class TestUtilsModuleStructure:
-    """Test utils module structure and imports"""
+    """Test canonical src module structure and imports."""
 
-    def test_utils_init_import(self):
-        """Test that utils module can be imported"""
+    def test_src_root_import(self):
+        """Test that the src root package can be imported."""
         try:
-            import y_web.utils
+            import y_web.src
 
-            assert y_web.utils is not None
+            assert y_web.src is not None
         except ImportError as e:
-            pytest.skip(f"Could not import utils module: {e}")
+            pytest.skip(f"Could not import y_web.src: {e}")
 
-    def test_utils_submodules_exist(self):
-        """Test that utils submodules exist"""
-        expected_submodules = [
-            "agents",
-            "article_extractor",
-            "external_processes",
-            "feeds",
-            "miscellanea",
-            "text_utils",
+    def test_src_submodules_exist(self):
+        """Test that core canonical submodules exist."""
+        expected_modules = [
+            "y_web.src.agents.population",
+            "y_web.src.content.article_extractor",
+            "y_web.src.simulation.server",
+            "y_web.src.content.feeds",
+            "y_web.src.system.miscellanea",
+            "y_web.src.content.text_utils",
         ]
 
-        for submodule in expected_submodules:
+        for module_name in expected_modules:
             try:
-                module = __import__(f"y_web.utils.{submodule}", fromlist=[""])
+                module = __import__(module_name, fromlist=[""])
                 assert module is not None
             except ImportError:
-                # Some submodules might have dependencies
                 pass
 
-    def test_utils_init_exports(self):
-        """Test utils __init__.py exports"""
+    def test_src_package_exports(self):
+        """Test canonical package exports."""
         try:
-            from y_web.utils import agents, external_processes, feeds, miscellanea
+            from y_web.src.agents import population
+            from y_web.src.content import feeds
+            from y_web.src.simulation import server
+            from y_web.src.system import miscellanea
 
-            # At least one should be available
-            assert any([agents, feeds, external_processes, miscellanea])
-
+            assert any([population, feeds, server, miscellanea])
         except ImportError as e:
-            pytest.skip(f"Could not import utils submodules: {e}")
+            pytest.skip(f"Could not import canonical submodules: {e}")
 
 
 class TestUtilsIntegration:

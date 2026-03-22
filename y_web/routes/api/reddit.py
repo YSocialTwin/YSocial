@@ -18,10 +18,7 @@ try:
     from y_web.src.llm import Annotator
 except Exception:
     Annotator = None
-try:
-    from y_web.llm_annotations.url_summarizer import UrlSummarizer
-except Exception:
-    UrlSummarizer = None
+UrlSummarizer = None
 from y_web.src.models import (
     Admin_users,
     Articles,

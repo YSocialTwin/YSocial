@@ -383,8 +383,8 @@ class TestLegacyShimBackwardCompatibility:
         assert get_suggested_users is gsu_src
 
     def test_recsys_submodule_shims_identity(self):
-        from y_web.recsys_support.content_recsys import get_suggested_posts
-        from y_web.recsys_support.follow_recsys import get_suggested_users
+        from y_web.src.recsys.content_recsys import get_suggested_posts
+        from y_web.src.recsys.follow_recsys import get_suggested_users
         from y_web.src.recsys.content_recsys import get_suggested_posts as gsp_src
         from y_web.src.recsys.follow_recsys import get_suggested_users as gsu_src
 

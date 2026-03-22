@@ -215,9 +215,9 @@ def main():
         # Remove the special flag and pass remaining args to client runner
         sys.argv.pop(1)
         # Import and run the client process runner
-        from y_web.src.simulation.process_runner import main as client_main
+        from y_web.src.simulation.process_runner import run_client_main
 
-        client_main()
+        run_client_main()
         return
 
     # Check if we're being invoked as a server runner subprocess
@@ -226,9 +226,9 @@ def main():
         # Remove the special flag and pass remaining args to server runner
         sys.argv.pop(1)
         # Import and run the server process
-        from y_web.src.simulation.process_runner import main as server_main
+        from y_web.src.simulation.process_runner import run_server_main
 
-        server_main()
+        run_server_main()
         return
 
     # Generate or load installation ID on first run
