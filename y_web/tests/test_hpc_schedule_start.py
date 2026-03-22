@@ -42,29 +42,23 @@ def test_start_schedule_calls_start_hpc_server_for_hpc_experiments():
     mock_population = MagicMock()
     mock_population.id = 1
 
+    # After Phase 10a refactoring, these names live in the _schedule sub-module.
+    # The _get_clients_to_start helper was moved to _helpers.
+    _sched = "y_web.routes.admin.sub.experiments._schedule"
+    _helpers = "y_web.routes.admin.sub.experiments._helpers"
     with (
-        patch(
-            "y_web.routes.admin.sub.experiments.ExperimentScheduleStatus"
-        ) as mock_status_cls,
-        patch(
-            "y_web.routes.admin.sub.experiments.ExperimentScheduleLog"
-        ) as mock_log_cls,
-        patch(
-            "y_web.routes.admin.sub.experiments.ExperimentScheduleGroup"
-        ) as mock_group_cls,
-        patch(
-            "y_web.routes.admin.sub.experiments.ExperimentScheduleItem"
-        ) as mock_item_cls,
-        patch("y_web.routes.admin.sub.experiments.Exps") as mock_exps_cls,
-        patch("y_web.routes.admin.sub.experiments.Client") as mock_client_cls,
-        patch("y_web.routes.admin.sub.experiments.Population") as mock_population_cls,
-        patch(
-            "y_web.routes.admin.sub.experiments._get_clients_to_start"
-        ) as mock_get_clients,
+        patch(f"{_sched}.ExperimentScheduleStatus") as mock_status_cls,
+        patch(f"{_sched}.ExperimentScheduleLog") as mock_log_cls,
+        patch(f"{_sched}.ExperimentScheduleGroup") as mock_group_cls,
+        patch(f"{_sched}.ExperimentScheduleItem") as mock_item_cls,
+        patch(f"{_sched}.Exps") as mock_exps_cls,
+        patch(f"{_sched}.Client") as mock_client_cls,
+        patch(f"{_sched}.Population") as mock_population_cls,
+        patch(f"{_sched}._get_clients_to_start") as mock_get_clients,
         patch("y_web.src.hpc.server.start_hpc_server") as mock_start_hpc_server,
         patch("y_web.src.simulation.server.start_server") as mock_start_server,
         patch("y_web.src.hpc.client.start_hpc_client") as mock_start_hpc_client,
-        patch("y_web.routes.admin.sub.experiments.db") as mock_db,
+        patch(f"{_sched}.db") as mock_db,
     ):
 
         # Setup mocks
