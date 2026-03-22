@@ -12,14 +12,14 @@ from sqlalchemy.sql.expression import func
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.data_access import (
+from y_web.src.data_access import (
     get_mutual_friends,
     get_top_user_hashtags,
     get_unanswered_mentions,
     get_user_recent_interests,
     get_user_recent_posts,
 )
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Agent,
     Emotions,
@@ -33,7 +33,7 @@ from y_web.models import (
     Reactions,
     User_mgmt,
 )
-from y_web.recsys_support import get_suggested_users
+from y_web.src.recsys import get_suggested_users
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
     _forum_current_profile_pic,
@@ -64,7 +64,7 @@ def index():
 
             # Get experiment user ID (not admin user ID)
             # Temporarily bind to experiment database to query user
-            from y_web.experiment_context import get_db_bind_key_for_exp
+            from y_web.src.experiment.context import get_db_bind_key_for_exp
 
             bind_key = get_db_bind_key_for_exp(exp.idexp)
 
@@ -73,7 +73,7 @@ def index():
             try:
                 # Use the experiment's database bind
                 from y_web import db
-                from y_web.models import User_mgmt
+                from y_web.src.models import User_mgmt
 
                 # Temporarily override db_exp bind to query correct database
                 original_bind = db.get_app().config["SQLALCHEMY_BINDS"].get("db_exp")

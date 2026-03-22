@@ -369,7 +369,7 @@ class TestCanonicalForumFunctions:
 
     def test_normalize_posts_deduplication(self):
         from y_web.src.forum.service.queries import _normalize_posts
-        from y_web.models import Post
+        from y_web.src.models import Post
 
         # _normalize_posts only processes actual Post ORM instances;
         # just verify it returns an empty list for non-Post objects
@@ -382,61 +382,61 @@ class TestCanonicalForumFunctions:
 
 class TestForumShimIdentity:
     def test_create_post_reddit_identity(self):
-        from y_web.reddit.actions import create_post_reddit as shim
+        from y_web.src.forum.actions import create_post_reddit as shim
         from y_web.src.forum.actions.posts import create_post_reddit as canonical
 
         assert shim is canonical
 
     def test_apply_vote_identity(self):
-        from y_web.reddit.actions import apply_vote as shim
+        from y_web.src.forum.actions import apply_vote as shim
         from y_web.src.forum.actions.reactions import apply_vote as canonical
 
         assert shim is canonical
 
     def test_create_comment_reddit_identity(self):
-        from y_web.reddit.actions import create_comment_reddit as shim
+        from y_web.src.forum.actions import create_comment_reddit as shim
         from y_web.src.forum.actions.posts import create_comment_reddit as canonical
 
         assert shim is canonical
 
     def test_fetch_feed_page_identity(self):
-        from y_web.reddit.service import fetch_feed_page as shim
+        from y_web.src.forum.service import fetch_feed_page as shim
         from y_web.src.forum.service.queries import fetch_feed_page as canonical
 
         assert shim is canonical
 
     def test_serialize_feed_posts_identity(self):
-        from y_web.reddit.service import serialize_feed_posts as shim
+        from y_web.src.forum.service import serialize_feed_posts as shim
         from y_web.src.forum.service.queries import serialize_feed_posts as canonical
 
         assert shim is canonical
 
     def test_rank_posts_longtail_identity(self):
-        from y_web.reddit.hot_rank import rank_posts_longtail as shim
+        from y_web.src.forum.hot_rank import rank_posts_longtail as shim
         from y_web.src.forum.hot_rank import rank_posts_longtail as canonical
 
         assert shim is canonical
 
     def test_base_hot_score_identity(self):
-        from y_web.reddit.hot_rank import base_hot_score as shim
+        from y_web.src.forum.hot_rank import base_hot_score as shim
         from y_web.src.forum.hot_rank import base_hot_score as canonical
 
         assert shim is canonical
 
     def test_calculate_vote_tallies_identity(self):
-        from y_web.reddit.actions import _calculate_vote_tallies as shim
+        from y_web.src.forum.actions import _calculate_vote_tallies as shim
         from y_web.src.forum.actions.reactions import _calculate_vote_tallies as canonical
 
         assert shim is canonical
 
     def test_clean_reddit_formatting_identity(self):
-        from y_web.reddit.service import clean_reddit_formatting as shim
+        from y_web.src.forum.service import clean_reddit_formatting as shim
         from y_web.src.forum.service.formatters import clean_reddit_formatting as canonical
 
         assert shim is canonical
 
     def test_article_preview_identity(self):
-        from y_web.reddit.service import ArticlePreview as shim
+        from y_web.src.forum.service import ArticlePreview as shim
         from y_web.src.forum.service.data_classes import ArticlePreview as canonical
 
         assert shim is canonical

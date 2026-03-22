@@ -697,7 +697,7 @@ def _save_watchdog_last_run(last_run: datetime) -> None:
         # Only save if we're in an application context
         if current_app:
             from y_web import db
-            from y_web.models import WatchdogSettings
+            from y_web.src.models import WatchdogSettings
 
             settings = WatchdogSettings.query.first()
             if settings:
@@ -725,7 +725,7 @@ def _load_watchdog_settings() -> Dict:
         from flask import current_app
 
         if current_app:
-            from y_web.models import WatchdogSettings
+            from y_web.src.models import WatchdogSettings
 
             settings = WatchdogSettings.query.first()
             if settings:
@@ -759,7 +759,7 @@ def _save_watchdog_settings(
 
         if current_app:
             from y_web import db
-            from y_web.models import WatchdogSettings
+            from y_web.src.models import WatchdogSettings
 
             settings = WatchdogSettings.query.first()
             if settings:

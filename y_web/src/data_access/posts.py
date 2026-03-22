@@ -9,7 +9,7 @@ sentiment, and unanswered @-mentions.
 from sqlalchemy import desc
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Agent,
     Articles,
@@ -60,7 +60,7 @@ def augment_text(text, exp_id):
     Returns:
         HTML-augmented text string
     """
-    from y_web.models import Hashtags  # local import avoids circular-import risk
+    from y_web.src.models import Hashtags  # local import avoids circular-import risk
 
     extract_components, _ = _get_text_utils()
 

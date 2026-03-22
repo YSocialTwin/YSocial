@@ -119,7 +119,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import numpy as np
 
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     PopulationActivityProfile,
 )
@@ -268,7 +268,7 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
     from sqlalchemy.orm import sessionmaker
 
     from y_web import create_app, db  # only to reuse URI config
-    from y_web.models import Client, Client_Execution, Exps, Population
+    from y_web.src.models import Client, Client_Execution, Exps, Population
     from y_web.src.system.path_utils import get_base_path, get_writable_path
 
     # Create app only to get DB URI, but don't push its context
@@ -783,7 +783,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     from sqlalchemy.orm import sessionmaker
 
     from y_web import create_app  # only to reuse URI config
-    from y_web.models import Client_Execution
+    from y_web.src.models import Client_Execution
     from y_web.src.system.path_utils import get_base_path
 
     base_path = get_base_path()
@@ -915,7 +915,7 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
                     # Check if all clients in this experiment have completed
                     # Import Client model to check other clients
-                    from y_web.models import Client, Exps
+                    from y_web.src.models import Client, Exps
 
                     # Get current client to find experiment ID
                     client = session.query(Client).filter_by(id=cli_id).first()

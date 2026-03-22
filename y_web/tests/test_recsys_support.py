@@ -218,7 +218,7 @@ class TestRecsysIntegration:
     def test_recsys_module_imports(self):
         """Test that recsys module can be imported"""
         try:
-            import y_web.recsys_support
+            import y_web.src.recsys
 
             assert hasattr(y_web.recsys_support, "get_suggested_posts")
             assert hasattr(y_web.recsys_support, "get_suggested_users")
@@ -228,7 +228,7 @@ class TestRecsysIntegration:
     def test_content_recsys_module_structure(self):
         """Test content_recsys module structure"""
         try:
-            from y_web.recsys_support import content_recsys
+            from y_web.src.recsys import content_recsys
 
             # Check for expected functions
             assert hasattr(content_recsys, "get_suggested_posts")
@@ -240,7 +240,7 @@ class TestRecsysIntegration:
     def test_follow_recsys_module_structure(self):
         """Test follow_recsys module structure"""
         try:
-            from y_web.recsys_support import follow_recsys
+            from y_web.src.recsys import follow_recsys
 
             # Check for expected functions
             assert hasattr(follow_recsys, "get_suggested_users")

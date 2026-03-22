@@ -2,7 +2,7 @@
 Backward-compatibility shim for y_web.utils.experiment_clock.
 
 The canonical location is now ``y_web.src.experiment.clock``.
-All existing ``from y_web.utils.experiment_clock import X`` call sites
+All existing ``from y_web.src.experiment.clock import X`` call sites
 continue to work without modification.
 
 .. deprecated::

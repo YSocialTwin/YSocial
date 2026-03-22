@@ -164,7 +164,7 @@ class TestImageAnnotator:
     def test_image_annotator_import(self):
         """Test that image annotator can be imported"""
         try:
-            from y_web.llm_annotations import image_annotator
+            from y_web.src.llm import image_annotator
 
             assert image_annotator is not None
         except ImportError as e:
@@ -173,7 +173,7 @@ class TestImageAnnotator:
     def test_image_annotator_structure(self):
         """Test image annotator module structure"""
         try:
-            from y_web.llm_annotations import image_annotator
+            from y_web.src.llm import image_annotator
 
             # Check for expected classes or functions
             expected_items = ["ImageAnnotator", "annotate_image", "process_image"]
@@ -194,7 +194,7 @@ class TestLLMAnnotationsModule:
     def test_llm_annotations_import(self):
         """Test that llm_annotations module can be imported"""
         try:
-            import y_web.llm_annotations
+            import y_web.src.llm
 
             assert y_web.llm_annotations is not None
         except ImportError as e:
@@ -203,7 +203,7 @@ class TestLLMAnnotationsModule:
     def test_llm_annotations_init_imports(self):
         """Test llm_annotations __init__.py imports"""
         try:
-            from y_web.llm_annotations import content_annotation, image_annotator
+            from y_web.src.llm import content_annotation, image_annotator
 
             assert content_annotation is not None
             assert image_annotator is not None
@@ -214,7 +214,7 @@ class TestLLMAnnotationsModule:
     def test_content_annotation_available(self):
         """Test that content annotation is available through main module"""
         try:
-            import y_web.llm_annotations
+            import y_web.src.llm
 
             # Check if ContentAnnotator is available
             if hasattr(y_web.llm_annotations, "ContentAnnotator"):

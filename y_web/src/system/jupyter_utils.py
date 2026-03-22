@@ -10,7 +10,7 @@ import psutil
 from flask import current_app
 
 from y_web import db
-from y_web.models import Exps, Jupyter_instances
+from y_web.src.models import Exps, Jupyter_instances
 
 
 def get_python_executable():

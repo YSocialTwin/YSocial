@@ -7,7 +7,7 @@ import subprocess
 import time
 
 from y_web import db
-from y_web.models import Client, Exps
+from y_web.src.models import Client, Exps
 
 # Flag to enable/disable watchdog monitoring
 WATCHDOG_ENABLED = True

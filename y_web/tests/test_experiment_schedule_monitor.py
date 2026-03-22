@@ -20,7 +20,7 @@ class TestExperimentScheduleMonitor:
 
     def test_monitor_initialization(self):
         """Test monitor initialises with expected default state."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -31,7 +31,7 @@ class TestExperimentScheduleMonitor:
 
     def test_monitor_start_stop(self):
         """Test that the monitor starts and stops its background thread."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -47,7 +47,7 @@ class TestExperimentScheduleMonitor:
 
     def test_monitor_start_idempotent(self):
         """Calling start() twice should not start a second thread."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -63,7 +63,7 @@ class TestExperimentScheduleMonitor:
 
     def test_monitor_stop_when_not_started(self):
         """Calling stop() on a monitor that was never started should not raise."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -71,7 +71,7 @@ class TestExperimentScheduleMonitor:
 
     def test_check_and_advance_calls_do_check(self):
         """_check_and_advance should delegate to _do_check_schedule_progress."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         monitor = ExperimentScheduleMonitor(app)
@@ -86,7 +86,7 @@ class TestExperimentScheduleMonitor:
 
     def test_run_loop_calls_check_and_advance(self):
         """The _run loop should call _check_and_advance while not stopped."""
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             POLL_INTERVAL_SECONDS,
             ExperimentScheduleMonitor,
         )
@@ -118,7 +118,7 @@ class TestExperimentScheduleMonitor:
 
     def test_run_loop_handles_exceptions(self):
         """Errors inside _check_and_advance should not crash the monitor loop."""
-        from y_web.utils.experiment_schedule_monitor import ExperimentScheduleMonitor
+        from y_web.src.experiment.schedule_monitor import ExperimentScheduleMonitor
 
         app = MagicMock()
         app.app_context.return_value.__enter__ = MagicMock(return_value=None)
@@ -151,13 +151,13 @@ class TestInitStopHelpers:
 
     def setup_method(self):
         """Reset global monitor state before each test."""
-        import y_web.utils.experiment_schedule_monitor as mod
+        import y_web.src.experiment.schedule_monitor as mod
 
         mod._monitor = None
 
     def teardown_method(self):
         """Clean up global monitor state after each test."""
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             stop_experiment_schedule_monitor,
         )
 
@@ -165,7 +165,7 @@ class TestInitStopHelpers:
 
     def test_init_creates_and_starts_monitor(self):
         """init_experiment_schedule_monitor should create and start the monitor."""
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             get_monitor,
             init_experiment_schedule_monitor,
         )
@@ -173,7 +173,7 @@ class TestInitStopHelpers:
         app = MagicMock()
 
         with patch(
-            "y_web.utils.experiment_schedule_monitor.ExperimentScheduleMonitor.start"
+            "y_web.src.experiment.schedule_monitor.ExperimentScheduleMonitor.start"
         ) as mock_start:
             monitor = init_experiment_schedule_monitor(app)
 
@@ -183,14 +183,14 @@ class TestInitStopHelpers:
 
     def test_init_idempotent(self):
         """Calling init twice should return the same monitor instance."""
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             init_experiment_schedule_monitor,
         )
 
         app = MagicMock()
 
         with patch(
-            "y_web.utils.experiment_schedule_monitor.ExperimentScheduleMonitor.start"
+            "y_web.src.experiment.schedule_monitor.ExperimentScheduleMonitor.start"
         ):
             first = init_experiment_schedule_monitor(app)
             second = init_experiment_schedule_monitor(app)
@@ -199,7 +199,7 @@ class TestInitStopHelpers:
 
     def test_stop_clears_global_monitor(self):
         """stop_experiment_schedule_monitor should clear the global instance."""
-        from y_web.utils.experiment_schedule_monitor import (
+        from y_web.src.experiment.schedule_monitor import (
             get_monitor,
             init_experiment_schedule_monitor,
             stop_experiment_schedule_monitor,
@@ -208,14 +208,14 @@ class TestInitStopHelpers:
         app = MagicMock()
 
         with patch(
-            "y_web.utils.experiment_schedule_monitor.ExperimentScheduleMonitor.start"
+            "y_web.src.experiment.schedule_monitor.ExperimentScheduleMonitor.start"
         ):
             init_experiment_schedule_monitor(app)
 
         assert get_monitor() is not None
 
         with patch(
-            "y_web.utils.experiment_schedule_monitor.ExperimentScheduleMonitor.stop"
+            "y_web.src.experiment.schedule_monitor.ExperimentScheduleMonitor.stop"
         ):
             stop_experiment_schedule_monitor()
 
@@ -227,7 +227,7 @@ class TestPollInterval:
 
     def test_poll_interval_is_reasonable(self):
         """POLL_INTERVAL_SECONDS should be short enough to detect completion quickly."""
-        from y_web.utils.experiment_schedule_monitor import POLL_INTERVAL_SECONDS
+        from y_web.src.experiment.schedule_monitor import POLL_INTERVAL_SECONDS
 
         # Should be at most 30 seconds (much less than the old browser-based 30s)
         assert POLL_INTERVAL_SECONDS <= 30

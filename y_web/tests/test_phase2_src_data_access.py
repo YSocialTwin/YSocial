@@ -264,15 +264,15 @@ class TestSrcDataAccessPackageReExports:
 
 
 class TestLegacyShimBackwardCompatibility:
-    """All existing from y_web.data_access import X usages must keep working."""
+    """All existing from y_web.src.data_access import X usages must keep working."""
 
     def test_shim_profiles_function(self):
-        from y_web.data_access import get_safe_profile_pic
+        from y_web.src.data_access import get_safe_profile_pic
 
         assert callable(get_safe_profile_pic)
 
     def test_shim_trends_functions(self):
-        from y_web.data_access import (
+        from y_web.src.data_access import (
             get_top_user_hashtags,
             get_trending_emotions,
             get_trending_hashtags,
@@ -288,7 +288,7 @@ class TestLegacyShimBackwardCompatibility:
             assert callable(fn)
 
     def test_shim_users_functions(self):
-        from y_web.data_access import (
+        from y_web.src.data_access import (
             get_mutual_friends,
             get_user_friends,
             get_user_recent_interests,
@@ -298,7 +298,7 @@ class TestLegacyShimBackwardCompatibility:
             assert callable(fn)
 
     def test_shim_posts_functions(self):
-        from y_web.data_access import (
+        from y_web.src.data_access import (
             augment_text,
             get_elicited_emotions,
             get_posts_associated_to_emotion,
@@ -323,9 +323,9 @@ class TestLegacyShimBackwardCompatibility:
 
     def test_shim_functions_are_same_objects_as_canonical(self):
         """The shim must re-export the exact same function objects, not copies."""
-        from y_web.data_access import augment_text as shim_aug
-        from y_web.data_access import get_trending_hashtags as shim_th
-        from y_web.data_access import get_user_recent_posts as shim_urp
+        from y_web.src.data_access import augment_text as shim_aug
+        from y_web.src.data_access import get_trending_hashtags as shim_th
+        from y_web.src.data_access import get_user_recent_posts as shim_urp
 
         from y_web.src.data_access.posts import augment_text as src_aug
         from y_web.src.data_access.posts import get_user_recent_posts as src_urp

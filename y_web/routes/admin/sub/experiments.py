@@ -35,7 +35,7 @@ from flask import (
 from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     Admin_users,
     AgeClass,
@@ -1190,7 +1190,7 @@ def join_experiment(exp_id):
         return redirect("/admin/experiments")
 
     # Get user id - need to check in the experiment database
-    from y_web.experiment_context import register_experiment_database
+    from y_web.src.experiment.context import register_experiment_database
 
     bind_key = f"db_exp_{exp_id}"
 
@@ -1267,7 +1267,7 @@ def change_active_experiment(exp_id):
         db.session.commit()
 
         # Register the experiment database dynamically
-        from y_web.experiment_context import register_experiment_database
+        from y_web.src.experiment.context import register_experiment_database
 
         register_experiment_database(current_app, exp_id, exp.db_name)
 
@@ -2778,7 +2778,7 @@ def create_experiment():
     db.session.add(jn_instance)
     db.session.commit()
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
@@ -3970,7 +3970,7 @@ def submit_experiment_logs(exp_id):
     """Submit experiment logs to telemetry server for troubleshooting."""
     check_privileges(current_user.username)
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
     from y_web.src.system.path_utils import get_writable_path
 
     # Get experiment details
@@ -6966,7 +6966,7 @@ def copy_experiment():
     Supports creating multiple copies with incremental naming (name_1, name_2, etc.)
     """
     check_privileges(current_user.username)
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     # Get form data
     new_exp_name = request.form.get("new_exp_name")
@@ -9113,7 +9113,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
     """
     from sqlalchemy import and_, or_
 
-    from y_web.models import Agent_Opinion, Rounds
+    from y_web.src.models import Agent_Opinion, Rounds
 
     # Get opinion groups from dashboard database for binning
     opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
@@ -9400,7 +9400,7 @@ def generate_agent_timeseries_data(
     """
     from sqlalchemy import and_, or_
 
-    from y_web.models import Agent_Opinion, Rounds
+    from y_web.src.models import Agent_Opinion, Rounds
 
     # Find all rounds up to the specified day/hour for x-axis display
     # We'll filter to hour==0 (day boundaries) for cleaner x-axis labels
@@ -9718,7 +9718,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
     from sqlalchemy import and_, or_
     from sqlalchemy.orm import defer
 
-    from y_web.models import Agent_Opinion, Rounds
+    from y_web.src.models import Agent_Opinion, Rounds
 
     # Check if incremental caching is supported (column exists)
     incremental_supported = hasattr(OpinionEvolutionCache, "latest_opinions_state")
@@ -10048,7 +10048,7 @@ def opinion_evolution(expid):
         return redirect(f"/admin/experiment_details/{expid}")
 
     # Activate experiment if not active (to access its database)
-    from y_web.experiment_context import register_experiment_database
+    from y_web.src.experiment.context import register_experiment_database
 
     bind_key = f"db_exp_{expid}"
 
@@ -10066,7 +10066,7 @@ def opinion_evolution(expid):
         # Import experiment-specific models
         from sqlalchemy import and_, func, or_
 
-        from y_web.models import Agent_Opinion, Interests, Rounds
+        from y_web.src.models import Agent_Opinion, Interests, Rounds
 
         # Get available topics from experiment database
         topics_query = db.session.query(Interests).all()
@@ -10257,7 +10257,7 @@ def opinion_evolution_data(expid):
         return jsonify({"error": "Opinion dynamics not enabled"}), 400
 
     # Activate experiment if not active (to access its database)
-    from y_web.experiment_context import register_experiment_database
+    from y_web.src.experiment.context import register_experiment_database
 
     bind_key = f"db_exp_{expid}"
 
@@ -10275,7 +10275,7 @@ def opinion_evolution_data(expid):
         # Import experiment-specific models
         from sqlalchemy import and_, or_
 
-        from y_web.models import Agent_Opinion, Rounds
+        from y_web.src.models import Agent_Opinion, Rounds
 
         # Get filter parameters from request
         filter_day = request.args.get("day", type=int, default=1)

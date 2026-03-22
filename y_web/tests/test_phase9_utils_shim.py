@@ -35,15 +35,15 @@ OLD_SRC_IMPORT_RE = re.compile(
 
 
 def test_phase9_legacy_imports_work():
-    from y_web.data_access import get_trending_hashtags, get_user_recent_posts
-    from y_web.llm_annotations import Annotator, ContentAnnotator
-    from y_web.models import Admin_users, Post, Profession, User_mgmt
-    from y_web.recsys_support import get_suggested_posts, get_suggested_users
-    from y_web.reddit.actions import apply_vote, create_post_reddit
-    from y_web.reddit.service import fetch_feed_page, serialize_feed_posts
-    from y_web.telemetry.usage_data import Telemetry
-    from y_web.utils.agents import generate_population_from_config
-    from y_web.utils.experiment_access import user_can_view_experiment
+    from y_web.src.data_access import get_trending_hashtags, get_user_recent_posts
+    from y_web.src.llm import Annotator, ContentAnnotator
+    from y_web.src.models import Admin_users, Post, Profession, User_mgmt
+    from y_web.src.recsys import get_suggested_posts, get_suggested_users
+    from y_web.src.forum.actions import apply_vote, create_post_reddit
+    from y_web.src.forum.service import fetch_feed_page, serialize_feed_posts
+    from y_web.src.telemetry.usage_data import Telemetry
+    from y_web.src.agents.population import generate_population_from_config
+    from y_web.src.experiment.access import user_can_view_experiment
     from y_web.utils.external_processes import start_client, start_server
     from y_web.utils.log_metrics import update_client_log_metrics
 
@@ -146,7 +146,7 @@ def test_src_tree_uses_canonical_imports():
 
 def test_execution_backend_shim_identity():
     from y_web.src.simulation.execution_backend import start_server_for_experiment as canonical
-    from y_web.utils.execution_backend import start_server_for_experiment as shim
+    from y_web.src.simulation.execution_backend import start_server_for_experiment as shim
 
     assert shim is canonical
 

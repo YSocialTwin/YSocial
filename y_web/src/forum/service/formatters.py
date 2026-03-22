@@ -15,8 +15,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy import text
 
 from y_web import db
-from y_web.experiment_context import get_current_experiment_id
-from y_web.models import (
+from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.models import (
     Agent,
     Articles,
     Exps,
@@ -308,7 +308,7 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
         return None
     try:
         # Use the current experiment's database bind
-        from y_web.experiment_context import get_current_experiment_bind
+        from y_web.src.experiment.context import get_current_experiment_bind
 
         bind_key = get_current_experiment_bind()
         engine = db.get_engine(bind=bind_key)

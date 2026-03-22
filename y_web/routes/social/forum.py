@@ -14,14 +14,14 @@ from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
 
 from y_web import db
-from y_web.data_access import (
+from y_web.src.data_access import (
     augment_text,
     get_elicited_emotions,
     get_topics,
     get_trending_hashtags,
     get_unanswered_mentions,
 )
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Agent,
     Articles,
@@ -35,8 +35,8 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.recsys_support import get_suggested_users
-from y_web.reddit.service import (
+from y_web.src.recsys import get_suggested_users
+from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     fetch_feed_page,

@@ -464,7 +464,7 @@ class TestNoneBackend:
 
     def test_llm_backend_status_with_none(self):
         """Test llm_backend_status returns proper structure for None backend"""
-        from y_web.utils.miscellanea import llm_backend_status
+        from y_web.src.system.miscellanea import llm_backend_status
 
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("LLM_BACKEND", None)

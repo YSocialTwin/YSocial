@@ -10,8 +10,8 @@ from flask import flash, redirect, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.llm_annotations import Annotator, ContentAnnotator
-from y_web.models import (
+from y_web.src.llm import Annotator, ContentAnnotator
+from y_web.src.models import (
     Admin_users,
     Emotions,
     Hashtags,

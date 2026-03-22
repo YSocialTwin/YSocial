@@ -162,8 +162,8 @@ class TestHPCExecutionLogMonitoring:
 
     def test_mark_client_as_completed(self, app, db):
         """Test marking a client as completed."""
-        from y_web.models import Client, Client_Execution, Exps, Population
-        from y_web.utils.log_metrics import mark_hpc_client_as_completed
+        from y_web.src.hpc.log_metrics import mark_hpc_client_as_completed
+        from y_web.src.models import Client, Client_Execution, Exps, Population
 
         with app.app_context():
             # Create test data
@@ -220,11 +220,11 @@ class TestHPCExecutionLogMonitoring:
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
 
-    @patch("y_web.utils.external_processes.stop_hpc_server")
+    @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_all_clients_completed(self, mock_stop, app, db):
         """Test terminating experiment when all clients are completed."""
-        from y_web.models import Client, Exps, Population
-        from y_web.utils.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.models import Client, Exps, Population
 
         with app.app_context():
             # Create test data
@@ -263,7 +263,7 @@ class TestHPCExecutionLogMonitoring:
             db.session.commit()
 
             # Create Client_Execution records indicating each client truly completed
-            from y_web.models import Client_Execution
+            from y_web.src.models import Client_Execution
 
             for client in clients_created:
                 client_exec = Client_Execution(
@@ -284,11 +284,11 @@ class TestHPCExecutionLogMonitoring:
             assert updated_exp.exp_status == "completed"
             mock_stop.assert_called_once_with(exp.idexp)
 
-    @patch("y_web.utils.external_processes.stop_hpc_server")
+    @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_some_clients_running(self, mock_stop, app, db):
         """Test that experiment is not terminated when some clients are still running."""
-        from y_web.models import Client, Exps, Population
-        from y_web.utils.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.models import Client, Exps, Population
 
         with app.app_context():
             # Create test data

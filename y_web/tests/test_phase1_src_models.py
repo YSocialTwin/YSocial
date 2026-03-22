@@ -225,10 +225,10 @@ class TestSrcModelsPackageReExports:
 
 
 class TestLegacyShimBackwardCompatibility:
-    """All existing from y_web.models import X usage must keep working."""
+    """All existing from y_web.src.models import X usage must keep working."""
 
     def test_shim_experiment_classes(self):
-        from y_web.models import (
+        from y_web.src.models import (
             Agent_Opinion,
             Article_topics,
             Articles,
@@ -259,7 +259,7 @@ class TestLegacyShimBackwardCompatibility:
         assert Post is not None
 
     def test_shim_admin_classes(self):
-        from y_web.models import (
+        from y_web.src.models import (
             Admin_users,
             AdminInterviewMessage,
             AdminInterviewSession,
@@ -284,7 +284,7 @@ class TestLegacyShimBackwardCompatibility:
         assert ClientLogMetrics is not None
 
     def test_shim_config_classes(self):
-        from y_web.models import (
+        from y_web.src.models import (
             ActivityProfile,
             AgeClass,
             Content_Recsys,
@@ -306,9 +306,9 @@ class TestLegacyShimBackwardCompatibility:
 
     def test_shim_classes_are_same_objects_as_canonical(self):
         """The shim must re-export the exact same class objects, not copies."""
-        from y_web.models import Admin_users as shim_admin
-        from y_web.models import Post as shim_post
-        from y_web.models import Profession as shim_prof
+        from y_web.src.models import Admin_users as shim_admin
+        from y_web.src.models import Post as shim_post
+        from y_web.src.models import Profession as shim_prof
 
         from y_web.src.models.admin import Admin_users as src_admin
         from y_web.src.models.config import Profession as src_prof

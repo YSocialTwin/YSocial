@@ -13,7 +13,7 @@ from flask import current_app, g
 from sqlalchemy.exc import IntegrityError
 
 from y_web import db
-from y_web.experiment_context import (
+from y_web.src.experiment.context import (
     get_db_bind_key_for_exp,
     register_experiment_database,
 )
@@ -24,7 +24,7 @@ except Exception:
     Annotator = None
     ContentAnnotator = None
 
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Articles,
     Emotions,

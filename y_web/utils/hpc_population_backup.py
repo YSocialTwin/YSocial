@@ -2,7 +2,7 @@
 Backward-compatibility shim for y_web.utils.hpc_population_backup.
 
 The canonical location is now y_web.src.hpc.population_backup.
-All existing ``from y_web.utils.hpc_population_backup import X`` call sites
+All existing ``from y_web.src.hpc.population_backup import X`` call sites
 continue to work without modification.
 
 .. deprecated::

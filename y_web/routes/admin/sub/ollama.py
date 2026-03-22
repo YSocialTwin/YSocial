@@ -16,7 +16,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import Ollama_Pull
+from y_web.src.models import Ollama_Pull
 from y_web.src.llm.ollama_manager import (
     delete_model_pull,
     delete_ollama_model,

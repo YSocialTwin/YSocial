@@ -12,17 +12,17 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import safe_join
 
 from y_web import db
-from y_web.data_access import get_elicited_emotions, get_topics
+from y_web.src.data_access import get_elicited_emotions, get_topics
 
 try:
-    from y_web.llm_annotations import Annotator
+    from y_web.src.llm import Annotator
 except Exception:
     Annotator = None
 try:
     from y_web.llm_annotations.url_summarizer import UrlSummarizer
 except Exception:
     UrlSummarizer = None
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Articles,
     Images,
@@ -37,8 +37,8 @@ from y_web.models import (
     Rounds,
     User_mgmt,
 )
-from y_web.reddit.actions import apply_vote, create_comment_reddit, create_post_reddit
-from y_web.reddit.service import (
+from y_web.src.forum.actions import apply_vote, create_comment_reddit, create_post_reddit
+from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
     _get_profile_pic,
@@ -49,7 +49,7 @@ from y_web.reddit.service import (
 from y_web.src.system.path_utils import get_writable_path
 
 try:
-    from y_web.models import ContentShown
+    from y_web.src.models import ContentShown
 except ImportError:
     ContentShown = None
 

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import y_web.src.forum.service.formatters as _formatters
-from y_web.reddit import service
+from y_web.src.forum import service
 
 
 def test_simulated_mode_uses_day_hour_label(monkeypatch):

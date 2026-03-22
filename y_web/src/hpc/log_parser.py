@@ -18,7 +18,7 @@ from sqlalchemy import and_  # noqa: F401 — re-exported for shim
 from sqlalchemy.exc import OperationalError, PendingRollbackError
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     Client,
     Client_Execution,
     ClientLogMetrics,

@@ -8,9 +8,9 @@ from sqlalchemy import case, func, or_, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
-from y_web.data_access import get_elicited_emotions, get_topics
-from y_web.experiment_context import get_current_experiment_id
-from y_web.models import (
+from y_web.src.data_access import get_elicited_emotions, get_topics
+from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.models import (
     Articles,
     Images,
     Post,

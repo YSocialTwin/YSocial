@@ -12,7 +12,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import SQLAlchemyError
 
 from y_web import db
-from y_web.models import Exps
+from y_web.src.models import Exps
 
 BASE_DIR = Path(__file__).resolve().parents[1]
 

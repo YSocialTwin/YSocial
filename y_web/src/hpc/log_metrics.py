@@ -11,7 +11,7 @@ import logging
 import os
 
 from y_web import db
-from y_web.models import Client, Client_Execution, ClientLogMetrics, Exps, ServerLogMetrics
+from y_web.src.models import Client, Client_Execution, ClientLogMetrics, Exps, ServerLogMetrics
 from y_web.src.hpc.log_parser import (
     _commit_with_retry,
     _ensure_session_clean,
@@ -496,7 +496,7 @@ def check_and_terminate_hpc_experiment(exp_id):
         bool: True if experiment was terminated, False otherwise
     """
     try:
-        from y_web.models import Exps
+        from y_web.src.models import Exps
         from y_web.src.hpc.server import stop_hpc_server
 
         # Get the experiment
@@ -636,7 +636,7 @@ def monitor_hpc_client_execution_logs():
 
     This function should be called periodically (e.g., every 5 seconds).
     """
-    from y_web.models import Exps
+    from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()

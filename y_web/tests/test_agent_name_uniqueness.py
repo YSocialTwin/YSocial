@@ -13,7 +13,7 @@ class TestAgentNameUniqueness:
     def test_generate_population_import(self):
         """Test that generate_population can be imported"""
         try:
-            from y_web.utils.agents import generate_population
+            from y_web.src.agents.population import generate_population
 
             assert callable(generate_population)
         except ImportError as e:

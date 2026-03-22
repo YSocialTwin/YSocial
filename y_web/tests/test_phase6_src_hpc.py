@@ -82,7 +82,7 @@ class TestLegacyShimIdentity:
         from y_web.src.hpc.population_backup import (
             backup_population_for_hpc_client as canonical,
         )
-        from y_web.utils.hpc_population_backup import (
+        from y_web.src.hpc.population_backup import (
             backup_population_for_hpc_client as shim,
         )
         assert shim is canonical
@@ -91,7 +91,7 @@ class TestLegacyShimIdentity:
         from y_web.src.hpc.population_backup import (
             restore_population_for_hpc_client as canonical,
         )
-        from y_web.utils.hpc_population_backup import (
+        from y_web.src.hpc.population_backup import (
             restore_population_for_hpc_client as shim,
         )
         assert shim is canonical
@@ -135,5 +135,5 @@ class TestLegacyShimIdentity:
 
     def test_log_sync_scheduler_shim_identity(self):
         from y_web.src.hpc.log_sync_scheduler import LogSyncScheduler as canonical
-        from y_web.utils.log_sync_scheduler import LogSyncScheduler as shim
+        from y_web.src.hpc.log_sync_scheduler import LogSyncScheduler as shim
         assert shim is canonical

@@ -15,7 +15,7 @@ class TestTextUtils:
     def test_vader_sentiment_import(self):
         """Test that vader_sentiment can be imported"""
         try:
-            from y_web.utils.text_utils import vader_sentiment
+            from y_web.src.content.text_utils import vader_sentiment
 
             assert callable(vader_sentiment)
         except ImportError as e:
@@ -24,7 +24,7 @@ class TestTextUtils:
     def test_toxicity_import(self):
         """Test that toxicity function can be imported"""
         try:
-            from y_web.utils.text_utils import toxicity
+            from y_web.src.content.text_utils import toxicity
 
             assert callable(toxicity)
         except ImportError as e:
@@ -37,7 +37,7 @@ class TestMiscellaneaUtils:
     def test_check_privileges_import(self):
         """Test that check_privileges can be imported"""
         try:
-            from y_web.utils.miscellanea import check_privileges
+            from y_web.src.system.miscellanea import check_privileges
 
             assert callable(check_privileges)
         except ImportError as e:
@@ -46,7 +46,7 @@ class TestMiscellaneaUtils:
     def test_ollama_status_import(self):
         """Test that ollama_status can be imported"""
         try:
-            from y_web.utils.miscellanea import ollama_status
+            from y_web.src.system.miscellanea import ollama_status
 
             assert callable(ollama_status)
         except ImportError as e:
@@ -59,7 +59,7 @@ class TestArticleExtractor:
     def test_extract_article_info_import(self):
         """Test that extract_article_info can be imported"""
         try:
-            from y_web.utils.article_extractor import extract_article_info
+            from y_web.src.content.article_extractor import extract_article_info
 
             assert callable(extract_article_info)
         except ImportError as e:
@@ -72,7 +72,7 @@ class TestAgentUtils:
     def test_generate_population_import(self):
         """Test that generate_population can be imported"""
         try:
-            from y_web.utils.agents import generate_population
+            from y_web.src.agents.population import generate_population
 
             assert callable(generate_population)
         except ImportError as e:
@@ -85,7 +85,7 @@ class TestFeedUtils:
     def test_get_feed_import(self):
         """Test that get_feed can be imported"""
         try:
-            from y_web.utils.feeds import get_feed
+            from y_web.src.content.feeds import get_feed
 
             assert callable(get_feed)
         except ImportError as e:
@@ -245,7 +245,7 @@ class TestLLMAnnotations:
     def test_content_annotator_import(self):
         """Test that ContentAnnotator can be imported"""
         try:
-            from y_web.llm_annotations import ContentAnnotator
+            from y_web.src.llm import ContentAnnotator
 
             assert ContentAnnotator is not None
         except ImportError as e:
@@ -254,7 +254,7 @@ class TestLLMAnnotations:
     def test_annotator_import(self):
         """Test that Annotator can be imported"""
         try:
-            from y_web.llm_annotations import Annotator
+            from y_web.src.llm import Annotator
 
             assert Annotator is not None
         except ImportError as e:

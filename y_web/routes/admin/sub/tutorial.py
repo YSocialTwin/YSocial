@@ -30,7 +30,7 @@ from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     Admin_users,
     AgeClass,
@@ -871,7 +871,7 @@ def create_tutorial_experiment():
 
         # Log telemetry
         try:
-            from y_web.telemetry import Telemetry
+            from y_web.src.telemetry import Telemetry
 
             telemetry = Telemetry(user=current_user)
             telemetry.log_event(

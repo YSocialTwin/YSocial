@@ -11,7 +11,7 @@ from flask_login import login_required, login_user, logout_user
 from werkzeug.security import check_password_hash
 
 from y_web import db
-from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
+from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.routes.auth._blueprint import auth
 
 
@@ -55,7 +55,7 @@ def login_post():
 
         # Log service start event
     try:
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "login", "data": {"role": user.role}})
@@ -173,7 +173,7 @@ def select_experiment():
         # Use the proper experiment context registration
         from flask import current_app
 
-        from y_web.experiment_context import (
+        from y_web.src.experiment.context import (
             get_db_bind_key_for_exp,
             register_experiment_database,
         )
@@ -228,7 +228,7 @@ def logout():
     try:
         from flask_login import current_user
 
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "logout", "data": {"role": current_user.role}})

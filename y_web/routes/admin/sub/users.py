@@ -24,7 +24,7 @@ from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
-from y_web.models import Admin_users, Exps, User_Experiment, User_mgmt
+from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.system.miscellanea import check_privileges, llm_backend_status, ollama_status
 
@@ -374,7 +374,7 @@ def add_user_to_experiment():
         return user_details(user_id)
 
     # Use the proper experiment context registration
-    from y_web.experiment_context import (
+    from y_web.src.experiment.context import (
         get_db_bind_key_for_exp,
         register_experiment_database,
     )
@@ -831,7 +831,7 @@ def bulk_assign_users():
             return redirect(url_for("users.user_data"))
 
         # Use the proper experiment context registration
-        from y_web.experiment_context import (
+        from y_web.src.experiment.context import (
             get_db_bind_key_for_exp,
             register_experiment_database,
         )
@@ -1065,7 +1065,7 @@ def mark_blog_post_read(post_id):
     """
     from flask import jsonify
 
-    from y_web.models import BlogPost
+    from y_web.src.models import BlogPost
 
     # Check if user is admin/researcher using existing check_privileges helper
     privilege_check = check_privileges(current_user.username)

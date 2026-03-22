@@ -13,7 +13,7 @@ from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     Leanings,
     Page,
@@ -93,7 +93,7 @@ def create_page():
     db.session.add(page)
     db.session.commit()
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(

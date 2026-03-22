@@ -13,7 +13,7 @@ from flask import Blueprint, flash, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     Agent,
     Agent_Population,

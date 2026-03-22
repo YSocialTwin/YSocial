@@ -114,7 +114,7 @@ def _get_experiment_uid_from_db_name(db_name: str) -> str:
 
 
 def _forum_experiment_config_path(exp_id: int) -> str:
-    from y_web.models import Exps
+    from y_web.src.models import Exps
     from y_web.src.system.path_utils import get_writable_path
 
     experiment = Exps.query.filter_by(idexp=exp_id).first()
@@ -133,7 +133,7 @@ def get_forum_avatar_mode(exp_id: int | None = None) -> str:
     """Load forum avatar mode from config_server.json with a lightweight mtime cache."""
     if exp_id is None:
         try:
-            from y_web.experiment_context import get_current_experiment_id
+            from y_web.src.experiment.context import get_current_experiment_id
 
             exp_id = get_current_experiment_id()
         except Exception:
@@ -191,7 +191,7 @@ def resolve_forum_profile_pic(user, exp_id: int | None = None) -> str:
         return deterministic_forum_avatar_url(username)
 
     try:
-        from y_web.models import Admin_users, Agent, Page
+        from y_web.src.models import Admin_users, Agent, Page
 
         if bool(getattr(user, "is_page", False)):
             page = Page.query.filter_by(name=username).first()
@@ -232,7 +232,7 @@ def resolve_forum_username_avatar(username: str, exp_id: int | None = None) -> s
         return deterministic_forum_avatar_url(username)
 
     try:
-        from y_web.models import Admin_users
+        from y_web.src.models import Admin_users
 
         admin = Admin_users.query.filter_by(username=username).first()
         if admin and getattr(admin, "profile_pic", None):

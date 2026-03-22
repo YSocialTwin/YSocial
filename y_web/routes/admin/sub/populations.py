@@ -19,7 +19,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     AgeClass,
     Agent,
@@ -229,7 +229,7 @@ def create_population():
 
     generate_population(name, percentages, actions_config, profession_backgrounds)
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(

@@ -14,8 +14,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import case, desc, func, or_
 
 from y_web import db
-from y_web.experiment_context import register_experiment_database
-from y_web.models import (
+from y_web.src.experiment.context import register_experiment_database
+from y_web.src.models import (
     Admin_users,
     AdminInterviewMessage,
     AdminInterviewSession,

@@ -113,7 +113,7 @@ def update_blog_info_in_db():
 
         # Import here to avoid circular imports
         from y_web import db
-        from y_web.models import BlogPost
+        from y_web.src.models import BlogPost
 
         # Get the latest blog post from DB
         latest_in_db = BlogPost.query.order_by(BlogPost.id.desc()).first()

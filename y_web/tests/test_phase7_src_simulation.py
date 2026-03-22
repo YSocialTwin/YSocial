@@ -264,13 +264,13 @@ class TestLegacyShimIdentity:
 
     def test_process_watchdog_shim_identity(self):
         from y_web.src.simulation.watchdog import get_watchdog as canonical
-        from y_web.utils.process_watchdog import get_watchdog as shim
+        from y_web.src.simulation.watchdog import get_watchdog as shim
 
         assert shim is canonical
 
     def test_process_watchdog_class_shim_identity(self):
         from y_web.src.simulation.watchdog import ProcessWatchdog as canonical
-        from y_web.utils.process_watchdog import ProcessWatchdog as shim
+        from y_web.src.simulation.watchdog import ProcessWatchdog as shim
 
         assert shim is canonical
 
@@ -278,7 +278,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.process_runner import (
             _resolve_client_package_dir as canonical,
         )
-        from y_web.utils.y_client_process_runner import (
+        from y_web.src.simulation.process_runner import (
             _resolve_client_package_dir as shim,
         )
 
@@ -286,7 +286,7 @@ class TestLegacyShimIdentity:
 
     def test_y_client_runner_start_client_process_shim(self):
         from y_web.src.simulation.process_runner import start_client_process as canonical
-        from y_web.utils.y_client_process_runner import start_client_process as shim
+        from y_web.src.simulation.process_runner import start_client_process as shim
 
         assert shim is canonical
 
@@ -294,7 +294,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.execution_backend import (
             start_server_for_experiment as canonical,
         )
-        from y_web.utils.execution_backend import start_server_for_experiment as shim
+        from y_web.src.simulation.execution_backend import start_server_for_experiment as shim
 
         assert shim is canonical
 

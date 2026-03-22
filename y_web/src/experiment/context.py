@@ -71,7 +71,7 @@ def get_active_experiments():
     Returns:
         List of Exps objects with status=1
     """
-    from y_web.models import Exps
+    from y_web.src.models import Exps
 
     return Exps.query.filter_by(status=1).all()
 
@@ -96,7 +96,7 @@ def setup_experiment_context():
         # Verify the bind exists
         if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
             # Bind doesn't exist, need to register it
-            from y_web.models import Exps
+            from y_web.src.models import Exps
 
             # Bind the explicit experiment referenced by the route even if it is not
             # currently active, so direct admin/forum routes never fall back to the
@@ -171,7 +171,7 @@ def initialize_active_experiment_databases(app):
         app: Flask application instance
     """
     with app.app_context():
-        from y_web.models import Exps
+        from y_web.src.models import Exps
 
         active_experiments = Exps.query.filter_by(status=1).all()
 

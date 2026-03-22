@@ -206,7 +206,7 @@ def cleanup_db_jupyter_with_new_app():
 
     # Log service stop event
     try:
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "stop"})
@@ -1211,7 +1211,7 @@ def create_app(db_type="sqlite", desktop_mode=False):
 
     # Log service start event
     try:
-        from y_web.telemetry import Telemetry
+        from y_web.src.telemetry import Telemetry
 
         telemetry = Telemetry()
         telemetry.log_event({"action": "start"})

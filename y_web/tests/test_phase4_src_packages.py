@@ -330,18 +330,18 @@ class TestCanonicalSystemImports:
 class TestLegacyShimBackwardCompatibility:
     def test_agents_shim_identity(self):
         from y_web.src.agents.population import generate_population
-        from y_web.utils.agents import generate_population as gp_shim
+        from y_web.src.agents.population import generate_population as gp_shim
 
         assert gp_shim is generate_population
 
     def test_agents_private_via_shim(self):
-        from y_web.utils.agents import _generate_unique_name
+        from y_web.src.agents.population import _generate_unique_name
 
         assert callable(_generate_unique_name)
 
     def test_population_platform_shim_identity(self):
         from y_web.src.agents.platform import normalize_population_username_type
-        from y_web.utils.population_platform import (
+        from y_web.src.agents.platform import (
             normalize_population_username_type as nput_shim,
         )
 
@@ -349,30 +349,30 @@ class TestLegacyShimBackwardCompatibility:
 
     def test_text_utils_shim_identity(self):
         from y_web.src.content.text_utils import augment_text
-        from y_web.utils.text_utils import augment_text as at_shim
+        from y_web.src.content.text_utils import augment_text as at_shim
 
         assert at_shim is augment_text
 
     def test_article_extractor_shim_identity(self):
         from y_web.src.content.article_extractor import extract_article_info
-        from y_web.utils.article_extractor import extract_article_info as eai_shim
+        from y_web.src.content.article_extractor import extract_article_info as eai_shim
 
         assert eai_shim is extract_article_info
 
     def test_feeds_shim_identity(self):
         from y_web.src.content.feeds import get_feed
-        from y_web.utils.feeds import get_feed as gf_shim
+        from y_web.src.content.feeds import get_feed as gf_shim
 
         assert gf_shim is get_feed
 
     def test_avatars_shim_identity(self):
         from y_web.src.content.avatars import normalize_forum_avatar_mode
-        from y_web.utils.avatars import normalize_forum_avatar_mode as nfam_shim
+        from y_web.src.content.avatars import normalize_forum_avatar_mode as nfam_shim
 
         assert nfam_shim is normalize_forum_avatar_mode
 
     def test_recsys_support_shim_identity(self):
-        from y_web.recsys_support import (
+        from y_web.src.recsys import (
             get_suggested_posts,
             get_suggested_users,
         )
@@ -393,31 +393,31 @@ class TestLegacyShimBackwardCompatibility:
 
     def test_telemetry_shim_identity(self):
         from y_web.src.telemetry.usage_data import Telemetry
-        from y_web.telemetry.usage_data import Telemetry as T_shim
+        from y_web.src.telemetry.usage_data import Telemetry as T_shim
 
         assert T_shim is Telemetry
 
     def test_path_utils_shim_identity(self):
         from y_web.src.system.path_utils import get_writable_path
-        from y_web.utils.path_utils import get_writable_path as gwp_shim
+        from y_web.src.system.path_utils import get_writable_path as gwp_shim
 
         assert gwp_shim is get_writable_path
 
     def test_miscellanea_shim_identity(self):
         from y_web.src.system.miscellanea import check_privileges
-        from y_web.utils.miscellanea import check_privileges as cp_shim
+        from y_web.src.system.miscellanea import check_privileges as cp_shim
 
         assert cp_shim is check_privileges
 
     def test_desktop_file_handler_shim_identity(self):
         from y_web.src.system.desktop_file_handler import send_file_desktop
-        from y_web.utils.desktop_file_handler import send_file_desktop as sfd_shim
+        from y_web.src.system.desktop_file_handler import send_file_desktop as sfd_shim
 
         assert sfd_shim is send_file_desktop
 
     def test_jupyter_utils_shim_identity(self):
         from y_web.src.system.jupyter_utils import get_jupyter_instances
-        from y_web.utils.jupyter_utils import get_jupyter_instances as gji_shim
+        from y_web.src.system.jupyter_utils import get_jupyter_instances as gji_shim
 
         assert gji_shim is get_jupyter_instances
 

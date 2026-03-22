@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from y_web.telemetry import Telemetry
+from y_web.src.telemetry import Telemetry
 
 
 class MockUser:

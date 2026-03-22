@@ -3,7 +3,7 @@ Backward-compatibility shim for y_web.data_access.
 
 The canonical location of all data-access functions is now
 ``y_web.src.data_access``.  This module re-exports every public function so
-that existing ``from y_web.data_access import some_function`` call sites
+that existing ``from y_web.src.data_access import some_function`` call sites
 continue to work without modification.
 
 .. deprecated::
