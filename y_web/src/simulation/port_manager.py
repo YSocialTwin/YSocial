@@ -15,7 +15,7 @@ from flask import current_app
 
 from y_web import db
 from y_web.models import Exps
-from y_web.utils.path_utils import get_writable_path
+from y_web.src.system.path_utils import get_writable_path
 
 # ---------------------------------------------------------------------------
 # Server port range constants

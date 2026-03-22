@@ -25,7 +25,7 @@ from y_web.models import (
     Client_Execution,
     Exps,
 )
-from y_web.utils.path_utils import get_base_path, get_resource_path, get_writable_path
+from y_web.src.system.path_utils import get_base_path, get_resource_path, get_writable_path
 from y_web.src.simulation.port_manager import (
     SERVER_PORT_MIN,
     SERVER_PORT_MAX,
@@ -336,7 +336,7 @@ def _update_server_port_in_configs(exp, new_port):
     print(f"Watchdog: Updating port from {old_port} to {new_port} in configs...")
 
     # Get experiment directory - use get_writable_path for PyInstaller compatibility
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     writable_base = get_writable_path()
     y_web_dir = os.path.join(writable_base, "y_web")

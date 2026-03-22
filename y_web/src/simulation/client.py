@@ -21,7 +21,7 @@ from y_web.models import (
     Exps,
     Population,
 )
-from y_web.utils.path_utils import get_resource_path, get_writable_path
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
 from y_web.src.simulation.port_manager import _force_terminate_process_tree
 from y_web.src.simulation.process_registry import (
     WATCHDOG_ENABLED,
@@ -266,7 +266,7 @@ def start_client(exp, cli, population, resume=True):
             cmd = [python_cmd, runner_script] + cmd_args
 
     # Create log files for client output
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     writable_base = get_writable_path()
 
