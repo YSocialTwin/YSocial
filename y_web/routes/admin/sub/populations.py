@@ -19,7 +19,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     AgeClass,
     Agent,
@@ -42,14 +42,12 @@ from y_web.models import (
     Topic_List,
     Toxicity_Levels,
 )
-from y_web.utils import (
-    generate_population,
-    get_llm_models,
-    get_ollama_models,
-)
-from y_web.utils.desktop_file_handler import send_file_desktop
-from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
-from y_web.utils.population_platform import (
+from y_web.src.agents.population import generate_population
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.system.desktop_file_handler import send_file_desktop
+from y_web.src.system.miscellanea import check_privileges, llm_backend_status, ollama_status
+from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     normalize_population_username_type,
@@ -231,7 +229,7 @@ def create_population():
 
     generate_population(name, percentages, actions_config, profession_backgrounds)
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
@@ -826,7 +824,7 @@ def download_population(uid):
             }
         )
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -854,7 +852,7 @@ def upload_population():
 
     population_file = request.files["population_file"]
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 

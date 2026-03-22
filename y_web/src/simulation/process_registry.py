@@ -7,7 +7,7 @@ import subprocess
 import time
 
 from y_web import db
-from y_web.models import Client, Exps
+from y_web.src.models import Client, Exps
 
 # Flag to enable/disable watchdog monitoring
 WATCHDOG_ENABLED = True
@@ -155,7 +155,7 @@ def stop_all_exps():
         # Stop watchdog first to prevent auto-restarts during shutdown
         if WATCHDOG_ENABLED:
             try:
-                from y_web.utils.process_watchdog import stop_watchdog
+                from y_web.src.simulation.watchdog import stop_watchdog
 
                 stop_watchdog()
             except Exception as e:

@@ -39,7 +39,7 @@ def register_experiment_database(app, exp_id, db_name):
     bind_key = get_db_bind_key_for_exp(exp_id)
 
     # Use get_writable_path to handle both development and PyInstaller modes
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     # Check database type
     if app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
@@ -71,7 +71,7 @@ def get_active_experiments():
     Returns:
         List of Exps objects with status=1
     """
-    from y_web.models import Exps
+    from y_web.src.models import Exps
 
     return Exps.query.filter_by(status=1).all()
 
@@ -96,7 +96,7 @@ def setup_experiment_context():
         # Verify the bind exists
         if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
             # Bind doesn't exist, need to register it
-            from y_web.models import Exps
+            from y_web.src.models import Exps
 
             # Bind the explicit experiment referenced by the route even if it is not
             # currently active, so direct admin/forum routes never fall back to the
@@ -171,7 +171,7 @@ def initialize_active_experiment_databases(app):
         app: Flask application instance
     """
     with app.app_context():
-        from y_web.models import Exps
+        from y_web.src.models import Exps
 
         active_experiments = Exps.query.filter_by(status=1).all()
 

@@ -80,7 +80,7 @@ def start_app(
     app = create_app(db_type=db_type, desktop_mode=desktop_mode)
 
     with app.app_context():
-        from y_web.models import Exps
+        from y_web.src.models import Exps
 
         exps = Exps.query.filter_by(status=1).all()
         for exp in exps:

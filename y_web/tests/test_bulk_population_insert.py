@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from y_web.utils.agents import generate_population
+from y_web.src.agents.population import generate_population
 
 
 def test_generate_population_uses_bulk_insert():
@@ -43,14 +43,16 @@ def test_generate_population_uses_bulk_insert():
     }
 
     with (
-        patch("y_web.utils.agents.Population") as mock_population_cls,
-        patch("y_web.utils.agents.PopulationActivityProfile") as mock_profile_cls,
-        patch("y_web.utils.agents.db") as mock_db,
-        patch("y_web.utils.agents.AgeClass") as mock_age_class,
-        patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
-        patch("y_web.utils.agents.Leanings") as mock_leanings,
-        patch("y_web.utils.agents.Profession") as mock_profession,
-        patch("y_web.utils.agents.Education") as mock_education,
+        patch("y_web.src.agents.population.Population") as mock_population_cls,
+        patch(
+            "y_web.src.agents.population.PopulationActivityProfile"
+        ) as mock_profile_cls,
+        patch("y_web.src.agents.population.db") as mock_db,
+        patch("y_web.src.agents.population.AgeClass") as mock_age_class,
+        patch("y_web.src.agents.population.Toxicity_Levels") as mock_toxicity,
+        patch("y_web.src.agents.population.Leanings") as mock_leanings,
+        patch("y_web.src.agents.population.Profession") as mock_profession,
+        patch("y_web.src.agents.population.Education") as mock_education,
     ):
         mock_session = mock_db.session
 
@@ -144,14 +146,16 @@ def test_bulk_insert_preserves_agent_count():
     }
 
     with (
-        patch("y_web.utils.agents.Population") as mock_population_cls,
-        patch("y_web.utils.agents.PopulationActivityProfile") as mock_profile_cls,
-        patch("y_web.utils.agents.db") as mock_db,
-        patch("y_web.utils.agents.AgeClass") as mock_age_class,
-        patch("y_web.utils.agents.Toxicity_Levels") as mock_toxicity,
-        patch("y_web.utils.agents.Leanings") as mock_leanings,
-        patch("y_web.utils.agents.Profession") as mock_profession,
-        patch("y_web.utils.agents.Education") as mock_education,
+        patch("y_web.src.agents.population.Population") as mock_population_cls,
+        patch(
+            "y_web.src.agents.population.PopulationActivityProfile"
+        ) as mock_profile_cls,
+        patch("y_web.src.agents.population.db") as mock_db,
+        patch("y_web.src.agents.population.AgeClass") as mock_age_class,
+        patch("y_web.src.agents.population.Toxicity_Levels") as mock_toxicity,
+        patch("y_web.src.agents.population.Leanings") as mock_leanings,
+        patch("y_web.src.agents.population.Profession") as mock_profession,
+        patch("y_web.src.agents.population.Education") as mock_education,
     ):
         mock_session = mock_db.session
 

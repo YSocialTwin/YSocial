@@ -14,7 +14,7 @@ import requests
 from ollama import Client as oclient
 
 from y_web import db
-from y_web.models import Ollama_Pull
+from y_web.src.models import Ollama_Pull
 
 # Dictionary to track ongoing Ollama model download processes
 ollama_processes = {}

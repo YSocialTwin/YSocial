@@ -14,8 +14,8 @@ from flask_login import current_user, login_required
 from sqlalchemy import case, desc, func, or_
 
 from y_web import db
-from y_web.experiment_context import register_experiment_database
-from y_web.models import (
+from y_web.src.experiment.context import register_experiment_database
+from y_web.src.models import (
     Admin_users,
     AdminInterviewMessage,
     AdminInterviewSession,
@@ -31,8 +31,8 @@ from y_web.models import (
     User_interest,
     User_mgmt,
 )
-from y_web.utils.avatars import resolve_forum_profile_pic
-from y_web.utils.path_utils import get_writable_path
+from y_web.src.content.avatars import resolve_forum_profile_pic
+from y_web.src.system.path_utils import get_writable_path
 
 api_interview = Blueprint("api_interview", __name__)
 _Y_WEB_DIR = Path(__file__).resolve().parents[1]

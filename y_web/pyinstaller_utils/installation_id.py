@@ -314,7 +314,7 @@ def get_or_create_installation_id():
             - python_version: Python version string
             - version: YSocial version at time of installation/update
     """
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     config_dir = get_installation_config_dir()
     id_file = config_dir / "installation_id.json"

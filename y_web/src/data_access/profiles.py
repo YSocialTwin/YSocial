@@ -5,7 +5,7 @@ Contains ``get_safe_profile_pic`` — the single function in this module —
 which resolves a display picture URL for any user or page in the system.
 """
 
-from y_web.models import Admin_users, Agent, Page
+from y_web.src.models import Admin_users, Agent, Page
 
 
 def get_safe_profile_pic(username, is_page=0):

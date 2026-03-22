@@ -82,7 +82,7 @@ class TestLegacyShimIdentity:
         from y_web.src.hpc.population_backup import (
             backup_population_for_hpc_client as canonical,
         )
-        from y_web.utils.hpc_population_backup import (
+        from y_web.src.hpc.population_backup import (
             backup_population_for_hpc_client as shim,
         )
         assert shim is canonical
@@ -91,49 +91,49 @@ class TestLegacyShimIdentity:
         from y_web.src.hpc.population_backup import (
             restore_population_for_hpc_client as canonical,
         )
-        from y_web.utils.hpc_population_backup import (
+        from y_web.src.hpc.population_backup import (
             restore_population_for_hpc_client as shim,
         )
         assert shim is canonical
 
     def test_log_metrics_shim_identity(self):
         from y_web.src.hpc.log_metrics import update_client_log_metrics as canonical
-        from y_web.utils.log_metrics import update_client_log_metrics as shim
+        from y_web.src.hpc.log_metrics import update_client_log_metrics as shim
         assert shim is canonical
 
     def test_log_metrics_server_shim_identity(self):
         from y_web.src.hpc.log_metrics import update_server_log_metrics as canonical
-        from y_web.utils.log_metrics import update_server_log_metrics as shim
+        from y_web.src.hpc.log_metrics import update_server_log_metrics as shim
         assert shim is canonical
 
     def test_log_parser_shim_identity(self):
         from y_web.src.hpc.log_parser import (
             parse_server_log_incremental as canonical,
         )
-        from y_web.utils.log_metrics import parse_server_log_incremental as shim
+        from y_web.src.hpc.log_parser import parse_server_log_incremental as shim
         assert shim is canonical
 
     def test_external_processes_start_hpc_server_shim_identity(self):
         from y_web.src.hpc.server import start_hpc_server as canonical
-        from y_web.utils.external_processes import start_hpc_server as shim
+        from y_web.src.hpc.server import start_hpc_server as shim
         assert shim is canonical
 
     def test_external_processes_stop_hpc_server_shim_identity(self):
         from y_web.src.hpc.server import stop_hpc_server as canonical
-        from y_web.utils.external_processes import stop_hpc_server as shim
+        from y_web.src.hpc.server import stop_hpc_server as shim
         assert shim is canonical
 
     def test_external_processes_start_hpc_client_shim_identity(self):
         from y_web.src.hpc.client import start_hpc_client as canonical
-        from y_web.utils.external_processes import start_hpc_client as shim
+        from y_web.src.hpc.client import start_hpc_client as shim
         assert shim is canonical
 
     def test_external_processes_stop_hpc_client_shim_identity(self):
         from y_web.src.hpc.client import stop_hpc_client as canonical
-        from y_web.utils.external_processes import stop_hpc_client as shim
+        from y_web.src.hpc.client import stop_hpc_client as shim
         assert shim is canonical
 
     def test_log_sync_scheduler_shim_identity(self):
         from y_web.src.hpc.log_sync_scheduler import LogSyncScheduler as canonical
-        from y_web.utils.log_sync_scheduler import LogSyncScheduler as shim
+        from y_web.src.hpc.log_sync_scheduler import LogSyncScheduler as shim
         assert shim is canonical

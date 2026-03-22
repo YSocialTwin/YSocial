@@ -21,7 +21,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     Client_Execution,
     Exps,
 )
@@ -256,7 +256,7 @@ def terminate_server_process(exp_id):
         # Unregister from watchdog first
         if WATCHDOG_ENABLED:
             try:
-                from y_web.utils.process_watchdog import get_watchdog
+                from y_web.src.simulation.watchdog import get_watchdog
 
                 watchdog = get_watchdog()
                 watchdog.unregister_process(f"server_{exp_id}")
@@ -952,7 +952,7 @@ def _register_server_with_watchdog(exp, pid, log_dir):
         pid: the process ID
         log_dir: directory containing log files
     """
-    from y_web.utils.process_watchdog import get_watchdog
+    from y_web.src.simulation.watchdog import get_watchdog
 
     # Use _server.log as the heartbeat file (this is the main server log)
     log_file = os.path.join(log_dir, "_server.log")

@@ -1,7 +1,7 @@
 """Helpers for experiment visibility and management permissions."""
 
 from y_web import db
-from y_web.models import Exps, User_Experiment
+from y_web.src.models import Exps, User_Experiment
 
 
 def _get_shared_exp_ids(user_id):

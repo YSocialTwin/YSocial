@@ -27,7 +27,7 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     AgeClass,
     Agent,
@@ -49,19 +49,21 @@ from y_web.models import (
     Topic_List,
     User_mgmt,
 )
-from y_web.utils import (
-    get_db_type,
-    get_llm_models,
-    get_ollama_models,
-)
-from y_web.utils.desktop_file_handler import send_file_desktop
-from y_web.utils.execution_backend import (
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.system.desktop_file_handler import send_file_desktop
+from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     stop_client_for_experiment,
 )
-from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
-from y_web.utils.path_utils import get_resource_path
-from y_web.utils.population_platform import (
+from y_web.src.system.miscellanea import (
+    check_privileges,
+    get_db_type,
+    llm_backend_status,
+    ollama_status,
+)
+from y_web.src.system.path_utils import get_resource_path
+from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     population_matches_platform,
@@ -123,7 +125,7 @@ def reset_client(uid):
     """Handle reset client operation."""
     check_privileges(current_user.username)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -206,7 +208,7 @@ def extend_simulation(id_client):
     # This ensures the client uses the extended duration when restarted
     if exp and exp.simulator_type == "HPC":
         try:
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             BASE = get_writable_path()
             dbtype = get_db_type()
@@ -268,13 +270,15 @@ def extend_simulation(id_client):
         # Reset log metrics for HPC experiments to force re-parsing
         # This ensures plots (both client and server trends) show extended data
         try:
-            from y_web.utils.log_metrics import (
-                reset_hpc_client_metrics,
-                reset_hpc_server_metrics,
+            from y_web.src.hpc.log_metrics import (
                 update_client_log_metrics,
                 update_server_log_metrics,
             )
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.hpc.log_parser import (
+                reset_hpc_client_metrics,
+                reset_hpc_server_metrics,
+            )
+            from y_web.src.system.path_utils import get_writable_path
 
             BASE = get_writable_path()
 
@@ -607,7 +611,7 @@ def _build_client_creation_context(idexp, recsys_mode):
 
     if exp is not None and getattr(exp, "simulator_type", "Standard") != "HPC":
         try:
-            from y_web.utils.path_utils import get_writable_path
+            from y_web.src.system.path_utils import get_writable_path
 
             writable_base = get_writable_path()
             if "database_server.db" in exp.db_name:
@@ -819,7 +823,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     import json
     import shutil
 
-    from y_web.utils.path_utils import get_resource_path, get_writable_path
+    from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
     BASE_DIR = get_writable_path()
 
@@ -2242,7 +2246,7 @@ def _create_standard_client_internal():
     else:
         uid = exp.db_name.removeprefix("experiments_")
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
     experiment_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
@@ -2693,7 +2697,7 @@ def _create_standard_client_internal():
         # get agent ids for all agents in populations
         agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
 
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE = get_writable_path()
         dbtypte = get_db_type()
@@ -2900,7 +2904,7 @@ def _create_standard_client_internal():
                 client.network_type = network_model
                 db.session.commit()
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
@@ -3732,7 +3736,7 @@ def _create_forum_client_internal():
     else:
         uid = exp.db_name.removeprefix("experiments_")
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE_DIR = get_writable_path()
     experiment_folder = os.path.join(BASE_DIR, "y_web", "experiments", uid)
@@ -3964,7 +3968,7 @@ def _create_forum_client_internal():
         # get agent ids for all agents in populations
         agent_ids = [Agent.query.filter_by(id=a.agent_id).first().name for a in agents]
 
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         BASE = get_writable_path()
         dbtypte = get_db_type()
@@ -4171,7 +4175,7 @@ def _create_forum_client_internal():
                 client.network_type = network_model
                 db.session.commit()
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
@@ -4306,7 +4310,7 @@ def delete_client(uid):
     db.session.delete(client)
     db.session.commit()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     # remove the db file on the client
     BASE_PATH = get_writable_path()
@@ -4405,7 +4409,7 @@ def client_details(uid):
     population = Population.query.filter_by(id=client.population_id).first()
     pages = _get_client_population_pages(client)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
@@ -4486,7 +4490,7 @@ def client_details_forum(uid):
     population = Population.query.filter_by(id=client.population_id).first()
     pages = _get_client_population_pages(client)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
@@ -4571,7 +4575,7 @@ def client_details_hpc(uid):
     population = Population.query.filter_by(id=client.population_id).first()
     pages = _get_client_population_pages(client)
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     base_dir = get_writable_path()
     exp_folder = _get_experiment_folder_name(experiment)
@@ -4777,7 +4781,7 @@ def set_network(uid):
     # get the client experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
 
@@ -4815,7 +4819,7 @@ def upload_network(uid):
     # get the client experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     # get the experiment folder
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
 
@@ -4933,7 +4937,7 @@ def download_agent_list(uid):
     # get the experiment
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     # get the experiment folder
     BASE = get_writable_path()
@@ -4976,7 +4980,7 @@ def update_agents_activity(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
@@ -5006,7 +5010,7 @@ def reset_agents_activity(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
@@ -5139,7 +5143,7 @@ def update_agent_archetypes(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
@@ -5221,7 +5225,7 @@ def reset_agent_archetypes(uid):
     experiment = Exps.query.filter_by(idexp=client.id_exp).first()
     population = Population.query.filter_by(id=client.population_id).first()
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
     exp_folder = experiment.db_name.split(os.sep)[1]
@@ -5535,8 +5539,8 @@ def _opinion_configuration_internal(idexp, expected_mode):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Load population JSON file to get actual segment values
-    from y_web.utils import get_db_type
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.miscellanea import get_db_type
+    from y_web.src.system.path_utils import get_writable_path
 
     writable_base = get_writable_path()
     dbtype = get_db_type()
@@ -6004,7 +6008,7 @@ def _resolve_opinion_submission_context(expected_mode):
 
     age_class_map = {ac.name: (ac.age_start, ac.age_end) for ac in AgeClass.query.all()}
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     writable_base = get_writable_path()
     exp_folder = _get_experiment_folder_name(exp)

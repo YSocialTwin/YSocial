@@ -3,7 +3,7 @@
 from sqlalchemy import inspect, text
 
 from y_web import db
-from y_web.models import Exps, Population_Experiment
+from y_web.src.models import Exps, Population_Experiment
 
 VALID_POPULATION_TYPES = {"microblogging", "forum"}
 

@@ -30,7 +30,7 @@ from sqlalchemy import create_engine, text
 from werkzeug.security import generate_password_hash
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     ActivityProfile,
     Admin_users,
     AgeClass,
@@ -53,10 +53,10 @@ from y_web.models import (
     Toxicity_Levels,
 )
 from y_web.routes.admin.sub.experiments import get_suggested_port
-from y_web.utils import generate_population
-from y_web.utils.miscellanea import check_privileges
-from y_web.utils.path_utils import get_resource_path, get_writable_path
-from y_web.utils.population_platform import ensure_population_username_type_column
+from y_web.src.agents.population import generate_population
+from y_web.src.system.miscellanea import check_privileges
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
+from y_web.src.agents.platform import ensure_population_username_type_column
 
 tutorial = Blueprint("tutorial", __name__)
 
@@ -128,7 +128,7 @@ def get_tutorial_data():
         JSON with education levels, political leanings, activity profiles,
         recommendation systems, and Ollama status
     """
-    from y_web.utils.external_processes import get_ollama_models, is_ollama_running
+    from y_web.src.llm.ollama_manager import get_ollama_models, is_ollama_running
 
     check_privileges(current_user.username)
 
@@ -518,7 +518,7 @@ def create_tutorial_experiment():
 
             admin_engine.dispose()
 
-        from y_web.utils.experiment_schema import ensure_experiment_schema_for_uri
+        from y_web.src.experiment.schema import ensure_experiment_schema_for_uri
 
         if db_type == "sqlite":
             ensure_experiment_schema_for_uri(f"sqlite:///{db_uri}")
@@ -871,7 +871,7 @@ def create_tutorial_experiment():
 
         # Log telemetry
         try:
-            from y_web.telemetry import Telemetry
+            from y_web.src.telemetry import Telemetry
 
             telemetry = Telemetry(user=current_user)
             telemetry.log_event(
@@ -919,8 +919,9 @@ def run_tutorial_simulation():
     Returns:
         JSON with success status
     """
-    from y_web.utils import start_client, start_hpc_client
-    from y_web.utils.external_processes import start_server
+    from y_web.src.hpc.client import start_hpc_client
+    from y_web.src.simulation.client import start_client
+    from y_web.src.simulation.server import start_server
 
     check_privileges(current_user.username)
 

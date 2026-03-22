@@ -9,7 +9,7 @@ import numpy as np
 from sqlalchemy.sql.expression import func
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Agent,
     Follow,

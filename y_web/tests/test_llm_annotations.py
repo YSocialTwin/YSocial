@@ -13,7 +13,7 @@ class TestContentAnnotation:
     def test_content_annotator_import(self):
         """Test that ContentAnnotator can be imported"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             assert ContentAnnotator is not None
         except ImportError as e:
@@ -22,7 +22,7 @@ class TestContentAnnotation:
     def test_content_annotator_creation(self):
         """Test ContentAnnotator creation"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             # Test creation without LLM
             annotator = ContentAnnotator()
@@ -42,7 +42,7 @@ class TestContentAnnotation:
     def test_content_annotator_methods(self):
         """Test ContentAnnotator methods existence"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -69,10 +69,10 @@ class TestContentAnnotation:
             # Mock using context manager instead of decorator to avoid import issues
             from unittest.mock import Mock, patch
 
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             with patch(
-                "y_web.llm_annotations.content_annotation.AssistantAgent"
+                "y_web.src.llm.content_annotation.AssistantAgent"
             ) as mock_agent:
                 # Mock the AssistantAgent
                 mock_agent_instance = Mock()
@@ -93,7 +93,7 @@ class TestContentAnnotation:
     def test_annotate_emotions_interface(self):
         """Test annotate_emotions method interface"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -113,7 +113,7 @@ class TestContentAnnotation:
     def test_extract_components_interface(self):
         """Test extract_components method interface"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -138,7 +138,7 @@ class TestContentAnnotation:
     def test_annotate_topics_interface(self):
         """Test annotate_topics method interface"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -164,7 +164,7 @@ class TestImageAnnotator:
     def test_image_annotator_import(self):
         """Test that image annotator can be imported"""
         try:
-            from y_web.llm_annotations import image_annotator
+            from y_web.src.llm import image_annotator
 
             assert image_annotator is not None
         except ImportError as e:
@@ -173,7 +173,7 @@ class TestImageAnnotator:
     def test_image_annotator_structure(self):
         """Test image annotator module structure"""
         try:
-            from y_web.llm_annotations import image_annotator
+            from y_web.src.llm import image_annotator
 
             # Check for expected classes or functions
             expected_items = ["ImageAnnotator", "annotate_image", "process_image"]
@@ -194,16 +194,16 @@ class TestLLMAnnotationsModule:
     def test_llm_annotations_import(self):
         """Test that llm_annotations module can be imported"""
         try:
-            import y_web.llm_annotations
+            import y_web.src.llm
 
-            assert y_web.llm_annotations is not None
+            assert y_web.src.llm is not None
         except ImportError as e:
             pytest.skip(f"Could not import llm_annotations module: {e}")
 
     def test_llm_annotations_init_imports(self):
         """Test llm_annotations __init__.py imports"""
         try:
-            from y_web.llm_annotations import content_annotation, image_annotator
+            from y_web.src.llm import content_annotation, image_annotator
 
             assert content_annotation is not None
             assert image_annotator is not None
@@ -214,11 +214,11 @@ class TestLLMAnnotationsModule:
     def test_content_annotation_available(self):
         """Test that content annotation is available through main module"""
         try:
-            import y_web.llm_annotations
+            import y_web.src.llm
 
             # Check if ContentAnnotator is available
-            if hasattr(y_web.llm_annotations, "ContentAnnotator"):
-                ContentAnnotator = getattr(y_web.llm_annotations, "ContentAnnotator")
+            if hasattr(y_web.src.llm, "ContentAnnotator"):
+                ContentAnnotator = getattr(y_web.src.llm, "ContentAnnotator")
                 assert callable(ContentAnnotator)
 
         except ImportError as e:
@@ -231,7 +231,7 @@ class TestAnnotatorIntegration:
     def test_annotator_class_hierarchy(self):
         """Test annotator class relationships"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             # Test that ContentAnnotator is a proper class
             assert isinstance(ContentAnnotator, type)
@@ -248,7 +248,7 @@ class TestAnnotatorIntegration:
     def test_multiple_annotator_instances(self):
         """Test creating multiple annotator instances"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             # Create multiple instances
             annotator1 = ContentAnnotator()
@@ -273,7 +273,7 @@ class TestAnnotationErrorHandling:
     def test_content_annotator_empty_text(self):
         """Test ContentAnnotator with empty text"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -296,7 +296,7 @@ class TestAnnotationErrorHandling:
     def test_content_annotator_invalid_component_type(self):
         """Test ContentAnnotator with invalid component type"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -324,7 +324,7 @@ class TestAnnotationConfiguration:
     def test_content_annotator_config_structure(self):
         """Test ContentAnnotator configuration structure"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator(llm="test-model")
 
@@ -348,7 +348,7 @@ class TestAnnotationConfiguration:
     def test_content_annotator_no_llm_config(self):
         """Test ContentAnnotator without LLM configuration"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -372,7 +372,7 @@ class TestAnnotationMethods:
     def test_emotion_annotation_types(self):
         """Test emotion annotation return types"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 
@@ -402,7 +402,7 @@ class TestAnnotationMethods:
     def test_topic_annotation_types(self):
         """Test topic annotation return types"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator()
 

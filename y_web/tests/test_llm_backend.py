@@ -221,7 +221,7 @@ class TestContentAnnotatorWithBackends:
     def test_content_annotator_uses_llm_url(self):
         """Test ContentAnnotator uses LLM_URL from environment"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator(llm="test-model")
 
@@ -237,7 +237,7 @@ class TestContentAnnotatorWithBackends:
     def test_content_annotator_vllm_url(self):
         """Test ContentAnnotator with vLLM URL"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator(llm="test-model")
 
@@ -252,7 +252,7 @@ class TestContentAnnotatorWithBackends:
     def test_content_annotator_custom_url(self):
         """Test ContentAnnotator with custom URL"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             annotator = ContentAnnotator(llm="test-model")
 
@@ -272,7 +272,7 @@ class TestImageAnnotatorWithBackends:
     def test_image_annotator_uses_llm_url(self):
         """Test image Annotator uses LLM_URL from environment"""
         try:
-            from y_web.llm_annotations.image_annotator import Annotator
+            from y_web.src.llm.image_annotator import Annotator
 
             annotator = Annotator(llmv="test-vision-model")
 
@@ -464,7 +464,7 @@ class TestNoneBackend:
 
     def test_llm_backend_status_with_none(self):
         """Test llm_backend_status returns proper structure for None backend"""
-        from y_web.utils.miscellanea import llm_backend_status
+        from y_web.src.system.miscellanea import llm_backend_status
 
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("LLM_BACKEND", None)
@@ -479,7 +479,7 @@ class TestNoneBackend:
     def test_content_annotator_with_none_backend(self):
         """Test ContentAnnotator handles None backend gracefully"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             with patch.dict(os.environ, {}, clear=False):
                 os.environ.pop("LLM_BACKEND", None)
@@ -500,7 +500,7 @@ class TestNoneBackend:
     def test_content_annotator_with_llm_but_no_backend(self):
         """Test ContentAnnotator with llm specified but no backend configured"""
         try:
-            from y_web.llm_annotations.content_annotation import ContentAnnotator
+            from y_web.src.llm.content_annotation import ContentAnnotator
 
             with patch.dict(os.environ, {}, clear=False):
                 os.environ.pop("LLM_BACKEND", None)

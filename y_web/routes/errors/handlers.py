@@ -37,7 +37,7 @@ def bad_request(e):
         "method": request.method if request else None,
     }
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
 
@@ -79,7 +79,7 @@ def forbidden(e):
         "method": request.method if request else None,
     }
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
 
@@ -121,7 +121,7 @@ def not_found(e):
         "method": request.method if request else None,
     }
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
 
@@ -163,7 +163,7 @@ def internal_server_error(e):
         "method": request.method if request else None,
     }
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
 

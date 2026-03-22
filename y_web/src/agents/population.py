@@ -16,7 +16,7 @@ import numpy as np
 from sqlalchemy.sql import func
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     AgeClass,
     Agent,
     Agent_Population,
@@ -456,6 +456,18 @@ def generate_population(
     # Bulk insert all agent-population relationships
     db.session.bulk_save_objects(agent_populations_to_insert)
     db.session.commit()
+
+
+def generate_population_from_config(
+    population_name, percentages=None, actions_config=None, profession_backgrounds=None
+):
+    """Configuration-oriented entrypoint for population generation."""
+    return generate_population(
+        population_name,
+        percentages=percentages,
+        actions_config=actions_config,
+        profession_backgrounds=profession_backgrounds,
+    )
 
 
 __locales = {

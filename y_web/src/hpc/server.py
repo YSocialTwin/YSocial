@@ -20,7 +20,7 @@ from requests import post
 from sklearn.utils import deprecated
 
 from y_web import db
-from y_web.models import Exps
+from y_web.src.models import Exps
 from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 
@@ -41,7 +41,7 @@ def start_hpc_server(exp):
     """
     # Import helpers from external_processes to avoid duplication.
     # These imports work because external_processes defines them before delegating here.
-    from y_web.utils.external_processes import detect_env_handler
+    from y_web.src.simulation.server import detect_env_handler
 
     # Get base path - this will be bundle location when frozen, repo root otherwise
     base_path = get_base_path()
@@ -389,7 +389,7 @@ def stop_hpc_server(exp_id):
         bool: True if process was found and terminated, False otherwise
     """
     # Import here to avoid circular import issues.
-    from y_web.utils.external_processes import __terminate_process as _terminate_process
+    from y_web.src.simulation.port_manager import __terminate_process as _terminate_process
 
     try:
         # Get experiment from database
@@ -470,7 +470,7 @@ def start_server_screen(exp):
     Args:
         exp: the experiment object
     """
-    from y_web.utils.external_processes import build_screen_command
+    from y_web.src.simulation.server import build_screen_command
 
     yserver_path = os.path.dirname(os.path.abspath(__file__)).split("y_web")[0]
     sys.path.append(f"{yserver_path}{os.sep}external{os.sep}YServer{os.sep}")

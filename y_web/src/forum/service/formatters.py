@@ -15,8 +15,8 @@ from sqlalchemy.exc import OperationalError
 from sqlalchemy import text
 
 from y_web import db
-from y_web.experiment_context import get_current_experiment_id
-from y_web.models import (
+from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.models import (
     Agent,
     Articles,
     Exps,
@@ -27,14 +27,14 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.utils.experiment_clock import (
+from y_web.src.experiment.clock import (
     DEFAULT_CLOCK_MODE,
     DEFAULT_CLOCK_TIMEZONE,
     default_clock_config,
     ensure_experiment_clock,
     parse_anchor_date,
 )
-from y_web.utils.text_utils import strip_tags
+from y_web.src.content.text_utils import strip_tags
 from y_web.src.forum.service.data_classes import ArticlePreview
 
 _Y_WEB_DIR = Path(__file__).resolve().parents[3]
@@ -134,7 +134,7 @@ def _fetch_and_cache_og_image(article) -> Optional[Dict[str, str]]:
     try:
         import requests
 
-        from y_web.utils.article_extractor import extract_image
+        from y_web.src.content.article_extractor import extract_image
 
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -308,7 +308,7 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
         return None
     try:
         # Use the current experiment's database bind
-        from y_web.experiment_context import get_current_experiment_bind
+        from y_web.src.experiment.context import get_current_experiment_bind
 
         bind_key = get_current_experiment_bind()
         engine = db.get_engine(bind=bind_key)
@@ -348,7 +348,7 @@ def _shared_from(post: Post) -> Optional[Tuple[int, str]]:
 
 
 def _get_profile_pic(user: User_mgmt) -> str:
-    from y_web.utils.avatars import resolve_forum_profile_pic
+    from y_web.src.content.avatars import resolve_forum_profile_pic
 
     return resolve_forum_profile_pic(user, get_current_experiment_id())
 

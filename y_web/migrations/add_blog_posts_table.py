@@ -15,7 +15,7 @@ def migrate_dashboard_db():
     # Determine the database path based on execution mode
     if getattr(sys, "frozen", False):
         # Running from PyInstaller - use writable location
-        from y_web.utils.path_utils import get_writable_path
+        from y_web.src.system.path_utils import get_writable_path
 
         db_dir = os.path.join(get_writable_path(), "y_web", "db")
     else:

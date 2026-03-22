@@ -62,11 +62,11 @@ def test_start_schedule_calls_start_hpc_server_for_hpc_experiments():
             "y_web.routes.admin.sub.experiments._get_clients_to_start"
         ) as mock_get_clients,
         patch(
-            "y_web.utils.external_processes.start_hpc_server"
+            "y_web.src.hpc.server.start_hpc_server"
         ) as mock_start_hpc_server,
-        patch("y_web.utils.external_processes.start_server") as mock_start_server,
+        patch("y_web.src.simulation.server.start_server") as mock_start_server,
         patch(
-            "y_web.utils.external_processes.start_hpc_client"
+            "y_web.src.hpc.client.start_hpc_client"
         ) as mock_start_hpc_client,
         patch("y_web.routes.admin.sub.experiments.db") as mock_db,
     ):

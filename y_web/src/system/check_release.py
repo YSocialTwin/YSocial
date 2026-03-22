@@ -196,7 +196,7 @@ def update_release_info_in_db():
         print("Release info from update check:", release_info)
         # Import here to avoid circular imports
         from y_web import db
-        from y_web.models import ReleaseInfo
+        from y_web.src.models import ReleaseInfo
 
         # Get or create the single row
         record = ReleaseInfo.query.first()

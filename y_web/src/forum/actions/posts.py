@@ -13,18 +13,18 @@ from flask import current_app, g
 from sqlalchemy.exc import IntegrityError
 
 from y_web import db
-from y_web.experiment_context import (
+from y_web.src.experiment.context import (
     get_db_bind_key_for_exp,
     register_experiment_database,
 )
 
 try:
-    from y_web.llm_annotations import Annotator, ContentAnnotator
+    from y_web.src.llm import Annotator, ContentAnnotator
 except Exception:
     Annotator = None
     ContentAnnotator = None
 
-from y_web.models import (
+from y_web.src.models import (
     Admin_users,
     Articles,
     Emotions,
@@ -44,8 +44,8 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.utils.article_extractor import extract_article_info
-from y_web.utils.text_utils import toxicity, vader_sentiment
+from y_web.src.content.article_extractor import extract_article_info
+from y_web.src.content.text_utils import toxicity, vader_sentiment
 from y_web.src.forum.actions.media import (
     _normalize_external_url,
     _extract_candidate_media_url,
@@ -423,7 +423,7 @@ def create_post_reddit(user, content: str, url: Optional[str] = None) -> Post:
                 annotation = None
                 annotator_ref = stored_url
                 if stored_url.startswith("/uploads/"):
-                    from y_web.utils.path_utils import get_writable_path
+                    from y_web.src.system.path_utils import get_writable_path
 
                     annotator_ref = os.path.join(
                         get_writable_path(), "y_web", stored_url.lstrip("/")

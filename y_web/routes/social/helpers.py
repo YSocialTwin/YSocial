@@ -16,13 +16,13 @@ from flask import request
 from flask_login import current_user
 
 from y_web import db
-from y_web.data_access import (
+from y_web.src.data_access import (
     augment_text,
     get_elicited_emotions,
     get_topics,
 )
-from y_web.experiment_context import get_current_experiment_id
-from y_web.models import (
+from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.models import (
     Admin_users,
     Agent,
     Articles,
@@ -35,11 +35,11 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.utils.avatars import (
+from y_web.src.content.avatars import (
     resolve_forum_profile_pic,
     resolve_forum_username_avatar,
 )
-from y_web.utils.text_utils import process_reddit_post, strip_tags
+from y_web.src.content.text_utils import process_reddit_post, strip_tags
 
 
 def get_safe_profile_pic(username, is_page=0):
@@ -124,7 +124,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
     exp = Exps.query.filter_by(idexp=int(exp_id)).first()
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
-    from y_web.reddit.service import (
+    from y_web.src.forum.service import (
         _format_display_time,
         _format_display_time_from_created_at,
     )

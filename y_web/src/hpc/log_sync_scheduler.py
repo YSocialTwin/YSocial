@@ -108,7 +108,7 @@ class LogSyncScheduler:
         from sqlalchemy.exc import IntegrityError
 
         from y_web import db
-        from y_web.models import HpcMonitorSettings
+        from y_web.src.models import HpcMonitorSettings
 
         settings = HpcMonitorSettings.query.first()
         if not settings:
@@ -126,7 +126,7 @@ class LogSyncScheduler:
     def _update_hpc_monitor_last_check(self):
         """Update the last check timestamp in database."""
         from y_web import db
-        from y_web.models import HpcMonitorSettings
+        from y_web.src.models import HpcMonitorSettings
 
         try:
             settings = HpcMonitorSettings.query.first()

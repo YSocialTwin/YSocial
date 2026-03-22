@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from y_web.utils.y_client_process_runner import (
+from y_web.src.simulation.process_runner import (
     _get_client_archetypes,
     process_agent,
 )

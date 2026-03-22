@@ -1,4 +1,4 @@
-from y_web.utils.agents import _generate_unique_name
+from y_web.src.agents.population import _generate_unique_name
 
 
 class FakeForum:

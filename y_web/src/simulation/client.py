@@ -15,7 +15,7 @@ from pathlib import Path
 from flask import current_app
 
 from y_web import db
-from y_web.models import (
+from y_web.src.models import (
     Client,
     Client_Execution,
     Exps,
@@ -135,7 +135,7 @@ def terminate_client(cli, pause=False):
     # Unregister from watchdog first
     if WATCHDOG_ENABLED:
         try:
-            from y_web.utils.process_watchdog import get_watchdog
+            from y_web.src.simulation.watchdog import get_watchdog
 
             watchdog = get_watchdog()
             watchdog.unregister_process(f"client_{cli.id}")
@@ -243,14 +243,14 @@ def start_client(exp, cli, population, resume=True):
         # Running from source - use detected environment with script path
         python_cmd = detect_env_handler()
         runner_script = get_resource_path(
-            os.path.join("y_web", "utils", "y_client_process_runner.py")
+            os.path.join("y_web", "src", "simulation", "client_runner.py")
         )
 
         # Validate that runner script exists
         if not Path(runner_script).exists():
             raise FileNotFoundError(
                 f"Client runner script not found: {runner_script}\n"
-                f"Please ensure y_client_process_runner.py exists in the utils directory."
+                f"Please ensure client_runner.py exists in y_web/src/simulation."
             )
 
         if (
@@ -391,7 +391,7 @@ def _register_client_with_watchdog(exp, cli, population, pid, log_dir):
         pid: the process ID
         log_dir: directory containing log files
     """
-    from y_web.utils.process_watchdog import get_watchdog
+    from y_web.src.simulation.watchdog import get_watchdog
 
     # Use {client_name}_client.log as the heartbeat file
     log_file = os.path.join(log_dir, f"{cli.name}_client.log")

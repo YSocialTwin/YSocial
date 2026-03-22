@@ -10,7 +10,7 @@ import re
 from html.parser import HTMLParser
 from io import StringIO
 
-from y_web.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
+from y_web.src.models import Admin_users, Hashtags, Post_Toxicity, User_mgmt
 
 # Optional imports
 try:

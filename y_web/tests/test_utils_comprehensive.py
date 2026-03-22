@@ -15,7 +15,7 @@ class TestAgentsUtils:
     def test_generate_population_import(self):
         """Test that generate_population can be imported"""
         try:
-            from y_web.utils.agents import generate_population
+            from y_web.src.agents.population import generate_population
 
             assert callable(generate_population)
         except ImportError as e:
@@ -25,7 +25,7 @@ class TestAgentsUtils:
         """Test age sampling function"""
         try:
             # Try to access the private function using name mangling
-            from y_web.utils.agents import _TestAgentsUtils__sample_age
+            from y_web.src.agents.population import _TestAgentsUtils__sample_age
 
             # Test age sampling within range
             age = _TestAgentsUtils__sample_age(
@@ -37,7 +37,7 @@ class TestAgentsUtils:
         except (ImportError, AttributeError):
             # Function might be private or named differently, try direct module access
             try:
-                import y_web.utils.agents as agents_module
+                import y_web.src.agents.population as agents_module
 
                 if hasattr(agents_module, "_agents__sample_age"):
                     sample_age_func = getattr(agents_module, "_agents__sample_age")
@@ -53,7 +53,7 @@ class TestAgentsUtils:
         """Test Pareto sampling function"""
         try:
             # Try to access the private function using name mangling
-            from y_web.utils.agents import _TestAgentsUtils__sample_pareto
+            from y_web.src.agents.population import _TestAgentsUtils__sample_pareto
 
             # Test Pareto sampling from list
             values = ["option1", "option2", "option3", "option4"]
@@ -63,7 +63,7 @@ class TestAgentsUtils:
         except (ImportError, AttributeError):
             # Function might be private or named differently, try direct module access
             try:
-                import y_web.utils.agents as agents_module
+                import y_web.src.agents.population as agents_module
 
                 if hasattr(agents_module, "_agents__sample_pareto"):
                     sample_pareto_func = getattr(
@@ -85,11 +85,11 @@ class TestAgentsUtils:
             # Mock using unittest.mock without patch decorator
             from unittest.mock import Mock, patch
 
-            from y_web.utils.agents import generate_population
+            from y_web.src.agents.population import generate_population
 
             with (
-                patch("y_web.utils.agents.db") as mock_db,
-                patch("y_web.utils.agents.Population") as mock_population,
+                patch("y_web.src.agents.population.db") as mock_db,
+                patch("y_web.src.agents.population.Population") as mock_population,
             ):
 
                 # Mock the population query
@@ -120,7 +120,7 @@ class TestArticleExtractor:
     def test_extract_article_info_import(self):
         """Test that extract_article_info can be imported"""
         try:
-            from y_web.utils.article_extractor import extract_article_info
+            from y_web.src.content.article_extractor import extract_article_info
 
             assert callable(extract_article_info)
         except ImportError as e:
@@ -129,7 +129,7 @@ class TestArticleExtractor:
     def test_extract_article_info_basic(self):
         """Test basic article extraction functionality"""
         try:
-            from y_web.utils.article_extractor import extract_article_info
+            from y_web.src.content.article_extractor import extract_article_info
 
             # Test with a simple URL (might require network)
             test_url = "https://example.com"
@@ -160,7 +160,7 @@ class TestExternalProcesses:
     def test_start_server_import(self):
         """Test that start_server can be imported"""
         try:
-            from y_web.utils.external_processes import start_server
+            from y_web.src.simulation.server import start_server
 
             assert callable(start_server)
         except ImportError as e:
@@ -169,7 +169,7 @@ class TestExternalProcesses:
     def test_terminate_process_on_port_import(self):
         """Test that terminate_process_on_port can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_process_on_port
+            from y_web.src.simulation.port_manager import terminate_process_on_port
 
             assert callable(terminate_process_on_port)
         except ImportError as e:
@@ -178,7 +178,7 @@ class TestExternalProcesses:
     def test_start_client_import(self):
         """Test that start_client can be imported"""
         try:
-            from y_web.utils.external_processes import start_client
+            from y_web.src.simulation.client import start_client
 
             assert callable(start_client)
         except ImportError as e:
@@ -187,7 +187,7 @@ class TestExternalProcesses:
     def test_terminate_client_import(self):
         """Test that terminate_client can be imported"""
         try:
-            from y_web.utils.external_processes import terminate_client
+            from y_web.src.simulation.client import terminate_client
 
             assert callable(terminate_client)
         except ImportError as e:
@@ -197,7 +197,7 @@ class TestExternalProcesses:
     def test_start_server_mocked(self, mock_popen):
         """Test start_server with mocked subprocess"""
         try:
-            from y_web.utils.external_processes import start_server
+            from y_web.src.simulation.server import start_server
 
             # Mock the subprocess
             mock_process = Mock()
@@ -221,7 +221,7 @@ class TestExternalProcesses:
         # Note: Full testing of start_client requires Flask application context
         # This test just verifies the function can be imported
         try:
-            from y_web.utils.external_processes import start_client
+            from y_web.src.simulation.client import start_client
 
             assert callable(start_client)
         except ImportError as e:
@@ -234,7 +234,7 @@ class TestFeeds:
     def test_get_feed_import(self):
         """Test that get_feed can be imported"""
         try:
-            from y_web.utils.feeds import get_feed
+            from y_web.src.content.feeds import get_feed
 
             assert callable(get_feed)
         except ImportError as e:
@@ -243,7 +243,7 @@ class TestFeeds:
     def test_get_feed_basic(self):
         """Test basic feed functionality"""
         try:
-            from y_web.utils.feeds import get_feed
+            from y_web.src.content.feeds import get_feed
 
             # Test with a simple feed URL (might require network and feedparser)
             test_url = "https://feeds.example.com/rss"
@@ -266,7 +266,7 @@ class TestMiscellanea:
     def test_check_privileges_import(self):
         """Test that check_privileges can be imported"""
         try:
-            from y_web.utils.miscellanea import check_privileges
+            from y_web.src.system.miscellanea import check_privileges
 
             assert callable(check_privileges)
         except ImportError as e:
@@ -275,7 +275,7 @@ class TestMiscellanea:
     def test_ollama_status_import(self):
         """Test that ollama_status can be imported"""
         try:
-            from y_web.utils.miscellanea import ollama_status
+            from y_web.src.system.miscellanea import ollama_status
 
             assert callable(ollama_status)
         except ImportError as e:
@@ -284,7 +284,7 @@ class TestMiscellanea:
     def test_get_ollama_models_import(self):
         """Test that get_ollama_models can be imported"""
         try:
-            from y_web.utils.miscellanea import get_ollama_models
+            from y_web.src.system.miscellanea import get_ollama_models
 
             assert callable(get_ollama_models)
         except ImportError as e:
@@ -293,7 +293,7 @@ class TestMiscellanea:
     def test_reload_current_user_import(self):
         """Test that reload_current_user can be imported"""
         try:
-            from y_web.utils.miscellanea import reload_current_user
+            from y_web.src.system.miscellanea import reload_current_user
 
             assert callable(reload_current_user)
         except ImportError as e:
@@ -302,7 +302,7 @@ class TestMiscellanea:
     def test_get_db_type_import(self):
         """Test that get_db_type can be imported"""
         try:
-            from y_web.utils.miscellanea import get_db_type
+            from y_web.src.system.miscellanea import get_db_type
 
             assert callable(get_db_type)
         except ImportError as e:
@@ -311,7 +311,7 @@ class TestMiscellanea:
     def test_get_db_port_import(self):
         """Test that get_db_port can be imported"""
         try:
-            from y_web.utils.miscellanea import get_db_port
+            from y_web.src.system.miscellanea import get_db_port
 
             assert callable(get_db_port)
         except ImportError as e:
@@ -320,7 +320,7 @@ class TestMiscellanea:
     def test_check_connection_import(self):
         """Test that check_connection can be imported"""
         try:
-            from y_web.utils.miscellanea import check_connection
+            from y_web.src.system.miscellanea import check_connection
 
             assert callable(check_connection)
         except ImportError as e:
@@ -329,7 +329,7 @@ class TestMiscellanea:
     def test_get_db_server_import(self):
         """Test that get_db_server can be imported"""
         try:
-            from y_web.utils.miscellanea import get_db_server
+            from y_web.src.system.miscellanea import get_db_server
 
             assert callable(get_db_server)
         except ImportError as e:
@@ -341,9 +341,9 @@ class TestMiscellanea:
             # Mock using unittest.mock without patch decorator
             from unittest.mock import Mock, patch
 
-            from y_web.utils.miscellanea import check_privileges
+            from y_web.src.system.miscellanea import check_privileges
 
-            with patch("y_web.utils.miscellanea.Admin_users") as mock_admin_users:
+            with patch("y_web.src.system.miscellanea.Admin_users") as mock_admin_users:
 
                 # Mock admin user
                 mock_user = Mock()
@@ -370,7 +370,7 @@ class TestMiscellanea:
     def test_ollama_status_basic(self):
         """Test ollama_status basic functionality"""
         try:
-            from y_web.utils.miscellanea import ollama_status
+            from y_web.src.system.miscellanea import ollama_status
 
             try:
                 result = ollama_status()
@@ -392,7 +392,7 @@ class TestMiscellanea:
     def test_get_ollama_models_basic(self):
         """Test get_ollama_models basic functionality"""
         try:
-            from y_web.utils.miscellanea import get_ollama_models
+            from y_web.src.system.miscellanea import get_ollama_models
 
             try:
                 result = get_ollama_models()
@@ -418,7 +418,7 @@ class TestTextUtils:
     def test_vader_sentiment_import(self):
         """Test that vader_sentiment can be imported"""
         try:
-            from y_web.utils.text_utils import vader_sentiment
+            from y_web.src.content.text_utils import vader_sentiment
 
             assert callable(vader_sentiment)
         except ImportError as e:
@@ -427,7 +427,7 @@ class TestTextUtils:
     def test_toxicity_import(self):
         """Test that toxicity function can be imported"""
         try:
-            from y_web.utils.text_utils import toxicity
+            from y_web.src.content.text_utils import toxicity
 
             assert callable(toxicity)
         except ImportError as e:
@@ -436,7 +436,7 @@ class TestTextUtils:
     def test_vader_sentiment_basic(self):
         """Test basic sentiment analysis"""
         try:
-            from y_web.utils.text_utils import vader_sentiment
+            from y_web.src.content.text_utils import vader_sentiment
 
             test_texts = [
                 "I am very happy today!",
@@ -471,7 +471,7 @@ class TestTextUtils:
             # Mock using unittest.mock without patch decorator
             from unittest.mock import Mock
 
-            from y_web.utils.text_utils import toxicity
+            from y_web.src.content.text_utils import toxicity
 
             mock_db = Mock()
 
@@ -492,46 +492,46 @@ class TestTextUtils:
 
 
 class TestUtilsModuleStructure:
-    """Test utils module structure and imports"""
+    """Test canonical src module structure and imports."""
 
-    def test_utils_init_import(self):
-        """Test that utils module can be imported"""
+    def test_src_root_import(self):
+        """Test that the src root package can be imported."""
         try:
-            import y_web.utils
+            import y_web.src
 
-            assert y_web.utils is not None
+            assert y_web.src is not None
         except ImportError as e:
-            pytest.skip(f"Could not import utils module: {e}")
+            pytest.skip(f"Could not import y_web.src: {e}")
 
-    def test_utils_submodules_exist(self):
-        """Test that utils submodules exist"""
-        expected_submodules = [
-            "agents",
-            "article_extractor",
-            "external_processes",
-            "feeds",
-            "miscellanea",
-            "text_utils",
+    def test_src_submodules_exist(self):
+        """Test that core canonical submodules exist."""
+        expected_modules = [
+            "y_web.src.agents.population",
+            "y_web.src.content.article_extractor",
+            "y_web.src.simulation.server",
+            "y_web.src.content.feeds",
+            "y_web.src.system.miscellanea",
+            "y_web.src.content.text_utils",
         ]
 
-        for submodule in expected_submodules:
+        for module_name in expected_modules:
             try:
-                module = __import__(f"y_web.utils.{submodule}", fromlist=[""])
+                module = __import__(module_name, fromlist=[""])
                 assert module is not None
             except ImportError:
-                # Some submodules might have dependencies
                 pass
 
-    def test_utils_init_exports(self):
-        """Test utils __init__.py exports"""
+    def test_src_package_exports(self):
+        """Test canonical package exports."""
         try:
-            from y_web.utils import agents, external_processes, feeds, miscellanea
+            from y_web.src.agents import population
+            from y_web.src.content import feeds
+            from y_web.src.simulation import server
+            from y_web.src.system import miscellanea
 
-            # At least one should be available
-            assert any([agents, feeds, external_processes, miscellanea])
-
+            assert any([population, feeds, server, miscellanea])
         except ImportError as e:
-            pytest.skip(f"Could not import utils submodules: {e}")
+            pytest.skip(f"Could not import canonical submodules: {e}")
 
 
 class TestUtilsIntegration:
@@ -540,7 +540,7 @@ class TestUtilsIntegration:
     def test_database_utils_integration(self):
         """Test database-related utils integration"""
         try:
-            from y_web.utils.miscellanea import (
+            from y_web.src.system.miscellanea import (
                 check_connection,
                 get_db_port,
                 get_db_type,
@@ -567,7 +567,7 @@ class TestUtilsIntegration:
     def test_ollama_utils_integration(self):
         """Test Ollama-related utils integration"""
         try:
-            from y_web.utils.miscellanea import get_ollama_models, ollama_status
+            from y_web.src.system.miscellanea import get_ollama_models, ollama_status
 
             try:
                 status = ollama_status()
@@ -594,7 +594,7 @@ class TestUtilsErrorHandling:
     def test_empty_inputs_handling(self):
         """Test utils functions with empty inputs"""
         try:
-            from y_web.utils.text_utils import vader_sentiment
+            from y_web.src.content.text_utils import vader_sentiment
 
             # Test with empty/None inputs
             empty_inputs = ["", None, "   ", "\n\t"]
@@ -615,7 +615,7 @@ class TestUtilsErrorHandling:
     def test_invalid_parameters_handling(self):
         """Test utils functions with invalid parameters"""
         try:
-            from y_web.utils.miscellanea import check_privileges
+            from y_web.src.system.miscellanea import check_privileges
 
             # Test with invalid usernames
             invalid_usernames = [None, "", "nonexistent_user_12345"]

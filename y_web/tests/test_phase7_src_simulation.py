@@ -212,31 +212,31 @@ class TestLegacyShimIdentity:
 
     def test_external_processes_start_server_shim(self):
         from y_web.src.simulation.server import start_server as canonical
-        from y_web.utils.external_processes import start_server as shim
+        from y_web.src.simulation.server import start_server as shim
 
         assert shim is canonical
 
     def test_external_processes_terminate_server_shim(self):
         from y_web.src.simulation.server import terminate_server_process as canonical
-        from y_web.utils.external_processes import terminate_server_process as shim
+        from y_web.src.simulation.server import terminate_server_process as shim
 
         assert shim is canonical
 
     def test_external_processes_start_client_shim(self):
         from y_web.src.simulation.client import start_client as canonical
-        from y_web.utils.external_processes import start_client as shim
+        from y_web.src.simulation.client import start_client as shim
 
         assert shim is canonical
 
     def test_external_processes_terminate_client_shim(self):
         from y_web.src.simulation.client import terminate_client as canonical
-        from y_web.utils.external_processes import terminate_client as shim
+        from y_web.src.simulation.client import terminate_client as shim
 
         assert shim is canonical
 
     def test_external_processes_detect_env_handler_shim(self):
         from y_web.src.simulation.server import detect_env_handler as canonical
-        from y_web.utils.external_processes import detect_env_handler as shim
+        from y_web.src.simulation.server import detect_env_handler as shim
 
         assert shim is canonical
 
@@ -244,7 +244,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.port_manager import (
             terminate_process_on_port as canonical,
         )
-        from y_web.utils.external_processes import (
+        from y_web.src.simulation.port_manager import (
             terminate_process_on_port as shim,
         )
 
@@ -252,25 +252,25 @@ class TestLegacyShimIdentity:
 
     def test_external_processes_stop_all_exps_shim(self):
         from y_web.src.simulation.process_registry import stop_all_exps as canonical
-        from y_web.utils.external_processes import stop_all_exps as shim
+        from y_web.src.simulation.process_registry import stop_all_exps as shim
 
         assert shim is canonical
 
     def test_external_processes_watchdog_enabled_shim(self):
         from y_web.src.simulation.process_registry import WATCHDOG_ENABLED as canonical
-        from y_web.utils.external_processes import WATCHDOG_ENABLED as shim
+        from y_web.src.simulation.process_registry import WATCHDOG_ENABLED as shim
 
         assert shim is canonical
 
     def test_process_watchdog_shim_identity(self):
         from y_web.src.simulation.watchdog import get_watchdog as canonical
-        from y_web.utils.process_watchdog import get_watchdog as shim
+        from y_web.src.simulation.watchdog import get_watchdog as shim
 
         assert shim is canonical
 
     def test_process_watchdog_class_shim_identity(self):
         from y_web.src.simulation.watchdog import ProcessWatchdog as canonical
-        from y_web.utils.process_watchdog import ProcessWatchdog as shim
+        from y_web.src.simulation.watchdog import ProcessWatchdog as shim
 
         assert shim is canonical
 
@@ -278,7 +278,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.process_runner import (
             _resolve_client_package_dir as canonical,
         )
-        from y_web.utils.y_client_process_runner import (
+        from y_web.src.simulation.process_runner import (
             _resolve_client_package_dir as shim,
         )
 
@@ -286,7 +286,7 @@ class TestLegacyShimIdentity:
 
     def test_y_client_runner_start_client_process_shim(self):
         from y_web.src.simulation.process_runner import start_client_process as canonical
-        from y_web.utils.y_client_process_runner import start_client_process as shim
+        from y_web.src.simulation.process_runner import start_client_process as shim
 
         assert shim is canonical
 
@@ -294,7 +294,7 @@ class TestLegacyShimIdentity:
         from y_web.src.simulation.execution_backend import (
             start_server_for_experiment as canonical,
         )
-        from y_web.utils.execution_backend import start_server_for_experiment as shim
+        from y_web.src.simulation.execution_backend import start_server_for_experiment as shim
 
         assert shim is canonical
 
@@ -310,6 +310,6 @@ class TestLegacyShimIdentity:
     def test_process_registry_shim_uppercase_identity(self):
         """Spec validation from BUSINESS_LOGIC_REFACTORING.md: registry identity via shim."""
         from y_web.src.simulation.process_registry import _PROCESS_REGISTRY as canonical
-        from y_web.utils.external_processes import _PROCESS_REGISTRY as shim_reg
+        from y_web.src.simulation.process_registry import _PROCESS_REGISTRY as shim_reg
 
         assert canonical is shim_reg, "Process registry identity mismatch!"

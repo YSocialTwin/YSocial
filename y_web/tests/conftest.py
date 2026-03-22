@@ -57,7 +57,7 @@ def app():
     with app.app_context():
         db.create_all()
 
-        from y_web.models import Admin_users, User_mgmt
+        from y_web.src.models import Admin_users, User_mgmt
 
         # Create test admin user
         admin_user = Admin_users(

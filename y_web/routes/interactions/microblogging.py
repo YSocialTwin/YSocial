@@ -10,8 +10,8 @@ from flask import flash, redirect, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.llm_annotations import Annotator, ContentAnnotator
-from y_web.models import (
+from y_web.src.llm import Annotator, ContentAnnotator
+from y_web.src.models import (
     Admin_users,
     Emotions,
     Hashtags,
@@ -28,7 +28,7 @@ from y_web.models import (
     User_mgmt,
 )
 from y_web.routes.interactions._blueprint import user
-from y_web.utils.text_utils import toxicity, vader_sentiment
+from y_web.src.content.text_utils import toxicity, vader_sentiment
 
 
 @user.route("/<int:exp_id>/publish")
