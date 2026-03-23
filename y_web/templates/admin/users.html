@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -24,16 +25,9 @@
 
                         <div class="box-content">
 
-
                             <div id="table"></div>
 
                             <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
-                            <style>
-
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
 <script>
   const tableDiv = document.getElementById('table');
   const currentUserRole = '{{ current_user_role }}';
@@ -196,8 +190,6 @@
   });
 </script>
 
-
-
                         </div>
                     </div>
 
@@ -347,7 +339,6 @@
 
                 </div>
 
-
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
@@ -377,7 +368,6 @@
 
                         </div>
                     </div>
-
 
                 </div>
             </div>

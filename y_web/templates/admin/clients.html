@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -27,7 +28,6 @@
                         {{ message }}
                     </div>
                     {% endfor %}
-
 
                     <div class="dashboard-box" id="box-new-client">
                         <h3 class="title is-5 is-thin">New Client</h3>
@@ -684,44 +684,6 @@
                                         </div>
                                     </div>
 
-                                    <style>
-                                        .form-section-header {
-                                            font-size: 0.95em;
-                                            font-weight: 600;
-                                            color: #333;
-                                            margin: 20px 0 8px 0;
-                                            padding-bottom: 5px;
-                                            border-bottom: 1px solid #e0e0e0;
-                                        }
-                                        .form-section-description {
-                                            font-size: 0.85em;
-                                            color: #666;
-                                            margin-bottom: 15px;
-                                            line-height: 1.4;
-                                        }
-                                        details summary {
-                                            list-style: none;
-                                        }
-                                        details summary::-webkit-details-marker {
-                                            display: none;
-                                        }
-                                        details summary::before {
-                                            content: '▶';
-                                            display: inline-block;
-                                            margin-right: 8px;
-                                            transition: transform 0.2s;
-                                            color: #374151;
-                                        }
-                                        details[open] summary::before {
-                                            transform: rotate(90deg);
-                                        }
-                                        .tutorial-section {
-                                            padding: 10px;
-                                            margin: -10px;
-                                            margin-bottom: 10px;
-                                            border-radius: 4px;
-                                        }
-                                    </style>
                                     </div><!-- End section-recsys -->
 
                                     <div id="section-topic-interest" class="tutorial-section">
@@ -729,49 +691,6 @@
                                     <div class="form-section-description">
                                         Specify the percentage of agents interested in each topic. Default is 100% for all topics.
                                     </div>
-
-                                    <style>
-                                        .topic-interest-boxes {
-                                            display: grid;
-                                            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-                                            gap: 12px;
-                                            margin-bottom: 20px;
-                                        }
-                                        .topic-interest-box {
-                                            background: #f9fafb;
-                                            border: 1px solid #e5e7eb;
-                                            border-radius: 6px;
-                                            padding: 12px;
-                                        }
-                                        .topic-interest-box h4 {
-                                            font-size: 0.85em;
-                                            font-weight: 600;
-                                            color: #374151;
-                                            margin-bottom: 6px;
-                                        }
-                                        .topic-interest-box p {
-                                            font-size: 0.75em;
-                                            color: #6b7280;
-                                            margin-bottom: 8px;
-                                            min-height: 2.5em;
-                                        }
-                                        .topic-interest-box input {
-                                            width: 80px;
-                                            padding: 4px 8px;
-                                            border: 1px solid #d1d5db;
-                                            border-radius: 3px;
-                                            font-size: 0.9em;
-                                        }
-                                        .topic-interest-box input:focus {
-                                            outline: none;
-                                            border-color: #3b82f6;
-                                            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-                                        }
-                                        .topic-percentage-label {
-                                            font-size: 0.8em;
-                                            color: #6b7280;
-                                        }
-                                    </style>
 
                                     <div class="topic-interest-boxes">
                                         {% for topic in topics %}
@@ -801,83 +720,6 @@
                                         </summary>
                                         <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
                                             
-                                            <style>
-                                                details[open] .details-arrow {
-                                                    transform: rotate(180deg);
-                                                }
-                                                .network-option-card {
-                                                    background: #f9fafb;
-                                                    border: 2px solid #e5e7eb;
-                                                    border-radius: 8px;
-                                                    padding: 20px;
-                                                    margin-bottom: 16px;
-                                                    transition: all 0.3s ease;
-                                                }
-                                                .network-option-card:hover {
-                                                    border-color: #d1d5db;
-                                                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                                                }
-                                                .network-option-card.active {
-                                                    border-color: #3b82f6;
-                                                    background: #eff6ff;
-                                                }
-                                                .network-card-title {
-                                                    font-size: 1em;
-                                                    font-weight: 600;
-                                                    color: #1f2937;
-                                                    margin-bottom: 12px;
-                                                    display: flex;
-                                                    align-items: center;
-                                                    gap: 8px;
-                                                }
-                                                .network-card-icon {
-                                                    font-size: 1.2em;
-                                                }
-                                                .network-params-container {
-                                                    display: grid;
-                                                    gap: 12px;
-                                                    margin-top: 16px;
-                                                    padding-top: 16px;
-                                                    border-top: 1px solid #e5e7eb;
-                                                }
-                                                .network-param-row {
-                                                    display: grid;
-                                                    grid-template-columns: 200px 1fr;
-                                                    gap: 12px;
-                                                    align-items: center;
-                                                }
-                                                .network-param-label {
-                                                    font-size: 0.875em;
-                                                    font-weight: 500;
-                                                    color: #4b5563;
-                                                }
-                                                .network-param-input {
-                                                    width: 100%;
-                                                    max-width: 300px;
-                                                }
-                                                .network-divider {
-                                                    display: flex;
-                                                    align-items: center;
-                                                    text-align: center;
-                                                    margin: 20px 0;
-                                                    color: #9ca3af;
-                                                    font-size: 0.875em;
-                                                    font-weight: 500;
-                                                }
-                                                .network-divider::before,
-                                                .network-divider::after {
-                                                    content: '';
-                                                    flex: 1;
-                                                    border-bottom: 1px solid #e5e7eb;
-                                                }
-                                                .network-divider::before {
-                                                    margin-right: 16px;
-                                                }
-                                                .network-divider::after {
-                                                    margin-left: 16px;
-                                                }
-                                            </style>
-
                                             <!-- Synthetic Network Section -->
                                             <div class="network-option-card" id="synthetic_network_card">
                                                 <div class="network-card-title">
@@ -986,57 +828,6 @@
                                                     Upload a CSV file with edges (one per line: source,target).
                                                 </p>
                                                 
-                                                <style>
-                                                    .file-upload-wrapper-network-create {
-                                                        position: relative;
-                                                        overflow: hidden;
-                                                        display: block;
-                                                    }
-                                                    .file-upload-wrapper-network-create input[type=file] {
-                                                        position: absolute;
-                                                        left: -9999px;
-                                                    }
-                                                    .file-upload-label-network-create {
-                                                        display: flex;
-                                                        align-items: center;
-                                                        justify-content: center;
-                                                        padding: 16px 20px;
-                                                        background: #ffffff;
-                                                        border: 2px dashed #d1d5db;
-                                                        border-radius: 8px;
-                                                        cursor: pointer;
-                                                        transition: all 0.3s;
-                                                        font-size: 0.9em;
-                                                    }
-                                                    .file-upload-label-network-create:hover {
-                                                        background: #f9fafb;
-                                                        border-color: #3b82f6;
-                                                    }
-                                                    .file-upload-label-network-create.disabled {
-                                                        opacity: 0.5;
-                                                        cursor: not-allowed;
-                                                        pointer-events: none;
-                                                        background: #f3f4f6;
-                                                    }
-                                                    .file-upload-icon-network-create {
-                                                        margin-right: 10px;
-                                                        font-size: 1.4em;
-                                                    }
-                                                    .file-upload-text-network-create {
-                                                        color: #6b7280;
-                                                        font-weight: 500;
-                                                    }
-                                                    .file-name-display-network-create {
-                                                        margin-top: 12px;
-                                                        padding: 8px 12px;
-                                                        font-size: 0.85em;
-                                                        color: #059669;
-                                                        background: #ecfdf5;
-                                                        border-radius: 6px;
-                                                        font-weight: 500;
-                                                        text-align: center;
-                                                    }
-                                                </style>
                                                 <div class="file-upload-wrapper-network-create">
                                                     <input type="file" id="network_file_create" name="network_file" onchange="displayNetworkFileNameCreate(this)">
                                                     <label for="network_file_create" class="file-upload-label-network-create">
@@ -1092,39 +883,6 @@
                                                 <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
                                                     Enter custom values for specific hours (leave empty to use defaults shown in placeholders).
                                                 </p>
-
-                                            <style>
-                                                .activity-grid-create {
-                                                    display: grid;
-                                                    grid-template-columns: repeat(12, 1fr);
-                                                    gap: 8px;
-                                                    margin-bottom: 16px;
-                                                }
-                                                .activity-hour-create {
-                                                    display: flex;
-                                                    flex-direction: column;
-                                                    align-items: center;
-                                                }
-                                                .activity-hour-create label {
-                                                    font-size: 0.75em;
-                                                    color: #666;
-                                                    margin-bottom: 4px;
-                                                    font-weight: 500;
-                                                }
-                                                .activity-hour-create input {
-                                                    width: 100%;
-                                                    padding: 4px 6px;
-                                                    text-align: center;
-                                                    font-size: 0.85em;
-                                                    border: 1px solid #d1d5db;
-                                                    border-radius: 4px;
-                                                }
-                                                .activity-hour-create input:focus {
-                                                    outline: none;
-                                                    border-color: #22c55e;
-                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
-                                                }
-                                            </style>
 
                                             <div class="activity-grid-create">
                                                 <div class="activity-hour-create">
@@ -1349,97 +1107,6 @@
                                         </summary>
                                         <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
 
-                                            <style>
-                                                .archetype-boxes {
-                                                    display: grid;
-                                                    grid-template-columns: repeat(3, 1fr);
-                                                    gap: 16px;
-                                                    margin-bottom: 24px;
-                                                }
-                                                .archetype-box {
-                                                    background: #f9fafb;
-                                                    border: 2px solid #e5e7eb;
-                                                    border-radius: 8px;
-                                                    padding: 16px;
-                                                    transition: all 0.3s ease;
-                                                }
-                                                .archetype-box:hover {
-                                                    border-color: #d1d5db;
-                                                    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                                                }
-                                                .archetype-box h4 {
-                                                    font-size: 0.9em;
-                                                    font-weight: 600;
-                                                    color: #1f2937;
-                                                    margin-bottom: 8px;
-                                                }
-                                                .archetype-box p {
-                                                    font-size: 0.8em;
-                                                    color: #6b7280;
-                                                    line-height: 1.4;
-                                                    margin-bottom: 12px;
-                                                }
-                                                .archetype-box input {
-                                                    width: 80px;
-                                                    padding: 6px 10px;
-                                                    text-align: center;
-                                                    font-size: 0.9em;
-                                                    border: 1px solid #d1d5db;
-                                                    border-radius: 6px;
-                                                }
-                                                .archetype-box input:focus {
-                                                    outline: none;
-                                                    border-color: #3b82f6;
-                                                    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-                                                }
-                                                .transition-table-compact {
-                                                    width: 100%;
-                                                    border-collapse: collapse;
-                                                    font-size: 0.8em;
-                                                    margin-top: 16px;
-                                                }
-                                                .transition-table-compact th,
-                                                .transition-table-compact td {
-                                                    padding: 4px 6px;
-                                                    text-align: center;
-                                                    border: 1px solid #e5e7eb;
-                                                }
-                                                .transition-table-compact th {
-                                                    background-color: #f9fafb;
-                                                    color: #374151;
-                                                    font-weight: 600;
-                                                    font-size: 0.7em;
-                                                }
-                                                .transition-table-compact td:first-child {
-                                                    background-color: #f9fafb;
-                                                    font-weight: 500;
-                                                    text-align: left;
-                                                    color: #374151;
-                                                    font-size: 0.7em;
-                                                }
-                                                .transition-table-compact input {
-                                                    width: 50px;
-                                                    padding: 3px 4px;
-                                                    text-align: center;
-                                                    font-size: 0.75em;
-                                                    border: 1px solid #d1d5db;
-                                                    border-radius: 3px;
-                                                }
-                                                .transition-table-compact input:focus {
-                                                    outline: none;
-                                                    border-color: #22c55e;
-                                                    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
-                                                }
-                                                .archetype-box.disabled {
-                                                    opacity: 0.5;
-                                                    background: #f3f4f6;
-                                                }
-                                                .archetype-box.disabled input {
-                                                    background: #e5e7eb;
-                                                    cursor: not-allowed;
-                                                }
-                                            </style>
-
                                             <!-- Archetype Distribution Card -->
                                             <div class="network-option-card" style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 20px; margin-bottom: 16px;">
                                                 <div class="network-card-title">
@@ -1525,7 +1192,6 @@
                     </div>
                 </div>
 
-
                 <!--Dashboard column-->
                 <div class="column is-4">
                     <!--Box-->
@@ -1608,7 +1274,6 @@
                         </div>
                     </div>
 
-
                 </div>
             </div>
         </div>
@@ -1636,7 +1301,6 @@ let llmModelsFetched = false;
 let llmModelSelected = false;
 
 // Enable disabled inputs before form submission so their values are included
-
 
 // Check if form should be enabled
 function updateFormButtonState() {

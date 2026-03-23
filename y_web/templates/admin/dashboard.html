@@ -1,42 +1,5 @@
 {% include "admin/head.html" %}
-<style>
-    .group-header {
-        gap: 10px;
-    }
-    .group-header-main {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        flex: 1;
-    }
-    .group-header-title {
-        font-weight: 600;
-        color: #333;
-        font-size: 0.95em;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .group-header-hint {
-        font-size: 0.75em;
-        color: #999;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-    @media (max-width: 1024px) {
-        .group-header {
-            flex-wrap: wrap;
-            align-items: center;
-        }
-        .group-header-hint,
-        .group-helper-text {
-            display: none !important;
-        }
-    }
-</style>
-
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 {# Macro for rendering an experiment box (full version with client details for running experiments) #}
 {% macro render_experiment_box(experiments, section_color, show_run_buttons=true) %}
     {% for exp in experiments %}
@@ -528,9 +491,7 @@
                     </script>
                     {% endif %}
 
-
                 </div>
-
 
                 <!--Dashboard column-->
                 <div class="column is-4">

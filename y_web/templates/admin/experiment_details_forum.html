@@ -1,37 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-/* Responsive styles for plot section headings */
-.plot-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5em;
-    flex-wrap: wrap;
-    gap: 0.75em;
-}
-.plot-section-header h3 {
-    margin-bottom: 0;
-    flex-shrink: 0;
-}
-.plot-section-controls {
-    display: flex;
-    gap: 0.5em;
-    align-items: center;
-    flex-wrap: wrap;
-}
-@media (max-width: 768px) {
-    .plot-section-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .plot-section-controls {
-        width: 100%;
-        justify-content: flex-start;
-    }
-}
-
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -218,8 +186,6 @@
 
                         </div>
                     </div>
-
-
 
                 </div>
 
@@ -1196,51 +1162,6 @@
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling */
-                            #pathFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #pathFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #039be5;
-                                box-shadow: 0 1px 3px rgba(3, 155, 229, 0.1);
-                            }
-
-                            #pathFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #039be5;
-                            }
-
-                            #pathFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #pathFilters label:has(input:checked) {
-                                background: #e3f2fd;
-                                border-color: #039be5;
-                            }
-
-                            #pathFilters label:has(input:checked) span {
-                                color: #0277bd;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>
@@ -1600,51 +1521,6 @@
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling for methods */
-                            #methodFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #methodFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #ff6b6b;
-                                box-shadow: 0 1px 3px rgba(255, 107, 107, 0.1);
-                            }
-
-                            #methodFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #ff6b6b;
-                            }
-
-                            #methodFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #methodFilters label:has(input:checked) {
-                                background: #ffe3e3;
-                                border-color: #ff6b6b;
-                            }
-
-                            #methodFilters label:has(input:checked) span {
-                                color: #c92a2a;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>

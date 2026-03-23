@@ -1,113 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-/* Responsive styles for plot section headings */
-.plot-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5em;
-    flex-wrap: wrap;
-    gap: 0.75em;
-}
-.plot-section-header h3 {
-    margin-bottom: 0;
-    flex-shrink: 0;
-}
-.plot-section-controls {
-    display: flex;
-    gap: 0.5em;
-    align-items: center;
-    flex-wrap: wrap;
-}
-@media (max-width: 768px) {
-    .plot-section-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .plot-section-controls {
-        width: 100%;
-        justify-content: flex-start;
-    }
-}
-
-/* Match toggle look-and-feel from admin/experiments (settings page) */
-.switch-small {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-}
-.switch-small input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider-small {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #d1d5db;
-    transition: .4s;
-}
-.slider-small:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: #fff;
-    transition: .4s;
-}
-.switch-small input:checked + .slider-small {
-    background-color: #039be5;
-}
-.switch-small input:checked + .slider-small:before {
-    transform: translateX(18px);
-}
-.slider-small.round {
-    border-radius: 22px;
-}
-.slider-small.round:before {
-    border-radius: 50%;
-}
-
-.exp-config-card {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
-}
-.exp-config-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-}
-.exp-config-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 6px 8px;
-    min-width: 0;
-}
-.exp-config-item span {
-    font-size: 0.82rem;
-    color: #374151;
-    white-space: nowrap;
-}
-.perspective-field-disabled {
-    opacity: 0.6;
-}
-@media (max-width: 768px) {
-    .exp-config-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -298,8 +190,6 @@
 
                         </div>
                     </div>
-
-
 
                 </div>
 
@@ -1299,51 +1189,6 @@
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling */
-                            #pathFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #pathFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #039be5;
-                                box-shadow: 0 1px 3px rgba(3, 155, 229, 0.1);
-                            }
-
-                            #pathFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #039be5;
-                            }
-
-                            #pathFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #pathFilters label:has(input:checked) {
-                                background: #e3f2fd;
-                                border-color: #039be5;
-                            }
-
-                            #pathFilters label:has(input:checked) span {
-                                color: #0277bd;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>
@@ -1703,51 +1548,6 @@
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling for methods */
-                            #methodFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #methodFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #ff6b6b;
-                                box-shadow: 0 1px 3px rgba(255, 107, 107, 0.1);
-                            }
-
-                            #methodFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #ff6b6b;
-                            }
-
-                            #methodFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #methodFilters label:has(input:checked) {
-                                background: #ffe3e3;
-                                border-color: #ff6b6b;
-                            }
-
-                            #methodFilters label:has(input:checked) span {
-                                color: #c92a2a;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>

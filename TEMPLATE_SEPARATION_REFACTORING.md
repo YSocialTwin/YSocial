@@ -390,10 +390,10 @@ to a single page go into a page-specific file (e.g., `admin-miscellanea.css`).
 
 **Success Criteria**:
 
-- [ ] `grep -r '<style>' y_web/templates/admin/ --include="*.html"` returns zero results.
-- [ ] All new CSS files (`admin-settings.css`, `admin-clients.css`, `admin-components.css`, `admin-tutorials.css`) exist and pass CSS validation (`npx stylelint` or equivalent).
-- [ ] The `<link>` tags for new CSS files are present in the respective templates (verified by `grep`).
-- [ ] Baseline `<style>` block count for admin templates reaches 0.
+- [x] `grep -r '<style>' y_web/templates/admin/ --include="*.html"` returns zero results.
+- [x] All new CSS files (`admin-settings.css`, `admin-clients.css`, `admin-components.css`, `admin-tutorials.css`) exist and pass CSS validation (`npx stylelint` or equivalent).
+- [x] The `<link>` tags for new CSS files are present in the respective templates (verified by `grep`).
+- [x] Baseline `<style>` block count for admin templates reaches 0.
 - [ ] Visual regression: admin pages render identically before and after (screenshot comparison or manual walkthrough).
 
 ---

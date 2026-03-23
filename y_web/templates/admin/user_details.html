@@ -1,58 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-/* Toggle switch styles */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 50px;
-  height: 24px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 18px;
-  width: 18px;
-  left: 3px;
-  bottom: 3px;
-  background-color: white;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #039be5;
-}
-
-input:checked + .slider:before {
-  transform: translateX(26px);
-}
-
-.slider.round {
-  border-radius: 24px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -63,8 +10,6 @@ input:checked + .slider:before {
         <div class="dashboard-body">
 
              <div class="columns">
-
-
 
                 <div class="column is-12">
                     <div class="dashboard-box">
@@ -114,7 +59,6 @@ input:checked + .slider:before {
             </div>
 
             <div class="columns is-multiline" style="align-items: stretch;">
-
 
                 <!--Dashboard column-->
                 <div class="column is-12-mobile is-4-tablet" style="display: flex;">
@@ -420,7 +364,6 @@ input:checked + .slider:before {
                 {% endif %}
 
             </div>
-
 
         </div>
     </div>

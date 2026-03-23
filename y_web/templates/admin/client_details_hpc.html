@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -465,7 +466,6 @@
 
                     </div>
 
-
                      <div class="dashboard-box" id="box-social-network">
                         <div class="box-content">
                             <div class="box-lines">
@@ -596,48 +596,6 @@
                             <hr>
                             <form action="/admin/upload_network/{{ client.id }}" enctype="multipart/form-data" method="POST">
                                 <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload Custom Network</h4>
-                                <style>
-                                    .file-upload-wrapper-network {
-                                        position: relative;
-                                        overflow: hidden;
-                                        display: block;
-                                        margin-bottom: 12px;
-                                    }
-                                    .file-upload-wrapper-network input[type=file] {
-                                        position: absolute;
-                                        left: -9999px;
-                                    }
-                                    .file-upload-label-network {
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        padding: 10px 12px;
-                                        background: #f9fafb;
-                                        border: 1px dashed #d1d5db;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        transition: all 0.2s;
-                                        font-size: 0.85em;
-                                    }
-                                    .file-upload-label-network:hover {
-                                        background: #f3f4f6;
-                                        border-color: #22c55e;
-                                    }
-                                    .file-upload-icon-network {
-                                        margin-right: 8px;
-                                        font-size: 1.1em;
-                                    }
-                                    .file-upload-text-network {
-                                        color: #6b7280;
-                                    }
-                                    .file-name-display-network {
-                                        margin-top: 6px;
-                                        font-size: 0.8em;
-                                        color: #22c55e;
-                                        font-weight: 500;
-                                        text-align: center;
-                                    }
-                                </style>
                                 <div class="file-upload-wrapper-network">
                                     <input type="file" id="network_file" name="network_file" onchange="displayNetworkFileName(this)">
                                     <label for="network_file" class="file-upload-label-network">
@@ -751,38 +709,6 @@
                         <form action="/admin/update_agents_activity/{{ client.id }}" enctype="multipart/form-data" method="POST">
                             <div class="box-content" style="margin-top: 16px;">
                                 <p style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-weight: 500;">Hourly Activity Percentages:</p>
-                                <style>
-                                    .activity-grid {
-                                        display: grid;
-                                        grid-template-columns: repeat(12, 1fr);
-                                        gap: 8px;
-                                        margin-bottom: 16px;
-                                    }
-                                    .activity-hour {
-                                        display: flex;
-                                        flex-direction: column;
-                                        align-items: center;
-                                    }
-                                    .activity-hour label {
-                                        font-size: 0.75em;
-                                        color: #666;
-                                        margin-bottom: 4px;
-                                        font-weight: 500;
-                                    }
-                                    .activity-hour input {
-                                        width: 100%;
-                                        padding: 4px 6px;
-                                        text-align: center;
-                                        font-size: 0.85em;
-                                        border: 1px solid #d1d5db;
-                                        border-radius: 4px;
-                                    }
-                                    .activity-hour input:focus {
-                                        outline: none;
-                                        border-color: #22c55e;
-                                        box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
-                                    }
-                                </style>
                                 <div class="activity-grid">
                                     {% for hour in range(12) %}
                                     <div class="activity-hour">
