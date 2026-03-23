@@ -32,40 +32,11 @@
     <!-- Loading Indicator - Cache-busting version parameter ensures updates are loaded -->
     <script src="{{ url_for('static', filename='assets/js/loading-indicator.js') }}?v=1.2"></script>
     
-    <!-- Alert dismissal functionality -->
-    <script>
-        $(document).ready(function() {
-            // Handle alert dismissal without page refresh
-            $(document).on('click', '[data-dismiss="alert"]', function(e) {
-                e.preventDefault();
-                $(this).closest('.alert').fadeOut(300, function() {
-                    $(this).remove();
-                });
-            });
-        });
-    </script>
 </head>
 
 <body>
 
-<script id="__bs_script__">//<![CDATA[
-(function () {
-    try {
-        var script = document.createElement('script');
-        if ('async') {
-            script.async = true;
-        }
-        script.src = "{{ url_for('static', filename='/assets/js/browser-sync-client.js') }}";
-        if (document.body) {
-            document.body.appendChild(script);
-        } else if (document.head) {
-            document.head.appendChild(script);
-        }
-    } catch (e) {
-        console.error("Browsersync: could not append script tag", e);
-    }
-})()
-//]]></script>
+{% include 'shared/browser_sync.html' %}
 
 <!-- Google Tag Manager (noscript) -->
 <noscript>
@@ -187,40 +158,6 @@
     </div>-->
 </div>
 
-
-<script>
-function toggleSidebar() {
-    const sidebar = document.getElementById('dashboard-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    
-    if (sidebar.classList.contains('open')) {
-        closeSidebar();
-    } else {
-        sidebar.classList.add('open');
-        overlay.classList.add('active');
-    }
-}
-
-function closeSidebar() {
-    const sidebar = document.getElementById('dashboard-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    
-    sidebar.classList.remove('open');
-    overlay.classList.remove('active');
-}
-
-// Close sidebar when clicking on a link (for mobile)
-document.addEventListener('DOMContentLoaded', function() {
-    const sidebarLinks = document.querySelectorAll('.dashboard-aside-link');
-    sidebarLinks.forEach(link => {
-        link.addEventListener('click', function() {
-            if (window.innerWidth <= 768) {
-                closeSidebar();
-            }
-        });
-    });
-});
-</script>
 
 
 

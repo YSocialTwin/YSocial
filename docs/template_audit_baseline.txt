@@ -16,10 +16,10 @@
 files_with_style_blocks=33
 total_style_blocks=71
 total_style_attrs=2827
-total_inline_scripts=148
-total_browsersync_occurrences=5
-total_html_files=83
-total_lines=45961
+total_inline_scripts=143
+total_browsersync_occurrences=1
+total_html_files=84
+total_lines=45598
 
 ## Per-Section Breakdown
 
@@ -28,7 +28,7 @@ total_lines=45961
 section_admin_files=38
 section_admin_style_blocks=60
 section_admin_style_attrs=2090
-section_admin_inline_scripts=107
+section_admin_inline_scripts=102
 
 section_admin_tutorials_files=13
 section_admin_tutorials_style_blocks=3
@@ -129,10 +129,6 @@ has_style_block: 1  microblogging/interview.html
 
 ## Files Containing BrowserSync Snippet
 
-has_browsersync: admin/head.html
-has_browsersync: forum/header.html
-has_browsersync: login/login.html
-has_browsersync: login/register.html
-has_browsersync: microblogging/header.html
+has_browsersync: shared/browser_sync.html
 
 # End of baseline

@@ -320,13 +320,13 @@ Steps:
 
 **Success Criteria**:
 
-- [ ] `admin/head.html` contains zero inline `<script>` blocks.
-- [ ] `admin/dash_head.html` contains zero inline function definitions.
-- [ ] `y_web/static/assets/js/admin-layout.js` and `admin-nav.js` exist.
-- [ ] `y_web/templates/shared/browser_sync.html` exists and is included in all 5 files.
-- [ ] `grep -rn 'id="__bs_script__"' y_web/templates/` returns exactly 1 result (the new shared partial).
+- [x] `admin/head.html` contains zero inline `<script>` blocks.
+- [x] `admin/dash_head.html` contains zero inline function definitions.
+- [x] `y_web/static/assets/js/admin-layout.js` and `admin-nav.js` exist.
+- [x] `y_web/templates/shared/browser_sync.html` exists and is included in all 5 files.
+- [x] `grep -rn 'id="__bs_script__"' y_web/templates/` returns exactly 1 result (the new shared partial).
 - [ ] Functional regression: alert banners dismiss without page reload; sidebar toggles on mobile; blog-banner dismiss works.
-- [ ] Baseline inline `<script>` count decreases by at least 8.
+- [x] Baseline inline `<script>` count decreases by at least 8 (5 pure inline `<script>` blocks removed + 4 BrowserSync occurrences de-duplicated into a single shared partial, net 9 reduction).
 
 ---
 

@@ -30,24 +30,7 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/core.css') }}"/>
 </head>
 <body>
-<script id="__bs_script__">//<![CDATA[
-(function () {
-    try {
-        var script = document.createElement('script');
-        if ('async') {
-            script.async = true;
-        }
-        script.src = "{{ url_for('static', filename='/assets/js/browser-sync-client.js') }}";
-        if (document.body) {
-            document.body.appendChild(script);
-        } else if (document.head) {
-            document.head.appendChild(script);
-        }
-    } catch (e) {
-        console.error("Browsersync: could not append script tag", e);
-    }
-})()
-//]]></script>
+{% include 'shared/browser_sync.html' %}
 
 <!-- Google Tag Manager (noscript) -->
 <noscript
