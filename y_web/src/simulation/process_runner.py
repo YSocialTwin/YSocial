@@ -113,15 +113,8 @@ import random
 import re
 import sys
 import traceback
-from collections import defaultdict  # noqa: F401 — kept for backward-compat importers
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-import numpy as np  # noqa: F401 — kept for any third-party callers that import it from here
-
-from y_web.src.models import (
-    ActivityProfile,  # noqa: F401 — kept for any third-party callers
-    PopulationActivityProfile,  # noqa: F401 — kept for any third-party callers
-)
 from y_web.src.simulation.agent_sampler import (
     ensure_agents_have_archetype,
     get_users_per_hour,

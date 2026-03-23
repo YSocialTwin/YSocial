@@ -28,10 +28,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = "auth.login"
 
-# Backward-compatible re-export so existing callers can still do:
-#   from y_web import create_postgresql_db
-from y_web.db_init.postgresql import create_postgresql_db  # noqa: F401
-
 
 def cleanup_db_jupyter_with_new_app():
     """

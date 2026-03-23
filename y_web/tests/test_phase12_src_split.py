@@ -191,52 +191,6 @@ def test_log_offset_exposes_retry_delay():
 
 
 # ---------------------------------------------------------------------------
-# Phase 12b — log_parser.py backward compatibility
-# ---------------------------------------------------------------------------
-
-
-def test_log_parser_still_exposes_get_log_file_offset():
-    mod = importlib.import_module("y_web.src.hpc.log_parser")
-    fn = getattr(mod, "get_log_file_offset", None)
-    assert callable(fn), "log_parser must still expose get_log_file_offset"
-
-
-def test_log_parser_still_exposes_update_log_file_offset():
-    mod = importlib.import_module("y_web.src.hpc.log_parser")
-    fn = getattr(mod, "update_log_file_offset", None)
-    assert callable(fn), "log_parser must still expose update_log_file_offset"
-
-
-def test_log_parser_still_exposes_reset_hpc_client_metrics():
-    mod = importlib.import_module("y_web.src.hpc.log_parser")
-    fn = getattr(mod, "reset_hpc_client_metrics", None)
-    assert callable(fn), "log_parser must still expose reset_hpc_client_metrics"
-
-
-def test_log_parser_still_exposes_reset_hpc_server_metrics():
-    mod = importlib.import_module("y_web.src.hpc.log_parser")
-    fn = getattr(mod, "reset_hpc_server_metrics", None)
-    assert callable(fn), "log_parser must still expose reset_hpc_server_metrics"
-
-
-def test_log_parser_identity_with_log_offset():
-    """log_parser symbols must be the same objects as log_offset ones."""
-    lp = importlib.import_module("y_web.src.hpc.log_parser")
-    lo = importlib.import_module("y_web.src.hpc.log_offset")
-    for name in (
-        "get_log_file_offset",
-        "update_log_file_offset",
-        "reset_hpc_client_metrics",
-        "reset_hpc_server_metrics",
-        "_ensure_session_clean",
-        "_commit_with_retry",
-    ):
-        assert getattr(lp, name) is getattr(lo, name), (
-            f"log_parser.{name} must be the same object as log_offset.{name}"
-        )
-
-
-# ---------------------------------------------------------------------------
 # Phase 12b — log_parser.py line-count goal
 # ---------------------------------------------------------------------------
 

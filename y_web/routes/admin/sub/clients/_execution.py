@@ -177,7 +177,7 @@ def extend_simulation(id_client):
                 update_client_log_metrics,
                 update_server_log_metrics,
             )
-            from y_web.src.hpc.log_parser import (
+            from y_web.src.hpc.log_offset import (
                 reset_hpc_client_metrics,
                 reset_hpc_server_metrics,
             )

@@ -144,7 +144,7 @@ def test_migrations_function_signature():
 
 
 # ---------------------------------------------------------------------------
-# 6. Backward-compatibility on y_web.__init__
+# 6. y_web.__init__ still exposes core symbols
 # ---------------------------------------------------------------------------
 
 
@@ -169,13 +169,13 @@ def test_y_web_still_has_create_app():
     assert callable(getattr(y_web, "create_app", None)), "y_web.create_app must be callable"
 
 
-def test_y_web_backward_compat_create_postgresql_db():
-    """y_web must still export create_postgresql_db for backward compatibility."""
-    import y_web
+def test_y_web_create_postgresql_db_via_db_init():
+    """create_postgresql_db must be accessible via the canonical y_web.db_init path."""
+    from y_web.db_init import create_postgresql_db
 
-    assert callable(
-        getattr(y_web, "create_postgresql_db", None)
-    ), "y_web.create_postgresql_db must be callable (re-exported from db_init)"
+    assert callable(create_postgresql_db), (
+        "create_postgresql_db must be callable via y_web.db_init"
+    )
 
 
 def test_y_web_init_line_count_reduced():

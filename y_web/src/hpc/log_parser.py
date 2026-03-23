@@ -3,37 +3,21 @@ Raw HPC log parsing utilities.
 
 Provides functions for incremental log file reading, offset tracking, and
 parsing of server/client log entries into aggregated metric dictionaries.
-Shared private helpers for database session safety and metric resets are
-defined in log_offset.py and re-imported here for backward compatibility.
 """
 
 import json
 import logging
 import os
-import time  # noqa: F401 — kept for any third-party callers
 from collections import defaultdict
-from datetime import datetime, timedelta  # noqa: F401 — timedelta re-exported for shim
+from datetime import datetime
 
-from sqlalchemy import and_  # noqa: F401 — re-exported for shim
-from sqlalchemy.exc import OperationalError, PendingRollbackError  # noqa: F401
-
-from y_web import db  # noqa: F401 — kept for any third-party callers
-from y_web.src.hpc.log_offset import (
-    MAX_RETRIES,
-    RETRY_DELAY,
-    _commit_with_retry,
-    _ensure_session_clean,
-    get_log_file_offset,
-    reset_hpc_client_metrics,
-    reset_hpc_server_metrics,
-    update_log_file_offset,
-)
+from y_web import db
+from y_web.src.hpc.log_offset import _commit_with_retry
 from y_web.src.models import (
     Client,
     Client_Execution,
     ClientLogMetrics,
     Exps,
-    LogFileOffset,  # noqa: F401 — kept for any third-party callers
     ServerLogMetrics,
 )
 
