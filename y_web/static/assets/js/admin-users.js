@@ -209,3 +209,7 @@ var AdminUsers = (function() {
 document.addEventListener('DOMContentLoaded', function() {
     AdminUsers.initUsersGrid();
 });
+
+// Expose globally for use in HTML onclick attributes
+window.fetchModelsForAddUser = AdminUsers.fetchModelsForAddUser;
+window.fetchModelsForUser = AdminUsers.fetchModelsForUser;

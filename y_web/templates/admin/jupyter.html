@@ -43,16 +43,8 @@
 </div>
 
 {% block extra_js %}
-<script>
-// Auto-reload if Jupyter is not responding
-setTimeout(() => {
-    const frame = document.getElementById('jupyter-frame');
-    frame.addEventListener('error', () => {
-        alert('Jupyter Lab appears to be offline. Redirecting to home...');
-        window.location.href = '{{ url_for("experiments.experiment_details", uid=experiment.idexp) }}';
-    });
-}, 5000);
-</script>
+<script>var YS_DATA_JUPYTER = { homeUrl: "{{ url_for('experiments.experiment_details', uid=experiment.idexp) }}" };</script>
 {% endblock %}
 
+<script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>
 {% include "admin/footer.html" %}

@@ -1819,4 +1819,103 @@ var AdminSettings = (function() {
           display.textContent = '';
       }
   }
+
+
+function syncEmbeddingSettingsControls() {
+    const service = document.getElementById('embedding_service');
+    const host = document.getElementById('embedding_host');
+    const fetchButton = document.getElementById('fetch_embedding_models');
+    const model = document.getElementById('embedding_model');
+    const enabled = service && service.value === 'ollama';
+
+    if (host) {
+        host.disabled = !enabled;
+    }
+    if (fetchButton) {
+        fetchButton.disabled = !enabled || !(host && host.value.trim());
+    }
+    if (model) {
+        model.disabled = !enabled;
+        if (!enabled) {
+            model.value = '';
+        }
+    }
+}
+
+function fetchEmbeddingModels() {
+    const service = document.getElementById('embedding_service');
+    const host = document.getElementById('embedding_host');
+    const model = document.getElementById('embedding_model');
+    const status = document.getElementById('embedding_fetch_status');
+
+    if (!service || service.value !== 'ollama') {
+        status.textContent = 'Select Ollama first.';
+        status.style.color = '#d9822b';
+        return;
+    }
+
+    const hostValue = host.value.trim();
+    if (!hostValue) {
+        status.textContent = 'Enter an Ollama host first.';
+        status.style.color = '#c62828';
+        return;
+    }
+
+    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
+    status.style.color = '#666';
+
+    fetch(`/admin/api/fetch_embedding_models?llm_url=${encodeURIComponent(hostValue)}`)
+        .then(async (response) => {
+            const data = await response.json();
+            if (!response.ok || data.error || data.success === false) {
+                throw new Error(data.error || data.message || 'Failed to fetch embedding models.');
+            }
+            return data;
+        })
+        .then((data) => {
+            const currentValue = model.value;
+            model.innerHTML = '<option value="">Select an embedding model</option>';
+            data.models.forEach((name) => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                if (name === currentValue) {
+                    option.selected = true;
+                }
+                model.appendChild(option);
+            });
+            if (data.models.length === 0) {
+                status.textContent = 'No embedding models found on this host.';
+                status.style.color = '#d9822b';
+            } else {
+                status.textContent = `${data.models.length} embedding model(s) loaded.`;
+                status.style.color = '#2e7d32';
+                if (!currentValue) {
+                    model.selectedIndex = 1;
+                }
+            }
+        })
+        .catch((error) => {
+            status.textContent = error.message || 'Connection failed.';
+            status.style.color = '#c62828';
+        });
+}
+
+window.addEventListener('DOMContentLoaded', function() {
+    const service = document.getElementById('embedding_service');
+    const host = document.getElementById('embedding_host');
+    const fetchButton = document.getElementById('fetch_embedding_models');
+
+    if (service) {
+        service.addEventListener('change', syncEmbeddingSettingsControls);
+    }
+    if (host) {
+        host.addEventListener('input', syncEmbeddingSettingsControls);
+    }
+    if (fetchButton) {
+        fetchButton.addEventListener('click', fetchEmbeddingModels);
+    }
+    syncEmbeddingSettingsControls();
+});
+
 })();

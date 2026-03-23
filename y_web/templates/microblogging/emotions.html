@@ -424,18 +424,7 @@
 
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
-<script>
-    // Initialize infinite scroll for emotion posts
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.InfiniteScroll) {
-            InfiniteScroll.init({
-                apiEndpoint: '/{{exp_id}}/api/emotion/{{emotion_id}}',
-                postsContainerId: 'posts-container',
-                initialPage: {{ page }}
-            });
-        }
-    });
-</script>
+<script>var YS_DATA_MB_EMOTIONS = { expId: '{{exp_id}}', emotionId: '{{emotion_id}}', page: {{ page }} };</script>
 
 
 <!-- profile js -->
@@ -462,5 +451,6 @@
 
 <!-- elements page js -->
 
+<script src="{{ url_for('static', filename='assets/js/mb-emotions.js') }}"></script>
 </body>
 </html>

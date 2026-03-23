@@ -821,18 +821,7 @@
 <script src="{{ url_for('static', filename='assets/js/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/infinite-scroll.js') }}"></script>
-<script>
-    // Initialize infinite scroll for feed
-    document.addEventListener('DOMContentLoaded', function() {
-        if (window.InfiniteScroll) {
-            InfiniteScroll.init({
-                apiEndpoint: '/{{exp_id}}/api/feed/{{user_id}}/{{timeline}}/{{mode}}',
-                postsContainerId: 'posts-container',
-                initialPage: {{ page }}
-            });
-        }
-    });
-</script>
+<script>var YS_DATA_MB_FEED = { expId: '{{exp_id}}', userId: '{{user_id}}', timeline: '{{timeline}}', mode: '{{mode}}', page: {{ page }} };</script>
 
 <!-- profile js -->
 
@@ -858,5 +847,6 @@
 
 <!-- elements page js -->
 
+<script src="{{ url_for('static', filename='assets/js/mb-feed.js') }}"></script>
 </body>
 </html>

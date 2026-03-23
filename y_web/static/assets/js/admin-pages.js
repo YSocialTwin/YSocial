@@ -171,3 +171,6 @@ document.addEventListener('DOMContentLoaded', function() {
         AdminPages.initPagesGrid();
     }
 });
+
+// Expose globally for use in HTML onchange attributes
+window.displayPageCollectionFileName = AdminPages.displayPageCollectionFileName;

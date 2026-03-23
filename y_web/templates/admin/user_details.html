@@ -370,47 +370,8 @@
 
 </div>
 
-<script>
-function fetchModelsForUser() {
-    const urlInput = document.getElementById('custom_llm_url');
-    const statusDiv = document.getElementById('fetch-status-user');
-    const selectElement = document.getElementById('llm_model_select');
-    const llmUrl = urlInput.value.trim();
-    
-    if (!llmUrl) {
-        statusDiv.innerHTML = '<span style="color: #ff6b6b;">Please enter an LLM URL</span>';
-        return;
-    }
-    
-    statusDiv.innerHTML = '<span style="color: #4a90e2;">Fetching models...</span>';
-    
-    fetch('/admin/api/fetch_models?llm_url=' + encodeURIComponent(llmUrl))
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.models && data.models.length > 0) {
-                selectElement.innerHTML = '';
-                data.models.forEach(model => {
-                    const option = document.createElement('option');
-                    option.value = model;
-                    option.textContent = model;
-                    selectElement.appendChild(option);
-                });
-                statusDiv.innerHTML = '<span style="color: #28a745;">✓ Loaded ' + data.models.length + ' models</span>';
-            } else {
-                statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ ' + (data.message || 'No models found') + '</span>';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            statusDiv.innerHTML = '<span style="color: #ff6b6b;">✗ Error: Could not fetch models. Check if server is reachable.</span>';
-        });
-}
-</script>
+
 
 {% include "admin/tutorials/user_details_tutorial.html" %}
+<script src="{{ url_for('static', filename='assets/js/admin-users.js') }}"></script>
 {% include "admin/footer.html" %}

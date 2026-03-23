@@ -93,38 +93,7 @@
     </div>
 </div>
 
-<script>
-async function markRead(id) {
-    try {
-        const response = await fetch(`/admin/notifications/${id}/read`, {
-            method: 'POST'
-        });
-        const data = await response.json();
-        if (data.success) {
-            window.location.reload();
-        }
-    } catch (error) {
-        console.error('Failed to mark notification as read:', error);
-    }
-}
 
-async function deleteNotification(id) {
-    if (!confirm('Delete this notification and remove attached file if present?')) {
-        return;
-    }
 
-    try {
-        const response = await fetch(`/admin/notifications/${id}/delete`, {
-            method: 'POST'
-        });
-        const data = await response.json();
-        if (data.success) {
-            window.location.reload();
-        }
-    } catch (error) {
-        console.error('Failed to delete notification:', error);
-    }
-}
-</script>
-
+<script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>
 {% include "admin/footer.html" %}

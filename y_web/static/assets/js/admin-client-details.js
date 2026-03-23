@@ -154,3 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
     AdminClientDetails.initActivityChart();
     AdminClientDetails.initNetworkModelSelector();
 });
+
+// Expose globally for use in HTML onclick/onchange attributes
+window.fetchModelsForClient = AdminClientDetails.fetchModelsForClient;
+window.displayNetworkFileName = AdminClientDetails.displayNetworkFileName;

@@ -499,4 +499,57 @@ var AdminDashboard = (function() {
           console.error('Error paginating stopped experiments:', error);
       }
   }
+
+
+async function markRead(id) {
+    try {
+        const response = await fetch(`/admin/notifications/${id}/read`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to mark notification as read:', error);
+    }
+}
+
+async function deleteNotification(id) {
+    if (!confirm('Delete this notification and remove attached file if present?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`/admin/notifications/${id}/delete`, {
+            method: 'POST'
+        });
+        const data = await response.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error('Failed to delete notification:', error);
+    }
+}
+
+  // Auto-reload if Jupyter is not responding
+  setTimeout(function() {
+      var frame = document.getElementById('jupyter-frame');
+      if (!frame) return;
+      frame.addEventListener('error', function() {
+          var config = window.YS_DATA_JUPYTER || {};
+          alert('Jupyter Lab appears to be offline. Redirecting to home...');
+          window.location.href = config.homeUrl || '/';
+      });
+  }, 5000);
+
+  // Expose globally for HTML onclick attributes
+  window.markRead = markRead;
+  window.deleteNotification = deleteNotification;
+  window.toggleGroup = toggleGroup;
+  window.dismissTelemetryNotice = dismissTelemetryNotice;
+
+
+
 })();
