@@ -9,6 +9,7 @@ simulator_type == "HPC" and db_type == "sqlite".
 import os
 import tempfile
 from unittest.mock import MagicMock, call, patch
+import pytest
 pytestmark = pytest.mark.unit
 
 

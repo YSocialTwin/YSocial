@@ -2435,7 +2435,7 @@ def _create_standard_client_internal():
     )
 
     # load experiment_details page
-    from .experiments import experiment_details
+    from ..experiments import experiment_details
 
     return experiment_details(int(exp_id))
 
@@ -3711,7 +3711,7 @@ def _create_forum_client_internal():
         )
 
     # load experiment_details page
-    from .experiments import experiment_details
+    from ..experiments import experiment_details
 
     return experiment_details(int(exp_id))
 
@@ -3818,7 +3818,7 @@ def delete_client(uid):
     Population_Experiment.query.filter_by(id_population=pop_id).delete()
     db.session.commit()
 
-    from .experiments import experiment_details
+    from ..experiments import experiment_details
 
     return experiment_details(exp_id)
 

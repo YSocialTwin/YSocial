@@ -114,6 +114,27 @@ from ._blueprint import (
     _EXP_IDS_MARKER_RE,
 )
 
+
+def _get_database_type():
+    """Get active admin database backend type."""
+    if current_app.config["SQLALCHEMY_DATABASE_URI"].startswith("postgresql"):
+        return "postgresql"
+    return "sqlite"
+
+
+def _get_experiment_folder(base_dir, experiment, db_type):
+    """Resolve experiment folder path for sqlite/postgresql layouts."""
+    if db_type == "sqlite":
+        return os.path.join(
+            base_dir,
+            f"y_web{os.sep}experiments{os.sep}{experiment.db_name.split(os.sep)[1]}",
+        )
+
+    return os.path.join(
+        base_dir,
+        f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
+    )
+
 def _normalize_rss_feed_item(item):
     """Normalize a forum RSS feed definition."""
     if not isinstance(item, dict):
