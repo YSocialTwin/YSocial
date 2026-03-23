@@ -259,22 +259,22 @@
 
         <!-- Feed page main wrapper -->
         <div id="activity-feed" class="view-wrap true-dom is-hidden">
-            <div class="columns" style="margin: 0 -0.5rem;">
+ <div class="columns ys-mx-neg-half">
                 <!-- Left side column -->
-                <div class="column is-3 is-hidden-mobile" style="padding: 0 0.5rem;">
+ <div class="column is-3 is-hidden-mobile ys-px-half">
                     <!-- Weather widget -->
                     <!-- /partials/widgets/weather-widget.html -->
                     {% if username != "" %}
                     <div
                             class="card is-weather-card"
-                            style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;"
+ class="ys-card-mb"
                     >
                         <div class="card-heading">
 
                         </div>
-                        <div class="card-body" style="padding: 1.5rem;">
+ <div class="card-body ys-p-15rem">
 
-                            <div style="text-align: center">
+ <div class="text-center">
                                 <div class="temperature">
                                         <span>{{ username }}</span>
                                     </div>
@@ -372,18 +372,18 @@
                     </div>
                     {% endif %}
 
-                    <div class="card" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
-                        <div class="card-heading is-bordered" style="padding: 1rem;">
-                            <h4 style="margin: 0; font-weight: 600;">Trending Hashtags</h4>
+ <div class="card ys-card-mb">
+ <div class="card-heading is-bordered ys-p-1rem">
+ <h4 class="ys-heading-tight">Trending Hashtags</h4>
 
                         </div>
                         <div class="card-body no-padding">
                             <!-- Hashtag block -->
                             {% for ht in trending_ht %}
-                            <div class="story-block" style="padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0; transition: background-color 0.2s ease;">
-                                <div class="story-meta" style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" style="font-weight: 500; color: #3273dc; text-decoration: none; transition: color 0.2s ease;">{{ ht['hashtag'] }}</a></span>
-                                    <span style="color: #7a7a7a; font-size: 0.9rem;">({{ ht['count'] }})</span>
+ <div class="story-block ys-list-item">
+ <div class="story-meta ys-flex-between">
+ <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" class="ys-link-blue">{{ ht['hashtag'] }}</a></span>
+ <span class="ys-text-mid-sm">({{ ht['count'] }})</span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -394,10 +394,10 @@
                 <!-- /Left side column -->
 
                 <!-- Middle column -->
-                <div class="column is-6" style="padding: 0 0.5rem;">
+ <div class="column is-6 ys-px-half">
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
-                    <div id="compose-card" class="card is-new-content" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); overflow: hidden;">
+ <div id="compose-card" class="card is-new-content ys-card-mb">
                         <!-- Top tabs -->
                         <div class="tabs-wrapper">
                             <div class="tabs is-boxed is-fullwidth">
@@ -753,7 +753,7 @@
                 <!-- /Middle column -->
 
                 <!-- Right side column -->
-                <div class="column is-3" style="padding: 0 0.5rem;">
+ <div class="column is-3 ys-px-half">
                     <!-- Stories widget -->
                     <!-- /partials/widgets/stories-widget.html -->
 

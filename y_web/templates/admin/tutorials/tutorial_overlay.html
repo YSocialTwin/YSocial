@@ -1,5 +1,5 @@
 <!-- Tutorial Wizard Overlay -->
-<div id="tutorial-overlay" style="display: none;">
+<div id="tutorial-overlay" class="d-none">
     <!-- Backdrop -->
     <div id="tutorial-backdrop" style="
         position: fixed;
@@ -136,17 +136,17 @@
             <!-- Step 1: Population -->
             <div id="tutorial-step-1" class="tutorial-step">
                 <h3 style="color: #363636; margin: 0 0 6px 0; font-size: 1.1em;">
-                    <i class="mdi mdi-account-group" style="color: #039be5;"></i> Create Your Population
+ <i class="mdi mdi-account-group ys-text-brand"></i> Create Your Population
                 </h3>
                 <p style="color: #666; margin: 0 0 16px 0; font-size: 0.85em;">
                     A population is a group of synthetic agents that will participate in your simulation.
-                    For more advanced options, visit the <a href="/admin/populations" style="color: #039be5;">Populations</a> page.
+ For more advanced options, visit the <a href="/admin/populations" class="ys-text-brand">Populations</a> page.
                 </p>
                 
-                <div style="display: flex; flex-direction: column; gap: 15px;">
+ <div class="ys-flex-col-gap-15">
                     <div>
                         <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #363636; font-size: 0.85em;">
-                            Population Name <span style="color: #e74c3c;">*</span>
+ Population Name <span class="ys-text-red">*</span>
                         </label>
                         <input type="text" id="tut-pop-name" placeholder="e.g., My First Population" style="
                             width: 100%;
@@ -160,7 +160,7 @@
                     </div>
                     
                     <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+ <label class="ys-form-label">
                             Population Size: <span id="tut-pop-size-value">50</span> agents
                         </label>
                         <input type="range" id="tut-pop-size" min="10" max="100" value="50" style="
@@ -173,12 +173,12 @@
                         </div>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
-                            Education Levels <span style="color: #e74c3c;">*</span>
+ <div class="box-line ys-flex-start-mb">
+ <span class="left ys-label-col-pt">
+ Education Levels <span class="ys-text-red">*</span>
                         </span>
-                        <span class="right" style="width: 70%;">
-                            <div class="multi-select-wrapper" style="position: relative;">
+ <span class="right ys-w-70">
+ <div class="multi-select-wrapper position-relative">
                                 <div class="multi-select-display" id="tut-education-display-wrapper" onclick="toggleTutDropdown('education')" style="
                                     min-height: 38px;
                                     padding: 6px 10px;
@@ -191,7 +191,7 @@
                                     gap: 5px;
                                     align-items: center;
                                 ">
-                                    <span id="tut-education-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select education levels...</span>
+ <span id="tut-education-display" class="multi-select-placeholder ys-text-muted-sm">Click to select education levels...</span>
                                 </div>
                                 <div class="multi-select-dropdown" id="tut-education-dropdown" style="
                                     position: absolute;
@@ -214,12 +214,12 @@
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: flex-start; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333; padding-top: 8px;">
-                            Political Leanings <span style="color: #e74c3c;">*</span>
+ <div class="box-line ys-flex-start-mb">
+ <span class="left ys-label-col-pt">
+ Political Leanings <span class="ys-text-red">*</span>
                         </span>
-                        <span class="right" style="width: 70%;">
-                            <div class="multi-select-wrapper" style="position: relative;">
+ <span class="right ys-w-70">
+ <div class="multi-select-wrapper position-relative">
                                 <div class="multi-select-display" id="tut-political-display-wrapper" onclick="toggleTutDropdown('political')" style="
                                     min-height: 38px;
                                     padding: 6px 10px;
@@ -232,7 +232,7 @@
                                     gap: 5px;
                                     align-items: center;
                                 ">
-                                    <span id="tut-political-display" class="multi-select-placeholder" style="color: #999; font-size: 0.9em;">Click to select political leanings...</span>
+ <span id="tut-political-display" class="multi-select-placeholder ys-text-muted-sm">Click to select political leanings...</span>
                                 </div>
                                 <div class="multi-select-dropdown" id="tut-political-dropdown" style="
                                     position: absolute;
@@ -263,16 +263,16 @@
                         Drag activity profiles from available to assigned, then set the percentage for each. Percentages must total 100%. Green bars identify the hours of the simulated day when agents assigned to the selected profile are active.
                     </div>
                     
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
+ <div class="ys-flex-col-gap-12">
                         <div style="border: 1px solid #e0e0e0; border-radius: 6px; padding: 10px; background-color: #fafafa;">
-                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Available Profiles (Drag to assign)</div>
+ <div class="ys-field-label2">Available Profiles (Drag to assign)</div>
                             <div id="tut-available-profiles" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 6px; min-height: 40px;">
                                 <!-- Will be populated by JavaScript -->
                             </div>
                         </div>
                         
                         <div style="border: 2px dashed #22c55e; border-radius: 6px; padding: 10px; background-color: #f0fdf4;">
-                            <div style="font-size: 0.85em; font-weight: 600; color: #555; margin-bottom: 8px;">Assigned Profiles & Percentages</div>
+ <div class="ys-field-label2">Assigned Profiles & Percentages</div>
                             <div id="tut-assigned-profiles" style="min-height: 40px;">
                                 <div class="empty-state" style="text-align: center; color: #999; font-size: 0.8em; padding: 10px;">Drag profiles here to assign them</div>
                             </div>
@@ -283,19 +283,19 @@
             </div>
             
             <!-- Step 2: Experiment -->
-            <div id="tutorial-step-2" class="tutorial-step" style="display: none;">
-                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
-                    <i class="mdi mdi-flask" style="color: #039be5;"></i> Create Your Experiment
+ <div id="tutorial-step-2" class="tutorial-step d-none">
+ <h3 class="ys-section-heading">
+ <i class="mdi mdi-flask ys-text-brand"></i> Create Your Experiment
                 </h3>
-                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+ <p class="ys-section-sub">
                     An experiment defines the simulation environment.
-                    For more options, visit the <a href="/admin/settings" style="color: #039be5;">Settings</a> page.
+ For more options, visit the <a href="/admin/settings" class="ys-text-brand">Settings</a> page.
                 </p>
                 
-                <div style="display: flex; flex-direction: column; gap: 15px;">
+ <div class="ys-flex-col-gap-15">
                     <div>
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
-                            Experiment Name <span style="color: #e74c3c;">*</span>
+ <label class="ys-form-label">
+ Experiment Name <span class="ys-text-red">*</span>
                         </label>
                         <input type="text" id="tut-exp-name" placeholder="e.g., My First Experiment" style="
                             width: 100%;
@@ -314,10 +314,10 @@
                         border-radius: 8px;
                         border-left: 4px solid #039be5;
                     ">
-                        <div style="display: flex; align-items: center; gap: 10px;">
+ <div class="ys-flex-gap-10-ai">
                             <i id="tut-llm-icon" class="mdi mdi-robot-off" style="font-size: 1.5em; color: #6c757d;"></i>
-                            <div style="flex: 1;">
-                                <div style="display: flex; align-items: center; gap: 10px;">
+ <div class="ys-flex-1">
+ <div class="ys-flex-gap-10-ai">
                                     <strong style="color: #333;">LLM Agents</strong>
                                     <label class="switch-small" style="position: relative; display: inline-block; width: 40px; height: 22px;">
                                         <input type="checkbox" id="tut-llm-toggle" style="opacity: 0; width: 0; height: 0;">
@@ -349,9 +349,9 @@
                     </div>
                     
                     <!-- Topics section (shown when LLM is enabled) -->
-                    <div id="tut-topics-section" style="display: none;">
-                        <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
-                            Simulation Topics <span style="color: #e74c3c;">*</span> <span style="font-weight: normal; color: #999;">(at least 2)</span>
+ <div id="tut-topics-section" class="d-none">
+ <label class="ys-form-label">
+ Simulation Topics <span class="ys-text-red">*</span> <span style="font-weight: normal; color: #999;">(at least 2)</span>
                         </label>
                         <div style="
                             border: 1px solid #ddd;
@@ -371,7 +371,7 @@
                                 box-sizing: border-box;
                             ">
                         </div>
-                        <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+ <p class="ys-text-tiny-mt">
                             Enter topics that agents will discuss. Press Enter after each topic.
                         </p>
                     </div>
@@ -379,21 +379,21 @@
             </div>
             
             <!-- Step 3: Client -->
-            <div id="tutorial-step-3" class="tutorial-step" style="display: none;">
-                <h3 style="color: #333; margin: 0 0 8px 0; font-size: 1.2em;">
-                    <i class="mdi mdi-cog" style="color: #039be5;"></i> Configure Your Client
+ <div id="tutorial-step-3" class="tutorial-step d-none">
+ <h3 class="ys-section-heading">
+ <i class="mdi mdi-cog ys-text-brand"></i> Configure Your Client
                 </h3>
-                <p style="color: #666; margin: 0 0 20px 0; font-size: 0.9em;">
+ <p class="ys-section-sub">
                     A client runs the simulation with your population.
                     For advanced settings, visit the client details page after creation.
                 </p>
                 
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
-                            Client Name <span style="color: #e74c3c;">*</span>
+ <div class="ys-flex-col-gap-15">
+ <div class="box-line ys-flex-mb-12">
+ <span class="left ys-label-col">
+ Client Name <span class="ys-text-red">*</span>
                         </span>
-                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                             <input type="text" id="tut-client-name" placeholder="e.g., Main Simulation" class="input" style="
                                 width: 100%;
                                 padding: 8px 12px;
@@ -405,11 +405,11 @@
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">
+ <div class="box-line ys-flex-mb-12">
+ <span class="left ys-label-col">
                             Simulation Days
                         </span>
-                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                             <input type="number" id="tut-sim-days" min="1" max="30" value="7" class="input" style="
                                 width: 80px;
                                 padding: 8px 12px;
@@ -427,66 +427,66 @@
                         All actions are scored from 0 to 10, where 0 means the action is never performed. Scores greater than 0 are relative to each other.
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Post new content</span>
-                        <span class="right" style="width: 70%;">
+ <div class="box-line ys-flex-mb-12">
+ <span class="left ys-label-col">Post new content</span>
+ <span class="right ys-w-70">
                             <div class="scale-wrapper">
-                                <div class="number-scale" id="tut-post-scale" style="display: flex; gap: 5px; margin: 5px 0;">
-                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
-                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
-                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
-                                    <div class="number-box selected" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">3</div>
-                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
-                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
-                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
-                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
-                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
-                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
-                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+ <div class="number-scale ys-flex-gap-5-my" id="tut-post-scale">
+ <div class="number-box ys-stepper-btn" data-value="0">0</div>
+ <div class="number-box ys-stepper-btn" data-value="1">1</div>
+ <div class="number-box ys-stepper-btn" data-value="2">2</div>
+ <div class="number-box selected ys-stepper-btn-active" data-value="3">3</div>
+ <div class="number-box ys-stepper-btn" data-value="4">4</div>
+ <div class="number-box ys-stepper-btn" data-value="5">5</div>
+ <div class="number-box ys-stepper-btn" data-value="6">6</div>
+ <div class="number-box ys-stepper-btn" data-value="7">7</div>
+ <div class="number-box ys-stepper-btn" data-value="8">8</div>
+ <div class="number-box ys-stepper-btn" data-value="9">9</div>
+ <div class="number-box ys-stepper-btn" data-value="10">10</div>
                                 </div>
                                 <input type="hidden" id="tut-post-prob" value="3">
                             </div>
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Comment a Post</span>
-                        <span class="right" style="width: 70%;">
+ <div class="box-line ys-flex-mb-12">
+ <span class="left ys-label-col">Comment a Post</span>
+ <span class="right ys-w-70">
                             <div class="scale-wrapper">
-                                <div class="number-scale" id="tut-comment-scale" style="display: flex; gap: 5px; margin: 5px 0;">
-                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
-                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
-                                    <div class="number-box" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">2</div>
-                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
-                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
-                                    <div class="number-box selected" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">5</div>
-                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
-                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
-                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
-                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
-                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+ <div class="number-scale ys-flex-gap-5-my" id="tut-comment-scale">
+ <div class="number-box ys-stepper-btn" data-value="0">0</div>
+ <div class="number-box ys-stepper-btn" data-value="1">1</div>
+ <div class="number-box ys-stepper-btn" data-value="2">2</div>
+ <div class="number-box ys-stepper-btn" data-value="3">3</div>
+ <div class="number-box ys-stepper-btn" data-value="4">4</div>
+ <div class="number-box selected ys-stepper-btn-active" data-value="5">5</div>
+ <div class="number-box ys-stepper-btn" data-value="6">6</div>
+ <div class="number-box ys-stepper-btn" data-value="7">7</div>
+ <div class="number-box ys-stepper-btn" data-value="8">8</div>
+ <div class="number-box ys-stepper-btn" data-value="9">9</div>
+ <div class="number-box ys-stepper-btn" data-value="10">10</div>
                                 </div>
                                 <input type="hidden" id="tut-comment-prob" value="5">
                             </div>
                         </span>
                     </div>
                     
-                    <div class="box-line" style="display: flex; align-items: center; margin-bottom: 12px;">
-                        <span class="left" style="width: 30%; font-size: 0.9em; color: #333;">Read a content</span>
-                        <span class="right" style="width: 70%;">
+ <div class="box-line ys-flex-mb-12">
+ <span class="left ys-label-col">Read a content</span>
+ <span class="right ys-w-70">
                             <div class="scale-wrapper">
-                                <div class="number-scale" id="tut-read-scale" style="display: flex; gap: 5px; margin: 5px 0;">
-                                    <div class="number-box" data-value="0" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">0</div>
-                                    <div class="number-box" data-value="1" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">1</div>
-                                    <div class="number-box selected" data-value="2" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #888; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em; background-color: #C1E0E6; color: #888;">2</div>
-                                    <div class="number-box" data-value="3" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">3</div>
-                                    <div class="number-box" data-value="4" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">4</div>
-                                    <div class="number-box" data-value="5" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">5</div>
-                                    <div class="number-box" data-value="6" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">6</div>
-                                    <div class="number-box" data-value="7" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">7</div>
-                                    <div class="number-box" data-value="8" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">8</div>
-                                    <div class="number-box" data-value="9" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">9</div>
-                                    <div class="number-box" data-value="10" style="width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 2px solid #ccc; border-radius: 5px; cursor: pointer; user-select: none; font-size: 0.85em;">10</div>
+ <div class="number-scale ys-flex-gap-5-my" id="tut-read-scale">
+ <div class="number-box ys-stepper-btn" data-value="0">0</div>
+ <div class="number-box ys-stepper-btn" data-value="1">1</div>
+ <div class="number-box selected ys-stepper-btn-active" data-value="2">2</div>
+ <div class="number-box ys-stepper-btn" data-value="3">3</div>
+ <div class="number-box ys-stepper-btn" data-value="4">4</div>
+ <div class="number-box ys-stepper-btn" data-value="5">5</div>
+ <div class="number-box ys-stepper-btn" data-value="6">6</div>
+ <div class="number-box ys-stepper-btn" data-value="7">7</div>
+ <div class="number-box ys-stepper-btn" data-value="8">8</div>
+ <div class="number-box ys-stepper-btn" data-value="9">9</div>
+ <div class="number-box ys-stepper-btn" data-value="10">10</div>
                                 </div>
                                 <input type="hidden" id="tut-read-prob" value="2">
                             </div>
@@ -498,7 +498,7 @@
                     
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
                         <div>
-                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+ <label class="ys-form-label">
                                 Content Recommendation
                             </label>
                             <select id="tut-content-recsys" style="
@@ -514,7 +514,7 @@
                             </select>
                         </div>
                         <div>
-                            <label style="display: block; font-weight: 500; margin-bottom: 5px; color: #333; font-size: 0.9em;">
+ <label class="ys-form-label">
                                 Follow Recommendation
                             </label>
                             <select id="tut-follow-recsys" style="
@@ -553,7 +553,7 @@
                             ">
                                 <!-- Populated by JavaScript -->
                             </select>
-                            <p style="color: #999; font-size: 0.75em; margin-top: 5px;">
+ <p class="ys-text-tiny-mt">
                                 Select the Ollama model for agent content generation.
                             </p>
                         </div>
@@ -562,7 +562,7 @@
             </div>
             
             <!-- Step 4: Congratulations -->
-            <div id="tutorial-step-4" class="tutorial-step" style="display: none;">
+ <div id="tutorial-step-4" class="tutorial-step d-none">
                 <div style="text-align: center; padding: 20px 0;">
                     <div style="font-size: 4em; margin-bottom: 15px;">🎊</div>
                     <h3 style="color: #333; margin: 0 0 15px 0; font-size: 1.5em;">
@@ -580,7 +580,7 @@
                         text-align: left;
                     ">
                         <h4 style="color: #2e7d32; margin: 0 0 12px 0; font-size: 1em;">
-                            <i class="mdi mdi-lightbulb-on" style="margin-right: 8px;"></i>What's Next?
+ <i class="mdi mdi-lightbulb-on ys-mr-8"></i>What's Next?
                         </h4>
                         <ul style="color: #555; margin: 0; padding-left: 20px; line-height: 1.8; font-size: 0.9em;">
                             <li>✔️ Explore <mark>advanced population settings</mark>  <small> (e.g., personality traits & toxicity) </small></li>

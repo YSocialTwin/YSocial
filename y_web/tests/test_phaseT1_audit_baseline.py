@@ -35,11 +35,11 @@ TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 BASELINE = {
     "files_with_style_blocks": 0,
     "total_style_blocks": 0,
-    "total_style_attrs": 2827,
-    "total_inline_scripts": 143,
+    "total_style_attrs": 379,
+    "total_inline_scripts": 48,
     "total_browsersync_occurrences": 1,
     "total_html_files": 84,
-    "total_lines": 40029,
+    "total_lines": 23944,
 }
 
 

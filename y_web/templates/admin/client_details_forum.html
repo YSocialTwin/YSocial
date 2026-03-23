@@ -31,14 +31,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box" id="box-client-overview">
                         <h3 class="title is-5 is-thin">Client Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Information about this simulation client, including assigned population and content sources.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Client identification and configuration.</p>
+ <p class="ys-label-hint">Client identification and configuration.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ client.name }}</span>
@@ -49,7 +49,7 @@
                                 </div>
                                 <hr>
                                 <b>Assigned Resources</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Population and content pages used in this simulation.</p>
+ <p class="ys-label-hint">Population and content pages used in this simulation.</p>
                                 <div class="box-line">
                                     <span class="left">Population</span>
                                     <span class="right"><a href="/admin/population_details/{{ population.id }}">{{ population.name }}</a></span>
@@ -71,24 +71,24 @@
                                 </div>
 
                             </div>
-                            <div class="buttons" style="display: flex; justify-content: right">
+ <div class="buttons ys-flex-right">
                                 <a class="link-tooltip" href="/admin/download_agent_list/{{ client.id }}" title="Download Agent List"><i
-                                     class="mdi mdi-account-star" style="font-size: 24px;"></i></a>
+ class="mdi mdi-account-star ys-icon-lg"></i></a>
                                 <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+ class="mdi mdi-delete ys-icon-lg"></i></a>
                             </div>
                         </div>
                     </div>
 
                     <div class="dashboard-box" id="box-simulation-params">
                         <h3 class="title is-5 is-thin">Simulation Parameters</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configuration settings controlling simulation behavior and dynamics.
                         </p>
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Duration & Growth</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Simulation length and population dynamics.</p>
+ <p class="ys-label-hint">Simulation length and population dynamics.</p>
                                 <div class="box-line">
                                     <span class="left">Simulation Length (days)</span>
                                     <span class="right">{{ client.days }}</span>
@@ -103,7 +103,7 @@
                                 </div>
                                 <hr>
                                 <b>Behavioral Settings</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Agent interaction and engagement parameters.</p>
+ <p class="ys-label-hint">Agent interaction and engagement parameters.</p>
                                 <div class="box-line">
                                     <span class="left">Thread Context Length</span>
                                     <span class="right">{{ client.max_length_thread_reading }}</span>
@@ -355,14 +355,14 @@
 
                                     <div class="box-line">
                                         <span class="left">Custom LLM URL (optional)</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_client" class="input" placeholder="e.g., localhost:8000" value="{{ client.llm }}" style="flex: 1;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-row-mb">
+ <input type="text" id="custom_llm_url_client" class="input ys-flex-1" placeholder="e.g., localhost:8000" value="{{ client.llm }}">
                                                 <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
                                                     Fetch Models
                                                 </button>
                                             </div>
-                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+ <div id="llm_url_status_client" class="ys-badge-min"></div>
                                         </span>
                                     </div>
 
@@ -401,7 +401,7 @@
                                     <span class="left">Each client can be deployed by imposing a starting social network among the agents of its populations.
                                     <br><br> The network can be either synthetically generated or custom-made and uploaded.
                                         To create a custom network file download the agent name list using
-                                        <i class="mdi mdi-account-star" style="font-size: 16px;"></i>
+ <i class="mdi mdi-account-star ys-icon-md"></i>
                                     </span>
 
                                 </div>
@@ -434,80 +434,80 @@
                                         </span>
                                     </div>
 
-                                    <div class="box-line hidden" id="option1-field" style="display: none">
+ <div class="box-line hidden d-none" id="option1-field">
                                         <span class="left">Edge probability (p)</span>
                                         <span class="right">
                                             <input type="text" name="p" class="input" value="0.1">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option2-field"  style="display: none">
+ <div class="box-line hidden d-none" id="option2-field">
                                         <span class="left">Edges per node (m)</span>
                                         <span class="right">
                                             <input type="text" name="m" class="input" value="2">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option3-field"  style="display: none">
+ <div class="box-line hidden d-none" id="option3-field">
                                         <span class="left">Nearest neighbors (k)</span>
                                         <span class="right">
                                             <input type="text" name="k" class="input" value="4">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option3-field2"  style="display: none">
+ <div class="box-line hidden d-none" id="option3-field2">
                                         <span class="left">Rewiring probability (p)</span>
                                         <span class="right">
                                             <input type="text" name="ws_p" class="input" value="0.3">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option4-field"  style="display: none">
+ <div class="box-line hidden d-none" id="option4-field">
                                         <span class="left">Edges per node (m)</span>
                                         <span class="right">
                                             <input type="text" name="plc_m" class="input" value="2">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option4-field2"  style="display: none">
+ <div class="box-line hidden d-none" id="option4-field2">
                                         <span class="left">Triangle probability (p)</span>
                                         <span class="right">
                                             <input type="text" name="plc_p" class="input" value="0.5">
                                         </span>
                                     </div>
                                     <!-- option5 (Complete Graph) has no parameters -->
-                                    <div class="box-line hidden" id="option6-field"  style="display: none">
+ <div class="box-line hidden d-none" id="option6-field">
                                         <span class="left">Number of blocks</span>
                                         <span class="right">
                                             <input type="text" name="blocks" class="input" value="3">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option6-field2"  style="display: none">
+ <div class="box-line hidden d-none" id="option6-field2">
                                         <span class="left">Intra-block probability</span>
                                         <span class="right">
                                             <input type="text" name="p_in" class="input" value="0.3">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option6-field3"  style="display: none">
+ <div class="box-line hidden d-none" id="option6-field3">
                                         <span class="left">Inter-block probability</span>
                                         <span class="right">
                                             <input type="text" name="p_out" class="input" value="0.05">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option7-field"  style="display: none">
+ <div class="box-line hidden d-none" id="option7-field">
                                         <span class="left">Degree exponent (tau1)</span>
                                         <span class="right">
                                             <input type="text" name="tau1" class="input" value="2.5">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option7-field2"  style="display: none">
+ <div class="box-line hidden d-none" id="option7-field2">
                                         <span class="left">Community size exponent (tau2)</span>
                                         <span class="right">
                                             <input type="text" name="tau2" class="input" value="1.5">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option7-field3"  style="display: none">
+ <div class="box-line hidden d-none" id="option7-field3">
                                         <span class="left">Mixing parameter (mu)</span>
                                         <span class="right">
                                             <input type="text" name="mu" class="input" value="0.1">
                                         </span>
                                     </div>
-                                    <div class="box-line hidden" id="option7-field4"  style="display: none">
+ <div class="box-line hidden d-none" id="option7-field4">
                                         <span class="left">Average degree</span>
                                         <span class="right">
                                             <input type="text" name="avg_degree" class="input" value="5">
@@ -522,7 +522,7 @@
                             </form>
                             <hr>
                             <form action="/admin/upload_network/{{ client.id }}" enctype="multipart/form-data" method="POST">
-                                <h4 style="font-size: 0.95em; font-weight: 600; margin-bottom: 12px; color: #374151;">Upload Custom Network</h4>
+ <h4 class="ys-subsection-title">Upload Custom Network</h4>
                                 <div class="file-upload-wrapper-network">
                                     <input type="file" id="network_file" name="network_file" onchange="displayNetworkFileName(this)">
                                     <label for="network_file" class="file-upload-label-network">
@@ -542,12 +542,12 @@
                     </div>
 
                     <!-- Hourly Activity Rates Box -->
-                    <div class="dashboard-box" id="box-hourly-activity" style="padding: 16px; margin-top: 20px;">
+ <div class="dashboard-box ys-section-body" id="box-hourly-activity">
                         <h3 class="title is-5 is-thin">Hourly Activity Rates</h3>
-                        <small style="font-size: 0.8em; color: #6b7280;">Default values from <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a></small>
+ <small class="ys-text-xs-muted ys-text-brand">Default values from <a href="https://zenodo.org/records/14669616" target="_blank">Bluesky Data</a></small>
                         
-                        <div class="box-content" style="margin-top: 12px;">
-                            <div style="height: 200px; position: relative;">
+ <div class="box-content ys-mt-12">
+ <div class="ys-chart-200">
                                 <canvas id="activity_rates"></canvas>
                             </div>
                             <script>var YS_DATA_CLIENT = { activityData: {{ data | tojson }}, activityLabels: {{ idx | tojson }} };</script>
@@ -555,8 +555,8 @@
                         </div>
 
                         <form action="/admin/update_agents_activity/{{ client.id }}" enctype="multipart/form-data" method="POST">
-                            <div class="box-content" style="margin-top: 16px;">
-                                <p style="font-size: 0.85em; color: #666; margin-bottom: 12px; font-weight: 500;">Hourly Activity Percentages:</p>
+ <div class="box-content ys-mt-16">
+ <p class="ys-field-sm">Hourly Activity Percentages:</p>
                                 <div class="activity-grid">
                                     {% for hour in range(12) %}
                                     <div class="activity-hour">
@@ -574,11 +574,11 @@
                                     {% endfor %}
                                 </div>
                                 
-                                <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end;">
-                                    <a class="link-tooltip" href="/admin/reset_agents_activity/{{ client.id }}" title="Reset to default values" style="padding: 8px;">
-                                        <i class="mdi mdi-backup-restore" style="font-size: 24px; color: #6b7280;"></i>
+ <div class="ys-flex-end-gap">
+ <a class="link-tooltip ys-p-8" href="/admin/reset_agents_activity/{{ client.id }}" title="Reset to default values">
+ <i class="mdi mdi-backup-restore ys-icon-gray"></i>
                                     </a>
-                                    <button class="button is-solid primary-button" style="padding: 8px 24px;">
+ <button class="button is-solid primary-button ys-py-8-px-24">
                                         Update Activity Rates
                                     </button>
                                 </div>

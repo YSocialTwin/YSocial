@@ -41,17 +41,17 @@
 
                                     <div class="box-line">
                                         <span class="left">Username</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="username"
+ <span class="right ys-w-70"><input type="text" name="username"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Password</span>
-                                        <span class="right" style="width: 70%;"><input type="password" name="password"
+ <span class="right ys-w-70"><input type="password" name="password"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Email</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="email"
+ <span class="right ys-w-70"><input type="text" name="email"
                                                                                        class="input" value=""></span>
                                     </div>
                                     <div class="box-line">
@@ -71,7 +71,7 @@
                                         <input type="text" id="custom_llm_url_add" name="custom_llm_url" class="input"
                                                value="{{ llm_backend['url'] if llm_backend and llm_backend.get('url') else '' }}"
                                                placeholder="e.g., http://localhost:8000/v1">
-                                        <button type="button" class="button is-solid primary-button is-1-desktop" onclick="fetchModelsForAddUser()" style="margin-top: 10px;">
+ <button type="button" class="button is-solid primary-button is-1-desktop ys-mt-10" onclick="fetchModelsForAddUser()">
                                             Fetch Models
                                         </button>
                                     </div>
@@ -88,7 +88,7 @@
                                 </div>
                                 <div class="box-line">
                                         <span class="left">Profile Picture <small>(url, optional)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="profile_pic"
+ <span class="right ys-w-70"><input type="text" name="profile_pic"
                                                                                        class="input" value=""></span>
                                     </div>
                                 <div class="button-wrap">
@@ -106,8 +106,8 @@
                         <div class="box-content">
                             <form action="/admin/bulk_create_users" method="POST">
                                 <div class="box-lines">
-                                    <div class="box-line" style="display: block;">
-                                        <label style="display: block; margin-bottom: 10px;">
+ <div class="box-line d-block">
+ <label class="ys-block-mb10">
                                             <b>Users Data</b><br>
                                             <small>Format: username,email,role,password (one per line)<br>
                                             {% if current_user_role == 'admin' %}
@@ -142,8 +142,8 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Select Experiment</span>
-                                        <div class="select" style="width: 70%;">
-                                            <select name="experiment_id" required style="width: 100%;">
+ <div class="select ys-w-70">
+ <select name="experiment_id" required class="w-100">
                                                 <option value="">-- Select Experiment --</option>
                                                 {% if experiments %}
                                                     {% for exp in experiments %}
@@ -154,7 +154,7 @@
                                         </div>
                                     </div>
                                     <div class="box-line" style="display: block; margin-top: 15px;">
-                                        <label style="display: block; margin-bottom: 10px;">
+ <label class="ys-block-mb10">
                                             <b>Select Users</b><br>
                                             <small>Hold Ctrl (Cmd on Mac) to select multiple users</small>
                                         </label>

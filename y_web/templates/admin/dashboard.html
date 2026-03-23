@@ -10,11 +10,11 @@
             {% set ns.has_infinite_client = true %}
         {% endif %}
     {% endfor %}
-    <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid {{ section_color }}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+    <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 4px solid {{ section_color }}; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" {# dynamic #}>
         <div class="box-lines">
-            <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
-                <span class="left" style="display: flex; align-items: center; gap: 10px;">
-                    Experiment: <strong style="color: #0d95e8">{{ experiments[exp]['experiment'].exp_name }}</strong>
+ <div class="box-line ys-pb-mb-5">
+ <span class="left ys-flex-gap-10-ai">
+ Experiment: <strong class="ys-text-info">{{ experiments[exp]['experiment'].exp_name }}</strong>
                     <span style="background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Experiment owner">{{ experiments[exp]['experiment'].owner }}</span>
                     <span style="background: linear-gradient(90deg, #0f766e 0%, #14b8a6 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="Platform">{{ 'Forum' if experiments[exp]['experiment'].platform_type == 'forum' else 'Microblogging' }}</span>
 
@@ -28,50 +28,50 @@
                     <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
                     {% endif %}
                     <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="View Experiment Details">
-                        <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                     </a>
                 </span>
-                <span class="right" style="display: flex; gap: 8px; align-items: center;">
+ <span class="right ys-flex-gap-8">
                     <div style="display: flex; gap: 3px; padding-right: 8px; border-right: 1px solid #ddd;">
                         {% if experiments[exp]['experiment'].running == 0 %}
                         <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Run Experiment">
-                            <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
                         </a>
                         {% endif %}
                         {% if experiments[exp]['experiment'].running == 1 and can_manage_experiment(experiments[exp]['experiment']) %}
                         <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop Experiment">
-                            <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
+ <i class="mdi mdi-stop active ys-icon-lg"></i>
                         </a>
                         {% endif %}
                         <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Load Experiment">
-                            <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+ <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%} ys-icon-lg"></i>
                         </a>
                         {% if experiments[exp]['experiment'].status == 1 %}
                         <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Join This Experiment">
-                            <i class="mdi mdi-login" style="font-size: 24px;"></i>
+ <i class="mdi mdi-login ys-icon-lg"></i>
                         </a>
                         {% endif %}
                         {% if experiments[exp]['experiment'].status == 0 and can_manage_experiment(experiments[exp]['experiment']) %}
                         <a class="link-tooltip" href="javascript:void(0);" 
                            onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}'; }" 
                            title="Delete Experiment">
-                            <i class="mdi mdi-delete" style="font-size: 24px;"></i>
+ <i class="mdi mdi-delete ys-icon-lg"></i>
                         </a>
                         {% endif %}
                     </div>
                     {% if jupyter_by_exp.get(experiments[exp]['experiment'].idexp) %}
                         {% if notebook %}
-                        <div style="display: flex; gap: 3px;">
+ <div class="ys-flex-gap-3">
                             {% if jupyter_by_exp[experiments[exp]['experiment'].idexp]['running'] %}
                             <a class="link-tooltip" href="#" onclick="stopJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop JupyterLab">
-                                <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
+ <i class="mdi mdi-flask-empty-outline ys-icon-danger"></i>
                             </a>
                             <a class="link-tooltip" href="/admin/lab/{{ experiments[exp]['experiment'].idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
-                                <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
                             </a>
                             {% else %}
                             <a class="link-tooltip" href="#" onclick="startJupyterSession('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Start JupyterLab">
-                                <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
                             </a>
                             {% endif %}
                         </div>
@@ -84,55 +84,55 @@
             <hr style="border-top: 2px solid #e6e6e6; margin-top: 0px; padding-top: 0px; margin-bottom: 0px;">
             {% for client in experiments[exp]["clients"] %}
             <div class="box-line" style="padding-left: 20px; padding-top: 8px; padding-bottom: 8px;  ">
-                <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">Client:
-                    <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
-                    <em style="color: #0d95e8">{{ client[0].name }}</em>
+ <span class="left ys-text-flex-sm">Client:
+ <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
+ <em class="ys-text-info">{{ client[0].name }}</em>
                     {% if client[1] != -1 and client[1].elapsed_time > 0 %}
                     <a href="/admin/client_details/{{client[0].id}}" class="link-tooltip" title="View Client Details">
-                        <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                     </a>
                     {% endif %}
                 </span>
-                <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
-                    <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
+ <span class="right ys-value-col-55">
+ <div class="sleek-progress-container ys-progress-track">
                         <div id="progress-bar-{{client[0].id}}" class="sleek-progress-bar" 
-                             style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out, background 0.3s ease; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
-                            <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">0%</span>
+ class="ys-progress-bar">
+ <span class="ys-badge-text">0%</span>
                         </div>
                     </div>
-                    <div style="display: flex; gap: 3px;">
+ <div class="ys-flex-gap-3">
                         {% if client[0].status == 0 and experiments[exp]['experiment'].running == 1 %}
                             {% if client[1] != -1 %}
                                 {% if client[1].elapsed_time == 0 %}
                                 <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
-                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% elif client[1].expected_duration_rounds == -1 %}
                                 {# Infinite client - always show resume button if started #}
                                 <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
-                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% elif client[1].elapsed_time > 0 and client[1].elapsed_time < client[1].expected_duration_rounds %}
                                 <a class="link-tooltip" href="/admin/resume_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Resume Client">
-                                    <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                 </a>
                                 {% endif %}
                             {% else %}
                             <a class="link-tooltip" href="/admin/run_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Run Client">
-                                <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                             </a>
                             {% endif %}
                         {% endif %}
                         {% if client[0].status == 1 %}
                         <a class="link-tooltip" href="/admin/pause_client/{{ client[0].id }}/{{ client[0].id_exp }}" title="Pause Client">
-                            <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
+ <i class="mdi mdi-pause active ys-icon-xl"></i>
                         </a>
                         {% endif %}
                         {% if client[0].status == 0 %}
                         <a class="link-tooltip" href="javascript:void(0);" 
                            onclick="if(confirm('Are you sure you want to delete this client? This action cannot be undone.')) { window.location.href='/admin/delete_client/{{ client[0].id }}'; }" 
                            title="Delete Client">
-                            <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+ <i class="mdi mdi-delete ys-icon-xl"></i>
                         </a>
                         {% endif %}
                     </div>
@@ -158,7 +158,7 @@
         {% endif %}
         {% set ns.client_count = ns.client_count + 1 %}
     {% endfor %}
-    <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid {{ section_color }}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+    <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-left: 2px solid {{ section_color }}; border-radius: 4px; padding: 4px 8px; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" {# dynamic #}>
         <div class="box-lines">
             <div class="box-line" style="padding: 0; display: flex; align-items: center; justify-content: space-between; gap: 4px;">
                 <span class="left" style="display: flex; align-items: center; gap: 4px; flex: 1; min-width: 0; overflow: hidden;">
@@ -184,16 +184,16 @@
                 <span class="right" style="display: flex; gap: 2px; align-items: center; flex-shrink: 0;">
                     {% if experiments[exp]['experiment'].running == 0 %}
                     <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Run">
-                        <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i>
+ <i class="mdi mdi-play-box-outline ys-icon-md"></i>
                     </a>
                     {% endif %}
                     {% if experiments[exp]['experiment'].running == 1 and can_manage_experiment(experiments[exp]['experiment']) %}
                     <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Stop">
-                        <i class="mdi mdi-stop active" style="font-size: 16px;"></i>
+ <i class="mdi mdi-stop active ys-icon-md"></i>
                     </a>
                     {% endif %}
                     <a class="link-tooltip" href="#" onclick="selectExperiment('{{ experiments[exp]['experiment'].idexp }}'); return false;" title="Load">
-                        <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%}" style="font-size: 16px;"></i>
+ <i class="mdi mdi-select-all {% if experiments[exp]['experiment'].status == 1 %}active{%endif%} ys-icon-md"></i>
                     </a>
                     <a href="/admin/experiment_details/{{ experiments[exp]['experiment'].idexp }}" class="link-tooltip" title="Details">
                         <i class="mdi mdi-open-in-new" style="font-size: 14px; color: #039be5;"></i>
@@ -202,7 +202,7 @@
                     <a class="link-tooltip" href="javascript:void(0);" 
                        onclick="if(confirm('Are you sure you want to delete this experiment? This action cannot be undone.')) { window.location.href='/admin/delete_simulation/{{ experiments[exp]['experiment'].idexp }}'; }" 
                        title="Delete">
-                        <i class="mdi mdi-delete" style="font-size: 16px;"></i>
+ <i class="mdi mdi-delete ys-icon-md"></i>
                     </a>
                     {% endif %}
                 </span>
@@ -218,16 +218,16 @@
     {% set group_id = status_name + '_' + group_name.replace(' ', '_').replace('/', '_') %}
     {% set experiments = experiments_by_group[group_name] %}
     {% set exp_count = experiments | length %}
-    <div class="experiment-group" style="margin-bottom: 15px;">
-        <div class="group-header" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-left: 3px solid {{ section_color }}; border-radius: 6px; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;" onclick="toggleGroup('{{ group_id }}')">
+ <div class="experiment-group ys-mb-15">
+        <div class="group-header" style="background: #f8f9fa; border: 1px solid #e0e0e0; border-left: 3px solid {{ section_color }}; border-radius: 6px; padding: 10px 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;" {# dynamic #} onclick="toggleGroup('{{ group_id }}')">
             <div class="group-header-main">
-                <i class="mdi mdi-chevron-down" id="icon-{{ group_id }}" style="font-size: 18px; color: #666; transition: transform 0.2s;{% if collapsed %} transform: rotate(-90deg);{% endif %}"></i>
+                <i class="mdi mdi-chevron-down" id="icon-{{ group_id }}" style="font-size: 18px; color: #666; transition: transform 0.2s;{% if collapsed %} transform: rotate(-90deg);{% endif %}" {# dynamic #}></i>
                 <span class="group-header-title">{{ group_name }}</span>
-                <span style="background: {{ section_color }}; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; font-weight: 600;">{{ exp_count }}</span>
+                <span style="background: {{ section_color }}; color: white; font-size: 0.7em; padding: 2px 8px; border-radius: 12px; font-weight: 600;" {# dynamic #}>{{ exp_count }}</span>
             </div>
             <span class="group-header-hint">Click to expand/collapse</span>
         </div>
-        <div id="{{ group_id }}" class="group-content" style="margin-top: 8px; display: {% if collapsed %}none{% else %}block{% endif %};">
+        <div id="{{ group_id }}" class="group-content" style="margin-top: 8px; display: {% if collapsed %}none{% else %}block{% endif %};" {# dynamic #}>
             {% if is_compact %}
                 {{ render_compact_experiment_box(experiments, section_color) }}
             {% else %}
@@ -265,12 +265,12 @@
                     <!-- Currently Running Experiments (Active) - Full width -->
                     {% if len(running_experiments) > 0 %}
                     <div class="dashboard-box" id="box-running-experiments">
-                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; gap: 10px;">
+ <h3 class="title is-5 is-thin ys-flex-gap-10-ai">
                             <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background-color: #28a745;"></span>
                             Currently Running Experiments
-                            <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ total_running }} total)</span>
+ <span class="ys-text-tiny-normal">({{ total_running }} total)</span>
                          </h3>
-                         <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Active experiments grouped by their project group. Click on a group header to expand/collapse.
                         </p>
                         <div id="running-experiments-container">
@@ -283,17 +283,17 @@
                     <div class="columns is-multiline" style="margin-bottom: 0; display: flex; align-items: stretch;">
                         <!-- Completed Experiments - Half width on desktop -->
                         {% if len(completed_experiments) > 0 %}
-                        <div class="column is-6-desktop is-12-tablet is-12-mobile" style="display: flex;">
-                            <div class="dashboard-box" id="box-completed-experiments" style="flex: 1; margin-bottom: 0; display: flex; flex-direction: column;">
-                                 <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+ <div class="column is-6-desktop is-12-tablet is-12-mobile d-flex">
+ <div class="dashboard-box ys-flex-col-0mb" id="box-completed-experiments">
+ <h3 class="title is-6 is-thin ys-flex-gap-8-mb">
+ <span class="ys-dot-info"></span>
                                     Completed
-                                    <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ total_completed }} total)</span>
+ <span class="ys-text-tiny-normal">({{ total_completed }} total)</span>
                                  </h3>
-                                 <p class="group-helper-text" style="font-size: 0.8em; color: #666; margin-bottom: 0.8em;">
+ <p class="group-helper-text ys-text-xs-gray-mb">
                                     Experiments grouped by project. Click to expand/collapse.
                                 </p>
-                                <div id="completed-experiments-container" style="flex: 1;">
+ <div id="completed-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(completed_experiments_by_group, '#17a2b8', 'completed', true, true) }}
                                 </div>
                             </div>
@@ -302,17 +302,17 @@
                         
                         <!-- Stopped/Scheduled Experiments - Half width on desktop -->
                         {% if len(stopped_experiments) > 0 %}
-                        <div class="column is-6-desktop is-12-tablet is-12-mobile" style="display: flex;">
-                            <div class="dashboard-box" id="box-stopped-experiments" style="flex: 1; margin-bottom: 0; display: flex; flex-direction: column;">
-                                 <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
+ <div class="column is-6-desktop is-12-tablet is-12-mobile d-flex">
+ <div class="dashboard-box ys-flex-col-0mb" id="box-stopped-experiments">
+ <h3 class="title is-6 is-thin ys-flex-gap-8-mb">
+ <span class="ys-dot-secondary"></span>
                                     Stopped / Scheduled
-                                    <span style="font-size: 0.7em; color: #666; font-weight: normal;">({{ total_stopped }} total)</span>
+ <span class="ys-text-tiny-normal">({{ total_stopped }} total)</span>
                                  </h3>
-                                 <p class="group-helper-text" style="font-size: 0.8em; color: #666; margin-bottom: 0.8em;">
+ <p class="group-helper-text ys-text-xs-gray-mb">
                                     Experiments grouped by project. Click to expand/collapse.
                                 </p>
-                                <div id="stopped-experiments-container" style="flex: 1;">
+ <div id="stopped-experiments-container" class="ys-flex-1">
                                     {{ render_grouped_experiments(stopped_experiments_by_group, '#6c757d', 'stopped', true, true) }}
                                 </div>
                             </div>
@@ -403,19 +403,19 @@
 <div id="services-indicator" style="position: fixed; bottom: 15px; right: 15px; z-index: 1000; background: rgba(255, 255, 255, 0.95); border-radius: 6px; padding: 8px 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.12); backdrop-filter: blur(10px); border: 1px solid rgba(0,0,0,0.08);">
     <div style="display: flex; flex-direction: row; gap: 12px; align-items: center;">
         <!-- Database Status -->
-        <div style="display: flex; align-items: center; gap: 6px;" title="{{ dbtype }}{% if db_server %} ({{ db_server }}:{{ dbport }}){% endif %}">
-            <i class="mdi mdi-database" style="font-size: 16px; color: #555;"></i>
-            <span style="font-size: 0.8em; color: #444; font-weight: 500;">{{ dbtype }}</span>
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {% if db_conn %}#22c55e{% else %}#ef4444{% endif %};"></span>
+ <div class="ys-flex-gap-6" title="{{ dbtype }}{% if db_server %} ({{ db_server }}:{{ dbport }}){% endif %}">
+ <i class="mdi mdi-database ys-icon-md-body"></i>
+ <span class="ys-text-xs-dark">{{ dbtype }}</span>
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {% if db_conn %}#22c55e{% else %}#ef4444{% endif %};" {# dynamic #}></span>
         </div>
         {% if llm_backend['backend'] is not none %}
         <!-- Separator -->
         <div style="width: 1px; height: 16px; background: rgba(0,0,0,0.15);"></div>
         <!-- LLM Server Status -->
-        <div style="display: flex; align-items: center; gap: 6px;" title="LLM Server: {{ llm_backend['backend']|upper }}">
-            <i class="mdi mdi-brain" style="font-size: 16px; color: #555;"></i>
-            <span style="font-size: 0.8em; color: #444; font-weight: 500;">{{ llm_backend['backend']|upper }}</span>
-            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {% if llm_backend['status'] %}#22c55e{% else %}#ef4444{% endif %};"></span>
+ <div class="ys-flex-gap-6" title="LLM Server: {{ llm_backend['backend']|upper }}">
+ <i class="mdi mdi-brain ys-icon-md-body"></i>
+ <span class="ys-text-xs-dark">{{ llm_backend['backend']|upper }}</span>
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: {% if llm_backend['status'] %}#22c55e{% else %}#ef4444{% endif %};" {# dynamic #}></span>
             {% if llm_backend['backend'] == 'ollama' and not llm_backend['status'] %}
             <a href="/admin/start_ollama/" title="Start Ollama" style="margin-left: 2px;">
                 <i class="mdi mdi-play-circle-outline" style="font-size: 16px; color: #22c55e;"></i>
@@ -462,11 +462,11 @@
     </div>
     
     <div style="color: #777; font-size: 0.8em; line-height: 1.4;">
-        <p style="margin: 0 0 6px 0;">
+ <p class="ys-m-mb-6">
             YSocial collects anonymous usage data to improve the platform. This includes feature usage patterns and error reports, but <strong>never</strong> your experiment data, personal information, or sensitive content.
         </p>
         
-        <p style="margin: 0 0 6px 0;">
+ <p class="ys-m-mb-6">
             All telemetry data is GDPR compliant. You can disable it anytime from the application
             <a href="/admin/miscellanea" style="color: #039be5; text-decoration: none; border-bottom: 1px solid #039be5;">settings</a>.
         </p>

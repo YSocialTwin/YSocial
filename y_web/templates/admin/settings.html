@@ -21,31 +21,31 @@
                     <!-- Three experiment sections in a row (responsive) -->
                     <div class="experiments-row">
                         <!-- Active Experiments Section -->
-                        <div id="box-active" class="dashboard-box experiment-box" style="display: none;">
+ <div id="box-active" class="dashboard-box experiment-box d-none">
                             <h3 class="title is-6 is-thin" style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
                                 <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #28a745;"></span>
                                 Running
                             </h3>
-                            <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                                 <div id="groups-active" class="experiment-groups"></div>
                             </div>
                         </div>
 
                         <!-- Completed Experiments Section -->
-                        <div id="box-completed" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #17a2b8;"></span>
+ <div id="box-completed" class="dashboard-box experiment-box d-none">
+ <h3 class="title is-6 is-thin ys-flex-between-mb10">
+ <span class="ys-flex-gap-8">
+ <span class="ys-dot-info"></span>
                                     Completed
                                 </span>
-                                <span style="display: flex; gap: 8px;">
+ <span class="ys-flex-gap-8-only">
                                     <button id="download-all-btn" onclick="downloadAllExperiments()" class="exp-action-btn"
                                             style="background-color: #28a745; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
                                             title="Download all completed experiments as a ZIP file">
                                         <i class="mdi mdi-download-multiple"></i><span class="exp-btn-label"> Download All</span>
                                     </button>
                                     <button id="delete-all-completed-btn" onclick="deleteAllExperiments('completed', 'delete-all-completed-btn', 'completed')" class="exp-action-btn"
-                                            style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
+ class="ys-btn-danger-sm"
                                             title="Delete all completed experiments">
                                         <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
                                     </button>
@@ -56,25 +56,25 @@
                                     </button>
                                 </span>
                             </h3>
-                            <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                                 <div id="groups-completed" class="experiment-groups"></div>
                             </div>
                         </div>
 
                         <!-- Stopped/Scheduled Experiments Section -->
-                        <div id="box-stopped" class="dashboard-box experiment-box" style="display: none;">
-                            <h3 class="title is-6 is-thin" style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
-                                <span style="display: flex; align-items: center; gap: 8px;">
-                                    <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #6c757d;"></span>
+ <div id="box-stopped" class="dashboard-box experiment-box d-none">
+ <h3 class="title is-6 is-thin ys-flex-between-mb10">
+ <span class="ys-flex-gap-8">
+ <span class="ys-dot-secondary"></span>
                                     Stopped / Scheduled
                                 </span>
                                 <button id="delete-all-stopped-btn" onclick="deleteAllExperiments('stopped_scheduled', 'delete-all-stopped-btn', 'stopped/scheduled')" class="exp-action-btn"
-                                        style="background-color: #dc3545; color: white; padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.75rem;"
+ class="ys-btn-danger-sm"
                                         title="Delete all stopped/scheduled experiments">
                                     <i class="mdi mdi-delete-sweep"></i><span class="exp-btn-label"> Delete All</span>
                                 </button>
                             </h3>
-                            <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                                 <div id="groups-stopped" class="experiment-groups"></div>
                             </div>
                         </div>
@@ -111,7 +111,7 @@
                                                     <input type="checkbox" id="hpc_toggle">
                                                     <span class="slider-small round"></span>
                                                 </label>
-                                                <span id="hpc-toggle-label" style="font-size: 0.9rem; color: #6b7280;">Disabled</span>
+ <span id="hpc-toggle-label" class="ys-text-sm-muted">Disabled</span>
                                             </div>
 
                                             <div id="hpc-info-inline" style="display: none; flex: 1; background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; padding: 8px 10px; border-radius: 6px; font-size: 0.75em; line-height: 1.3; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
@@ -128,9 +128,9 @@
 
                                     <div class="box-line">
                                         <span class="left">Platform Type</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="select">
-                                                <select id="platform_type_select" name="platform_type" style="width: 100%">
+ <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
                                                     <option value="forum">Forum (i.e., Reddit)</option>
                                                 </select>
@@ -140,55 +140,55 @@
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="exp_name"
+ <span class="right ys-w-70"><input type="text" name="exp_name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="textarea" name="exp_descr"
+ <span class="right ys-w-70"><input type="textarea" name="exp_descr"
                                                                                        class="input"></span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Enable LLM Agents</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 8px;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-gap-8">
                                                 <label class="switch-small">
                                                     <input type="checkbox" id="llm_agents_toggle" name="llm_agents_enabled" value="true" checked>
                                                     <span class="slider-small round"></span>
                                                 </label>
-                                                <span style="font-size: 0.9rem; color: #6b7280;">Enable AI-driven agents in the simulation</span>
+ <span class="ys-text-sm-muted">Enable AI-driven agents in the simulation</span>
                                             </div>
                                         </span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Experiment Type</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="remote-experiment-container" style="display: flex; align-items: center; gap: 8px;">
+ <span class="right ys-w-70">
+ <div id="remote-experiment-container" class="ys-flex-gap-8">
                                                 <label class="switch-small">
                                                     <input type="checkbox" id="remote_experiment_toggle" name="is_remote" value="true">
                                                     <span class="slider-small round"></span>
                                                 </label>
-                                                <span id="remote-experiment-label" style="font-size: 0.9rem; color: #6b7280;">Remote Experiment</span>
+ <span id="remote-experiment-label" class="ys-text-sm-muted">Remote Experiment</span>
                                             </div>
                                         </span>
                                     </div>
 
                                     <!-- Remote Experiment Configuration (shown only when remote is enabled) -->
-                                    <div id="remote-config-box" class="box-line" style="display: none;">
+ <div id="remote-config-box" class="box-line d-none">
                                         <span class="left">Remote Server</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-                                                <div style="margin-bottom: 12px;">
-                                                    <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Host Address</label>
-                                                    <input type="text" id="remote_host" name="remote_host" value="" placeholder="e.g., 192.168.1.100 or example.com" class="input" style="width: 100%;">
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Host Address</label>
+ <input type="text" id="remote_host" name="remote_host" value="" placeholder="e.g., 192.168.1.100 or example.com" class="input w-100">
                                                 </div>
 
-                                                <div style="margin-bottom: 0;">
-                                                    <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Port</label>
+ <div class="mb-0">
+ <label class="ys-field-label">Port</label>
                                                     <!-- Default: 8000 (common for YSocial experiment servers) -->
-                                                    <input type="number" id="remote_port" name="remote_port" value="8000" placeholder="8000" class="input" style="width: 100%;" min="1" max="65535">
+ <input type="number" id="remote_port" name="remote_port" value="8000" placeholder="8000" class="input w-100" min="1" max="65535">
                                                 </div>
                                             </div>
                                         </span>
@@ -196,16 +196,16 @@
 
                                     <div class="box-line">
                                         <span class="left">Simulation Topics</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
 
-                                            <div class="tags-input" style="width: 100%;">
+ <div class="tags-input w-100">
                                             <ul id="tags"></ul>
                                             <input type="hidden" id="tags-hidden" name="tags">
-                                            <input type="text" id="input-tag" placeholder="Enter topic name" style="width: 100%;"/>
+ <input type="text" id="input-tag" placeholder="Enter topic name" class="w-100"/>
                                         </div>
                                         
                                         <!-- Numeric input for number of topics when LLM agents are disabled -->
-                                        <div id="topic-count-input" style="display: none; margin-top: 8px;">
+ <div id="topic-count-input" class="ys-hidden-mt">
                                             <label for="topic-count" style="font-size: 0.9rem; color: #374151; display: block; margin-bottom: 4px;">Number of topics:</label>
                                             <input type="number" id="topic-count" min="1" max="100" value="10" style="width: 100px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px;"/>
                                             <button type="button" id="generate-topics-btn" title="Generate topics based on the specified count" aria-label="Generate topics" style="margin-left: 8px; padding: 4px 12px; background: #039be5; color: white; border: none; border-radius: 4px; cursor: pointer;">Generate</button>
@@ -217,51 +217,51 @@
 
                                     <div class="box-line" id="annotation_settings_row">
                                         <span class="left">Generated Content Annotation</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-                                                <div style="display: flex; align-items: center; gap: 8px;">
+ <div class="ys-flex-gap-8">
                                                     <label class="switch-small">
                                                         <input type="checkbox" id="toxicity_annotation_toggle" name="toxicity_annotation" value="true">
                                                         <span class="slider-small round"></span>
                                                     </label>
-                                                    <span style="font-size: 0.9rem;">Toxicity</span>
+ <span class="ys-text-09rem">Toxicity</span>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
+ <div class="ys-flex-gap-8">
                                                     <label class="switch-small">
                                                         <input type="checkbox" id="sentiment_annotation_toggle" name="sentiment_annotation" value="true" checked>
                                                         <span class="slider-small round"></span>
                                                     </label>
-                                                    <span style="font-size: 0.9rem;">Sentiment</span>
+ <span class="ys-text-09rem">Sentiment</span>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
+ <div class="ys-flex-gap-8">
                                                     <label class="switch-small">
                                                         <input type="checkbox" id="emotion_annotation_toggle" name="emotion_annotation" value="true" checked>
                                                         <span class="slider-small round"></span>
                                                     </label>
-                                                    <span style="font-size: 0.9rem;">Emotion</span>
+ <span class="ys-text-09rem">Emotion</span>
                                                 </div>
-                                                <div style="display: flex; align-items: center; gap: 8px;">
+ <div class="ys-flex-gap-8">
                                                     <label class="switch-small">
                                                         <input type="checkbox" id="opinion_annotation_toggle" name="opinion_annotation" value="true" checked>
                                                         <span class="slider-small round"></span>
                                                     </label>
-                                                    <span style="font-size: 0.9rem;">Opinion Dynamics</span>
+ <span class="ys-text-09rem">Opinion Dynamics</span>
                                                 </div>
                                             </div>
                                         </span>
                                     </div>
 
-                                    <div class="box-line" id="perspective_api_field" style="display: none;">
+ <div class="box-line d-none" id="perspective_api_field">
                                         <span class="left">Perspective API Key<br> <small>(Required for toxicity)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="perspective_api"
+ <span class="right ys-w-70"><input type="text" name="perspective_api"
                                                                                        class="input"
                                                                                        value=""></span>
                                     </div>
 
                                     <!-- Redis Configuration Box (shown only for HPC, collapsed by default) -->
-                                    <div id="redis-config-box" class="box-line" style="display: none;">
+ <div id="redis-config-box" class="box-line d-none">
                                         <span class="left">Advanced Settings</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
                                                 <!-- Collapsible header -->
                                                 <div id="redis-config-header" style="padding: 12px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f9fafb; border-radius: 6px 6px 0 0; transition: background 0.2s;">
@@ -274,31 +274,31 @@
                                                 
                                                 <!-- Collapsible content -->
                                                 <div id="redis-config-content" style="display: none; padding: 16px; border-top: 1px solid #e5e7eb;">
-                                                    <div style="margin-bottom: 16px;">
-                                                        <label style="display: flex; align-items: center; gap: 8px;">
-                                                            <input type="checkbox" id="redis_enabled" name="redis_enabled" value="true" style="width: auto;">
+ <div class="ys-mb-16">
+ <label class="ys-flex-gap-8">
+ <input type="checkbox" id="redis_enabled" name="redis_enabled" value="true" class="ys-w-auto">
                                                             <span style="font-size: 0.9em; color: #374151; font-weight: 500;">Enable Redis</span>
                                                         </label>
                                                     </div>
 
-                                                    <div style="margin-bottom: 12px;">
-                                                        <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Host</label>
-                                                        <input type="text" name="redis_host" value="localhost" class="input" style="width: 100%;">
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Host</label>
+ <input type="text" name="redis_host" value="localhost" class="input w-100">
                                                     </div>
 
-                                                    <div style="margin-bottom: 12px;">
-                                                        <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Port</label>
-                                                        <input type="number" name="redis_port" value="6379" class="input" style="width: 100%;" min="1" max="65535">
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Port</label>
+ <input type="number" name="redis_port" value="6379" class="input w-100" min="1" max="65535">
                                                     </div>
 
-                                                    <div style="margin-bottom: 12px;">
-                                                        <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Password <span style="color: #6b7280; font-weight: normal;">(optional)</span></label>
-                                                        <input type="password" name="redis_password" value="" placeholder="Leave empty for no password" class="input" style="width: 100%;">
+ <div class="ys-mb-12">
+ <label class="ys-field-label">Password <span style="color: #6b7280; font-weight: normal;">(optional)</span></label>
+ <input type="password" name="redis_password" value="" placeholder="Leave empty for no password" class="input w-100">
                                                     </div>
 
-                                                    <div style="margin-bottom: 0;">
-                                                        <label style="display: block; font-size: 0.85em; color: #374151; margin-bottom: 6px; font-weight: 500;">Sliding Window Days</label>
-                                                        <input type="number" name="redis_sliding_window_days" value="2" class="input" style="width: 100%;" min="1" max="365">
+ <div class="mb-0">
+ <label class="ys-field-label">Sliding Window Days</label>
+ <input type="number" name="redis_sliding_window_days" value="2" class="input w-100" min="1" max="365">
                                                     </div>
                                                 </div>
                                             </div>
@@ -307,22 +307,22 @@
 
                                     <div class="box-line">
                                         <span class="left">Experiment Group</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; gap: 8px; align-items: center;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-gap-8">
                                                 <input type="text" 
                                                        id="exp_group_input" 
                                                        name="exp_group" 
                                                        list="exp_groups_datalist" 
                                                        class="input" 
                                                        placeholder="Enter or select a group..."
-                                                       style="flex: 1;">
+ class="ys-flex-1">
                                                 <datalist id="exp_groups_datalist">
                                                     {% for group in exp_groups %}
                                                     <option value="{{ group }}">
                                                     {% endfor %}
                                                 </datalist>
                                             </div>
-                                            <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+ <p class="ys-text-tiny-gray-mt">
                                                 Optional: Group experiments together (e.g., "Project A", "Study B")
                                             </p>
                                         </span>
@@ -356,7 +356,7 @@
                                         <span class="meta-title">
                                             {{ exp.exp_name }}
                                             {% if exp_has_infinite.get(exp.idexp, false) %}
-                                            <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+ <span class="ys-badge-success" title="This experiment has at least one client set to run until manually stopped">∞</span>
                                             {% endif %}
                                         </span>
                                         <span class="meta-content">Description: {{ exp.exp_descr }}</span>
@@ -412,7 +412,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">Experiment Name</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="text" 
                                                    id="exp_name" 
                                                    name="exp_name" 
@@ -422,7 +422,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Experiment Group</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="text" 
                                                    id="upload_exp_group" 
                                                    name="exp_group" 
@@ -438,7 +438,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">ZIP File</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="file-upload-wrapper-exp">
                                                 <input type="file" id="experiment" name="experiment" accept=".zip" onchange="displayExperimentFileName(this)" required>
                                                 <label for="experiment" class="file-upload-label-exp">
@@ -468,7 +468,7 @@
                 <div class="column is-8">
                     <div id="box-schedule" class="dashboard-box">
                         <h3 class="title is-5 is-thin" style="display: flex; align-items: center; justify-content: space-between;">
-                            <span style="display: flex; align-items: center; gap: 10px;">
+ <span class="ys-flex-gap-10-ai">
                                 <i class="mdi mdi-calendar-clock" style="font-size: 20px; color: #6c757d;"></i>
                                 Experiment Schedule
                             </span>
@@ -484,8 +484,8 @@
                                 <h4 style="font-size: 0.9em; font-weight: 600; margin-bottom: 10px; color: #333;">
                                     <i class="mdi mdi-flask-outline"></i> Available
                                 </h4>
-                                <div id="available-experiments" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">Loading...</p>
+ <div id="available-experiments" class="ys-scroll-sm">
+ <p class="ys-empty-state">Loading...</p>
                                 </div>
                             </div>
 
@@ -503,7 +503,7 @@
                                             <i class="mdi mdi-auto-fix"></i> Auto
                                         </button>
                                         <input type="number" id="exps-per-group" value="2" min="1" max="10" style="width: 45px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.8em; text-align: center;" title="Experiments per group">
-                                        <div class="select" style="font-size: 0.8em;">
+ <div class="select ys-text-080">
                                             <select id="group-filter" aria-label="Filter experiments by group" title="Filter by group (all = all groups)">
                                                 <option value="">All Groups</option>
                                                 {% for group in exp_groups %}
@@ -513,8 +513,8 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div id="schedule-groups" style="min-height: 100px; max-height: 200px; overflow-y: auto;">
-                                    <p style="color: #999; font-size: 0.85em; text-align: center; padding: 20px;">No groups created yet</p>
+ <div id="schedule-groups" class="ys-scroll-sm">
+ <p class="ys-empty-state">No groups created yet</p>
                                 </div>
                             </div>
                         </div>
@@ -525,7 +525,7 @@
                                 <h4 style="font-size: 0.9em; font-weight: 600; color: #333; margin: 0;">
                                     <i class="mdi mdi-console"></i> Log
                                 </h4>
-                                <div style="display: flex; gap: 8px; align-items: center;">
+ <div class="ys-flex-gap-8">
                                     <button onclick="clearLogs()" style="background: none; border: none; color: #6c757d; cursor: pointer; font-size: 0.8em;">
                                         <i class="mdi mdi-delete-sweep"></i> Clear
                                     </button>
@@ -553,7 +553,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">New Name</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="text" 
                                                    id="new_exp_name" 
                                                    name="new_exp_name" 
@@ -564,9 +564,9 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Source Experiment</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div class="select" style="width: 100%;">
-                                                <select id="source_exp_id" name="source_exp_id" style="width: 100%;" required>
+ <span class="right ys-w-70">
+ <div class="select w-100">
+ <select id="source_exp_id" name="source_exp_id" class="w-100" required>
                                                     <option value="">Select experiment...</option>
                                                     {% for exp in all_experiments %}
                                                     <option value="{{ exp.idexp }}">{{ exp.exp_name }}</option>
@@ -577,7 +577,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Number of Copies</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number" 
                                                    id="num_copies" 
                                                    name="num_copies" 
@@ -585,15 +585,15 @@
                                                    value="1" 
                                                    min="1"
                                                    max="20"
-                                                   style="width: 100%;">
-                                            <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+ class="w-100">
+ <p class="ys-text-tiny-gray-mt">
                                                 If &gt;1, creates copies named: name_1, name_2, etc.
                                             </p>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Experiment Group</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="text" 
                                                    id="copy_exp_group" 
                                                    name="exp_group" 
@@ -605,7 +605,7 @@
                                                 <option value="{{ group }}">
                                                 {% endfor %}
                                             </datalist>
-                                            <p style="font-size: 0.75em; color: #6b7280; margin-top: 4px;">
+ <p class="ys-text-tiny-gray-mt">
                                                 Optional: Group experiments together
                                             </p>
                                         </span>

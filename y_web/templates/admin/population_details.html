@@ -30,14 +30,14 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Population Overview</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Core information about this synthetic population, including configuration and agent demographics.
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Population name, description, and configuration settings.</p>
+ <p class="ys-label-hint">Population name, description, and configuration settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">{{ population.name }}</span>
@@ -53,11 +53,11 @@
 
                             </div>
                                 <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
-                                    <a class="button is-info" href="/admin/download_population/{{ population.id }}" style="display: flex; align-items: center; gap: 5px;">
+ <a class="button is-info ys-flex-gap-5" href="/admin/download_population/{{ population.id }}">
                                         <i class="mdi mdi-download"></i>
                                         <span>Download</span>
                                     </a>
-                                    <a class="button is-danger" href="/admin/delete_population/{{ population.id }}" style="display: flex; align-items: center; gap: 5px;">
+ <a class="button is-danger ys-flex-gap-5" href="/admin/delete_population/{{ population.id }}">
                                         <i class="mdi mdi-delete"></i>
                                         <span>Delete</span>
                                     </a>
@@ -71,7 +71,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Experiment Deployments</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Experiments where this population is currently deployed.
                         </p>
                         <div class="box-content">
@@ -116,7 +116,7 @@
 
                 <div class="column is-12">
                     <hr style="margin: 2em 0;">
-                <h3 class="title is-5 is-thin" style="text-align: center">Population Statistics & Analytics</h3>
+ <h3 class="title is-5 is-thin text-center">Population Statistics & Analytics</h3>
                 <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 0.5em;">
                     Visual analysis of agent distribution across demographics, attributes, and behavior patterns.
                 </p>
@@ -128,7 +128,7 @@
                 <div class="column is-4">
                      <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="ages" style="width:100%;height:250px"></canvas>
+ <canvas id="ages" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -137,7 +137,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="gender" style="width:100%;height:250px"></canvas>
+ <canvas id="gender" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -146,7 +146,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="nationalities" style="width:100%;height:250px"></canvas>
+ <canvas id="nationalities" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -158,7 +158,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="edu" style="width:100%;height:250px"></canvas>
+ <canvas id="edu" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -167,7 +167,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="languages" style="width:100%;height:250px"></canvas>
+ <canvas id="languages" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -176,7 +176,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="professions" style="width:100%;height:250px"></canvas>
+ <canvas id="professions" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -188,7 +188,7 @@
                 <div class="column is-4">
                      <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="leanings" style="width:100%;height:250px"></canvas>
+ <canvas id="leanings" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -197,7 +197,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="tox" style="width:100%;height:250px"></canvas>
+ <canvas id="tox" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -206,7 +206,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="activity" style="width:100%;height:250px"></canvas>
+ <canvas id="activity" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>
@@ -218,7 +218,7 @@
                 <div class="column is-4">
                     <div class="dashboard-box">
                         <div class="box-content">
-                            <canvas id="activity_profiles" style="width:100%;height:250px"></canvas>
+ <canvas id="activity_profiles" class="ys-w100-h250"></canvas>
 
                         </div>
                     </div>

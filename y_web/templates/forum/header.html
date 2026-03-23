@@ -45,7 +45,7 @@
             src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP"
             height="0"
             width="0"
-            style="display: none; visibility: hidden"
+ class="ys-invisible"
     ></iframe
     >
 </noscript>
@@ -92,7 +92,7 @@
 
                 {% if reply_notif_url %}
                 <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="Notifications">
-                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}"></i>
+                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}" {# dynamic #}></i>
                     {% if (reply_notif_unread_count|default(0))|int > 0 %}
                     <span class="reply-notif-badge">{{ reply_notif_unread_count }}</span>
                     {% endif %}

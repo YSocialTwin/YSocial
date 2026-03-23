@@ -39,13 +39,13 @@
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+ <span class="right ys-w-70"><input type="text"
                                                                                        name="name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea name="descr" class="textarea" rows="3"></textarea>
                                         </span>
                                     </div>
@@ -79,46 +79,46 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Simulation Length (days)</span>
-                                        <span class="right" style="width: 70%; display: flex; align-items: center; gap: 10px;">
+ <span class="right ys-value-col">
                                             <input type="number"
                                                    id="days_display"
                                                    class="input"
                                                    min="1"
                                                    step="1"
                                                    value="30"
-                                                   style="flex: 1;">
+ class="ys-flex-1">
                                             <input type="hidden" name="days" id="days_input" value="30">
-                                            <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; font-size: 0.9em; white-space: nowrap;">
-                                                <input type="checkbox" id="infinite_duration" name="infinite_duration" style="cursor: pointer;">
-                                                <span style="color: #039be5;">Run until stopped</span>
+ <label class="ys-flex-click-nowrap">
+ <input type="checkbox" id="infinite_duration" name="infinite_duration" class="ys-pointer">
+ <span class="ys-text-brand">Run until stopped</span>
                                             </label>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Experiment Clock Mode</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div class="select" style="width: 100%;">
-                                                <select name="clock_mode" class="input" style="width: 100%;">
+ <span class="right ys-w-70">
+ <div class="select w-100">
+ <select name="clock_mode" class="input w-100">
                                                     {% set selected_clock_mode = experiment_clock.get('mode', 'simulated') %}
                                                     <option value="simulated" {% if selected_clock_mode == 'simulated' %}selected{% endif %}>Simulated (run as fast as possible)</option>
                                                     <option value="real_time" {% if selected_clock_mode == 'real_time' %}selected{% endif %}>Real-time (one wall-clock hour per round)</option>
                                                 </select>
                                             </div>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Experiment-wide setting shared by all clients in this experiment.
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Clock Timezone</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="text"
                                                    name="clock_timezone"
                                                    class="input"
                                                    value="{{ experiment_clock.get('timezone', 'Europe/Rome') }}"
                                                    placeholder="Europe/Rome"
                                                    required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Used for real-time wall-hour mapping (IANA timezone).
                                             </small>
                                         </span>
@@ -129,21 +129,21 @@
 
                                     <div class="box-line">
                                         <span class="left">Initial Number of Agents</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number"
                                                    name="initial_agents"
                                                    class="input"
                                                    min="1"
                                                    step="1"
                                                    placeholder="Leave empty for all agents">
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Subset of population to activate initially. Leave empty to use all agents.
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% New Agents (daily)</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="percentage_new_agents_iteration"
                                                                                        class="input"
                                                                                        min="0"
@@ -154,7 +154,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">% Daily Churn</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="percentage_removed_agents_iteration"
                                                                                        class="input"
                                                                                        min="0"
@@ -165,28 +165,28 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Show Advanced Parameters</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="checkbox" id="show_simulation_advanced_params" onchange="toggleSimulationAdvancedParams()">
                                         </span>
                                     </div>
-                                    <div id="simulation_advanced_params_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+ <div id="simulation_advanced_params_fields" class="ys-collapsible-panel">
                                     <div class="box-line">
                                         <span class="left">Initial Number of Agents</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number"
                                                    name="initial_agents"
                                                    class="input"
                                                    min="1"
                                                    step="1"
                                                    placeholder="Leave empty for all agents">
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Subset of population to activate initially. Leave empty to use all agents.
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Thread Context Length</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number"
                                                    name="max_length_thread_reading"
                                                    class="input"
@@ -194,14 +194,14 @@
                                                    step="1"
                                                    value="10"
                                                    required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Max number of thread items (post + comments) to fetch for context.
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Thread Context Max Chars</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number"
                                                    name="max_thread_context_chars"
                                                    class="input"
@@ -210,16 +210,16 @@
                                                    max="4800"
                                                    value="3200"
                                                    required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Character cap on thread text sent to the LLM (24B/Ollama-safe default).
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Context Preset</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <select id="context_preset_select" class="input" style="flex: 1;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-gap-8">
+ <select id="context_preset_select" class="input ys-flex-1">
                                                     <option value="balanced" selected>Balanced (Recommended)</option>
                                                     <option value="high_24b">High Context (24B/Ollama)</option>
                                                 </select>
@@ -227,7 +227,7 @@
                                                     Apply
                                                 </button>
                                             </div>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Applies thread + memory + LLM token budgets. High profile stays within 24B/Ollama-safe caps.
                                             </small>
                                             <small id="context_preset_status" style="color: #1a7f37; display: none; margin-top: 4px;"></small>
@@ -235,7 +235,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Timeline Follower Ratio</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="reading_from_follower_ratio"
                                                                                        class="input"
                                                                                        min="0"
@@ -246,7 +246,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Daily Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="probability_of_daily_follow"
                                                                                        class="input"
                                                                                        min="0"
@@ -257,7 +257,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Probability Secondary Follow</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="probability_of_secondary_follow"
                                                                                        class="input"
                                                                                        min="0"
@@ -268,7 +268,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Agents' Memory (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="attention_window"
                                                                                        class="input"
                                                                                        min="1"
@@ -278,7 +278,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Content Visibility (hours)</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="visibility_rounds"
                                                                                        class="input"
                                                                                        min="1"
@@ -298,126 +298,126 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Enable Memory</span>
-                                        <span class="right" style="width: 70%;">
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+ <span class="right ys-w-70">
+ <label class="ys-flex-click">
                                                 <input type="checkbox" id="memory_enabled" name="memory_enabled" onchange="toggleForumMemorySettings()">
-                                                <span style="color: #039be5;">Enable run-scoped memory</span>
+ <span class="ys-text-brand">Enable run-scoped memory</span>
                                             </label>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 When enabled, memory can influence posting, commenting, and voting.
                                             </small>
                                         </span>
                                     </div>
-                                    <div id="forum_memory_config_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
+ <div id="forum_memory_config_fields" class="ys-collapsible-panel">
                                         <div class="box-line">
                                             <span class="left">Semantic Retrieval</span>
-                                            <span class="right" style="width: 70%;">
-                                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+ <span class="right ys-w-70">
+ <label class="ys-flex-click">
                                                     <input type="checkbox" name="memory_semantic_enabled" id="memory_semantic_enabled">
-                                                    <span style="color: #039be5;">Enable embedding-backed retrieval</span>
+ <span class="ys-text-brand">Enable embedding-backed retrieval</span>
                                                 </label>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Requires an available Ollama embedding model. Leave disabled for the safest default setup.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Pair Limit</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_pair_limit" class="input"
                                                        min="1" max="50" step="1" value="5" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     How many recent interaction events to include in LLM context per user/thread pair.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Prompt Max Chars</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_prompt_max_chars" class="input"
                                                        min="200" max="3200" step="50" value="1600" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Character cap for injected memory context (24B/Ollama-safe default).
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Search K</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_search_k" class="input"
                                                        min="1" max="40" step="1" value="8" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Number of top semantic memory items considered per retrieval.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Search Window (rounds)</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_search_time_window_rounds" class="input"
                                                        min="0" max="10000" step="1" value="40" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Recency horizon for semantic search candidates.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Total Memory Chars</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_total_max_chars" class="input"
                                                        min="800" max="5000" step="50" value="2200" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Overall cap for injected memory context across tiers.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Reflection Cadence</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_reflection_cadence_rounds" class="input"
                                                        min="1" max="200" step="1" value="3" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     How often memory reflections are generated.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Cold-Start Window</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="number" name="memory_cold_start_window" class="input"
                                                        min="1" max="1000" step="1" value="5" required>
-                                                <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                     Number of initial interactions treated as full memory imprint before progressive decay starts.
                                                 </small>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Show Advanced Parameters</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <input type="checkbox" id="show_memory_advanced_params" onchange="toggleForumMemoryAdvancedParams()">
                                             </span>
                                         </div>
-                                        <div id="memory_advanced_params_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f9fafb; border-radius: 4px; margin-bottom: 10px;">
-                                            <div class="box-line"><span class="left">Social Decay (lambda)</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.05" required></span></div>
-                                            <div class="box-line"><span class="left">Social Corruption Rate</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.02" required></span></div>
-                                            <div class="box-line"><span class="left">Social Resummarize Every (events)</span><span class="right" style="width: 70%;"><input type="number" name="memory_social_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
-                                            <div class="box-line"><span class="left">Thread Decay (lambda)</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.03" required></span></div>
-                                            <div class="box-line"><span class="left">Thread Corruption Rate</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.01" required></span></div>
-                                            <div class="box-line"><span class="left">Thread Resummarize Every (events)</span><span class="right" style="width: 70%;"><input type="number" name="memory_thread_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
-                                            <div class="box-line"><span class="left">Evidence Tail Max</span><span class="right" style="width: 70%;"><input type="number" name="memory_evidence_tail_max" class="input" min="0" max="100" step="1" value="8" required></span></div>
-                                            <div class="box-line"><span class="left">Digest Update Cadence (rounds)</span><span class="right" style="width: 70%;"><input type="number" name="memory_digest_update_cadence_rounds" class="input" min="1" max="100" step="1" value="3" required></span></div>
-                                            <div class="box-line"><span class="left">Digest Events Limit</span><span class="right" style="width: 70%;"><input type="number" name="memory_digest_events_limit" class="input" min="10" max="1000" step="5" value="80" required></span></div>
-                                            <div class="box-line"><span class="left">Search Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_search_max_chars" class="input" min="300" max="1800" step="50" value="900" required></span></div>
-                                            <div class="box-line"><span class="left">Tier A Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_a_max_chars" class="input" min="100" max="2000" step="25" value="350" required></span></div>
-                                            <div class="box-line"><span class="left">Tier B Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_b_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
-                                            <div class="box-line"><span class="left">Tier C Max Chars</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_c_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
-                                            <div class="box-line"><span class="left">Tier C Uncertainty</span><span class="right" style="width: 70%;"><input type="number" name="memory_tier_c_uncertainty_threshold" class="input" min="0" max="1" step="0.01" value="0.45" required></span></div>
-                                            <div class="box-line"><span class="left">Reflection Min Events</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_min_events" class="input" min="1" max="500" step="1" value="12" required></span></div>
-                                            <div class="box-line"><span class="left">Reflection Trigger Sum</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_trigger_importance_sum" class="input" min="0" max="20" step="0.1" value="3.5" required></span></div>
-                                            <div class="box-line"><span class="left">Reflection Max Items</span><span class="right" style="width: 70%;"><input type="number" name="memory_reflection_max_items_per_run" class="input" min="1" max="5000" step="1" value="60" required></span></div>
-                                            <div class="box-line"><span class="left">Embedding Model</span><span class="right" style="width: 70%;"><input type="text" name="memory_embedding_model" id="memory_embedding_model" class="input" value="snowflake-arctic-embed:110m" disabled><small style="color: #666; display: block; margin-top: 4px;">Used only when semantic retrieval is enabled.</small></span></div>
-                                            <div class="box-line"><span class="left">Async Embedding</span><span class="right" style="width: 70%;"><label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" name="memory_embedding_async" id="memory_embedding_async" checked disabled><span style="color: #039be5;">Background indexing</span></label></span></div>
-                                            <div class="box-line"><span class="left">Importance Mode</span><span class="right" style="width: 70%;"><input type="text" name="memory_importance_mode" class="input" value="heuristic_then_batch_llm"></span></div>
+ <div id="memory_advanced_params_fields" class="ys-collapsible-panel">
+ <div class="box-line ys-w-70"><span class="left">Social Decay (lambda)</span><span class="right"><input type="number" name="memory_social_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.05" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Social Corruption Rate</span><span class="right"><input type="number" name="memory_social_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.02" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Social Resummarize Every (events)</span><span class="right"><input type="number" name="memory_social_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Decay (lambda)</span><span class="right"><input type="number" name="memory_thread_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.03" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Corruption Rate</span><span class="right"><input type="number" name="memory_thread_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.01" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Resummarize Every (events)</span><span class="right"><input type="number" name="memory_thread_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Evidence Tail Max</span><span class="right"><input type="number" name="memory_evidence_tail_max" class="input" min="0" max="100" step="1" value="8" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Digest Update Cadence (rounds)</span><span class="right"><input type="number" name="memory_digest_update_cadence_rounds" class="input" min="1" max="100" step="1" value="3" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Digest Events Limit</span><span class="right"><input type="number" name="memory_digest_events_limit" class="input" min="10" max="1000" step="5" value="80" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Search Max Chars</span><span class="right"><input type="number" name="memory_search_max_chars" class="input" min="300" max="1800" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier A Max Chars</span><span class="right"><input type="number" name="memory_tier_a_max_chars" class="input" min="100" max="2000" step="25" value="350" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier B Max Chars</span><span class="right"><input type="number" name="memory_tier_b_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier C Max Chars</span><span class="right"><input type="number" name="memory_tier_c_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier C Uncertainty</span><span class="right"><input type="number" name="memory_tier_c_uncertainty_threshold" class="input" min="0" max="1" step="0.01" value="0.45" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Min Events</span><span class="right"><input type="number" name="memory_reflection_min_events" class="input" min="1" max="500" step="1" value="12" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Trigger Sum</span><span class="right"><input type="number" name="memory_reflection_trigger_importance_sum" class="input" min="0" max="20" step="0.1" value="3.5" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Max Items</span><span class="right"><input type="number" name="memory_reflection_max_items_per_run" class="input" min="1" max="5000" step="1" value="60" required></span></div>
+ <div class="box-line ys-w-70 ys-hint-text"><span class="left">Embedding Model</span><span class="right"><input type="text" name="memory_embedding_model" id="memory_embedding_model" class="input" value="snowflake-arctic-embed:110m" disabled><small>Used only when semantic retrieval is enabled.</small></span></div>
+ <div class="box-line ys-w-70 ys-flex-click ys-text-brand"><span class="left">Async Embedding</span><span class="right"><label><input type="checkbox" name="memory_embedding_async" id="memory_embedding_async" checked disabled><span>Background indexing</span></label></span></div>
+ <div class="box-line ys-w-70"><span class="left">Importance Mode</span><span class="right"><input type="text" name="memory_importance_mode" class="input" value="heuristic_then_batch_llm"></span></div>
                                         </div>
                                     </div>
                                     </div><!-- End section-agent-memory -->
@@ -433,7 +433,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Post new content</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -456,7 +456,7 @@
                                     <input type="hidden" name="news" id="news" value="0.0">
                                     <div class="box-line">
                                         <span class="left">Comment a Post</span>
-                                         <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -477,7 +477,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Read a content</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -500,7 +500,7 @@
                                     {% if experiment.db_name.startswith('database_') %}
                                     <div class="box-line">
                                         <span class="left">Search a Hashtag</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -524,7 +524,7 @@
                                     {% endif %}
                                     <div class="box-line">
                                         <span class="left">Share RSS / Feed Link</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -541,14 +541,14 @@
                                             </div>
                                             <input type="hidden" name="share_link" id="share_link" value="2">
                                             </div>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Forum uses link-sharing to publish content imported from RSS and feed sources.
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Share Image</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <div class="scale-wrapper">
                                             <div class="number-scale">
                                                   <div class="number-box" data-value="0">0</div>
@@ -576,20 +576,20 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Max Replies per Round</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number" name="max_replies_per_round" class="input"
                                                    min="0" max="10" step="1" value="2" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Maximum number of replies an agent can make per simulation round
                                             </small>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Reply Cooldown (rounds)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <input type="number" name="reply_cooldown_rounds" class="input"
                                                    min="0" max="10" step="1" value="2" required>
-                                            <small style="color: #666; display: block; margin-top: 4px;">
+ <small class="ys-hint-text">
                                                 Rounds to wait before replying to the same user again
                                             </small>
                                         </span>
@@ -602,14 +602,14 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_client" name="llm" class="input" placeholder="e.g., localhost:8000" value="{{ exp_llm_defaults.llm }}" style="flex: 1;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-row-mb">
+ <input type="text" id="custom_llm_url_client" name="llm" class="input ys-flex-1" placeholder="e.g., localhost:8000" value="{{ exp_llm_defaults.llm }}">
                                                 <button type="button" class="button is-solid primary-button" onclick="fetchModelsForClient()">
                                                     Fetch Models
                                                 </button>
                                             </div>
-                                            <div id="llm_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+ <div id="llm_url_status_client" class="ys-badge-min"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -625,14 +625,14 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+ <span class="right ys-w-70"><input type="text"
                                                                                        name="llm_api_key"
                                                                                        class="input"
                                                                                        value="{{ exp_llm_defaults.llm_api_key }}"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Max tokens</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="llm_max_tokens"
                                                                                        class="input"
                                                                                        step="1"
@@ -640,7 +640,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Temperature</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="llm_temperature"
                                                                                        class="input"
                                                                                        step="any"
@@ -652,7 +652,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">VLM Model</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <select name="llm_v_agent" id="llm_v_agent" class="input">
                                                 <option value="qwen3-vl:8b" {% if exp_llm_defaults.llm_v_agent == 'qwen3-vl:8b' or not exp_llm_defaults.llm_v_agent %}selected{% endif %}>qwen3-vl:8b (Recommended)</option>
                                                 <option value="minicpm-v" {% if exp_llm_defaults.llm_v_agent == 'minicpm-v' %}selected{% endif %}>minicpm-v</option>
@@ -664,40 +664,40 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
-                                                <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input" placeholder="e.g., localhost:8000" value="{{ exp_llm_defaults.llm_v }}" style="flex: 1;">
+ <span class="right ys-w-70">
+ <div class="ys-flex-row-mb">
+ <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input ys-flex-1" placeholder="e.g., localhost:8000" value="{{ exp_llm_defaults.llm_v }}">
                                                 <button type="button" class="button is-solid primary-button" onclick="validateImageLLMModel()">
                                                     Validate Model
                                                 </button>
                                             </div>
-                                            <div id="llm_v_url_status_client" style="min-height: 24px; font-size: 0.9rem;"></div>
+ <div id="llm_v_url_status_client" class="ys-badge-min"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">API Key</span>
-                                        <span class="right" style="width: 70%;"><input type="text"
+ <span class="right ys-w-70"><input type="text"
                                                                                        name="llm_v_api_key"
                                                                                        class="input"
                                                                                        value="{{ exp_llm_defaults.llm_v_api_key }}"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Max tokens</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="llm_v_max_tokens"
                                                                                        class="input"
                                                                                        value="{{ exp_llm_defaults.llm_v_max_tokens }}"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Temperature</span>
-                                        <span class="right" style="width: 70%;"><input type="number"
+ <span class="right ys-w-70"><input type="number"
                                                                                        name="llm_v_temperature"
                                                                                        class="input"
                                                                                        step="any"
                                                                                        value="{{ exp_llm_defaults.llm_v_temperature }}"></span>
                                     </div>
                                     <input type="hidden" id="llm_v_validation_status" value="false">
-                                    <div id="image_action_warning" style="padding: 10px; margin: 10px 0; background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; color: #856404;">
+ <div id="image_action_warning" class="ys-alert-warning-sm">
                                         <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that your selected VLM model is available on your server to enable this feature.
                                     </div>
                                     {% endif %}
@@ -781,21 +781,21 @@
                                     </div><!-- End section-recsys -->
 
                                     <div id="section-network" class="tutorial-section">
-                                    <div class="form-section-header">Social Network Structure <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+ <div class="form-section-header ys-field-note">Social Network Structure <span>(Optional)</span></div>
                                     <div class="form-section-description">
                                         Configure a starting social network among the agents. You can either generate a synthetic network or upload a custom network file.
                                     </div>
 
-                                    <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
-                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
-                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <details class="ys-mb-20">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                                 Network Configuration
                                             </span>
                                         </summary>
-                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+ <div class="ys-content-panel">
                                             
                                             <!-- Synthetic Network Section -->
                                             <div class="network-option-card" id="synthetic_network_card">
@@ -803,15 +803,15 @@
                                                     <span class="network-card-icon">🔗</span>
                                                     Generate Synthetic Network
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 12px;">
+ <p class="ys-field-hint-sm">
                                                     Choose from various network topologies with configurable parameters.
                                                 </p>
 
                                                 <div class="box-line">
-                                                    <span class="left" style="font-weight: 500;">Network Model</span>
+ <span class="left fw-medium">Network Model</span>
                                                     <span class="right">
-                                                        <div class="select" style="width: 100%; max-width: 400px;">
-                                                            <select name="network_model" id="network_model_select" style="width: 100%;">
+ <div class="select ys-w-max400">
+ <select name="network_model" id="network_model_select" class="w-100">
                                                                 <option value="">Select a network model...</option>
                                                                 <optgroup label="Basic Models">
                                                                     <option value="ER">Random Network (Erdős-Rényi)</option>
@@ -833,60 +833,60 @@
 
                                                 <!-- Parameter fields with improved layout -->
                                                 <div class="network-params-container">
-                                                    <div class="network-param-row" id="er_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="er_param_field">
                                                         <span class="network-param-label">Edge probability (p)</span>
                                                         <input type="number" name="network_p" class="input network-param-input" value="0.1" min="0" max="1" step="0.00001">
                                                     </div>
                                                     
-                                                    <div class="network-param-row" id="ba_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="ba_param_field">
                                                         <span class="network-param-label">Edges per node (m)</span>
                                                         <input type="number" name="network_m" class="input network-param-input" value="2" min="1">
                                                     </div>
                                                     
-                                                    <div class="network-param-row" id="ws_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="ws_param_field">
                                                         <span class="network-param-label">Nearest neighbors (k)</span>
                                                         <input type="number" name="network_k" class="input network-param-input" value="4" min="2">
                                                     </div>
-                                                    <div class="network-param-row" id="ws_param_field2" style="display: none;">
+ <div class="network-param-row d-none" id="ws_param_field2">
                                                         <span class="network-param-label">Rewiring probability (p)</span>
                                                         <input type="number" name="network_ws_p" class="input network-param-input" value="0.3" min="0" max="1" step="0.01">
                                                     </div>
                                                     
-                                                    <div class="network-param-row" id="plc_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="plc_param_field">
                                                         <span class="network-param-label">Edges per node (m)</span>
                                                         <input type="number" name="network_plc_m" class="input network-param-input" value="2" min="1">
                                                     </div>
-                                                    <div class="network-param-row" id="plc_param_field2" style="display: none;">
+ <div class="network-param-row d-none" id="plc_param_field2">
                                                         <span class="network-param-label">Triangle probability (p)</span>
                                                         <input type="number" name="network_plc_p" class="input network-param-input" value="0.5" min="0" max="1" step="0.01">
                                                     </div>
                                                     
-                                                    <div class="network-param-row" id="sbm_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="sbm_param_field">
                                                         <span class="network-param-label">Number of blocks</span>
                                                         <input type="number" name="network_blocks" class="input network-param-input" value="3" min="2">
                                                     </div>
-                                                    <div class="network-param-row" id="sbm_param_field2" style="display: none;">
+ <div class="network-param-row d-none" id="sbm_param_field2">
                                                         <span class="network-param-label">Intra-block edge probability</span>
                                                         <input type="number" name="network_p_in" class="input network-param-input" value="0.3" min="0" max="1" step="0.01">
                                                     </div>
-                                                    <div class="network-param-row" id="sbm_param_field3" style="display: none;">
+ <div class="network-param-row d-none" id="sbm_param_field3">
                                                         <span class="network-param-label">Inter-block edge probability</span>
                                                         <input type="number" name="network_p_out" class="input network-param-input" value="0.05" min="0" max="1" step="0.01">
                                                     </div>
                                                     
-                                                    <div class="network-param-row" id="lfr_param_field" style="display: none;">
+ <div class="network-param-row d-none" id="lfr_param_field">
                                                         <span class="network-param-label">Degree exponent (tau1)</span>
                                                         <input type="number" name="network_tau1" class="input network-param-input" value="2.5" min="1" step="0.1">
                                                     </div>
-                                                    <div class="network-param-row" id="lfr_param_field2" style="display: none;">
+ <div class="network-param-row d-none" id="lfr_param_field2">
                                                         <span class="network-param-label">Community size exponent (tau2)</span>
                                                         <input type="number" name="network_tau2" class="input network-param-input" value="1.5" min="1" step="0.1">
                                                     </div>
-                                                    <div class="network-param-row" id="lfr_param_field3" style="display: none;">
+ <div class="network-param-row d-none" id="lfr_param_field3">
                                                         <span class="network-param-label">Mixing parameter (mu)</span>
                                                         <input type="number" name="network_mu" class="input network-param-input" value="0.1" min="0" max="1" step="0.05">
                                                     </div>
-                                                    <div class="network-param-row" id="lfr_param_field4" style="display: none;">
+ <div class="network-param-row d-none" id="lfr_param_field4">
                                                         <span class="network-param-label">Average degree</span>
                                                         <input type="number" name="network_avg_degree" class="input network-param-input" value="5" min="2">
                                                     </div>
@@ -901,7 +901,7 @@
                                                     <span class="network-card-icon">📤</span>
                                                     Upload Custom Network
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+ <p class="ys-field-hint">
                                                     Upload a CSV file with edges (one per line: source,target).
                                                 </p>
                                                 
@@ -911,7 +911,7 @@
                                                         <span class="file-upload-icon-network-create">📊</span>
                                                         <span class="file-upload-text-network-create">Choose edge list file (CSV)...</span>
                                                     </label>
-                                                    <div id="network-file-name-display-create" class="file-name-display-network-create" style="display: none;"></div>
+ <div id="network-file-name-display-create" class="file-name-display-network-create d-none"></div>
                                                 </div>
                                             </div>
                                         </div>
@@ -919,45 +919,45 @@
                                     </div><!-- End section-network -->
 
                                     <div id="section-activity-rates" class="tutorial-section">
-                                    <div class="form-section-header">Hourly Activity Rates <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+ <div class="form-section-header ys-field-note">Hourly Activity Rates <span>(Optional)</span></div>
                                     <div class="form-section-description">
                                         Configure hourly activity rates for the simulation. Default values are based on
-                                        <a href="https://zenodo.org/records/14669616" target="_blank" style="color: #039be5;">Bluesky Data</a>.
+ <a href="https://zenodo.org/records/14669616" target="_blank" class="ys-text-brand">Bluesky Data</a>.
                                         Leave empty to use defaults.
                                     </div>
 
-                                    <details style="margin-bottom: 20px;">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
-                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
-                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <details class="ys-mb-20">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                                 Activity Rates Configuration
                                             </span>
                                         </summary>
-                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
+ <div class="ys-content-panel">
 
                                             <!-- Bar Chart Visualization Card -->
-                                            <div class="network-option-card" style="background: #ffffff; border: 2px solid #e5e7eb; padding: 20px; margin-bottom: 16px;">
+ <div class="network-option-card ys-card-white-mb">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">📊</span>
                                                     Activity Rates Visualization
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 12px;">
+ <p class="ys-field-hint-sm">
                                                     Real-time preview of hourly activity distribution.
                                                 </p>
-                                                <div style="height: 200px; position: relative; background: #f9fafb; padding: 15px; border: 1px solid #e5e7eb; border-radius: 6px;">
+ <div class="ys-chart-box">
                                                     <canvas id="activity_rates_create"></canvas>
                                                 </div>
                                             </div>
 
                                             <!-- Activity Rates Input Fields Card -->
-                                            <div class="network-option-card" style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 20px;">
+ <div class="network-option-card ys-card-gray">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">⏰</span>
                                                     Customize Hourly Rates
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+ <p class="ys-field-hint">
                                                     Enter custom values for specific hours (leave empty to use defaults shown in placeholders).
                                                 </p>
 
@@ -1069,69 +1069,69 @@
                                     </div><!-- End section-activity-rates -->
 
                                     <div id="section-agent-archetypes" class="tutorial-section">
-                                    <div class="form-section-header">Agent Archetypes and Transitions <span style="font-size: 0.85em; color: #6b7280; font-weight: 400;">(Optional)</span></div>
+ <div class="form-section-header ys-field-note">Agent Archetypes and Transitions <span>(Optional)</span></div>
                                     <div class="form-section-description">
                                         Configure the behavioral archetypes and transition probabilities for agents.
                                     </div>
 
-                                    <div style="margin: 15px 0; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                        <label style="display: flex; align-items: center; cursor: pointer; font-size: 0.9em; font-weight: 500; color: #374151;">
-                                            <input type="checkbox" id="enable_archetypes" name="enable_archetypes" checked style="margin-right: 8px; cursor: pointer;">
+ <div class="ys-note-box">
+ <label class="ys-flex-link">
+ <input type="checkbox" id="enable_archetypes" name="enable_archetypes" checked class="ys-mr-click">
                                             <span>Enable Agent Archetypes Distribution</span>
                                         </label>
-                                        <p style="font-size: 0.8em; color: #6b7280; margin: 8px 0 0 28px; line-height: 1.4;">
+ <p class="ys-text-xs-indent">
                                             When disabled, all agents will be able to perform all actions without archetype restrictions.
                                         </p>
                                     </div>
 
-                                    <details style="margin-bottom: 20px;" id="archetype-details">
-                                        <summary style="cursor: pointer; font-weight: 500; font-size: 0.95em; padding: 12px 16px; color: #374151; list-style: none; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; transition: all 0.2s;">
-                                            <span style="display: inline-flex; align-items: center; gap: 8px;">
-                                                <svg style="width: 18px; height: 18px; transition: transform 0.2s;" class="details-arrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+ <details class="ys-mb-20" id="archetype-details">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                                                 </svg>
                                                 Archetype Configuration
                                             </span>
                                         </summary>
-                                        <div style="padding: 20px; margin-top: 8px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px;">
-                                            <div class="network-option-card" style="background: #f9fafb; border: 2px solid #e5e7eb; padding: 20px; margin-bottom: 16px;">
+ <div class="ys-content-panel">
+ <div class="network-option-card ys-card-gray-mb">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">👥</span>
                                                     Archetype Distribution (%)
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+ <p class="ys-field-hint">
                                                     Define the percentage of agents in each behavioral archetype (must sum to 100%).
                                                 </p>
                                                 <div class="archetype-boxes">
                                                     <div class="archetype-box" id="archetype-validator-box">
                                                         <h4>The Validator</h4>
                                                         <p>Active Audience - ~70% of activity is validating others</p>
-                                                        <input type="number" id="archetype_validator" name="archetype_validator" value="52" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+ <input type="number" id="archetype_validator" name="archetype_validator" value="52" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
                                                     </div>
                                                     <div class="archetype-box" id="archetype-broadcaster-box">
                                                         <h4>The Broadcaster</h4>
                                                         <p>Content Creator - ~75% of actions are posts/comments</p>
-                                                        <input type="number" id="archetype_broadcaster" name="archetype_broadcaster" value="20" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+ <input type="number" id="archetype_broadcaster" name="archetype_broadcaster" value="20" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
                                                     </div>
                                                     <div class="archetype-box" id="archetype-explorer-box">
                                                         <h4>The Explorer</h4>
                                                         <p>Network Growth - Focused on expanding social graph</p>
-                                                        <input type="number" id="archetype_explorer" name="archetype_explorer" value="28" step="0.1" min="0" max="100"> <span style="font-size: 0.8em; color: #6b7280;">%</span>
+ <input type="number" id="archetype_explorer" name="archetype_explorer" value="28" step="0.1" min="0" max="100"> <span class="ys-text-xs-muted">%</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="network-option-card" style="background: #ffffff; border: 2px solid #e5e7eb; padding: 20px;">
+ <div class="network-option-card ys-card-white">
                                                 <div class="network-card-title">
                                                     <span class="network-card-icon">🔄</span>
                                                     Transition Probabilities (%)
                                                 </div>
-                                                <p style="font-size: 0.875em; color: #6b7280; margin-bottom: 16px;">
+ <p class="ys-field-hint">
                                                     Probability that an agent transitions from one archetype to another (each row must sum to 100%).
                                                 </p>
                                                 <table class="transition-table-compact">
                                                     <thead>
                                                         <tr>
-                                                            <th style="text-align: left;">From / To</th>
+ <th class="text-start">From / To</th>
                                                             <th>Validator</th>
                                                             <th>Broadcaster</th>
                                                             <th>Explorer</th>
@@ -1207,8 +1207,8 @@
                                 <em>Agents' Memory (hours):</em> For how long an agent maintain his interest in a topic<br>
                                 <em>Content Visibility (hours)</em> For how long a content can be proposed by recommender systems
                             </p>
-                            <p style="color: #f39c12; font-size: 0.9em; margin-top: 10px;">
-                                <i class="mdi mdi-alert" style="font-size: 14px;"></i>
+ <p class="ys-text-orange-mt">
+ <i class="mdi mdi-alert ys-text-14"></i>
                                 <strong>Note:</strong> Experiments with infinite-duration clients cannot be used in scheduled experiment groups.
                             </p>
                             <hr>
@@ -1221,8 +1221,8 @@
                             <p>
                                 <b>Large Language Models</b><br>
                                 Configure the LLM server and model for agent content generation.<br><br>
-                                <i class="mdi mdi-information-outline" style="font-size: 16px;"></i> Click "Fetch Models" to load available models from your LLM server<br>
-                                <i class="mdi mdi-check-circle" style="font-size: 16px;"></i> Select a model to enable the Create button
+ <i class="mdi mdi-information-outline ys-icon-md"></i> Click "Fetch Models" to load available models from your LLM server<br>
+ <i class="mdi mdi-check-circle ys-icon-md"></i> Select a model to enable the Create button
                             </p>
                             <hr>
                             <p>

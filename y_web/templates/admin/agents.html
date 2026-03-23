@@ -31,7 +31,7 @@
                             
 
                             <div style="margin-top: 20px; text-align: right;">
-                                <form action="/admin/delete_orphaned_agents" method="POST" style="display: inline-block;" onsubmit="if(confirm('Are you sure you want to delete all agents that do not belong to any population? This action cannot be undone.')) { showLoading('Deleting orphaned agents...'); return true; } return false;">
+ <form action="/admin/delete_orphaned_agents" method="POST" class="d-inline-block" onsubmit="if(confirm('Are you sure you want to delete all agents that do not belong to any population? This action cannot be undone.')) { showLoading('Deleting orphaned agents...'); return true; } return false;">
                                     <button type="submit" class="button is-solid" style="background-color: #dc3545; color: white; padding: 8px 16px; font-size: 0.9rem;">
                                         Delete Orphaned Agents
                                     </button>
@@ -75,12 +75,12 @@
                                     <b>Demographic Information</b>
                                     <div class="box-line">
                                         <span class="left">Agent Name</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="name"
+ <span class="right ys-w-70"><input type="text" name="name"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Profile Picture URL <small>(optional)</small></span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="profile_pic"
+ <span class="right ys-w-70"><input type="text" name="profile_pic"
                                                                                        class="input"></span>
                                     </div>
                                     <div class="box-line">
@@ -259,7 +259,7 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Alternative profile</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="alt_profile"
+ <span class="right ys-w-70"><input type="text" name="alt_profile"
                                                                                        class="input" value=""></span>
                                     </div>
                                     </div><!-- End section-advanced-roleplay -->

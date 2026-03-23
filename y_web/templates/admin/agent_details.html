@@ -30,7 +30,7 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Agent Profile</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Comprehensive profile of this synthetic agent, including demographics, personality, and behavioral characteristics.
                         </p>
 
@@ -38,7 +38,7 @@
                             <div class="box-lines">
 
                                 <h4><b>Demographic Information</b></h4>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Basic demographic attributes and language preferences.</p>
+ <p class="ys-label-hint">Basic demographic attributes and language preferences.</p>
                                 <div class="box-line">
                                     <span class="left">Agent Name</span>
                                     <span class="right">{{ agent.name }}</span>
@@ -65,7 +65,7 @@
                                 </div>
                                 <hr>
                                 <h4><b>Thematic Characterization</b></h4>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Professional and ideological identity traits.</p>
+ <p class="ys-label-hint">Professional and ideological identity traits.</p>
                                 <div class="box-line">
                                     <span class="left">Profession</span>
                                     <span class="right">{{ agent.profession }}</span>
@@ -79,7 +79,7 @@
                                 <hr>
 
                                 <h4><b>Big Five Personality Profile</b></h4>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Scores for the five major personality dimensions (0.0 - 1.0 scale).</p>
+ <p class="ys-label-hint">Scores for the five major personality dimensions (0.0 - 1.0 scale).</p>
                                 <div class="box-line">
                                     <span class="left">Openness to Experience</span>
                                     <span class="right">{{ agent.oe }}</span>
@@ -103,7 +103,7 @@
 
                                 <hr>
                                 <h4><b>Expected Social Behavior</b></h4>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Behavioral patterns and activity characteristics.</p>
+ <p class="ys-label-hint">Behavioral patterns and activity characteristics.</p>
                                 <div class="box-line">
                                     <span class="left">Toxicity Level</span>
                                     <span class="right">{{ agent.toxicity }}</span>
@@ -136,16 +136,16 @@
                                 {% if profile is not none %}
                                 <hr>
                                 <h4><b>Advanced Role-Playing Profile</b></h4>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Custom behavioral instructions for enhanced agent simulation.</p>
+ <p class="ys-label-hint">Custom behavioral instructions for enhanced agent simulation.</p>
                                 <div class="box-line">
                                 <span class="right">{{ profile.profile }}</span>
                                 </div>
                                 {% endif %}
 
                             </div>
-                            <div class="buttons" style="display: flex; justify-content: right">
+ <div class="buttons ys-flex-right">
                                 <a class="link-tooltip" href="/admin/delete_agent/{{ agent.id }}" title="Delete"><i
-                                     class="mdi mdi-delete" style="font-size: 24px;"></i></a>
+ class="mdi mdi-delete ys-icon-lg"></i></a>
                             </div>
 
                         </div>
@@ -162,8 +162,8 @@
 
 
                         <div class="box-content">
-                            <div class="box-lines" style="display: flex; justify-content: center">
-                                <img src="{{ agent.profile_pic }}" alt="Logo" style="width: 50%; height: auto;">
+ <div class="box-lines ys-flex-center">
+ <img src="{{ agent.profile_pic }}" alt="Logo" class="ys-w-50-auto">
                             </div>
 
                         </div>
@@ -172,7 +172,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Population Memberships</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Populations where this agent is currently deployed.
                         </p>
                         <div class="box-content">
@@ -200,7 +200,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">Add to Population</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Assign this agent to additional populations for use in experiments.
                         </p>
                         <div class="box-content">
@@ -208,7 +208,7 @@
                                 <div class="box-lines">
                                     <div class="box-line">
                                         <span class="left">
-                                            <small style="color: #666;">ℹ️ An agent can be added to multiple populations.</small>
+ <small class="ys-text-gray">ℹ️ An agent can be added to multiple populations.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">

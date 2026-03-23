@@ -24,7 +24,7 @@
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">{{ platform_label }} Memory Embeddings</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configure the embedding backend used by {{ server_label }} for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.
                         </p>
 
@@ -32,7 +32,7 @@
                             <div class="box-content">
                                 <div class="box-line">
                                     <span class="left">Embedding Service</span>
-                                    <span class="right" style="width: 50%;">
+ <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
                                             <select name="embedding_service" id="embedding_service" class="input">
                                                 <option value="" {% if not embedding_settings.service %}selected{% endif %}>Disabled</option>
@@ -41,11 +41,11 @@
                                         </div>
                                     </span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only Ollama is currently supported for memory embeddings.</p>
+ <p class="ys-text-xs-hint2">Only Ollama is currently supported for memory embeddings.</p>
 
                                 <div class="box-line">
                                     <span class="left">Ollama Host</span>
-                                    <span class="right" style="width: 50%;">
+ <span class="right ys-w-50">
                                         <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434">
                                     </span>
                                 </div>
@@ -56,11 +56,11 @@
                                     </button>
                                     <span id="embedding_fetch_status" style="font-size: 0.85em; color: #666;"></span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Model discovery is enabled only after an Ollama host is provided.</p>
+ <p class="ys-text-xs-hint2">Model discovery is enabled only after an Ollama host is provided.</p>
 
                                 <div class="box-line">
                                     <span class="left">Embedding Model</span>
-                                    <span class="right" style="width: 50%;">
+ <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
                                             <select name="embedding_model" id="embedding_model" class="input">
                                                 <option value="">Select an embedding model</option>
@@ -71,9 +71,9 @@
                                         </div>
                                     </span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only embedding-capable models are shown in this selector.</p>
+ <p class="ys-text-xs-hint2">Only embedding-capable models are shown in this selector.</p>
 
-                                <div class="button-wrap" style="margin-top: 1.5em;">
+ <div class="button-wrap ys-mt-15em">
                                     <button type="submit" class="button is-solid primary-button is-fullwidth">Save Embedding Settings</button>
                                 </div>
                             </div>

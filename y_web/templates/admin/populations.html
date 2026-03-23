@@ -51,16 +51,16 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Population Name <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
+ <span class="left text-danger">Population Name <span>*</span></span>
+ <span class="right ys-w-70"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
+ <span class="right ys-w-70"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Platform <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Population Platform <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="select is-fullwidth">
                                                 <select name="username_type" class="input" required>
                                                     <option value="microblogging">Microblogging</option>
@@ -70,7 +70,7 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Size <span style="color: red;">*</span></span>
+ <span class="left text-danger">Population Size <span>*</span></span>
                                         <div class="slider-timeline">
                                             <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
                                         </div>
@@ -109,8 +109,8 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Age Classes <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Age Classes <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
                                                     <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
@@ -125,30 +125,30 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="age_classes_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="age_classes_percentages_container">
                                         <span class="left">Age Classes %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="age_classes_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="age_classes_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="age_classes_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="age_classes_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Gender Distribution</span>
                                         <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
-                                            <div style="display: flex; align-items: center; gap: 5px;">
-                                                <label for="male_percentage" style="margin: 0; font-size: 0.9em;">Male:</label>
+ <div class="ys-flex-gap-5">
+ <label for="male_percentage" class="ys-m0-sm">Male:</label>
                                                 <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
-                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+ class="ys-num-input2"
                                                        oninput="updateFemalePercentage()">
-                                                <span style="font-size: 0.9em;">%</span>
+ <span class="ys-text-090">%</span>
                                             </div>
-                                            <div style="display: flex; align-items: center; gap: 5px;">
-                                                <label for="female_percentage" style="margin: 0; font-size: 0.9em;">Female:</label>
+ <div class="ys-flex-gap-5">
+ <label for="female_percentage" class="ys-m0-sm">Female:</label>
                                                 <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
-                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+ class="ys-num-input2"
                                                        oninput="updateMalePercentage()">
-                                                <span style="font-size: 0.9em;">%</span>
+ <span class="ys-text-090">%</span>
                                             </div>
                                             <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
                                         </span>
@@ -162,8 +162,8 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Education Levels <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Education Levels <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
                                                     <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
@@ -178,16 +178,16 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="education_levels_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="education_levels_percentages_container">
                                         <span class="left">Education %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="education_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="education_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="education_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="education_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Political Leanings <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Political Leanings <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
                                                     <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
@@ -202,16 +202,16 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="political_leanings_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="political_leanings_percentages_container">
                                         <span class="left">Political %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="political_leanings_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="political_leanings_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="political_leanings_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="political_leanings_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Toxicity Levels <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Toxicity Levels <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
                                                     <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
@@ -226,18 +226,18 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="toxicity_levels_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="toxicity_levels_percentages_container">
                                         <span class="left">Toxicity %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="toxicity_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="toxicity_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="toxicity_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="toxicity_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     </div><!-- End section-social-attributes -->
 
                                     <div id="section-profession-categories" class="tutorial-section">
-                                    <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleProfessionBackgrounds()">
-                                        <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+ <div class="form-section-header ys-clickable" onclick="toggleProfessionBackgrounds()">
+ <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
                                         Select profession categories to be used during agent generation. By default, all categories are available.
@@ -246,7 +246,7 @@
                                     <div class="profession-backgrounds-section" id="profession-backgrounds-section">
                                         <div class="box-line">
                                             <span class="left">Available Categories</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <div class="profession-tags-container" id="profession-tags-container">
                                                     {% for background in profession_backgrounds %}
                                                     <span class="profession-tag" data-background="{{ background }}" onclick="toggleProfessionTag(this)">
@@ -267,8 +267,8 @@
                                     </div><!-- End section-profession-categories -->
 
                                     <div id="section-activity-engagement" class="tutorial-section">
-                                    <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleActivityProfiles()">
-                                        <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+ <div class="form-section-header ys-clickable" onclick="toggleActivityProfiles()">
+ <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
                                         Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
@@ -302,40 +302,40 @@
                                                 <div id="assigned-profiles">
                                                     <div class="empty-state-compact">Drag profiles here to assign them</div>
                                                 </div>
-                                                <div id="percentage-validation" class="percentage-validation-compact" style="display: none;"></div>
+ <div id="percentage-validation" class="percentage-validation-compact d-none"></div>
                                             </div>
 
                                             <div class="profiles-section">
                                                 <div class="profiles-section-title">Actions Per User Once Active</div>
-                                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Min:</label>
+ <div class="ys-flex-col-gap-12">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Min:</label>
                                                         <input type="number" 
                                                                id="actions_min" 
                                                                name="actions_min" 
                                                                class="input" 
-                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                min="1" 
                                                                value="1"
                                                                placeholder="Minimum actions">
                                                     </div>
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Max:</label>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Max:</label>
                                                         <input type="number" 
                                                                id="actions_max" 
                                                                name="actions_max" 
                                                                class="input" 
-                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                min="1" 
                                                                value="10"
                                                                placeholder="Maximum actions">
                                                     </div>
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Distribution:</label>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Distribution:</label>
                                                         <select id="actions_distribution" 
                                                                 name="actions_distribution" 
                                                                 class="input" 
-                                                                style="flex: 1; padding: 6px; font-size: 0.9em;"
+ class="ys-flex-input"
                                                                 onchange="updateDistributionParams()">
                                                             <option value="Uniform" selected>Uniform</option>
                                                             <option value="Poisson">Poisson</option>
@@ -345,53 +345,53 @@
                                                     </div>
                                                     
                                                     <!-- Distribution-specific parameter fields -->
-                                                    <div id="poisson-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Lambda (λ):</label>
+ <div id="poisson-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Lambda (λ):</label>
                                                             <input type="number" 
                                                                    id="poisson_lambda" 
                                                                    name="poisson_lambda" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.01" 
                                                                    value="0.88"
                                                                    placeholder="Lambda parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
+ <span class="ys-text-tiny-gray">Rate parameter</span>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div id="geometric-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">p:</label>
+ <div id="geometric-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">p:</label>
                                                             <input type="number" 
                                                                    id="geometric_p" 
                                                                    name="geometric_p" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.01" 
                                                                    min="0" 
                                                                    max="1" 
                                                                    value="0.6667"
                                                                    placeholder="Probability parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
+ <span class="ys-text-tiny-gray">Success probability (0-1)</span>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div id="zipf-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
+ <div id="zipf-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">s:</label>
                                                             <input type="number" 
                                                                    id="zipf_s" 
                                                                    name="zipf_s" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.1" 
                                                                    value="2.5"
                                                                    placeholder="Exponent parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
+ <span class="ys-text-tiny-gray">Exponent parameter</span>
                                                         </div>
                                                     </div>
                                                 </div>

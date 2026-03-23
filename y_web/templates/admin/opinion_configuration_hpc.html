@@ -31,7 +31,7 @@
 
                     <div class="dashboard-box" id="box-opinion-config">
                         <h3 class="title is-5 is-thin">Opinion Distribution Configuration</h3>
-                        <p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">
+ <p class="ys-mb-hint">
                             Configure how opinions are distributed across different population segments for each simulation topic.
                         </p>
                         
@@ -41,7 +41,7 @@
                             <input type="hidden" name="segmentation" id="segmentation-input" value="">
 
                             <!-- Segmentation Selection -->
-                            <div class="box-content" style="margin-bottom: 20px;">
+ <div class="box-content ys-mb-20">
                                 <div class="form-section-header">1. Select Population Segmentation Dimensions (Optional)</div>
                                 <div class="form-section-description">
                                     Click on dimensions to add or remove them from segmentation. Active dimensions are shown in blue. Without selection, a global "All Population" segment is used.
@@ -64,9 +64,9 @@
                                 </div>
                                 
                                 <!-- Distribution Visualizations -->
-                                <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 12px; font-size: 0.9em; color: #374151;">Available Distributions:</div>
-                                    <div id="distributions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+ <div class="ys-info-card">
+ <div class="ys-label-dark">Available Distributions:</div>
+ <div id="distributions-grid" class="ys-grid-180">
                                         <!-- Distributions will be dynamically generated here -->
                                     </div>
                                 </div>
@@ -84,7 +84,7 @@
                             </div>
 
                             <!-- Opinion Update Rule Configuration -->
-                            <div class="box-content" id="update-rule-configuration" style="margin-top: 20px;">
+ <div class="box-content ys-mt-20" id="update-rule-configuration">
                                 <div class="form-section-header">3. Select Opinion Update Rule</div>
                                 <div class="form-section-description">
                                     Choose how agent opinions are updated during the simulation.
@@ -92,45 +92,45 @@
                                 
                                 <input type="hidden" name="update_rule" id="update_rule_input" value="bounded_confidence">
                                 
-                                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+ <div class="ys-mb-flex-wrap">
                                     <button type="button" class="update-rule-button selected" data-rule="bounded_confidence" onclick="selectUpdateRule(this, 'bounded_confidence')">
-                                        <div style="font-weight: 600; margin-bottom: 4px;">Bounded Confidence</div>
-                                        <div style="font-size: 0.8em; opacity: 0.9;">Agents update opinions based on similarity with others</div>
+ <div class="ys-label-sm">Bounded Confidence</div>
+ <div class="ys-text-xs-faded">Agents update opinions based on similarity with others</div>
                                     </button>
                                     
                                     <button type="button" class="update-rule-button{% if not llm_agents_enabled %} disabled{% endif %}" data-rule="llm_evaluation" onclick="selectUpdateRule(this, 'llm_evaluation')" {% if not llm_agents_enabled %}disabled{% endif %}>
-                                        <div style="font-weight: 600; margin-bottom: 4px;">LLM Evaluation</div>
-                                        <div style="font-size: 0.8em; opacity: 0.9;">Agents use LLM to evaluate and update opinions</div>
-                                        {% if not llm_agents_enabled %}<div style="font-size: 0.75em; color: #f59e0b; margin-top: 4px;">⚠ Requires LLM agents enabled</div>{% endif %}
+ <div class="ys-label-sm">LLM Evaluation</div>
+ <div class="ys-text-xs-faded">Agents use LLM to evaluate and update opinions</div>
+ {% if not llm_agents_enabled %}<div class="ys-text-amber-mt">⚠ Requires LLM agents enabled</div>{% endif %}
                                     </button>
                                 </div>
                                 
                                 <!-- Bounded Confidence Parameters -->
-                                <div id="bounded-confidence-params" style="display: block; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9em;">Bounded Confidence Parameters</div>
+ <div id="bounded-confidence-params" class="ys-block-panel">
+ <div class="ys-label-md">Bounded Confidence Parameters</div>
                                     
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+ <div class="ys-grid-200">
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Epsilon (Confidence Bound)</label>
-                                            <input type="number" class="input" name="bc_epsilon" value="0.25" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0.25</small>
+ <label class="label ys-text-sm-mb">Epsilon (Confidence Bound)</label>
+ <input type="number" class="input ys-input-sm" name="bc_epsilon" value="0.25" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.25</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Mu (Averaging Weight)</label>
-                                            <input type="number" class="input" name="bc_mu" value="0.5" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0.5</small>
+ <label class="label ys-text-sm-mb">Mu (Averaging Weight)</label>
+ <input type="number" class="input ys-input-sm" name="bc_mu" value="0.5" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.5</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Theta (Backfire Strength)</label>
-                                            <input type="number" class="input" name="bc_theta" value="0" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0</small>
+ <label class="label ys-text-sm-mb">Theta (Backfire Strength)</label>
+ <input type="number" class="input ys-input-sm" name="bc_theta" value="0" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Cold Start Strategy</label>
-                                            <select class="input" name="bc_cold_start" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="bc_cold_start">
                                                 <option value="neutral">Neutral (0.5)</option>
                                                 <option value="inherited">Inherited</option>
                                             </select>
@@ -139,32 +139,32 @@
                                 </div>
                                 
                                 <!-- LLM Evaluation Parameters -->
-                                <div id="llm-evaluation-params" style="display: none; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9em;">LLM Evaluation Parameters</div>
+ <div id="llm-evaluation-params" class="ys-hidden-panel">
+ <div class="ys-label-md">LLM Evaluation Parameters</div>
                                     
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+ <div class="ys-grid-250">
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Cold Start Strategy</label>
-                                            <select class="input" name="llm_cold_start" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="llm_cold_start">
                                                 <option value="neutral">Neutral (0.5)</option>
                                                 <option value="inherited">Inherited</option>
                                             </select>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Evaluation Scope</label>
-                                            <select class="input" name="llm_evaluation_scope" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Evaluation Scope</label>
+ <select class="input ys-input-sm" name="llm_evaluation_scope">
                                                 <option value="interlocutor_only">Interlocutor Only</option>
                                                 <option value="interlocutor_and_friends">Interlocutor + First-Order Friends</option>
                                             </select>
-                                            <small style="color: #6b7280; font-size: 0.8em;">Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions</small>
+ <small class="ys-text-xs-gray">Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="box-content" style="margin-top: 20px; display: flex; gap: 10px;">
+ <div class="box-content ys-mt-flex-gap">
                                 <button type="submit" class="button is-solid accent-button" id="submit-btn">
                                     Save Configuration
                                 </button>

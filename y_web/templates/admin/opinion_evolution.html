@@ -26,7 +26,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin" style="margin-bottom: 15px;">Temporal Controls</h3>
+ <h3 class="title is-5 is-thin ys-mb-15">Temporal Controls</h3>
                         
                         <div class="filter-section">
                             <div class="slider-container">
@@ -39,11 +39,11 @@
                                             Hourly
                                         </button>
                                         <button class="granularity-button" data-granularity="daily"
-                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+ class="ys-tag-btn">
                                             Daily
                                         </button>
                                         <button class="granularity-button" data-granularity="weekly"
-                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
+ class="ys-tag-btn">
                                             Weekly
                                         </button>
                                     </div>
@@ -115,13 +115,13 @@
             <div class="columns">
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin" style="margin-bottom: 15px;">Opinion Distribution</h3>
+ <h3 class="title is-6 is-thin ys-mb-15">Opinion Distribution</h3>
                         
                         <div class="chart-container">
                             <canvas id="opinionChart" height="250"></canvas>
                         </div>
                         
-                        <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 10px;" id="chart-description">
+ <p class="ys-text-xs-center-mt" id="chart-description">
                             Distribution of agent opinions across different opinion groups.
                         </p>
                     </div>
@@ -130,13 +130,13 @@
                 <!-- Opinion Group Trends Chart -->
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin" style="margin-bottom: 15px;">Opinion Group Trends</h3>
+ <h3 class="title is-6 is-thin ys-mb-15">Opinion Group Trends</h3>
                         
                         <div class="chart-container">
                             <canvas id="groupTrendsChart" height="250"></canvas>
                         </div>
                         
-                        <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 10px;">
+ <p class="ys-text-xs-center-mt">
                             Evolution of opinion group volumes (percentage of agents in each group over time).
                         </p>
                     </div>
@@ -146,10 +146,10 @@
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h3 class="title is-6 is-thin" style="margin-bottom: 0;">Agent Opinion Evolution</h3>
+ <h3 class="title is-6 is-thin mb-0">Agent Opinion Evolution</h3>
                             
                             <!-- Sample size text input in upper right corner -->
-                            <div style="display: flex; align-items: center; gap: 8px;">
+ <div class="ys-flex-gap-8">
                                 <label style="font-size: 0.85em; font-weight: 600; color: #374151;">Sample Size:</label>
                                 <input type="number" id="sample-input" 
                                        min="1" max="100" value="50"
@@ -162,7 +162,7 @@
                             <canvas id="timeseriesChart" height="250"></canvas>
                         </div>
                         
-                        <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 10px;">
+ <p class="ys-text-xs-center-mt">
                             Individual agent opinion trajectories over time (colored by initial opinion group).
                         </p>
                     </div>

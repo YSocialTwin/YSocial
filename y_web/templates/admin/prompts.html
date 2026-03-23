@@ -31,122 +31,122 @@
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">LLM Prompts Configuration</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configure system prompts that guide agent and page behavior during simulation. These instructions are sent to the LLM before each action.
                         </p>
                         <div class="box-content">
                             <form action="/admin/update_prompts/{{ experiment.idexp }}" enctype="multipart/form-data" method="POST">
                                 <div class="box-lines">
                                     <h4 class="title is-6 is-thin">Agents Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Instructions that define agent behavior and roleplay characteristics.</p>
+ <p class="ys-label-hint">Instructions that define agent behavior and roleplay characteristics.</p>
                                     <div class="box-line">
                                         <span class="left">Roleplay</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="6" name="agent_roleplay" class="textarea">{{ prompts['agent_roleplay'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Roleplay (base)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="agent_roleplay_base" class="textarea">{{ prompts['agent_roleplay_base'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Roleplay (simple)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="4" name="agent_roleplay_simple" class="textarea">{{ prompts['agent_roleplay_simple'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Roleplay (Comment & Share)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="10" name="agent_roleplay_comments_share" class="textarea">{{ prompts['agent_roleplay_comments_share'] }}</textarea>
                                         </span>
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Page Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Instructions for content pages to generate posts and responses.</p>
+ <p class="ys-label-hint">Instructions for content pages to generate posts and responses.</p>
                                     <div class="box-line">
                                         <span class="left">Roleplay</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="page_roleplay" class="textarea">{{ prompts['page_roleplay'] }}</textarea>
                                         </span>
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Handler Pre-prompts</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Core simulation handler instructions for processing agent actions.</p>
+ <p class="ys-label-hint">Core simulation handler instructions for processing agent actions.</p>
                                     <div class="box-line">
                                         <span class="left">Instructions</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="7" name="handler_instructions" class="textarea">{{ prompts['handler_instructions'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Instructions (simple)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="handler_instructions_simple" class="textarea">{{ prompts['handler_instructions_simple'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Instructions (Topics)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="handler_instructions_topics" class="textarea">{{ prompts['handler_instructions_topics'] }}</textarea>
                                         </span>
                                     </div>
                                     <hr>
                                     <h4 class="title is-6 is-thin">Handler Actions Provided Instructions</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Specific prompts for different agent action types (post, comment, share, etc.).</p>
+ <p class="ys-label-hint">Specific prompts for different agent action types (post, comment, share, etc.).</p>
                                     <div class="box-line">
                                         <span class="left">Action Selection</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="9" name="handler_action" class="textarea">{{ prompts['handler_action'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Post</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="handler_post" class="textarea">{{ prompts['handler_post'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">News</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="18" name="handler_news" class="textarea">{{ prompts['handler_news'] }}</textarea>
                                         </span>
                                     </div>
                                      <div class="box-line">
                                         <span class="left">Comment</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="17" name="handler_comment" class="textarea">{{ prompts['handler_comment'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Comment Image</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="9" name="handler_comment_image" class="textarea">{{ prompts['handler_comment_image'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Share</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="20" name="handler_share" class="textarea">{{ prompts['handler_share'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Reactions</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="9" name="handler_reactions" class="textarea">{{ prompts['handler_reactions'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Follow</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="10" name="handler_follow" class="textarea">{{ prompts['handler_follow'] }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Cast Vote</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="10" name="handler_cast" class="textarea">{{ prompts['handler_cast'] }}</textarea>
                                         </span>
                                     </div>
@@ -189,61 +189,61 @@
                                     <b>Agent Features</b>
                                     <div class="box-line">
                                         <span class="left"><code>{self.name}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent name.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.age}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent age.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.nationality}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent nationality.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.gender}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent gender.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.profession}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent profession.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.leaning}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent political leaning.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{','.join(interest)}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             A subset of agent's interests.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.education_level}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent education level.
                                         </span>
                                     </div>
                                           <div class="box-line">
                                         <span class="left"><code>{self.toxicity}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent expected toxicity.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.language}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The agent spoken language.
                                         </span>
                                     </div>
@@ -251,31 +251,31 @@
                                     <b>Big-5 Personality Traits</b>
                                     <div class="box-line">
                                         <span class="left"><code>{self.oe}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             Openness to Experience.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.co}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             Conscientiousness.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.ex}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             Extraversion.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.ag}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             Agreeableness.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{self.ne}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             Neuroticism.
                                         </span>
                                     </div>
@@ -284,25 +284,25 @@
                                     <b>News Pages</b>
                                     <div class="box-line">
                                         <span class="left"><code>{website.name}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The Website name.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{website.leaning}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The Website political leaning (if available).
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{article.title}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The Article title.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{article.summary}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The Article summary.
                                         </span>
                                     </div>
@@ -310,19 +310,19 @@
                                     <b>Contents</b>
                                     <div class="box-line">
                                         <span class="left"><code>{descr}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The image textual description.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{post_text}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             The post text.
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left"><code>{conv}</code></span>
-                                        <span class="right" style="width: 40%;">
+ <span class="right ys-w-40">
                                             A discussion thread.
                                         </span>
                                     </div>
