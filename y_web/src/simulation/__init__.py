@@ -12,6 +12,8 @@ client           : client lifecycle (start_client, terminate_client, …)
 watchdog         : ProcessWatchdog, get_watchdog, …
 execution_backend: routing between standard and HPC backends
 process_runner   : merged y_client_process_runner + y_server_process_runner
+agent_sampler    : get_users_per_hour, sample_agents, ensure_agents_have_archetype,
+                   process_agent
 
 Re-exports
 ----------
@@ -30,6 +32,10 @@ _LAZY = {
     "start_client": "y_web.src.simulation.client",
     "terminate_client": "y_web.src.simulation.client",
     "stop_all_exps": "y_web.src.simulation.process_registry",
+    "get_users_per_hour": "y_web.src.simulation.agent_sampler",
+    "sample_agents": "y_web.src.simulation.agent_sampler",
+    "ensure_agents_have_archetype": "y_web.src.simulation.agent_sampler",
+    "process_agent": "y_web.src.simulation.agent_sampler",
 }
 
 

@@ -8,6 +8,14 @@ from y_web.src.hpc.log_metrics import (
     update_client_log_metrics,
     update_server_log_metrics,
 )
+from y_web.src.hpc.log_offset import (
+    _commit_with_retry,
+    _ensure_session_clean,
+    get_log_file_offset,
+    reset_hpc_client_metrics,
+    reset_hpc_server_metrics,
+    update_log_file_offset,
+)
 from y_web.src.hpc.log_parser import (
     get_rotating_log_files,
     has_server_log_files,
