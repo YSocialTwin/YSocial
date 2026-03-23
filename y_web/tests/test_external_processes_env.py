@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from y_web.src.simulation.server import detect_env_handler
 import pytest
-pytestmark = pytest.mark.unit
 
+from y_web.src.simulation.server import detect_env_handler
+
+pytestmark = pytest.mark.unit
 
 
 def test_detect_env_handler_prefers_running_interpreter(monkeypatch):

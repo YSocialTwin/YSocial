@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys as _sys
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -12,9 +13,11 @@ from y_web.src.experiment.context import register_experiment_database
 from y_web.src.models import Exps
 from y_web.src.system.path_utils import get_writable_path
 
-import sys as _sys
-
-from ._helpers import _get_experiment_uid_from_db_name, _normalize_memory_mode, _safe_json_loads
+from ._helpers import (
+    _get_experiment_uid_from_db_name,
+    _normalize_memory_mode,
+    _safe_json_loads,
+)
 
 
 def _pick_listening_port(
@@ -152,9 +155,7 @@ def _server_base_url(exp: Exps) -> str:
     latest = _get_latest(exp)
     host = (getattr(latest, "server", "") or "").strip() or "127.0.0.1"
     configured_port = int(getattr(latest, "port", 0) or 0)
-    runtime_port = _discover_port(
-        latest, preferred_port=configured_port
-    )
+    runtime_port = _discover_port(latest, preferred_port=configured_port)
     port = int(runtime_port or configured_port or 0)
     if host.startswith(("http://", "https://")):
         return host.rstrip("/")

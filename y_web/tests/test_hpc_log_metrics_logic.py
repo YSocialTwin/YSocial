@@ -13,8 +13,8 @@ sessions so that no database is required.
 import json
 
 import pytest
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 # ---------------------------------------------------------------------------
@@ -128,9 +128,7 @@ def test_update_client_execution_from_log_marks_progress(app, tmp_path):
 
     with app.app_context():
         with (
-            patch(
-                "y_web.src.hpc.log_metrics.Client_Execution.query"
-            ) as mock_query,
+            patch("y_web.src.hpc.log_metrics.Client_Execution.query") as mock_query,
             patch("y_web.src.hpc.log_metrics._commit_with_retry"),
         ):
             mock_query.filter_by.return_value.first.return_value = mock_exec

@@ -172,7 +172,6 @@ def create_app(db_type="sqlite", desktop_mode=False):
     app.config["SESSION_COOKIE_NAME"] = "YSocial_session"
 
     from y_web.src.agents.platform import ensure_population_username_type_column
-
     from y_web.src.models import Admin_users, User_mgmt
 
     with app.app_context():
@@ -287,8 +286,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
     @app.context_processor
     def inject_experiment_memory_enabled():
         """Inject whether the active Standard/Forum experiment has memory enabled."""
-        from y_web.src.models import Exps
         from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
+        from y_web.src.models import Exps
         from y_web.src.system.path_utils import get_writable_path
 
         try:
@@ -364,8 +363,8 @@ def create_app(db_type="sqlite", desktop_mode=False):
         """Inject active experiments into all admin templates."""
         from flask_login import current_user
 
-        from y_web.src.models import Admin_users, Exps
         from y_web.src.experiment.access import get_visible_experiment_query
+        from y_web.src.models import Admin_users, Exps
 
         try:
             if not current_user.is_authenticated:

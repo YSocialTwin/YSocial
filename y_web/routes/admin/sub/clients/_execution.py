@@ -1,4 +1,5 @@
 """Lifecycle routes for client execution (run/pause/resume/stop/reset)."""
+
 import json
 import os
 import shutil
@@ -21,6 +22,7 @@ from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
+
 
 @clientsr.route("/admin/reset_client/<int:uid>")
 @login_required
@@ -454,4 +456,3 @@ def stop_client(uid, idexp):
             db.session.commit()
 
     return experiment_details(idexp)  # redirect(request.referrer)
-

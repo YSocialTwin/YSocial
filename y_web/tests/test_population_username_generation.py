@@ -1,7 +1,8 @@
-from y_web.src.agents.population import _generate_unique_name
 import pytest
-pytestmark = pytest.mark.unit
 
+from y_web.src.agents.population import _generate_unique_name
+
+pytestmark = pytest.mark.unit
 
 
 class FakeForum:

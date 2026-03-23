@@ -6,14 +6,14 @@ check_release: only version_tuple and download_file are tested; network calls
 and DB writes are patched out.
 """
 
+import hashlib
 import os
 import sys
-import hashlib
 import tempfile
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -122,6 +122,7 @@ def test_version_tuple_comparison():
 def test_download_file_verifies_size_mismatch(tmp_path):
     """download_file returns (False, msg) when the downloaded size is wrong."""
     from unittest.mock import MagicMock, patch
+
     from y_web.src.system.check_release import download_file
 
     dest = tmp_path / "test_download.bin"
@@ -131,11 +132,13 @@ def test_download_file_verifies_size_mismatch(tmp_path):
     mock_response.iter_content = lambda chunk_size: [content]
     mock_response.raise_for_status = MagicMock()
 
-    with patch("y_web.src.system.check_release.requests.get", return_value=mock_response):
+    with patch(
+        "y_web.src.system.check_release.requests.get", return_value=mock_response
+    ):
         ok, msg = download_file(
             "https://example.com/file.bin",
             str(dest),
-            exp_size=999,          # wrong size
+            exp_size=999,  # wrong size
             exp_sha256="deadbeef",
         )
 
@@ -146,6 +149,7 @@ def test_download_file_verifies_size_mismatch(tmp_path):
 def test_download_file_verifies_sha256_mismatch(tmp_path):
     """download_file returns (False, msg) when SHA256 does not match."""
     from unittest.mock import MagicMock, patch
+
     from y_web.src.system.check_release import download_file
 
     dest = tmp_path / "test_download2.bin"
@@ -155,12 +159,14 @@ def test_download_file_verifies_sha256_mismatch(tmp_path):
     mock_response.iter_content = lambda chunk_size: [content]
     mock_response.raise_for_status = MagicMock()
 
-    with patch("y_web.src.system.check_release.requests.get", return_value=mock_response):
+    with patch(
+        "y_web.src.system.check_release.requests.get", return_value=mock_response
+    ):
         ok, msg = download_file(
             "https://example.com/file.bin",
             str(dest),
             exp_size=len(content),
-            exp_sha256="000000",   # wrong hash
+            exp_sha256="000000",  # wrong hash
         )
 
     assert ok is False
@@ -170,6 +176,7 @@ def test_download_file_verifies_sha256_mismatch(tmp_path):
 def test_download_file_succeeds_with_correct_metadata(tmp_path):
     """download_file returns (True, msg) when size and SHA256 both match."""
     from unittest.mock import MagicMock, patch
+
     from y_web.src.system.check_release import download_file
 
     dest = tmp_path / "test_download3.bin"
@@ -180,7 +187,9 @@ def test_download_file_succeeds_with_correct_metadata(tmp_path):
     mock_response.iter_content = lambda chunk_size: [content]
     mock_response.raise_for_status = MagicMock()
 
-    with patch("y_web.src.system.check_release.requests.get", return_value=mock_response):
+    with patch(
+        "y_web.src.system.check_release.requests.get", return_value=mock_response
+    ):
         ok, msg = download_file(
             "https://example.com/file.bin",
             str(dest),

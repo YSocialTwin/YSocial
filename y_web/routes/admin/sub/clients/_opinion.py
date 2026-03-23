@@ -1,4 +1,5 @@
 """Opinion configuration and distribution routes."""
+
 import json
 import os
 import random
@@ -22,6 +23,7 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import DISTRIBUTION_SCALE_FACTOR, clientsr
 from ._crud import _get_experiment_folder_name, _get_experiment_mode
+
 
 def _opinion_configuration_internal(idexp, expected_mode):
     """Display opinion configuration page for the expected experiment modality."""

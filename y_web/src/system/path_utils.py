@@ -103,9 +103,7 @@ def get_writable_path(relative_path=""):
         # Running from source - use repository root
         # y_web/src/system/path_utils.py → y_web/src/system → y_web/src → y_web → repo root
         base = os.path.dirname(
-            os.path.dirname(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            )
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         )
 
     if relative_path:

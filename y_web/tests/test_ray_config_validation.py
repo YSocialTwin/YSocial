@@ -14,8 +14,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_ray_config_exists_immediately():

@@ -80,9 +80,10 @@ class TestAllFilesHaveMarkers:
             if mark is not None and mark not in VALID_MARKS:
                 invalid.append((fname, mark))
 
-        assert invalid == [], (
-            "The following test files have an unrecognised pytestmark:\n"
-            + "\n".join(f"  {f}: pytest.mark.{m}" for f, m in invalid)
+        assert (
+            invalid == []
+        ), "The following test files have an unrecognised pytestmark:\n" + "\n".join(
+            f"  {f}: pytest.mark.{m}" for f, m in invalid
         )
 
     def test_unit_marker_present_in_at_least_one_file(self):
@@ -101,7 +102,9 @@ class TestAllFilesHaveMarkers:
             for p in _collect_test_files()
             if _extract_pytestmark(p) == "integration"
         ]
-        assert len(integration_files) >= 1, "No test files carry pytest.mark.integration"
+        assert (
+            len(integration_files) >= 1
+        ), "No test files carry pytest.mark.integration"
 
     def test_majority_of_files_are_marked_unit(self):
         """
@@ -126,15 +129,15 @@ class TestMarkerCounts:
         unit_files = [
             p for p in _collect_test_files() if _extract_pytestmark(p) == "unit"
         ]
-        assert len(unit_files) >= 50, (
-            f"Expected >= 50 unit test files, found {len(unit_files)}"
-        )
+        assert (
+            len(unit_files) >= 50
+        ), f"Expected >= 50 unit test files, found {len(unit_files)}"
 
     def test_integration_count_above_threshold(self):
         """There should be at least 10 integration-marked test files."""
         integration_files = [
             p for p in _collect_test_files() if _extract_pytestmark(p) == "integration"
         ]
-        assert len(integration_files) >= 10, (
-            f"Expected >= 10 integration test files, found {len(integration_files)}"
-        )
+        assert (
+            len(integration_files) >= 10
+        ), f"Expected >= 10 integration test files, found {len(integration_files)}"

@@ -5,8 +5,8 @@ Tests for y_web llm_annotations module
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class TestContentAnnotation:

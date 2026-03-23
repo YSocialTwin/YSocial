@@ -16,8 +16,8 @@ from pathlib import Path
 import pytest
 
 from y_web.src.telemetry import Telemetry
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class MockUser:

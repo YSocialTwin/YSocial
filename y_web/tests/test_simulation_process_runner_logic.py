@@ -17,8 +17,8 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -141,9 +141,9 @@ def test_ensure_agents_have_archetype_skips_pages():
 
     page = SimpleNamespace(name="page1", is_page=1)  # no archetype attr
     ensure_agents_have_archetype([page], _archetypes_on)
-    assert not hasattr(page, "archetype"), (
-        "Pages must not receive an archetype assignment"
-    )
+    assert not hasattr(
+        page, "archetype"
+    ), "Pages must not receive an archetype assignment"
 
 
 def test_ensure_agents_have_archetype_noop_when_disabled():
@@ -199,9 +199,7 @@ def test_repair_legacy_agent_file_no_op_on_valid(tmp_path):
 
     _repair_legacy_agent_file(str(agent_file), "microblogging")
 
-    repaired_json = json.dumps(
-        json.loads(agent_file.read_text()), sort_keys=True
-    )
+    repaired_json = json.dumps(json.loads(agent_file.read_text()), sort_keys=True)
     assert repaired_json == original_json
 
 

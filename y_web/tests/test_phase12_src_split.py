@@ -12,9 +12,10 @@ Verifies that:
 
 import importlib
 import inspect
-import pytest
-pytestmark = pytest.mark.unit
 
+import pytest
+
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -97,10 +98,15 @@ def test_process_runner_identity_with_agent_sampler():
     """process_runner symbols must be the same objects as agent_sampler ones."""
     pr = importlib.import_module("y_web.src.simulation.process_runner")
     asm = importlib.import_module("y_web.src.simulation.agent_sampler")
-    for name in ("get_users_per_hour", "sample_agents", "ensure_agents_have_archetype", "process_agent"):
-        assert getattr(pr, name) is getattr(asm, name), (
-            f"process_runner.{name} must be the same object as agent_sampler.{name}"
-        )
+    for name in (
+        "get_users_per_hour",
+        "sample_agents",
+        "ensure_agents_have_archetype",
+        "process_agent",
+    ):
+        assert getattr(pr, name) is getattr(
+            asm, name
+        ), f"process_runner.{name} must be the same object as agent_sampler.{name}"
 
 
 # ---------------------------------------------------------------------------
@@ -121,9 +127,9 @@ def test_process_runner_line_count_reduced():
     )
     with open(os.path.abspath(path)) as fh:
         lines = fh.readlines()
-    assert len(lines) < 900, (
-        f"process_runner.py has {len(lines)} lines; expected < 900 after Phase 12a"
-    )
+    assert (
+        len(lines) < 900
+    ), f"process_runner.py has {len(lines)} lines; expected < 900 after Phase 12a"
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +140,12 @@ def test_process_runner_line_count_reduced():
 def test_simulation_package_lazy_exports_agent_sampler_names():
     """src.simulation.__init__ must lazily export the agent_sampler public names."""
     pkg = importlib.import_module("y_web.src.simulation")
-    for name in ("get_users_per_hour", "sample_agents", "ensure_agents_have_archetype", "process_agent"):
+    for name in (
+        "get_users_per_hour",
+        "sample_agents",
+        "ensure_agents_have_archetype",
+        "process_agent",
+    ):
         fn = getattr(pkg, name, None)
         assert callable(fn), f"y_web.src.simulation.{name} not accessible"
 
@@ -208,9 +219,9 @@ def test_log_parser_line_count_reduced():
     )
     with open(os.path.abspath(path)) as fh:
         lines = fh.readlines()
-    assert len(lines) < 900, (
-        f"log_parser.py has {len(lines)} lines; expected < 900 after Phase 12b"
-    )
+    assert (
+        len(lines) < 900
+    ), f"log_parser.py has {len(lines)} lines; expected < 900 after Phase 12b"
 
 
 # ---------------------------------------------------------------------------

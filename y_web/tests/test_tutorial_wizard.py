@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from flask import Flask
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 class TestTutorialRoutes:

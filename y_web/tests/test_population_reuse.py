@@ -7,9 +7,10 @@ Verifies that when uploading an experiment:
 - No error should be raised for existing populations
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
+
 
 def test_population_reuse_logic():
     """Test that existing populations are reused instead of causing errors."""

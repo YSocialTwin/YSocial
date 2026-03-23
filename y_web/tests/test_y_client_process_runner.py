@@ -1,12 +1,13 @@
 from types import SimpleNamespace
 
+import pytest
+
 from y_web.src.simulation.process_runner import (
     _get_client_archetypes,
     process_agent,
 )
-import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class DummyClient:

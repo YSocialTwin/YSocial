@@ -100,18 +100,17 @@ from y_web.src.system.miscellanea import (
 )
 from y_web.src.system.path_utils import get_resource_path
 
-
 from ._blueprint import (
-    experiments,
-    OPINION_CACHE_EXPIRY_MINUTES,
-    MAX_HPC_PER_GROUP,
-    DEFAULT_FEED_LIMITS,
-    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
-    _schedule_check_lock,
     _EXP_IDS_MARKER_RE,
+    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
+    DEFAULT_FEED_LIMITS,
+    DEFAULT_FORUM_AVATAR_SETTINGS,
+    DEFAULT_FORUM_EMBEDDING_SETTINGS,
+    FORUM_FEED_REQUEST_HEADERS,
+    MAX_HPC_PER_GROUP,
+    OPINION_CACHE_EXPIRY_MINUTES,
+    _schedule_check_lock,
+    experiments,
 )
 from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
@@ -768,5 +767,3 @@ def update_feed_limits(uid):
 
     flash("Feed limits updated successfully.", "success")
     return redirect(request.referrer or url_for("experiments.feed_limits", uid=uid))
-
-

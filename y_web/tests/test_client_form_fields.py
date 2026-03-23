@@ -5,8 +5,8 @@ Test for new optional client form fields: network structure and hourly activity 
 from unittest.mock import Mock, patch
 
 import pytest
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 class TestClientFormFields:

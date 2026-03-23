@@ -6,8 +6,8 @@ and can be set during experiment creation.
 """
 
 import pytest
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 def _setup_exps_model_for_test(app):

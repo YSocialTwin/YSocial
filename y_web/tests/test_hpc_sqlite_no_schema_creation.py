@@ -9,9 +9,10 @@ simulator_type == "HPC" and db_type == "sqlite".
 import os
 import tempfile
 from unittest.mock import MagicMock, call, patch
-import pytest
-pytestmark = pytest.mark.unit
 
+import pytest
+
+pytestmark = pytest.mark.unit
 
 
 def _schema_creation_logic(db_type, simulator_type, db_uri, ensure_fn):

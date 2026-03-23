@@ -10,6 +10,7 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from flask import Flask
 
 from y_web.src.system.desktop_file_handler import (
@@ -17,9 +18,8 @@ from y_web.src.system.desktop_file_handler import (
     is_desktop_mode,
     send_file_desktop,
 )
-import pytest
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 class TestDesktopModeDetection(unittest.TestCase):

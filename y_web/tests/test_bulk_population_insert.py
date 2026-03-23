@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from y_web.src.agents.population import generate_population
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_generate_population_uses_bulk_insert():

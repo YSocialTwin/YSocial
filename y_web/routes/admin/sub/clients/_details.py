@@ -1,4 +1,5 @@
 """Client detail view routes."""
+
 import json
 import os
 
@@ -6,6 +7,7 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     Agent,
     Agent_Population,
@@ -19,9 +21,12 @@ from y_web.src.models import (
     Population,
     Population_Experiment,
 )
-from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.system.desktop_file_handler import send_file_desktop
-from y_web.src.system.miscellanea import check_privileges, get_db_type, llm_backend_status
+from y_web.src.system.miscellanea import (
+    check_privileges,
+    get_db_type,
+    llm_backend_status,
+)
 
 from ._blueprint import clientsr
 from ._crud import (
@@ -34,6 +39,7 @@ from ._crud import (
     _read_json_if_exists,
 )
 from ._helpers import _forum_effective_link_share
+
 
 @clientsr.route("/admin/client_details/<int:uid>")
 @login_required

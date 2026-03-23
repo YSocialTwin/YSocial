@@ -18,8 +18,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 # ---------------------------------------------------------------------------
@@ -53,7 +53,10 @@ def test_get_python_executable_frozen_falls_back_to_which(tmp_path):
 
     with (
         patch.object(sys, "frozen", True, create=True),
-        patch("shutil.which", side_effect=lambda n: fake_python if n == "python3" else None),
+        patch(
+            "shutil.which",
+            side_effect=lambda n: fake_python if n == "python3" else None,
+        ),
     ):
         result = get_python_executable()
     assert result == fake_python

@@ -1,4 +1,5 @@
 """Shared helper functions for the clients sub-package."""
+
 import random
 
 

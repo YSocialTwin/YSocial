@@ -100,18 +100,17 @@ from y_web.src.system.miscellanea import (
 )
 from y_web.src.system.path_utils import get_resource_path
 
-
 from ._blueprint import (
-    experiments,
-    OPINION_CACHE_EXPIRY_MINUTES,
-    MAX_HPC_PER_GROUP,
-    DEFAULT_FEED_LIMITS,
-    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
-    _schedule_check_lock,
     _EXP_IDS_MARKER_RE,
+    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
+    DEFAULT_FEED_LIMITS,
+    DEFAULT_FORUM_AVATAR_SETTINGS,
+    DEFAULT_FORUM_EMBEDDING_SETTINGS,
+    FORUM_FEED_REQUEST_HEADERS,
+    MAX_HPC_PER_GROUP,
+    OPINION_CACHE_EXPIRY_MINUTES,
+    _schedule_check_lock,
+    experiments,
 )
 
 
@@ -134,6 +133,7 @@ def _get_experiment_folder(base_dir, experiment, db_type):
         base_dir,
         f"y_web{os.sep}experiments{os.sep}{experiment.db_name.removeprefix('experiments_')}",
     )
+
 
 def _normalize_rss_feed_item(item):
     """Normalize a forum RSS feed definition."""
@@ -804,5 +804,3 @@ def is_port_valid(port):
         )
 
     return True, None
-
-

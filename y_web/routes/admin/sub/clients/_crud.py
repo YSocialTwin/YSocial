@@ -1,4 +1,5 @@
 """CRUD routes and helpers for client creation and deletion."""
+
 import json
 import logging
 import os
@@ -46,6 +47,7 @@ from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
+
 
 def _build_client_creation_context(idexp, recsys_mode):
     """Build the shared context used by client creation pages."""
@@ -3878,5 +3880,3 @@ def _build_hourly_activity_chart_series(activity):
         idx.append(str(hour))
         data.append(activity.get(str(hour), 0))
     return idx, data
-
-

@@ -8,9 +8,10 @@ backward compatibility.
 
 import importlib
 import inspect
-import pytest
-pytestmark = pytest.mark.unit
 
+import pytest
+
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -68,9 +69,9 @@ def test_routes_are_registered():
     """At least 100 route-decorator functions must be registered on the Blueprint."""
     from y_web.routes.admin.sub.experiments import experiments as bp
 
-    assert len(bp.deferred_functions) >= 100, (
-        f"Expected ≥100 registered route handlers, got {len(bp.deferred_functions)}"
-    )
+    assert (
+        len(bp.deferred_functions) >= 100
+    ), f"Expected ≥100 registered route handlers, got {len(bp.deferred_functions)}"
 
 
 # ---------------------------------------------------------------------------
@@ -201,7 +202,15 @@ def test_no_duplicate_blueprint_definitions():
     """No sub-module except _blueprint.py should define a Blueprint named 'experiments'."""
     from flask import Blueprint
 
-    sub_modules = ["_crud", "_data", "_hpc", "_feeds", "_notifications", "_schedule", "_opinion"]
+    sub_modules = [
+        "_crud",
+        "_data",
+        "_hpc",
+        "_feeds",
+        "_notifications",
+        "_schedule",
+        "_opinion",
+    ]
     for mod_name in sub_modules:
         mod = importlib.import_module(f"y_web.routes.admin.sub.experiments.{mod_name}")
         for attr_name in dir(mod):
@@ -211,6 +220,7 @@ def test_no_duplicate_blueprint_definitions():
                 from y_web.routes.admin.sub.experiments._blueprint import (
                     experiments as canonical,
                 )
+
                 assert obj is canonical, (
                     f"{mod_name}.{attr_name} is a different Blueprint object – "
                     "only _blueprint.py should define it"

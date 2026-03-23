@@ -13,8 +13,8 @@ import shutil
 import tempfile
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_log_file_exclusion_pattern():

@@ -100,24 +100,23 @@ from y_web.src.system.miscellanea import (
 )
 from y_web.src.system.path_utils import get_resource_path
 
-
 from ._blueprint import (
-    experiments,
-    OPINION_CACHE_EXPIRY_MINUTES,
-    MAX_HPC_PER_GROUP,
-    DEFAULT_FEED_LIMITS,
-    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_EMBEDDING_SETTINGS,
-    DEFAULT_FORUM_AVATAR_SETTINGS,
-    FORUM_FEED_REQUEST_HEADERS,
-    _schedule_check_lock,
     _EXP_IDS_MARKER_RE,
+    DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS,
+    DEFAULT_FEED_LIMITS,
+    DEFAULT_FORUM_AVATAR_SETTINGS,
+    DEFAULT_FORUM_EMBEDDING_SETTINGS,
+    FORUM_FEED_REQUEST_HEADERS,
+    MAX_HPC_PER_GROUP,
+    OPINION_CACHE_EXPIRY_MINUTES,
+    _schedule_check_lock,
+    experiments,
 )
+from ._data import experiment_details
 from ._helpers import *  # noqa: F401,F403
 from ._helpers import _current_admin_user_or_none
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
-from ._data import experiment_details
 
 
 @experiments.route("/admin/experiments")
@@ -2309,7 +2308,6 @@ def delete_simulations_bulk():
     return redirect(url_for("experiments.settings"))
 
 
-
 @experiments.route("/admin/start_experiment/<int:uid>")
 @login_required
 def start_experiment(uid):
@@ -2652,7 +2650,6 @@ def update_prompts_hpc(uid):
     flash("HPC prompts updated successfully!", "success")
 
     return redirect(request.referrer)
-
 
 
 @experiments.route("/admin/copy_experiment", methods=["POST"])
@@ -3185,5 +3182,3 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
     db.session.commit()
 
     return True
-
-

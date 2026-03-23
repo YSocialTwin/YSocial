@@ -9,8 +9,8 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -38,7 +38,10 @@ def test_validate_feed_refresh_rejects_invalid():
 
 
 def test_validate_feed_refresh_uses_default_for_none():
-    from y_web.src.experiment.clock import validate_feed_refresh, DEFAULT_CLOCK_FEED_REFRESH
+    from y_web.src.experiment.clock import (
+        DEFAULT_CLOCK_FEED_REFRESH,
+        validate_feed_refresh,
+    )
 
     assert validate_feed_refresh(None) == DEFAULT_CLOCK_FEED_REFRESH
 
@@ -162,7 +165,9 @@ def test_ensure_experiment_clock_fills_defaults():
 def test_ensure_experiment_clock_preserves_valid_values():
     from y_web.src.experiment.clock import ensure_experiment_clock
 
-    config = {"clock": {"mode": "simulated", "timezone": "UTC", "feed_refresh": "hourly"}}
+    config = {
+        "clock": {"mode": "simulated", "timezone": "UTC", "feed_refresh": "hourly"}
+    }
     clock = ensure_experiment_clock(config)
     assert clock["mode"] == "simulated"
     assert clock["timezone"] == "UTC"

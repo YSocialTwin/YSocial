@@ -8,9 +8,10 @@ while maintaining full backward compatibility.
 
 import importlib
 import inspect
-import pytest
-pytestmark = pytest.mark.unit
 
+import pytest
+
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -75,7 +76,12 @@ def test_db_init_all_list():
     """y_web.db_init.__all__ must declare the public API."""
     pkg = importlib.import_module("y_web.db_init")
     assert hasattr(pkg, "__all__"), "db_init must define __all__"
-    for name in ("init_db", "create_postgresql_db", "create_sqlite_db", "run_migrations"):
+    for name in (
+        "init_db",
+        "create_postgresql_db",
+        "create_sqlite_db",
+        "run_migrations",
+    ):
         assert name in pkg.__all__, f"{name!r} missing from db_init.__all__"
 
 
@@ -166,16 +172,18 @@ def test_y_web_still_has_create_app():
     """y_web must still expose create_app."""
     import y_web
 
-    assert callable(getattr(y_web, "create_app", None)), "y_web.create_app must be callable"
+    assert callable(
+        getattr(y_web, "create_app", None)
+    ), "y_web.create_app must be callable"
 
 
 def test_y_web_create_postgresql_db_via_db_init():
     """create_postgresql_db must be accessible via the canonical y_web.db_init path."""
     from y_web.db_init import create_postgresql_db
 
-    assert callable(create_postgresql_db), (
-        "create_postgresql_db must be callable via y_web.db_init"
-    )
+    assert callable(
+        create_postgresql_db
+    ), "create_postgresql_db must be callable via y_web.db_init"
 
 
 def test_y_web_init_line_count_reduced():
@@ -187,9 +195,9 @@ def test_y_web_init_line_count_reduced():
     init_path = os.path.join(os.path.dirname(y_web.__file__), "__init__.py")
     with open(init_path) as fh:
         lines = fh.readlines()
-    assert len(lines) < 700, (
-        f"y_web/__init__.py has {len(lines)} lines; expected < 700 after Phase 11 refactor"
-    )
+    assert (
+        len(lines) < 700
+    ), f"y_web/__init__.py has {len(lines)} lines; expected < 700 after Phase 11 refactor"
 
 
 # ---------------------------------------------------------------------------

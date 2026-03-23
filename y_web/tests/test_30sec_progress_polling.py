@@ -7,9 +7,10 @@ experiment_clients endpoint every 30 seconds to keep Client_Execution
 updated from log files.
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
+
 
 def test_polling_logic():
     """Test the 30-second polling mechanism logic."""

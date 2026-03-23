@@ -1,5 +1,6 @@
 """Recommender system and LLM update routes for clients."""
-from flask import flash, redirect, url_for, request
+
+from flask import flash, redirect, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
@@ -15,6 +16,7 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
 from ._crud import _get_experiment_mode
+
 
 def _update_recsys_internal(uid, expected_mode):
     """Update recsys using the modality-specific route."""

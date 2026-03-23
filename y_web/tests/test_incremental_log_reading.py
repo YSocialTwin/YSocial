@@ -23,8 +23,8 @@ from y_web.src.models import (
     LogFileOffset,
     ServerLogMetrics,
 )
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture

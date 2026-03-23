@@ -1,4 +1,5 @@
 """Blueprint singleton and shared constants for the clients sub-package."""
+
 from flask import Blueprint
 
 clientsr = Blueprint("clientsr", __name__)

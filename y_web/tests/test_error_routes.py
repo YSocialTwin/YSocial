@@ -4,8 +4,8 @@ Tests for error routes and error page rendering.
 
 import pytest
 from flask import Blueprint
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class TestErrorRoutesStructure:

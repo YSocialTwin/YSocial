@@ -10,8 +10,8 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-pytestmark = pytest.mark.integration
 
+pytestmark = pytest.mark.integration
 
 
 def test_session_cleanup_on_request():

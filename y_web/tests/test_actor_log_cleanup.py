@@ -11,8 +11,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_actor_log_cleanup_removes_last_two_lines():

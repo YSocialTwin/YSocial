@@ -1,4 +1,5 @@
 """Agent activity and archetype update routes."""
+
 import json
 import os
 
@@ -14,6 +15,7 @@ from y_web.src.models import (
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import clientsr
+
 
 @clientsr.route("/admin/update_agents_activity/<int:uid>", methods=["POST"])
 @login_required

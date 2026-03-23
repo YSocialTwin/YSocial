@@ -5,8 +5,8 @@ Tests for external URL opening functionality.
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_webbrowser_import():

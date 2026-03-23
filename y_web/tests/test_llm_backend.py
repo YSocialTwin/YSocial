@@ -15,8 +15,8 @@ import os
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class TestLLMBackendCLI:

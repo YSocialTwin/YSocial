@@ -9,8 +9,8 @@ are skipped gracefully.
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -81,7 +81,9 @@ def _make_soup(html: str):
 def test_extract_title_og_title_preferred():
     from y_web.src.content.article_extractor import extract_title
 
-    soup = _make_soup('<meta property="og:title" content="OG Title"/><title>Page Title</title>')
+    soup = _make_soup(
+        '<meta property="og:title" content="OG Title"/><title>Page Title</title>'
+    )
     assert extract_title(soup, "https://example.com") == "OG Title"
 
 
@@ -113,13 +115,19 @@ def test_normalize_forum_avatar_mode_actual_variants():
 
 
 def test_normalize_forum_avatar_mode_default_for_unknown():
-    from y_web.src.content.avatars import normalize_forum_avatar_mode, DEFAULT_FORUM_AVATAR_MODE
+    from y_web.src.content.avatars import (
+        DEFAULT_FORUM_AVATAR_MODE,
+        normalize_forum_avatar_mode,
+    )
 
     assert normalize_forum_avatar_mode("nonsense") == DEFAULT_FORUM_AVATAR_MODE
 
 
 def test_normalize_forum_avatar_mode_none_returns_default():
-    from y_web.src.content.avatars import normalize_forum_avatar_mode, DEFAULT_FORUM_AVATAR_MODE
+    from y_web.src.content.avatars import (
+        DEFAULT_FORUM_AVATAR_MODE,
+        normalize_forum_avatar_mode,
+    )
 
     assert normalize_forum_avatar_mode(None) == DEFAULT_FORUM_AVATAR_MODE
 
@@ -139,10 +147,14 @@ def test_deterministic_forum_avatar_url_contains_username():
 def test_deterministic_forum_avatar_url_stable():
     from y_web.src.content.avatars import deterministic_forum_avatar_url
 
-    assert deterministic_forum_avatar_url("bob") == deterministic_forum_avatar_url("bob")
+    assert deterministic_forum_avatar_url("bob") == deterministic_forum_avatar_url(
+        "bob"
+    )
 
 
 def test_deterministic_forum_avatar_url_different_users_differ():
     from y_web.src.content.avatars import deterministic_forum_avatar_url
 
-    assert deterministic_forum_avatar_url("alice") != deterministic_forum_avatar_url("bob")
+    assert deterministic_forum_avatar_url("alice") != deterministic_forum_avatar_url(
+        "bob"
+    )

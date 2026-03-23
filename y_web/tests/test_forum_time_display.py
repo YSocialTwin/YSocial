@@ -1,10 +1,11 @@
 from datetime import datetime
 
+import pytest
+
 import y_web.src.forum.service.formatters as _formatters
 from y_web.src.forum import service
-import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_simulated_mode_uses_day_hour_label(monkeypatch):

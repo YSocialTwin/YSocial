@@ -13,8 +13,8 @@ import time
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 class TestExperimentScheduleMonitor:

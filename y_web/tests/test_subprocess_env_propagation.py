@@ -24,8 +24,8 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 # ---------------------------------------------------------------------------
@@ -72,9 +72,9 @@ def test_hpc_client_all_popen_calls_pass_env():
     import y_web.src.hpc.client as mod
 
     missing = _popen_calls_missing_env(inspect.getsource(mod))
-    assert not missing, (
-        f"subprocess.Popen call(s) in hpc/client.py missing env= at lines: {missing}"
-    )
+    assert (
+        not missing
+    ), f"subprocess.Popen call(s) in hpc/client.py missing env= at lines: {missing}"
 
 
 def test_simulation_server_all_popen_calls_pass_env():
@@ -82,9 +82,9 @@ def test_simulation_server_all_popen_calls_pass_env():
     import y_web.src.simulation.server as mod
 
     missing = _popen_calls_missing_env(inspect.getsource(mod))
-    assert not missing, (
-        f"subprocess.Popen call(s) in simulation/server.py missing env= at lines: {missing}"
-    )
+    assert (
+        not missing
+    ), f"subprocess.Popen call(s) in simulation/server.py missing env= at lines: {missing}"
 
 
 def test_hpc_server_all_popen_calls_pass_env():
@@ -92,9 +92,9 @@ def test_hpc_server_all_popen_calls_pass_env():
     import y_web.src.hpc.server as mod
 
     missing = _popen_calls_missing_env(inspect.getsource(mod))
-    assert not missing, (
-        f"subprocess.Popen call(s) in hpc/server.py missing env= at lines: {missing}"
-    )
+    assert (
+        not missing
+    ), f"subprocess.Popen call(s) in hpc/server.py missing env= at lines: {missing}"
 
 
 def test_simulation_client_all_popen_calls_pass_env():
@@ -102,9 +102,9 @@ def test_simulation_client_all_popen_calls_pass_env():
     import y_web.src.simulation.client as mod
 
     missing = _popen_calls_missing_env(inspect.getsource(mod))
-    assert not missing, (
-        f"subprocess.Popen call(s) in simulation/client.py missing env= at lines: {missing}"
-    )
+    assert (
+        not missing
+    ), f"subprocess.Popen call(s) in simulation/client.py missing env= at lines: {missing}"
 
 
 # ---------------------------------------------------------------------------
@@ -117,9 +117,9 @@ def test_hpc_client_env_dict_built_before_popen():
     import y_web.src.hpc.client as mod
 
     src = inspect.getsource(mod)
-    assert re.search(r"env\s*=\s*os\.environ\.copy\(\)", src), (
-        "hpc/client.py must build env = os.environ.copy() before the Popen calls"
-    )
+    assert re.search(
+        r"env\s*=\s*os\.environ\.copy\(\)", src
+    ), "hpc/client.py must build env = os.environ.copy() before the Popen calls"
 
 
 def test_simulation_server_sqlite_env_contains_log_file_assignment():
@@ -127,9 +127,9 @@ def test_simulation_server_sqlite_env_contains_log_file_assignment():
     import y_web.src.simulation.server as mod
 
     src = inspect.getsource(mod)
-    assert 'env["YSERVER_LOG_FILE"]' in src or "env['YSERVER_LOG_FILE']" in src, (
-        "simulation/server.py must assign env['YSERVER_LOG_FILE'] (Bug 2 fix)"
-    )
+    assert (
+        'env["YSERVER_LOG_FILE"]' in src or "env['YSERVER_LOG_FILE']" in src
+    ), "simulation/server.py must assign env['YSERVER_LOG_FILE'] (Bug 2 fix)"
 
 
 def test_hpc_server_gunicorn_env_contains_config_assignment():
@@ -137,9 +137,9 @@ def test_hpc_server_gunicorn_env_contains_config_assignment():
     import y_web.src.hpc.server as mod
 
     src = inspect.getsource(mod)
-    assert 'env["YSERVER_CONFIG"]' in src or "env['YSERVER_CONFIG']" in src, (
-        "hpc/server.py must assign env['YSERVER_CONFIG'] (Bug 3 fix)"
-    )
+    assert (
+        'env["YSERVER_CONFIG"]' in src or "env['YSERVER_CONFIG']" in src
+    ), "hpc/server.py must assign env['YSERVER_CONFIG'] (Bug 3 fix)"
 
 
 # ---------------------------------------------------------------------------
@@ -152,9 +152,9 @@ def test_simulation_client_env_contains_pythonpath_source():
     import y_web.src.simulation.client as mod
 
     src = inspect.getsource(mod)
-    assert "PYTHONPATH" in src, (
-        "simulation/client.py must set PYTHONPATH in the subprocess env"
-    )
+    assert (
+        "PYTHONPATH" in src
+    ), "simulation/client.py must set PYTHONPATH in the subprocess env"
 
 
 # ---------------------------------------------------------------------------
@@ -184,9 +184,9 @@ def test_client_runner_repo_root_on_sys_path():
 
     assert hasattr(cr, "_REPO_ROOT"), "client_runner must define _REPO_ROOT"
     # _REPO_ROOT must be on sys.path (it is inserted at import time)
-    assert cr._REPO_ROOT in sys.path, (
-        f"client_runner._REPO_ROOT ({cr._REPO_ROOT!r}) not found on sys.path"
-    )
+    assert (
+        cr._REPO_ROOT in sys.path
+    ), f"client_runner._REPO_ROOT ({cr._REPO_ROOT!r}) not found on sys.path"
 
 
 def test_server_runner_repo_root_on_sys_path():
@@ -194,6 +194,6 @@ def test_server_runner_repo_root_on_sys_path():
     import y_web.src.simulation.server_runner as sr
 
     assert hasattr(sr, "_REPO_ROOT"), "server_runner must define _REPO_ROOT"
-    assert sr._REPO_ROOT in sys.path, (
-        f"server_runner._REPO_ROOT ({sr._REPO_ROOT!r}) not found on sys.path"
-    )
+    assert (
+        sr._REPO_ROOT in sys.path
+    ), f"server_runner._REPO_ROOT ({sr._REPO_ROOT!r}) not found on sys.path"

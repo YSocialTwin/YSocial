@@ -10,8 +10,8 @@ import os
 import tempfile
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_hpc_experiment_detection_logic():

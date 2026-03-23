@@ -8,8 +8,8 @@ stopped by the user, it's removed from the group to unblock subsequent groups.
 from unittest.mock import MagicMock, patch
 
 import pytest
-pytestmark = pytest.mark.unit
 
+pytestmark = pytest.mark.unit
 
 
 def test_stop_scheduled_experiment_removes_from_group():

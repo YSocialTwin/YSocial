@@ -7,9 +7,10 @@ Verifies that when uploading an experiment:
 - If population doesn't exist: create it
 """
 
-
 import pytest
+
 pytestmark = pytest.mark.unit
+
 
 def test_same_agents_reuse_population():
     """Test that existing populations with same agents are reused."""
