@@ -940,3 +940,62 @@
 .ys-w-60px { width: 60px; }
 .ys-w-70 { width: 70%; }
 .ys-white-box { background: white; border-radius: 6px; padding: 10px; margin-top: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase T9 — ys-* Utility Class Style Guide (forum-components.css)
+   ═══════════════════════════════════════════════════════════════════════════
+   Classes below replace inline style= attributes (Phase T8) in the forum/
+   template tree.  The ys-* prefix distinguishes them from Bootstrap, Font
+   Awesome, and vendor classes.
+
+   ── Layout / Display ────────────────────────────────────────────────────
+   .ys-flex          display:flex
+   .ys-flex-1        flex:1 (grow to fill)
+   .ys-flex-between  display:flex; justify-content:space-between; align-items:center
+   .ys-flex-center   display:flex; align-items:center; justify-content:center
+
+   ── Width Helpers ───────────────────────────────────────────────────────
+   .ys-w-50          width:50%
+   .ys-w-70          width:70%
+   .ys-w-50px        width:50px
+   .ys-w-auto        width:auto
+
+   ── Typography ──────────────────────────────────────────────────────────
+   .ys-text-sm       font-size:0.875rem
+   .ys-text-brand    primary brand colour (#039be5)
+   .ys-text-red      red / danger (#dc3545)
+   .ys-text-gray     medium grey
+   .ys-text-tiny-gray  tiny grey metadata text
+   .ys-text-xs-meta  extra-small metadata (author / timestamp)
+   .ys-text-italic-sm small italic muted text
+   .ys-word-break    word-break:break-word
+   .ys-pre-wrap      white-space:pre-wrap
+
+   ── Badges & Status ─────────────────────────────────────────────────────
+   .ys-badge-red     red badge
+   .ys-badge-green   green / success badge
+   .ys-badge-blue    brand-blue badge
+
+   ── Interactive ─────────────────────────────────────────────────────────
+   .ys-pointer       cursor:pointer
+   .ys-clickable     cursor:pointer + hover opacity
+   .ys-btn-primary   primary action button
+   .ys-action-btn    icon-only action button
+
+   ── Cards & Panels ──────────────────────────────────────────────────────
+   .ys-card-white    white rounded card
+   .ys-card-gray     light-grey background card
+   .ys-white-box     white box with rounded corners
+
+   ── Avatars & Media ─────────────────────────────────────────────────────
+   .ys-avatar-md     medium avatar circle (40px)
+   .ys-post-title    post title text style
+   .ys-post-excerpt  post excerpt / preview text
+
+   ── Overflow ────────────────────────────────────────────────────────────
+   .ys-overflow-x-auto  overflow-x:auto
+
+   ── Responsive Exceptions ───────────────────────────────────────────────
+   Dynamic style= attributes that contain Jinja2 expressions are kept inline
+   and annotated with {# dynamic #}.  These are approved exceptions.
+   ─────────────────────────────────────────────────────────────────────── */

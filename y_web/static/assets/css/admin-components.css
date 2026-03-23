@@ -2551,3 +2551,160 @@ input:checked + .slider:before {
 .ys-w-60px { width: 60px; }
 .ys-w-70 { width: 70%; }
 .ys-white-box { background: white; border-radius: 6px; padding: 10px; margin-top: 10px; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Phase T9 — ys-* Utility Class Style Guide
+   ═══════════════════════════════════════════════════════════════════════════
+   All ys-* classes below were introduced in Phase T8 to replace inline
+   style= attributes.  They are grouped by category for quick lookup.
+
+   PREFIX RULE: Every YSocial utility class begins with "ys-" to avoid
+   collisions with Bootstrap, Font Awesome, or third-party vendor classes.
+
+   ── Layout & Display ────────────────────────────────────────────────────
+   .ys-flex          display:flex
+   .ys-flex-1        flex:1  (grow to fill available space)
+   .ys-flex-wrap     flex-wrap:wrap
+   .ys-flex-col      flex-direction:column
+   .ys-flex-between  display:flex; justify-content:space-between; align-items:center
+   .ys-flex-right    display:flex; justify-content:flex-end
+   .ys-flex-center   display:flex; align-items:center; justify-content:center
+   .ys-align-stretch align-self:stretch
+   .ys-center-content text-align:center; align-items:center (flex helper)
+   .ys-col-100       width:100% (column that spans full width)
+   .ys-col-60        width:60%
+
+   ── Width Helpers ───────────────────────────────────────────────────────
+   .ys-w-30          width:30%
+   .ys-w-40          width:40%
+   .ys-w-50          width:50%
+   .ys-w-55          width:55%
+   .ys-w-70          width:70%
+   .ys-w-auto        width:auto
+   .ys-w-230         width:230px
+   .ys-w-max400      max-width:400px
+   .ys-w-50px        width:50px  (avatar / icon sizing)
+   .ys-w-60px        width:60px
+   .ys-w100-h250     width:100%; height:250px  (fixed-height chart container)
+
+   ── Spacing Helpers ─────────────────────────────────────────────────────
+   .ys-block-mb8     display:block; margin-bottom:8px
+   .ys-block-mb10    display:block; margin-bottom:10px
+   .ys-cell-pad      padding:8px 12px  (table cell padding)
+   .ys-px-half       padding-left:0.5rem; padding-right:0.5rem
+   .ys-py-8-px-24    padding:8px 24px
+   .ys-text-center-mt  text-align:center; margin-top:...
+
+   ── Typography ──────────────────────────────────────────────────────────
+   .ys-text-sm       font-size:0.875rem (Bootstrap-like)
+   .ys-text-080      font-size:0.80em
+   .ys-text-090      font-size:0.90em
+   .ys-text-14       font-size:14px
+   .ys-subtitle      section subtitle style (slightly muted, smaller)
+   .ys-section-label uppercase micro-label above a section
+   .ys-section-heading  section H-level heading
+   .ys-section-sub   secondary section heading / sub-title
+   .ys-subsection-title smaller section title
+   .ys-brand-text    primary brand colour text (#039be5)
+   .ys-text-brand    same — primary brand colour  (#039be5)
+   .ys-text-brand-bold brand colour + bold
+   .ys-text-red      red / danger colour  (#dc3545)
+   .ys-text-info     info blue (#0d95e8)
+   .ys-text-light    muted light grey
+   .ys-text-gray     medium grey
+   .ys-text-dark-gray  darker grey
+   .ys-text-mid-gray  mid-range grey
+   .ys-text-sm-muted  small + muted
+   .ys-text-italic-sm small italic muted
+   .ys-text-primary-bold  bold primary-colour text
+   .ys-text-tiny-gray  tiny grey text (timestamps, metadata)
+   .ys-text-xs-gray   extra-small grey text
+   .ys-text-xs-meta   extra-small metadata line (author / date)
+   .ys-text-xs-hint   extra-small hint / helper text
+   .ys-word-break    word-break:break-word (long URLs / hashes)
+   .ys-pre-wrap      white-space:pre-wrap  (preserve line breaks)
+   .ys-nowrap        white-space:nowrap  (prevent wrapping)
+
+   ── Colour / Background ─────────────────────────────────────────────────
+   .ys-bg-blue-light  light blue tint background
+   .ys-stroke-white   SVG stroke: white  (icon outlines on dark backgrounds)
+   .ys-stroke-blue    SVG stroke: brand blue
+
+   ── Borders & Cards ─────────────────────────────────────────────────────
+   .ys-card-white    white rounded card (8px radius, subtle shadow)
+   .ys-card-white-lg same + larger padding
+   .ys-card-white-mb same + bottom margin
+   .ys-card-border   card with explicit border
+   .ys-card-gray     light-grey background card
+   .ys-card-gray-mb  same + bottom margin
+   .ys-card-mb       card with only margin-bottom
+   .ys-white-box     white box with rounded corners + top margin
+   .ys-block-panel   content block panel
+   .ys-content-panel mid-level content grouping panel
+   .ys-section-box   major section box (bordered, padded)
+   .ys-section-box-sm same but compact
+   .ys-collapsible-panel  collapsible accordion panel wrapper
+   .ys-warning-panel  amber / warning-toned panel
+
+   ── Interactive Controls ────────────────────────────────────────────────
+   .ys-pointer       cursor:pointer
+   .ys-clickable     cursor:pointer + hover opacity
+   .ys-btn-primary   styled primary action button
+   .ys-btn-brand     brand-coloured action button
+   .ys-btn-rounded   rounded-pill button variant
+   .ys-btn-lg        larger button padding
+   .ys-btn-outline-gray  outlined grey button
+   .ys-btn-danger-sm  small danger button
+   .ys-action-btn    icon-only action button in tables
+   .ys-stepper-btn   +/- stepper control button
+   .ys-stepper-btn-active  active state for stepper
+   .ys-tag-btn       inline tag chip button (bordered, hoverable)
+   .ys-search-input  full-width search text input
+
+   ── Badges & Status ─────────────────────────────────────────────────────
+   .ys-badge-sm      small inline badge
+   .ys-badge-min     minimal badge (tight padding)
+   .ys-badge-count   numeric count badge
+   .ys-badge-red     red / danger badge
+   .ys-badge-green   green / success badge
+   .ys-badge-blue    brand-blue badge
+   .ys-badge-text    badge displayed as plain text
+   .ys-badge-success   Bootstrap-style success badge
+   .ys-badge-success2  alternate success badge style
+   .ys-dot-info      coloured dot indicator (info)
+   .ys-dot-secondary  coloured dot indicator (secondary)
+   .ys-chip          tag / chip pill  (rounded, small, coloured)
+   .ys-tag-info      information tag chip (blue-border pill)
+
+   ── Charts & Data Visualisation ─────────────────────────────────────────
+   .ys-chart-container  fixed-height chart wrapper (position:relative)
+   .ys-chart-box     chart container with border + padding
+   .ys-chart-200     chart area with 200px min-height
+   .ys-chart-sm      smaller chart variant
+   .ys-progress-bar  filled progress indicator bar
+   .ys-progress-track  progress bar track (background rail)
+
+   ── Overflow & Scroll ───────────────────────────────────────────────────
+   .ys-overflow-x-auto  overflow-x:auto  (horizontal scroll)
+   .ys-scroll-sm     compact scrollable area (max-height ~200px)
+   .ys-scroll-lg     taller scrollable area (max-height ~400px)
+
+   ── Utilities & Misc ────────────────────────────────────────────────────
+   .ys-avatar-md     medium avatar circle (width+height+border-radius)
+   .ys-code-block    monospace code block with background
+   .ys-code-sm       small inline code span
+   .ys-accordion-header  clickable accordion list-item header
+   .ys-chevron-icon  rotate chevron used in accordions
+   .ys-abs-left-center  position:absolute; left+vertical-centre (icon overlays)
+   .ys-textarea      full-width textarea with border/padding
+   .ys-post-title    post/article title text style
+   .ys-post-excerpt  post excerpt / preview text style
+   .ys-value-col     right-aligned value column in key/value tables
+   .ys-value-col-55  value column, fixed 55px width
+   .ys-alert-warning-sm  compact inline warning alert box
+
+   ── Responsive Exceptions ───────────────────────────────────────────────
+   The 11 remaining dynamic style= attributes (annotated {# dynamic #}) use
+   Jinja2 expressions (e.g. style="border-left: 4px solid {{ section_color }}").
+   These cannot be replaced by static classes and are an approved exception.
+   ─────────────────────────────────────────────────────────────────────── */
