@@ -12,6 +12,8 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.simulation.process_runner import _resolve_client_package_dir
 from y_web.src.simulation.server import _resolve_server_runtime_paths
+pytestmark = pytest.mark.unit
+
 
 
 @pytest.mark.parametrize(

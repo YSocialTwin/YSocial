@@ -8,6 +8,9 @@ while maintaining full backward compatibility.
 
 import importlib
 import inspect
+import pytest
+pytestmark = pytest.mark.unit
+
 
 
 # ---------------------------------------------------------------------------

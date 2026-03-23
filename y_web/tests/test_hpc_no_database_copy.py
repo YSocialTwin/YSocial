@@ -5,6 +5,9 @@ Test to verify that HPC experiments do not get database copied when cloned.
 import os
 import shutil
 import tempfile
+import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_hpc_detection_logic():

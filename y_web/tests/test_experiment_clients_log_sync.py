@@ -4,6 +4,9 @@ from log files before returning data.
 """
 
 
+import pytest
+pytestmark = pytest.mark.unit
+
 def test_experiment_clients_updates_from_logs():
     """
     Verify that the experiment_clients endpoint syncs log data

@@ -5,6 +5,8 @@ Test for log metrics reset when extending HPC client simulation.
 from unittest.mock import Mock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 class TestExtendSimulationMetricsReset:

@@ -6,6 +6,8 @@ All tests are side-effect-free and require no database or Flask app context.
 """
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 # ---------------------------------------------------------------------------

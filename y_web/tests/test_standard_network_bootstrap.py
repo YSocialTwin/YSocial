@@ -3,6 +3,8 @@ import sys
 from pathlib import Path
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
 EXTERNAL_YCLIENT = ROOT / "external" / "YClient"

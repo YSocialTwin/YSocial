@@ -7,6 +7,8 @@ import tempfile
 from unittest.mock import Mock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 class TestTextUtils:

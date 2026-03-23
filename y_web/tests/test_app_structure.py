@@ -8,6 +8,8 @@ import tempfile
 import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
+pytestmark = pytest.mark.integration
+
 
 
 class TestFlaskAppBasics:

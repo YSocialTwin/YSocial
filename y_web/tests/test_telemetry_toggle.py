@@ -13,6 +13,8 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 
 from y_web.src.telemetry import Telemetry
+pytestmark = pytest.mark.integration
+
 
 
 def test_admin_user_model_has_telemetry_fields():

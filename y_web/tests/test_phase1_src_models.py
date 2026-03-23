@@ -10,6 +10,8 @@ Verifies that:
 """
 
 import pytest
+pytestmark = pytest.mark.integration
+
 
 # ---------------------------------------------------------------------------
 # Phase 0

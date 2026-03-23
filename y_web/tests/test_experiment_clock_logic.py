@@ -9,6 +9,8 @@ from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 # ---------------------------------------------------------------------------

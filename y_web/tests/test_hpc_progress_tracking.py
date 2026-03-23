@@ -8,6 +8,8 @@ created to enable proper progress tracking for the scheduler.
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_hpc_client_creates_client_execution_record():

@@ -8,6 +8,8 @@ configured with entitlements for macOS distribution.
 import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
+pytestmark = pytest.mark.unit
+
 
 
 def test_entitlements_file_exists():

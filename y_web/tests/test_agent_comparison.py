@@ -8,6 +8,9 @@ Verifies that when uploading an experiment:
 """
 
 
+import pytest
+pytestmark = pytest.mark.unit
+
 def test_same_agents_reuse_population():
     """Test that existing populations with same agents are reused."""
     # Scenario: population exists with agents A, B, C

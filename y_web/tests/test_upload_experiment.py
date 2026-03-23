@@ -17,6 +17,8 @@ from io import BytesIO
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_port_range_validation():

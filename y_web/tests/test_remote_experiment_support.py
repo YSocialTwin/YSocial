@@ -17,6 +17,8 @@ from y_web.routes.admin.sub.experiments import (
     generate_standard_config,
 )
 from y_web.src.models import Exps
+pytestmark = pytest.mark.unit
+
 
 
 def test_exps_model_has_remote_field():

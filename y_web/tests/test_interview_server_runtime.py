@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
 from y_web.routes.api import interview
+import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_pick_listening_port_prefers_configured_port():

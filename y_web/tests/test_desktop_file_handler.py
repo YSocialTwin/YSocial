@@ -17,6 +17,9 @@ from y_web.src.system.desktop_file_handler import (
     is_desktop_mode,
     send_file_desktop,
 )
+import pytest
+pytestmark = pytest.mark.integration
+
 
 
 class TestDesktopModeDetection(unittest.TestCase):

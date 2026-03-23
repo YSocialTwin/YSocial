@@ -13,6 +13,8 @@ sessions so that no database is required.
 import json
 
 import pytest
+pytestmark = pytest.mark.integration
+
 
 
 # ---------------------------------------------------------------------------

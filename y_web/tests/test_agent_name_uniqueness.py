@@ -5,6 +5,8 @@ Tests for agent name uniqueness in population generation.
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 class TestAgentNameUniqueness:

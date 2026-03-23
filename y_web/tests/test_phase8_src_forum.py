@@ -10,6 +10,8 @@ Verifies:
 """
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 class TestCanonicalForumPackageImports:

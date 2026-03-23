@@ -14,6 +14,8 @@ Verifies that:
 import sys
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 # ---------------------------------------------------------------------------
 # Phase 3 — package structure

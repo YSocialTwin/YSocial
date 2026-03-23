@@ -15,6 +15,8 @@ import tempfile
 from unittest.mock import MagicMock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 # ---------------------------------------------------------------------------
 # Helpers — build minimal config files in a temp directory

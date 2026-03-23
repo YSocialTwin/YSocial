@@ -3,6 +3,8 @@ import importlib
 import types
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_interview_importable():

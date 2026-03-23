@@ -8,6 +8,8 @@ start_hpc_server function is called instead of start_server.
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 def test_start_schedule_calls_start_hpc_server_for_hpc_experiments():

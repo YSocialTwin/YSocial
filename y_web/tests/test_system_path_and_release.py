@@ -12,6 +12,8 @@ import hashlib
 import tempfile
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 # ---------------------------------------------------------------------------

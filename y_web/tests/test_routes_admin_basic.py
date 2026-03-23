@@ -5,6 +5,8 @@ Basic tests for y_web routes_admin routes coverage verification
 from unittest.mock import Mock, patch
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 
 class TestRoutesAdminCoverage:

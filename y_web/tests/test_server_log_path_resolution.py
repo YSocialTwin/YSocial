@@ -1,6 +1,8 @@
 import os
 
 import pytest
+pytestmark = pytest.mark.unit
+
 
 y_server = pytest.importorskip(
     "y_server", reason="y_server module not available in this environment"
