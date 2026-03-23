@@ -29,7 +29,7 @@ behaviour across all 83 Jinja2 templates.
 ### 1.1 Template Inventory
 
 ```
-y_web/templates/ (83 files, 46,371 lines total)
+y_web/templates/ (83 files, 46,371 lines total — pre-T2 baseline)
 ├── admin/           51 files  — admin dashboard, settings, experiment controls
 │   └── tutorials/  13 files  — interactive tour overlays (included in the 51)
 ├── error_pages/      4 files  — HTTP 400/403/404/500
@@ -251,13 +251,13 @@ copy in `admin-responsive.css` serves both includes.
 
 **Success Criteria**:
 
-- [ ] `admin/head.html` contains zero `<style>` blocks.
-- [ ] `admin/dash_head.html` contains zero duplicate responsive CSS rules.
-- [ ] `y_web/static/assets/css/admin-responsive.css` exists and is non-empty.
-- [ ] Running `grep -r '<style>' y_web/templates/admin/head.html` returns nothing.
+- [x] `admin/head.html` contains zero `<style>` blocks.
+- [x] `admin/dash_head.html` contains zero duplicate responsive CSS rules.
+- [x] `y_web/static/assets/css/admin-responsive.css` exists and is non-empty.
+- [x] Running `grep -r '<style>' y_web/templates/admin/head.html` returns nothing.
 - [ ] Visual regression: the admin sidebar toggle still opens/closes correctly on a
   viewport ≤ 768 px (manual or screenshot test).
-- [ ] Baseline `<style>` block count decreases by at least 2.
+- [x] Baseline `<style>` block count decreases by at least 2.
 
 ---
 
