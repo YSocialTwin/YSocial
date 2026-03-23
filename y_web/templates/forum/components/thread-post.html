@@ -64,15 +64,6 @@
     {% endif %}
     {% if thread["post"] %}
     <div style="color: #1c1c1c; font-size: 16px; line-height: 1.5; margin-bottom: 12px; font-family: 'Reddit Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">
-        <style>
-            .thread-content strong, .thread-content b { font-weight: 600; }
-            .thread-content em, .thread-content i { font-style: italic; }
-            .thread-content ul { margin: 8px 0; padding-left: 20px; }
-            .thread-content li { margin: 4px 0; }
-            .thread-content p { margin: 0 0 8px 0 !important; }
-            .thread-content p:first-child { margin-top: 0 !important; }
-            .thread-content p:last-child { margin-bottom: 0 !important; }
-        </style>
         <div class="thread-content" style="white-space: pre-wrap; word-wrap: break-word;">{{- thread["post"]|safe -}}</div>
     </div>
     {% endif %}

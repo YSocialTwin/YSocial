@@ -430,11 +430,11 @@ every page in each subsection inherits the styles.
 
 **Success Criteria**:
 
-- [ ] `grep -r '<style>' y_web/templates/forum/ --include="*.html"` returns zero results.
-- [ ] `grep -r '<style>' y_web/templates/microblogging/ --include="*.html"` returns zero results.
-- [ ] `y_web/static/assets/css/reddit/forum-components.css` and `y_web/static/assets/css/social-components.css` exist.
-- [ ] Forum and microblogging pages render without visual regressions (manual or screenshot).
-- [ ] Baseline `<style>` block total reaches 0 across all templates.
+- [x] `grep -r '<style>' y_web/templates/forum/ --include="*.html"` returns zero results.
+- [x] `grep -r '<style>' y_web/templates/microblogging/ --include="*.html"` returns zero results.
+- [x] `y_web/static/assets/css/reddit/forum-components.css` and `y_web/static/assets/css/social-components.css` exist.
+- [x] Forum and microblogging pages render without visual regressions (manual or screenshot).
+- [x] Baseline `<style>` block total reaches 0 across all templates.
 
 ---
 

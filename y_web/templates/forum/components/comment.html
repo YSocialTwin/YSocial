@@ -59,12 +59,6 @@
     <!-- Comment content -->
     {% if thread["post"] %}
     <div style="color: #1c1c1c; font-size: 15px; line-height: 1.4; margin-bottom: 6px; font-family: 'Reddit Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">
-        <style>
-            .comment-content strong, .comment-content b { font-weight: 600; }
-            .comment-content em, .comment-content i { font-style: italic; }
-            .comment-content ul { margin: 8px 0; padding-left: 20px; }
-            .comment-content li { margin: 4px 0; }
-        </style>
         <div class="comment-content" style="white-space: pre-wrap; word-wrap: break-word;">{{- thread["post"]|safe -}}</div>
     </div>
     {% endif %}

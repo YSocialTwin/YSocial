@@ -33,13 +33,13 @@ TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 
 # Expected post-T4 baseline values (from docs/template_audit_baseline.txt)
 BASELINE = {
-    "files_with_style_blocks": 8,
-    "total_style_blocks": 8,
+    "files_with_style_blocks": 0,
+    "total_style_blocks": 0,
     "total_style_attrs": 2827,
     "total_inline_scripts": 143,
     "total_browsersync_occurrences": 1,
     "total_html_files": 84,
-    "total_lines": 40900,
+    "total_lines": 40029,
 }
 
 
