@@ -207,9 +207,9 @@ y_web/static/assets/
 
 **Success Criteria**:
 
-- [ ] `scripts/audit_templates.sh` (or equivalent) executes without error.
-- [ ] Baseline numbers are recorded and committed.
-- [ ] Every developer on the team can reproduce the baseline numbers.
+- [x] `scripts/audit_templates.sh` (or equivalent) executes without error.
+- [x] Baseline numbers are recorded and committed.
+- [x] Every developer on the team can reproduce the baseline numbers.
 
 ---
 
