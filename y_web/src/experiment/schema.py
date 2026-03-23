@@ -98,6 +98,8 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
 
         for table, columns in _SQLITE_COLUMNS.items():
             existing = _sqlite_existing_columns(conn, table)
+            if not existing:
+                continue  # table doesn't exist in this DB; skip
             for column_name, column_def in columns.items():
                 if column_name not in existing:
                     conn.execute(
@@ -138,6 +140,8 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> None:
 
             for table, columns in _POSTGRES_COLUMNS.items():
                 existing = _postgres_existing_columns(conn, table)
+                if not existing:
+                    continue  # table doesn't exist in this DB; skip
                 for column_name, column_def in columns.items():
                     if column_name not in existing:
                         conn.execute(
