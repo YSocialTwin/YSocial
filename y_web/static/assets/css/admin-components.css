@@ -2261,10 +2261,10 @@ input:checked + .slider:before {
 .ys-flex-end-gap { display: flex; gap: 12px; align-items: center; justify-content: flex-end; }
 .ys-flex-gap-10 { display: flex; gap: 10px; align-items: center; }
 .ys-flex-gap-10-ai { display: flex; align-items: center; gap: 10px; }
-.ys-flex-gap-3 { display: flex; gap: 3px; }
+.ys-flex-gap-3 { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; }
 .ys-flex-gap-5 { display: flex; align-items: center; gap: 5px; }
 .ys-flex-gap-5-my { display: flex; gap: 5px; margin: 5px 0; }
-.ys-flex-gap-8 { display: flex; align-items: center; gap: 8px; }
+.ys-flex-gap-8 { display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; }
 .ys-flex-gap-8-only { display: flex; gap: 8px; }
 .ys-flex-gap-half { display: flex; align-items: center; gap: 0.5em; }
 .ys-flex-grow-row { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px; }
@@ -2407,7 +2407,7 @@ input:checked + .slider:before {
 .ys-text-xs-muted { font-size: 0.8em; color: #6b7280; }
 .ys-textarea { width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95rem; resize: vertical; margin-bottom: 0.75rem; }
 .ys-value-col { width: 70%; display: flex; gap: 10px; align-items: center; }
-.ys-value-col-55 { width: 55%; display: flex; align-items: center; gap: 10px; }
+.ys-value-col-55 { width: 55%; display: flex; align-items: center; gap: 10px; flex-wrap: nowrap; }
 .ys-w-230 { width: 230px; }
 .ys-w-30 { width: 30%; }
 .ys-w-40 { width: 40%; }
@@ -2418,6 +2418,75 @@ input:checked + .slider:before {
 .ys-w-max400 { width: 100%; max-width: 400px; }
 .ys-w100-h250 { width: 100%; height: 250px; }
 .ys-warning-panel { display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em; }
+
+/* Experiment details row layout fixes after template extraction.
+   These rows still inherit legacy core rules that force .left/.right to display:block,
+   which breaks the intended flex alignment for controls and progress rows. */
+.dashboard-box .box-content .box-line .right.ys-flex-gap-8 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.dashboard-box .box-content .box-line .right.ys-value-col-55 {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: nowrap;
+    flex: 1 1 55%;
+    min-width: 320px;
+}
+
+.dashboard-box .box-content .box-line .left.ys-text-flex-sm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.dashboard-box .box-content .box-line .right.ys-flex-gap-8 .ys-flex-gap-3,
+.dashboard-box .box-content .box-line .right.ys-value-col-55 .ys-flex-gap-3,
+.dashboard-box .box-content .box-line .right.ys-flex-gap-8 .ys-flex-divider {
+    flex-wrap: nowrap;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+.dashboard-box .box-content .box-line .right.ys-value-col-55 .ys-progress-track {
+    flex: 1 1 auto;
+    min-width: 180px;
+}
+
+/* Keep client names from painting underneath the progress bar/actions lane on
+   experiment detail pages. */
+#simulation-clients-section .box-content .box-line.ys-cell-pad {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm {
+    flex: 1 1 0;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55 {
+    flex: 0 0 min(62%, 640px);
+    min-width: 360px;
+    justify-content: flex-end;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm a,
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm i {
+    flex: 0 0 auto;
+}
 .ys-word-break { word-break: break-all; }
 
 

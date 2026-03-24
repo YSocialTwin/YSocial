@@ -3,18 +3,29 @@
  * Auto-generated. Do not edit manually.
  */
 var AdminClients = (function() {
+  const bindById = (id, eventName, handler) => {
+      const element = document.getElementById(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+
   // Sync display input with hidden input
-  document.getElementById('days_display').addEventListener('change', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'change', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
-  document.getElementById('days_display').addEventListener('input', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'input', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
 
   // Toggle between finite and infinite duration
-  document.getElementById('infinite_duration').addEventListener('change', function() {
+  bindById('infinite_duration', 'change', function() {
       const daysDisplay = document.getElementById('days_display');
       const daysInput = document.getElementById('days_input');
+      if (!daysDisplay || !daysInput) return;
       const defaultDays = '30';
       if (this.checked) {
           // Store current value before switching to infinite
@@ -33,8 +44,9 @@ var AdminClients = (function() {
   });
 
   // Toggle follow decay parameters visibility
-  document.getElementById('follow_decay_enabled').addEventListener('change', function() {
+  bindById('follow_decay_enabled', 'change', function() {
       const paramsDiv = document.getElementById('follow_decay_params');
+      if (!paramsDiv) return;
       if (this.checked) {
           paramsDiv.style.display = 'block';
       } else {
@@ -243,8 +255,8 @@ var AdminClients = (function() {
                                               });
 
   // Track if models have been fetched and validated
-  let llmModelsFetched = false;
-  let llmModelSelected = false;
+  var llmModelsFetched = false;
+  var llmModelSelected = false;
 
   // Enable disabled inputs before form submission so their values are included
 
@@ -472,40 +484,52 @@ var AdminClients = (function() {
           networkModelSelect.disabled = false;
       }
     
+      function hideNetworkField(field) {
+          if (!field) return;
+          field.style.display = 'none';
+          field.classList.add('d-none');
+      }
+
+      function showNetworkField(field) {
+          if (!field) return;
+          field.classList.remove('d-none');
+          field.style.display = 'block';
+      }
+
       // Show/hide parameter fields based on model selection
-      if (erParamField) erParamField.style.display = 'none';
-      if (baParamField) baParamField.style.display = 'none';
-      if (wsParamField) wsParamField.style.display = 'none';
-      if (wsParamField2) wsParamField2.style.display = 'none';
-      if (plcParamField) plcParamField.style.display = 'none';
-      if (plcParamField2) plcParamField2.style.display = 'none';
-      if (sbmParamField) sbmParamField.style.display = 'none';
-      if (sbmParamField2) sbmParamField2.style.display = 'none';
-      if (sbmParamField3) sbmParamField3.style.display = 'none';
-      if (lfrParamField) lfrParamField.style.display = 'none';
-      if (lfrParamField2) lfrParamField2.style.display = 'none';
-      if (lfrParamField3) lfrParamField3.style.display = 'none';
-      if (lfrParamField4) lfrParamField4.style.display = 'none';
-    
+      hideNetworkField(erParamField);
+      hideNetworkField(baParamField);
+      hideNetworkField(wsParamField);
+      hideNetworkField(wsParamField2);
+      hideNetworkField(plcParamField);
+      hideNetworkField(plcParamField2);
+      hideNetworkField(sbmParamField);
+      hideNetworkField(sbmParamField2);
+      hideNetworkField(sbmParamField3);
+      hideNetworkField(lfrParamField);
+      hideNetworkField(lfrParamField2);
+      hideNetworkField(lfrParamField3);
+      hideNetworkField(lfrParamField4);
+
       if (networkModelSelect.value === 'ER' && erParamField) {
-          erParamField.style.display = 'block';
+          showNetworkField(erParamField);
       } else if (networkModelSelect.value === 'BA' && baParamField) {
-          baParamField.style.display = 'block';
+          showNetworkField(baParamField);
       } else if (networkModelSelect.value === 'WS') {
-          if (wsParamField) wsParamField.style.display = 'block';
-          if (wsParamField2) wsParamField2.style.display = 'block';
+          showNetworkField(wsParamField);
+          showNetworkField(wsParamField2);
       } else if (networkModelSelect.value === 'PLC') {
-          if (plcParamField) plcParamField.style.display = 'block';
-          if (plcParamField2) plcParamField2.style.display = 'block';
+          showNetworkField(plcParamField);
+          showNetworkField(plcParamField2);
       } else if (networkModelSelect.value === 'SBM') {
-          if (sbmParamField) sbmParamField.style.display = 'block';
-          if (sbmParamField2) sbmParamField2.style.display = 'block';
-          if (sbmParamField3) sbmParamField3.style.display = 'block';
+          showNetworkField(sbmParamField);
+          showNetworkField(sbmParamField2);
+          showNetworkField(sbmParamField3);
       } else if (networkModelSelect.value === 'LFR') {
-          if (lfrParamField) lfrParamField.style.display = 'block';
-          if (lfrParamField2) lfrParamField2.style.display = 'block';
-          if (lfrParamField3) lfrParamField3.style.display = 'block';
-          if (lfrParamField4) lfrParamField4.style.display = 'block';
+          showNetworkField(lfrParamField);
+          showNetworkField(lfrParamField2);
+          showNetworkField(lfrParamField3);
+          showNetworkField(lfrParamField4);
       }
       // C (Complete graph) has no parameters
   }
@@ -636,17 +660,20 @@ var AdminClients = (function() {
   });
 
   // Sync display input with hidden input
-  document.getElementById('days_display').addEventListener('change', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'change', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
-  document.getElementById('days_display').addEventListener('input', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'input', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
 
   // Toggle between finite and infinite duration
-  document.getElementById('infinite_duration').addEventListener('change', function() {
+  bindById('infinite_duration', 'change', function() {
       const daysDisplay = document.getElementById('days_display');
       const daysInput = document.getElementById('days_input');
+      if (!daysDisplay || !daysInput) return;
       const defaultDays = '30';
       if (this.checked) {
           // Store current value before switching to infinite
@@ -768,8 +795,8 @@ var AdminClients = (function() {
                                               });
 
   // Track if models have been fetched and validated
-  let llmModelsFetched = false;
-  let llmModelSelected = false;
+  llmModelsFetched = false;
+  llmModelSelected = false;
 
   // Enable disabled inputs before form submission so their values are included
 
@@ -973,40 +1000,52 @@ var AdminClients = (function() {
           networkModelSelect.disabled = false;
       }
     
+      function hideNetworkField(field) {
+          if (!field) return;
+          field.style.display = 'none';
+          field.classList.add('d-none');
+      }
+
+      function showNetworkField(field) {
+          if (!field) return;
+          field.classList.remove('d-none');
+          field.style.display = 'block';
+      }
+
       // Show/hide parameter fields based on model selection
-      if (erParamField) erParamField.style.display = 'none';
-      if (baParamField) baParamField.style.display = 'none';
-      if (wsParamField) wsParamField.style.display = 'none';
-      if (wsParamField2) wsParamField2.style.display = 'none';
-      if (plcParamField) plcParamField.style.display = 'none';
-      if (plcParamField2) plcParamField2.style.display = 'none';
-      if (sbmParamField) sbmParamField.style.display = 'none';
-      if (sbmParamField2) sbmParamField2.style.display = 'none';
-      if (sbmParamField3) sbmParamField3.style.display = 'none';
-      if (lfrParamField) lfrParamField.style.display = 'none';
-      if (lfrParamField2) lfrParamField2.style.display = 'none';
-      if (lfrParamField3) lfrParamField3.style.display = 'none';
-      if (lfrParamField4) lfrParamField4.style.display = 'none';
-    
+      hideNetworkField(erParamField);
+      hideNetworkField(baParamField);
+      hideNetworkField(wsParamField);
+      hideNetworkField(wsParamField2);
+      hideNetworkField(plcParamField);
+      hideNetworkField(plcParamField2);
+      hideNetworkField(sbmParamField);
+      hideNetworkField(sbmParamField2);
+      hideNetworkField(sbmParamField3);
+      hideNetworkField(lfrParamField);
+      hideNetworkField(lfrParamField2);
+      hideNetworkField(lfrParamField3);
+      hideNetworkField(lfrParamField4);
+
       if (networkModelSelect.value === 'ER' && erParamField) {
-          erParamField.style.display = 'block';
+          showNetworkField(erParamField);
       } else if (networkModelSelect.value === 'BA' && baParamField) {
-          baParamField.style.display = 'block';
+          showNetworkField(baParamField);
       } else if (networkModelSelect.value === 'WS') {
-          if (wsParamField) wsParamField.style.display = 'block';
-          if (wsParamField2) wsParamField2.style.display = 'block';
+          showNetworkField(wsParamField);
+          showNetworkField(wsParamField2);
       } else if (networkModelSelect.value === 'PLC') {
-          if (plcParamField) plcParamField.style.display = 'block';
-          if (plcParamField2) plcParamField2.style.display = 'block';
+          showNetworkField(plcParamField);
+          showNetworkField(plcParamField2);
       } else if (networkModelSelect.value === 'SBM') {
-          if (sbmParamField) sbmParamField.style.display = 'block';
-          if (sbmParamField2) sbmParamField2.style.display = 'block';
-          if (sbmParamField3) sbmParamField3.style.display = 'block';
+          showNetworkField(sbmParamField);
+          showNetworkField(sbmParamField2);
+          showNetworkField(sbmParamField3);
       } else if (networkModelSelect.value === 'LFR') {
-          if (lfrParamField) lfrParamField.style.display = 'block';
-          if (lfrParamField2) lfrParamField2.style.display = 'block';
-          if (lfrParamField3) lfrParamField3.style.display = 'block';
-          if (lfrParamField4) lfrParamField4.style.display = 'block';
+          showNetworkField(lfrParamField);
+          showNetworkField(lfrParamField2);
+          showNetworkField(lfrParamField3);
+          showNetworkField(lfrParamField4);
       }
       // C (Complete graph) has no parameters
   }
@@ -1170,17 +1209,20 @@ var AdminClients = (function() {
   });
 
   // Sync display input with hidden input
-  document.getElementById('days_display').addEventListener('change', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'change', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
-  document.getElementById('days_display').addEventListener('input', function() {
-      document.getElementById('days_input').value = this.value;
+  bindById('days_display', 'input', function() {
+      const daysInput = document.getElementById('days_input');
+      if (daysInput) daysInput.value = this.value;
   });
 
   // Toggle between finite and infinite duration
-  document.getElementById('infinite_duration').addEventListener('change', function() {
+  bindById('infinite_duration', 'change', function() {
       const daysDisplay = document.getElementById('days_display');
       const daysInput = document.getElementById('days_input');
+      if (!daysDisplay || !daysInput) return;
       const defaultDays = '30';
       if (this.checked) {
           // Store current value before switching to infinite
@@ -1302,8 +1344,8 @@ var AdminClients = (function() {
   });
 
   // Track if models have been fetched and validated
-  let llmModelsFetched = false;
-  let llmModelSelected = false;
+  llmModelsFetched = false;
+  llmModelSelected = false;
 
   // Check if form should be enabled
   function updateFormButtonState() {
@@ -1561,40 +1603,52 @@ var AdminClients = (function() {
           networkModelSelect.disabled = false;
       }
     
+      function hideNetworkField(field) {
+          if (!field) return;
+          field.style.display = 'none';
+          field.classList.add('d-none');
+      }
+
+      function showNetworkField(field) {
+          if (!field) return;
+          field.classList.remove('d-none');
+          field.style.display = 'block';
+      }
+
       // Show/hide parameter fields based on model selection
-      if (erParamField) erParamField.style.display = 'none';
-      if (baParamField) baParamField.style.display = 'none';
-      if (wsParamField) wsParamField.style.display = 'none';
-      if (wsParamField2) wsParamField2.style.display = 'none';
-      if (plcParamField) plcParamField.style.display = 'none';
-      if (plcParamField2) plcParamField2.style.display = 'none';
-      if (sbmParamField) sbmParamField.style.display = 'none';
-      if (sbmParamField2) sbmParamField2.style.display = 'none';
-      if (sbmParamField3) sbmParamField3.style.display = 'none';
-      if (lfrParamField) lfrParamField.style.display = 'none';
-      if (lfrParamField2) lfrParamField2.style.display = 'none';
-      if (lfrParamField3) lfrParamField3.style.display = 'none';
-      if (lfrParamField4) lfrParamField4.style.display = 'none';
-    
+      hideNetworkField(erParamField);
+      hideNetworkField(baParamField);
+      hideNetworkField(wsParamField);
+      hideNetworkField(wsParamField2);
+      hideNetworkField(plcParamField);
+      hideNetworkField(plcParamField2);
+      hideNetworkField(sbmParamField);
+      hideNetworkField(sbmParamField2);
+      hideNetworkField(sbmParamField3);
+      hideNetworkField(lfrParamField);
+      hideNetworkField(lfrParamField2);
+      hideNetworkField(lfrParamField3);
+      hideNetworkField(lfrParamField4);
+
       if (networkModelSelect.value === 'ER' && erParamField) {
-          erParamField.style.display = 'block';
+          showNetworkField(erParamField);
       } else if (networkModelSelect.value === 'BA' && baParamField) {
-          baParamField.style.display = 'block';
+          showNetworkField(baParamField);
       } else if (networkModelSelect.value === 'WS') {
-          if (wsParamField) wsParamField.style.display = 'block';
-          if (wsParamField2) wsParamField2.style.display = 'block';
+          showNetworkField(wsParamField);
+          showNetworkField(wsParamField2);
       } else if (networkModelSelect.value === 'PLC') {
-          if (plcParamField) plcParamField.style.display = 'block';
-          if (plcParamField2) plcParamField2.style.display = 'block';
+          showNetworkField(plcParamField);
+          showNetworkField(plcParamField2);
       } else if (networkModelSelect.value === 'SBM') {
-          if (sbmParamField) sbmParamField.style.display = 'block';
-          if (sbmParamField2) sbmParamField2.style.display = 'block';
-          if (sbmParamField3) sbmParamField3.style.display = 'block';
+          showNetworkField(sbmParamField);
+          showNetworkField(sbmParamField2);
+          showNetworkField(sbmParamField3);
       } else if (networkModelSelect.value === 'LFR') {
-          if (lfrParamField) lfrParamField.style.display = 'block';
-          if (lfrParamField2) lfrParamField2.style.display = 'block';
-          if (lfrParamField3) lfrParamField3.style.display = 'block';
-          if (lfrParamField4) lfrParamField4.style.display = 'block';
+          showNetworkField(lfrParamField);
+          showNetworkField(lfrParamField2);
+          showNetworkField(lfrParamField3);
+          showNetworkField(lfrParamField4);
       }
       // C (Complete graph) has no parameters
   }
@@ -1766,5 +1820,21 @@ var AdminClients = (function() {
       }
 
       toggleSimulationAdvancedParams();
+  });
+
+  Object.assign(window, {
+      toggleSimulationAdvancedParams,
+      toggleLLMFields,
+      toggleAdvancedSettings,
+      toggleImageTranscription,
+      fetchModelsForClient,
+      validateImageLLMModel,
+      displayNetworkFileNameCreate,
+      toggleStandardMemorySettings,
+      toggleStandardMemoryAdvancedParams,
+      syncStandardEmbeddingFieldsState,
+      toggleForumMemorySettings,
+      toggleForumMemoryAdvancedParams,
+      applyContextPreset
   });
 })();

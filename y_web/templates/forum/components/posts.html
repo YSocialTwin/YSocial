@@ -144,15 +144,13 @@
         <div style="display: flex; padding: 4px; border-top: 1px solid #e1e8ed;" onclick="event.stopPropagation()">
             <!-- Left side voting box (Reddit style gray box) -->
             <div style="background: #f8f9fa; border-radius: 4px; display: flex; flex-direction: column; align-items: center; padding: 4px; margin-right: 8px; min-width: 40px;">
-                <button class="vote-button" type="button" data-action="like"
- class="ys-icon-btn-xs">
+                <button class="vote-button ys-icon-btn-xs" type="button" data-action="like">
  <i data-feather="arrow-up" class="ys-icon-xs"></i>
                 </button>
                 <span data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 1px 0; line-height: 1;">
                     {{ item.get('likes', 0) - item.get('dislikes', 0) }}
                 </span>
-                <button class="vote-button" type="button" data-action="dislike"
- class="ys-icon-btn-xs">
+                <button class="vote-button ys-icon-btn-xs" type="button" data-action="dislike">
  <i data-feather="arrow-down" class="ys-icon-xs"></i>
                 </button>
             </div>

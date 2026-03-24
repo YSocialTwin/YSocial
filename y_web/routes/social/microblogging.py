@@ -807,15 +807,21 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 
     max_post_per_page = 10
     username = ""
+    render_user_id = current_user.id
     posts, additional = None, None
 
     if user_id == "all":
         posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
     elif user_id != "all":
         user = User_mgmt.query.filter_by(id=user_id).first()
+        if not user:
+            user = User_mgmt.query.filter_by(username=current_user.username).first()
+        if not user:
+            return jsonify({"html": "", "has_more": False}), 404
+        render_user_id = user.id
         recsys = user.recsys_type
         posts, additional = get_suggested_posts(
-            user_id, recsys, page, max_post_per_page
+            user.id, recsys, page, max_post_per_page
         )
         username = user.username
 
@@ -837,16 +843,21 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
+    has_more = bool(
+        (posts is not None and getattr(posts, "has_next", False))
+        or (additional is not None and getattr(additional, "has_next", False))
+    )
+
     html = render_template(
         "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
-        user_id=user_id if user_id != "all" else current_user.id,
+        user_id=render_user_id,
         str=str,
         bool=bool,
         len=len,
     )
-    return jsonify({"html": html, "has_more": len(res) > 0})
+    return jsonify({"html": html, "has_more": has_more})
 
 
 @main.get("/<int:exp_id>/api/hashtag_posts/<hashtag_id>/<int:page>")

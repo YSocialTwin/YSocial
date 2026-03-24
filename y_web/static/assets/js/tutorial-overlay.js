@@ -822,10 +822,14 @@
         checkTutorialStatus();
         
         // Event listeners
-        document.getElementById('tutorial-next-btn').addEventListener('click', handleNext);
-        document.getElementById('tutorial-prev-btn').addEventListener('click', handlePrev);
-        document.getElementById('tutorial-skip-btn').addEventListener('click', dismissTutorial);
-        document.getElementById('tutorial-close-btn').addEventListener('click', dismissTutorial);
+        const nextBtn = document.getElementById('tutorial-next-btn');
+        const prevBtn = document.getElementById('tutorial-prev-btn');
+        const skipBtn = document.getElementById('tutorial-skip-btn');
+        const closeBtn = document.getElementById('tutorial-close-btn');
+        if (nextBtn) nextBtn.addEventListener('click', handleNext);
+        if (prevBtn) prevBtn.addEventListener('click', handlePrev);
+        if (skipBtn) skipBtn.addEventListener('click', dismissTutorial);
+        if (closeBtn) closeBtn.addEventListener('click', dismissTutorial);
     });
     
     // Expose function to manually show tutorial (for "Show Tutorial" button)

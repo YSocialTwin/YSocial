@@ -2474,7 +2474,7 @@ def prompts_forum(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
@@ -2509,7 +2509,7 @@ def prompts_hpc(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -2580,7 +2580,7 @@ def update_prompts_hpc(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":

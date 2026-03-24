@@ -3,6 +3,14 @@
  * Auto-generated. Do not edit manually.
  */
 var AdminSettings = (function() {
+  const bindById = (id, eventName, handler) => {
+      const element = document.getElementById(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+
   // Status configuration
   const EXP_STATUS = {
       ACTIVE: 'active',
@@ -107,29 +115,19 @@ var AdminSettings = (function() {
               formatter: (cell, row) => {
                   // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
                   const web = row.cells[5].data;      // web is at index 5
-                  if (YS_DATA_SETTINGS.enableNotebook) {
-                  const jupyter = row.cells[6].data;  // jupyter_status is at index 6
-                  }
-                
+                  const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[6].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                  if (YS_DATA_SETTINGS.enableNotebook) {
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  }
-                
                   return gridjs.html(`
                       <div class="status-indicators">
                           <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          if (YS_DATA_SETTINGS.enableNotebook) {
-                          <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                          }
+                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
                       </div>
                   `);
               }
           },
           { id: 'web', hidden: true },
-          if (YS_DATA_SETTINGS.enableNotebook) {
-          { id: 'jupyter_status', hidden: true },
-          }
+          ...(YS_DATA_SETTINGS.enableNotebook ? [{ id: 'jupyter_status', hidden: true }] : []),
           {
               id: 'details',
               name: '',
@@ -203,29 +201,19 @@ var AdminSettings = (function() {
               formatter: (cell, row) => {
                   // Get the web value from hidden cell (shifted by 1 due to has_infinite_client column)
                   const web = row.cells[5].data;      // web is at index 5
-                  if (YS_DATA_SETTINGS.enableNotebook) {
-                  const jupyter = row.cells[6].data;  // jupyter_status is at index 6
-                  }
-                
+                  const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[6].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                  if (YS_DATA_SETTINGS.enableNotebook) {
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  }
-                
                   return gridjs.html(`
                       <div class="status-indicators">
                           <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          if (YS_DATA_SETTINGS.enableNotebook) {
-                          <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                          }
+                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
                       </div>
                   `);
               }
           },
           { id: 'web', hidden: true },
-          if (YS_DATA_SETTINGS.enableNotebook) {
-          { id: 'jupyter_status', hidden: true },
-          }
+          ...(YS_DATA_SETTINGS.enableNotebook ? [{ id: 'jupyter_status', hidden: true }] : []),
           {
               id: 'details',
               name: '',
@@ -435,29 +423,19 @@ var AdminSettings = (function() {
               formatter: (cell, row) => {
                   // Get the web value from hidden cell (shifted by 1 due to checkbox and has_infinite_client column)
                   const web = row.cells[6].data;      // web is at index 6 (shifted +1)
-                  if (YS_DATA_SETTINGS.enableNotebook) {
-                  const jupyter = row.cells[7].data;  // jupyter_status is at index 7 (shifted +1)
-                  }
-                
+                  const jupyter = YS_DATA_SETTINGS.enableNotebook ? row.cells[7].data : null;
                   const webColor = web === 'Loaded' ? '#28a745' : '#6c757d';
-                  if (YS_DATA_SETTINGS.enableNotebook) {
                   const jupyterColor = jupyter === 'Active' ? '#28a745' : '#6c757d';
-                  }
-                
                   return gridjs.html(`
                       <div class="status-indicators">
                           <span class="status-dot" style="background-color: ${webColor};" title="Web: ${web}"></span>
-                          if (YS_DATA_SETTINGS.enableNotebook) {
-                          <span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>
-                          }
+                          ${YS_DATA_SETTINGS.enableNotebook ? `<span class="status-dot" style="background-color: ${jupyterColor};" title="Lab: ${jupyter}"></span>` : ''}
                       </div>
                   `);
               }
           },
           { id: 'web', hidden: true },
-          if (YS_DATA_SETTINGS.enableNotebook) {
-          { id: 'jupyter_status', hidden: true },
-          }
+          ...(YS_DATA_SETTINGS.enableNotebook ? [{ id: 'jupyter_status', hidden: true }] : []),
           {
               id: 'details',
               name: '',
@@ -634,6 +612,7 @@ var AdminSettings = (function() {
   function createGroupedView(containerId, statusFilter, boxId) {
       const containerDiv = document.getElementById(containerId);
       const boxDiv = document.getElementById(boxId);
+      if (!containerDiv || !boxDiv) return;
     
       // Initialize pagination state if not exists
       if (!paginationState[containerId]) {
@@ -647,10 +626,12 @@ var AdminSettings = (function() {
           .then(response => response.json())
           .then(results => {
               if (results.total === 0) {
+                  boxDiv.classList.add('d-none');
                   boxDiv.style.display = 'none';
                   return;
               }
-            
+
+              boxDiv.classList.remove('d-none');
               boxDiv.style.display = 'flex';
             
               // Group experiments by exp_group
@@ -804,6 +785,7 @@ var AdminSettings = (function() {
           })
           .catch(error => {
               console.error('Error fetching experiments:', error);
+              boxDiv.classList.add('d-none');
               boxDiv.style.display = 'none';
           });
   }
@@ -1280,7 +1262,7 @@ var AdminSettings = (function() {
 
   function addScheduleGroup() {
       // Auto-generate incremental group name
-      const container = document.getElementById('schedule-groups-container');
+      const container = document.getElementById('schedule-groups');
       const existingGroups = container ? container.querySelectorAll('.schedule-group').length : 0;
       const name = 'Group ' + (existingGroups + 1);
 
@@ -1519,31 +1501,33 @@ var AdminSettings = (function() {
       }
   }
 
-  input.addEventListener('keydown', function (event) {
-      if (event.key === 'Enter') {
-          event.preventDefault();
-          const tagContent = input.value.trim();
-          if (tagContent !== '' && !tagList.includes(tagContent)) {
-              tagList.push(tagContent);
-              const tag = document.createElement('li');
-              tag.innerHTML = `${tagContent} <button class="delete-button">X</button>`;
-              tags.appendChild(tag);
+  if (input && tags && hiddenInput) {
+      input.addEventListener('keydown', function (event) {
+          if (event.key === 'Enter') {
+              event.preventDefault();
+              const tagContent = input.value.trim();
+              if (tagContent !== '' && !tagList.includes(tagContent)) {
+                  tagList.push(tagContent);
+                  const tag = document.createElement('li');
+                  tag.innerHTML = `${tagContent} <button class="delete-button">X</button>`;
+                  tags.appendChild(tag);
+                  hiddenInput.value = tagList.join(',');
+                  input.value = '';
+                  updateButtonState();
+              }
+          }
+      });
+
+      tags.addEventListener('click', function (event) {
+          if (event.target.classList.contains('delete-button') && !event.target.disabled) {
+              const tagText = event.target.parentNode.textContent.slice(0, -1).trim();
+              tagList.splice(tagList.indexOf(tagText), 1);
               hiddenInput.value = tagList.join(',');
-              input.value = '';
+              event.target.parentNode.remove();
               updateButtonState();
           }
-      }
-  });
-
-  tags.addEventListener('click', function (event) {
-      if (event.target.classList.contains('delete-button') && !event.target.disabled) {
-          const tagText = event.target.parentNode.textContent.slice(0, -1).trim();
-          tagList.splice(tagList.indexOf(tagText), 1);
-          hiddenInput.value = tagList.join(',');
-          event.target.parentNode.remove();
-          updateButtonState();
-      }
-  });
+      });
+  }
 
   // Show/hide Perspective API field based on toxicity annotation toggle
   document.addEventListener('DOMContentLoaded', function() {
@@ -1555,6 +1539,9 @@ var AdminSettings = (function() {
       const opinionToggle = document.getElementById('opinion_annotation_toggle');
       const annotationSettingsRow = document.getElementById('annotation_settings_row');
       const inputTag = document.getElementById('input-tag');
+      if (!toxicityToggle || !perspectiveApiField || !llmAgentsToggle || !sentimentToggle || !emotionToggle || !opinionToggle || !annotationSettingsRow || !inputTag) {
+          return;
+      }
 
       toxicityToggle.addEventListener('change', function() {
           if (this.checked) {
@@ -1652,8 +1639,9 @@ var AdminSettings = (function() {
       }
     
       // Handle generate topics button click
-      document.getElementById('generate-topics-btn').addEventListener('click', function() {
-          const topicCount = parseInt(document.getElementById('topic-count').value);
+      bindById('generate-topics-btn', 'click', function() {
+          const topicCountInput = document.getElementById('topic-count');
+          const topicCount = topicCountInput ? parseInt(topicCountInput.value) : NaN;
           if (!isNaN(topicCount) && topicCount >= 1 && topicCount <= 100) {
               generateTopics(topicCount);
           }
@@ -1672,6 +1660,7 @@ var AdminSettings = (function() {
       const redisConfigContent = document.getElementById('redis-config-content');
       const redisConfigIcon = document.getElementById('redis-config-icon');
     
+      if (redisConfigHeader && redisConfigContent && redisConfigIcon) {
       redisConfigHeader.addEventListener('click', function() {
           const isExpanded = redisConfigContent.style.display === 'block';
           if (isExpanded) {
@@ -1690,6 +1679,7 @@ var AdminSettings = (function() {
       redisConfigHeader.addEventListener('mouseleave', function() {
           redisConfigHeader.style.background = '#f9fafb';
       });
+      }
 
       function updateSimulatorTypeUI() {
           const isForum = platformTypeSelect.value === 'forum';
@@ -1786,8 +1776,8 @@ var AdminSettings = (function() {
           }
       }
 
-      hpcToggle.addEventListener('change', updateSimulatorTypeUI);
-      platformTypeSelect.addEventListener('change', updateSimulatorTypeUI);
+      if (hpcToggle) hpcToggle.addEventListener('change', updateSimulatorTypeUI);
+      if (platformTypeSelect) platformTypeSelect.addEventListener('change', updateSimulatorTypeUI);
     
       // Initialize on page load
       updateSimulatorTypeUI();
@@ -1798,6 +1788,7 @@ var AdminSettings = (function() {
       const remoteHostInput = document.getElementById('remote_host');
       const remotePortInput = document.getElementById('remote_port');
 
+      if (remoteExperimentToggle) {
       remoteExperimentToggle.addEventListener('change', function() {
           if (this.checked) {
               remoteConfigBox.style.display = 'flex';
@@ -1809,6 +1800,7 @@ var AdminSettings = (function() {
               remotePortInput.required = false;
           }
       });
+      }
   });
 
   function displayExperimentFileName(input) {
@@ -1832,7 +1824,7 @@ function syncEmbeddingSettingsControls() {
         host.disabled = !enabled;
     }
     if (fetchButton) {
-        fetchButton.disabled = !enabled || !(host && host.value.trim());
+        fetchButton.disabled = !enabled;
     }
     if (model) {
         model.disabled = !enabled;
@@ -1911,11 +1903,39 @@ window.addEventListener('DOMContentLoaded', function() {
     }
     if (host) {
         host.addEventListener('input', syncEmbeddingSettingsControls);
+        host.addEventListener('change', syncEmbeddingSettingsControls);
+        host.addEventListener('keyup', syncEmbeddingSettingsControls);
     }
     if (fetchButton) {
         fetchButton.addEventListener('click', fetchEmbeddingModels);
     }
     syncEmbeddingSettingsControls();
+});
+
+Object.assign(window, {
+    startExperimentServer,
+    stopExperimentServer,
+    toggleExperimentSelection,
+    toggleAllExperiments,
+    downloadSelectedExperiments,
+    downloadAllExperiments,
+    downloadGroupExperiments,
+    deleteGroupExperiments,
+    toggleGroup,
+    autoCreateGroups,
+    addScheduleGroup,
+    deleteScheduleGroup,
+    removeExperimentFromGroup,
+    handleDragStart,
+    handleDragOver,
+    handleDrop,
+    clearLogs,
+    startSchedule,
+    stopSchedule,
+    deleteAllExperiments,
+    displayExperimentFileName,
+    fetchEmbeddingModels,
+    syncEmbeddingSettingsControls
 });
 
 })();

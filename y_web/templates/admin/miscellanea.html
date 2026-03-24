@@ -757,7 +757,7 @@
 
 <script>
 var YS_DATA_MISCELLANEA = {
-    pullId: {{ pull[0] | tojson }},
+    pullId: {{ (active_pulls[0][0] if active_pulls else none) | tojson }},
     llmBackend: {{ llm_backend["backend"] | tojson }}
 };
 </script>

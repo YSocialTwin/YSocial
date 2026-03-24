@@ -28,12 +28,12 @@ def _update_recsys_internal(uid, expected_mode):
     client = Client.query.filter_by(id=uid).first()
     if not client:
         flash("Client not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     actual_mode = _get_experiment_mode(exp)
     if actual_mode != expected_mode:
@@ -99,12 +99,12 @@ def update_recsys(uid):
     client = Client.query.filter_by(id=uid).first()
     if not client:
         flash("Client not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return update_hpc_recsys(uid)
@@ -120,12 +120,12 @@ def _update_client_llm_internal(uid, expected_mode):
     client = Client.query.filter_by(id=uid).first()
     if not client:
         flash("Client not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     actual_mode = (
         "hpc"
@@ -193,12 +193,12 @@ def update_llm(uid):
     client = Client.query.filter_by(id=uid).first()
     if not client:
         flash("Client not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     exp = Exps.query.filter_by(idexp=client.id_exp).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return update_hpc_client_llm(uid)

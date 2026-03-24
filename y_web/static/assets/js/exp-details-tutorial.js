@@ -362,9 +362,12 @@
         checkTutorialStatus();
         
         // Event listeners
-        document.getElementById('exp-tutorial-next').addEventListener('click', nextStep);
-        document.getElementById('exp-tutorial-skip').addEventListener('click', hideTutorial);
-        document.getElementById('exp-tutorial-close').addEventListener('click', hideTutorial);
+        const nextBtn = document.getElementById('exp-tutorial-next');
+        const skipBtn = document.getElementById('exp-tutorial-skip');
+        const closeBtn = document.getElementById('exp-tutorial-close');
+        if (nextBtn) nextBtn.addEventListener('click', nextStep);
+        if (skipBtn) skipBtn.addEventListener('click', hideTutorial);
+        if (closeBtn) closeBtn.addEventListener('click', hideTutorial);
         
         // Handle window resize
         let resizeTimeout;

@@ -49,6 +49,76 @@ from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
 
 
+def _collect_population_agent_attributes(population_id):
+    """Return normalized per-agent attributes for a population, skipping broken rows."""
+    agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
+    agents = []
+    for link in agent_links:
+        agent = Agent.query.filter_by(id=link.agent_id).first()
+        if agent is not None:
+            agents.append(agent)
+
+    return {
+        "agents": agents,
+        "political_leanings": sorted(
+            {a.leaning for a in agents if getattr(a, "leaning", None) not in (None, "")}
+        ),
+        "ages": sorted(
+            {
+                int(a.age)
+                for a in agents
+                if getattr(a, "age", None) not in (None, "")
+            }
+        ),
+        "toxicity_levels": sorted(
+            {
+                a.toxicity
+                for a in agents
+                if getattr(a, "toxicity", None) not in (None, "")
+            }
+        ),
+        "languages": sorted(
+            {
+                a.language
+                for a in agents
+                if getattr(a, "language", None) not in (None, "")
+            }
+        ),
+        "llm_agents": sorted(
+            {
+                a.ag_type
+                for a in agents
+                if getattr(a, "ag_type", None) not in (None, "")
+            }
+        ),
+        "education_levels": sorted(
+            {
+                a.education_level
+                for a in agents
+                if getattr(a, "education_level", None) not in (None, "")
+            }
+        ),
+    }
+
+
+def _apply_population_attributes_to_client_config(config, population_id):
+    summary = _collect_population_agent_attributes(population_id)
+    ages = summary["ages"]
+    if not summary["agents"] or not ages:
+        return False
+
+    config["agents"]["political_leanings"] = summary["political_leanings"]
+    config["agents"]["age"]["min"] = min(ages)
+    config["agents"]["age"]["max"] = max(ages)
+    config["agents"]["toxicity_levels"] = summary["toxicity_levels"]
+    config["agents"]["languages"] = summary["languages"]
+    config["agents"]["llm_agents"] = summary["llm_agents"]
+    config["agents"]["education_levels"] = summary["education_levels"]
+    config["agents"]["round_actions"] = {"min": 1, "max": 3}
+    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    return True
+
+
 def _build_client_creation_context(idexp, recsys_mode):
     """Build the shared context used by client creation pages."""
     ensure_population_username_type_column()
@@ -205,7 +275,7 @@ def clients(idexp):
     exp = Exps.query.filter_by(idexp=idexp).first()
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     experiment_mode = _get_experiment_mode(exp)
     if experiment_mode == "hpc":
@@ -225,7 +295,7 @@ def clients_standard(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type == "forum":
@@ -244,7 +314,7 @@ def clients_forum(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type != "forum":
@@ -263,7 +333,7 @@ def clients_hpc(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
@@ -1199,7 +1269,7 @@ def _create_standard_client_internal():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
             "Use the dedicated HPC client creation route for this experiment.", "error"
@@ -1959,40 +2029,12 @@ def _create_standard_client_internal():
         },
     }
 
-    # get population agents
-    agents = Agent_Population.query.filter_by(population_id=population_id).all()
-    # get agents political leaning
-    political_leaning = set(
-        [Agent.query.filter_by(id=a.agent_id).first().leaning for a in agents]
-    )
-    # get agents' age
-    age = set([Agent.query.filter_by(id=a.agent_id).first().age for a in agents])
-    # get agents toxicity levels
-    toxicity = set(
-        [Agent.query.filter_by(id=a.agent_id).first().toxicity for a in agents]
-    )
-    # get agents' language
-    language = set(
-        [Agent.query.filter_by(id=a.agent_id).first().language for a in agents]
-    )
-    # get agents' type
-    ag_type = set(
-        [Agent.query.filter_by(id=a.agent_id).first().ag_type for a in agents]
-    )
-    # get agents' education level
-    education_level = set(
-        [Agent.query.filter_by(id=a.agent_id).first().education_level for a in agents]
-    )
-
-    config["agents"]["political_leanings"] = list(political_leaning)
-    config["agents"]["age"]["min"] = min(age)
-    config["agents"]["age"]["max"] = max(age)
-    config["agents"]["toxicity_levels"] = list(toxicity)
-    config["agents"]["languages"] = list(language)
-    config["agents"]["llm_agents"] = list(ag_type)
-    config["agents"]["education_levels"] = list(education_level)
-    config["agents"]["round_actions"] = {"min": 1, "max": 3}
-    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    if not _apply_population_attributes_to_client_config(config, population_id):
+        flash(
+            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            "error",
+        )
+        return redirect(request.referrer)
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
@@ -2454,7 +2496,7 @@ def _create_forum_client_internal():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
             "Use the dedicated HPC client creation route for this experiment.", "error"
@@ -3191,40 +3233,12 @@ def _create_forum_client_internal():
         },
     }
 
-    # get population agents
-    agents = Agent_Population.query.filter_by(population_id=population_id).all()
-    # get agents political leaning
-    political_leaning = set(
-        [Agent.query.filter_by(id=a.agent_id).first().leaning for a in agents]
-    )
-    # get agents' age
-    age = set([Agent.query.filter_by(id=a.agent_id).first().age for a in agents])
-    # get agents toxicity levels
-    toxicity = set(
-        [Agent.query.filter_by(id=a.agent_id).first().toxicity for a in agents]
-    )
-    # get agents' language
-    language = set(
-        [Agent.query.filter_by(id=a.agent_id).first().language for a in agents]
-    )
-    # get agents' type
-    ag_type = set(
-        [Agent.query.filter_by(id=a.agent_id).first().ag_type for a in agents]
-    )
-    # get agents' education level
-    education_level = set(
-        [Agent.query.filter_by(id=a.agent_id).first().education_level for a in agents]
-    )
-
-    config["agents"]["political_leanings"] = list(political_leaning)
-    config["agents"]["age"]["min"] = min(age)
-    config["agents"]["age"]["max"] = max(age)
-    config["agents"]["toxicity_levels"] = list(toxicity)
-    config["agents"]["languages"] = list(language)
-    config["agents"]["llm_agents"] = list(ag_type)
-    config["agents"]["education_levels"] = list(education_level)
-    config["agents"]["round_actions"] = {"min": 1, "max": 3}
-    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    if not _apply_population_attributes_to_client_config(config, population_id):
+        flash(
+            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            "error",
+        )
+        return redirect(request.referrer)
 
     # check db type
     if "database_server.db" in exp.db_name:  # sqlite
@@ -3746,7 +3760,7 @@ def create_hpc_client_route():
 
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         flash(
             "Use the dedicated standard or forum client creation route for this experiment.",
@@ -3769,7 +3783,7 @@ def create_client():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return create_hpc_client_route()

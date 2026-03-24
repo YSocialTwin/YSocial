@@ -3,6 +3,16 @@
  * Auto-generated. Do not edit manually.
  */
 var AdminExperiments = (function() {
+  const byId = (id) => document.getElementById(id);
+  const bindById = (id, eventName, handler) => {
+      const element = byId(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+  const currentExperimentData = () => window.YS_DATA_EXP_FORUM || window.YS_DATA_EXP || {};
+
   (function() {
       const toxicityToggle = document.getElementById('toxicity_annotation_toggle_exp');
       const perspectiveWrap = document.getElementById('perspective_api_field_exp');
@@ -150,8 +160,15 @@ var AdminExperiments = (function() {
       }
 
       // Hide content and error initially
-      document.getElementById('client-logs-content').style.display = 'none';
-      document.getElementById('client-logs-error-message').style.display = 'none';
+      const clientLogsContent = document.getElementById('client-logs-content');
+      const clientLogsError = document.getElementById('client-logs-error-message');
+      if (clientLogsContent) {
+          clientLogsContent.classList.add('d-none');
+          clientLogsContent.style.display = 'none';
+      }
+      if (clientLogsError) {
+          clientLogsError.style.display = 'none';
+      }
 
       if (!clientId) {
           return;
@@ -169,7 +186,9 @@ var AdminExperiments = (function() {
           .then(response => response.json())
           .then(data => {
               if (data.error) {
-                  document.getElementById('client-logs-error-message').style.display = 'block';
+                  if (clientLogsError) {
+                      clientLogsError.style.display = 'block';
+                  }
                   document.getElementById('client-logs-error-text').textContent = data.error;
                   return;
               }
@@ -179,13 +198,18 @@ var AdminExperiments = (function() {
 
               // Check if there's any data
               if (Object.keys(callVolume).length === 0) {
-                  document.getElementById('client-logs-error-message').style.display = 'block';
+                  if (clientLogsError) {
+                      clientLogsError.style.display = 'block';
+                  }
                   document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
                   return;
               }
 
               // Show content
-              document.getElementById('client-logs-content').style.display = 'block';
+              if (clientLogsContent) {
+                  clientLogsContent.classList.remove('d-none');
+                  clientLogsContent.style.display = 'block';
+              }
 
               // Store data globally
               allClientMethodsData.methods = Object.keys(callVolume).sort();
@@ -291,7 +315,9 @@ var AdminExperiments = (function() {
           })
           .catch(error => {
               console.error('Error fetching client logs:', error);
-              document.getElementById('client-logs-error-message').style.display = 'block';
+              if (clientLogsError) {
+                  clientLogsError.style.display = 'block';
+              }
               document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
           })
           .finally(() => {
@@ -306,31 +332,33 @@ var AdminExperiments = (function() {
 
   // Function to update refresh button state based on client selection
   function updateClientRefreshButtonState() {
-      const clientId = document.getElementById('clientSelector').value;
-      const refreshBtn = document.getElementById('refreshClientLogsBtn');
-      if (refreshBtn) {
-          refreshBtn.disabled = !clientId;
-      }
+      const clientSelector = byId('clientSelector');
+      const refreshBtn = byId('refreshClientLogsBtn');
+      if (!clientSelector || !refreshBtn) return;
+      refreshBtn.disabled = !clientSelector.value;
   }
 
   // Client selector change handler
-  document.getElementById('clientSelector').addEventListener('change', function() {
+  bindById('clientSelector', 'change', function() {
       loadClientLogs(this.value);
       updateClientRefreshButtonState();
   });
 
   // Refresh button click handler for client logs
   const ERROR_MESSAGE_AUTO_HIDE_DELAY = 3000; // milliseconds
-  document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
-      const clientId = document.getElementById('clientSelector').value;
+  bindById('refreshClientLogsBtn', 'click', function() {
+      const clientSelector = byId('clientSelector');
+      const errorMessage = byId('client-logs-error-message');
+      const errorText = byId('client-logs-error-text');
+      const clientId = clientSelector ? clientSelector.value : '';
       if (clientId) {
           loadClientLogs(clientId);
       } else {
           // Show brief feedback that a client must be selected
-          document.getElementById('client-logs-error-message').style.display = 'block';
-          document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
+          if (errorMessage) errorMessage.style.display = 'block';
+          if (errorText) errorText.textContent = 'Please select a client first.';
           setTimeout(() => {
-              document.getElementById('client-logs-error-message').style.display = 'none';
+              if (errorMessage) errorMessage.style.display = 'none';
           }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
       }
   });
@@ -361,7 +389,7 @@ var AdminExperiments = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshClientLogs').addEventListener('change', function() {
+  bindById('autoRefreshClientLogs', 'change', function() {
       if (this.checked) {
           startClientLogsAutoRefresh();
       } else {
@@ -370,20 +398,21 @@ var AdminExperiments = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalClientLogs').addEventListener('change', function() {
+  bindById('refreshIntervalClientLogs', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshClientLogs').checked) {
+      const autoRefresh = byId('autoRefreshClientLogs');
+      if (autoRefresh && autoRefresh.checked) {
           startClientLogsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked and client is selected
-  if (document.getElementById('autoRefreshClientLogs').checked) {
+  if (byId('autoRefreshClientLogs') && byId('autoRefreshClientLogs').checked) {
       startClientLogsAutoRefresh();
   }
 
   // Select All button handler for methods
-  document.getElementById('selectAllMethods').addEventListener('click', function() {
+  bindById('selectAllMethods', 'click', function() {
       document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = true;
       });
@@ -391,7 +420,7 @@ var AdminExperiments = (function() {
   });
 
   // Deselect All button handler for methods
-  document.getElementById('deselectAllMethods').addEventListener('click', function() {
+  bindById('deselectAllMethods', 'click', function() {
       document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = false;
       });
@@ -468,7 +497,8 @@ var AdminExperiments = (function() {
       statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Testing connection...</div>';
       statusDiv.style.display = 'block';
     
-      fetch(`/admin/test_remote_server/${YS_DATA_EXP.expId}`, {
+      const expData = currentExperimentData();
+      fetch(`/admin/test_remote_server/${expData.expId}`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -507,7 +537,8 @@ var AdminExperiments = (function() {
       statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Updating server settings...</div>';
       statusDiv.style.display = 'block';
     
-      fetch(`/admin/update_remote_server/${YS_DATA_EXP.expId}`, {
+      const expData = currentExperimentData();
+      fetch(`/admin/update_remote_server/${expData.expId}`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -531,63 +562,79 @@ var AdminExperiments = (function() {
       });
   }
 
-  $(document).ready(function () {
-      $.ajax({
-          url: `/admin/progress/${YS_DATA_EXP.clientId}`,
-          method: 'GET'
-      });
+  function applyProgressBarState(progressBar, data) {
+      if (!progressBar || progressBar.length === 0) {
+          return;
+      }
 
-      function pollProgress() {
+      if (data.infinite) {
+          progressBar.css('width', '100%');
+          progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+
+          const days = data.elapsed_days || 0;
+          const hours = data.elapsed_hours || 0;
+          const timeText = days > 0 ? (days + 'd ' + hours + 'h') : (hours + 'h elapsed');
+          progressBar.find('span').text('∞ ' + timeText);
+          return;
+      }
+
+      const percentage = Math.min(100, Math.max(0, data.progress || 0));
+      progressBar.css('width', percentage + '%');
+      progressBar.find('span').text(percentage + '%');
+
+      if (percentage >= 75) {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+      } else if (percentage >= 50) {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+      } else {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(3,155,229,0.3)');
+      }
+  }
+
+  function pollAllClientProgress() {
+      const progressBars = document.querySelectorAll('[id^="progress-bar-"]');
+      if (!progressBars.length) {
+          return;
+      }
+
+      let shouldContinuePolling = false;
+      progressBars.forEach((bar) => {
+          const clientId = bar.id.replace('progress-bar-', '');
+          if (!clientId) {
+              return;
+          }
+
           $.ajax({
-              url: '/admin/progress/${YS_DATA_EXP.clientId}',
+              url: `/admin/progress/${clientId}`,
               method: 'GET',
               dataType: 'json',
               success: function (data) {
-                  const progressBar = $(`#progress-bar-${YS_DATA_EXP.clientId}`);
-                
-                  // Check if this is an infinite client
-                  if (data.infinite) {
-                      // For infinite clients, show green bar with elapsed time
-                      progressBar.css('width', '100%');
-                      progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
-                      progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
-                    
-                      // Format elapsed time display
-                      const days = data.elapsed_days || 0;
-                      const hours = data.elapsed_hours || 0;
-                      let timeText = '';
-                      if (days > 0) {
-                          timeText = days + 'd ' + hours + 'h';
-                      } else {
-                          timeText = hours + 'h elapsed';
-                      }
-                      progressBar.find('span').text('∞ ' + timeText);
-                    
-                      // Keep polling for infinite clients
-                      setTimeout(pollProgress, 1000);
-                  } else {
-                      // Cap percentage at 100 to prevent overflow
-                      const percentage = Math.min(100, Math.max(0, data.progress || 0));
-                      progressBar.css('width', percentage + '%');
-                      progressBar.find('span').text(percentage + '%');
-                    
-                      // Update gradient based on progress
-                      if (percentage >= 75) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                      } else if (percentage >= 50) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                      }
-                    
-                      if (percentage < 100) {
-                          setTimeout(pollProgress, 500);
-                      }
+                  applyProgressBarState($(`#progress-bar-${clientId}`), data);
+                  if (data.infinite || (data.progress || 0) < 100) {
+                      shouldContinuePolling = true;
                   }
               }
           });
-      }
-      pollProgress();
+      });
+
+      setTimeout(() => {
+          const hasActiveBars = Array.from(document.querySelectorAll('[id^="progress-bar-"] span'))
+              .some((span) => {
+                  const text = span.textContent || '';
+                  return text.startsWith('∞') || text !== '100%';
+              });
+          if (shouldContinuePolling || hasActiveBars) {
+              pollAllClientProgress();
+          }
+      }, 1000);
+  }
+
+  $(document).ready(function () {
+      pollAllClientProgress();
   });
 
   // Global variables for trend charts
@@ -905,7 +952,12 @@ var AdminExperiments = (function() {
           refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
       }
 
-      fetch('/admin/experiment_trends/${YS_DATA_EXP.expId}')
+      const expData = currentExperimentData();
+      if (!expData.expId) {
+          return;
+      }
+
+      fetch(`/admin/experiment_trends/${expData.expId}`)
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -952,7 +1004,7 @@ var AdminExperiments = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshTrends').addEventListener('change', function() {
+  bindById('autoRefreshTrends', 'change', function() {
       if (this.checked) {
           startTrendsAutoRefresh();
       } else {
@@ -961,20 +1013,21 @@ var AdminExperiments = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalTrends').addEventListener('change', function() {
+  bindById('refreshIntervalTrends', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshTrends').checked) {
+      const autoRefresh = byId('autoRefreshTrends');
+      if (autoRefresh && autoRefresh.checked) {
           startTrendsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked
-  if (document.getElementById('autoRefreshTrends').checked) {
+  if (byId('autoRefreshTrends') && byId('autoRefreshTrends').checked) {
       startTrendsAutoRefresh();
   }
 
   // Refresh button click handler
-  document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
+  bindById('refreshTrendsBtn', 'click', loadTrendsData);
 
   // Handle aggregation change
   document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
@@ -1048,7 +1101,7 @@ var AdminExperiments = (function() {
   }
 
   // Select All button handler
-  document.getElementById('selectAllPaths').addEventListener('click', function() {
+  bindById('selectAllPaths', 'click', function() {
       document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = true;
       });
@@ -1056,7 +1109,7 @@ var AdminExperiments = (function() {
   });
 
   // Deselect All button handler
-  document.getElementById('deselectAllPaths').addEventListener('click', function() {
+  bindById('deselectAllPaths', 'click', function() {
       document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = false;
       });
@@ -1075,7 +1128,12 @@ var AdminExperiments = (function() {
           refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
       }
 
-      fetch('/admin/experiment_logs/${YS_DATA_EXP.expId}')
+      const expData = currentExperimentData();
+      if (!expData.expId) {
+          return;
+      }
+
+      fetch(`/admin/experiment_logs/${expData.expId}`)
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -1232,7 +1290,7 @@ var AdminExperiments = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshLogs').addEventListener('change', function() {
+  bindById('autoRefreshLogs', 'change', function() {
       if (this.checked) {
           startLogsAutoRefresh();
       } else {
@@ -1241,20 +1299,21 @@ var AdminExperiments = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalLogs').addEventListener('change', function() {
+  bindById('refreshIntervalLogs', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshLogs').checked) {
+      const autoRefresh = byId('autoRefreshLogs');
+      if (autoRefresh && autoRefresh.checked) {
           startLogsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked
-  if (document.getElementById('autoRefreshLogs').checked) {
+  if (byId('autoRefreshLogs') && byId('autoRefreshLogs').checked) {
       startLogsAutoRefresh();
   }
 
   // Refresh button click handler
-  document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
+  bindById('refreshLogsBtn', 'click', loadServerLogsData);
 })();
 
 
@@ -1393,8 +1452,15 @@ var AdminExperimentsForum = (function() {
       }
 
       // Hide content and error initially
-      document.getElementById('client-logs-content').style.display = 'none';
-      document.getElementById('client-logs-error-message').style.display = 'none';
+      const clientLogsContent = document.getElementById('client-logs-content');
+      const clientLogsError = document.getElementById('client-logs-error-message');
+      if (clientLogsContent) {
+          clientLogsContent.classList.add('d-none');
+          clientLogsContent.style.display = 'none';
+      }
+      if (clientLogsError) {
+          clientLogsError.style.display = 'none';
+      }
 
       if (!clientId) {
           return;
@@ -1412,7 +1478,9 @@ var AdminExperimentsForum = (function() {
           .then(response => response.json())
           .then(data => {
               if (data.error) {
-                  document.getElementById('client-logs-error-message').style.display = 'block';
+                  if (clientLogsError) {
+                      clientLogsError.style.display = 'block';
+                  }
                   document.getElementById('client-logs-error-text').textContent = data.error;
                   return;
               }
@@ -1422,13 +1490,18 @@ var AdminExperimentsForum = (function() {
 
               // Check if there's any data
               if (Object.keys(callVolume).length === 0) {
-                  document.getElementById('client-logs-error-message').style.display = 'block';
+                  if (clientLogsError) {
+                      clientLogsError.style.display = 'block';
+                  }
                   document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
                   return;
               }
 
               // Show content
-              document.getElementById('client-logs-content').style.display = 'block';
+              if (clientLogsContent) {
+                  clientLogsContent.classList.remove('d-none');
+                  clientLogsContent.style.display = 'block';
+              }
 
               // Store data globally
               allClientMethodsData.methods = Object.keys(callVolume).sort();
@@ -1534,7 +1607,9 @@ var AdminExperimentsForum = (function() {
           })
           .catch(error => {
               console.error('Error fetching client logs:', error);
-              document.getElementById('client-logs-error-message').style.display = 'block';
+              if (clientLogsError) {
+                  clientLogsError.style.display = 'block';
+              }
               document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
           })
           .finally(() => {
@@ -1549,31 +1624,33 @@ var AdminExperimentsForum = (function() {
 
   // Function to update refresh button state based on client selection
   function updateClientRefreshButtonState() {
-      const clientId = document.getElementById('clientSelector').value;
-      const refreshBtn = document.getElementById('refreshClientLogsBtn');
-      if (refreshBtn) {
-          refreshBtn.disabled = !clientId;
-      }
+      const clientSelector = byId('clientSelector');
+      const refreshBtn = byId('refreshClientLogsBtn');
+      if (!clientSelector || !refreshBtn) return;
+      refreshBtn.disabled = !clientSelector.value;
   }
 
   // Client selector change handler
-  document.getElementById('clientSelector').addEventListener('change', function() {
+  bindById('clientSelector', 'change', function() {
       loadClientLogs(this.value);
       updateClientRefreshButtonState();
   });
 
   // Refresh button click handler for client logs
   const ERROR_MESSAGE_AUTO_HIDE_DELAY = 3000; // milliseconds
-  document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
-      const clientId = document.getElementById('clientSelector').value;
+  bindById('refreshClientLogsBtn', 'click', function() {
+      const clientSelector = byId('clientSelector');
+      const errorMessage = byId('client-logs-error-message');
+      const errorText = byId('client-logs-error-text');
+      const clientId = clientSelector ? clientSelector.value : '';
       if (clientId) {
           loadClientLogs(clientId);
       } else {
           // Show brief feedback that a client must be selected
-          document.getElementById('client-logs-error-message').style.display = 'block';
-          document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
+          if (errorMessage) errorMessage.style.display = 'block';
+          if (errorText) errorText.textContent = 'Please select a client first.';
           setTimeout(() => {
-              document.getElementById('client-logs-error-message').style.display = 'none';
+              if (errorMessage) errorMessage.style.display = 'none';
           }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
       }
   });
@@ -1604,7 +1681,7 @@ var AdminExperimentsForum = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshClientLogs').addEventListener('change', function() {
+  bindById('autoRefreshClientLogs', 'change', function() {
       if (this.checked) {
           startClientLogsAutoRefresh();
       } else {
@@ -1613,20 +1690,21 @@ var AdminExperimentsForum = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalClientLogs').addEventListener('change', function() {
+  bindById('refreshIntervalClientLogs', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshClientLogs').checked) {
+      const autoRefresh = byId('autoRefreshClientLogs');
+      if (autoRefresh && autoRefresh.checked) {
           startClientLogsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked and client is selected
-  if (document.getElementById('autoRefreshClientLogs').checked) {
+  if (byId('autoRefreshClientLogs') && byId('autoRefreshClientLogs').checked) {
       startClientLogsAutoRefresh();
   }
 
   // Select All button handler for methods
-  document.getElementById('selectAllMethods').addEventListener('click', function() {
+  bindById('selectAllMethods', 'click', function() {
       document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = true;
       });
@@ -1634,7 +1712,7 @@ var AdminExperimentsForum = (function() {
   });
 
   // Deselect All button handler for methods
-  document.getElementById('deselectAllMethods').addEventListener('click', function() {
+  bindById('deselectAllMethods', 'click', function() {
       document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = false;
       });
@@ -1711,7 +1789,8 @@ var AdminExperimentsForum = (function() {
       statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Testing connection...</div>';
       statusDiv.style.display = 'block';
     
-      fetch(`/admin/test_remote_server/${YS_DATA_EXP_FORUM.expId}`, {
+      const expData = currentExperimentData();
+      fetch(`/admin/test_remote_server/${expData.expId}`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1750,7 +1829,8 @@ var AdminExperimentsForum = (function() {
       statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Updating server settings...</div>';
       statusDiv.style.display = 'block';
     
-      fetch(`/admin/update_remote_server/${YS_DATA_EXP_FORUM.expId}`, {
+      const expData = currentExperimentData();
+      fetch(`/admin/update_remote_server/${expData.expId}`, {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -1773,65 +1853,6 @@ var AdminExperimentsForum = (function() {
           statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error updating server settings</div>';
       });
   }
-
-  $(document).ready(function () {
-      $.ajax({
-          url: `/admin/progress/${YS_DATA_EXP_FORUM.clientId}`,
-          method: 'GET'
-      });
-
-      function pollProgress() {
-          $.ajax({
-              url: '/admin/progress/${YS_DATA_EXP_FORUM.clientId}',
-              method: 'GET',
-              dataType: 'json',
-              success: function (data) {
-                  const progressBar = $(`#progress-bar-${YS_DATA_EXP_FORUM.clientId}`);
-                
-                  // Check if this is an infinite client
-                  if (data.infinite) {
-                      // For infinite clients, show green bar with elapsed time
-                      progressBar.css('width', '100%');
-                      progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
-                      progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
-                    
-                      // Format elapsed time display
-                      const days = data.elapsed_days || 0;
-                      const hours = data.elapsed_hours || 0;
-                      let timeText = '';
-                      if (days > 0) {
-                          timeText = days + 'd ' + hours + 'h';
-                      } else {
-                          timeText = hours + 'h elapsed';
-                      }
-                      progressBar.find('span').text('∞ ' + timeText);
-                    
-                      // Keep polling for infinite clients
-                      setTimeout(pollProgress, 1000);
-                  } else {
-                      // Cap percentage at 100 to prevent overflow
-                      const percentage = Math.min(100, Math.max(0, data.progress || 0));
-                      progressBar.css('width', percentage + '%');
-                      progressBar.find('span').text(percentage + '%');
-                    
-                      // Update gradient based on progress
-                      if (percentage >= 75) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                      } else if (percentage >= 50) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                      }
-                    
-                      if (percentage < 100) {
-                          setTimeout(pollProgress, 500);
-                      }
-                  }
-              }
-          });
-      }
-      pollProgress();
-  });
 
   // Global variables for trend charts
   let serverComputeTimeTrendChart = null;
@@ -2148,7 +2169,12 @@ var AdminExperimentsForum = (function() {
           refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
       }
 
-      fetch('/admin/experiment_trends/${YS_DATA_EXP_FORUM.expId}')
+      const expData = currentExperimentData();
+      if (!expData.expId) {
+          return;
+      }
+
+      fetch(`/admin/experiment_trends/${expData.expId}`)
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -2195,7 +2221,7 @@ var AdminExperimentsForum = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshTrends').addEventListener('change', function() {
+  bindById('autoRefreshTrends', 'change', function() {
       if (this.checked) {
           startTrendsAutoRefresh();
       } else {
@@ -2204,20 +2230,21 @@ var AdminExperimentsForum = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalTrends').addEventListener('change', function() {
+  bindById('refreshIntervalTrends', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshTrends').checked) {
+      const autoRefresh = byId('autoRefreshTrends');
+      if (autoRefresh && autoRefresh.checked) {
           startTrendsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked
-  if (document.getElementById('autoRefreshTrends').checked) {
+  if (byId('autoRefreshTrends') && byId('autoRefreshTrends').checked) {
       startTrendsAutoRefresh();
   }
 
   // Refresh button click handler
-  document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
+  bindById('refreshTrendsBtn', 'click', loadTrendsData);
 
   // Handle aggregation change
   document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
@@ -2291,7 +2318,7 @@ var AdminExperimentsForum = (function() {
   }
 
   // Select All button handler
-  document.getElementById('selectAllPaths').addEventListener('click', function() {
+  bindById('selectAllPaths', 'click', function() {
       document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = true;
       });
@@ -2299,7 +2326,7 @@ var AdminExperimentsForum = (function() {
   });
 
   // Deselect All button handler
-  document.getElementById('deselectAllPaths').addEventListener('click', function() {
+  bindById('deselectAllPaths', 'click', function() {
       document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
           checkbox.checked = false;
       });
@@ -2318,7 +2345,12 @@ var AdminExperimentsForum = (function() {
           refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
       }
 
-      fetch('/admin/experiment_logs/${YS_DATA_EXP_FORUM.expId}')
+      const expData = currentExperimentData();
+      if (!expData.expId) {
+          return;
+      }
+
+      fetch(`/admin/experiment_logs/${expData.expId}`)
           .then(response => response.json())
           .then(data => {
               if (data.error) {
@@ -2475,7 +2507,7 @@ var AdminExperimentsForum = (function() {
   }
 
   // Auto-refresh checkbox handler
-  document.getElementById('autoRefreshLogs').addEventListener('change', function() {
+  bindById('autoRefreshLogs', 'change', function() {
       if (this.checked) {
           startLogsAutoRefresh();
       } else {
@@ -2484,18 +2516,33 @@ var AdminExperimentsForum = (function() {
   });
 
   // Refresh interval input handler
-  document.getElementById('refreshIntervalLogs').addEventListener('change', function() {
+  bindById('refreshIntervalLogs', 'change', function() {
       // Restart auto-refresh with new interval if currently enabled
-      if (document.getElementById('autoRefreshLogs').checked) {
+      const autoRefresh = byId('autoRefreshLogs');
+      if (autoRefresh && autoRefresh.checked) {
           startLogsAutoRefresh();
       }
   });
 
   // Start auto-refresh if checkbox is checked
-  if (document.getElementById('autoRefreshLogs').checked) {
+  if (byId('autoRefreshLogs') && byId('autoRefreshLogs').checked) {
       startLogsAutoRefresh();
   }
 
   // Refresh button click handler
-  document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
+  bindById('refreshLogsBtn', 'click', loadServerLogsData);
+
+  Object.assign(window, {
+      startExperimentServer,
+      stopExperimentServer,
+      selectExperiment,
+      joinExperiment,
+      startJupyter,
+      stopJupyter,
+      submitExperimentLogs,
+      toggleRemoteServerEdit,
+      cancelRemoteServerEdit,
+      testRemoteServer,
+      saveRemoteServer
+  });
 })();

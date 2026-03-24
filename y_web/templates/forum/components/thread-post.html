@@ -96,15 +96,13 @@
     <div style="display: flex; align-items: center; gap: 8px; color: #7c7c7c; font-size: 12px; font-weight: 700;">
         <!-- Reddit-style voting (consistent with feed) -->
         <div style="display: flex; flex-direction: column; align-items: center; margin-right: 8px;">
-            <button class="vote-button" type="button" data-action="like"
- class="ys-icon-btn">
+            <button class="vote-button ys-icon-btn" type="button" data-action="like">
  <i data-feather="arrow-up" class="ys-icon-xs"></i>
             </button>
             <span data-role="score" style="font-size: 12px; font-weight: bold; color: #1c1c1c; margin: 2px 0;">
                 {{ thread.get('likes', 0) - thread.get('dislikes', 0) }}
             </span>
-            <button class="vote-button" type="button" data-action="dislike"
- class="ys-icon-btn">
+            <button class="vote-button ys-icon-btn" type="button" data-action="dislike">
  <i data-feather="arrow-down" class="ys-icon-xs"></i>
             </button>
         </div>

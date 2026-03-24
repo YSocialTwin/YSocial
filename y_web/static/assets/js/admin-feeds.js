@@ -304,3 +304,15 @@ document.addEventListener('DOMContentLoaded', function() {
         AdminFeeds.initRssFeeds();
     }
 });
+
+Object.assign(window, {
+    parseSubreddit: AdminFeeds.parseSubreddit,
+    addParsedSubreddit: AdminFeeds.addParsedSubreddit,
+    removeFeed: AdminFeeds.removeFeed,
+    uploadImageFeeds: AdminFeeds.uploadImageFeeds,
+    exportImageFeeds: AdminFeeds.exportImageFeeds,
+    parseRssFeed: AdminFeeds.parseRssFeed,
+    addParsedRssFeed: AdminFeeds.addParsedRssFeed,
+    removeRssFeed: AdminFeeds.removeRssFeed,
+    uploadRssFeeds: AdminFeeds.uploadRssFeeds
+});

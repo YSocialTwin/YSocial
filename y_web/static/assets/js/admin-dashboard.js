@@ -28,62 +28,79 @@ var AdminDashboard = (function() {
       }
   }
 
-  $(document).ready(function () {
-      $.ajax({
-          url: `/admin/progress/${YS_DATA_DASHBOARD.clientId}`,
-          method: 'GET'
-      });
+  function applyProgressBarState(progressBar, data) {
+      if (!progressBar || progressBar.length === 0) {
+          return;
+      }
 
-      function pollProgress() {
+      if (data.infinite) {
+          progressBar.css('width', '100%');
+          progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
+
+          const days = data.elapsed_days || 0;
+          const hours = data.elapsed_hours || 0;
+          const timeText = days > 0 ? (days + 'd ' + hours + 'h') : (hours + 'h elapsed');
+          progressBar.find('span').text('∞ ' + timeText);
+          return;
+      }
+
+      const percentage = Math.min(100, Math.max(0, data.progress || 0));
+      progressBar.css('width', percentage + '%');
+      progressBar.find('span').text(percentage + '%');
+
+      if (percentage >= 75) {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
+      } else if (percentage >= 50) {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
+      } else {
+          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #4facfe 100%)');
+          progressBar.css('box-shadow', '0 2px 6px rgba(3,155,229,0.3)');
+      }
+  }
+
+  function pollAllClientProgress() {
+      const progressBars = document.querySelectorAll('[id^="progress-bar-"]');
+      if (!progressBars.length) {
+          return;
+      }
+
+      let shouldContinuePolling = false;
+      progressBars.forEach((bar) => {
+          const clientId = bar.id.replace('progress-bar-', '');
+          if (!clientId) {
+              return;
+          }
+
           $.ajax({
-              url: `/admin/progress/${YS_DATA_DASHBOARD.clientId}`,
+              url: `/admin/progress/${clientId}`,
               method: 'GET',
               dataType: 'json',
               success: function (data) {
-                  const progressBar = $('#progress-bar-${YS_DATA_DASHBOARD.clientId}');
-                
-                  // Check if this is an infinite client
-                  if (data.infinite) {
-                      // For infinite clients, show green bar with elapsed time
-                      progressBar.css('width', '100%');
-                      progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
-                      progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
-                    
-                      // Format elapsed time display
-                      const days = data.elapsed_days || 0;
-                      const hours = data.elapsed_hours || 0;
-                      let timeText = '';
-                      if (days > 0) {
-                          timeText = days + 'd ' + hours + 'h';
-                      } else {
-                          timeText = hours + 'h elapsed';
-                      }
-                      progressBar.find('span').text('∞ ' + timeText);
-                    
-                      // Keep polling for infinite clients
-                      setTimeout(pollProgress, 1000);
-                  } else {
-                      const percentage = data.progress;
-                      progressBar.css('width', percentage + '%');
-                      progressBar.find('span').text(percentage + '%');
-                    
-                      // Update gradient based on progress - aligned with template colors
-                      if (percentage >= 75) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                      } else if (percentage >= 50) {
-                          progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                          progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                      }
-                    
-                      if (percentage < 100) {
-                          setTimeout(pollProgress, 500);
-                      }
+                  applyProgressBarState($(`#progress-bar-${clientId}`), data);
+                  if (data.infinite || (data.progress || 0) < 100) {
+                      shouldContinuePolling = true;
                   }
               }
           });
-      }
-      pollProgress();
+      });
+
+      setTimeout(() => {
+          const hasActiveBars = Array.from(document.querySelectorAll('[id^="progress-bar-"] span'))
+              .some((span) => {
+                  const text = span.textContent || '';
+                  return text.startsWith('∞') || text !== '100%';
+              });
+          if (shouldContinuePolling || hasActiveBars) {
+              pollAllClientProgress();
+          }
+      }, 1000);
+  }
+
+  $(document).ready(function () {
+      pollAllClientProgress();
   });
 
   function startJupyterSession(expId) {
@@ -549,6 +566,12 @@ async function deleteNotification(id) {
   window.deleteNotification = deleteNotification;
   window.toggleGroup = toggleGroup;
   window.dismissTelemetryNotice = dismissTelemetryNotice;
+  window.startJupyterSession = startJupyterSession;
+  window.stopJupyterSession = stopJupyterSession;
+  window.startExperimentServer = startExperimentServer;
+  window.stopExperimentServer = stopExperimentServer;
+  window.selectExperiment = selectExperiment;
+  window.joinExperiment = joinExperiment;
 
 
 

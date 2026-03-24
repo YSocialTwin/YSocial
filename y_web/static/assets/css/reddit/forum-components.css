@@ -862,6 +862,14 @@
 .ys-hidden-white-box { background: white; border-radius: 6px; padding: 10px; margin-top: 10px; display: none; }
 .ys-icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px; }
 .ys-icon-btn-xs { background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px; }
+.vote-button { display: inline-flex; align-items: center; justify-content: center; color: #878a8c; transition: color 0.15s ease, background-color 0.15s ease; }
+.vote-button:hover { background: rgba(0, 0, 0, 0.04); }
+.vote-button svg,
+.vote-button i,
+.open-thread-button svg,
+.open-thread-button i { flex: 0 0 auto; }
+.vote-button svg { width: 16px; height: 16px; stroke-width: 2.25px; }
+.reddit-comment .vote-button svg { width: 12px; height: 12px; }
 .ys-icon-circle-blue { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background-color: #3273dc; color: white; transition: background-color 0.2s ease; }
 .ys-icon-circle-brand { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #039be5; border-radius: 50%; flex-shrink: 0; }
 .ys-icon-md-body { font-size: 16px; color: #555; }

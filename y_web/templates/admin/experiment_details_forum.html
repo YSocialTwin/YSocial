@@ -1,5 +1,6 @@
 {% include "admin/head.html" %}
 <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -270,20 +271,20 @@
  <span class="right ys-flex-gap-8">
  <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
-                                            <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiment.idexp }}'); return false;" title="Run Experiment">
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" onclick="showLoading('Starting experiment server...');" title="Run Experiment">
  <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
                                             </a>
                                             {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
-                                            <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiment.idexp }}'); return false;" title="Stop Experiment">
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" onclick="showLoading('Stopping experiment server...');" title="Stop Experiment">
  <i class="mdi mdi-stop active ys-icon-lg"></i>
                                             </a>
                                         {% endif %}
-                                            <a id="load-experiment-btn" class="link-tooltip" href="#" onclick="selectExperiment('{{ experiment.idexp }}'); return false;" title="Load Experiment">
+                                            <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
  <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%} ys-icon-lg"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
-                                            <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiment.idexp }}'); return false;" title="Join This Experiment">
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" onclick="showLoading('Joining experiment...');" title="Join This Experiment">
  <i class="mdi mdi-login ys-icon-lg"></i>
                                             </a>
                                             {% endif %}
@@ -355,19 +356,18 @@
                                     </span>
  <span class="right ys-value-col-55">
  <div class="sleek-progress-container ys-progress-track">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar" 
- class="ys-progress-bar">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
  <div class="ys-flex-gap-3">
                                             {% if client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
-                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="event.preventDefault(); showLoading('Starting client...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="showLoading('Starting client...');">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                             </a>
                                             {% endif %}
                                             {% if client.status == 1 %}
-                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="event.preventDefault(); showLoading('Pausing client...'); setTimeout(() => { window.location.href = this.href; }, 100);">
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="showLoading('Pausing client...');">
  <i class="mdi mdi-pause active ys-icon-xl"></i>
                                             </a>
                                             {% endif %}
@@ -715,18 +715,16 @@
                                     <div class="control">
                                         <textarea 
                                             id="problem-description-{{ experiment.idexp }}"
-                                            class="textarea" 
+                                            class="textarea ys-text-sm" 
                                             placeholder="What issue did you encounter? What were you trying to do when the error occurred?"
-                                            rows="3"
- class="ys-text-sm"></textarea>
+                                            rows="3"></textarea>
                                     </div>
  <p class="help ys-text-080">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
                                 </div>
                                 <button 
                                     id="submit-logs-btn-{{ experiment.idexp }}"
-                                    class="button is-info is-small" 
-                                    onclick="submitExperimentLogs({{ experiment.idexp }})"
- class="w-100">
+                                    class="button is-info is-small w-100" 
+                                    onclick="submitExperimentLogs({{ experiment.idexp }})">
                                     <span class="icon"><i class="mdi mdi-upload"></i></span>
                                     <span>Submit Logs</span>
                                 </button>
@@ -749,7 +747,7 @@
 <script>
 var YS_DATA_EXP_FORUM = {
     expId: {{ experiment.idexp | tojson }},
-    clientId: {{ client.id | tojson }}
+    clientId: null
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-experiments.js') }}"></script>

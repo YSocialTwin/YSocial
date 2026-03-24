@@ -3,6 +3,14 @@
  * Auto-generated. Do not edit manually.
  */
 var AdminMiscellanea = (function() {
+  const bindById = (id, eventName, handler) => {
+      const element = document.getElementById(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+
   const tableDiv = document.getElementById('leaning_table');
 
   const updateUrl = (prev, query) => {
@@ -1172,13 +1180,19 @@ var AdminMiscellanea = (function() {
   });
 
   // Collect selected hours when form is submitted
-  document.querySelector('form[action="/admin/create_activity_profile"]').addEventListener('submit', function(e) {
-      const checkboxes = document.querySelectorAll('input[name="hour"]:checked');
-      const hours = Array.from(checkboxes).map(cb => cb.value);
-      document.getElementById('hours_input').value = hours.join(',');
-  });
+  const activityProfileForm = document.querySelector('form[action="/admin/create_activity_profile"]');
+  if (activityProfileForm) {
+      activityProfileForm.addEventListener('submit', function(e) {
+          const checkboxes = document.querySelectorAll('input[name="hour"]:checked');
+          const hours = Array.from(checkboxes).map(cb => cb.value);
+          const hoursInput = document.getElementById('hours_input');
+          if (hoursInput) {
+              hoursInput.value = hours.join(',');
+          }
+      });
+  }
 
-  document.getElementById('check-updates-btn').addEventListener('click', function() {
+  bindById('check-updates-btn', 'click', function() {
       const btn = this;
       const statusDiv = document.getElementById('update-status');
     
@@ -1225,7 +1239,7 @@ var AdminMiscellanea = (function() {
       setTimeout(() => { msgDiv.style.display = 'none'; }, 3000);
   }
 
-  document.getElementById('telemetry_enabled').addEventListener('change', function() {
+  bindById('telemetry_enabled', 'change', function() {
       const enabled = this.checked;
       updateTelemetryStatus(enabled);
     
@@ -1301,7 +1315,7 @@ var AdminMiscellanea = (function() {
   }
 
   // Save HPC monitor settings
-  document.getElementById('save-hpc-monitor-settings').addEventListener('click', async function() {
+  bindById('save-hpc-monitor-settings', 'click', async function() {
       const enabled = document.getElementById('hpc_monitor_enabled').checked;
       const intervalValue = document.getElementById('hpc_check_interval_seconds').value;
       const interval = Number(intervalValue);
@@ -1337,7 +1351,7 @@ var AdminMiscellanea = (function() {
   });
 
   // Update status indicator when toggle changes
-  document.getElementById('hpc_monitor_enabled').addEventListener('change', function() {
+  bindById('hpc_monitor_enabled', 'change', function() {
       updateHpcMonitorStatusIndicator(this.checked);
   });
 
@@ -1392,7 +1406,7 @@ var AdminMiscellanea = (function() {
   }
 
   // Handle enable/disable toggle
-  document.getElementById('watchdog_enabled').addEventListener('change', function() {
+  bindById('watchdog_enabled', 'change', function() {
       const enabled = this.checked;
       const statusDiv = document.getElementById('watchdog-status');
     
@@ -1420,7 +1434,7 @@ var AdminMiscellanea = (function() {
       });
   });
 
-  document.getElementById('save-watchdog-interval').addEventListener('click', function() {
+  bindById('save-watchdog-interval', 'click', function() {
       const interval = document.getElementById('watchdog_interval').value;
       const statusDiv = document.getElementById('watchdog-status');
     
@@ -1444,7 +1458,7 @@ var AdminMiscellanea = (function() {
       });
   });
 
-  document.getElementById('run-watchdog-now').addEventListener('click', function() {
+  bindById('run-watchdog-now', 'click', function() {
       const btn = this;
       const statusDiv = document.getElementById('watchdog-status');
     
@@ -1840,7 +1854,7 @@ var AdminMiscellanea = (function() {
       });
   }
 
-  document.getElementById('opinion-dist-form').addEventListener('submit', function(e) {
+  bindById('opinion-dist-form', 'submit', function(e) {
       const distType = document.getElementById('dist-type').value;
       const params = {};
       let hasError = false;
@@ -1880,6 +1894,9 @@ var AdminMiscellanea = (function() {
   }
 
   $(document).ready(function () {
+              if (!YS_DATA_MISCELLANEA.pullId) {
+                  return;
+              }
               // Start the background progress as soon as the page loads
               $.ajax({
                   url: `/admin/pull_progress/${YS_DATA_MISCELLANEA.pullId}`,
@@ -1930,6 +1947,7 @@ var AdminMiscellanea = (function() {
       return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
   };
 
+  if (llmModelsTableDiv) {
   new gridjs.Grid({
       columns: [
           { id: 'model_name', name: 'Model Name', sort: true },
@@ -1991,4 +2009,10 @@ var AdminMiscellanea = (function() {
           },
       },
   }).render(llmModelsTableDiv);
+  }
+
+  Object.assign(window, {
+      switchMiscTab,
+      updateDistributionParams
+  });
 })();

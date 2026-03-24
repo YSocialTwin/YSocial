@@ -1,4 +1,12 @@
 var AdminOpinion = (function() {
+  const bindById = (id, eventName, handler) => {
+      const element = document.getElementById(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+
 
     // ── Opinion Configuration ──────────────────────────────────────────────
 
@@ -606,7 +614,7 @@ var AdminOpinion = (function() {
             }
         });
 
-        document.getElementById('speed-down').addEventListener('click', function() {
+        bindById('speed-down', 'click', function() {
             if (_currentSpeedIndex > 0) {
                 _currentSpeedIndex--;
                 updateSpeedDisplay();
@@ -614,7 +622,7 @@ var AdminOpinion = (function() {
             }
         });
 
-        document.getElementById('speed-up').addEventListener('click', function() {
+        bindById('speed-up', 'click', function() {
             if (_currentSpeedIndex < _speeds.length - 1) {
                 _currentSpeedIndex++;
                 updateSpeedDisplay();
@@ -662,3 +670,5 @@ document.addEventListener('DOMContentLoaded', function() {
         AdminOpinion.initOpinionEvolution();
     }
 });
+
+window.selectUpdateRule = AdminOpinion.selectUpdateRule;

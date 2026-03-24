@@ -34,7 +34,7 @@
                                     <span class="left">Embedding Service</span>
  <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
-                                            <select name="embedding_service" id="embedding_service" class="input">
+                                            <select name="embedding_service" id="embedding_service" class="input" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
                                                 <option value="" {% if not embedding_settings.service %}selected{% endif %}>Disabled</option>
                                                 <option value="ollama" {% if embedding_settings.service == 'ollama' %}selected{% endif %}>Ollama</option>
                                             </select>
@@ -46,11 +46,11 @@
                                 <div class="box-line">
                                     <span class="left">Ollama Host</span>
  <span class="right ys-w-50">
-                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434">
+                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434" oninput="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
                                     </span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 0.75em; margin-bottom: 0.5em;">
-                                    <button type="button" id="fetch_embedding_models" class="button is-light is-small">
+                                    <button type="button" id="fetch_embedding_models" class="button is-light is-small" onclick="return window.fetchEmbeddingModels ? window.fetchEmbeddingModels() : false;">
                                         <i class="mdi mdi-download"></i>
                                         <span>Fetch Embedding Models</span>
                                     </button>

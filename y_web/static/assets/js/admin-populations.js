@@ -3,17 +3,36 @@
  * Auto-generated. Do not edit manually.
  */
 var AdminPopulations = (function() {
-  new Chart("ages", {
+  const bindById = (id, eventName, handler) => {
+      const element = document.getElementById(id);
+      if (element) {
+          element.addEventListener(eventName, handler);
+      }
+      return element;
+  };
+
+  const createChartIfPresent = (canvasId, config) => {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) {
+          return null;
+      }
+      return new Chart(canvas, config);
+  };
+
+  const popDetails = window.YS_DATA_POP_DETAILS;
+
+  if (popDetails) {
+  createChartIfPresent("ages", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Age',
-              data: YS_DATA_POP_DETAILS.ages.data,
+              data: popDetails.ages.data,
               backgroundColor: 'rgba(168, 85, 247, 0.7)',
               borderColor: 'rgba(168, 85, 247, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.ages.labels
+          labels: popDetails.ages.labels
         },
       options: {
           responsive: true,
@@ -42,17 +61,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("gender", {
+  createChartIfPresent("gender", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Gender',
-              data: YS_DATA_POP_DETAILS.gender.data,
+              data: popDetails.gender.data,
               backgroundColor: 'rgba(139, 92, 246, 0.7)',
               borderColor: 'rgba(139, 92, 246, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.gender.labels
+          labels: popDetails.gender.labels
         },
       options: {
           responsive: true,
@@ -77,17 +96,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("nationalities", {
+  createChartIfPresent("nationalities", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Nationalities',
-              data: YS_DATA_POP_DETAILS.nationalities.data,
+              data: popDetails.nationalities.data,
               backgroundColor: 'rgba(59, 130, 246, 0.7)',
               borderColor: 'rgba(59, 130, 246, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.nationalities.labels
+          labels: popDetails.nationalities.labels
         },
       options: {
           responsive: true,
@@ -112,17 +131,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("edu", {
+  createChartIfPresent("edu", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Education',
-              data: YS_DATA_POP_DETAILS.education.data,
+              data: popDetails.education.data,
               backgroundColor: 'rgba(236, 72, 153, 0.7)',
               borderColor: 'rgba(236, 72, 153, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.education.labels
+          labels: popDetails.education.labels
         },
       options: {
           responsive: true,
@@ -147,17 +166,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("languages", {
+  createChartIfPresent("languages", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Spoken Languages',
-              data: YS_DATA_POP_DETAILS.languages.data,
+              data: popDetails.languages.data,
               backgroundColor: 'rgba(234, 179, 8, 0.7)',
               borderColor: 'rgba(234, 179, 8, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.languages.labels
+          labels: popDetails.languages.labels
         },
       options: {
           responsive: true,
@@ -182,17 +201,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("leanings", {
+  createChartIfPresent("leanings", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Political Leanings',
-              data: YS_DATA_POP_DETAILS.leanings.data,
+              data: popDetails.leanings.data,
               backgroundColor: 'rgba(34, 197, 94, 0.7)',
               borderColor: 'rgba(34, 197, 94, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.leanings.labels
+          labels: popDetails.leanings.labels
         },
       options: {
           responsive: true,
@@ -217,17 +236,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("tox", {
+  createChartIfPresent("tox", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Toxicity Levels',
-              data: YS_DATA_POP_DETAILS.toxicity.data,
+              data: popDetails.toxicity.data,
               backgroundColor: 'rgba(239, 68, 68, 0.7)',
               borderColor: 'rgba(239, 68, 68, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.toxicity.labels
+          labels: popDetails.toxicity.labels
         },
       options: {
           responsive: true,
@@ -252,17 +271,17 @@ var AdminPopulations = (function() {
       }
   });
 
-  new Chart("activity_profiles", {
+  createChartIfPresent("activity_profiles", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Activity Profiles',
-              data: YS_DATA_POP_DETAILS.activityProfiles.data,
+              data: popDetails.activityProfiles.data,
               backgroundColor: 'rgba(99, 102, 241, 0.7)',
               borderColor: 'rgba(99, 102, 241, 1)',
               borderWidth: 1
           }],
-          labels: YS_DATA_POP_DETAILS.activityProfiles.labels
+          labels: popDetails.activityProfiles.labels
         },
       options: {
           responsive: true,
@@ -288,15 +307,15 @@ var AdminPopulations = (function() {
   });
 
   // Create word cloud effect using bar chart
-  const profData = YS_DATA_POP_DETAILS.professions.data;
-  const profLabels = YS_DATA_POP_DETAILS.professions.labels;
+  const profData = popDetails.professions.data;
+  const profLabels = popDetails.professions.labels;
 
   // Take top 10 for readability
   const topCount = Math.min(10, profLabels.length);
   const topProfLabels = profLabels.slice(0, topCount);
   const topProfData = profData.slice(0, topCount);
 
-  new Chart("professions", {
+  createChartIfPresent("professions", {
       type: 'bar',
       data: {
           datasets: [{
@@ -332,7 +351,7 @@ var AdminPopulations = (function() {
       }
   });
 
-  const activityLevels = YS_DATA_POP_DETAILS.activity.levels;
+  const activityLevels = popDetails.activity.levels;
   const activityLabels = activityLevels.map(level => {
       const labelMap = {
           1: 'Very Low',
@@ -344,12 +363,12 @@ var AdminPopulations = (function() {
       return labelMap[level] || `Level ${level}`;
   });
 
-  new Chart("activity", {
+  createChartIfPresent("activity", {
       type: 'bar',
       data: {
           datasets: [{
               label: 'Daily Activity Levels',
-              data: YS_DATA_POP_DETAILS.activity.data,
+              data: popDetails.activity.data,
               backgroundColor: 'rgba(20, 184, 166, 0.7)',
               borderColor: 'rgba(20, 184, 166, 1)',
               borderWidth: 1
@@ -378,6 +397,7 @@ var AdminPopulations = (function() {
           }
       }
   });
+  }
 
   const tableDiv = document.getElementById('table');
 
@@ -397,6 +417,7 @@ var AdminPopulations = (function() {
     }
   };
 
+  if (tableDiv) {
   new gridjs.Grid({
     columns: [
       { id: 'id', hidden: true },
@@ -570,6 +591,7 @@ var AdminPopulations = (function() {
       }
     }
   });
+  }
 
   function displayFileName(input) {
       const display = document.getElementById('file-name-display');
@@ -715,20 +737,21 @@ var AdminPopulations = (function() {
   // Initialize merge drag and drop
   document.addEventListener('DOMContentLoaded', function() {
       loadMergePopulations();
-      document.getElementById('merged_population_type').addEventListener('change', function() {
+      bindById('merged_population_type', 'change', function() {
           mergeSelectedPopulations = [];
           renderMergeSelectedPopulations();
           renderMergeAvailablePopulations();
       });
     
       const selectedContainer = document.getElementById('merge-selected-populations');
+      if (!selectedContainer) return;
       selectedContainer.addEventListener('dragover', handleMergeDragOver);
       selectedContainer.addEventListener('drop', handleMergeDrop);
       selectedContainer.addEventListener('dragleave', handleMergeDragLeave);
   });
 
   // Form validation
-  document.getElementById('merge_populations_form').addEventListener('submit', function(e) {
+  bindById('merge_populations_form', 'submit', function(e) {
       if (mergeSelectedPopulations.length < 2) {
           e.preventDefault();
           alert('Please select at least 2 populations to merge');
@@ -918,7 +941,10 @@ var AdminPopulations = (function() {
       containerRow.style.display = '';
     
       // Check if all percentages are 0 (uninitialized)
-      const allZero = items.every(([id, item]) => item.percentage === 0);
+      const allZero = items.every(([id, item]) => {
+          const value = item.percentage;
+          return value === 0 || value === undefined || value === null || value === '';
+      });
     
       // Only split evenly if all percentages are 0 (uninitialized)
       // This preserves hardcoded defaults for age_classes while maintaining
@@ -989,7 +1015,7 @@ var AdminPopulations = (function() {
   });
 
   // Add hidden inputs before form submission
-  document.getElementById('popcreate_form').addEventListener('submit', function(e) {
+  bindById('popcreate_form', 'submit', function(e) {
       // Validate gender percentages
       const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
       const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
@@ -1074,8 +1100,17 @@ var AdminPopulations = (function() {
     
       const ageClassDefaults = YS_DATA_POPULATIONS.ageClasses;
     
-      // Set default age classes
-      multiSelectData.age_classes = ageClassDefaults;
+      // Set default age classes with explicit percentages so form submission
+      // serializes a usable age distribution even before any user edit.
+      multiSelectData.age_classes = Object.fromEntries(
+          Object.entries(ageClassDefaults).map(([id, item]) => [
+              id,
+              {
+                  label: item.label,
+                  percentage: defaultPercentages[item.name] ?? 0
+              }
+          ])
+      );
       updateDisplay('age_classes');
       updateOptionStyles('age_classes');
       updatePercentages('age_classes');
@@ -1288,16 +1323,23 @@ var AdminPopulations = (function() {
   function validateFormFields() {
       const popName = document.getElementById('pop_name').value.trim();
       const nAgents = document.getElementById('n_agents').value;
+      const hasAgeClasses = Object.keys(multiSelectData.age_classes).length > 0;
       const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
       const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
       const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
     
       const submitBtn = document.getElementById('create_population_btn');
-      const isValid = popName && nAgents && hasEducation && hasPolitical && hasToxicity;
+      const isValid = popName && nAgents && hasAgeClasses && hasEducation && hasPolitical && hasToxicity;
     
       submitBtn.disabled = !isValid;
     
       // Visual feedback for required fields
+      if (!hasAgeClasses) {
+          document.getElementById('age_classes_display_wrapper').style.borderColor = '#fcc';
+      } else {
+          document.getElementById('age_classes_display_wrapper').style.borderColor = '#ddd';
+      }
+
       if (!hasEducation) {
           document.getElementById('education_levels_display_wrapper').style.borderColor = '#fcc';
       } else {
@@ -1321,10 +1363,22 @@ var AdminPopulations = (function() {
 
   // Add event listeners to all fields that affect validation
   document.addEventListener('DOMContentLoaded', function() {
-      document.getElementById('pop_name').addEventListener('input', validateFormFields);
-      document.getElementById('n_agents').addEventListener('input', validateFormFields);
+  bindById('pop_name', 'input', validateFormFields);
+  bindById('n_agents', 'input', validateFormFields);
     
       // Initial validation
       validateFormFields();
+  });
+
+  Object.assign(window, {
+      displayFileName,
+      toggleActivityProfiles,
+      toggleProfessionBackgrounds,
+      toggleProfessionTag,
+      updateFemalePercentage,
+      updateMalePercentage,
+      toggleDropdown,
+      toggleOption,
+      updateDistributionParams
   });
 })();
