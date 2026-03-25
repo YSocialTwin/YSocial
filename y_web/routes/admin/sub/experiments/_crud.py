@@ -2299,7 +2299,8 @@ def delete_simulations_bulk():
         flash("Invalid experiment IDs provided.", "error")
         return redirect(url_for("experiments.settings"))
 
-    normalized_ids = _resolve_bulk_experiment_ids(exp_ids)
+    admin_user = _current_admin_user_or_none()
+    normalized_ids = _resolve_bulk_experiment_ids(exp_ids, admin_user=admin_user)
 
     if not normalized_ids:
         flash("No experiments selected for deletion.", "warning")
@@ -2307,7 +2308,6 @@ def delete_simulations_bulk():
 
     deleted_count = 0
     failed_ids = []
-    admin_user = _current_admin_user_or_none()
 
     for eid in normalized_ids:
         exp = Exps.query.filter_by(idexp=eid).first()
