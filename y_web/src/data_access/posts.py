@@ -151,7 +151,10 @@ def get_topics(post_id, user_id):
     cleaned = {}
     for topic in sentiment:
         if topic.topic_id != -1:
-            name = Interests.query.filter_by(iid=topic.topic_id).first().interest
+            interest = Interests.query.filter_by(iid=topic.topic_id).first()
+            if interest is None:
+                continue
+            name = interest.interest
             if topic.topic_id not in cleaned and topic.is_reaction == 0:
                 if topic.compound > 0.05:
                     cleaned[topic.topic_id] = (
@@ -174,6 +177,23 @@ def get_topics(post_id, user_id):
                         "neutral",
                         topic.round,
                     )
+
+    if not cleaned:
+        post_topics = (
+            Post_topics.query.filter_by(post_id=post_id)
+            .join(Interests, Post_topics.topic_id == Interests.iid)
+            .add_columns(Interests.interest)
+            .all()
+        )
+        for topic, interest_name in post_topics:
+            if topic.topic_id == -1 or topic.topic_id in cleaned:
+                continue
+            cleaned[topic.topic_id] = (
+                topic.topic_id,
+                interest_name,
+                "neutral",
+                getattr(post, "round", None),
+            )
 
     return list(cleaned.values())
 
