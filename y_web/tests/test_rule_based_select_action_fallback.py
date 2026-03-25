@@ -12,4 +12,7 @@ def test_rule_based_select_action_fallback_present():
     assert "def _has_usable_llm_config(self):" in source
     assert 'if not getattr(self, "llm_agents_enabled", True):' in source
     assert "return self.select_action_lite(" in source
-    assert "def select_action_lite(self, tid, actions, max_length_thread_reading=5):" in source
+    assert (
+        "def select_action_lite(self, tid, actions, max_length_thread_reading=5):"
+        in source
+    )

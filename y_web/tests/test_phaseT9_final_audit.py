@@ -24,9 +24,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 DOCS_DIR = os.path.join(REPO_ROOT, "docs")
@@ -41,6 +39,7 @@ REFACTORING_DOC = os.path.join(REPO_ROOT, "TEMPLATE_SEPARATION_REFACTORING.md")
 BASELINE_FILE = os.path.join(DOCS_DIR, "template_audit_baseline.txt")
 
 # ── helpers ──────────────────────────────────────────────────────────────────
+
 
 def _find_html_files(directory):
     """Return all .html files under *directory*."""
@@ -68,32 +67,33 @@ def _css_content(key):
 
 # ── 1. Total style= count ────────────────────────────────────────────────────
 
+
 class TestStyleAttrCounts:
     TOTAL_LIMIT = 566
 
     def test_total_style_attrs_within_limit(self):
         """Total style= across all templates must be ≤ 566 (T8 target)."""
-        total = _count_pattern(r'style=', TEMPLATES_DIR)
-        assert total <= self.TOTAL_LIMIT, (
-            f"style= count {total} exceeds limit {self.TOTAL_LIMIT}"
-        )
+        total = _count_pattern(r"style=", TEMPLATES_DIR)
+        assert (
+            total <= self.TOTAL_LIMIT
+        ), f"style= count {total} exceeds limit {self.TOTAL_LIMIT}"
 
     def test_admin_style_attrs(self):
         """Admin templates style= ≤ 480."""
         admin_dir = os.path.join(TEMPLATES_DIR, "admin")
-        count = _count_pattern(r'style=', admin_dir)
+        count = _count_pattern(r"style=", admin_dir)
         assert count <= 480, f"Admin style= count {count} > 480"
 
     def test_microblogging_style_attrs(self):
         """Microblogging templates style= ≤ 60."""
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
-        count = _count_pattern(r'style=', mb_dir)
+        count = _count_pattern(r"style=", mb_dir)
         assert count <= 60, f"Microblogging style= count {count} > 60"
 
     def test_forum_style_attrs(self):
         """Forum templates style= ≤ 80."""
         forum_dir = os.path.join(TEMPLATES_DIR, "forum")
-        count = _count_pattern(r'style=', forum_dir)
+        count = _count_pattern(r"style=", forum_dir)
         assert count <= 80, f"Forum style= count {count} > 80"
 
     def test_login_error_style_attrs(self):
@@ -103,43 +103,45 @@ class TestStyleAttrCounts:
         count = 0
         for d in (login_dir, error_dir):
             if os.path.isdir(d):
-                count += _count_pattern(r'style=', d)
+                count += _count_pattern(r"style=", d)
         assert count <= 25, f"Login/error style= count {count} > 25"
 
 
 # ── 2. <style> inline blocks completely gone ─────────────────────────────────
 
+
 class TestStyleBlocks:
     def test_no_inline_style_blocks_anywhere(self):
         """All inline <style> blocks must be gone (T4+T5 target)."""
-        count = _count_pattern(r'<style>', TEMPLATES_DIR)
+        count = _count_pattern(r"<style>", TEMPLATES_DIR)
         assert count == 0, f"Found {count} inline <style> blocks — all must be removed"
 
     def test_no_style_blocks_in_admin(self):
         """No <style> blocks in admin/."""
         admin_dir = os.path.join(TEMPLATES_DIR, "admin")
-        count = _count_pattern(r'<style>', admin_dir)
+        count = _count_pattern(r"<style>", admin_dir)
         assert count == 0, f"Found {count} <style> blocks in admin/"
 
     def test_no_style_blocks_in_forum(self):
         """No <style> blocks in forum/."""
         forum_dir = os.path.join(TEMPLATES_DIR, "forum")
-        count = _count_pattern(r'<style>', forum_dir)
+        count = _count_pattern(r"<style>", forum_dir)
         assert count == 0
 
     def test_no_style_blocks_in_microblogging(self):
         """No <style> blocks in microblogging/."""
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
-        count = _count_pattern(r'<style>', mb_dir)
+        count = _count_pattern(r"<style>", mb_dir)
         assert count == 0
 
 
 # ── 3. <script> blocks in forum/microblogging are data-bridge-only ───────────
 
+
 class TestDataBridgeScripts:
     """T7 criterion: no function definitions remain in forum/microblogging."""
 
-    FUNCTION_DEF_PATTERN = r'function\s+\w+\s*\('
+    FUNCTION_DEF_PATTERN = r"function\s+\w+\s*\("
 
     def test_no_function_defs_in_forum(self):
         """forum/ templates must not contain function definitions."""
@@ -154,9 +156,9 @@ class TestDataBridgeScripts:
         """microblogging/ templates must not contain function definitions."""
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
         count = _count_pattern(self.FUNCTION_DEF_PATTERN, mb_dir)
-        assert count == 0, (
-            f"Found {count} function definitions in microblogging/ templates"
-        )
+        assert (
+            count == 0
+        ), f"Found {count} function definitions in microblogging/ templates"
 
 
 # ── 4. CSS files contain the T9 style-guide section ─────────────────────────
@@ -167,24 +169,25 @@ STYLE_GUIDE_MARKER = "Phase T9 — ys-* Utility Class Style Guide"
 class TestStyleGuidePresent:
     def test_admin_css_has_style_guide(self):
         """admin-components.css must contain the T9 style-guide section."""
-        assert STYLE_GUIDE_MARKER in _css_content("admin"), (
-            f"admin-components.css is missing '{STYLE_GUIDE_MARKER}'"
-        )
+        assert STYLE_GUIDE_MARKER in _css_content(
+            "admin"
+        ), f"admin-components.css is missing '{STYLE_GUIDE_MARKER}'"
 
     def test_social_css_has_style_guide(self):
         """social-components.css must contain the T9 style-guide section."""
-        assert STYLE_GUIDE_MARKER in _css_content("social"), (
-            f"social-components.css is missing '{STYLE_GUIDE_MARKER}'"
-        )
+        assert STYLE_GUIDE_MARKER in _css_content(
+            "social"
+        ), f"social-components.css is missing '{STYLE_GUIDE_MARKER}'"
 
     def test_forum_css_has_style_guide(self):
         """reddit/forum-components.css must contain the T9 style-guide section."""
-        assert STYLE_GUIDE_MARKER in _css_content("forum"), (
-            f"reddit/forum-components.css is missing '{STYLE_GUIDE_MARKER}'"
-        )
+        assert STYLE_GUIDE_MARKER in _css_content(
+            "forum"
+        ), f"reddit/forum-components.css is missing '{STYLE_GUIDE_MARKER}'"
 
 
 # ── 5. Style-guide covers required categories ─────────────────────────────────
+
 
 class TestStyleGuideCategories:
     """Verify that each style-guide section covers all mandatory categories."""
@@ -205,9 +208,9 @@ class TestStyleGuideCategories:
         assert guide_start != -1, f"{css_key} CSS missing style guide section"
         guide_section = content[guide_start:]
         for category in self.REQUIRED_CATEGORIES:
-            assert category in guide_section, (
-                f"{css_key} style guide is missing category '{category}'"
-            )
+            assert (
+                category in guide_section
+            ), f"{css_key} style guide is missing category '{category}'"
 
     def test_admin_css_style_guide_categories(self):
         self._assert_categories("admin")
@@ -232,6 +235,7 @@ class TestStyleGuideCategories:
 
 # ── 6. Dynamic style= attributes are annotated ───────────────────────────────
 
+
 class TestDynamicAnnotation:
     def test_dynamic_styles_annotated(self):
         """style= with Jinja2 expressions must use {# dynamic #} annotation."""
@@ -251,13 +255,12 @@ class TestDynamicAnnotation:
 
     def test_annotated_dynamic_styles_exist(self):
         """At least some dynamic style= attributes should be annotated."""
-        count = _count_pattern(r'\{# dynamic #\}', TEMPLATES_DIR)
-        assert count >= 1, (
-            "No {# dynamic #} annotations found — expected at least 1"
-        )
+        count = _count_pattern(r"\{# dynamic #\}", TEMPLATES_DIR)
+        assert count >= 1, "No {# dynamic #} annotations found — expected at least 1"
 
 
 # ── 7. Baseline file present ─────────────────────────────────────────────────
+
 
 class TestBaselineFile:
     def test_baseline_file_exists(self):
@@ -281,12 +284,13 @@ class TestBaselineFile:
 
 # ── 8. TEMPLATE_SEPARATION_REFACTORING.md has no unchecked items ─────────────
 
+
 class TestRefactoringDocComplete:
     def test_no_unchecked_items(self):
         """All success-criteria checkboxes must be checked [x]."""
         with open(REFACTORING_DOC, encoding="utf-8") as fh:
             content = fh.read()
-        unchecked = re.findall(r'- \[ \]', content)
+        unchecked = re.findall(r"- \[ \]", content)
         assert not unchecked, (
             f"Found {len(unchecked)} unchecked [ ] item(s) in "
             "TEMPLATE_SEPARATION_REFACTORING.md — complete all phases first"
@@ -296,9 +300,9 @@ class TestRefactoringDocComplete:
         """TEMPLATE_SEPARATION_REFACTORING.md must define Phase T9."""
         with open(REFACTORING_DOC, encoding="utf-8") as fh:
             content = fh.read()
-        assert "Phase T9" in content, (
-            "TEMPLATE_SEPARATION_REFACTORING.md must contain Phase T9 definition"
-        )
+        assert (
+            "Phase T9" in content
+        ), "TEMPLATE_SEPARATION_REFACTORING.md must contain Phase T9 definition"
 
     def test_t9_in_table_of_contents(self):
         """T9 must appear in the Table of Contents."""
@@ -310,6 +314,7 @@ class TestRefactoringDocComplete:
 
 
 # ── 9. CSS files exist and are non-empty ─────────────────────────────────────
+
 
 class TestCssFilesExist:
     def test_admin_components_css_exists(self):

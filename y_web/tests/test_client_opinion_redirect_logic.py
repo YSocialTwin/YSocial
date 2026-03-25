@@ -35,7 +35,9 @@ def test_standard_client_creation_uses_config_backed_opinion_toggle(tmp_path):
     )
     experiment = _make_experiment(db_name=f"experiments/{exp_uid}/database_server.db")
 
-    with patch("y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"):
+    with patch(
+        "y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"
+    ):
         with patch(
             "y_web.src.system.path_utils.get_writable_path", return_value=str(tmp_path)
         ):
@@ -56,7 +58,9 @@ def test_hpc_client_creation_reads_server_config_toggle(tmp_path):
         db_name=f"experiments/{exp_uid}/database_server.db",
     )
 
-    with patch("y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"):
+    with patch(
+        "y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"
+    ):
         with patch(
             "y_web.src.system.path_utils.get_writable_path", return_value=str(tmp_path)
         ):
@@ -69,7 +73,9 @@ def test_client_creation_opinion_toggle_falls_back_to_annotations():
     )
 
     experiment = _make_experiment(annotations="sentiment,opinions,toxicity")
-    with patch("y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"):
+    with patch(
+        "y_web.routes.admin.sub.clients._crud.get_db_type", return_value="sqlite"
+    ):
         assert _opinion_dynamics_enabled_for_client_creation(experiment) is True
 
 

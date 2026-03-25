@@ -69,9 +69,12 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
 
     assert "memory_configuration_supported = bool(" in data_source
     assert 'and bool(getattr(experiment, "llm_agents_enabled", 0))' in data_source
-    assert 'if memory_configuration_supported:' in data_source
+    assert "if memory_configuration_supported:" in data_source
     assert 'memory_enabled = _is_checked("memory_enabled")' in data_source
     assert 'memory_config["enabled"] = bool(memory_enabled)' in data_source
     assert "def _memory_enabled_for_client_creation(experiment):" in clients_source
-    assert "experiment_memory_enabled = _memory_enabled_for_client_creation(exp)" in clients_source
+    assert (
+        "experiment_memory_enabled = _memory_enabled_for_client_creation(exp)"
+        in clients_source
+    )
     assert 'and bool(getattr(experiment, "llm_agents_enabled", 0))' in clients_source

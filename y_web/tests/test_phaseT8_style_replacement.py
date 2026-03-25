@@ -19,9 +19,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
@@ -40,7 +38,10 @@ SECTION_LIMITS = {
     "admin (all)": (os.path.join(TEMPLATES_DIR, "admin"), 380),
     "admin/tutorials": (os.path.join(TEMPLATES_DIR, "admin", "tutorials"), 100),
     "forum/components": (os.path.join(TEMPLATES_DIR, "forum", "components"), 60),
-    "microblogging/components": (os.path.join(TEMPLATES_DIR, "microblogging", "components"), 20),
+    "microblogging/components": (
+        os.path.join(TEMPLATES_DIR, "microblogging", "components"),
+        20,
+    ),
     "login": (os.path.join(TEMPLATES_DIR, "login"), 20),
     "error_pages": (os.path.join(TEMPLATES_DIR, "error_pages"), 5),
 }
@@ -96,6 +97,7 @@ REQUIRED_YS_CLASSES_FORUM = [
 # 1. Total style= count
 # ---------------------------------------------------------------------------
 
+
 def _count_style_attrs(directory, recurse=True):
     """Count style= occurrences in HTML files under directory."""
     result = subprocess.run(
@@ -121,6 +123,7 @@ def test_total_style_attr_count():
 # 2. Per-section counts
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("section_name,section_info", SECTION_LIMITS.items())
 def test_section_style_count(section_name, section_info):
     """Each section must be within its limit."""
@@ -138,6 +141,7 @@ def test_section_style_count(section_name, section_info):
 # 3–5. CSS files exist, are non-empty, and contain required ys-* classes
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("css_name,css_path", CSS_FILES.items())
 def test_css_file_exists(css_name, css_path):
     assert os.path.isfile(css_path), f"CSS file not found: {css_path}"
@@ -154,9 +158,9 @@ def test_admin_css_has_class(class_name):
     css_path = CSS_FILES["admin"]
     with open(css_path) as f:
         content = f.read()
-    assert class_name in content, (
-        f"Class '{class_name}' not found in admin-components.css"
-    )
+    assert (
+        class_name in content
+    ), f"Class '{class_name}' not found in admin-components.css"
 
 
 @pytest.mark.parametrize("class_name", REQUIRED_YS_CLASSES_SOCIAL)
@@ -165,9 +169,9 @@ def test_social_css_has_class(class_name):
     css_path = CSS_FILES["social"]
     with open(css_path) as f:
         content = f.read()
-    assert class_name in content, (
-        f"Class '{class_name}' not found in social-components.css"
-    )
+    assert (
+        class_name in content
+    ), f"Class '{class_name}' not found in social-components.css"
 
 
 @pytest.mark.parametrize("class_name", REQUIRED_YS_CLASSES_FORUM)
@@ -176,14 +180,15 @@ def test_forum_css_has_class(class_name):
     css_path = CSS_FILES["forum"]
     with open(css_path) as f:
         content = f.read()
-    assert class_name in content, (
-        f"Class '{class_name}' not found in reddit/forum-components.css"
-    )
+    assert (
+        class_name in content
+    ), f"Class '{class_name}' not found in reddit/forum-components.css"
 
 
 # ---------------------------------------------------------------------------
 # 6. Dynamic style= annotations
 # ---------------------------------------------------------------------------
+
 
 def test_dynamic_style_annotations():
     """All dynamic style= attributes (containing {{ or {%) must be annotated."""
@@ -218,6 +223,7 @@ def test_dynamic_style_annotations():
 # 7. No leftover replacement placeholders
 # ---------------------------------------------------------------------------
 
+
 def test_no_leftover_placeholders():
     """No template should contain leftover __STYLE_REPLACED__ placeholders."""
     result = subprocess.run(
@@ -225,6 +231,6 @@ def test_no_leftover_placeholders():
         capture_output=True,
         text=True,
     )
-    assert result.returncode != 0 or not result.stdout.strip(), (
-        "Leftover __STYLE_REPLACED__ placeholders found in templates"
-    )
+    assert (
+        result.returncode != 0 or not result.stdout.strip()
+    ), "Leftover __STYLE_REPLACED__ placeholders found in templates"

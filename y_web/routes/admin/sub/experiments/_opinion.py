@@ -12,8 +12,8 @@ import pathlib
 import random
 import re
 import shutil
-import sqlite3
 import socket
+import sqlite3
 import threading
 import time
 import uuid
@@ -154,7 +154,9 @@ def _resolve_opinion_evolution_topics(expid):
 
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
-    db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    db_name = (
+        str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    )
     uid = get_experiment_uid_from_db_name(db_name)
     if not uid:
         return db_name
@@ -170,7 +172,7 @@ def _resolve_opinion_experiment_db_name(experiment):
         try:
             with open(server_config_path, "r") as handle:
                 server_config = json.load(handle)
-            sqlite_cfg = ((server_config.get("database") or {}).get("sqlite") or {})
+            sqlite_cfg = (server_config.get("database") or {}).get("sqlite") or {}
             sqlite_filename = str(sqlite_cfg.get("filename") or "").strip()
             if sqlite_filename:
                 candidates.append(
@@ -248,7 +250,9 @@ def _experiment_db_has_required_opinion_tables(db_uri):
 
 def _resolve_opinion_cold_start_value(experiment):
     """Resolve the configured opinion cold-start strategy for an experiment."""
-    db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    db_name = (
+        str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    )
     uid = get_experiment_uid_from_db_name(db_name)
     if not uid:
         return "neutral"
@@ -288,7 +292,11 @@ def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
     if db.session.query(Agent_Opinion.id).limit(1).first() is not None:
         return 0
 
-    first_round = db.session.query(Rounds).order_by(Rounds.day.asc(), Rounds.hour.asc(), Rounds.id.asc()).first()
+    first_round = (
+        db.session.query(Rounds)
+        .order_by(Rounds.day.asc(), Rounds.hour.asc(), Rounds.id.asc())
+        .first()
+    )
     if first_round is None:
         return 0
 

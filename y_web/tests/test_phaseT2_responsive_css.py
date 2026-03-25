@@ -23,9 +23,7 @@ pytestmark = pytest.mark.unit
 # Paths
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
 STATIC_CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
@@ -37,6 +35,7 @@ RESPONSIVE_CSS = os.path.join(STATIC_CSS_DIR, "admin-responsive.css")
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _count_style_blocks(path):
     """Return the number of ``<style>`` tags in a file."""
@@ -57,6 +56,7 @@ def _count_style_blocks_in_dir(directory):
 # 1. admin-responsive.css must exist with expected content
 # ---------------------------------------------------------------------------
 
+
 class TestResponsiveCssFile:
     """y_web/static/assets/css/admin-responsive.css must exist and contain
     the rules extracted from admin/head.html and admin/dash_head.html."""
@@ -68,52 +68,61 @@ class TestResponsiveCssFile:
         )
 
     def test_css_file_non_empty(self):
-        assert os.path.getsize(RESPONSIVE_CSS) > 0, \
-            "admin-responsive.css must not be empty"
+        assert (
+            os.path.getsize(RESPONSIVE_CSS) > 0
+        ), "admin-responsive.css must not be empty"
 
     # ---- Rules from head.html (sidebar) ------------------------------------
 
     def test_css_contains_sidebar_toggle_rule(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert ".sidebar-toggle-btn" in css, \
-            "admin-responsive.css must contain .sidebar-toggle-btn rule"
+        assert (
+            ".sidebar-toggle-btn" in css
+        ), "admin-responsive.css must contain .sidebar-toggle-btn rule"
 
     def test_css_contains_sidebar_overlay_rule(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert ".sidebar-overlay" in css, \
-            "admin-responsive.css must contain .sidebar-overlay rule"
+        assert (
+            ".sidebar-overlay" in css
+        ), "admin-responsive.css must contain .sidebar-overlay rule"
 
     def test_css_contains_mobile_media_query_768(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert "max-width: 768px" in css, \
-            "admin-responsive.css must contain the @media max-width:768px breakpoint"
+        assert (
+            "max-width: 768px" in css
+        ), "admin-responsive.css must contain the @media max-width:768px breakpoint"
 
     def test_css_contains_tutorial_highlighted_rule(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert ".dashboard-aside-link.tutorial-highlighted" in css, \
-            "admin-responsive.css must contain .dashboard-aside-link.tutorial-highlighted"
+        assert (
+            ".dashboard-aside-link.tutorial-highlighted" in css
+        ), "admin-responsive.css must contain .dashboard-aside-link.tutorial-highlighted"
 
     # ---- Rules from dash_head.html (toolbar / download notifications) ------
 
     def test_css_contains_download_notification_badge_rule(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert ".download-notification-badge" in css, \
-            "admin-responsive.css must contain .download-notification-badge rule"
+        assert (
+            ".download-notification-badge" in css
+        ), "admin-responsive.css must contain .download-notification-badge rule"
 
     def test_css_contains_dashboard_toolbar_rule(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert ".dashboard-toolbar" in css, \
-            "admin-responsive.css must contain .dashboard-toolbar rule"
+        assert (
+            ".dashboard-toolbar" in css
+        ), "admin-responsive.css must contain .dashboard-toolbar rule"
 
     def test_css_contains_mobile_media_query_1024(self):
         css = open(RESPONSIVE_CSS, encoding="utf-8").read()
-        assert "max-width: 1024px" in css, \
-            "admin-responsive.css must contain the @media max-width:1024px breakpoint"
+        assert (
+            "max-width: 1024px" in css
+        ), "admin-responsive.css must contain the @media max-width:1024px breakpoint"
 
 
 # ---------------------------------------------------------------------------
 # 2. admin/head.html must reference admin-responsive.css and have no <style>
 # ---------------------------------------------------------------------------
+
 
 class TestHeadHtml:
     """admin/head.html must link admin-responsive.css and have no inline <style>."""
@@ -127,18 +136,21 @@ class TestHeadHtml:
 
     def test_head_html_links_responsive_css(self):
         content = open(HEAD_HTML, encoding="utf-8").read()
-        assert "admin-responsive.css" in content, \
-            "admin/head.html must have a <link> to admin-responsive.css"
+        assert (
+            "admin-responsive.css" in content
+        ), "admin/head.html must have a <link> to admin-responsive.css"
 
     def test_head_html_link_uses_url_for(self):
         content = open(HEAD_HTML, encoding="utf-8").read()
-        assert "url_for('static', filename='assets/css/admin-responsive.css')" in content, \
-            "The admin-responsive.css link must use url_for('static', …)"
+        assert (
+            "url_for('static', filename='assets/css/admin-responsive.css')" in content
+        ), "The admin-responsive.css link must use url_for('static', …)"
 
 
 # ---------------------------------------------------------------------------
 # 3. admin/dash_head.html must have no <style>
 # ---------------------------------------------------------------------------
+
 
 class TestDashHeadHtml:
     """admin/dash_head.html must contain no inline <style> block after Phase T2."""
@@ -154,6 +166,7 @@ class TestDashHeadHtml:
 # ---------------------------------------------------------------------------
 # 4. Global style-block count must have decreased
 # ---------------------------------------------------------------------------
+
 
 class TestGlobalStyleBlockCount:
     """The total <style>-block count across all templates must be ≤ 71."""

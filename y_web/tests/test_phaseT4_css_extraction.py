@@ -16,9 +16,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-REPO_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 TEMPLATES_ADMIN = os.path.join(REPO_ROOT, "y_web", "templates", "admin")
 CSS_DIR = os.path.join(REPO_ROOT, "y_web", "static", "assets", "css")
 
@@ -88,6 +86,7 @@ CSS_SPOT_CHECKS = {
 # 1. CSS files exist and are non-empty
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize("css_file", NEW_CSS_FILES)
 def test_css_file_exists_and_nonempty(css_file):
     path = os.path.join(CSS_DIR, css_file)
@@ -99,34 +98,33 @@ def test_css_file_exists_and_nonempty(css_file):
 # 2. No <style> blocks remain in admin templates
 # ---------------------------------------------------------------------------
 
+
 def test_no_style_blocks_in_admin_templates():
     result = subprocess.run(
         ["grep", "-r", "<style>", TEMPLATES_ADMIN, "--include=*.html"],
         capture_output=True,
         text=True,
     )
-    assert result.returncode != 0 or result.stdout.strip() == "", (
-        f"Found <style> blocks in admin templates:\n{result.stdout}"
-    )
+    assert (
+        result.returncode != 0 or result.stdout.strip() == ""
+    ), f"Found <style> blocks in admin templates:\n{result.stdout}"
 
 
 # ---------------------------------------------------------------------------
 # 3. Templates have <link> to the correct CSS file
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("css_file,templates", [
-    (css, tmpl)
-    for css, tmpl_list in CSS_TEMPLATE_MAP.items()
-    for tmpl in tmpl_list
-])
+
+@pytest.mark.parametrize(
+    "css_file,templates",
+    [(css, tmpl) for css, tmpl_list in CSS_TEMPLATE_MAP.items() for tmpl in tmpl_list],
+)
 def test_template_has_link_to_css(css_file, templates):
     path = os.path.join(TEMPLATES_ADMIN, templates)
     assert os.path.isfile(path), f"Template not found: {path}"
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
-    assert css_file in content, (
-        f"Template {templates} is missing <link> to {css_file}"
-    )
+    assert css_file in content, f"Template {templates} is missing <link> to {css_file}"
 
 
 def test_admin_tutorials_css_linked_from_head():
@@ -134,46 +132,46 @@ def test_admin_tutorials_css_linked_from_head():
     head_path = os.path.join(TEMPLATES_ADMIN, "head.html")
     with open(head_path, "r", encoding="utf-8") as f:
         content = f.read()
-    assert "admin-tutorials.css" in content, (
-        "admin-tutorials.css link not found in head.html"
-    )
+    assert (
+        "admin-tutorials.css" in content
+    ), "admin-tutorials.css link not found in head.html"
 
 
 # ---------------------------------------------------------------------------
 # 4. Key CSS rules present in CSS files (spot checks)
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("css_file,expected", [
-    (css, rule)
-    for css, rules in CSS_SPOT_CHECKS.items()
-    for rule in rules
-])
+
+@pytest.mark.parametrize(
+    "css_file,expected",
+    [(css, rule) for css, rules in CSS_SPOT_CHECKS.items() for rule in rules],
+)
 def test_css_spot_check(css_file, expected):
     path = os.path.join(CSS_DIR, css_file)
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
-    assert expected in content, (
-        f"Expected CSS rule '{expected}' not found in {css_file}"
-    )
+    assert (
+        expected in content
+    ), f"Expected CSS rule '{expected}' not found in {css_file}"
 
 
 # ---------------------------------------------------------------------------
 # 5. <link> tags use url_for('static', ...) pattern
 # ---------------------------------------------------------------------------
 
-@pytest.mark.parametrize("css_file,templates", [
-    (css, tmpl)
-    for css, tmpl_list in CSS_TEMPLATE_MAP.items()
-    for tmpl in tmpl_list
-])
+
+@pytest.mark.parametrize(
+    "css_file,templates",
+    [(css, tmpl) for css, tmpl_list in CSS_TEMPLATE_MAP.items() for tmpl in tmpl_list],
+)
 def test_link_tag_uses_url_for(css_file, templates):
     path = os.path.join(TEMPLATES_ADMIN, templates)
     with open(path, "r", encoding="utf-8") as f:
         content = f.read()
     expected = f"url_for('static', filename='assets/css/{css_file}')"
-    assert expected in content, (
-        f"Template {templates} link tag does not use url_for pattern for {css_file}"
-    )
+    assert (
+        expected in content
+    ), f"Template {templates} link tag does not use url_for pattern for {css_file}"
 
 
 def test_head_link_uses_url_for_for_tutorials():

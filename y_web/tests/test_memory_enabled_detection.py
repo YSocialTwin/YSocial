@@ -76,9 +76,7 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
 
     uid = "test-uid-xyz"
     exp_dir_path = os.path.abspath(exp_dir_path)
-    writable_base = os.path.dirname(
-        os.path.dirname(os.path.dirname(exp_dir_path))
-    )
+    writable_base = os.path.dirname(os.path.dirname(os.path.dirname(exp_dir_path)))
 
     mock_exp = MagicMock()
     mock_exp.platform_type = platform_type

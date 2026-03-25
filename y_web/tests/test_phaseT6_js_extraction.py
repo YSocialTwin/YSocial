@@ -10,6 +10,7 @@ Verifies that:
 
 import os
 import re
+
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -34,6 +35,7 @@ def _has_script_src(path, js_filename):
 
 
 # ── admin-client-details.js ──────────────────────────────────────────────────
+
 
 class TestAdminClientDetailsJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-client-details.js")
@@ -71,8 +73,9 @@ class TestClientDetailsTemplates:
 
     def test_has_script_src(self):
         for t in self.TEMPLATES:
-            assert _has_script_src(t, "admin-client-details.js"), \
-                f"{t} missing <script src> for admin-client-details.js"
+            assert _has_script_src(
+                t, "admin-client-details.js"
+            ), f"{t} missing <script src> for admin-client-details.js"
 
     def test_data_bridge_present(self):
         for t in self.TEMPLATES:
@@ -81,6 +84,7 @@ class TestClientDetailsTemplates:
 
 
 # ── admin-opinion.js ─────────────────────────────────────────────────────────
+
 
 class TestAdminOpinionJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-opinion.js")
@@ -130,6 +134,7 @@ class TestOpinionTemplates:
 
 # ── admin-feeds.js ───────────────────────────────────────────────────────────
 
+
 class TestAdminFeedsJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-feeds.js")
 
@@ -167,6 +172,7 @@ class TestFeedsTemplates:
 
 
 # ── admin-users.js ───────────────────────────────────────────────────────────
+
 
 class TestAdminUsersJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-users.js")
@@ -209,6 +215,7 @@ class TestUsersTemplates:
 
 # ── admin-pages.js ───────────────────────────────────────────────────────────
 
+
 class TestAdminPagesJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-pages.js")
 
@@ -244,6 +251,7 @@ class TestPagesTemplates:
 
 # ── admin-settings.js ────────────────────────────────────────────────────────
 
+
 class TestAdminSettingsJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-settings.js")
 
@@ -268,6 +276,7 @@ class TestEmbeddingSettingsTemplate:
 
 
 # ── admin-dashboard.js ───────────────────────────────────────────────────────
+
 
 class TestAdminDashboardJs:
     JS = os.path.join(STATIC_JS_DIR, "admin-dashboard.js")
@@ -316,13 +325,16 @@ class TestDashboardTemplates:
 
 # ── Global inline script count ───────────────────────────────────────────────
 
+
 class TestGlobalInlineScriptReductionT6:
     T5_BASELINE = 78  # count before T6 (after T5 phase)
 
     def _count_inline_scripts(self):
         pattern = re.compile(r"<script(?![^>]*src)>", re.IGNORECASE)
         total = 0
-        for root, _dirs, files in os.walk(os.path.join(REPO_ROOT, "y_web", "templates")):
+        for root, _dirs, files in os.walk(
+            os.path.join(REPO_ROOT, "y_web", "templates")
+        ):
             for fname in files:
                 if fname.endswith(".html"):
                     text = open(os.path.join(root, fname), encoding="utf-8").read()

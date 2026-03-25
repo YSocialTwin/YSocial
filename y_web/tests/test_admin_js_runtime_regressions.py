@@ -3,7 +3,6 @@ from pathlib import Path
 
 import pytest
 
-
 pytestmark = pytest.mark.unit
 
 REPO_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
@@ -42,7 +41,9 @@ def test_admin_experiments_has_no_literal_admin_placeholder_urls():
 def test_admin_bundles_do_not_bind_events_on_missing_ids_at_top_level():
     offenders = []
     for path in sorted(STATIC_JS_DIR.glob("admin-*.js")):
-        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        for lineno, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), start=1
+        ):
             if "document.getElementById(" in line and ".addEventListener(" in line:
                 offenders.append(f"{path}:{lineno}:{line.strip()}")
 
@@ -97,11 +98,16 @@ def test_new_experiment_form_hides_description_and_experiment_type_controls():
     settings = (
         REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
     ).read_text(encoding="utf-8")
-    admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(encoding="utf-8")
+    admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(
+        encoding="utf-8"
+    )
 
     assert '<span class="left">Description</span>' not in settings
     assert 'name="exp_descr"' not in settings
     assert '<span class="left">Experiment Type</span>' not in settings
     assert 'id="remote_experiment_toggle"' not in settings
     assert 'name="is_remote" value="false"' in settings
-    assert "if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {" in admin_settings_js
+    assert (
+        "if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {"
+        in admin_settings_js
+    )
