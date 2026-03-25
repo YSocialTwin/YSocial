@@ -542,7 +542,42 @@
 .ys-hidden-white-box { background: white; border-radius: 6px; padding: 10px; margin-top: 10px; display: none; }
 .ys-icon-btn { background: none; border: none; cursor: pointer; padding: 4px; border-radius: 2px; }
 .ys-icon-btn-xs { background: none; border: none; cursor: pointer; padding: 2px; border-radius: 2px; }
-.ys-icon-circle-blue { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; background-color: #3273dc; color: white; transition: background-color 0.2s ease; }
+.ys-icon-circle-blue {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #f6faff 0%, #e8f1ff 100%);
+    border: 1px solid rgba(50, 115, 220, 0.18);
+    color: #3273dc;
+    text-decoration: none;
+    line-height: 1;
+    box-shadow: 0 4px 10px rgba(17, 24, 39, 0.08);
+    transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.ys-icon-circle-blue:hover,
+.ys-icon-circle-blue:focus {
+    color: #1f5fcc;
+    text-decoration: none;
+    background: linear-gradient(180deg, #eef5ff 0%, #dfeaff 100%);
+    border-color: rgba(50, 115, 220, 0.28);
+    box-shadow: 0 8px 18px rgba(17, 24, 39, 0.12);
+    transform: translateY(-1px);
+}
+
+.ys-icon-circle-blue svg,
+.ys-icon-circle-blue i {
+    width: 16px;
+    height: 16px;
+    stroke-width: 2.25;
+    stroke: currentColor;
+}
 .ys-icon-circle-brand { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #039be5; border-radius: 50%; flex-shrink: 0; }
 .ys-icon-md-body { font-size: 16px; color: #555; }
 .ys-icon-primary { font-size: 24px; color: #1976D2; }
