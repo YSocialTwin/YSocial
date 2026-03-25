@@ -239,6 +239,17 @@ def visibility_settings():
     shared_rows = shared_rows.order_by(
         Exps.exp_name.asc(), Admin_users.username.asc()
     ).all()
+    shared_visibility_rows = [
+        {
+            "exp_id": row[2].idexp,
+            "experiment_name": row[2].exp_name,
+            "experiment_url": url_for("experiments.experiment_details", uid=row[2].idexp),
+            "group_name": row[2].exp_group if row[2].exp_group else "-",
+            "researcher_id": row[1].id,
+            "researcher_name": row[1].username,
+        }
+        for row in shared_rows
+    ]
 
     return render_template(
         "admin/visibility_settings.html",
@@ -246,6 +257,7 @@ def visibility_settings():
         researcher_users=researcher_users,
         group_names=group_names,
         shared_rows=shared_rows,
+        shared_visibility_rows=shared_visibility_rows,
         current_admin_user=user,
     )
 

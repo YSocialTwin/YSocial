@@ -143,6 +143,40 @@ def test_admin_miscellanea_and_feeds_export_template_handlers():
     assert "dist-chart-canvas" in opinion
 
 
+def test_admin_notifications_page_uses_dedicated_actions_and_download_links():
+    notifications_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/download_notifications.html"
+    ).read_text(encoding="utf-8")
+    notifications_js = (
+        STATIC_JS_DIR / "admin-notifications.js"
+    ).read_text(encoding="utf-8")
+    nav_js = (STATIC_JS_DIR / "admin-nav.js").read_text(encoding="utf-8")
+
+    assert 'assets/js/admin-notifications.js' in notifications_template
+    assert 'id="notifications-table-body"' in notifications_template
+    assert 'n.download_url' in notifications_template
+    assert 'window.markRead = markRead;' in notifications_js
+    assert 'window.deleteNotification = deleteNotification;' in notifications_js
+    assert '>Download</a>' in nav_js
+
+
+def test_visibility_settings_uses_grid_table_for_current_researcher_visibility():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/visibility_settings.html"
+    ).read_text(encoding="utf-8")
+    script = (
+        STATIC_JS_DIR / "admin-visibility.js"
+    ).read_text(encoding="utf-8")
+
+    assert 'assets/vendor/js/gridjs.umd.js' in template
+    assert 'id="researcher-visibility-table"' in template
+    assert 'YS_DATA_VISIBILITY' in template
+    assert 'assets/js/admin-visibility.js' in template
+    assert 'new gridjs.Grid({' in script
+    assert 'pagination: {' in script
+    assert 'window.revokeVisibilityAssignment = revokeVisibilityAssignment;' in script
+
+
 def test_admin_head_loads_shared_admin_component_and_icon_css():
     content = ADMIN_HEAD.read_text(encoding="utf-8")
     assert "assets/css/admin-components.css" in content

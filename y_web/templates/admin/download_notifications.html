@@ -38,7 +38,7 @@
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody id="notifications-table-body">
                                     {% for n in notifications %}
                                     <tr id="notification-row-{{ n.id }}">
                                         <td>
@@ -62,9 +62,9 @@
                                         <td>{% if n.is_read %}Yes{% else %}No{% endif %}</td>
                                         <td>
                                             <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
-                                                {% if n.status == 'ready' and n.resource_path %}
-                                                <a href="/admin/notifications/{{ n.id }}/download" class="button is-small is-success">
-                                                    Open
+                                                {% if n.status == 'ready' and n.download_url %}
+                                                <a href="{{ n.download_url }}" class="button is-small is-success">
+                                                    Download
                                                 </a>
                                                 {% endif %}
 
@@ -95,5 +95,5 @@
 
 
 
-<script src="{{ url_for('static', filename='assets/js/admin-dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/admin-notifications.js') }}"></script>
 {% include "admin/footer.html" %}

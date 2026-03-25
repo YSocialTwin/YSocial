@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" class="dashboard-container">
@@ -110,34 +111,7 @@
                     <div class="dashboard-box">
                         <h4 class="title is-6 is-thin">Current Researcher Visibility</h4>
                         {% if shared_rows %}
- <div class="ys-overflow-x-auto">
-                            <table class="table is-fullwidth is-striped is-narrow">
-                                <thead>
-                                    <tr>
-                                        <th>Experiment</th>
-                                        <th>Group</th>
-                                        <th>Researcher</th>
-                                        <th style="width: 120px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in shared_rows %}
-                                    <tr>
-                                        <td><a href="/admin/experiment_details/{{ row[2].idexp }}">{{ row[2].exp_name }}</a></td>
-                                        <td>{{ row[2].exp_group if row[2].exp_group else '-' }}</td>
-                                        <td>{{ row[1].username }}</td>
-                                        <td>
- <form method="POST" action="/admin/visibility_settings/revoke_assignment" class="m-0">
-                                                <input type="hidden" name="exp_id" value="{{ row[2].idexp }}">
-                                                <input type="hidden" name="researcher_id" value="{{ row[1].id }}">
-                                                <button class="button is-small is-danger is-light" type="submit">Revoke</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="researcher-visibility-table"></div>
                         {% else %}
                         <p style="font-size: 0.9em; color: #666;">No visibility grants configured yet.</p>
                         {% endif %}
@@ -148,4 +122,10 @@
     </div>
 </div>
 
+<script>
+var YS_DATA_VISIBILITY = {
+    rows: {{ shared_visibility_rows | tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-visibility.js') }}"></script>
 {% include "admin/footer.html" %}
