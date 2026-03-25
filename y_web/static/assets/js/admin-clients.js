@@ -75,10 +75,12 @@ var AdminClients = (function() {
       const ollamaFields = document.getElementById('ollama_fields');
       const imageTranscriptionCheckbox = document.getElementById('enable_image_transcription');
     
-      if (!backendElement) return;
+      if (!backendElement || !vllmFields || !ollamaFields) return;
       const backend = backendElement.value;
     
       if (backend === 'vllm') {
+          vllmFields.classList.remove('d-none');
+          ollamaFields.classList.add('d-none');
           vllmFields.style.display = 'block';
           ollamaFields.style.display = 'none';
           // vLLM doesn't need model fetching, enable submit button
@@ -91,6 +93,8 @@ var AdminClients = (function() {
               disableImageAction();
           }
       } else {
+          vllmFields.classList.add('d-none');
+          ollamaFields.classList.remove('d-none');
           vllmFields.style.display = 'none';
           ollamaFields.style.display = 'block';
           // Ollama requires model fetching
@@ -103,7 +107,9 @@ var AdminClients = (function() {
   function toggleAdvancedSettings() {
       const checkbox = document.getElementById('show_advanced_settings');
       const fields = document.getElementById('advanced_settings_fields');
-    
+
+      if (!checkbox || !fields) return;
+
       if (checkbox.checked) {
           fields.style.display = 'block';
       } else {
@@ -1077,8 +1083,31 @@ var AdminClients = (function() {
       const fields = document.getElementById('standard_memory_config_fields');
       const advancedCheckbox = document.getElementById('show_standard_memory_advanced_params');
       const advancedFields = document.getElementById('standard_memory_advanced_params_fields');
+      const experimentMemoryEnabled = !!(window.YS_DATA_CLIENTS && YS_DATA_CLIENTS.experimentMemoryEnabled);
+      const memorySupported = !!(window.YS_DATA_CLIENTS && YS_DATA_CLIENTS.memoryConfigurationSupported);
 
       if (!checkbox || !fields) return;
+
+      if (!memorySupported || !experimentMemoryEnabled) {
+          checkbox.checked = false;
+          checkbox.disabled = true;
+          fields.style.display = 'none';
+          fields.querySelectorAll('input, select, textarea, button').forEach((control) => {
+              if (control.id === 'standard_memory_enabled') return;
+              control.disabled = true;
+          });
+          if (advancedCheckbox) {
+              advancedCheckbox.checked = false;
+              advancedCheckbox.disabled = true;
+          }
+          if (advancedFields) {
+              advancedFields.style.display = 'none';
+          }
+          syncStandardEmbeddingFieldsState();
+          return;
+      }
+
+      checkbox.disabled = false;
 
       fields.style.display = checkbox.checked ? 'block' : 'none';
       fields.querySelectorAll('input, select, textarea').forEach((control) => {
@@ -1680,10 +1709,36 @@ var AdminClients = (function() {
       const fields = document.getElementById('forum_memory_config_fields');
       const advancedCheckbox = document.getElementById('show_memory_advanced_params');
       const advancedFields = document.getElementById('memory_advanced_params_fields');
+      const experimentMemoryEnabled = !!(window.YS_DATA_CLIENTS && YS_DATA_CLIENTS.experimentMemoryEnabled);
+      const memorySupported = !!(window.YS_DATA_CLIENTS && YS_DATA_CLIENTS.memoryConfigurationSupported);
 
       if (!checkbox || !fields) {
           return;
       }
+
+      if (!memorySupported || !experimentMemoryEnabled) {
+          checkbox.checked = false;
+          checkbox.disabled = true;
+          fields.style.display = 'none';
+          const disabledControls = fields.querySelectorAll('input, select, textarea, button');
+          disabledControls.forEach(control => {
+              if (control.id === 'memory_enabled') {
+                  return;
+              }
+              control.disabled = true;
+          });
+          if (advancedCheckbox) {
+              advancedCheckbox.checked = false;
+              advancedCheckbox.disabled = true;
+          }
+          if (advancedFields) {
+              advancedFields.style.display = 'none';
+          }
+          syncForumMemoryControls();
+          return;
+      }
+
+      checkbox.disabled = false;
 
       const enabled = checkbox.checked;
       fields.style.display = enabled ? 'block' : 'none';

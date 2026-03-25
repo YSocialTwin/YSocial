@@ -180,7 +180,7 @@
     </div>
 </div>
 
-<script>var YS_DATA_OPINION = { topics: {{ topics | tojson }}, distributions: {{ distributions | tojson }}, segmentationOptions: {{ segmentation_options | tojson }}, segmentValues: {{ segment_values | tojson }} };</script>
+<script>var YS_DATA_OPINION = { topics: {{ topics | tojson }}, distributions: {{ distributions | tojson }}, segmentationOptions: {{ segmentation_options | tojson }}, segmentValues: {{ segment_values | tojson }}, bins: {{ bins | tojson }}, labels: {{ labels | tojson }} };</script>
 
 <script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>
 {% include "admin/footer.html" %}

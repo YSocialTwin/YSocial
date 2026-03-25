@@ -135,6 +135,41 @@ def _get_experiment_folder(base_dir, experiment, db_type):
     )
 
 
+def _experiment_configuration_box_present(experiment):
+    """Return whether experiment_details should show a configuration block."""
+    if experiment is None:
+        return False
+    if getattr(experiment, "platform_type", "") == "forum":
+        return bool(getattr(experiment, "llm_agents_enabled", 0))
+    return True
+
+
+def _experiment_configuration_update_required(experiment):
+    """Return whether experiment workflows must stay locked until config is acknowledged."""
+    if not _experiment_configuration_box_present(experiment):
+        return False
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        cfg_path = os.path.join(
+            _get_experiment_folder(base_dir, experiment, _get_database_type()),
+            (
+                "server_config.json"
+                if getattr(experiment, "simulator_type", "Standard") == "HPC"
+                else "config_server.json"
+            ),
+        )
+        if not os.path.exists(cfg_path):
+            return True
+        with open(cfg_path, "r") as f:
+            config = json.load(f)
+        return not bool(config.get("experiment_configuration_confirmed"))
+    except Exception:
+        return True
+
+
 def _normalize_rss_feed_item(item):
     """Normalize a forum RSS feed definition."""
     if not isinstance(item, dict):

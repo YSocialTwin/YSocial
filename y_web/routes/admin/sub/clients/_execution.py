@@ -20,6 +20,9 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
+from y_web.routes.admin.sub.experiments._helpers import (
+    _experiment_configuration_update_required,
+)
 
 from ._blueprint import clientsr
 
@@ -316,6 +319,12 @@ def run_client(uid, idexp):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=idexp).first()
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before running clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
     # get the client
     client = Client.query.filter_by(id=uid).first()
 
@@ -360,6 +369,12 @@ def resume_client(uid, idexp):
 
     # get experiment
     exp = Exps.query.filter_by(idexp=idexp).first()
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before running clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
     # get the client
     client = Client.query.filter_by(id=uid).first()
 
@@ -402,13 +417,20 @@ def pause_client(uid, idexp):
 
     check_privileges(current_user.username)
 
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before changing client execution state.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
     # get population_experiment and update the client_running status
     db.session.query(Client).filter_by(id=uid).update({Client.status: 0})
     db.session.commit()
 
     # get client and experiment
     client = Client.query.filter_by(id=uid).first()
-    exp = Exps.query.filter_by(idexp=idexp).first()
 
     stop_client_for_experiment(exp, client, pause=True)
 

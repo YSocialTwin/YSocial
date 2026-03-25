@@ -71,3 +71,37 @@ def test_admin_clients_network_parameter_rows_toggle_bootstrap_visibility():
     assert clients.count("field.classList.add('d-none');") >= 3
     assert clients.count("function showNetworkField(field) {") == 3
     assert clients.count("field.classList.remove('d-none');") >= 3
+
+
+def test_admin_populations_percentage_rows_toggle_bootstrap_visibility():
+    populations = (STATIC_JS_DIR / "admin-populations.js").read_text(encoding="utf-8")
+
+    assert "containerRow.classList.add('d-none');" in populations
+    assert "containerRow.classList.remove('d-none');" in populations
+
+
+def test_new_experiment_form_no_longer_contains_annotation_toggles():
+    settings = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
+    ).read_text(encoding="utf-8")
+
+    assert "Generated Content Annotation" not in settings
+    assert 'name="toxicity_annotation"' not in settings
+    assert 'name="sentiment_annotation"' not in settings
+    assert 'name="emotion_annotation"' not in settings
+    assert 'name="opinion_annotation"' not in settings
+    assert 'name="perspective_api"' not in settings
+
+
+def test_new_experiment_form_hides_description_and_experiment_type_controls():
+    settings = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
+    ).read_text(encoding="utf-8")
+    admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(encoding="utf-8")
+
+    assert '<span class="left">Description</span>' not in settings
+    assert 'name="exp_descr"' not in settings
+    assert '<span class="left">Experiment Type</span>' not in settings
+    assert 'id="remote_experiment_toggle"' not in settings
+    assert 'name="is_remote" value="false"' in settings
+    assert "if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {" in admin_settings_js

@@ -114,7 +114,10 @@ from ._blueprint import (
 )
 from ._data import experiment_details
 from ._helpers import *  # noqa: F401,F403
-from ._helpers import _current_admin_user_or_none
+from ._helpers import (
+    _current_admin_user_or_none,
+    _experiment_configuration_update_required,
+)
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
 
@@ -1575,7 +1578,7 @@ def generate_standard_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
-    opinions_enabled,
+    opinion_dynamics_enabled,
     db_uri,
     topics,
     data_path,
@@ -1595,11 +1598,13 @@ def generate_standard_config(
         ),
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
-        "opinions_enabled": opinions_enabled,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
         "is_remote": is_remote,
+        "experiment_configuration_confirmed": False,
+        "memory": {"enabled": False},
     }
 
     return config
@@ -1618,6 +1623,7 @@ def generate_hpc_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
+    opinion_dynamics_enabled,
     topics,
     data_path,
     db_config_dict=None,
@@ -1661,6 +1667,7 @@ def generate_hpc_config(
             "sliding_window_days": redis_sliding_window_days,
         },
         "posts": {"visibility_rounds": 36},
+        "experiment_configuration_confirmed": False,
         # Server-side fallback. Client-specific recommendation limits are set
         # in each HPC client config at client creation time.
         "recommendations": {"default_limit": 5},
@@ -1701,6 +1708,7 @@ def generate_hpc_config(
         "perspective_api": perspective_api,
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
@@ -1795,7 +1803,7 @@ def create_experiment():
 
     # Get LLM agents setting (convert to integer for database compatibility)
     llm_agents_enabled = 1 if request.form.get("llm_agents_enabled") == "true" else 0
-    opinions_enabled = request.form.get("opinion_annotation") == "true"
+    opinion_dynamics_enabled = request.form.get("opinion_annotation") == "true"
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
@@ -1806,7 +1814,7 @@ def create_experiment():
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
     if platform_type == "forum":
-        opinions_enabled = False
+        opinion_dynamics_enabled = False
         toxicity_annotation = False
         perspective_api = None
         sentiment_annotation = False
@@ -1981,6 +1989,7 @@ def create_experiment():
             ),
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
+            opinion_dynamics_enabled=opinion_dynamics_enabled,
             topics=topics,
             data_path=data_path,
             db_config_dict=db_config_dict,
@@ -2000,7 +2009,7 @@ def create_experiment():
             ),
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
-            opinions_enabled=opinions_enabled,
+            opinion_dynamics_enabled=opinion_dynamics_enabled,
             db_uri=db_uri,
             topics=topics,
             data_path=data_path,
@@ -2028,7 +2037,7 @@ def create_experiment():
         annotations += "sentiment,"
     if emotion_annotation:
         annotations += "emotion,"
-    if opinions_enabled:
+    if opinion_dynamics_enabled:
         annotations += "opinions,"
     # remove trailing comma
     annotations = annotations.rstrip(",")
@@ -2321,6 +2330,13 @@ def start_experiment(uid):
         flash("You are not allowed to start this experiment.", "error")
         return redirect(url_for("experiments.settings"))
 
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before starting the server or creating clients.",
+            "warning",
+        )
+        return experiment_details(uid)
+
     # check if the experiment is already running
     if exp.running == 1:
         return experiment_details(uid)
@@ -2358,6 +2374,13 @@ def stop_experiment(uid):
     if not user_can_manage_experiment(admin_user, exp):
         flash("You do not have permission to stop this experiment.", "error")
         return redirect(url_for("experiments.settings"))
+
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before changing server or client execution state.",
+            "warning",
+        )
+        return experiment_details(uid)
 
     # check if the experiment is already running
     if exp.running == 0:

@@ -934,11 +934,17 @@ var AdminPopulations = (function() {
       const containerRow = document.getElementById(fieldName + '_percentages_container');
     
       if (items.length === 0) {
-          containerRow.style.display = 'none';
+          if (containerRow) {
+              containerRow.style.display = 'none';
+              containerRow.classList.add('d-none');
+          }
           return;
       }
     
-      containerRow.style.display = '';
+      if (containerRow) {
+          containerRow.classList.remove('d-none');
+          containerRow.style.display = '';
+      }
     
       // Check if all percentages are 0 (uninitialized)
       const allZero = items.every(([id, item]) => {
@@ -1372,6 +1378,7 @@ var AdminPopulations = (function() {
 
   Object.assign(window, {
       displayFileName,
+      removeMergePopulation,
       toggleActivityProfiles,
       toggleProfessionBackgrounds,
       toggleProfessionTag,
@@ -1379,6 +1386,10 @@ var AdminPopulations = (function() {
       updateMalePercentage,
       toggleDropdown,
       toggleOption,
-      updateDistributionParams
+      removeTag,
+      updatePercentageValue,
+      updateDistributionParams,
+      updatePercentage,
+      removeProfile
   });
 })();

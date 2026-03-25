@@ -57,119 +57,207 @@
                                     <span class="left">Owner</span>
                                     <span class="right">{{ experiment.owner }}</span>
                                 </div>
+                                <div class="ys-topic-block">
+                                    <div class="ys-topic-title">Simulation Topics</div>
+                                    <div class="ys-topic-body">
+                                        {% if can_manage_experiment %}
+                                        <form method="POST" action="/admin/update_experiment_topics/{{ experiment.idexp }}">
+                                            <div class="tags-input w-100 ys-topic-tags-input">
+                                                <ul id="experiment-topics-tags">
+                                                    {% for topic in experiment_topics %}
+                                                    <li>{{ topic }} <button type="button" class="delete-button">X</button></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="experiment-topics-hidden" name="topics" value="{{ experiment_topics|join(',') }}">
+                                                <input type="text" id="experiment-topics-input" placeholder="Enter topic name" class="w-100"/>
+                                            </div>
+                                            <div class="ys-topic-actions">
+                                                <button type="submit" class="button is-small is-light">Save Topics</button>
+                                            </div>
+                                        </form>
+                                        {% else %}
+                                        <div class="ys-topic-readonly">
+                                            {% for topic in experiment_topics %}
+                                            <span class="tag is-light">{{ topic }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if can_manage_experiment and experiment.llm_agents_enabled %}
+                                <hr>
+                                <b>Experiment Configuration</b>
+                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Generated content annotations are unavailable for forum experiments. Memory can still be enabled for LLM-based runs.</p>
+                            <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
+                                <div class="exp-config-card">
+                                    <div class="exp-config-grid">
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" disabled>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Toxicity</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" disabled>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Emotion</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" disabled>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Sentiment</span>
+                                        </div>
+                                        {% if memory_configuration_supported %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="memory_enabled" {% if memory_module_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Memory</span>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
+                                        Forum experiments keep all generated-content annotations disabled. Opinion dynamics is not available for this platform.
+                                    </div>
+                                </div>
+ <button type="submit" class="button is-small is-info ys-mt-8">Update Configuration</button>
+                            </form>
+                            {% endif %}
                                 <hr>
                                 <div id="actions-section">
-                                    <b>Actions</b>
- <p class="ys-label-hint">Manage experiment data and configuration.</p>
-                            
-                            {% if len(clients)>0 %}
-                            <div class="box-line">
-                                <span class="left">Edit LLM Prompts</span>
-                                <span class="right">
-                                    <a class="link-tooltip" href="/admin/prompts_forum/{{ experiment.idexp }}" title="Edit">
+ <details class="ys-mb-20">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                            Additional Configuration
+                                        </span>
+                                    </summary>
+ <div class="ys-content-panel">
+ <p class="ys-label-hint">Adjust forum prompts, feeds, limits, embeddings, and avatar behavior.</p>
+
+                                {% if len(clients)>0 %}
+                                <div class="box-line">
+                                    <span class="left">Edit LLM Prompts</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts_forum/{{ experiment.idexp }}" title="Edit">
  <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
-                                </span>
-                            </div>
-                            {% endif %}
-                            <div class="box-line">
-                                <span class="left">Edit RSS Feeds</span>
-                                <span class="right">
-                                    {% if can_manage_experiment %}
-                                    <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="Edit RSS Feeds">
- <i class="mdi mdi-rss-box ys-icon-lg"></i>
-                                    </a>
-                                    {% else %}
- <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit forum feeds"></i>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="box-line">
-                                <span class="left">Edit Image Feeds</span>
-                                <span class="right">
-                                    {% if can_manage_experiment %}
-                                    <a class="link-tooltip" href="/admin/image_feeds/{{ experiment.idexp }}" title="Edit Image Feeds">
- <i class="mdi mdi-image-multiple ys-icon-lg"></i>
-                                    </a>
-                                    {% else %}
- <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit image feeds"></i>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="box-line">
-                                <span class="left">Feed Retrieval Limits</span>
-                                <span class="right">
-                                    {% if can_manage_experiment %}
-                                    <a class="link-tooltip" href="/admin/feed_limits/{{ experiment.idexp }}" title="Configure Feed Limits">
- <i class="mdi mdi-tune ys-icon-lg"></i>
-                                    </a>
-                                    {% else %}
- <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit feed limits"></i>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div class="box-line">
-                                <span class="left">Memory Embeddings</span>
-                                <span class="right">
-                                    {% if can_manage_experiment %}
-                                    <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
- <i class="mdi mdi-tune ys-icon-lg"></i>
-                                    </a>
-                                    {% else %}
- <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
-                                    {% endif %}
-                                </span>
-                            </div>
- <div class="ys-text-xs-meta">
-                                {% if forum_embedding_settings.service and forum_embedding_settings.model %}
-                                {{ forum_embedding_settings.service|upper }} · {{ forum_embedding_settings.model }}
-                                {% else %}
-                                Not configured. Semantic memory falls back to lexical retrieval.
+                                    </span>
+                                </div>
                                 {% endif %}
-                            </div>
-                            <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
-                                <div class="box-line" style="align-items: center;">
-                                    <span class="left">Actual Profile Pics</span>
+                                <div class="box-line">
+                                    <span class="left">Edit RSS Feeds</span>
                                     <span class="right">
                                         {% if can_manage_experiment %}
- <label class="switch is-rounded is-primary mb-0">
+                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="Edit RSS Feeds">
+ <i class="mdi mdi-rss-box ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit forum feeds"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Edit Image Feeds</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/image_feeds/{{ experiment.idexp }}" title="Edit Image Feeds">
+ <i class="mdi mdi-image-multiple ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit image feeds"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Feed Retrieval Limits</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/feed_limits/{{ experiment.idexp }}" title="Configure Feed Limits">
+ <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit feed limits"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if memory_configuration_supported and memory_module_enabled %}
+                                <div class="box-line">
+                                    <span class="left">Memory Embeddings</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
+ <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+ <div class="ys-text-xs-meta">
+                                    {% if forum_embedding_settings.service and forum_embedding_settings.model %}
+                                    {{ forum_embedding_settings.service|upper }} · {{ forum_embedding_settings.model }}
+                                    {% else %}
+                                    Not configured. Semantic memory falls back to lexical retrieval.
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                <form method="post" action="/admin/update_forum_avatar_mode/{{ experiment.idexp }}" style="margin: 0 0 0.9em 0;">
+                                    <div class="box-line" style="align-items: center;">
+                                        <span class="left">Actual Profile Pics</span>
+                                        <span class="right">
+                                        {% if can_manage_experiment %}
+ <label class="switch-small">
                                             <input
                                                 type="checkbox"
                                                 name="use_actual_profile_pics"
-                                                value="1"
+                                                    value="1"
                                                 {% if forum_avatar_settings.mode == 'actual' %}checked{% endif %}
                                                 onchange="this.form.submit()"
                                             >
-                                            <span class="check"></span>
+                                            <span class="slider-small round"></span>
                                         </label>
                                         <input type="hidden" name="avatar_mode" value="{% if forum_avatar_settings.mode == 'actual' %}placeholder{% else %}actual{% endif %}">
                                         {% else %}
  <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit avatar mode"></i>
-                                        {% endif %}
-                                    </span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </form>
+                                <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
+                                    {% if forum_avatar_settings.mode == 'actual' %}
+                                    Actual profile pictures are enabled across the forum interface.
+                                    {% else %}
+                                    Reddit-like placeholders are enabled across the forum interface.
+                                    {% endif %}
                                 </div>
-                            </form>
-                            <div style="font-size: 0.8em; color: #777; margin: -0.8em 0 0.9em 0;">
-                                {% if forum_avatar_settings.mode == 'actual' %}
-                                Actual profile pictures are enabled across the forum interface.
-                                {% else %}
-                                Reddit-like placeholders are enabled across the forum interface.
-                                {% endif %}
-                            </div>
 
-                            {% if forum_feed_health %}
-                            <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
-                                <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">Feed Health</div>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.75em; font-size: 0.78em; color: #5b6472;">
+                                {% if forum_feed_health %}
+                                <div style="margin: 0.2em 0 1em 0; padding: 0.75em 0.85em; border: 1px solid #e4e7eb; border-radius: 10px; background: #fafbfc;">
+                                    <div style="font-size: 0.85em; font-weight: 600; color: #2f3a4a; margin-bottom: 0.55em;">Feed Health</div>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.35em 0.75em; font-size: 0.78em; color: #5b6472;">
  <span>Configured RSS feeds</span><span class="ys-text-right-dark">{{ forum_feed_health.rss_feed_count }}</span>
  <span>Configured image feeds</span><span class="ys-text-right-dark">{{ forum_feed_health.image_feed_count }}</span>
  <span>Loaded articles</span><span class="ys-text-right-dark">{{ forum_feed_health.article_count }}</span>
  <span>Loaded image posts</span><span class="ys-text-right-dark">{{ forum_feed_health.image_post_count }}</span>
  <span>RSS-derived posts emitted</span><span class="ys-text-right-dark">{{ forum_feed_health.rss_post_count }}</span>
  <span>Image-share posts emitted</span><span class="ys-text-right-dark">{{ forum_feed_health.image_share_post_count }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            {% endif %}
+                                {% endif %}
+                                    </div>
+                                </details>
 
+                                <hr>
+                                <b>Management</b>
+ <p class="ys-label-hint">Download or remove this experiment.</p>
                             <div class="box-line">
                                 <span class="left">Download Experiment</span>
                                 <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i
@@ -181,7 +269,6 @@
                                                         title="Delete"><i
  class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
-
                                 </div>
                             </div>
 
@@ -196,8 +283,13 @@
  <div class="column is-12-mobile is-4-tablet ys-flex-col">
                     <!--Box-->
 
-                    <div id="server-controls-section" class="dashboard-box">
+                    <div id="server-controls-section" class="dashboard-box{% if configuration_update_required %} ys-config-locked-box{% endif %}">
                         <h3 class="title is-5 is-thin">Server & Analysis Controls</h3>
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Update <b>Experiment Configuration</b> first. Until then, server control actions and client workflows stay locked.
+                        </div>
+                        {% endif %}
                         
                         {% if experiment.is_remote == 1 %}
                         <!-- Remote experiment info -->
@@ -208,7 +300,7 @@
  <div class="ys-text-primary-bold">Remote Experiment</div>
  <div class="ys-text-sm-primary-mt">YServer running on external machine</div>
                                 </div>
- <button onclick="toggleRemoteServerEdit()" class="button is-small ys-badge-sm" title="Edit server settings">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="toggleRemoteServerEdit()"{% endif %} class="button is-small ys-badge-sm" title="Edit server settings">
                                     <i class="mdi mdi-pencil"></i> Edit
                                 </button>
                             </div>
@@ -224,7 +316,7 @@
  <span id="display-port" class="ys-mono-primary">{{ experiment.port }}</span>
                                 </div>
  <div class="ys-mt-center">
- <button onclick="testRemoteServer()" class="button is-info is-small is-fullwidth ys-flex-center-gap">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="testRemoteServer()"{% endif %} class="button is-info is-small is-fullwidth ys-flex-center-gap">
                                         <i class="mdi mdi-network-outline"></i>
                                         <span>Test Connection</span>
                                     </button>
@@ -242,14 +334,32 @@
                                     <input type="number" id="edit-port" value="{{ experiment.port }}" class="input is-small" min="1" max="65535" placeholder="8000">
                                 </div>
  <div class="ys-flex-gap-8-only">
- <button onclick="saveRemoteServer()" class="button is-success is-small ys-flex-1">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="saveRemoteServer()"{% endif %} class="button is-success is-small ys-flex-1">
                                         <i class="mdi mdi-check"></i> Save
                                     </button>
- <button onclick="cancelRemoteServerEdit()" class="button is-light is-small ys-flex-1">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="cancelRemoteServerEdit()"{% endif %} class="button is-light is-small ys-flex-1">
                                         <i class="mdi mdi-close"></i> Cancel
                                     </button>
                                 </div>
                             </div>
+                            {% if configuration_update_required %}
+ <div class="ys-mt-center">
+                                <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
+ <i class="mdi mdi-select-all ys-icon-lg"></i>
+                                </a>
+                                {% if notebooks %}
+                                    {% if jupyter_instance.status!='stopped' %}
+                                    <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
+                                    </a>
+                                    {% else %}
+                                    <a id="start-jupyter-btn" class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             
                             <!-- Status message area -->
  <div id="remote-status-message" class="ys-hidden-mt10"></div>
@@ -271,30 +381,54 @@
  <span class="right ys-flex-gap-8">
  <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" onclick="showLoading('Starting experiment server...');" title="Run Experiment">
  <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
                                             </a>
                                             {% endif %}
+                                            {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" onclick="showLoading('Stopping experiment server...');" title="Stop Experiment">
  <i class="mdi mdi-stop active ys-icon-lg"></i>
                                             </a>
+                                            {% endif %}
                                         {% endif %}
                                             <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
  <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%} ys-icon-lg"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-login ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" onclick="showLoading('Joining experiment...');" title="Join This Experiment">
  <i class="mdi mdi-login ys-icon-lg"></i>
                                             </a>
+                                            {% endif %}
                                             {% endif %}
                                         </div>
                                         {% if notebooks %}
  <div id="jupyter-controls" class="ys-flex-divider">
                                             {% if jupyter_instance.status!='stopped' %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-flask-empty-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;" title="Stop JupyterLab">
  <i class="mdi mdi-flask-empty-outline ys-icon-danger"></i>
                                             </a>
+                                            {% endif %}
                                             <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
  <i class="mdi mdi-open-in-new ys-icon-brand"></i>
                                             </a>
@@ -331,11 +465,16 @@
 
                     {% endif %}
 
- <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col">
+ <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}">
                         <h3 class="title is-5 is-thin">Simulation Clients</h3>
  <p class="ys-text-small">
                             Manage clients running agent populations for this experiment.
                         </p>
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Client creation and execution stay disabled until <b>Update Configuration</b> is executed.
+                        </div>
+                        {% endif %}
  <div class="box-content ys-flex-1">
                             {% if len(clients) == 0 %}
                             <div class="box-line">
@@ -348,35 +487,53 @@
  <span class="left ys-text-flex-sm">
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
                                         {{ client.name }}
-                                        {% if client_executions.get(client.id, False) %}
+                                        {% if client_executions.get(client.id, False) and not configuration_update_required %}
                                         <a href="/admin/client_details_forum/{{client.id}}" class="link-tooltip" title="View Client Details">
  <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                                         </a>
                                         {% endif %}
                                     </span>
- <span class="right ys-value-col-55">
- <div class="sleek-progress-container ys-progress-track">
+ <span class="right ys-value-col-55 ys-detail-progress-wrap">
+ <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
                                             <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
- <div class="ys-flex-gap-3">
+ <div class="ys-flex-gap-3 ys-detail-progress-actions">
                                             {% if client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="showLoading('Starting client...');">
  <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                             </a>
                                             {% endif %}
+                                            {% endif %}
                                             {% if client.status == 1 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-pause ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="showLoading('Pausing client...');">
  <i class="mdi mdi-pause active ys-icon-xl"></i>
                                             </a>
                                             {% endif %}
+                                            {% endif %}
                                             {% if client.status == 0 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-delete ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" 
                                                onclick="showLoading('Deleting client...');" 
                                                title="Delete Client">
  <i class="mdi mdi-delete ys-icon-xl"></i>
                                             </a>
+                                            {% endif %}
                                             {% endif %}
                                         </div>
                                     </span>
@@ -389,9 +546,15 @@
 
  <div class="ys-text-center-mt10">
  <hr class="ys-my-5">
+                                {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-plus-circle-outline ys-icon-muted"></i>
+                                </span>
+                                {% else %}
                                 <a class="link-tooltip" href="/admin/clients_forum/{{ experiment.idexp }}" title="Add Client">
  <i class="mdi mdi-plus-circle-outline ys-icon-lg"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -406,12 +569,13 @@
                             <p>
                                 <b>Server & Analysis Controls</b><br>
                                 Unified control panel for managing the simulation server, web interface, and data analysis tools.<br><br>
- <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start the experiment server<br>
- <i class="mdi mdi-stop ys-icon-md"></i> Stop the experiment server<br>
- <i class="mdi mdi-select-all ys-icon-md"></i> Load experiment's web interface<br>
- <i class="mdi mdi-plus-box ys-icon-md"></i> Join the web interface<br>
+ <i class="mdi mdi-tune ys-icon-md"></i> First update <b>Experiment Configuration</b> to unlock execution controls<br>
+ <i class="mdi mdi-select-all ys-icon-md"></i> Load experiment's web interface is available before the unlock step<br>
+ <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start the experiment server only after configuration is updated<br>
+ <i class="mdi mdi-stop ys-icon-md"></i> Stop the experiment server only after configuration is updated<br>
+ <i class="mdi mdi-plus-box ys-icon-md"></i> Create/run clients only after configuration is updated<br>
                                 {% if notebooks %}
- <i class="mdi mdi-flask-outline ys-icon-md"></i> Start/Stop JupyterLab for data analysis<br>
+ <i class="mdi mdi-flask-outline ys-icon-md"></i> Start/open JupyterLab remains available during the configuration step<br>
                                 {% endif %}
                             </p>
                             <hr>

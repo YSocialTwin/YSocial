@@ -12,6 +12,7 @@ import pathlib
 import random
 import re
 import shutil
+import sqlite3
 import socket
 import threading
 import time
@@ -98,7 +99,7 @@ from y_web.src.system.miscellanea import (
     ollama_status,
     reload_current_user,
 )
-from y_web.src.system.path_utils import get_resource_path
+from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 from ._blueprint import (
     _EXP_IDS_MARKER_RE,
@@ -113,6 +114,257 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+
+
+def _resolve_opinion_evolution_topics(expid):
+    """Return topic metadata for opinion evolution pages.
+
+    Prefer the experiment-local Interests table because opinion_evolution filters
+    directly on Agent_Opinion.topic_id values stored in the experiment DB.
+    Fall back to the dashboard mapping only for legacy datasets that do not expose
+    Interests.
+    """
+    try:
+        from y_web.src.models import Interests
+
+        topics_query = db.session.query(Interests).all()
+        topics = [{"iid": t.iid, "interest": t.interest} for t in topics_query]
+        if topics:
+            return topics
+    except Exception:
+        pass
+
+    topic_links = Exp_Topic.query.filter_by(exp_id=expid).all()
+    if topic_links:
+        topic_ids = [link.topic_id for link in topic_links]
+        topic_rows = (
+            db.session.query(Topic_List).filter(Topic_List.id.in_(topic_ids)).all()
+        )
+        topic_names_by_id = {topic.id: topic.name for topic in topic_rows}
+        return [
+            {
+                "iid": link.topic_id,
+                "interest": topic_names_by_id.get(link.topic_id, str(link.topic_id)),
+            }
+            for link in topic_links
+        ]
+
+    return []
+
+
+def _resolve_opinion_experiment_db_name(experiment):
+    """Resolve the sqlite database path that should back opinion evolution."""
+    db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    uid = get_experiment_uid_from_db_name(db_name)
+    if not uid:
+        return db_name
+
+    experiment_dir = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    candidates = []
+
+    if db_name:
+        candidates.append(db_name)
+
+    server_config_path = os.path.join(experiment_dir, "server_config.json")
+    if os.path.exists(server_config_path):
+        try:
+            with open(server_config_path, "r") as handle:
+                server_config = json.load(handle)
+            sqlite_cfg = ((server_config.get("database") or {}).get("sqlite") or {})
+            sqlite_filename = str(sqlite_cfg.get("filename") or "").strip()
+            if sqlite_filename:
+                candidates.append(
+                    os.path.join("experiments", uid, os.path.basename(sqlite_filename))
+                )
+            database_uri = str(server_config.get("database_uri") or "").strip()
+            if database_uri:
+                candidates.append(
+                    os.path.join("experiments", uid, os.path.basename(database_uri))
+                )
+        except Exception:
+            pass
+
+    candidates.extend(
+        [
+            os.path.join("experiments", uid, "simulation.db"),
+            os.path.join("experiments", uid, "database_server.db"),
+        ]
+    )
+
+    seen = set()
+    normalized_candidates = []
+    for candidate in candidates:
+        normalized = str(candidate or "").replace("\\", os.sep)
+        if normalized and normalized not in seen:
+            seen.add(normalized)
+            normalized_candidates.append(normalized)
+
+    required_tables = {"rounds", "agent_opinion"}
+    fallback_existing = None
+    for candidate in normalized_candidates:
+        db_path = os.path.join(get_writable_path(), "y_web", candidate)
+        if not os.path.exists(db_path):
+            continue
+        if fallback_existing is None:
+            fallback_existing = candidate
+        try:
+            with sqlite3.connect(db_path) as conn:
+                tables = {
+                    row[0]
+                    for row in conn.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                }
+            if required_tables.issubset(tables):
+                return candidate
+        except sqlite3.Error:
+            continue
+
+    return fallback_existing or db_name
+
+
+def _experiment_db_has_required_opinion_tables(db_uri):
+    """Check whether the currently bound experiment DB can serve opinion evolution."""
+    if not db_uri or not db_uri.startswith("sqlite:///"):
+        return True
+
+    db_path = db_uri.replace("sqlite:///", "", 1)
+    if not os.path.exists(db_path):
+        return False
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            tables = {
+                row[0]
+                for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+    except sqlite3.Error:
+        return False
+
+    return {"rounds", "agent_opinion"}.issubset(tables)
+
+
+def _resolve_opinion_cold_start_value(experiment):
+    """Resolve the configured opinion cold-start strategy for an experiment."""
+    db_name = str(getattr(experiment, "db_name", "") or "").replace("\\", os.sep).strip()
+    uid = get_experiment_uid_from_db_name(db_name)
+    if not uid:
+        return "neutral"
+
+    experiment_dir = os.path.join(get_writable_path(), "y_web", "experiments", uid)
+    for entry in os.listdir(experiment_dir) if os.path.isdir(experiment_dir) else []:
+        if not entry.startswith("client_") or not entry.endswith(".json"):
+            continue
+        config_path = os.path.join(experiment_dir, entry)
+        try:
+            with open(config_path, "r") as handle:
+                config = json.load(handle)
+            params = (
+                (config.get("simulation") or {})
+                .get("opinion_dynamics", {})
+                .get("parameters", {})
+            )
+            cold_start = str(params.get("cold_start") or "").strip().lower()
+            if cold_start:
+                return cold_start
+        except Exception:
+            continue
+
+    return "neutral"
+
+
+def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):
+    """Populate initial experiment-local agent_opinion rows when the table is empty.
+
+    Standard experiments created during the regression window can have opinion
+    dynamics enabled but no seeded opinion rows. The original page logic expects
+    experiment-local Agent_Opinion data, so bootstrap a first neutral/random
+    snapshot in the current experiment DB and invalidate cached aggregates.
+    """
+    from y_web.src.models import Agent_Opinion, Interests, Rounds, User_mgmt
+
+    if db.session.query(Agent_Opinion.id).limit(1).first() is not None:
+        return 0
+
+    first_round = db.session.query(Rounds).order_by(Rounds.day.asc(), Rounds.hour.asc(), Rounds.id.asc()).first()
+    if first_round is None:
+        return 0
+
+    topics = db.session.query(Interests).order_by(Interests.iid.asc()).all()
+    users = db.session.query(User_mgmt).filter(User_mgmt.is_page == 0).all()
+    if not topics or not users:
+        return 0
+
+    cold_start = _resolve_opinion_cold_start_value(experiment)
+    inserted = 0
+
+    for user in users:
+        for topic in topics:
+            if cold_start == "random":
+                opinion_value = random.random()
+            else:
+                opinion_value = 0.5
+
+            db.session.add(
+                Agent_Opinion(
+                    agent_id=user.id,
+                    tid=first_round.id,
+                    topic_id=topic.iid,
+                    id_interacted_with=user.id,
+                    id_post=-1,
+                    opinion=opinion_value,
+                )
+            )
+            inserted += 1
+
+    if inserted:
+        db.session.commit()
+        OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
+        OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+        db.session.commit()
+
+    return inserted
+
+
+def _invalidate_stale_opinion_evolution_cache(expid):
+    """Drop cached opinion-evolution frames if they outlive the current experiment DB.
+
+    Experiments can be reset or rerun while keeping the same dashboard experiment id.
+    In that case the dashboard cache may still contain frames from a previous run
+    (for example day 11) while the current experiment DB only goes to an earlier
+    point (for example day 2). When that happens the animation appears broken
+    because the page reuses stale aggregates/samples.
+    """
+    from y_web.src.models import Rounds
+
+    max_round = (
+        db.session.query(Rounds.day, Rounds.hour)
+        .order_by(Rounds.day.desc(), Rounds.hour.desc())
+        .first()
+    )
+    if max_round is None:
+        return False
+
+    latest_cache = (
+        OpinionEvolutionCache.query.filter_by(exp_id=expid)
+        .order_by(OpinionEvolutionCache.day.desc(), OpinionEvolutionCache.hour.desc())
+        .first()
+    )
+    if latest_cache is None:
+        return False
+
+    db_max_time = int(max_round.day) * 24 + int(max_round.hour)
+    cache_max_time = int(latest_cache.day) * 24 + int(latest_cache.hour)
+
+    if cache_max_time <= db_max_time:
+        return False
+
+    OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()
+    OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()
+    db.session.commit()
+    return True
 
 
 @experiments.route("/admin/opinion_groups_data")
@@ -1395,10 +1647,8 @@ def opinion_evolution(expid):
     from y_web.src.experiment.context import register_experiment_database
 
     bind_key = f"db_exp_{expid}"
-
-    # Ensure the experiment database is registered
-    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        register_experiment_database(current_app, expid, experiment.db_name)
+    opinion_db_name = _resolve_opinion_experiment_db_name(experiment)
+    register_experiment_database(current_app, expid, opinion_db_name)
 
     # Temporarily switch to experiment database
     old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
@@ -1407,15 +1657,38 @@ def opinion_evolution(expid):
     ][bind_key]
 
     try:
+        bound_db_uri = current_app.config["SQLALCHEMY_BINDS"].get(bind_key)
+        if not _experiment_db_has_required_opinion_tables(bound_db_uri):
+            flash(
+                "The current experiment database does not contain opinion evolution tables.",
+                "warning",
+            )
+            return render_template(
+                "admin/opinion_evolution.html",
+                experiment=experiment,
+                topics=topics,
+                max_day=1,
+                max_hour=1,
+                filter_day=1,
+                filter_hour=1,
+                filter_topic_id=(topics[0]["iid"] if topics else None),
+                chart_labels=[],
+                chart_values=[],
+                total_opinions=0,
+                social_interactions=0,
+                unique_agents=0,
+                group_trends_data=[],
+                timeseries_data=[],
+            )
+
+        _invalidate_stale_opinion_evolution_cache(expid)
+        _bootstrap_initial_agent_opinions_if_missing(expid, experiment)
+        topics = _resolve_opinion_evolution_topics(expid)
+
         # Import experiment-specific models
         from sqlalchemy import and_, func, or_
 
-        from y_web.src.models import Agent_Opinion, Interests, Rounds
-
-        # Get available topics from experiment database
-        topics_query = db.session.query(Interests).all()
-        # Convert to dictionaries immediately to avoid ObjectDeletedError when session closes
-        topics = [{"iid": t.iid, "interest": t.interest} for t in topics_query]
+        from y_web.src.models import Agent_Opinion, Rounds
 
         # Get max day and hour from Rounds table (start at day 1 hour 1 as per requirements)
         max_round = (
@@ -1604,10 +1877,8 @@ def opinion_evolution_data(expid):
     from y_web.src.experiment.context import register_experiment_database
 
     bind_key = f"db_exp_{expid}"
-
-    # Ensure the experiment database is registered
-    if bind_key not in current_app.config["SQLALCHEMY_BINDS"]:
-        register_experiment_database(current_app, expid, experiment.db_name)
+    opinion_db_name = _resolve_opinion_experiment_db_name(experiment)
+    register_experiment_database(current_app, expid, opinion_db_name)
 
     # Temporarily switch to experiment database
     old_bind = current_app.config["SQLALCHEMY_BINDS"].get("db_exp")
@@ -1616,6 +1887,20 @@ def opinion_evolution_data(expid):
     ][bind_key]
 
     try:
+        bound_db_uri = current_app.config["SQLALCHEMY_BINDS"].get(bind_key)
+        if not _experiment_db_has_required_opinion_tables(bound_db_uri):
+            return (
+                jsonify(
+                    {
+                        "error": "The current experiment database does not contain opinion evolution tables."
+                    }
+                ),
+                400,
+            )
+
+        _invalidate_stale_opinion_evolution_cache(expid)
+        _bootstrap_initial_agent_opinions_if_missing(expid, experiment)
+
         # Import experiment-specific models
         from sqlalchemy import and_, or_
 

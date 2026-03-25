@@ -701,7 +701,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    min-height: 150px;
+    min-height: 220px;
 }
 
 .dist-preview:hover {
@@ -2464,23 +2464,78 @@ input:checked + .slider:before {
 /* Keep client names from painting underneath the progress bar/actions lane on
    experiment detail pages. */
 #simulation-clients-section .box-content .box-line.ys-cell-pad {
-    display: flex;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 46%);
     align-items: center;
-    gap: 12px;
+    column-gap: 12px;
 }
 
 #simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm {
-    flex: 1 1 0;
     min-width: 0;
+    max-width: 100%;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
 
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55 {
-    flex: 0 0 min(62%, 640px);
-    min-width: 360px;
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55,
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap {
+    width: auto !important;
+    min-width: 0;
+    max-width: 100%;
     justify-content: flex-end;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 10px;
+    overflow: hidden;
+}
+
+#simulation-clients-section .ys-detail-progress-track {
+    position: relative;
+    display: block;
+    min-width: 0;
+    width: auto;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+#simulation-clients-section .ys-detail-progress-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+#simulation-clients-section .ys-detail-progress-track .ys-progress-bar,
+#simulation-clients-section .ys-detail-progress-track .sleek-progress-bar {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+#simulation-clients-section .ys-detail-progress-track .ys-progress-bar span,
+#simulation-clients-section .ys-detail-progress-track .sleek-progress-bar span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 8px;
+}
+
+@media (max-width: 1023px) {
+    #simulation-clients-section .box-content .box-line.ys-cell-pad {
+        grid-template-columns: 1fr;
+        row-gap: 10px;
+    }
+
+    #simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm,
+    #simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap,
+    #simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55 {
+        max-width: 100%;
+        min-width: 0;
+    }
 }
 
 #simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm a,
@@ -2590,6 +2645,53 @@ input:checked + .slider:before {
 .ys-scroll-sm { min-height: 100px; max-height: 200px; overflow-y: auto; }
 .ys-section-box { background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .ys-section-box-sm { background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+.ys-config-locked-box {
+  background: linear-gradient(180deg, #f7f7f7 0%, #f1f3f5 100%);
+  border-color: #d8dde3;
+}
+.ys-config-locked-note {
+  margin: 0 0 12px 0;
+  padding: 10px 12px;
+  border: 1px solid #d7dee7;
+  border-radius: 8px;
+  background: #f7fafc;
+  color: #4b5563;
+  font-size: 0.84rem;
+}
+.ys-topic-block {
+  margin: 10px 0 12px;
+}
+.ys-topic-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+.ys-topic-body {
+  width: 100%;
+}
+.ys-topic-tags-input {
+  width: 100%;
+  min-height: 44px;
+}
+.ys-topic-tags-input ul {
+  gap: 4px;
+}
+.ys-topic-tags-input li {
+  margin: 2px 4px 2px 0;
+  padding: 4px 7px;
+  font-size: 0.78rem;
+}
+.ys-topic-actions {
+  margin-top: 6px;
+  display: flex;
+  justify-content: flex-end;
+}
+.ys-topic-readonly {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
 .ys-section-heading { color: #333; margin: 0 0 8px 0; font-size: 1.2em; }
 .ys-section-sub { color: #666; margin: 0 0 20px 0; font-size: 0.9em; }
 .ys-stroke-white { stroke: #ffffff; }

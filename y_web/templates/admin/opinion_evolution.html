@@ -39,11 +39,11 @@
                                             Hourly
                                         </button>
                                         <button class="granularity-button" data-granularity="daily"
- class="ys-tag-btn">
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
                                             Daily
                                         </button>
                                         <button class="granularity-button" data-granularity="weekly"
- class="ys-tag-btn">
+                                                style="padding: 2px 6px; font-size: 0.7em; border: 1px solid #d1d5db; border-radius: 3px; background: white; color: #374151; cursor: pointer; transition: all 0.2s;">
                                             Weekly
                                         </button>
                                     </div>
@@ -186,7 +186,9 @@
   groupTrendsData: {{ group_trends_data | tojson }},
   timeseriesData: {{ timeseries_data | tojson }},
   filterTopicId: {{ filter_topic_id | tojson if filter_topic_id else 'null' }},
-  maxTick: {{ max_day * 24 + max_hour }}
+  maxTick: {{ max_day * 24 + max_hour }},
+  maxDay: {{ max_day }},
+  maxHour: {{ max_hour }}
 };</script>
 
 <script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>

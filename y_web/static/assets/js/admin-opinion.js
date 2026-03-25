@@ -37,9 +37,185 @@ var AdminOpinion = (function() {
             'lognormal', 'bimodal', 'polarized'
         ]);
         if (supported.has(type)) {
-            return '<div class="dist-note">Sampling uses the backend implementation for this distribution type. The parameters above come directly from the database definition.</div>';
+            return '';
         }
         return '<div class="dist-note is-custom">Custom distribution type <strong>' + type + '</strong>. Sampling is delegated to the backend implementation, so newly added DB-driven distributions remain available without template changes.</div>';
+    }
+
+    function clampProbability(value) {
+        if (!isFinite(value) || isNaN(value)) return 0;
+        return Math.max(0, value);
+    }
+
+    function gaussianPdf(x, mu, sigma) {
+        if (!sigma || sigma <= 0) sigma = 0.2;
+        var z = (x - mu) / sigma;
+        return Math.exp(-0.5 * z * z);
+    }
+
+    function betaPdfLike(x, a, b) {
+        a = Number(a);
+        b = Number(b);
+        if (!isFinite(a) || a <= 0) a = 2;
+        if (!isFinite(b) || b <= 0) b = 5;
+        var epsilon = 1e-4;
+        var safeX = Math.min(1 - epsilon, Math.max(epsilon, x));
+        return Math.pow(safeX, a - 1) * Math.pow(1 - safeX, b - 1);
+    }
+
+    function exponentialPdfLike(x, scale) {
+        scale = Number(scale);
+        if (!isFinite(scale) || scale <= 0) scale = 1;
+        return Math.exp(-x / scale);
+    }
+
+    function gammaPdfLike(x, shape, scale) {
+        shape = Number(shape);
+        scale = Number(scale);
+        if (!isFinite(shape) || shape <= 0) shape = 2;
+        if (!isFinite(scale) || scale <= 0) scale = 1;
+        var scaledX = Math.max(x, 1e-4);
+        return Math.pow(scaledX, shape - 1) * Math.exp(-scaledX / scale);
+    }
+
+    function lognormalPdfLike(x, mean, sigma) {
+        mean = Number(mean);
+        sigma = Number(sigma);
+        if (!isFinite(mean)) mean = 0;
+        if (!isFinite(sigma) || sigma <= 0) sigma = 1;
+        var safeX = Math.max(x, 1e-4);
+        var exponent = -Math.pow(Math.log(safeX) - mean, 2) / (2 * sigma * sigma);
+        return Math.exp(exponent) / safeX;
+    }
+
+    function densityAt(x, type, params, index, totalSteps) {
+        var y = 0;
+        if (type === 'uniform') {
+            y = 1;
+        } else if (type === 'normal') {
+            y = gaussianPdf(x, Number(params.loc || 0.5), Number(params.scale || 0.2));
+        } else if (type === 'beta') {
+            y = betaPdfLike(x, params.a, params.b);
+        } else if (type === 'exponential') {
+            y = exponentialPdfLike(x, params.scale);
+        } else if (type === 'gamma') {
+            y = gammaPdfLike(x, params.shape, params.scale);
+        } else if (type === 'lognormal') {
+            y = lognormalPdfLike(x, params.mean, params.sigma);
+        } else if (type === 'bimodal') {
+            y =
+                gaussianPdf(x, Number(params.peak1 || 0.2), Number(params.sigma || 0.15)) +
+                gaussianPdf(x, Number(params.peak2 || 0.8), Number(params.sigma || 0.15));
+        } else if (type === 'polarized') {
+            y = (index === 0 || index === totalSteps - 1) ? 1 : 0;
+        } else {
+            y = 1;
+        }
+        return clampProbability(y);
+    }
+
+    function buildPreviewSeries(dist, bins, labels) {
+        var type = (dist.type || 'custom').toLowerCase();
+        var params = dist.parameters || {};
+        var resolvedBins = Array.isArray(bins) && bins.length >= 2
+            ? bins
+            : [0.0, 0.25, 0.5, 0.75, 1.0];
+        var resolvedLabels = Array.isArray(labels) && labels.length === resolvedBins.length - 1
+            ? labels
+            : resolvedBins.slice(0, -1).map(function(value, idx) {
+                var next = resolvedBins[idx + 1];
+                return value + '–' + next;
+            });
+        var data = [];
+
+        for (var i = 0; i < resolvedBins.length - 1; i++) {
+            var start = Number(resolvedBins[i]);
+            var end = Number(resolvedBins[i + 1]);
+            var midpoint = (start + end) / 2;
+            var width = Math.max(end - start, 0.0001);
+            data.push(
+                densityAt(midpoint, type, params, i, resolvedBins.length - 1) * width
+            );
+        }
+
+        var maxValue = Math.max.apply(null, data);
+        if (maxValue > 0) {
+            data = data.map(function(value) { return value / maxValue; });
+        }
+
+        return { labels: resolvedLabels, data: data };
+    }
+
+    function createDistributionChart(canvas, dist, index) {
+        if (!canvas || typeof Chart === 'undefined') return;
+
+        var config = window.YS_DATA_OPINION || {};
+        var palette = [
+            ['rgba(168, 85, 247, 0.72)', 'rgba(168, 85, 247, 1)'],
+            ['rgba(236, 72, 153, 0.72)', 'rgba(236, 72, 153, 1)'],
+            ['rgba(34, 197, 94, 0.72)', 'rgba(34, 197, 94, 1)'],
+            ['rgba(59, 130, 246, 0.72)', 'rgba(59, 130, 246, 1)'],
+            ['rgba(251, 146, 60, 0.72)', 'rgba(251, 146, 60, 1)'],
+            ['rgba(239, 68, 68, 0.72)', 'rgba(239, 68, 68, 1)']
+        ];
+        var colors = palette[index % palette.length];
+        var preview = buildPreviewSeries(dist, config.bins, config.labels);
+
+        new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: preview.labels,
+                datasets: [{
+                    data: preview.data,
+                    backgroundColor: colors[0],
+                    borderColor: colors[1],
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    barPercentage: 1.0,
+                    categoryPercentage: 1.0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                layout: {
+                    padding: {
+                        bottom: 8
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { enabled: false }
+                },
+                scales: {
+                    y: {
+                        display: false,
+                        beginAtZero: true,
+                        suggestedMax: 1
+                    },
+                    x: {
+                        display: true,
+                        grid: { display: false },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45,
+                            color: '#6b7280',
+                            callback: function(value, tickIndex) {
+                                var label = preview.labels[tickIndex];
+                                if (typeof label !== 'string') return label;
+                                if (label.length <= 12) return label;
+                                return label.split(/\s+/);
+                            },
+                            font: {
+                                size: 9
+                            }
+                        }
+                    }
+                }
+            }
+        });
     }
 
     function initializeDistributionPreviews() {
@@ -48,13 +224,16 @@ var AdminOpinion = (function() {
         var grid = document.getElementById('distributions-grid');
         if (!grid) return;
         grid.innerHTML = '';
-        distributions.forEach(function(dist) {
+        distributions.forEach(function(dist, index) {
             var preview = document.createElement('div');
             preview.className = 'dist-preview';
             var distType = dist.type || 'custom';
             preview.innerHTML = '<div class="dist-header"><div class="dist-name">' + dist.name + '</div><span class="dist-type-badge">' + distType + '</span></div>' +
+                '<div class="dist-chart-box" style="position: relative; height: 160px;"><canvas class="dist-chart-canvas"></canvas></div>' +
                 '<div class="dist-body">' + buildDistributionParamsMarkup(dist.parameters) + buildDistributionNote(distType) + '</div>';
             grid.appendChild(preview);
+            var canvas = preview.querySelector('.dist-chart-canvas');
+            createDistributionChart(canvas, dist, index);
         });
     }
 
@@ -298,8 +477,13 @@ var AdminOpinion = (function() {
         }
 
         if (_evoGroupTrendsChartInstance) {
+            if (data.group_trends_data) {
+                _currentGroupTrendsData = data.group_trends_data;
+                _evoGroupTrendsChartInstance.data.labels = data.group_trends_data.timestamps || [];
+                _evoGroupTrendsChartInstance.data.datasets = createGroupTrendsDatasets(data.group_trends_data);
+            }
             var currentDay = data.filter_day;
-            var labels = _evoGroupTrendsChartInstance.data.labels;
+            var labels = _evoGroupTrendsChartInstance.data.labels || [];
             var dayIndex = labels.findIndex(function(label) { return Math.floor(label) === Math.floor(currentDay); });
             if (dayIndex !== -1) {
                 var xScale = _evoGroupTrendsChartInstance.scales.x;
@@ -412,7 +596,7 @@ var AdminOpinion = (function() {
         var groupTrendsData = config.groupTrendsData || { groups: [], timestamps: [], timestamp_mapping: {} };
         var timeseriesData = config.timeseriesData || { agents: [], timestamps: [] };
         _currentTopicId = config.filterTopicId || null;
-        _maxTimeValue = (config.maxDay || 0) * 24 + (config.maxHour || 0);
+        _maxTimeValue = config.maxTick || ((config.maxDay || 0) * 24 + (config.maxHour || 0));
 
         _evoChartValues.push.apply(_evoChartValues, chartValues);
 
@@ -487,7 +671,9 @@ var AdminOpinion = (function() {
                         callbacks: {
                             title: function(context) {
                                 var position = context[0].label;
-                                var mapping = groupTrendsData.timestamp_mapping[position];
+                                var mapping = (_currentGroupTrendsData && _currentGroupTrendsData.timestamp_mapping)
+                                    ? _currentGroupTrendsData.timestamp_mapping[position]
+                                    : null;
                                 if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
                                 return 'Step ' + position;
                             },
@@ -550,6 +736,24 @@ var AdminOpinion = (function() {
                 }
             }
         });
+
+        var initialSlider = document.getElementById('time-slider');
+        if (_evoGroupTrendsChartInstance && initialSlider) {
+            var initialValue = parseInt(initialSlider.value, 10);
+            if (!isNaN(initialValue)) {
+                var initialDay = Math.floor(initialValue / 24);
+                var initialLabels = _evoGroupTrendsChartInstance.data.labels || [];
+                var initialDayIndex = initialLabels.findIndex(function(label) {
+                    return Math.floor(label) === Math.floor(initialDay);
+                });
+                if (initialDayIndex !== -1) {
+                    var initialScale = _evoGroupTrendsChartInstance.scales.x;
+                    _evoGroupTrendsChartInstance.options.plugins.verticalLine.x =
+                        initialScale.getPixelForValue(initialDayIndex);
+                    _evoGroupTrendsChartInstance.update('none');
+                }
+            }
+        }
 
         updateSpeedDisplay();
 

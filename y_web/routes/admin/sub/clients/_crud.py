@@ -44,6 +44,9 @@ from y_web.src.models import (
 )
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
+from y_web.routes.admin.sub.experiments._helpers import (
+    _experiment_configuration_update_required,
+)
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
@@ -163,6 +166,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "model": "",
     }
     experiment_memory_enabled = False
+    memory_configuration_supported = False
+    experiment_opinion_dynamics_enabled = False
     exp_llm_defaults = {
         "llm": "http://127.0.0.1:11434/v1",
         "llm_api_key": "NULL",
@@ -196,9 +201,7 @@ def _build_client_creation_context(idexp, recsys_mode):
                 experiment_clock["feed_refresh"] = raw_clock.get(
                     "feed_refresh", "hourly"
                 )
-                raw_memory = experiment_config.get("memory", {}) or {}
-                if isinstance(raw_memory, dict):
-                    experiment_memory_enabled = bool(raw_memory.get("enabled"))
+                experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
                 raw_embeddings = experiment_config.get("memory_embeddings", {}) or {}
                 if isinstance(raw_embeddings, dict):
                     experiment_embedding_settings["service"] = str(
@@ -212,6 +215,15 @@ def _build_client_creation_context(idexp, recsys_mode):
                     ).strip()
         except Exception:
             pass
+
+    if exp is not None:
+        experiment_opinion_dynamics_enabled = (
+            _opinion_dynamics_enabled_for_client_creation(exp)
+        )
+        memory_configuration_supported = bool(
+            exp.simulator_type != "HPC"
+            and bool(getattr(exp, "llm_agents_enabled", 0))
+        )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = (
@@ -261,6 +273,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "topics": topics_list,
         "experiment_clock": experiment_clock,
         "experiment_memory_enabled": experiment_memory_enabled,
+        "memory_configuration_supported": memory_configuration_supported,
+        "experiment_opinion_dynamics_enabled": experiment_opinion_dynamics_enabled,
         "experiment_embedding_settings": experiment_embedding_settings,
         "exp_llm_defaults": exp_llm_defaults,
     }
@@ -300,6 +314,12 @@ def clients_standard(idexp):
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type == "forum":
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     return render_template("admin/clients.html", **context)
 
@@ -319,6 +339,12 @@ def clients_forum(idexp):
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type != "forum":
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     return render_template("admin/clients_forum.html", **context)
 
@@ -338,6 +364,12 @@ def clients_hpc(idexp):
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     return render_template("admin/clients_hpc.html", **context)
 
@@ -817,6 +849,16 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     import faker
 
+    posted_opinion_flag = str(
+        request.form.get("experiment_opinion_dynamics_enabled", "")
+    ).strip().lower()
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
+        opinions_enabled = True
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
+        opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
+
     population_data = {"agents": []}
     for idx, agent in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=agent.id).first()
@@ -832,11 +874,6 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         )
         activity_profile_name = (
             activity_profile_obj.name if activity_profile_obj else "Always On"
-        )
-
-        # Get opinions enabled from experiment annotations
-        opinions_enabled = "opinions" in (
-            exp.annotations.split(",") if exp.annotations else []
         )
 
         agent_data = {
@@ -869,7 +906,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "activity_profile": activity_profile_name,
             "archetype": archetype_assignments[idx],
             "opinions": (
-                {i: random.random() for i in interests} if opinions_enabled else None
+                {i: random.random() for i in interests} if bool(opinions_enabled) else None
             ),
             "llm": bool(exp.llm_agents_enabled),
         }
@@ -1243,14 +1280,10 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     flash(f"HPC client '{name}' created successfully")
 
-    # Check if opinions annotation is present and redirect to opinion configuration
-    opinions_enabled = "opinions" in (
-        exp.annotations.split(",") if exp.annotations else []
-    )
-    if opinions_enabled:
+    if bool(opinions_enabled):
         return redirect(
             url_for(
-                "clientsr.opinion_configuration", idexp=exp.idexp, client_id=client.id
+                "clientsr.opinion_configuration_hpc", idexp=exp.idexp, client_id=client.id
             )
         )
 
@@ -1390,8 +1423,21 @@ def _create_standard_client_internal():
     llm_agents_enabled = (
         exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
     )
+    experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
+    if not experiment_memory_enabled:
+        memory_enabled = False
+        memory_semantic_enabled = False
+        memory_embedding_async = False
 
-    opinions_enabled = False
+    posted_opinion_flag = str(
+        request.form.get("experiment_opinion_dynamics_enabled", "")
+    ).strip().lower()
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
+        opinions_enabled = True
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
+        opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
 
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
@@ -1846,6 +1892,7 @@ def _create_standard_client_internal():
         pass
 
     config = {
+        "name": name,
         "servers": {
             "llm": llm,
             "llm_api_key": llm_api_key,
@@ -1886,6 +1933,9 @@ def _create_standard_client_internal():
                 "share_image": float(share_image) if share_image is not None else 0,
             },
             "emotion_annotation": emotion_annotation,
+            "opinion_dynamics": {
+                "enabled": bool(opinions_enabled),
+            },
             "agent_archetypes": {
                 "enabled": enable_archetypes,
                 "distribution": {
@@ -2478,6 +2528,15 @@ def _create_standard_client_internal():
         }
     )
 
+    if bool(opinions_enabled):
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_standard",
+                idexp=exp_id,
+                client_id=client.id,
+            )
+        )
+
     # load experiment_details page
     from ..experiments import experiment_details
 
@@ -2615,12 +2674,21 @@ def _create_forum_client_internal():
     llm_agents_enabled = (
         exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
     )
+    experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
+    if not experiment_memory_enabled:
+        memory_enabled = False
+        memory_semantic_enabled = False
+        memory_embedding_async = False
 
-    annotations = {an: None for an in exp.annotations.split(",")}
-    if "opinions" in annotations:
+    posted_opinion_flag = str(
+        request.form.get("experiment_opinion_dynamics_enabled", "")
+    ).strip().lower()
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
         opinions_enabled = True
-    else:
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
         opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
 
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
@@ -3051,6 +3119,7 @@ def _create_forum_client_internal():
     }
 
     config = {
+        "name": name,
         "servers": {
             "llm": llm,
             "llm_api_key": llm_api_key,
@@ -3091,6 +3160,9 @@ def _create_forum_client_internal():
                 "share_image": float(share_image) if share_image is not None else 0,
             },
             "emotion_annotation": emotion_annotation,
+            "opinion_dynamics": {
+                "enabled": bool(opinions_enabled),
+            },
             "agent_archetypes": {
                 "enabled": enable_archetypes,
                 "distribution": {
@@ -3408,7 +3480,7 @@ def _create_forum_client_internal():
                 "activity_profile": activity_profile_name,
                 "archetype": archetype_assignments[idx],
                 "opinions": (
-                    {i: random.random() for i in ints[0]} if opinions_enabled else None
+                    {i: random.random() for i in ints[0]} if bool(opinions_enabled) else None
                 ),  # @todo: check initial opinions
             }
         )
@@ -3720,12 +3792,6 @@ def _create_forum_client_internal():
         }
     )
 
-    # Check if opinions annotation is present and redirect to opinion configuration
-    if opinions_enabled:
-        return redirect(
-            url_for("clientsr.opinion_configuration", idexp=exp_id, client_id=client.id)
-        )
-
     # load experiment_details page
     from ..experiments import experiment_details
 
@@ -3862,6 +3928,85 @@ def _read_json_if_exists(path):
         return None
     with open(path, "r") as handle:
         return json.load(handle)
+
+
+def _opinion_dynamics_enabled_for_client_creation(experiment):
+    """Resolve whether opinion dynamics are active for client creation flows."""
+    if experiment is None:
+        return False
+
+    annotations = {
+        item.strip()
+        for item in (experiment.annotations or "").split(",")
+        if item and item.strip()
+    }
+    default_enabled = "opinions" in annotations
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        config_name = (
+            "server_config.json"
+            if getattr(experiment, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        )
+        config_path = os.path.join(
+            get_writable_path(),
+            "y_web",
+            "experiments",
+            _get_experiment_folder_name(experiment),
+            config_name,
+        )
+        config = _read_json_if_exists(config_path)
+        if isinstance(config, dict):
+            return bool(
+                config.get(
+                    "opinion_dynamics_enabled",
+                    config.get("opinions_enabled", default_enabled),
+                )
+            )
+    except Exception:
+        pass
+
+    return default_enabled
+
+
+def _memory_enabled_for_client_creation(experiment):
+    """Resolve whether experiment-level memory is enabled for client creation flows."""
+    if experiment is None:
+        return False
+
+    supported = bool(
+        getattr(experiment, "simulator_type", "Standard") != "HPC"
+        and bool(getattr(experiment, "llm_agents_enabled", 0))
+    )
+    if not supported:
+        return False
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        config_name = (
+            "server_config.json"
+            if getattr(experiment, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        )
+        config_path = os.path.join(
+            get_writable_path(),
+            "y_web",
+            "experiments",
+            _get_experiment_folder_name(experiment),
+            config_name,
+        )
+        config = _read_json_if_exists(config_path)
+        if isinstance(config, dict):
+            memory_cfg = config.get("memory")
+            if isinstance(memory_cfg, dict):
+                return bool(memory_cfg.get("enabled"))
+    except Exception:
+        pass
+
+    return False
 
 
 def _get_client_population_pages(client):

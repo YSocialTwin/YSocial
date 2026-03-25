@@ -30,6 +30,64 @@ var AdminExperiments = (function() {
       syncPerspectiveState();
   })();
 
+  (function() {
+      const tags = document.getElementById('experiment-topics-tags');
+      const hiddenInput = document.getElementById('experiment-topics-hidden');
+      const input = document.getElementById('experiment-topics-input');
+      if (!tags || !hiddenInput || !input) return;
+
+      const tagList = hiddenInput.value
+          ? hiddenInput.value.split(',').map(item => item.trim()).filter(Boolean)
+          : [];
+
+      function syncHiddenInput() {
+          hiddenInput.value = tagList.join(',');
+      }
+
+      function createTagElement(tagContent) {
+          const tag = document.createElement('li');
+          tag.appendChild(document.createTextNode(`${tagContent} `));
+          const deleteBtn = document.createElement('button');
+          deleteBtn.type = 'button';
+          deleteBtn.className = 'delete-button';
+          deleteBtn.textContent = 'X';
+          tag.appendChild(deleteBtn);
+          return tag;
+      }
+
+      function addTagFromInput() {
+          const tagContent = input.value.trim();
+          if (!tagContent) return;
+          const duplicate = tagList.some(existing => existing.toLowerCase() === tagContent.toLowerCase());
+          if (duplicate) {
+              input.value = '';
+              return;
+          }
+          tagList.push(tagContent);
+          tags.appendChild(createTagElement(tagContent));
+          syncHiddenInput();
+          input.value = '';
+      }
+
+      input.addEventListener('keydown', function(event) {
+          if (event.key === 'Enter') {
+              event.preventDefault();
+              addTagFromInput();
+          }
+      });
+
+      tags.addEventListener('click', function(event) {
+          if (!event.target.classList.contains('delete-button')) return;
+          const tagText = event.target.parentNode.textContent.slice(0, -1).trim();
+          const idx = tagList.findIndex(item => item.toLowerCase() === tagText.toLowerCase());
+          if (idx >= 0) {
+              tagList.splice(idx, 1);
+          }
+          event.target.parentNode.remove();
+          syncHiddenInput();
+      });
+  })();
+
   // Experiment server control functions
   function startExperimentServer(expId) {
       showLoading('Starting experiment server...');

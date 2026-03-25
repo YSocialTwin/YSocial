@@ -173,9 +173,11 @@ function renderDownloadNotifications(items, unreadCount) {
     }
 
     if (unreadCount > 0) {
+        badge.classList.remove('d-none');
         badge.style.display = 'inline-flex';
         badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
     } else {
+        badge.classList.add('d-none');
         badge.style.display = 'none';
     }
 

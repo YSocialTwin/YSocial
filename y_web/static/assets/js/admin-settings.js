@@ -1529,44 +1529,18 @@ var AdminSettings = (function() {
       });
   }
 
-  // Show/hide Perspective API field based on toxicity annotation toggle
   document.addEventListener('DOMContentLoaded', function() {
-      const toxicityToggle = document.getElementById('toxicity_annotation_toggle');
-      const perspectiveApiField = document.getElementById('perspective_api_field');
       const llmAgentsToggle = document.getElementById('llm_agents_toggle');
-      const sentimentToggle = document.getElementById('sentiment_annotation_toggle');
-      const emotionToggle = document.getElementById('emotion_annotation_toggle');
-      const opinionToggle = document.getElementById('opinion_annotation_toggle');
-      const annotationSettingsRow = document.getElementById('annotation_settings_row');
       const inputTag = document.getElementById('input-tag');
-      if (!toxicityToggle || !perspectiveApiField || !llmAgentsToggle || !sentimentToggle || !emotionToggle || !opinionToggle || !annotationSettingsRow || !inputTag) {
+      if (!llmAgentsToggle || !inputTag) {
           return;
       }
-
-      toxicityToggle.addEventListener('change', function() {
-          if (this.checked) {
-              perspectiveApiField.style.display = 'flex';
-          } else {
-              perspectiveApiField.style.display = 'none';
-          }
-      });
 
       // Handle LLM agents toggle
       llmAgentsToggle.addEventListener('change', function() {
           const topicCountInput = document.getElementById('topic-count-input');
         
           if (!this.checked) {
-              // Disable all annotation toggles
-              toxicityToggle.checked = false;
-              toxicityToggle.disabled = true;
-              sentimentToggle.checked = false;
-              sentimentToggle.disabled = true;
-              emotionToggle.checked = false;
-              emotionToggle.disabled = true;
-              opinionToggle.checked = false;
-              opinionToggle.disabled = true;
-              perspectiveApiField.style.display = 'none';
-
               // Clear topics and show numeric input for topic count
               tagList.length = 0;
               while (tags.firstChild) {
@@ -1581,16 +1555,6 @@ var AdminSettings = (function() {
               generateTopics(10);
               updateButtonState();
           } else {
-              // Re-enable all annotation toggles
-              const isForum = platformTypeSelect.value === 'forum';
-              toxicityToggle.disabled = isForum;
-              sentimentToggle.checked = !isForum;
-              sentimentToggle.disabled = isForum;
-              emotionToggle.checked = !isForum;
-              emotionToggle.disabled = isForum;
-              opinionToggle.checked = !isForum;
-              opinionToggle.disabled = isForum;
-
               // Re-enable topics input and clear default
               tagList.length = 0;
               while (tags.firstChild) {
@@ -1682,6 +1646,9 @@ var AdminSettings = (function() {
       }
 
       function updateSimulatorTypeUI() {
+          if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {
+              return;
+          }
           const isForum = platformTypeSelect.value === 'forum';
           const isHPC = !isForum && hpcToggle.checked;
           const remoteExperimentToggle = document.getElementById('remote_experiment_toggle');
@@ -1705,45 +1672,16 @@ var AdminSettings = (function() {
                   hpcToggleContainer.style.opacity = '1';
               }
           }
-
-          if (annotationSettingsRow) {
-              annotationSettingsRow.style.display = isForum ? 'none' : 'flex';
-          }
-
-          if (isForum) {
-              toxicityToggle.checked = false;
-              toxicityToggle.disabled = true;
-              sentimentToggle.checked = false;
-              sentimentToggle.disabled = true;
-              emotionToggle.checked = false;
-              emotionToggle.disabled = true;
-              opinionToggle.checked = false;
-              opinionToggle.disabled = true;
-              perspectiveApiField.style.display = 'none';
-          } else {
-              toxicityToggle.disabled = !llmEnabled;
-              sentimentToggle.disabled = !llmEnabled;
-              emotionToggle.disabled = !llmEnabled;
-              opinionToggle.disabled = !llmEnabled;
-              if (llmEnabled) {
-                  sentimentToggle.checked = true;
-                  emotionToggle.checked = true;
-                  opinionToggle.checked = true;
-              }
-              if (toxicityToggle.checked && llmEnabled) {
-                  perspectiveApiField.style.display = 'flex';
-              } else {
-                  perspectiveApiField.style.display = 'none';
-              }
-          }
         
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
               redisConfigBox.style.display = 'flex';
 
               // Disable remote experiment toggle for HPC
-              remoteExperimentToggle.disabled = true;
-              remoteExperimentToggle.checked = false;
+              if (remoteExperimentToggle) {
+                  remoteExperimentToggle.disabled = true;
+                  remoteExperimentToggle.checked = false;
+              }
               if (remoteExperimentContainer) {
                   remoteExperimentContainer.style.opacity = '0.5';
                   remoteExperimentContainer.style.cursor = 'not-allowed';
@@ -1765,7 +1703,9 @@ var AdminSettings = (function() {
               hpcInfoInline.style.display = 'none';
               redisConfigBox.style.display = 'none';
 
-              remoteExperimentToggle.disabled = false;
+              if (remoteExperimentToggle) {
+                  remoteExperimentToggle.disabled = false;
+              }
               if (remoteExperimentContainer) {
                   remoteExperimentContainer.style.opacity = '1';
                   remoteExperimentContainer.style.cursor = 'pointer';

@@ -36,6 +36,7 @@
                                   method="POST" onsubmit="showLoading('Creating client...');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+                                    <input type="hidden" name="experiment_opinion_dynamics_enabled" value="{{ 'true' if experiment_opinion_dynamics_enabled else 'false' }}">
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
@@ -187,11 +188,16 @@
                                     <div class="form-section-description">
                                         Configure optional memory retrieval and summarization for Standard clients. Memory is disabled by default.
                                     </div>
+                                    {% if not experiment_memory_enabled %}
+                                    <div class="ys-text-xs-meta" style="margin-bottom: 10px;">
+                                        Enable <b>Memory</b> in <a href="/admin/experiment_details/{{ experiment.idexp }}">Experiment Configuration</a> before configuring client-level memory.
+                                    </div>
+                                    {% endif %}
                                     <div class="box-line">
                                         <span class="left">Enable Memory</span>
  <span class="right ys-w-70">
  <label class="ys-flex-click">
-                                                <input type="checkbox" id="standard_memory_enabled" name="memory_enabled" onchange="toggleStandardMemorySettings()">
+                                                <input type="checkbox" id="standard_memory_enabled" name="memory_enabled" onchange="toggleStandardMemorySettings()" {% if not experiment_memory_enabled %}disabled{% endif %}>
  <span class="ys-text-brand">Activate run-scoped memory</span>
                                             </label>
                                         </span>
@@ -1167,7 +1173,9 @@
 {% include "admin/tutorials/clients_tutorial.html" %}
 <script>
 var YS_DATA_CLIENTS = {
-    llmAgentsEnabled: {{ llm_agents_enabled | tojson }}
+    llmAgentsEnabled: {{ llm_agents_enabled | tojson }},
+    experimentMemoryEnabled: {{ experiment_memory_enabled | tojson }},
+    memoryConfigurationSupported: {{ memory_configuration_supported | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-clients.js') }}"></script>

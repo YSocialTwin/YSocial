@@ -36,6 +36,7 @@
                                   method="POST" onsubmit="showLoading('Creating HPC client...');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+                                    <input type="hidden" name="experiment_opinion_dynamics_enabled" value="{{ 'true' if experiment_opinion_dynamics_enabled else 'false' }}">
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
