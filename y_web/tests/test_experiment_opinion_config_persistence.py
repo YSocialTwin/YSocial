@@ -68,8 +68,14 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
     ).read()
 
     assert "memory_configuration_supported = bool(" in data_source
-    assert "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)" in data_source
-    assert "experiment.simulator_type != \"HPC\" and llm_agents_enabled_effective" in data_source
+    assert (
+        "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)"
+        in data_source
+    )
+    assert (
+        'experiment.simulator_type != "HPC" and llm_agents_enabled_effective'
+        in data_source
+    )
     assert "if memory_configuration_supported:" in data_source
     assert 'memory_enabled = _is_checked("memory_enabled")' in data_source
     assert 'memory_config["enabled"] = bool(memory_enabled)' in data_source
