@@ -9,6 +9,8 @@ import os
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
+import pytest
+
 pytestmark = pytest.mark.unit
 
 
