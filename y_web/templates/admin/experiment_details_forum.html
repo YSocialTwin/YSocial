@@ -84,7 +84,7 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                {% if can_manage_experiment and experiment.llm_agents_enabled %}
+                        {% if can_manage_experiment and llm_agents_enabled_effective %}
                                 <hr>
                                 <b>Experiment Configuration</b>
                             <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Generated content annotations are unavailable for forum experiments. Memory can still be enabled for LLM-based runs.</p>

@@ -118,6 +118,7 @@ from ._helpers import (
     _experiment_configuration_box_present,
     _experiment_configuration_update_required,
     _experiment_has_started_once,
+    _experiment_uses_llm_agents,
     _get_database_type,
     _get_experiment_folder,
     _normalize_embedding_host,
@@ -485,10 +486,10 @@ def experiment_details(uid):
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     forum_feed_health = None
+    llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     memory_module_enabled = False
     memory_configuration_supported = bool(
-        experiment.simulator_type != "HPC"
-        and bool(getattr(experiment, "llm_agents_enabled", 0))
+        experiment.simulator_type != "HPC" and llm_agents_enabled_effective
     )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
@@ -611,6 +612,7 @@ def experiment_details(uid):
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
         telemetry_enabled=telemetry_enabled,
         can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
+        llm_agents_enabled_effective=llm_agents_enabled_effective,
         current_perspective_api=current_perspective_api,
         toxicity_annotation_enabled=toxicity_annotation_enabled,
         sentiment_annotation_enabled=sentiment_annotation_enabled,

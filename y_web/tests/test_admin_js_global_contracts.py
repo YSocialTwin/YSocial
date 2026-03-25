@@ -206,7 +206,7 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert (
         "Generated content annotations are unavailable for forum experiments." in forum
     )
-    assert "{% if can_manage_experiment and experiment.llm_agents_enabled %}" in forum
+    assert "{% if can_manage_experiment and llm_agents_enabled_effective %}" in forum
     assert "<span>Opinion Dynamics</span>" not in forum
     assert "Update Configuration" in forum
     assert 'name="opinion_dynamics_enabled"' in standard

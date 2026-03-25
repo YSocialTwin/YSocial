@@ -140,8 +140,65 @@ def _experiment_configuration_box_present(experiment):
     if experiment is None:
         return False
     if getattr(experiment, "platform_type", "") == "forum":
-        return bool(getattr(experiment, "llm_agents_enabled", 0))
+        return _experiment_uses_llm_agents(experiment)
     return True
+
+
+def _experiment_uses_llm_agents(experiment):
+    """Resolve whether an experiment is configured to use LLM agents."""
+    if experiment is None:
+        return False
+
+    default_enabled = bool(getattr(experiment, "llm_agents_enabled", 0))
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        exp_folder = _get_experiment_folder(
+            get_writable_path(), experiment, _get_database_type()
+        )
+        if not os.path.isdir(exp_folder):
+            return default_enabled
+
+        client_files = [
+            filename
+            for filename in os.listdir(exp_folder)
+            if filename.endswith(".json") and filename.startswith("client")
+        ]
+        if not client_files:
+            return default_enabled
+
+        saw_llm_config = False
+        for client_file in client_files:
+            client_path = os.path.join(exp_folder, client_file)
+            try:
+                with open(client_path, "r") as f:
+                    client_config = json.load(f)
+            except Exception:
+                continue
+
+            llm_agents_value = (
+                client_config.get("agents", {}).get("llm_agents")
+                if isinstance(client_config, dict)
+                else None
+            )
+            if llm_agents_value is None:
+                continue
+
+            saw_llm_config = True
+            if not (
+                isinstance(llm_agents_value, list)
+                and len(llm_agents_value) == 1
+                and llm_agents_value[0] is None
+            ):
+                return True
+
+        if saw_llm_config:
+            return False
+    except Exception:
+        pass
+
+    return default_enabled
 
 
 def _experiment_configuration_update_required(experiment):

@@ -91,7 +91,7 @@
                             <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
                                 <div class="exp-config-card">
                                     <div class="exp-config-grid">
-                                            {% if experiment.llm_agents_enabled %}
+                                            {% if llm_agents_enabled_effective %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
@@ -131,7 +131,7 @@
                                             </div>
                                             {% endif %}
                                     </div>
-                                    {% if experiment.llm_agents_enabled %}
+                                    {% if llm_agents_enabled_effective %}
  <div id="perspective_api_field_exp" class="ys-mt-8">
                                         <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (required for toxicity)</label>
                                         <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza..." style="font-size: 0.84rem;">
@@ -144,7 +144,7 @@
                                 </div>
  <button type="submit" class="button is-small is-info ys-mt-8">Update Configuration</button>
                             </form>
-                            {% if experiment.llm_agents_enabled %}
+                            {% if llm_agents_enabled_effective %}
 
                             {% endif %}
 

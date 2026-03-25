@@ -5,6 +5,7 @@ def test_base_agent_restores_opinion_runtime_path():
     source = Path(
         "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/classes/base_agent.py"
     ).read_text()
+    assert "def _llm_agents_enabled_from_config(config):" in source
     assert "def _seed_initial_opinions_if_needed(self):" in source
     assert 'def new_opinions(self, post_id, tid, text=""):' in source
     assert "def _record_self_post_opinions(self, *, topic_ids, tid):" in source
@@ -54,6 +55,8 @@ def test_generate_user_uses_fake_agent_for_non_llm_configs():
         "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/utils.py"
     ).read_text()
     assert "def _rule_based_agents_enabled(config):" in source
+    assert "len(llm_agents) == 1" in source
+    assert "llm_agents[0] is None" in source
     assert (
         "AgentClass = FakeAgent if _rule_based_agents_enabled(config) else Agent"
         in source
@@ -62,6 +65,15 @@ def test_generate_user_uses_fake_agent_for_non_llm_configs():
         "PageClass = FakePageAgent if _rule_based_agents_enabled(config) else PageAgent"
         in source
     )
+
+
+def test_client_web_rule_based_detection_matches_legacy_null_only_contract():
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/external/YClient/y_client/clients/client_web.py"
+    ).read_text()
+    assert "def _rule_based_agents_enabled(self):" in source
+    assert "len(llm_agents) == 1" in source
+    assert "llm_agents[0] is None" in source
 
 
 def test_web_init_restores_fake_agent_follow_probabilities():
