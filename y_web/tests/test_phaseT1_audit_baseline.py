@@ -24,9 +24,7 @@ pytestmark = pytest.mark.unit
 # Paths
 # ---------------------------------------------------------------------------
 
-REPO_ROOT = os.path.dirname(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-)
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 AUDIT_SCRIPT = os.path.join(REPO_ROOT, "scripts", "audit_templates.sh")
 BASELINE_FILE = os.path.join(REPO_ROOT, "docs", "template_audit_baseline.txt")
 TEMPLATES_DIR = os.path.join(REPO_ROOT, "y_web", "templates")
@@ -46,6 +44,7 @@ BASELINE = {
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _parse_kv(text):
     """
@@ -91,31 +90,37 @@ def live_audit_result():
 # 1. Audit script exists and is executable
 # ---------------------------------------------------------------------------
 
+
 class TestAuditScriptExists:
     """scripts/audit_templates.sh must exist and be executable."""
 
     def test_scripts_directory_exists(self):
-        assert os.path.isdir(os.path.join(REPO_ROOT, "scripts")), \
-            "scripts/ directory not found at repo root"
+        assert os.path.isdir(
+            os.path.join(REPO_ROOT, "scripts")
+        ), "scripts/ directory not found at repo root"
 
     def test_audit_script_file_exists(self):
-        assert os.path.isfile(AUDIT_SCRIPT), \
-            f"scripts/audit_templates.sh not found at {AUDIT_SCRIPT}"
+        assert os.path.isfile(
+            AUDIT_SCRIPT
+        ), f"scripts/audit_templates.sh not found at {AUDIT_SCRIPT}"
 
     def test_audit_script_is_executable(self):
-        assert os.access(AUDIT_SCRIPT, os.X_OK), \
-            "scripts/audit_templates.sh is not executable (chmod +x)"
+        assert os.access(
+            AUDIT_SCRIPT, os.X_OK
+        ), "scripts/audit_templates.sh is not executable (chmod +x)"
 
     def test_audit_script_has_shebang(self):
         with open(AUDIT_SCRIPT, encoding="utf-8") as fh:
             first_line = fh.readline().rstrip()
-        assert first_line.startswith("#!"), \
-            f"audit_templates.sh should start with a shebang, got: {first_line!r}"
+        assert first_line.startswith(
+            "#!"
+        ), f"audit_templates.sh should start with a shebang, got: {first_line!r}"
 
 
 # ---------------------------------------------------------------------------
 # 2. Audit script runs successfully
 # ---------------------------------------------------------------------------
+
 
 class TestAuditScriptRuns:
     """Running audit_templates.sh from the repo root must exit 0."""
@@ -127,13 +132,15 @@ class TestAuditScriptRuns:
 
     def test_audit_script_outputs_overall_totals_section(self, live_audit_result):
         _kv, stdout = live_audit_result
-        assert "## Overall Totals" in stdout, \
-            "audit output should contain '## Overall Totals' section"
+        assert (
+            "## Overall Totals" in stdout
+        ), "audit output should contain '## Overall Totals' section"
 
     def test_audit_script_outputs_per_section_breakdown(self, live_audit_result):
         _kv, stdout = live_audit_result
-        assert "## Per-Section Breakdown" in stdout, \
-            "audit output should contain '## Per-Section Breakdown' section"
+        assert (
+            "## Per-Section Breakdown" in stdout
+        ), "audit output should contain '## Per-Section Breakdown' section"
 
     def test_audit_script_outputs_expected_keys(self, live_audit_result):
         kv, _stdout = live_audit_result
@@ -145,38 +152,45 @@ class TestAuditScriptRuns:
 # 3. Baseline file exists and is parseable
 # ---------------------------------------------------------------------------
 
+
 class TestBaselineFileExists:
     """docs/template_audit_baseline.txt must exist with expected content."""
 
     def test_docs_directory_exists(self):
-        assert os.path.isdir(os.path.join(REPO_ROOT, "docs")), \
-            "docs/ directory not found at repo root"
+        assert os.path.isdir(
+            os.path.join(REPO_ROOT, "docs")
+        ), "docs/ directory not found at repo root"
 
     def test_baseline_file_exists(self):
-        assert os.path.isfile(BASELINE_FILE), \
-            f"docs/template_audit_baseline.txt not found at {BASELINE_FILE}"
+        assert os.path.isfile(
+            BASELINE_FILE
+        ), f"docs/template_audit_baseline.txt not found at {BASELINE_FILE}"
 
     def test_baseline_file_not_empty(self):
-        assert os.path.getsize(BASELINE_FILE) > 0, \
-            "docs/template_audit_baseline.txt is empty"
+        assert (
+            os.path.getsize(BASELINE_FILE) > 0
+        ), "docs/template_audit_baseline.txt is empty"
 
     def test_baseline_file_contains_overall_totals_section(self):
         content = open(BASELINE_FILE, encoding="utf-8").read()
-        assert "## Overall Totals" in content, \
-            "Baseline file should contain '## Overall Totals' section"
+        assert (
+            "## Overall Totals" in content
+        ), "Baseline file should contain '## Overall Totals' section"
 
     @pytest.mark.parametrize("key,expected", list(BASELINE.items()))
     def test_baseline_file_contains_correct_value(self, key, expected):
         content = open(BASELINE_FILE, encoding="utf-8").read()
         kv = _parse_kv(content)
         assert key in kv, f"Key '{key}' not found in baseline file"
-        assert kv[key] == expected, \
-            f"Baseline '{key}': expected {expected}, got {kv[key]}"
+        assert (
+            kv[key] == expected
+        ), f"Baseline '{key}': expected {expected}, got {kv[key]}"
 
 
 # ---------------------------------------------------------------------------
 # 4. Live metrics match the baseline (reproducibility check)
 # ---------------------------------------------------------------------------
+
 
 class TestLiveMetricsMatchBaseline:
     """

@@ -16,6 +16,9 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.routes.admin.sub.experiments._helpers import (
+    _experiment_configuration_update_required,
+)
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
@@ -44,9 +47,6 @@ from y_web.src.models import (
 )
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
-from y_web.routes.admin.sub.experiments._helpers import (
-    _experiment_configuration_update_required,
-)
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
@@ -67,11 +67,7 @@ def _collect_population_agent_attributes(population_id):
             {a.leaning for a in agents if getattr(a, "leaning", None) not in (None, "")}
         ),
         "ages": sorted(
-            {
-                int(a.age)
-                for a in agents
-                if getattr(a, "age", None) not in (None, "")
-            }
+            {int(a.age) for a in agents if getattr(a, "age", None) not in (None, "")}
         ),
         "toxicity_levels": sorted(
             {
@@ -88,11 +84,7 @@ def _collect_population_agent_attributes(population_id):
             }
         ),
         "llm_agents": sorted(
-            {
-                a.ag_type
-                for a in agents
-                if getattr(a, "ag_type", None) not in (None, "")
-            }
+            {a.ag_type for a in agents if getattr(a, "ag_type", None) not in (None, "")}
         ),
         "education_levels": sorted(
             {
@@ -221,8 +213,7 @@ def _build_client_creation_context(idexp, recsys_mode):
             _opinion_dynamics_enabled_for_client_creation(exp)
         )
         memory_configuration_supported = bool(
-            exp.simulator_type != "HPC"
-            and bool(getattr(exp, "llm_agents_enabled", 0))
+            exp.simulator_type != "HPC" and bool(getattr(exp, "llm_agents_enabled", 0))
         )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
@@ -849,9 +840,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     import faker
 
-    posted_opinion_flag = str(
-        request.form.get("experiment_opinion_dynamics_enabled", "")
-    ).strip().lower()
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
     if posted_opinion_flag in {"true", "1", "yes", "on"}:
         opinions_enabled = True
     elif posted_opinion_flag in {"false", "0", "no", "off"}:
@@ -906,7 +897,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "activity_profile": activity_profile_name,
             "archetype": archetype_assignments[idx],
             "opinions": (
-                {i: random.random() for i in interests} if bool(opinions_enabled) else None
+                {i: random.random() for i in interests}
+                if bool(opinions_enabled)
+                else None
             ),
             "llm": bool(exp.llm_agents_enabled),
         }
@@ -1283,7 +1276,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     if bool(opinions_enabled):
         return redirect(
             url_for(
-                "clientsr.opinion_configuration_hpc", idexp=exp.idexp, client_id=client.id
+                "clientsr.opinion_configuration_hpc",
+                idexp=exp.idexp,
+                client_id=client.id,
             )
         )
 
@@ -1429,9 +1424,9 @@ def _create_standard_client_internal():
         memory_semantic_enabled = False
         memory_embedding_async = False
 
-    posted_opinion_flag = str(
-        request.form.get("experiment_opinion_dynamics_enabled", "")
-    ).strip().lower()
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
     if posted_opinion_flag in {"true", "1", "yes", "on"}:
         opinions_enabled = True
     elif posted_opinion_flag in {"false", "0", "no", "off"}:
@@ -2680,9 +2675,9 @@ def _create_forum_client_internal():
         memory_semantic_enabled = False
         memory_embedding_async = False
 
-    posted_opinion_flag = str(
-        request.form.get("experiment_opinion_dynamics_enabled", "")
-    ).strip().lower()
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
     if posted_opinion_flag in {"true", "1", "yes", "on"}:
         opinions_enabled = True
     elif posted_opinion_flag in {"false", "0", "no", "off"}:
@@ -3480,7 +3475,9 @@ def _create_forum_client_internal():
                 "activity_profile": activity_profile_name,
                 "archetype": archetype_assignments[idx],
                 "opinions": (
-                    {i: random.random() for i in ints[0]} if bool(opinions_enabled) else None
+                    {i: random.random() for i in ints[0]}
+                    if bool(opinions_enabled)
+                    else None
                 ),  # @todo: check initial opinions
             }
         )

@@ -2,7 +2,6 @@ import pytest
 
 from y_web.routes.admin.sub.populations import _normalize_percentage_distribution
 
-
 pytestmark = pytest.mark.unit
 
 

@@ -11,7 +11,7 @@ def test_opinion_evolution_prefers_experiment_interests():
 
     assert "def _resolve_opinion_evolution_topics(expid):" in source
     assert "db.session.query(Interests).all()" in source
-    assert 'if topics:' in source
+    assert "if topics:" in source
     assert "return topics" in source
     assert "Exp_Topic.query.filter_by(exp_id=expid).all()" in source
     assert "db.session.query(Topic_List)" in source
@@ -55,9 +55,13 @@ def test_opinion_evolution_bootstraps_missing_agent_opinions():
         "r",
     ).read()
 
-    assert "def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):" in source
+    assert (
+        "def _bootstrap_initial_agent_opinions_if_missing(expid, experiment):" in source
+    )
     assert "OpinionEvolutionCache.query.filter_by(exp_id=expid).delete()" in source
-    assert "OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()" in source
+    assert (
+        "OpinionEvolutionSampledAgents.query.filter_by(exp_id=expid).delete()" in source
+    )
     assert "_bootstrap_initial_agent_opinions_if_missing(expid, experiment)" in source
 
 
@@ -68,7 +72,9 @@ def test_opinion_evolution_invalidates_stale_cache_when_db_was_reset():
     ).read()
 
     assert "def _invalidate_stale_opinion_evolution_cache(expid):" in source
-    assert "cache_max_time = int(latest_cache.day) * 24 + int(latest_cache.hour)" in source
+    assert (
+        "cache_max_time = int(latest_cache.day) * 24 + int(latest_cache.hour)" in source
+    )
     assert "db_max_time = int(max_round.day) * 24 + int(max_round.hour)" in source
     assert "_invalidate_stale_opinion_evolution_cache(expid)" in source
 
@@ -101,5 +107,8 @@ def test_opinion_evolution_js_refreshes_group_trends_state():
     ).read()
 
     assert "_currentGroupTrendsData = data.group_trends_data;" in source
-    assert "_evoGroupTrendsChartInstance.data.datasets = createGroupTrendsDatasets(data.group_trends_data);" in source
+    assert (
+        "_evoGroupTrendsChartInstance.data.datasets = createGroupTrendsDatasets(data.group_trends_data);"
+        in source
+    )
     assert "_maxTimeValue = config.maxTick ||" in source

@@ -2,11 +2,12 @@ from pathlib import Path
 
 import pytest
 
-
 pytestmark = pytest.mark.unit
 
 STATIC_JS_DIR = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js")
-ADMIN_HEAD = Path("/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html")
+ADMIN_HEAD = Path(
+    "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html"
+)
 
 
 def _contains_any(path: Path, snippets):
@@ -147,34 +148,32 @@ def test_admin_notifications_page_uses_dedicated_actions_and_download_links():
     notifications_template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/download_notifications.html"
     ).read_text(encoding="utf-8")
-    notifications_js = (
-        STATIC_JS_DIR / "admin-notifications.js"
-    ).read_text(encoding="utf-8")
+    notifications_js = (STATIC_JS_DIR / "admin-notifications.js").read_text(
+        encoding="utf-8"
+    )
     nav_js = (STATIC_JS_DIR / "admin-nav.js").read_text(encoding="utf-8")
 
-    assert 'assets/js/admin-notifications.js' in notifications_template
+    assert "assets/js/admin-notifications.js" in notifications_template
     assert 'id="notifications-table-body"' in notifications_template
-    assert 'n.download_url' in notifications_template
-    assert 'window.markRead = markRead;' in notifications_js
-    assert 'window.deleteNotification = deleteNotification;' in notifications_js
-    assert '>Download</a>' in nav_js
+    assert "n.download_url" in notifications_template
+    assert "window.markRead = markRead;" in notifications_js
+    assert "window.deleteNotification = deleteNotification;" in notifications_js
+    assert ">Download</a>" in nav_js
 
 
 def test_visibility_settings_uses_grid_table_for_current_researcher_visibility():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/visibility_settings.html"
     ).read_text(encoding="utf-8")
-    script = (
-        STATIC_JS_DIR / "admin-visibility.js"
-    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-visibility.js").read_text(encoding="utf-8")
 
-    assert 'assets/vendor/js/gridjs.umd.js' in template
+    assert "assets/vendor/js/gridjs.umd.js" in template
     assert 'id="researcher-visibility-table"' in template
-    assert 'YS_DATA_VISIBILITY' in template
-    assert 'assets/js/admin-visibility.js' in template
-    assert 'new gridjs.Grid({' in script
-    assert 'pagination: {' in script
-    assert 'window.revokeVisibilityAssignment = revokeVisibilityAssignment;' in script
+    assert "YS_DATA_VISIBILITY" in template
+    assert "assets/js/admin-visibility.js" in template
+    assert "new gridjs.Grid({" in script
+    assert "pagination: {" in script
+    assert "window.revokeVisibilityAssignment = revokeVisibilityAssignment;" in script
 
 
 def test_admin_head_loads_shared_admin_component_and_icon_css():
@@ -204,7 +203,9 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
     assert "<b>Experiment Configuration</b>" in standard
     assert "<b>Experiment Configuration</b>" in forum
-    assert "Generated content annotations are unavailable for forum experiments." in forum
+    assert (
+        "Generated content annotations are unavailable for forum experiments." in forum
+    )
     assert "{% if can_manage_experiment and experiment.llm_agents_enabled %}" in forum
     assert "<span>Opinion Dynamics</span>" not in forum
     assert "Update Configuration" in forum
@@ -212,7 +213,9 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert 'name="opinion_dynamics_enabled"' not in forum
     assert 'name="memory_enabled"' in standard
     assert 'name="memory_enabled"' in forum
-    assert "{% if memory_configuration_supported and memory_module_enabled %}" in standard
+    assert (
+        "{% if memory_configuration_supported and memory_module_enabled %}" in standard
+    )
     assert "{% if memory_configuration_supported and memory_module_enabled %}" in forum
     assert 'if getattr(exp, "platform_type", "") == "forum":' in route_source
 
@@ -235,7 +238,9 @@ def test_experiment_details_quick_guide_mentions_configuration_first_pipeline():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/experiment_details_forum.html"
     ).read_text(encoding="utf-8")
 
-    expected = "First update <b>Experiment Configuration</b> to unlock execution controls"
+    expected = (
+        "First update <b>Experiment Configuration</b> to unlock execution controls"
+    )
     assert expected in standard
     assert expected in forum
 
@@ -250,7 +255,7 @@ def test_client_creation_pages_use_experiment_memory_gate():
 
     assert "experimentMemoryEnabled" in standard
     assert "memoryConfigurationSupported" in standard
-    assert 'standard_memory_enabled' in standard
+    assert "standard_memory_enabled" in standard
     assert "{% if not experiment_memory_enabled %}" in standard
 
     assert "experimentMemoryEnabled" in forum

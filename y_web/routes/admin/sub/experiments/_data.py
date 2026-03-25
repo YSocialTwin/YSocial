@@ -715,8 +715,7 @@ def update_experiment_config(uid):
         perspective_api = ""
 
     memory_configuration_supported = bool(
-        exp.simulator_type != "HPC"
-        and bool(getattr(exp, "llm_agents_enabled", 0))
+        exp.simulator_type != "HPC" and bool(getattr(exp, "llm_agents_enabled", 0))
     )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")

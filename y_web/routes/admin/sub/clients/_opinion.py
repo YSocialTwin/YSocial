@@ -7,7 +7,16 @@ import random
 import numpy as np
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
-from sqlalchemy import MetaData, Table, create_engine, delete, func, insert, inspect, select
+from sqlalchemy import (
+    MetaData,
+    Table,
+    create_engine,
+    delete,
+    func,
+    insert,
+    inspect,
+    select,
+)
 
 from y_web import db
 from y_web.src.models import (
@@ -865,7 +874,9 @@ def _sync_initial_standard_opinions_to_experiment_db(context):
             if not opinion_rows:
                 return
 
-            conn.execute(delete(agent_opinion).where(agent_opinion.c.tid == first_round_id))
+            conn.execute(
+                delete(agent_opinion).where(agent_opinion.c.tid == first_round_id)
+            )
             conn.execute(insert(agent_opinion), opinion_rows)
     finally:
         engine.dispose()

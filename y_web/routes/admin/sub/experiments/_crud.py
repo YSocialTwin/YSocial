@@ -243,7 +243,9 @@ def visibility_settings():
         {
             "exp_id": row[2].idexp,
             "experiment_name": row[2].exp_name,
-            "experiment_url": url_for("experiments.experiment_details", uid=row[2].idexp),
+            "experiment_url": url_for(
+                "experiments.experiment_details", uid=row[2].idexp
+            ),
             "group_name": row[2].exp_group if row[2].exp_group else "-",
             "researcher_id": row[1].id,
             "researcher_name": row[1].username,
