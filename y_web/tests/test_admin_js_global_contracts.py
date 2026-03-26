@@ -293,5 +293,11 @@ def test_create_experiment_enforces_external_repo_availability():
     assert 'present("YServer") and present("YClient")' in source
     assert 'present("YSimulator")' in source
     assert 'present("YServerReddit") and present("YClientReddit")' in source
-    assert "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present." in source
-    assert "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present." in source
+    assert (
+        "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
+        in source
+    )
+    assert (
+        "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
+        in source
+    )

@@ -123,8 +123,14 @@ def test_new_experiment_form_uses_repo_availability_bridge():
 
     assert "repoAvailability:" in settings
     assert "const repoAvailability =" in admin_settings_js
-    assert "const microbloggingAvailable = !!repoAvailability.microblogging;" in admin_settings_js
+    assert (
+        "const microbloggingAvailable = !!repoAvailability.microblogging;"
+        in admin_settings_js
+    )
     assert "const hpcAvailable = !!repoAvailability.hpc;" in admin_settings_js
     assert "const forumAvailable = !!repoAvailability.forum;" in admin_settings_js
     assert "hpcToggleLabel.textContent = 'Required';" in admin_settings_js
-    assert "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;" in admin_settings_js
+    assert (
+        "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;"
+        in admin_settings_js
+    )
