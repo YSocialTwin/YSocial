@@ -22,13 +22,6 @@
                 <div class="column is-8">
                     <!--Dashboard box-->
 
-                     {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <div class="dashboard-box" id="box-new-client">
                         <h3 class="title is-5 is-thin">New Forum Client</h3>
                         <div class="box-content">
@@ -36,6 +29,7 @@
                                   method="POST" onsubmit="showLoading('Creating client...');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+                                    <input type="hidden" name="experiment_opinion_dynamics_enabled" value="{{ 'true' if experiment_opinion_dynamics_enabled else 'false' }}">
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
@@ -72,6 +66,13 @@
                                         </span>
                                     </div>
                                     {% endif %}
+
+                                    {% if experiment_opinion_dynamics_enabled %}
+                                    <div class="ys-text-xs-meta" style="margin: 0 0 10px 0;">
+                                        Opinion dynamics is enabled for this experiment. After client creation, you will be redirected to forum opinion configuration.
+                                    </div>
+                                    {% endif %}
+
                                     <div id="section-simulation-params" class="tutorial-section">
                                     <div class="form-section-header">Simulation Parameters</div>
                                     <div class="form-section-description">

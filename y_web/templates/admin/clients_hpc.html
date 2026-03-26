@@ -22,13 +22,6 @@
                 <div class="column is-8">
                     <!--Dashboard box-->
 
-                     {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <div class="dashboard-box" id="box-new-client">
                         <h3 class="title is-5 is-thin">New HPC Client</h3>
                         <div class="box-content">

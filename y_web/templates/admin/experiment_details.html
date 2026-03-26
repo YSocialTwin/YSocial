@@ -25,13 +25,6 @@
                 <!--Dashboard column-->
  <div class="column is-12-mobile is-4-tablet ys-flex-col">
 
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <!--Dashboard box-->
  <div class="dashboard-box ys-flex-auto-col">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
@@ -216,9 +209,9 @@
                             </div>
                             <div class="box-line">
                                 <span class="left">Delete Experiment</span>
-                                <span class="right"> {% if can_manage_experiment %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
+                                <span class="right"> {% if can_manage_experiment and experiment.running != 1 %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
                                                         title="Delete"><i
- class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
+ class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% elif can_manage_experiment %}<i class="mdi mdi-delete-off ys-icon-muted" title="Stop the experiment before deleting it"></i>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
                             </div>
                                 </div>
                             </div>
