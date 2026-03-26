@@ -1507,12 +1507,14 @@ def client_logs(client_id):
         # agent_execution.log file instead of the per-client log file.
         # Preserve compatibility for those experiments while new runs use the
         # restored per-client sink again.
-        if (
-            getattr(experiment, "platform_type", "") == "forum"
-            and (not os.path.exists(log_file) or os.path.getsize(log_file) == 0)
+        if getattr(experiment, "platform_type", "") == "forum" and (
+            not os.path.exists(log_file) or os.path.getsize(log_file) == 0
         ):
             legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
-            if os.path.exists(legacy_forum_log) and os.path.getsize(legacy_forum_log) > 0:
+            if (
+                os.path.exists(legacy_forum_log)
+                and os.path.getsize(legacy_forum_log) > 0
+            ):
                 log_file = legacy_forum_log
 
         # Check if log file exists

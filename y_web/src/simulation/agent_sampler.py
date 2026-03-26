@@ -24,9 +24,7 @@ from y_web.src.models import ActivityProfile, PopulationActivityProfile
 def _rule_based_agents_enabled(config):
     llm_agents = (config or {}).get("agents", {}).get("llm_agents")
     return (
-        isinstance(llm_agents, list)
-        and len(llm_agents) == 1
-        and llm_agents[0] is None
+        isinstance(llm_agents, list) and len(llm_agents) == 1 and llm_agents[0] is None
     )
 
 

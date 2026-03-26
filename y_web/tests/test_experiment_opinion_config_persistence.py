@@ -107,10 +107,12 @@ def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
     ).read()
 
     assert 'if getattr(experiment, "platform_type", "") == "forum":' not in (
-        helpers_source.split("def _experiment_configuration_box_present(experiment):", 1)[1]
-        .split("def _experiment_uses_llm_agents", 1)[0]
+        helpers_source.split(
+            "def _experiment_configuration_box_present(experiment):", 1
+        )[1].split("def _experiment_uses_llm_agents", 1)[0]
     )
     assert "return True" in (
-        helpers_source.split("def _experiment_configuration_box_present(experiment):", 1)[1]
-        .split("def _experiment_uses_llm_agents", 1)[0]
+        helpers_source.split(
+            "def _experiment_configuration_box_present(experiment):", 1
+        )[1].split("def _experiment_uses_llm_agents", 1)[0]
     )

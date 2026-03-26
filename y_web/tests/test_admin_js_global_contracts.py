@@ -79,7 +79,7 @@ def test_forum_client_logs_support_legacy_shared_log_fallback():
     ).read_text(encoding="utf-8")
 
     assert 'platform_type", "") == "forum"' in route_source
-    assert 'agent_execution.log' in route_source
+    assert "agent_execution.log" in route_source
 
 
 def test_forum_process_runner_passes_per_client_log_file_to_reddit_client():
