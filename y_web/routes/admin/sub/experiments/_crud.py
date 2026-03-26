@@ -1614,13 +1614,17 @@ def generate_standard_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
-    opinion_dynamics_enabled,
     db_uri,
     topics,
     data_path,
+    opinion_dynamics_enabled=None,
     is_remote=False,
+    opinions_enabled=None,
 ):
     """Generate config file for Standard simulator type."""
+    if opinion_dynamics_enabled is None:
+        opinion_dynamics_enabled = bool(opinions_enabled)
+
     config = {
         "platform_type": platform_type,
         "name": exp_name,
@@ -1659,13 +1663,17 @@ def generate_hpc_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
-    opinion_dynamics_enabled,
     topics,
     data_path,
+    opinion_dynamics_enabled=None,
     db_config_dict=None,
     is_remote=False,
+    opinions_enabled=None,
 ):
     """Generate config file for HPC simulator type."""
+    if opinion_dynamics_enabled is None:
+        opinion_dynamics_enabled = bool(opinions_enabled)
+
     # Build database configuration section
     database_config = {
         "type": db_type,

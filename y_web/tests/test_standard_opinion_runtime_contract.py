@@ -1,5 +1,10 @@
 from pathlib import Path
 
+import pytest
+
+
+pytestmark = pytest.mark.unit
+
 
 def test_base_agent_restores_opinion_runtime_path():
     source = Path(

@@ -9,14 +9,27 @@ ollama_manager     — Ollama server management (install check, start, model ops
 vllm_manager       — vLLM server management and generic model listing
 """
 
-# Annotation classes require the autogen framework; guard so that importing
-# manager functions (which don't need autogen) still works in environments
-# where autogen is not installed.
+# Annotation classes may have different optional dependencies. Import them
+# independently so one missing dependency does not hide the other export.
 try:
     from y_web.src.llm.content_annotation import ContentAnnotator  # noqa: F401
+except ImportError:
+    class ContentAnnotator:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "ContentAnnotator requires optional LLM dependencies that are "
+                "not available in this environment."
+            )
+
+try:
     from y_web.src.llm.image_annotator import Annotator  # noqa: F401
 except ImportError:
-    pass
+    class Annotator:  # type: ignore[no-redef]
+        def __init__(self, *args, **kwargs):
+            raise ImportError(
+                "Annotator requires optional multimodal LLM dependencies that "
+                "are not available in this environment."
+            )
 
 from y_web.src.llm.ollama_manager import (  # noqa: F401
     delete_model_pull,

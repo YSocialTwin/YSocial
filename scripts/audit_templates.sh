@@ -33,20 +33,45 @@ count_in_dir() {
   local pattern="$2"
   local perl="${3:-}"
   local files
-  # Build a list of .html files in this directory only (not recursive)
-  mapfile -t files < <(find "$dir" -maxdepth 1 -name "*.html" 2>/dev/null)
-  if [ "${#files[@]}" -eq 0 ]; then
+  files=$(find "$dir" -maxdepth 1 -name "*.html" -print 2>/dev/null)
+  if [ -z "$files" ]; then
     echo 0
     return 0
   fi
   if [ "$perl" = "--perl" ]; then
-    grep -cP "$pattern" "${files[@]}" 2>/dev/null \
-      | awk -F: '$2>0{sum+=$2} END{print sum+0}'
+    python - "$dir" <<'PY'
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+pattern = re.compile(r"<script(?![^>]*src)>")
+total = 0
+for path in root.glob("*.html"):
+    total += len(pattern.findall(path.read_text(encoding="utf-8")))
+print(total)
+PY
   else
-    grep -c "$pattern" "${files[@]}" 2>/dev/null \
-      | awk -F: '$2>0{sum+=$2} END{print sum+0}'
+    printf "%s\n" "$files" | while IFS= read -r file; do
+      grep -c "$pattern" "$file" 2>/dev/null || true
+    done | awk '{sum+=$1} END{print sum+0}'
   fi
   return 0
+}
+
+count_inline_scripts_recursive() {
+  python - "$1" <<'PY'
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+pattern = re.compile(r"<script(?![^>]*src)>")
+total = 0
+for path in root.rglob("*.html"):
+    total += len(pattern.findall(path.read_text(encoding="utf-8")))
+print(total)
+PY
 }
 
 # ---------------------------------------------------------------------------
@@ -63,7 +88,7 @@ echo ""
 FILES_WITH_STYLE_BLOCKS=$(grep -r '<style>' "$ROOT" --include="*.html" -l | wc -l | tr -d ' ')
 TOTAL_STYLE_BLOCKS=$(grep -r '<style>' "$ROOT" --include="*.html" | wc -l | tr -d ' ')
 TOTAL_STYLE_ATTRS=$(grep -r 'style=' "$ROOT" --include="*.html" | wc -l | tr -d ' ')
-TOTAL_INLINE_SCRIPTS=$(grep -rP '<script(?![^>]*src)>' "$ROOT" --include="*.html" | wc -l | tr -d ' ')
+TOTAL_INLINE_SCRIPTS=$(count_inline_scripts_recursive "$ROOT")
 TOTAL_BROWSERSYNC=$(grep -r '__bs_script__' "$ROOT" --include="*.html" | wc -l | tr -d ' ')
 TOTAL_HTML_FILES=$(find "$ROOT" -name "*.html" | wc -l | tr -d ' ')
 TOTAL_LINES=$(find "$ROOT" -name "*.html" | xargs wc -l 2>/dev/null | tail -1 | awk '{print $1}')
@@ -135,7 +160,19 @@ echo ""
 echo "## Top 10 Files by Inline <script> Block Count"
 echo ""
 find "$ROOT" -name "*.html" | \
-  xargs grep -cP '<script(?![^>]*src)>' 2>/dev/null | \
+  while IFS= read -r path; do
+    cnt=$(python - "$path" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+pattern = re.compile(r"<script(?![^>]*src)>")
+print(len(pattern.findall(path.read_text(encoding="utf-8"))))
+PY
+)
+    echo "${path}:${cnt}"
+  done | \
   sort -t: -k2 -nr | \
   head -10 | \
   while IFS=: read -r path cnt; do

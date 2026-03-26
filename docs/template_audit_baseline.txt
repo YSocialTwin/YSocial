@@ -16,11 +16,11 @@
 
 files_with_style_blocks=0
 total_style_blocks=0
-total_style_attrs=379
-total_inline_scripts=48
+total_style_attrs=384
+total_inline_scripts=49
 total_browsersync_occurrences=1
 total_html_files=84
-total_lines=23944
+total_lines=24161
 
 ## Per-Section Breakdown
 
@@ -28,8 +28,8 @@ total_lines=23944
 
 section_admin_files=38
 section_admin_style_blocks=0
-section_admin_style_attrs=183
-section_admin_inline_scripts=21
+section_admin_style_attrs=188
+section_admin_inline_scripts=22
 
 section_admin_tutorials_files=13
 section_admin_tutorials_style_blocks=0
@@ -69,14 +69,14 @@ section_microblogging_components_inline_scripts=0
 ## Top 10 Files by style= Attribute Count
 
 style_attrs_top: 69  admin/tutorials/tutorial_overlay.html
-style_attrs_top: 47  admin/settings.html
+style_attrs_top: 48  admin/settings.html
 style_attrs_top: 46  admin/dashboard.html
 style_attrs_top: 20  forum/components/posts.html
 style_attrs_top: 14  forum/components/thread-post.html
 style_attrs_top: 13  admin/tutorials/exp_details_tutorial.html
 style_attrs_top: 12  forum/components/comment.html
 style_attrs_top: 12  admin/tutorials/tutorial_base.html
-style_attrs_top: 11  admin/opinion_evolution.html
+style_attrs_top: 13  admin/opinion_evolution.html
 style_attrs_top: 10  login/login.html
 
 ## Top 10 Files by Inline <script> Block Count
