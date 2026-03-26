@@ -141,8 +141,8 @@ def start_hpc_client(exp, cli, population):
     ):
         raise FileNotFoundError(
             f"Client script not found: {script_path}\n"
-            f"Please ensure the YSimulator submodule is initialized.\n"
-            f"Run: git submodule update --init --recursive"
+            f"Please ensure YSimulator is cloned under external/YSimulator.\n"
+            f"You can install or update it from the Admin > Plugins panel."
         )
 
     # Get the Python executable to use

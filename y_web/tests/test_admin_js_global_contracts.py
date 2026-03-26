@@ -312,9 +312,11 @@ def test_create_experiment_enforces_external_repo_availability():
     ).read_text(encoding="utf-8")
 
     assert "def _external_repo_availability():" in source
-    assert 'present("YServer") and present("YClient")' in source
-    assert 'present("YSimulator")' in source
-    assert 'present("YServerReddit") and present("YClientReddit")' in source
+    assert 'get_runtime_status("microblogging_server").installed' in source
+    assert '"microblogging_client"' in source
+    assert 'get_runtime_status("hpc_simulator").installed' in source
+    assert 'get_runtime_status("forum_server").installed' in source
+    assert '"forum_client"' in source
     assert (
         "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
         in source
@@ -323,3 +325,22 @@ def test_create_experiment_enforces_external_repo_availability():
         "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
         in source
     )
+
+
+def test_external_runtime_panel_sidebar_link_and_templates_exist():
+    head_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html"
+    ).read_text(encoding="utf-8")
+    panel_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtimes.html"
+    ).read_text(encoding="utf-8")
+    logs_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtime_logs.html"
+    ).read_text(encoding="utf-8")
+
+    assert "sidebar-external-runtimes" in head_template
+    assert "url_for('experiments.external_runtimes')" in head_template
+    assert "External Runtime Plugins" in panel_template
+    assert "Install Dependencies" in panel_template
+    assert "View Logs" in panel_template
+    assert "Operation Log" in logs_template

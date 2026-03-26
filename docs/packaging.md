@@ -21,7 +21,7 @@ The packaging flow bundles:
 Before building on any platform:
 
 ```bash
-git clone --recursive https://github.com/YSocialTwin/YSocial.git
+git clone https://github.com/YSocialTwin/YSocial.git
 cd YSocial
 python -m venv venv
 source venv/bin/activate
@@ -29,10 +29,9 @@ pip install -r requirements.txt
 pip install pyinstaller
 ```
 
-Also initialize runtime assets and submodules:
+Also ensure the required runtime repositories are cloned under `external/`:
 
 ```bash
-git submodule update --init --recursive
 python -c "import nltk; nltk.download('vader_lexicon')"
 ```
 

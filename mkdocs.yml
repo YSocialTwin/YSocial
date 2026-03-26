@@ -18,6 +18,7 @@ nav:
       - Runtime Layout: project-structure.md
   - Reference:
       - CLI Reference: reference/cli.md
+      - External Runtime Management: reference/external-runtime-management.md
       - Usage Examples: USAGE_EXAMPLES.md
   - Packaging:
       - PyInstaller Builds: packaging.md

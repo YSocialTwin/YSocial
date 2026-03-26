@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.external_runtime import get_runtime_status
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -122,16 +123,13 @@ from ._helpers import (
 
 def _external_repo_availability():
     """Detect which simulator repositories are available under external/."""
-    repo_root = pathlib.Path(__file__).resolve().parents[5]
-    external_dir = repo_root / "external"
-
-    def present(name):
-        path = external_dir / name
-        return path.exists() and path.is_dir()
-
-    microblogging = present("YServer") and present("YClient")
-    hpc = present("YSimulator")
-    forum = present("YServerReddit") and present("YClientReddit")
+    microblogging = get_runtime_status("microblogging_server").installed and get_runtime_status(
+        "microblogging_client"
+    ).installed
+    hpc = get_runtime_status("hpc_simulator").installed
+    forum = get_runtime_status("forum_server").installed and get_runtime_status(
+        "forum_client"
+    ).installed
 
     return {
         "microblogging": microblogging,

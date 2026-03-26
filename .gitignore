@@ -152,11 +152,7 @@ venv.bak/
 /site
 
 # External runtime repositories are managed as standalone clones
-/external/YClient/
-/external/YServer/
-/external/YClientReddit/
-/external/YServerReddit/
-/external/YSimulator/
+/external/
 
 # mypy
 .mypy_cache/
