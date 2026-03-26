@@ -342,5 +342,7 @@ def test_external_runtime_panel_sidebar_link_and_templates_exist():
     assert "url_for('experiments.external_runtimes')" in head_template
     assert "External Runtime Plugins" in panel_template
     assert "Install Dependencies" in panel_template
+    assert "Dependency installation uses the same Python interpreter currently running YSocial" in panel_template
+    assert "action='delete'" in panel_template
     assert "View Logs" in panel_template
     assert "Operation Log" in logs_template

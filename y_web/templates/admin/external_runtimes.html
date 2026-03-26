@@ -13,6 +13,10 @@
                             <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
                                 Manage the cloned runtime repositories used by the platform. Updates are blocked while dependent experiments are active.
                             </p>
+                            <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
+                                Dependency installation uses the same Python interpreter currently running YSocial:
+                                <code>{{ current_python_executable }}</code>
+                            </p>
 
                             {% for group_info in grouped_runtime_status %}
                             <div class="ys-panel-card" style="margin-bottom: 22px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
@@ -84,6 +88,14 @@
                                                         </button>
                                                         <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" class="button is-solid primary-button">
                                                             Validate
+                                                        </button>
+                                                        {% endif %}
+                                                        {% if repo.exists %}
+                                                        <button type="submit"
+                                                                formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}"
+                                                                class="button is-light"
+                                                                onclick="return confirm('Delete {{ repo.label }} from external/? This removes the local clone or link.');">
+                                                            Delete
                                                         </button>
                                                         {% endif %}
                                                         <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light">

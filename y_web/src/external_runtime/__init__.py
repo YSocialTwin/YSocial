@@ -3,6 +3,7 @@
 from .manager import (
     ExternalRuntimeError,
     clone_runtime_repo,
+    delete_runtime_repo,
     fetch_runtime_repo,
     get_grouped_runtime_status,
     get_runtime_status,
@@ -18,6 +19,7 @@ __all__ = [
     "SUPPORTED_EXTERNAL_REPOS",
     "ExternalRuntimeError",
     "clone_runtime_repo",
+    "delete_runtime_repo",
     "fetch_runtime_repo",
     "get_grouped_runtime_status",
     "get_runtime_status",

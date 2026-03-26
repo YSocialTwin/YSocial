@@ -90,3 +90,11 @@ def test_validate_runtime_repo_imports_package(runtime_repo_spec):
 
     assert "Required files present" in output
     assert "Imported testruntime" in output
+
+
+def test_delete_runtime_repo_removes_clone(runtime_repo_spec):
+    manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+    assert runtime_repo_spec.path.exists()
+
+    manager.delete_runtime_repo(runtime_repo_spec.key, actor="tester")
+    assert not runtime_repo_spec.path.exists()

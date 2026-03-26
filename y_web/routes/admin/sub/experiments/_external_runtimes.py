@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import sys
+
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
+    delete_runtime_repo,
     fetch_runtime_repo,
     get_grouped_runtime_status,
     log_external_runtime_action,
@@ -22,7 +25,7 @@ from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import experiments
 
-_MUTATING_ACTIONS = {"clone", "fetch", "update", "install", "validate"}
+_MUTATING_ACTIONS = {"clone", "fetch", "update", "install", "validate", "delete"}
 
 
 def _require_admin_user():
@@ -64,6 +67,7 @@ def external_runtimes():
         "admin/external_runtimes.html",
         grouped_runtime_status=grouped_status,
         active_group_usage=active_group_usage,
+        current_python_executable=sys.executable,
         recent_runtime_logs=recent_logs,
     )
 
@@ -86,7 +90,7 @@ def external_runtime_action(repo_key: str, action: str):
         return redirect(url_for("experiments.external_runtimes"))
 
     branch = (request.form.get("branch") or spec.default_branch).strip()
-    if action in {"clone", "fetch", "update", "install"}:
+    if action in {"clone", "fetch", "update", "install", "delete"}:
         active_experiments = _runtime_group_active_experiments(spec.group)
         if active_experiments:
             names = ", ".join(exp.exp_name for exp in active_experiments[:3])
@@ -113,6 +117,9 @@ def external_runtime_action(repo_key: str, action: str):
         elif action == "validate":
             validate_runtime_repo(repo_key, admin_user.username)
             flash(f"Validated {spec.label}.", "success")
+        elif action == "delete":
+            delete_runtime_repo(repo_key, admin_user.username)
+            flash(f"Deleted {spec.label}.", "success")
     except ExternalRuntimeError as exc:
         log_external_runtime_action(repo_key, action, admin_user.username, branch, False, str(exc))
         flash(str(exc), "error")

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import shutil
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
@@ -46,6 +47,7 @@ class RuntimeStatus:
     validation_ready: bool
     available_branches: list[str]
     path_kind: str
+    python_executable: str
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -228,6 +230,7 @@ def get_runtime_status(repo_key: str) -> RuntimeStatus:
         validation_ready=_validate_prereqs(spec),
         available_branches=branches,
         path_kind=path_kind,
+        python_executable=sys.executable,
     )
 
 
@@ -306,6 +309,7 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     env = os.environ.copy()
     env.setdefault("PIP_DISABLE_PIP_VERSION_CHECK", "1")
     env.setdefault("PYTHONUNBUFFERED", "1")
+    output_parts.append(f"Using interpreter: {sys.executable}")
     for command in spec.install_commands:
         resolved = [sys.executable if token == "python" else token for token in command]
         output_parts.append(_run_command(resolved, cwd=spec.path, env=env))
@@ -333,3 +337,22 @@ def validate_runtime_repo(repo_key: str, actor: str) -> str:
     output = "\n".join(part for part in output_parts if part)
     log_external_runtime_action(repo_key, "validate", actor, None, True, output)
     return output
+
+
+def delete_runtime_repo(repo_key: str, actor: str) -> None:
+    spec = runtime_spec(repo_key)
+    if not spec.path.exists() and not spec.path.is_symlink():
+        raise ExternalRuntimeError(f"{spec.label} is not installed")
+
+    if spec.path.is_symlink():
+        link_target = os.readlink(spec.path)
+        spec.path.unlink()
+        output = f"Removed symlink {spec.path} -> {link_target}"
+    elif spec.path.is_dir():
+        shutil.rmtree(spec.path)
+        output = f"Removed clone directory {spec.path}"
+    else:
+        spec.path.unlink()
+        output = f"Removed file {spec.path}"
+
+    log_external_runtime_action(repo_key, "delete", actor, None, True, output)
