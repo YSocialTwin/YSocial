@@ -274,9 +274,7 @@ def test_client_forms_use_fetch_based_vision_model_selection():
     hpc = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
     ).read_text(encoding="utf-8")
-    admin_clients_js = (STATIC_JS_DIR / "admin-clients.js").read_text(
-        encoding="utf-8"
-    )
+    admin_clients_js = (STATIC_JS_DIR / "admin-clients.js").read_text(encoding="utf-8")
 
     for template in (standard, forum, hpc):
         assert "Fetch Vision Models" in template
