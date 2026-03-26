@@ -99,8 +99,7 @@ var AdminClients = (function() {
           ollamaFields.style.display = 'block';
           // Ollama requires model fetching
           updateFormButtonStateForBackend('ollama');
-          // When not vLLM, disable Image action (since Ollama handles it differently)
-          disableImageAction();
+          syncVisionModelSelectionState();
       }
   }
 
@@ -589,6 +588,11 @@ var AdminClients = (function() {
               updateFormButtonState();
           });
       }
+      }
+
+      const visionModelsSelect = document.getElementById('llm_v_agent');
+      if (visionModelsSelect) {
+          visionModelsSelect.addEventListener('change', syncVisionModelSelectionState);
       }
     
       // Setup network mutual exclusivity
@@ -1488,55 +1492,98 @@ var AdminClients = (function() {
           });
   }
 
-  // Validate that selected VLM model is available for image transcription
-  function validateImageLLMModel() {
+  function isVisionModelName(modelName) {
+      const lowered = String(modelName || '').trim().toLowerCase();
+      if (!lowered) return false;
+      const markers = [
+          'vision',
+          'minicpm-v',
+          'qwen-vl',
+          'llava',
+          'internvl',
+          'pixtral',
+          'molmo',
+          'gpt-4o',
+          'gpt-4.1',
+          'omni',
+          '-vl',
+          '_vl'
+      ];
+      return markers.some(marker => lowered.includes(marker));
+  }
+
+  function syncVisionModelSelectionState() {
+      const validationStatus = document.getElementById('llm_v_validation_status');
+      const modelSelect = document.getElementById('llm_v_agent');
+      const hasSelection = !!(modelSelect && modelSelect.value);
+
+      if (validationStatus) {
+          validationStatus.value = hasSelection ? 'true' : 'false';
+      }
+
+      if (hasSelection) {
+          enableImageAction();
+      } else {
+          disableImageAction();
+      }
+  }
+
+  function fetchVisionModelsForClient() {
       const llmVUrlInput = document.getElementById('custom_llm_url_v_client');
       const status = document.getElementById('llm_v_url_status_client');
-      const validationStatus = document.getElementById('llm_v_validation_status');
       const llmVUrl = llmVUrlInput.value.trim();
       const modelSelect = document.getElementById('llm_v_agent');
-      const modelName = modelSelect.value;
     
       if (!llmVUrl) {
           alert('Please enter an LLM server URL for image transcription');
           return;
       }
     
-      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Validating...';
+      status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
     
       fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmVUrl)}`)
           .then(response => response.json())
           .then(data => {
               if (data.error) {
                   status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> ' + data.error + '</span>';
-                  validationStatus.value = 'false';
                   disableImageAction();
-                  alert('Unable to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
                   setTimeout(() => { status.innerHTML = ''; }, 5000);
               } else {
-                  // Check if selected VLM model exists in fetched models
-                  const modelExists = data.models.includes(modelName);
+                  const availableVisionModels = (data.models || []).filter(isVisionModelName);
+                  const previousValue = modelSelect ? modelSelect.value : '';
 
-                  if (modelExists) {
-                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> Model "' + modelName + '" found and validated!</span>';
-                      validationStatus.value = 'true';
-                      enableImageAction();
+                  if (modelSelect) {
+                      modelSelect.innerHTML = '<option value="">Select a vision model</option>';
+                      availableVisionModels.forEach(model => {
+                          const option = document.createElement('option');
+                          option.value = model;
+                          option.textContent = model;
+                          modelSelect.appendChild(option);
+                      });
+
+                      if (availableVisionModels.includes(previousValue)) {
+                          modelSelect.value = previousValue;
+                      } else if (availableVisionModels.length) {
+                          modelSelect.value = availableVisionModels[0];
+                      }
+                  }
+
+                  if (availableVisionModels.length) {
+                      status.innerHTML = '<span style="color: green;"><i class="mdi mdi-check"></i> ' + availableVisionModels.length + ' vision models loaded</span>';
+                      syncVisionModelSelectionState();
                       setTimeout(() => { status.innerHTML = ''; }, 3000);
                   } else {
-                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Model "' + modelName + '" not found on this server!</span>';
-                      validationStatus.value = 'false';
+                      if (modelSelect) {
+                          modelSelect.value = '';
+                      }
+                      status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> No vision-capable models found on this server</span>';
                       disableImageAction();
-                      alert('The "' + modelName + '" model is not available on the specified server. Image sharing/commenting functionality will remain disabled.');
-                      // Set llm_v to empty/None to signal model unavailability
-                      llmVUrlInput.value = '';
                   }
               }
           })
           .catch(error => {
               status.innerHTML = '<span style="color: red;"><i class="mdi mdi-alert"></i> Connection failed</span>';
-              validationStatus.value = 'false';
               disableImageAction();
-              alert('Failed to connect to the LLM server. Image sharing/commenting functionality will remain disabled.');
               setTimeout(() => { status.innerHTML = ''; }, 5000);
           });
   }
@@ -1852,6 +1899,7 @@ var AdminClients = (function() {
       toggleForumMemorySettings();
       toggleForumMemoryAdvancedParams();
       syncForumMemoryControls();
+      syncVisionModelSelectionState();
 
       const archetypeToggle = document.getElementById('enable_archetypes');
       const archetypeDetails = document.getElementById('archetype-details');
@@ -1883,7 +1931,8 @@ var AdminClients = (function() {
       toggleAdvancedSettings,
       toggleImageTranscription,
       fetchModelsForClient,
-      validateImageLLMModel,
+      fetchVisionModelsForClient,
+      validateImageLLMModel: fetchVisionModelsForClient,
       displayNetworkFileNameCreate,
       toggleStandardMemorySettings,
       toggleStandardMemoryAdvancedParams,
