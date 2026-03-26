@@ -659,23 +659,22 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">VLM Model</span>
- <span class="right ys-w-70">
+                                        <div class="select">
                                             <select name="llm_v_agent" id="llm_v_agent" class="input">
-                                                <option value="qwen3-vl:8b" {% if exp_llm_defaults.llm_v_agent == 'qwen3-vl:8b' or not exp_llm_defaults.llm_v_agent %}selected{% endif %}>qwen3-vl:8b (Recommended)</option>
-                                                <option value="minicpm-v" {% if exp_llm_defaults.llm_v_agent == 'minicpm-v' %}selected{% endif %}>minicpm-v</option>
-                                                <option value="llava:7b" {% if exp_llm_defaults.llm_v_agent == 'llava:7b' %}selected{% endif %}>llava:7b</option>
-                                                <option value="llava:13b" {% if exp_llm_defaults.llm_v_agent == 'llava:13b' %}selected{% endif %}>llava:13b</option>
-                                                <option value="llava:34b" {% if exp_llm_defaults.llm_v_agent == 'llava:34b' %}selected{% endif %}>llava:34b</option>
+                                                <option value="">Fetch available vision models</option>
+                                                {% if exp_llm_defaults.llm_v_agent %}
+                                                <option value="{{ exp_llm_defaults.llm_v_agent }}" selected>{{ exp_llm_defaults.llm_v_agent }}</option>
+                                                {% endif %}
                                             </select>
-                                        </span>
+                                        </div>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">LLM Server URL</span>
  <span class="right ys-w-70">
  <div class="ys-flex-row-mb">
  <input type="text" id="custom_llm_url_v_client" name="llm_v" class="input ys-flex-1" placeholder="e.g., localhost:8000" value="{{ exp_llm_defaults.llm_v }}">
-                                                <button type="button" class="button is-solid primary-button" onclick="validateImageLLMModel()">
-                                                    Validate Model
+                                                <button type="button" class="button is-solid primary-button" onclick="fetchVisionModelsForClient()">
+                                                    Fetch Vision Models
                                                 </button>
                                             </div>
  <div id="llm_v_url_status_client" class="ys-badge-min"></div>
@@ -705,7 +704,7 @@
                                     </div>
                                     <input type="hidden" id="llm_v_validation_status" value="false">
  <div id="image_action_warning" class="ys-alert-warning-sm">
-                                        <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Please validate that your selected VLM model is available on your server to enable this feature.
+                                        <i class="mdi mdi-alert"></i> <strong>Notice:</strong> Image sharing/commenting is currently disabled. Fetch the available vision models and select one to enable this feature.
                                     </div>
                                     {% endif %}
                                     </div><!-- End section-actions-relevance -->
@@ -1235,7 +1234,7 @@
                             <p>
                                 <b>Image Transcription (Optional)</b><br>
                                 Configure vision LLM for image content analysis.<br><br>
-                                Select a VLM model and click "Validate Model" to verify it's available. This enables image-related actions.
+                                Click "Fetch Vision Models" to load the available vision-capable models, then select one to enable image-related actions.
                             </p>
                             <hr>
                             <p>

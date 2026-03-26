@@ -262,3 +262,25 @@ def test_client_creation_pages_use_experiment_memory_gate():
     assert "memoryConfigurationSupported" in forum
     assert "{% if memory_configuration_supported %}" in forum
     assert "{% if not experiment_memory_enabled %}" in forum
+
+
+def test_client_forms_use_fetch_based_vision_model_selection():
+    standard = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html"
+    ).read_text(encoding="utf-8")
+    forum = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html"
+    ).read_text(encoding="utf-8")
+    hpc = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+    ).read_text(encoding="utf-8")
+    admin_clients_js = (STATIC_JS_DIR / "admin-clients.js").read_text(
+        encoding="utf-8"
+    )
+
+    for template in (standard, forum, hpc):
+        assert "Fetch Vision Models" in template
+        assert 'name="llm_v_agent"' in template
+        assert "validateImageLLMModel()" not in template
+
+    assert "function fetchVisionModelsForClient()" in admin_clients_js

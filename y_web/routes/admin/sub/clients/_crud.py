@@ -524,14 +524,18 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "temperature": 0.9,
             "llm_api_key": "NULL",
             "llm_max_tokens": -1,
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
         llm_v_config = {
-            "address": llm,
+            "address": llm_v,
             "port": 11434,
-            "model": "minicpm-v",
-            "temperature": 0.5,
-            "llm_api_key": "NULL",
-            "llm_max_tokens": 300,
+            "model": llm_v_agent or "minicpm-v:latest",
+            "temperature": float(llm_v_temperature or "0.5"),
+            "llm_api_key": llm_v_api_key or "NULL",
+            "llm_max_tokens": int(llm_v_max_tokens or "300"),
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
     elif llm_backend == "vllm":
         llm_config = {
@@ -573,14 +577,18 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "temperature": float(form_data.get("llm_temperature", "0.7")),
             "llm_api_key": "NULL",
             "llm_max_tokens": -1,
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
         llm_v_config = {
-            "address": llm,
+            "address": llm_v,
             "port": 11434,
-            "model": "minicpm-v",
-            "temperature": 0.5,
-            "llm_api_key": "NULL",
-            "llm_max_tokens": 300,
+            "model": form_data.get("llm_v_agent", "minicpm-v:latest"),
+            "temperature": float(form_data.get("llm_v_temperature", "0.5")),
+            "llm_api_key": form_data.get("llm_v_api_key", "NULL"),
+            "llm_max_tokens": int(form_data.get("llm_v_max_tokens", "300")),
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
 
     # Get activity profiles for population

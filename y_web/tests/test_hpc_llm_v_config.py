@@ -216,6 +216,28 @@ class TestHPCLLMVConfig:
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
 
+    def test_hpc_ollama_config_source_contains_auto_api_fields(self):
+        source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        ).read()
+
+        assert '"api_format": "auto"' in source
+        assert '"batching_policy": "auto"' in source
+
+    def test_hpc_template_uses_selectable_vision_model_fetch(self):
+        template = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+        ).read()
+        js = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/admin-clients.js"
+        ).read()
+
+        assert 'select name="llm_v_agent" id="llm_v_agent"' in template
+        assert "Fetch Vision Models" in template
+        assert "fetchVisionModelsForClient()" in template
+        assert "function fetchVisionModelsForClient()" in js
+        assert "function isVisionModelName(modelName)" in js
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

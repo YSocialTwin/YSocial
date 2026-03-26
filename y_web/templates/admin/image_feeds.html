@@ -30,14 +30,13 @@
 
                         <div class="box-content">
                             <h4 class="title is-6 is-thin">Add Subreddit</h4>
- <p class="ys-label-hint">
-                                Enter a subreddit name to automatically parse its RSS feed and extract images.
+                            <p class="ys-label-hint">
+                                Enter a subreddit name, <code>r/name</code>, or a Reddit subreddit URL to parse and preview images.
                             </p>
                             <div class="box-line">
                                 <span class="left">Subreddit</span>
                                 <span class="right" style="width: 70%; display: flex; gap: 10px;">
-                                    <span style="line-height: 38px;">r/</span>
- <input type="text" id="subreddit_name" class="input ys-flex-1" placeholder="memes">
+ <input type="text" id="subreddit_name" class="input ys-flex-1" placeholder="memes or https://www.reddit.com/r/memes/">
                                     <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">Parse</button>
                                 </span>
                             </div>

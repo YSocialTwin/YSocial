@@ -311,7 +311,7 @@ class TestDashboardTemplates:
         assert not _inline_function_scripts(self.NOTIFICATIONS)
 
     def test_notifications_has_script_src(self):
-        assert _has_script_src(self.NOTIFICATIONS, "admin-dashboard.js")
+        assert _has_script_src(self.NOTIFICATIONS, "admin-notifications.js")
 
     def test_jupyter_no_inline_function_scripts(self):
         assert not _inline_function_scripts(self.JUPYTER)

@@ -8,6 +8,7 @@ function that works with any LLM backend.
 
 import subprocess
 import time
+from urllib.parse import urlparse
 
 import requests
 
@@ -118,25 +119,82 @@ def get_llm_models(llm_url=None):
             else:
                 llm_url = "http://127.0.0.1:11434/v1"
 
-    # Construct models endpoint URL
-    models_url = (
-        llm_url.replace("/v1", "/v1/models")
-        if "/v1" in llm_url
-        else f"{llm_url}/models"
-    )
-
-    try:
-        response = requests.get(models_url, timeout=15)
-        if response.status_code == 200:
-            data = response.json()
-            # OpenAI-compatible format
-            models = [model["id"] for model in data.get("data", [])]
-            return models
-        else:
-            print(
-                f"Failed to get LLM models from {models_url}. Status: {response.status_code}"
-            )
+    def _candidate_model_endpoints(raw_url):
+        base_url = str(raw_url or "").rstrip("/")
+        if not base_url:
             return []
-    except requests.exceptions.RequestException as e:
-        print(f"LLM server at {models_url} is not accessible: {e}")
+
+        parsed = urlparse(base_url)
+        path = parsed.path.rstrip("/")
+        root_url = f"{parsed.scheme}://{parsed.netloc}"
+        candidates = []
+
+        def add(endpoint):
+            if endpoint and endpoint not in candidates:
+                candidates.append(endpoint)
+
+        if path.endswith("/v1/models") or path.endswith("/models") or path.endswith(
+            "/api/tags"
+        ):
+            add(base_url)
+            return candidates
+
+        add(f"{base_url}/v1/models")
+        add(f"{base_url}/models")
+        add(f"{base_url}/api/tags")
+
+        if path.endswith("/v1"):
+            trimmed = base_url[: -len("/v1")]
+            add(f"{base_url}/models")
+            add(f"{trimmed}/models")
+            add(f"{trimmed}/api/tags")
+
+        if path:
+            add(f"{root_url}/v1/models")
+            add(f"{root_url}/models")
+            add(f"{root_url}/api/tags")
+
+        return candidates
+
+    def _models_from_payload(payload):
+        if isinstance(payload, dict):
+            if isinstance(payload.get("data"), list):
+                return [
+                    str(model.get("id", "")).strip()
+                    for model in payload.get("data", [])
+                    if str(model.get("id", "")).strip()
+                ]
+            if isinstance(payload.get("models"), list):
+                normalized = []
+                for model in payload.get("models", []):
+                    if isinstance(model, dict):
+                        name = str(
+                            model.get("name") or model.get("model") or model.get("id") or ""
+                        ).strip()
+                    else:
+                        name = str(model).strip()
+                    if name:
+                        normalized.append(name)
+                return normalized
         return []
+
+    last_error = None
+    for models_url in _candidate_model_endpoints(llm_url):
+        try:
+            response = requests.get(models_url, timeout=15)
+            response.raise_for_status()
+            data = response.json()
+            models = _models_from_payload(data)
+            if models:
+                return models
+            print(f"No models found in payload from {models_url}.")
+        except requests.exceptions.RequestException as e:
+            last_error = e
+            print(f"LLM server at {models_url} is not accessible: {e}")
+        except ValueError as e:
+            last_error = e
+            print(f"Invalid JSON payload from {models_url}: {e}")
+
+    if last_error:
+        print(f"Failed to discover models from {llm_url}: {last_error}")
+    return []

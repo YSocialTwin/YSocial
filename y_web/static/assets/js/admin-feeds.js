@@ -22,8 +22,8 @@ var AdminFeeds = (function() {
 
     function parseSubreddit() {
         var subreddit = document.getElementById('subreddit_name').value.trim().toLowerCase();
-        if (!subreddit) { alert('Please enter a subreddit name'); return; }
-        _currentSubreddit = subreddit;
+        if (!subreddit) { alert('Please enter a subreddit name or Reddit URL'); return; }
+        _currentSubreddit = '';
         setParseStatus('loading', 'Parsing...');
         document.getElementById('parse_result').style.display = 'block';
         document.getElementById('sample_images').replaceChildren();
@@ -34,7 +34,12 @@ var AdminFeeds = (function() {
         })
         .then(function(r) { return r.json().then(function(data) { return {ok: r.ok, data: data}; }); })
         .then(function(res) {
-            if (!res.ok || res.data.error) { setParseStatus('error', res.data.error || 'Could not parse subreddit.'); return; }
+            if (!res.ok || res.data.error) {
+                _currentSubreddit = '';
+                setParseStatus('error', res.data.error || 'Could not parse subreddit.');
+                return;
+            }
+            _currentSubreddit = res.data.subreddit || '';
             setParseStatus('success', 'Found ' + res.data.image_count + ' images (' + res.data.nsfw_filtered + ' NSFW filtered)');
             var sampleDiv = document.getElementById('sample_images');
             sampleDiv.replaceChildren();
@@ -57,10 +62,10 @@ var AdminFeeds = (function() {
         if (_imageFeeds.some(function(f) { return f.subreddit === _currentSubreddit; })) { alert('This subreddit is already added'); return; }
         _imageFeeds.push({ subreddit: _currentSubreddit, interests: selectedInterests });
         updateFeedsDisplay();
-        document.getElementById('subreddit_name').value = '';
-        document.getElementById('parse_result').style.display = 'none';
-        _currentSubreddit = '';
-    }
+            document.getElementById('subreddit_name').value = '';
+            document.getElementById('parse_result').style.display = 'none';
+            _currentSubreddit = '';
+        }
 
     function removeFeed(index) {
         _imageFeeds.splice(index, 1);

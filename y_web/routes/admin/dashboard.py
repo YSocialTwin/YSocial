@@ -48,7 +48,7 @@ admin = Blueprint("admin", __name__)
 
 
 def _normalize_llm_models_url(llm_url: str) -> str:
-    """Normalize a user-provided OpenAI-compatible models endpoint base URL."""
+    """Normalize a user-provided LLM base URL for model discovery."""
     llm_url = str(llm_url or "").strip()
     if not llm_url:
         return ""
@@ -56,10 +56,9 @@ def _normalize_llm_models_url(llm_url: str) -> str:
         llm_url = f"http://{llm_url}"
     if llm_url.endswith("/"):
         llm_url = llm_url[:-1]
-    if llm_url.endswith("/v1/models"):
-        return llm_url[:-7]
-    if not llm_url.endswith("/v1"):
-        llm_url = f"{llm_url}/v1"
+    for suffix in ("/v1/models", "/models", "/api/tags", "/v1"):
+        if llm_url.endswith(suffix):
+            return llm_url[: -len(suffix)]
     return llm_url
 
 

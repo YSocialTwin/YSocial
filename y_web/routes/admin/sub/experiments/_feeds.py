@@ -120,6 +120,7 @@ from ._helpers import (
     _normalize_embedding_service,
     _normalize_image_feeds_payload,
     _normalize_rss_feeds_payload,
+    _normalize_subreddit_input,
     _parse_required_feed_limit,
     _read_experiment_embedding_settings,
     _read_feed_with_headers,
@@ -220,17 +221,23 @@ def parse_rss_feed():
     if not feed_url:
         return jsonify({"error": "No URL provided"}), 400
 
+    if "://" not in feed_url:
+        feed_url = f"https://{feed_url}"
+
     try:
         feed_content = _read_feed_with_headers(feed_url)
         feed = feedparser.parse(feed_content)
         if feed.bozo and not feed.entries:
             return jsonify({"error": "Invalid RSS feed URL"}), 400
-        parsed_url = urlparse(feed_url)
+        parsed_feed_url = getattr(feed, "href", "") or feed_url
+        parsed_url = urlparse(parsed_feed_url)
+        site_url = str(feed.feed.get("link") or "").strip()
+        site_host = urlparse(site_url).netloc or parsed_url.netloc
         return jsonify(
             {
-                "name": feed.feed.get("title", parsed_url.netloc or feed_url),
-                "feed_url": feed_url,
-                "url_site": parsed_url.netloc,
+                "name": feed.feed.get("title", site_host or parsed_url.netloc or feed_url),
+                "feed_url": parsed_feed_url,
+                "url_site": site_url or site_host,
                 "description": feed.feed.get("description", ""),
                 "entries_count": len(feed.entries),
             }
@@ -489,11 +496,18 @@ def parse_image_feed():
     import feedparser
 
     payload = request.get_json(silent=True) or {}
-    subreddit = str(payload.get("subreddit", "")).strip().lower()
+    subreddit = _normalize_subreddit_input(payload.get("subreddit", ""))
     if not subreddit:
-        return jsonify({"error": "No subreddit provided"}), 400
-
-    subreddit = subreddit[2:] if subreddit.startswith("r/") else subreddit
+        return (
+            jsonify(
+                {
+                    "error": (
+                        "Provide a subreddit slug, r/<name>, or a Reddit subreddit URL."
+                    )
+                }
+            ),
+            400,
+        )
     feed_url = f"https://www.reddit.com/r/{quote(subreddit)}.rss"
 
     try:
