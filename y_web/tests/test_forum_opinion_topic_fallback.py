@@ -10,10 +10,10 @@ def test_forum_server_topic_routes_fall_back_to_thread_root():
         "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/routes/content_management.py"
     ).read_text()
 
-    assert 'post = Post.query.filter_by(id=post_id).first()' in source
-    assert 'if not direct_topics and post.thread_id is not None:' in source
-    assert 'topic_post_id = post.thread_id' in source
-    assert 'Post_topics.query.filter_by(post_id=topic_post_id)' in source
+    assert "post = Post.query.filter_by(id=post_id).first()" in source
+    assert "if not direct_topics and post.thread_id is not None:" in source
+    assert "topic_post_id = post.thread_id" in source
+    assert "Post_topics.query.filter_by(post_id=topic_post_id)" in source
 
 
 def test_forum_experiment_10_comments_need_thread_root_topic_fallback():
@@ -23,23 +23,19 @@ def test_forum_experiment_10_comments_need_thread_root_topic_fallback():
     db = f"/Users/rossetti/PycharmProjects/YWeb/y_web/experiments/{uid}/database_server.db"
     con = sqlite3.connect(db)
     cur = con.cursor()
-    cur.execute(
-        """
+    cur.execute("""
         select count(*)
         from post p
         join post_topics pt on pt.post_id = p.thread_id
         where p.comment_to != -1
-        """
-    )
+        """)
     comments_with_root_topics = cur.fetchone()[0]
-    cur.execute(
-        """
+    cur.execute("""
         select count(*)
         from post p
         join post_topics pt on pt.post_id = p.id
         where p.comment_to != -1
-        """
-    )
+        """)
     comments_with_direct_topics = cur.fetchone()[0]
     con.close()
 
