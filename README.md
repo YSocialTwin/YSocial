@@ -144,10 +144,12 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    git clone https://github.com/YSocialTwin/YSocial.git
    cd YSocial
    ```
-2. **Sync submodules:**  
-   ```bash
-   git submodule update --init --recursive
-   ```
+2. **Clone the required external runtimes into `external/`:**
+   - `external/YClient`
+   - `external/YServer`
+   - `external/YClientReddit`
+   - `external/YServerReddit`
+   - `external/YSimulator`
 3. **Install dependencies:**  
    ```bash
    pip install -r requirements.txt
@@ -336,4 +338,3 @@ The Template license is the one of the creators ([Friendkit](https://cssninja.io
 ```
 
 🚀 **Start your social simulation journey with Y Social today!** 🎭
-

@@ -37,7 +37,7 @@ Notes:
 
 - Python 3.11 recommended
 - Git
-- initialized submodules
+- required external runtime repositories cloned under `external/`
 - a writable working directory
 
 Recommended environment setup:
@@ -52,7 +52,6 @@ Clone and install:
 ```bash
 git clone https://github.com/YSocialTwin/YSocial.git
 cd YSocial
-git submodule update --init --recursive
 pip install -r requirements.txt
 ```
 

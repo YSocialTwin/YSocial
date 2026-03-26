@@ -151,6 +151,13 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# External runtime repositories are managed as standalone clones
+/external/YClient/
+/external/YServer/
+/external/YClientReddit/
+/external/YServerReddit/
+/external/YSimulator/
+
 # mypy
 .mypy_cache/
 .dmypy.json
