@@ -1618,6 +1618,10 @@ var AdminSettings = (function() {
       const hpcInfoInline = document.getElementById('hpc-info-inline');
       const redisConfigBox = document.getElementById('redis-config-box');
       const platformTypeSelect = document.getElementById('platform_type_select');
+      const repoAvailability = (window.YS_DATA_SETTINGS && window.YS_DATA_SETTINGS.repoAvailability) || {};
+      const microbloggingAvailable = !!repoAvailability.microblogging;
+      const hpcAvailable = !!repoAvailability.hpc;
+      const forumAvailable = !!repoAvailability.forum;
     
       // Handle Redis Configuration collapsible toggle
       const redisConfigHeader = document.getElementById('redis-config-header');
@@ -1649,14 +1653,15 @@ var AdminSettings = (function() {
           if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {
               return;
           }
+          if (!forumAvailable && platformTypeSelect.value === 'forum') {
+              platformTypeSelect.value = 'microblogging';
+          }
           const isForum = platformTypeSelect.value === 'forum';
-          const isHPC = !isForum && hpcToggle.checked;
+          let isHPC = !isForum && hpcToggle.checked;
           const remoteExperimentToggle = document.getElementById('remote_experiment_toggle');
           const remoteExperimentContainer = document.getElementById('remote-experiment-container');
           const remoteExperimentLabel = document.getElementById('remote-experiment-label');
           const llmEnabled = llmAgentsToggle.checked;
-
-          simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
 
           if (isForum) {
               hpcToggle.checked = false;
@@ -1666,13 +1671,61 @@ var AdminSettings = (function() {
                   hpcToggleContainer.style.opacity = '0.55';
               }
           } else {
-              hpcToggle.disabled = false;
-              hpcToggleLabel.textContent = isHPC ? 'Enabled' : 'Disabled';
-              if (hpcToggleContainer) {
-                  hpcToggleContainer.style.opacity = '1';
+              if (!hpcAvailable) {
+                  hpcToggle.checked = false;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = 'Unavailable';
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.55';
+                  }
+              } else if (!microbloggingAvailable) {
+                  hpcToggle.checked = true;
+                  hpcToggle.disabled = true;
+                  hpcToggleLabel.textContent = 'Required';
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '0.8';
+                  }
+              } else {
+                  hpcToggle.disabled = false;
+                  hpcToggleLabel.textContent = hpcToggle.checked ? 'Enabled' : 'Disabled';
+                  if (hpcToggleContainer) {
+                      hpcToggleContainer.style.opacity = '1';
+                  }
               }
           }
-        
+
+          isHPC = !isForum && hpcToggle.checked;
+          simulatorTypeInput.value = isHPC ? 'HPC' : 'Standard';
+
+          if (!isForum && microbloggingAvailable && !hpcAvailable) {
+              hpcToggleLabel.textContent = 'Unavailable';
+          } else if (!isForum && !microbloggingAvailable && hpcAvailable) {
+              hpcToggleLabel.textContent = 'Required';
+          } else if (!isForum && hpcAvailable && microbloggingAvailable) {
+              hpcToggleLabel.textContent = isHPC ? 'Enabled' : 'Disabled';
+          }
+
+          if (platformTypeSelect) {
+              const forumOption = platformTypeSelect.querySelector('option[value="forum"]');
+              if (forumOption) {
+                  forumOption.disabled = !forumAvailable;
+              }
+              const microbloggingOption = platformTypeSelect.querySelector('option[value="microblogging"]');
+              if (microbloggingOption) {
+                  microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;
+              }
+          }
+
+          if (!isForum && hpcToggleContainer) {
+              if (hpcAvailable || microbloggingAvailable) {
+                  hpcToggleContainer.style.display = 'flex';
+              } else {
+                  hpcToggleContainer.style.display = 'none';
+              }
+          } else if (hpcToggleContainer) {
+              hpcToggleContainer.style.display = 'flex';
+          }
+
           if (isHPC) {
               hpcInfoInline.style.display = 'block';
               redisConfigBox.style.display = 'flex';
@@ -1705,6 +1758,9 @@ var AdminSettings = (function() {
 
               if (remoteExperimentToggle) {
                   remoteExperimentToggle.disabled = false;
+              }
+              if (hpcToggleContainer) {
+                  hpcToggleContainer.style.opacity = hpcToggle.disabled ? hpcToggleContainer.style.opacity : '1';
               }
               if (remoteExperimentContainer) {
                   remoteExperimentContainer.style.opacity = '1';

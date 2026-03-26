@@ -118,6 +118,26 @@ from ._helpers import (
     _current_admin_user_or_none,
     _experiment_configuration_update_required,
 )
+
+
+def _external_repo_availability():
+    """Detect which simulator repositories are available under external/."""
+    repo_root = pathlib.Path(__file__).resolve().parents[5]
+    external_dir = repo_root / "external"
+
+    def present(name):
+        path = external_dir / name
+        return path.exists() and path.is_dir()
+
+    microblogging = present("YServer") and present("YClient")
+    hpc = present("YSimulator")
+    forum = present("YServerReddit") and present("YClientReddit")
+
+    return {
+        "microblogging": microblogging,
+        "hpc": hpc,
+        "forum": forum,
+    }
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
 
@@ -177,6 +197,7 @@ def settings():
         .all()
     )
     exp_groups = [group[0] for group in exp_groups]  # Extract from tuples
+    repo_availability = _external_repo_availability()
 
     return render_template(
         "admin/settings.html",
@@ -189,6 +210,7 @@ def settings():
         exp_has_infinite=exp_has_infinite,
         exp_groups=exp_groups,
         active_experiments=active_experiments,
+        repo_availability=repo_availability,
     )
 
 
@@ -1745,6 +1767,27 @@ def create_experiment():
         "simulator_type", "Standard"
     )  # Default to Standard
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
+    repo_availability = _external_repo_availability()
+
+    if platform_type == "forum" and not repo_availability["forum"]:
+        flash("Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    if platform_type == "microblogging":
+        if simulator_type == "HPC":
+            if not repo_availability["hpc"]:
+                if repo_availability["microblogging"]:
+                    simulator_type = "Standard"
+                else:
+                    flash("HPC microblogging experiments are unavailable because YSimulator is not present.", "error")
+                    return redirect(url_for("experiments.settings"))
+        else:
+            if not repo_availability["microblogging"]:
+                if repo_availability["hpc"]:
+                    simulator_type = "HPC"
+                else:
+                    flash("Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present.", "error")
+                    return redirect(url_for("experiments.settings"))
 
     if platform_type == "forum":
         simulator_type = "Standard"

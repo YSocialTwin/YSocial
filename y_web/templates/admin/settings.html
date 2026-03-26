@@ -107,7 +107,7 @@
                                             <div class="select" style="flex: 1 1 280px; min-width: 240px;">
  <select id="platform_type_select" name="platform_type" class="w-100">
                                                     <option value="microblogging">Microblogging (i.e., X/BlueSky)</option>
-                                                    <option value="forum">Forum (i.e., Reddit)</option>
+                                                    <option value="forum" {% if not repo_availability.forum %}disabled{% endif %}>Forum (i.e., Reddit){% if not repo_availability.forum %} - Unavailable{% endif %}</option>
                                                 </select>
                                             </div>
                                             <div id="hpc-toggle-container" style="display: flex; align-items: center; gap: 8px; min-width: 140px; flex-shrink: 0;">
@@ -562,7 +562,8 @@
 {% include "admin/tutorials/experiments_tutorial.html" %}
 <script>
 var YS_DATA_SETTINGS = {
-    enableNotebook: {{ enable_notebook | tojson }}
+    enableNotebook: {{ enable_notebook | tojson }},
+    repoAvailability: {{ repo_availability | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-settings.js') }}"></script>

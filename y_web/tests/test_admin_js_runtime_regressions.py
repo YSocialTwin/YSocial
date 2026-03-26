@@ -111,3 +111,20 @@ def test_new_experiment_form_hides_description_and_experiment_type_controls():
         "if (!simulatorTypeInput || !platformTypeSelect || !hpcToggle || !hpcToggleLabel || !hpcInfoInline || !redisConfigBox || !llmAgentsToggle) {"
         in admin_settings_js
     )
+
+
+def test_new_experiment_form_uses_repo_availability_bridge():
+    settings = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "settings.html"
+    ).read_text(encoding="utf-8")
+    admin_settings_js = (STATIC_JS_DIR / "admin-settings.js").read_text(
+        encoding="utf-8"
+    )
+
+    assert "repoAvailability:" in settings
+    assert "const repoAvailability =" in admin_settings_js
+    assert "const microbloggingAvailable = !!repoAvailability.microblogging;" in admin_settings_js
+    assert "const hpcAvailable = !!repoAvailability.hpc;" in admin_settings_js
+    assert "const forumAvailable = !!repoAvailability.forum;" in admin_settings_js
+    assert "hpcToggleLabel.textContent = 'Required';" in admin_settings_js
+    assert "microbloggingOption.disabled = !microbloggingAvailable && !hpcAvailable;" in admin_settings_js

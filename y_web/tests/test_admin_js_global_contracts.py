@@ -284,3 +284,16 @@ def test_client_forms_use_fetch_based_vision_model_selection():
         assert "validateImageLLMModel()" not in template
 
     assert "function fetchVisionModelsForClient()" in admin_clients_js
+
+
+def test_create_experiment_enforces_external_repo_availability():
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py"
+    ).read_text(encoding="utf-8")
+
+    assert "def _external_repo_availability():" in source
+    assert 'present("YServer") and present("YClient")' in source
+    assert 'present("YSimulator")' in source
+    assert 'present("YServerReddit") and present("YClientReddit")' in source
+    assert "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present." in source
+    assert "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present." in source
