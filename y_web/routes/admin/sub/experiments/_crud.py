@@ -138,6 +138,8 @@ def _external_repo_availability():
         "hpc": hpc,
         "forum": forum,
     }
+
+
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
 
@@ -1770,7 +1772,10 @@ def create_experiment():
     repo_availability = _external_repo_availability()
 
     if platform_type == "forum" and not repo_availability["forum"]:
-        flash("Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.", "error")
+        flash(
+            "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.",
+            "error",
+        )
         return redirect(url_for("experiments.settings"))
 
     if platform_type == "microblogging":
@@ -1779,14 +1784,20 @@ def create_experiment():
                 if repo_availability["microblogging"]:
                     simulator_type = "Standard"
                 else:
-                    flash("HPC microblogging experiments are unavailable because YSimulator is not present.", "error")
+                    flash(
+                        "HPC microblogging experiments are unavailable because YSimulator is not present.",
+                        "error",
+                    )
                     return redirect(url_for("experiments.settings"))
         else:
             if not repo_availability["microblogging"]:
                 if repo_availability["hpc"]:
                     simulator_type = "HPC"
                 else:
-                    flash("Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present.", "error")
+                    flash(
+                        "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present.",
+                        "error",
+                    )
                     return redirect(url_for("experiments.settings"))
 
     if platform_type == "forum":
