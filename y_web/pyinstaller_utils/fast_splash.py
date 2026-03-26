@@ -98,7 +98,7 @@ class FastSplashScreen:
 
             try:
                 # Load logo
-                logo_path = get_resource_path("images/YSocial_v.png")
+                logo_path = get_resource_path("y_web/static/assets/images/platform/YSocial_v.png")
                 if os.path.exists(logo_path):
                     logo_img = Image.open(logo_path)
                     logo_target_width = 100

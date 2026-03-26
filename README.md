@@ -15,7 +15,7 @@ As a plus, YSocial allows you to analyze simulation data with an embedded **Jupy
 
 For more information, visit the [project website](https://y-not.social/) or read our [research paper](https://arxiv.org/abs/2408.00818).
 
-![Logo](./images/header.png)
+![Logo](./y_web/static/assets/images/platform/header.png)
 
 
 ---
@@ -105,7 +105,7 @@ The **Y Social** supports a wide range of simulation configurations and automate
 
 **Y Social** has been tested on **GNU/Linux**, **MacOS** and **Windows**. 
 
-[![os](./images/os_support.png)](https://y-not.social/download)
+[![os](./y_web/static/assets/images/platform/os_support.png)](https://y-not.social/download)
 
 ### 🎯 **Quick Start - Standalone Executable** *(Recommended for non-developers)*
 
@@ -280,14 +280,14 @@ Don't want to deal with dependencies? `Y Social` provides a **Dockerized setup**
 
 ### 📦 **Building & Running the Docker Container**
 ```bash
-docker-compose -f docker-compose.yml build
-docker-compose up
+docker compose -f deployment/docker/compose/docker-compose.yml build
+docker compose -f deployment/docker/compose/docker-compose.yml up
 ```
 
 #### ⚡ **Enable GPU Support (NVIDIA Only)**
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose_gpu.yml build
-docker-compose up --gpus all
+docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml build
+docker compose -f deployment/docker/compose/docker-compose.yml -f deployment/docker/compose/docker-compose_gpu.yml up --gpus all
 ```
 💡 **Ensure you have the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) installed.**
 

@@ -55,7 +55,7 @@ class YSocialSplashScreen:
 
         # Load logo preserving aspect ratio
         try:
-            logo_path = self._get_resource_path("images/YSocial_v.png")
+            logo_path = self._get_resource_path("y_web/static/assets/images/platform/YSocial_v.png")
             logo_img = Image.open(logo_path)
             # Calculate dimensions preserving aspect ratio (target width ~100px)
             logo_target_width = 100

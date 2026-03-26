@@ -50,7 +50,7 @@ RUN /opt/conda/envs/ysocial/bin/python -m pip install --no-cache-dir \
 
 # 3. Copy project files and install remaining requirements
 COPY . /app
-RUN /opt/conda/envs/ysocial/bin/python -m pip install --no-cache-dir -r requirements_fix.txt
+RUN /opt/conda/envs/ysocial/bin/python -m pip install --no-cache-dir -r deployment/docker/advanced/requirements_fix.txt
 
 # Fix ownership
 RUN chown -R $UNAME:$GID /app
