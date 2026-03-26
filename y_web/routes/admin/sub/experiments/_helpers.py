@@ -140,8 +140,6 @@ def _experiment_configuration_box_present(experiment):
     """Return whether experiment_details should show a configuration block."""
     if experiment is None:
         return False
-    if getattr(experiment, "platform_type", "") == "forum":
-        return _experiment_uses_llm_agents(experiment)
     return True
 
 

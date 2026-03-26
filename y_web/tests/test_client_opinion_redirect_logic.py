@@ -87,6 +87,7 @@ def test_client_creation_routes_persist_and_redirect_opinion_configuration():
     assert '"opinion_dynamics": {' in source
     assert '"clientsr.opinion_configuration_standard"' in source
     assert '"clientsr.opinion_configuration_hpc"' in source
+    assert '"clientsr.opinion_configuration_forum"' in source
 
 
 def test_client_creation_context_uses_shared_opinion_resolver():
@@ -118,3 +119,18 @@ def test_standard_redirect_is_implemented_in_standard_create_function():
 
     assert '"clientsr.opinion_configuration_standard"' in standard_chunk
     assert '"clientsr.opinion_configuration_standard"' not in forum_chunk
+
+
+def test_forum_redirect_is_implemented_in_forum_create_function():
+    source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+        "r",
+    ).read()
+
+    forum_start = source.index("def _create_forum_client_internal():")
+    next_def_after_forum = source.find("\ndef ", forum_start + 1)
+    if next_def_after_forum == -1:
+        next_def_after_forum = len(source)
+    forum_chunk = source[forum_start:next_def_after_forum]
+
+    assert '"clientsr.opinion_configuration_forum"' in forum_chunk

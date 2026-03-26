@@ -2203,6 +2203,9 @@ def delete_simulation(exp_id):
     if exp and not user_can_manage_experiment(admin_user, exp):
         flash("You do not have permission to delete this experiment.", "error")
         return settings()
+    if exp and int(getattr(exp, "running", 0) or 0) == 1:
+        flash("Stop the experiment before deleting it.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=exp.idexp))
 
     deleted, error_message = _delete_simulation_internal(exp_id)
     if not deleted and error_message:

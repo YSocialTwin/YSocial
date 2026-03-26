@@ -703,7 +703,9 @@ def update_experiment_config(uid):
     memory_enabled = None
     perspective_api = (request.form.get("perspective_api") or "").strip()
 
-    if not bool(getattr(exp, "llm_agents_enabled", 0)):
+    llm_agents_enabled_effective = _experiment_uses_llm_agents(exp)
+
+    if not llm_agents_enabled_effective:
         toxicity_enabled = False
         emotion_enabled = False
         sentiment_enabled = False
@@ -713,11 +715,10 @@ def update_experiment_config(uid):
         toxicity_enabled = False
         emotion_enabled = False
         sentiment_enabled = False
-        opinion_dynamics_enabled = False
         perspective_api = ""
 
     memory_configuration_supported = bool(
-        exp.simulator_type != "HPC" and bool(getattr(exp, "llm_agents_enabled", 0))
+        exp.simulator_type != "HPC" and llm_agents_enabled_effective
     )
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
@@ -1501,6 +1502,18 @@ def client_logs(client_id):
 
         # Client log file name format: {client_name}_client.log
         log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+        # Forum regressions previously wrote structured metrics into a shared
+        # agent_execution.log file instead of the per-client log file.
+        # Preserve compatibility for those experiments while new runs use the
+        # restored per-client sink again.
+        if (
+            getattr(experiment, "platform_type", "") == "forum"
+            and (not os.path.exists(log_file) or os.path.getsize(log_file) == 0)
+        ):
+            legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
+            if os.path.exists(legacy_forum_log) and os.path.getsize(legacy_forum_log) > 0:
+                log_file = legacy_forum_log
 
         # Check if log file exists
         if not os.path.exists(log_file):

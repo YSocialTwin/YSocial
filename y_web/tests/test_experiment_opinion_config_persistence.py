@@ -85,3 +85,32 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
         in clients_source
     )
     assert 'and bool(getattr(experiment, "llm_agents_enabled", 0))' in clients_source
+
+
+def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
+    data_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py",
+        "r",
+    ).read()
+
+    forum_section = data_source.split(
+        'if getattr(exp, "platform_type", "") == "forum":', 1
+    )[1].split("memory_configuration_supported =", 1)[0]
+
+    assert "opinion_dynamics_enabled = False" not in forum_section
+
+
+def test_forum_experiments_always_require_configuration_box_for_lock_workflow():
+    helpers_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        "r",
+    ).read()
+
+    assert 'if getattr(experiment, "platform_type", "") == "forum":' not in (
+        helpers_source.split("def _experiment_configuration_box_present(experiment):", 1)[1]
+        .split("def _experiment_uses_llm_agents", 1)[0]
+    )
+    assert "return True" in (
+        helpers_source.split("def _experiment_configuration_box_present(experiment):", 1)[1]
+        .split("def _experiment_uses_llm_agents", 1)[0]
+    )

@@ -18,6 +18,7 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
+    _experiment_uses_llm_agents,
 )
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
@@ -138,9 +139,7 @@ def _build_client_creation_context(idexp, recsys_mode):
     )
     topics_list = [{"id": t.id, "name": t.name} for t in topics_objs]
 
-    llm_agents_enabled = (
-        exp.llm_agents_enabled if hasattr(exp, "llm_agents_enabled") else True
-    )
+    llm_agents_enabled = _experiment_uses_llm_agents(exp) if exp is not None else True
 
     crecsys_all = Content_Recsys.query.all()
     frecsys_all = Follow_Recsys.query.all()
@@ -213,7 +212,7 @@ def _build_client_creation_context(idexp, recsys_mode):
             _opinion_dynamics_enabled_for_client_creation(exp)
         )
         memory_configuration_supported = bool(
-            exp.simulator_type != "HPC" and bool(getattr(exp, "llm_agents_enabled", 0))
+            exp.simulator_type != "HPC" and llm_agents_enabled
         )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
@@ -2010,7 +2009,7 @@ def _create_standard_client_internal():
             "political_leaning": [],
             "toxicity_levels": [],
             "languages": [],
-            "llm_agents": [],
+            "llm_agents": [] if llm_agents_enabled else [None],
             "education_levels": [],
             "round_actions": {"min": 1, "max": 3},
             "n_interests": {"min": 1, "max": 5},
@@ -3237,7 +3236,7 @@ def _create_forum_client_internal():
             "political_leaning": [],
             "toxicity_levels": [],
             "languages": [],
-            "llm_agents": [],
+            "llm_agents": [] if llm_agents_enabled else [None],
             "education_levels": [],
             "round_actions": {"min": 1, "max": 3},
             "n_interests": {"min": 1, "max": 5},
@@ -3796,6 +3795,15 @@ def _create_forum_client_internal():
             },
         }
     )
+
+    if bool(opinions_enabled):
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_forum",
+                idexp=exp_id,
+                client_id=client.id,
+            )
+        )
 
     # load experiment_details page
     from ..experiments import experiment_details

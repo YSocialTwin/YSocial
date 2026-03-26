@@ -73,6 +73,24 @@ def test_admin_experiments_exports_template_handlers():
     assert "experiment-topics-input" in content
 
 
+def test_forum_client_logs_support_legacy_shared_log_fallback():
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'platform_type", "") == "forum"' in route_source
+    assert 'agent_execution.log' in route_source
+
+
+def test_forum_process_runner_passes_per_client_log_file_to_reddit_client():
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/process_runner.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'if exp.platform_type == "forum":' in source
+    assert 'client_kwargs["log_file"] = log_file' in source
+
+
 def test_admin_clients_exports_template_handlers():
     path = STATIC_JS_DIR / "admin-clients.js"
     content = path.read_text(encoding="utf-8")
@@ -203,16 +221,20 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
     assert "<b>Experiment Configuration</b>" in standard
     assert "<b>Experiment Configuration</b>" in forum
-    assert (
-        "Generated content annotations are unavailable for forum experiments." in forum
-    )
-    assert "{% if can_manage_experiment and llm_agents_enabled_effective %}" in forum
-    assert "<span>Opinion Dynamics</span>" not in forum
+    assert "Forum experiments expose a single runtime configuration here." in forum
+    assert "{% if can_manage_experiment %}" in forum
+    assert "<span>Opinion Dynamics</span>" in forum
+    assert "<span>Memory</span>" not in forum
+    assert "<span>Toxicity</span>" not in forum
+    assert "<span>Emotion</span>" not in forum
+    assert "<span>Sentiment</span>" not in forum
     assert "Update Configuration" in forum
     assert 'name="opinion_dynamics_enabled"' in standard
-    assert 'name="opinion_dynamics_enabled"' not in forum
+    assert 'name="opinion_dynamics_enabled"' in forum
     assert 'name="memory_enabled"' in standard
-    assert 'name="memory_enabled"' in forum
+    assert 'name="memory_enabled"' not in forum
+    assert "/admin/opinion_configuration_forum/" in forum
+    assert "/admin/opinion_evolution/" in forum
     assert (
         "{% if memory_configuration_supported and memory_module_enabled %}" in standard
     )

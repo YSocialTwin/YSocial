@@ -442,21 +442,21 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
         # Check if this is an infinite client
         is_infinite = cli.days == -1 or ce.expected_duration_rounds == -1
 
+        client_kwargs = {
+            "config_file": config_file,
+            "data_base_path": data_base_path,
+            "first_run": first_run,
+        }
+        if exp.platform_type == "forum":
+            client_kwargs["log_file"] = log_file
+
         if first_run and cli.network_type:
             path = f"{cli.name}_network.csv"
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-                network=path,
-            )
+            client_kwargs["network"] = path
+            cl = YClientWeb(**client_kwargs)
             print(f"First run (with network)", file=sys.stderr)
         else:
-            cl = YClientWeb(
-                config_file,
-                data_base_path,
-                first_run=first_run,
-            )
+            cl = YClientWeb(**client_kwargs)
             if first_run:
                 print(f"First run (without network)", file=sys.stderr)
             else:
@@ -517,6 +517,9 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
     if exp.platform_type == "microblogging":
         sys.path.append(os.path.join(base_path, "external", "YClient"))
         from y_client.classes import FakeAgent
+    elif exp.platform_type == "forum":
+        sys.path.append(os.path.join(base_path, "external", "YClientReddit"))
+        from y_client.classes.fake_base_agent import FakeAgent
 
     # Create app only to get DB URI, but don't push its context
     app2 = create_app(db_type)
@@ -735,6 +738,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             # Evaluating new friendship ties
             for agent in da:
                 if agent not in cl.pages:
+                    llm_agents = cl.config.get("agents", {}).get("llm_agents")
+                    if (
+                        FakeAgent is not None
+                        and isinstance(llm_agents, list)
+                        and len(llm_agents) == 1
+                        and llm_agents[0] is None
+                        and not getattr(agent, "is_page", 0)
+                    ):
+                        agent.__class__ = FakeAgent
                     agent.select_action(tid=tid, actions=["FOLLOW", "NONE"])
 
         # daily churn and new agents

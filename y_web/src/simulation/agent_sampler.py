@@ -21,6 +21,15 @@ import numpy as np
 from y_web.src.models import ActivityProfile, PopulationActivityProfile
 
 
+def _rule_based_agents_enabled(config):
+    llm_agents = (config or {}).get("agents", {}).get("llm_agents")
+    return (
+        isinstance(llm_agents, list)
+        and len(llm_agents) == 1
+        and llm_agents[0] is None
+    )
+
+
 def get_users_per_hour(population, agents, session):
     # get population activity profiles
     activity_profiles = defaultdict(list)
@@ -218,6 +227,10 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
         except Exception:
             pass
 
+        if FakeAgent is not None and not getattr(g, "is_page", 0):
+            if _rule_based_agents_enabled(getattr(cl, "config", {})):
+                g.__class__ = FakeAgent
+
         if archetypes["enabled"]:
             # filtering the actions based on the archetype
             # Use getattr with default to handle agents without archetype attribute (e.g., when resuming old simulations)
@@ -229,13 +242,17 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                     for a, v in cl.actions_likelihood.items()
                     if v > 0 and a in ["READ", "SHARE", "SEARCH"]
                 ]
-                if exp.platform_type == "microblogging" and FakeAgent is not None:
+                if FakeAgent is not None and _rule_based_agents_enabled(
+                    getattr(cl, "config", {})
+                ):
                     g.__class__ = FakeAgent
             elif agent_archetype == "broadcaster":
                 acts = [a for a, v in cl.actions_likelihood.items() if v > 0]
             elif agent_archetype == "explorer":
                 acts = ["FOLLOW"]
-                if exp.platform_type == "microblogging" and FakeAgent is not None:
+                if FakeAgent is not None and _rule_based_agents_enabled(
+                    getattr(cl, "config", {})
+                ):
                     g.__class__ = FakeAgent
 
         else:

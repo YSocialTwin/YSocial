@@ -3,7 +3,7 @@ FROM mambaorg/micromamba:latest
 
 USER root
 
-ARG UNAME=giuliorossetti
+ARG UNAME= # Set this to your desired username, e.g., "ysocial"
 ARG UID=1056
 ARG GID=1056
 
