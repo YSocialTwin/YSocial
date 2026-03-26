@@ -186,7 +186,7 @@ def update_rss_feeds(uid):
         json.dump(feeds, handle, indent=2)
 
     flash("RSS feeds updated successfully.", "success")
-    return redirect(request.referrer or url_for("experiments.rss_feeds", uid=uid))
+    return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
 @experiments.route("/admin/update_url_feeds/<int:uid>", methods=["POST"])
@@ -205,7 +205,7 @@ def update_url_feeds(uid):
         handle.write("\n".join(urls))
 
     flash("URL feeds updated successfully.", "success")
-    return redirect(request.referrer or url_for("experiments.rss_feeds", uid=uid))
+    return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
 @experiments.route("/admin/api/parse_rss_feed", methods=["POST"])
@@ -414,7 +414,7 @@ def update_image_feeds(uid):
         json.dump(feeds, handle, indent=2)
 
     flash("Image feeds updated successfully.", "success")
-    return redirect(request.referrer or url_for("experiments.image_feeds", uid=uid))
+    return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
 @experiments.route("/admin/upload_image_feeds/<int:uid>", methods=["POST"])
