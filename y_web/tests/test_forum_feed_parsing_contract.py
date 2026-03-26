@@ -13,7 +13,12 @@ def test_normalize_subreddit_input_accepts_slug_and_reddit_urls():
     assert _normalize_subreddit_input("memes") == "memes"
     assert _normalize_subreddit_input("r/memes") == "memes"
     assert _normalize_subreddit_input("https://www.reddit.com/r/memes/") == "memes"
-    assert _normalize_subreddit_input("https://old.reddit.com/r/space/comments/abc123/post") == "space"
+    assert (
+        _normalize_subreddit_input(
+            "https://old.reddit.com/r/space/comments/abc123/post"
+        )
+        == "space"
+    )
     assert _normalize_subreddit_input("https://example.com/feed") == ""
 
 
@@ -36,13 +41,7 @@ def test_image_feeds_template_allows_reddit_urls():
 
 def test_rss_feed_parser_prefers_feed_metadata_link():
     content = (
-        REPO_ROOT
-        / "y_web"
-        / "routes"
-        / "admin"
-        / "sub"
-        / "experiments"
-        / "_feeds.py"
+        REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "experiments" / "_feeds.py"
     ).read_text(encoding="utf-8")
 
     assert 'site_url = str(feed.feed.get("link") or "").strip()' in content

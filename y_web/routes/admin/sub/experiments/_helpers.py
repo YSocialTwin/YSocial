@@ -23,7 +23,6 @@ from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
 import requests
-
 from flask import (
     Blueprint,
     current_app,

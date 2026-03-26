@@ -235,7 +235,9 @@ def parse_rss_feed():
         site_host = urlparse(site_url).netloc or parsed_url.netloc
         return jsonify(
             {
-                "name": feed.feed.get("title", site_host or parsed_url.netloc or feed_url),
+                "name": feed.feed.get(
+                    "title", site_host or parsed_url.netloc or feed_url
+                ),
                 "feed_url": parsed_feed_url,
                 "url_site": site_url or site_host,
                 "description": feed.feed.get("description", ""),

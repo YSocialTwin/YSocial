@@ -133,8 +133,10 @@ def get_llm_models(llm_url=None):
             if endpoint and endpoint not in candidates:
                 candidates.append(endpoint)
 
-        if path.endswith("/v1/models") or path.endswith("/models") or path.endswith(
-            "/api/tags"
+        if (
+            path.endswith("/v1/models")
+            or path.endswith("/models")
+            or path.endswith("/api/tags")
         ):
             add(base_url)
             return candidates
@@ -169,7 +171,10 @@ def get_llm_models(llm_url=None):
                 for model in payload.get("models", []):
                     if isinstance(model, dict):
                         name = str(
-                            model.get("name") or model.get("model") or model.get("id") or ""
+                            model.get("name")
+                            or model.get("model")
+                            or model.get("id")
+                            or ""
                         ).strip()
                     else:
                         name = str(model).strip()
