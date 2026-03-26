@@ -14,6 +14,7 @@ vllm_manager       — vLLM server management and generic model listing
 try:
     from y_web.src.llm.content_annotation import ContentAnnotator  # noqa: F401
 except ImportError:
+
     class ContentAnnotator:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             raise ImportError(
@@ -21,15 +22,18 @@ except ImportError:
                 "not available in this environment."
             )
 
+
 try:
     from y_web.src.llm.image_annotator import Annotator  # noqa: F401
 except ImportError:
+
     class Annotator:  # type: ignore[no-redef]
         def __init__(self, *args, **kwargs):
             raise ImportError(
                 "Annotator requires optional multimodal LLM dependencies that "
                 "are not available in this environment."
             )
+
 
 from y_web.src.llm.ollama_manager import (  # noqa: F401
     delete_model_pull,

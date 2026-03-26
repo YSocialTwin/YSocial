@@ -355,8 +355,7 @@ class TestIncludePathsValid:
                     content = fh.read()
                 for ref in pattern.findall(content):
                     if not (
-                        ref.startswith("microblogging/")
-                        or ref.startswith("shared/")
+                        ref.startswith("microblogging/") or ref.startswith("shared/")
                     ):
                         wrong.append((rel, ref))
         assert wrong == [], (
