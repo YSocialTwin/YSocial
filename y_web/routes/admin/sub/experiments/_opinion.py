@@ -889,7 +889,15 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
 
     # Organize opinions by (day, hour) for incremental processing
     opinions_by_time = defaultdict(list)
-    for row_id, agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
+    for (
+        row_id,
+        agent_id,
+        topic_id,
+        tid,
+        opinion,
+        opinion_day,
+        opinion_hour,
+    ) in all_opinions:
         opinions_by_time[(opinion_day, opinion_hour)].append(
             (row_id, agent_id, topic_id, opinion)
         )
@@ -1170,7 +1178,15 @@ def generate_agent_timeseries_data(
     opinions_by_time = defaultdict(list)
     agent_first_opinion = {}  # Track first observed opinion for each agent
 
-    for row_id, agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
+    for (
+        row_id,
+        agent_id,
+        topic_id,
+        tid,
+        opinion,
+        opinion_day,
+        opinion_hour,
+    ) in all_opinions:
         opinions_by_time[(opinion_day, opinion_hour)].append(
             (row_id, agent_id, topic_id, opinion)
         )

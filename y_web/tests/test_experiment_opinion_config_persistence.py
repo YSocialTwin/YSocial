@@ -95,9 +95,9 @@ def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
 
     assert "opinion_dynamics_enabled = False" not in data_source
     assert 'if getattr(exp, "platform_type", "") == "forum":' not in (
-        data_source.split(
-            "def update_experiment_config(uid):", 1
-        )[1].split("memory_configuration_supported =", 1)[0]
+        data_source.split("def update_experiment_config(uid):", 1)[1].split(
+            "memory_configuration_supported =", 1
+        )[0]
     )
 
 
