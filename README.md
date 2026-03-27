@@ -135,7 +135,7 @@ To avoid conflicts with the Python environment, we recommend using a virtual env
 Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can create a new environment with the following command:
 
   ```bash
-  conda create --name Y python=3.11
+  conda create --name Y python=3.12
   conda activate Y
   ```
 
@@ -144,7 +144,7 @@ Assuming you have [Anaconda](https://www.anaconda.com/) installed, you can creat
    git clone https://github.com/YSocialTwin/YSocial.git
    cd YSocial
    ```
-2. **Clone the required external runtimes into `external/`:**
+2. **Clone the required external runtimes into `external/` (or add them using the plugin interface in the admin panel):**
    - `external/YClient`
    - `external/YServer`
    - `external/YClientReddit`
@@ -330,7 +330,7 @@ The Template license is the one of the creators ([Friendkit](https://cssninja.io
   title={Y Social: an LLM-powered Social Media Digital Twin},
   author={Rossetti, Giulio and Stella, Massimo and Cazabet, Rémy and
   Abramski, Katherine and Cau, Erica and Citraro, Salvatore and
-  Failla, Andrea and Improta, Riccardo and Morini, Virginia and
+  Failla, Andrea and Morini, Virginia and
   Pansanella, Virginia},
   journal={arXiv preprint arXiv:2408.00818},
   year={2024}
