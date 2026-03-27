@@ -115,7 +115,10 @@ from ._blueprint import (
 from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
     _current_admin_user_or_none,
+    _experiment_configuration_box_present,
+    _experiment_configuration_update_required,
     _experiment_has_started_once,
+    _experiment_uses_llm_agents,
     _get_database_type,
     _get_experiment_folder,
     _normalize_embedding_host,
@@ -426,6 +429,13 @@ def experiment_details(uid):
         .filter(Population_Experiment.id_exp == uid)
         .all()
     )
+    experiment_topics = (
+        db.session.query(Exp_Topic, Topic_List)
+        .join(Topic_List, Exp_Topic.topic_id == Topic_List.id)
+        .filter(Exp_Topic.exp_id == uid)
+        .all()
+    )
+    experiment_topics = [topic.name for _, topic in experiment_topics]
 
     users = (
         db.session.query(Admin_users, User_Experiment)
@@ -476,7 +486,11 @@ def experiment_details(uid):
     forum_embedding_settings = dict(DEFAULT_FORUM_EMBEDDING_SETTINGS)
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     forum_feed_health = None
+    llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     memory_module_enabled = False
+    memory_configuration_supported = bool(
+        experiment.simulator_type != "HPC" and llm_agents_enabled_effective
+    )
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -489,6 +503,10 @@ def experiment_details(uid):
     opinion_dynamics_enabled = bool(
         experiment.annotations and "opinions" in experiment.annotations
     )
+    configuration_update_required = _experiment_configuration_update_required(
+        experiment
+    )
+    configuration_box_present = _experiment_configuration_box_present(experiment)
     try:
         from y_web.src.system.path_utils import get_writable_path
 
@@ -503,6 +521,13 @@ def experiment_details(uid):
         if os.path.exists(cfg_path):
             with open(cfg_path, "r") as f:
                 config = json.load(f)
+            config_topics = config.get("topics")
+            if isinstance(config_topics, list):
+                experiment_topics = [
+                    str(topic).strip()[:50]
+                    for topic in config_topics
+                    if str(topic).strip()
+                ]
             current_perspective_api = (config.get("perspective_api") or "").strip()
             toxicity_annotation_enabled = bool(
                 config.get("toxicity_annotation", toxicity_annotation_enabled)
@@ -518,6 +543,9 @@ def experiment_details(uid):
                     "opinion_dynamics_enabled",
                     config.get("opinions_enabled", opinion_dynamics_enabled),
                 )
+            )
+            configuration_update_required = configuration_box_present and not bool(
+                config.get("experiment_configuration_confirmed")
             )
             memory_cfg = config.get("memory")
             if isinstance(memory_cfg, dict):
@@ -577,17 +605,22 @@ def experiment_details(uid):
         client_executions=client_executions,
         has_infinite_client=has_infinite_client,
         users=users,
+        experiment_topics=experiment_topics,
         len=len,
         dbtype=dbtype,
         jupyter_instance=jupyter_instance,
         notebooks=current_app.config["ENABLE_NOTEBOOK"],
         telemetry_enabled=telemetry_enabled,
         can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
+        llm_agents_enabled_effective=llm_agents_enabled_effective,
         current_perspective_api=current_perspective_api,
         toxicity_annotation_enabled=toxicity_annotation_enabled,
         sentiment_annotation_enabled=sentiment_annotation_enabled,
         emotion_annotation_enabled=emotion_annotation_enabled,
         opinion_dynamics_enabled=opinion_dynamics_enabled,
+        configuration_box_present=configuration_box_present,
+        configuration_update_required=configuration_update_required,
+        memory_configuration_supported=memory_configuration_supported,
         memory_module_enabled=memory_module_enabled,
         embedding_settings=embedding_settings,
         forum_embedding_settings=forum_embedding_settings,
@@ -667,16 +700,30 @@ def update_experiment_config(uid):
     emotion_enabled = _is_checked("emotion_annotation")
     sentiment_enabled = _is_checked("sentiment_annotation")
     opinion_dynamics_enabled = _is_checked("opinion_dynamics_enabled")
-    memory_enabled = _is_checked("memory_enabled")
+    memory_enabled = None
     perspective_api = (request.form.get("perspective_api") or "").strip()
 
-    if not bool(getattr(exp, "llm_agents_enabled", 0)):
+    llm_agents_enabled_effective = _experiment_uses_llm_agents(exp)
+
+    if not llm_agents_enabled_effective:
         toxicity_enabled = False
         emotion_enabled = False
         sentiment_enabled = False
         perspective_api = ""
 
-    opinions_enabled = opinion_dynamics_enabled
+    if getattr(exp, "platform_type", "") == "forum":
+        toxicity_enabled = False
+        emotion_enabled = False
+        sentiment_enabled = False
+        perspective_api = ""
+
+    memory_configuration_supported = bool(
+        exp.simulator_type != "HPC" and llm_agents_enabled_effective
+    )
+    if memory_configuration_supported:
+        memory_enabled = _is_checked("memory_enabled")
+    else:
+        memory_enabled = False
 
     existing = [a.strip() for a in (exp.annotations or "").split(",") if a.strip()]
     annotation_set = set(existing)
@@ -684,7 +731,7 @@ def update_experiment_config(uid):
         ("toxicity", toxicity_enabled),
         ("emotion", emotion_enabled),
         ("sentiment", sentiment_enabled),
-        ("opinions", opinions_enabled),
+        ("opinions", opinion_dynamics_enabled),
     ):
         if enabled:
             annotation_set.add(key)
@@ -712,13 +759,16 @@ def update_experiment_config(uid):
 
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
-        config["opinions_enabled"] = opinions_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
         config["perspective_api"] = perspective_api if toxicity_enabled else None
+        config["experiment_configuration_confirmed"] = True
         memory_config = config.get("memory")
         if not isinstance(memory_config, dict):
             memory_config = {}
-        memory_config["enabled"] = bool(memory_enabled)
+        if memory_enabled is not None:
+            memory_config["enabled"] = bool(memory_enabled)
+        else:
+            memory_config["enabled"] = bool(memory_config.get("enabled"))
         config["memory"] = memory_config
 
         with open(cfg_path, "w") as f:
@@ -789,6 +839,75 @@ def update_experiment_config(uid):
     except Exception as exc:
         db.session.rollback()
         flash(f"Failed to update configuration: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
+@experiments.route("/admin/update_experiment_topics/<int:uid>", methods=["POST"])
+@login_required
+def update_experiment_topics(uid):
+    """Update experiment topics in admin DB and persisted server config."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=uid).first()
+    if not exp:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if not user_can_manage_experiment(admin_user, exp):
+        flash("You do not have permission to update experiment topics.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    raw_topics = (request.form.get("topics") or "").split(",")
+    topics = []
+    seen = set()
+    for raw_topic in raw_topics:
+        topic = str(raw_topic or "").strip()[:50]
+        if not topic:
+            continue
+        key = topic.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        topics.append(topic)
+
+    if not topics:
+        flash("Please provide at least one simulation topic.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=uid))
+
+    try:
+        db.session.query(Exp_Topic).filter_by(exp_id=uid).delete()
+        for topic in topics:
+            existing_topic = Topic_List.query.filter_by(name=topic).first()
+            if existing_topic is None:
+                existing_topic = Topic_List(name=topic)
+                db.session.add(existing_topic)
+                db.session.flush()
+            db.session.add(Exp_Topic(exp_id=uid, topic_id=existing_topic.id))
+
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        exp_folder = _get_experiment_folder(base_dir, exp, _get_database_type())
+        cfg_name = (
+            "server_config.json"
+            if exp.simulator_type == "HPC"
+            else "config_server.json"
+        )
+        cfg_path = os.path.join(exp_folder, cfg_name)
+        if os.path.exists(cfg_path):
+            with open(cfg_path, "r") as f:
+                config = json.load(f)
+            config["topics"] = topics
+            with open(cfg_path, "w") as f:
+                json.dump(config, f, indent=4)
+
+        db.session.commit()
+        flash("Experiment topics updated.", "success")
+    except Exception as exc:
+        db.session.rollback()
+        flash(f"Failed to update experiment topics: {str(exc)}", "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
 
@@ -1383,6 +1502,20 @@ def client_logs(client_id):
 
         # Client log file name format: {client_name}_client.log
         log_file = os.path.join(exp_folder, f"{client.name}_client.log")
+
+        # Forum regressions previously wrote structured metrics into a shared
+        # agent_execution.log file instead of the per-client log file.
+        # Preserve compatibility for those experiments while new runs use the
+        # restored per-client sink again.
+        if getattr(experiment, "platform_type", "") == "forum" and (
+            not os.path.exists(log_file) or os.path.getsize(log_file) == 0
+        ):
+            legacy_forum_log = os.path.join(exp_folder, "agent_execution.log")
+            if (
+                os.path.exists(legacy_forum_log)
+                and os.path.getsize(legacy_forum_log) > 0
+            ):
+                log_file = legacy_forum_log
 
         # Check if log file exists
         if not os.path.exists(log_file):

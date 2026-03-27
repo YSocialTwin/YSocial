@@ -399,15 +399,18 @@ def _run_bulk_download_job(app, notification_id, exp_ids):
             db.session.remove()
 
 
-def _resolve_bulk_experiment_ids(exp_ids_payload):
-    """Resolve incoming payload to a deduplicated integer experiment ID list."""
+def _resolve_bulk_experiment_ids(exp_ids_payload, admin_user=None):
+    """Resolve incoming payload to visible, deduplicated integer experiment IDs."""
+    visible_query = get_visible_experiment_query(admin_user)
+    visible_ids = {exp.idexp for exp in visible_query.all()}
+
     if exp_ids_payload == "all":
-        completed_experiments = Exps.query.filter_by(exp_status="completed").all()
+        completed_experiments = visible_query.filter_by(exp_status="completed").all()
         return [exp.idexp for exp in completed_experiments]
 
     if isinstance(exp_ids_payload, dict) and exp_ids_payload.get("all"):
         status_filter = str(exp_ids_payload.get("status", "")).strip()
-        query = Exps.query
+        query = visible_query
         if status_filter:
             if status_filter == "stopped_scheduled":
                 query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
@@ -418,7 +421,7 @@ def _resolve_bulk_experiment_ids(exp_ids_payload):
     if isinstance(exp_ids_payload, dict) and exp_ids_payload.get("group"):
         group_name = str(exp_ids_payload.get("group")).strip()
         status_filter = str(exp_ids_payload.get("status", "")).strip()
-        query = Exps.query.filter(Exps.exp_group == group_name)
+        query = visible_query.filter(Exps.exp_group == group_name)
         if status_filter:
             if status_filter == "stopped_scheduled":
                 query = query.filter(Exps.exp_status.in_(["stopped", "scheduled"]))
@@ -436,7 +439,7 @@ def _resolve_bulk_experiment_ids(exp_ids_payload):
             eid_int = int(eid)
         except (TypeError, ValueError):
             continue
-        if eid_int not in seen:
+        if eid_int in visible_ids and eid_int not in seen:
             normalized_ids.append(eid_int)
             seen.add(eid_int)
     return normalized_ids
@@ -456,6 +459,9 @@ def download_experiment_file(eid):
     admin_user = _current_admin_user()
     if not admin_user:
         flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.settings"))
+    if not user_can_view_experiment(admin_user, experiment):
+        flash("You do not have access to this experiment.", "error")
         return redirect(url_for("experiments.settings"))
 
     notification = _create_download_notification(
@@ -494,14 +500,14 @@ def download_experiments_bulk():
         flash("Invalid experiment IDs provided.", "error")
         return redirect(url_for("experiments.settings"))
 
-    exp_ids = _resolve_bulk_experiment_ids(exp_ids_payload)
-    if not exp_ids:
-        flash("No experiments selected for download.", "warning")
-        return redirect(url_for("experiments.settings"))
-
     admin_user = _current_admin_user()
     if not admin_user:
         flash("Unable to resolve current admin user.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    exp_ids = _resolve_bulk_experiment_ids(exp_ids_payload, admin_user=admin_user)
+    if not exp_ids:
+        flash("No experiments selected for download.", "warning")
         return redirect(url_for("experiments.settings"))
 
     notification = _create_download_notification(

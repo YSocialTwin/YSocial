@@ -60,6 +60,40 @@ from y_web.src.system.miscellanea import (
 population = Blueprint("population", __name__)
 
 
+def _uniform_distribution_from_ids(selected_ids):
+    ids = [str(item).strip() for item in selected_ids if str(item).strip()]
+    if not ids:
+        return {}
+    weight = 100.0 / len(ids)
+    return {item_id: weight for item_id in ids}
+
+
+def _normalize_percentage_distribution(raw_distribution, selected_ids):
+    selected = [str(item).strip() for item in selected_ids if str(item).strip()]
+    if not selected:
+        return {}
+
+    normalized = {}
+    for item_id in selected:
+        if str(item_id) in raw_distribution:
+            try:
+                normalized[item_id] = float(raw_distribution[str(item_id)])
+            except (TypeError, ValueError):
+                continue
+
+    if not normalized:
+        return _uniform_distribution_from_ids(selected)
+
+    return normalized
+
+
+def _distribution_total_is_valid(distribution):
+    if not distribution:
+        return False
+    total = sum(float(v) for v in distribution.values())
+    return abs(total - 100.0) < 0.01
+
+
 @population.route("/admin/create_population_empty", methods=["POST", "GET"])
 @login_required
 def create_population_empty():
@@ -128,13 +162,14 @@ def create_population():
     female_percentage = int(request.form.get("female_percentage", "50"))
     gender_distribution = {"male": male_percentage, "female": female_percentage}
 
-    education_levels = request.form.getlist("education_levels")
-    education_levels = ",".join(education_levels)
-    political_leanings = request.form.getlist("political_leanings")
-    political_leanings = ",".join(political_leanings)
+    age_classes = request.form.getlist("age_classes")
+    education_level_ids = request.form.getlist("education_levels")
+    political_leaning_ids = request.form.getlist("political_leanings")
+    toxicity_level_ids = request.form.getlist("toxicity_levels")
 
-    toxicity_levels = request.form.getlist("toxicity_levels")
-    toxicity_levels = ",".join(toxicity_levels)
+    education_levels = ",".join(education_level_ids)
+    political_leanings = ",".join(political_leaning_ids)
+    toxicity_levels = ",".join(toxicity_level_ids)
 
     # Retrieve percentage data for education, political leanings, toxicity, and age classes
     # These will be used in future implementations for weighted distribution
@@ -154,6 +189,19 @@ def create_population():
         toxicity_percentages = {}
         age_classes_percentages = {}
 
+    education_percentages = _normalize_percentage_distribution(
+        education_percentages, education_level_ids
+    )
+    political_percentages = _normalize_percentage_distribution(
+        political_percentages, political_leaning_ids
+    )
+    toxicity_percentages = _normalize_percentage_distribution(
+        toxicity_percentages, toxicity_level_ids
+    )
+    age_classes_percentages = _normalize_percentage_distribution(
+        age_classes_percentages, age_classes
+    )
+
     percentages = {
         "education": education_percentages,
         "political_leanings": political_percentages,
@@ -161,6 +209,38 @@ def create_population():
         "age_classes": age_classes_percentages,
         "gender": gender_distribution,
     }
+
+    if not name or not str(name).strip():
+        flash("Population name is required.", "error")
+        return redirect(request.referrer)
+
+    try:
+        n_agents_value = int(n_agents)
+    except (TypeError, ValueError):
+        flash("Population size must be a valid integer.", "error")
+        return redirect(request.referrer)
+
+    if n_agents_value <= 0:
+        flash("Population size must be greater than zero.", "error")
+        return redirect(request.referrer)
+
+    if male_percentage + female_percentage != 100:
+        flash("Gender distribution must total 100%.", "error")
+        return redirect(request.referrer)
+
+    required_distributions = {
+        "age classes": age_classes_percentages,
+        "education levels": education_percentages,
+        "political leanings": political_percentages,
+        "toxicity levels": toxicity_percentages,
+    }
+    for label, distribution in required_distributions.items():
+        if not distribution:
+            flash(f"Select at least one {label}.", "error")
+            return redirect(request.referrer)
+        if not _distribution_total_is_valid(distribution):
+            flash(f"The {label} percentages must sum to 100%.", "error")
+            return redirect(request.referrer)
 
     nationalities = request.form.get("nationalities")
     languages = request.form.get("languages")
@@ -204,7 +284,7 @@ def create_population():
     population = Population(
         name=name,
         descr=descr,
-        size=n_agents,
+        size=n_agents_value,
         llm=user_type,
         age_min=None,
         age_max=None,
@@ -231,7 +311,19 @@ def create_population():
         db.session.add(profile_assoc)
     db.session.commit()
 
-    generate_population(name, percentages, actions_config, profession_backgrounds)
+    try:
+        generate_population(name, percentages, actions_config, profession_backgrounds)
+    except Exception as exc:
+        PopulationActivityProfile.query.filter_by(population=population.id).delete()
+        Agent_Population.query.filter_by(population_id=population.id).delete()
+        Agent_Profile.query.filter_by(population_id=population.id).delete()
+        db.session.delete(population)
+        db.session.commit()
+        flash(
+            f"Population generation failed: {exc}. No partial population was kept.",
+            "error",
+        )
+        return redirect(request.referrer)
 
     from y_web.src.telemetry import Telemetry
 

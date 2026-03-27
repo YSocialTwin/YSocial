@@ -7,6 +7,16 @@ import random
 import numpy as np
 from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
+from sqlalchemy import (
+    MetaData,
+    Table,
+    create_engine,
+    delete,
+    func,
+    insert,
+    inspect,
+    select,
+)
 
 from y_web import db
 from y_web.src.models import (
@@ -15,6 +25,8 @@ from y_web.src.models import (
     Exp_Topic,
     Exps,
     OpinionDistribution,
+    OpinionEvolutionCache,
+    OpinionEvolutionSampledAgents,
     OpinionGroup,
     Population,
     Topic_List,
@@ -22,7 +34,11 @@ from y_web.src.models import (
 from y_web.src.system.miscellanea import check_privileges
 
 from ._blueprint import DISTRIBUTION_SCALE_FACTOR, clientsr
-from ._crud import _get_experiment_folder_name, _get_experiment_mode
+from ._crud import (
+    _get_experiment_folder_name,
+    _get_experiment_mode,
+    _opinion_dynamics_enabled_for_client_creation,
+)
 
 
 def _opinion_configuration_internal(idexp, expected_mode):
@@ -81,14 +97,8 @@ def _opinion_configuration_internal(idexp, expected_mode):
         flash("Client not found or does not belong to this experiment.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    # Verify that opinions annotation is present
-    annotations = (
-        {an.strip(): None for an in exp.annotations.split(",")}
-        if exp.annotations and exp.annotations.strip()
-        else {}
-    )
-    if "opinions" not in annotations:
-        flash("This experiment does not have opinions annotation.", "warning")
+    if not _opinion_dynamics_enabled_for_client_creation(exp):
+        flash("Opinion dynamics is not enabled for this experiment.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     # Get experiment topics
@@ -114,34 +124,6 @@ def _opinion_configuration_internal(idexp, expected_mode):
         exp_folder = exp.db_name.split(os.sep)[1]
     else:
         exp_folder = exp.db_name.removeprefix("experiments_")
-
-    # Read server config to resolve opinion dynamics global toggle.
-    server_cfg = os.path.join(
-        writable_base,
-        "y_web",
-        "experiments",
-        exp_folder,
-        "server_config.json" if exp.simulator_type == "HPC" else "config_server.json",
-    )
-    opinion_dynamics_global_enabled = False
-    if os.path.exists(server_cfg):
-        try:
-            with open(server_cfg, "r") as sf:
-                scfg = json.load(sf)
-            opinion_dynamics_global_enabled = bool(
-                scfg.get(
-                    "opinion_dynamics_enabled",
-                    bool(exp.annotations and "opinions" in exp.annotations),
-                )
-            )
-        except Exception:
-            opinion_dynamics_global_enabled = bool(
-                exp.annotations and "opinions" in exp.annotations
-            )
-    else:
-        opinion_dynamics_global_enabled = bool(
-            exp.annotations and "opinions" in exp.annotations
-        )
 
     # For HPC experiments, look for client_{client.name}-{population.name}.json
     # For standard experiments, look for {population.name}.json
@@ -608,44 +590,10 @@ def _resolve_opinion_submission_context(expected_mode):
                 "warning",
             )
 
-    server_cfg = os.path.join(
-        writable_base,
-        "y_web",
-        "experiments",
-        exp_folder,
-        "server_config.json" if actual_mode == "hpc" else "config_server.json",
-    )
-    opinion_dynamics_global_enabled = False
-    if os.path.exists(server_cfg):
-        try:
-            with open(server_cfg, "r") as handle:
-                scfg = json.load(handle)
-            opinion_dynamics_global_enabled = bool(
-                scfg.get(
-                    "opinion_dynamics_enabled",
-                    scfg.get(
-                        "opinions_enabled",
-                        bool(exp.annotations and "opinions" in exp.annotations),
-                    ),
-                )
-            )
-        except Exception:
-            opinion_dynamics_global_enabled = bool(
-                exp.annotations and "opinions" in exp.annotations
-            )
-    else:
-        opinion_dynamics_global_enabled = bool(
-            exp.annotations and "opinions" in exp.annotations
-        )
-
-    annotations = (
-        {an.strip(): None for an in exp.annotations.split(",")}
-        if exp.annotations and exp.annotations.strip()
-        else {}
-    )
-    opinion_dynamics_enabled = (
-        "opinions" in annotations and opinion_dynamics_global_enabled
-    )
+    opinion_dynamics_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
+    if not opinion_dynamics_enabled:
+        flash("Opinion dynamics is not enabled for this experiment.", "warning")
+        return None, redirect(url_for("experiments.experiment_details", uid=idexp))
 
     client_config_file = os.path.join(
         writable_base,
@@ -824,6 +772,116 @@ def _persist_hpc_opinion_dynamics(context):
         )
 
 
+def _invalidate_opinion_evolution_cache_for_experiment(exp_id):
+    """Clear opinion-evolution cache and stable samples for an experiment."""
+    try:
+        OpinionEvolutionCache.query.filter_by(exp_id=exp_id).delete()
+        OpinionEvolutionSampledAgents.query.filter_by(exp_id=exp_id).delete()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+
+def _sync_initial_standard_opinions_to_experiment_db(context):
+    """Sync configured initial opinions from the population JSON into the experiment DB.
+
+    This is only safe before a real simulation has materially progressed. Once the
+    experiment has posts/reactions/follows, those runtime-written opinion rows are
+    the source of truth and should not be overwritten here.
+    """
+    exp = context["exp"]
+    if getattr(exp, "simulator_type", "Standard") == "HPC":
+        return
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    writable_base = get_writable_path()
+    experiment_db = os.path.join(writable_base, "y_web", exp.db_name)
+    if not os.path.exists(experiment_db):
+        return
+
+    engine = create_engine(f"sqlite:////{experiment_db}")
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    required = {"user_mgmt", "interests", "rounds", "agent_opinion"}
+    if not required.issubset(tables):
+        engine.dispose()
+        return
+
+    metadata = MetaData()
+    user_mgmt = Table("user_mgmt", metadata, autoload_with=engine)
+    interests = Table("interests", metadata, autoload_with=engine)
+    rounds = Table("rounds", metadata, autoload_with=engine)
+    agent_opinion = Table("agent_opinion", metadata, autoload_with=engine)
+
+    activity_tables = {}
+    for table_name in ("post", "reactions", "follow"):
+        if table_name in tables:
+            activity_tables[table_name] = Table(
+                table_name, metadata, autoload_with=engine
+            )
+
+    try:
+        with engine.begin() as conn:
+            # Do not rewrite initial rows once the experiment has meaningful activity.
+            for table in activity_tables.values():
+                count_stmt = select(func.count()).select_from(table)
+                if int(conn.execute(count_stmt).scalar() or 0) > 0:
+                    return
+
+            first_round_id = conn.execute(
+                select(rounds.c.id)
+                .order_by(rounds.c.day.asc(), rounds.c.hour.asc(), rounds.c.id.asc())
+                .limit(1)
+            ).scalar()
+            if first_round_id is None:
+                return
+
+            topic_rows = conn.execute(
+                select(interests.c.iid, interests.c.interest)
+            ).all()
+            topic_name_to_id = {row.interest: row.iid for row in topic_rows}
+
+            user_rows = conn.execute(
+                select(user_mgmt.c.id, user_mgmt.c.username).where(
+                    user_mgmt.c.is_page == 0
+                )
+            ).all()
+            username_to_id = {row.username: row.id for row in user_rows}
+
+            opinion_rows = []
+            for agent in context["pop_data"].get("agents", []):
+                if agent.get("is_page", 0):
+                    continue
+                agent_id = username_to_id.get(agent.get("name"))
+                if agent_id is None:
+                    continue
+                for topic_name, opinion in (agent.get("opinions") or {}).items():
+                    topic_id = topic_name_to_id.get(topic_name)
+                    if topic_id is None:
+                        continue
+                    opinion_rows.append(
+                        {
+                            "agent_id": agent_id,
+                            "tid": first_round_id,
+                            "topic_id": topic_id,
+                            "id_interacted_with": None,
+                            "id_post": None,
+                            "opinion": float(opinion),
+                        }
+                    )
+
+            if not opinion_rows:
+                return
+
+            conn.execute(
+                delete(agent_opinion).where(agent_opinion.c.tid == first_round_id)
+            )
+            conn.execute(insert(agent_opinion), opinion_rows)
+    finally:
+        engine.dispose()
+
+
 def _set_standard_opinion_distributions_internal():
     """Persist opinion distributions for standard microblogging experiments."""
     context, error_response = _resolve_opinion_submission_context("standard")
@@ -833,6 +891,8 @@ def _set_standard_opinion_distributions_internal():
     if save_error is not None:
         return save_error
     _persist_non_hpc_opinion_dynamics(context)
+    _sync_initial_standard_opinions_to_experiment_db(context)
+    _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 
@@ -845,6 +905,8 @@ def _set_forum_opinion_distributions_internal():
     if save_error is not None:
         return save_error
     _persist_non_hpc_opinion_dynamics(context)
+    _sync_initial_standard_opinions_to_experiment_db(context)
+    _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 
@@ -857,6 +919,7 @@ def _set_hpc_opinion_distributions_internal():
     if save_error is not None:
         return save_error
     _persist_hpc_opinion_dynamics(context)
+    _invalidate_opinion_evolution_cache_for_experiment(int(context["idexp"]))
     return redirect(url_for("experiments.experiment_details", uid=context["idexp"]))
 
 

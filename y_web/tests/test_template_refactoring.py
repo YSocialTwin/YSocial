@@ -341,7 +341,7 @@ class TestIncludePathsValid:
         )
 
     def test_microblogging_includes_use_new_paths(self):
-        """All includes inside microblogging/ must use 'microblogging/...' prefix."""
+        """Microblogging templates may include local or shared partials only."""
         wrong = []
         mb_dir = os.path.join(TEMPLATES_DIR, "microblogging")
         pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.-]+\.html)["']""")
@@ -354,15 +354,17 @@ class TestIncludePathsValid:
                 with open(fpath) as fh:
                     content = fh.read()
                 for ref in pattern.findall(content):
-                    if not ref.startswith("microblogging/"):
+                    if not (
+                        ref.startswith("microblogging/") or ref.startswith("shared/")
+                    ):
                         wrong.append((rel, ref))
         assert wrong == [], (
-            "Microblogging templates contain includes not prefixed with 'microblogging/':\n"
+            "Microblogging templates contain includes outside 'microblogging/' or 'shared/':\n"
             + "\n".join(f"  {t}: '{r}'" for t, r in wrong)
         )
 
     def test_forum_includes_use_new_paths(self):
-        """All includes inside forum/ must use 'forum/...' prefix."""
+        """Forum templates may include local or shared partials only."""
         wrong = []
         forum_dir = os.path.join(TEMPLATES_DIR, "forum")
         pattern = re.compile(r"""{%-?\s+include\s+["']([\w/.-]+\.html)["']""")
@@ -375,10 +377,10 @@ class TestIncludePathsValid:
                 with open(fpath) as fh:
                     content = fh.read()
                 for ref in pattern.findall(content):
-                    if not ref.startswith("forum/"):
+                    if not (ref.startswith("forum/") or ref.startswith("shared/")):
                         wrong.append((rel, ref))
         assert wrong == [], (
-            "Forum templates contain includes not prefixed with 'forum/':\n"
+            "Forum templates contain includes outside 'forum/' or 'shared/':\n"
             + "\n".join(f"  {t}: '{r}'" for t, r in wrong)
         )
 

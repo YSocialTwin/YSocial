@@ -22,7 +22,7 @@
                  style="width: 20px; height: 20px; border-radius: 50%;"
                  alt="">
             <span style="font-weight: 500; color: #1c1c1c; margin-right: 6px; font-size: 12px;">
-                <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" style="color: inherit; text-decoration: none;">{{ thread["author"] }}</a>
+ <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1" class="ys-link-inherit">{{ thread["author"] }}</a>
             </span>
             <span style="color: #7c7c7c; font-size: 11px;">
                 {% if thread.get("display_time") %}
@@ -59,25 +59,19 @@
     <!-- Comment content -->
     {% if thread["post"] %}
     <div style="color: #1c1c1c; font-size: 15px; line-height: 1.4; margin-bottom: 6px; font-family: 'Reddit Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; text-indent: 0 !important; margin-left: 0 !important; padding-left: 0 !important;">
-        <style>
-            .comment-content strong, .comment-content b { font-weight: 600; }
-            .comment-content em, .comment-content i { font-style: italic; }
-            .comment-content ul { margin: 8px 0; padding-left: 20px; }
-            .comment-content li { margin: 4px 0; }
-        </style>
-        <div class="comment-content" style="white-space: pre-wrap; word-wrap: break-word;">{{- thread["post"]|safe -}}</div>
+ <div class="comment-content ys-pre-wrap">{{- thread["post"]|safe -}}</div>
     </div>
     {% endif %}
 
     <!-- Comment actions -->
     <div style="display: flex; align-items: center; gap: 4px; color: #7c7c7c; font-size: 11px; font-weight: 700; margin-bottom: 8px;">
-        <button class="vote-button" type="button" data-action="like" style="display: flex; align-items: center; gap: 2px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700;">
-            <i data-feather="arrow-up" style="width: 12px; height: 12px;"></i>
+ <button class="vote-button ys-action-btn" type="button" data-action="like">
+ <i data-feather="arrow-up" class="ys-icon-xxs"></i>
             <span data-role="score">{{ thread.get("likes", 0) - thread.get("dislikes", 0) }}</span>
         </button>
         
-        <button class="vote-button" type="button" data-action="dislike" style="display: flex; align-items: center; gap: 2px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700;">
-            <i data-feather="arrow-down" style="width: 12px; height: 12px;"></i>
+ <button class="vote-button ys-action-btn" type="button" data-action="dislike">
+ <i data-feather="arrow-down" class="ys-icon-xxs"></i>
         </button>
         
         <button class="toggle-reply-button" type="button" data-reply-target="{{ thread['post_id'] }}" style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700;">
@@ -88,7 +82,7 @@
     <!-- Reply form (initially hidden) -->
     <div style="margin-bottom: 8px;">
         <p id="message-{{ thread['post_id'] }}"></p>
-        <form class="comment_form" id="comment_form-{{ thread['post_id'] }}" style="display: none;">
+ <form class="comment_form d-none" id="comment_form-{{ thread['post_id'] }}">
             <textarea rows="2" class="reply_comment" id="comment-{{ thread['post_id'] }}" 
                       style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-family: inherit; resize: vertical; margin-bottom: 6px; font-size: 12px;">@{{ thread["author"] }} </textarea>
             <button type="button" class="add-comment-button" data-parent-id="{{ thread['post_id'] }}"

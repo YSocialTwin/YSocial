@@ -68,17 +68,15 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
 
     Uses a UID of "test-uid-xyz" and sets exp.db_name = "experiments/test-uid-xyz"
     so that the uid-extraction inside the function produces the right value.
-    The function's base-dir derivation (os.path.dirname(os.path.abspath(__file__)))
-    is patched to point one level *above* exp_dir_path, so the constructed path
-    resolves to the real temp directory.
+    The writable-path helper is patched so the constructed
+    <writable>/y_web/experiments/<uid>/config_server.json path resolves to the
+    real temp directory tree.
     """
     from y_web.routes.social.helpers import _experiment_memory_enabled  # noqa: PLC0415
 
     uid = "test-uid-xyz"
-    # exp_dir_path is e.g. /tmp/abc/experiments/test-uid-xyz
-    # The function builds: os.path.join(base_dir, "experiments", uid, "config_server.json")
-    # We set base_dir = parent of the "experiments" subfolder inside exp_dir_path
-    base_dir = os.path.dirname(os.path.dirname(exp_dir_path))  # two levels up
+    exp_dir_path = os.path.abspath(exp_dir_path)
+    writable_base = os.path.dirname(os.path.dirname(os.path.dirname(exp_dir_path)))
 
     mock_exp = MagicMock()
     mock_exp.platform_type = platform_type
@@ -86,10 +84,9 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
 
     with patch("y_web.routes.social.helpers.Exps") as mock_exps:
         mock_exps.query.filter_by.return_value.first.return_value = mock_exp
-        # Redirect the base-dir to our tmpdir so all paths resolve correctly
         with patch(
-            "y_web.routes.social.helpers.os.path.abspath",
-            return_value=os.path.join(base_dir, "helpers.py"),
+            "y_web.routes.social.helpers.get_writable_path",
+            return_value=writable_base,
         ):
             return _experiment_memory_enabled(1)
 
@@ -101,7 +98,7 @@ def exp_tmpdir(tmp_path):
     and returns (exp_dir, write_config, write_client) callables.
     """
     uid = "test-uid-xyz"
-    exp_dir = tmp_path / "experiments" / uid
+    exp_dir = tmp_path / "y_web" / "experiments" / uid
     exp_dir.mkdir(parents=True)
 
     def write_config(data):

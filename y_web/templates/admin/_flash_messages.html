@@ -1,0 +1,20 @@
+{% with flashes = get_flashed_messages(with_categories=true) %}
+{% if flashes %}
+<div class="ys-admin-flash-strip">
+    {% for category, message in flashes %}
+    {% set alert_class = 'warning' %}
+    {% if category in ['error', 'danger'] %}
+    {% set alert_class = 'danger' %}
+    {% elif category == 'success' %}
+    {% set alert_class = 'success' %}
+    {% elif category == 'info' %}
+    {% set alert_class = 'info' %}
+    {% endif %}
+    <div class="alert alert-{{ alert_class }} ys-admin-flash-alert" role="alert">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">&times;</button>
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}

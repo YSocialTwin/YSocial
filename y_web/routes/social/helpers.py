@@ -27,6 +27,7 @@ from y_web.src.data_access import (
     get_topics,
 )
 from y_web.src.experiment.context import get_current_experiment_id
+from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -40,6 +41,7 @@ from y_web.src.models import (
     User_mgmt,
     Websites,
 )
+from y_web.src.system.path_utils import get_writable_path
 
 
 def get_safe_profile_pic(username, is_page=0):
@@ -378,21 +380,15 @@ def _experiment_memory_enabled(exp_id):
     if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
         return False
 
-    uid = None
-    db_name = str(getattr(exp, "db_name", "") or "").replace("\\", "/")
-    parts = db_name.split("/")
-    if "experiments" in parts:
-        try:
-            uid = parts[parts.index("experiments") + 1]
-        except Exception:
-            uid = None
-    elif db_name.startswith("experiments_"):
-        uid = db_name.replace("experiments_", "")
+    uid = get_experiment_uid_from_db_name(
+        str(getattr(exp, "db_name", "") or "").replace("\\", "/")
+    )
     if not uid:
         return False
 
     config_path = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)),
+        get_writable_path(),
+        "y_web",
         "experiments",
         str(uid),
         "config_server.json",

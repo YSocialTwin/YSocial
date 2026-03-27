@@ -1,113 +1,6 @@
 {% include "admin/head.html" %}
-
-<style>
-/* Responsive styles for plot section headings */
-.plot-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5em;
-    flex-wrap: wrap;
-    gap: 0.75em;
-}
-.plot-section-header h3 {
-    margin-bottom: 0;
-    flex-shrink: 0;
-}
-.plot-section-controls {
-    display: flex;
-    gap: 0.5em;
-    align-items: center;
-    flex-wrap: wrap;
-}
-@media (max-width: 768px) {
-    .plot-section-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .plot-section-controls {
-        width: 100%;
-        justify-content: flex-start;
-    }
-}
-
-/* Match toggle look-and-feel from admin/experiments (settings page) */
-.switch-small {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-}
-.switch-small input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.slider-small {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background-color: #d1d5db;
-    transition: .4s;
-}
-.slider-small:before {
-    position: absolute;
-    content: "";
-    height: 16px;
-    width: 16px;
-    left: 3px;
-    bottom: 3px;
-    background-color: #fff;
-    transition: .4s;
-}
-.switch-small input:checked + .slider-small {
-    background-color: #039be5;
-}
-.switch-small input:checked + .slider-small:before {
-    transform: translateX(18px);
-}
-.slider-small.round {
-    border-radius: 22px;
-}
-.slider-small.round:before {
-    border-radius: 50%;
-}
-
-.exp-config-card {
-    background: #f8fafc;
-    border: 1px solid #e5e7eb;
-    border-radius: 8px;
-    padding: 10px;
-}
-.exp-config-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-}
-.exp-config-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 6px;
-    padding: 6px 8px;
-    min-width: 0;
-}
-.exp-config-item span {
-    font-size: 0.82rem;
-    color: #374151;
-    white-space: nowrap;
-}
-.perspective-field-disabled {
-    opacity: 0.6;
-}
-@media (max-width: 768px) {
-    .exp-config-grid {
-        grid-template-columns: 1fr;
-    }
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-settings.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -122,37 +15,30 @@
                     <div class="dashboard-box">
                         <a href="/admin/experiments">Experiments</a> > Simulation: {{ experiment.exp_name }}
                         {% if has_infinite_client %}
-                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: 600; margin-left: 10px;" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
+ <span class="ys-badge-success2" title="This experiment has at least one client set to run until manually stopped">∞ Infinite</span>
                         {% endif %}
                     </div>
                 </div>
             </div>
 
-            <div class="columns is-multiline" style="display: flex; align-items: stretch;">
+ <div class="columns is-multiline ys-flex-stretch">
                 <!--Dashboard column-->
-                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
-
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
 
                     <!--Dashboard box-->
-                    <div class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
+ <div class="dashboard-box ys-flex-auto-col">
                         <h3 class="title is-5 is-thin">Experiment Overview</h3>
 
-                        <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                             <div class="box-lines">
                                 <b>Basic Information</b>
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Experiment identification and settings.</p>
+ <p class="ys-label-hint">Experiment identification and settings.</p>
                                 <div class="box-line">
                                     <span class="left">Name</span>
                                     <span class="right">
                                         {{ experiment.exp_name }}
                                         {% if has_infinite_client %}
-                                        <span style="background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); color: white; font-size: 0.7em; padding: 2px 6px; border-radius: 10px; font-weight: 600; margin-left: 5px;" title="This experiment has at least one client set to run until manually stopped">∞</span>
+ <span class="ys-badge-success" title="This experiment has at least one client set to run until manually stopped">∞</span>
                                         {% endif %}
                                     </span>
                                 </div>
@@ -164,60 +50,41 @@
                                     <span class="left">Owner</span>
                                     <span class="right">{{ experiment.owner }}</span>
                                 </div>
+                                <div class="ys-topic-block">
+                                    <div class="ys-topic-title">Simulation Topics</div>
+                                    <div class="ys-topic-body">
+                                        {% if can_manage_experiment %}
+                                        <form method="POST" action="/admin/update_experiment_topics/{{ experiment.idexp }}">
+                                            <div class="tags-input w-100 ys-topic-tags-input">
+                                                <ul id="experiment-topics-tags">
+                                                    {% for topic in experiment_topics %}
+                                                    <li>{{ topic }} <button type="button" class="delete-button">X</button></li>
+                                                    {% endfor %}
+                                                </ul>
+                                                <input type="hidden" id="experiment-topics-hidden" name="topics" value="{{ experiment_topics|join(',') }}">
+                                                <input type="text" id="experiment-topics-input" placeholder="Enter topic name" class="w-100"/>
+                                            </div>
+                                            <div class="ys-topic-actions">
+                                                <button type="submit" class="button is-small is-light">Save Topics</button>
+                                            </div>
+                                        </form>
+                                        {% else %}
+                                        <div class="ys-topic-readonly">
+                                            {% for topic in experiment_topics %}
+                                            <span class="tag is-light">{{ topic }}</span>
+                                            {% endfor %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% if can_manage_experiment %}
                                 <hr>
-                                <div id="actions-section">
-                                    <b>Actions</b>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Manage experiment data and configuration.</p>
-                            
-                            {% if len(clients)>0 %}
-                            <div class="box-line">
-                                <span class="left">Edit LLM Prompts</span>
-                                <span class="right">
-                                    <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="Edit">
-                                        <i class="mdi mdi-credit-card" style="font-size: 24px;"></i></a>
-                                </span>
-                            </div>
-                            {% endif %}
-
-                            <div class="box-line">
-                                <span class="left">Download Experiment</span>
-                                <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i
-                                 class="mdi mdi-download" style="font-size: 24px;"></i></a></span>
-                            </div>
-                            <div class="box-line">
-                                <span class="left">Delete Experiment</span>
-                                <span class="right"> {% if can_manage_experiment %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
-                                                        title="Delete"><i
-                                 class="mdi mdi-delete" style="font-size: 24px;"></i></a>{% else %}<i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
-                            </div>
-                            <div class="box-line">
-                                <span class="left">Memory Embeddings</span>
-                                <span class="right">
-                                    {% if can_manage_experiment %}
-                                    <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
-                                        <i class="mdi mdi-tune" style="font-size: 24px;"></i>
-                                    </a>
-                                    {% else %}
-                                    <i class="mdi mdi-lock" style="font-size: 20px; color: #9aa0a6;" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
-                                    {% endif %}
-                                </span>
-                            </div>
-                            <div style="font-size: 0.8em; color: #777; margin: -0.2em 0 0.9em 0;">
-                                {% if embedding_settings.service and embedding_settings.model %}
-                                {{ embedding_settings.service|upper }} · {{ embedding_settings.model }}
-                                {% else %}
-                                Not configured. Semantic memory falls back to lexical retrieval.
-                                {% endif %}
-                            </div>
-
-                            {% if can_manage_experiment %}
-                            <hr>
-                            <b>Experiment Configuration</b>
-                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Enable/disable runtime annotations.</p>
+                                <b>Experiment Configuration</b>
+                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Enable or disable runtime annotations and memory.</p>
                             <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
                                 <div class="exp-config-card">
                                     <div class="exp-config-grid">
-                                            {% if experiment.llm_agents_enabled %}
+                                            {% if llm_agents_enabled_effective %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
                                                     <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
@@ -247,9 +114,18 @@
                                                 </label>
                                                 <span>Opinion Dynamics</span>
                                             </div>
+                                            {% if memory_configuration_supported %}
+                                            <div class="exp-config-item">
+                                                <label class="switch-small">
+                                                    <input type="checkbox" name="memory_enabled" {% if memory_module_enabled %}checked{% endif %}>
+                                                    <span class="slider-small round"></span>
+                                                </label>
+                                                <span>Memory</span>
+                                            </div>
+                                            {% endif %}
                                     </div>
-                                    {% if experiment.llm_agents_enabled %}
-                                    <div id="perspective_api_field_exp" style="margin-top: 8px;">
+                                    {% if llm_agents_enabled_effective %}
+ <div id="perspective_api_field_exp" class="ys-mt-8">
                                         <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (required for toxicity)</label>
                                         <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza..." style="font-size: 0.84rem;">
                                     </div>
@@ -259,33 +135,16 @@
                                     </div>
                                     {% endif %}
                                 </div>
-                                <button type="submit" class="button is-small is-info" style="margin-top: 8px;">Update Configuration</button>
+ <button type="submit" class="button is-small is-info ys-mt-8">Update Configuration</button>
                             </form>
-                            {% if experiment.llm_agents_enabled %}
-                            <script>
-                                (function() {
-                                    const toxicityToggle = document.getElementById('toxicity_annotation_toggle_exp');
-                                    const perspectiveWrap = document.getElementById('perspective_api_field_exp');
-                                    const perspectiveInput = document.getElementById('perspective_api_input_exp');
-                                    if (!toxicityToggle || !perspectiveWrap || !perspectiveInput) return;
-                                    const syncPerspectiveState = () => {
-                                        const enabled = !!toxicityToggle.checked;
-                                        perspectiveInput.disabled = !enabled;
-                                        perspectiveWrap.classList.toggle('perspective-field-disabled', !enabled);
-                                        if (!enabled) {
-                                            perspectiveInput.value = '';
-                                        }
-                                    };
-                                    toxicityToggle.addEventListener('change', syncPerspectiveState);
-                                    syncPerspectiveState();
-                                })();
-                            </script>
+                            {% if llm_agents_enabled_effective %}
+
                             {% endif %}
 
                             {% if hpc_reset_available %}
                             <hr>
                             <b>HPC Reset</b>
-                            <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">
+ <p class="ys-label-hint">
                                 Reset experiment to initial state: clear logs, delete DB, restore population backups, and reset dashboard counters.
                             </p>
                             <form method="POST" action="/admin/reset_hpc_experiment/{{ experiment.idexp }}" onsubmit="return confirm('Reset this HPC experiment? This will clear logs, delete DB files, reset statuses, and restore population backups.');">
@@ -293,51 +152,115 @@
                             </form>
                             {% endif %}
                             {% endif %}
+                                <hr>
+                                <div id="actions-section">
+ <details class="ys-mb-20">
+ <summary class="ys-accordion-header">
+ <span class="ys-inline-flex-gap">
+ <svg class="details-arrow ys-chevron-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                            Additional Configuration
+                                        </span>
+                                    </summary>
+ <div class="ys-content-panel">
+ <p class="ys-label-hint">Adjust experiment prompts and supporting configuration.</p>
+
+                                {% if len(clients)>0 %}
+                                <div class="box-line">
+                                    <span class="left">Edit LLM Prompts</span>
+                                    <span class="right">
+                                        <a class="link-tooltip" href="/admin/prompts/{{ experiment.idexp }}" title="Edit">
+ <i class="mdi mdi-credit-card ys-icon-lg"></i></a>
+                                    </span>
+                                </div>
+                                {% endif %}
+
+                                {% if memory_configuration_supported and memory_module_enabled %}
+                                <div class="box-line">
+                                    <span class="left">Memory Embeddings</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/embedding_settings/{{ experiment.idexp }}" title="Configure Memory Embeddings">
+ <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+ <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit memory embeddings"></i>
+                                        {% endif %}
+                                    </span>
+                                </div>
+ <div class="ys-text-xs-meta">
+                                    {% if embedding_settings.service and embedding_settings.model %}
+                                    {{ embedding_settings.service|upper }} · {{ embedding_settings.model }}
+                                    {% else %}
+                                    Not configured. Semantic memory falls back to lexical retrieval.
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                                    </div>
+                                </details>
+                                <hr>
+                                <b>Management</b>
+ <p class="ys-label-hint">Download or remove this experiment.</p>
+                            <div class="box-line">
+                                <span class="left">Download Experiment</span>
+                                <span class="right"><a class="link-tooltip" href="/admin/download_experiment/{{ experiment.idexp }}" title="Download"><i
+ class="mdi mdi-download ys-icon-lg"></i></a></span>
+                            </div>
+                            <div class="box-line">
+                                <span class="left">Delete Experiment</span>
+                                <span class="right"> {% if can_manage_experiment and experiment.running != 1 %}<a class="link-tooltip" href="/admin/delete_simulation/{{ experiment.idexp }}" 
+                                                        title="Delete"><i
+ class="mdi mdi-delete ys-icon-lg ys-icon-muted"></i></a>{% elif can_manage_experiment %}<i class="mdi mdi-delete-off ys-icon-muted" title="Stop the experiment before deleting it"></i>{% else %}<i class="mdi mdi-lock" title="Only owner/admin/shared researchers can delete"></i>{% endif %}</span>
+                            </div>
                                 </div>
                             </div>
 
                         </div>
                     </div>
 
-
-
                 </div>
 
                 <!--Dashboard box-->
 
                 <!--Dashboard column-->
-                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
                     <!--Box-->
 
-                    <div id="server-controls-section" class="dashboard-box">
+                    <div id="server-controls-section" class="dashboard-box{% if configuration_update_required %} ys-config-locked-box{% endif %}">
                         <h3 class="title is-5 is-thin">Server & Analysis Controls</h3>
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Update <b>Experiment Configuration</b> first. Until then, server control actions and client workflows stay locked.
+                        </div>
+                        {% endif %}
                         
                         {% if experiment.is_remote == 1 %}
                         <!-- Remote experiment info -->
-                        <div id="remote-server-info" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border: 2px solid #2196F3; border-radius: 8px; padding: 16px; margin-bottom: 15px;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <i class="mdi mdi-cloud-outline" style="font-size: 24px; color: #1976D2;"></i>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: #0d47a1; font-size: 0.95em;">Remote Experiment</div>
-                                    <div style="font-size: 0.85em; color: #1565C0; margin-top: 2px;">YServer running on external machine</div>
+ <div id="remote-server-info" class="ys-info-banner">
+ <div class="ys-flex-row-mb8">
+ <i class="mdi mdi-cloud-outline ys-icon-primary"></i>
+ <div class="ys-flex-1">
+ <div class="ys-text-primary-bold">Remote Experiment</div>
+ <div class="ys-text-sm-primary-mt">YServer running on external machine</div>
                                 </div>
-                                <button onclick="toggleRemoteServerEdit()" class="button is-small" style="padding: 4px 8px; font-size: 0.8em;" title="Edit server settings">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="toggleRemoteServerEdit()"{% endif %} class="button is-small ys-badge-sm" title="Edit server settings">
                                     <i class="mdi mdi-pencil"></i> Edit
                                 </button>
                             </div>
                             
                             <!-- Display mode -->
-                            <div id="remote-display-mode" style="background: white; border-radius: 6px; padding: 10px; margin-top: 10px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                    <span style="font-size: 0.85em; color: #555; font-weight: 500;">Host:</span>
-                                    <span id="display-host" style="font-size: 0.9em; color: #0d47a1; font-family: monospace; font-weight: 600;">{{ experiment.server }}</span>
+ <div id="remote-display-mode" class="ys-white-box">
+ <div class="ys-flex-between-mb6">
+ <span class="ys-label-555">Host:</span>
+ <span id="display-host" class="ys-mono-primary">{{ experiment.server }}</span>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <span style="font-size: 0.85em; color: #555; font-weight: 500;">Port:</span>
-                                    <span id="display-port" style="font-size: 0.9em; color: #0d47a1; font-family: monospace; font-weight: 600;">{{ experiment.port }}</span>
+ <div class="ys-flex-between">
+ <span class="ys-label-555">Port:</span>
+ <span id="display-port" class="ys-mono-primary">{{ experiment.port }}</span>
                                 </div>
-                                <div style="margin-top: 10px; text-align: center;">
-                                    <button onclick="testRemoteServer()" class="button is-info is-small is-fullwidth" style="display: flex; align-items: center; justify-content: center; gap: 0.5em;">
+ <div class="ys-mt-center">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="testRemoteServer()"{% endif %} class="button is-info is-small is-fullwidth ys-flex-center-gap">
                                         <i class="mdi mdi-network-outline"></i>
                                         <span>Test Connection</span>
                                     </button>
@@ -345,156 +268,117 @@
                             </div>
                             
                             <!-- Edit mode (initially hidden) -->
-                            <div id="remote-edit-mode" style="background: white; border-radius: 6px; padding: 10px; margin-top: 10px; display: none;">
-                                <div style="margin-bottom: 10px;">
-                                    <label style="display: block; font-size: 0.85em; color: #555; font-weight: 500; margin-bottom: 4px;">Host:</label>
+ <div id="remote-edit-mode" class="ys-hidden-white-box">
+ <div class="ys-mb-10">
+ <label class="ys-label-555">Host:</label>
                                     <input type="text" id="edit-host" value="{{ experiment.server }}" class="input is-small" placeholder="e.g., 192.168.1.100">
                                 </div>
-                                <div style="margin-bottom: 10px;">
-                                    <label style="display: block; font-size: 0.85em; color: #555; font-weight: 500; margin-bottom: 4px;">Port:</label>
+ <div class="ys-mb-10">
+ <label class="ys-label-555">Port:</label>
                                     <input type="number" id="edit-port" value="{{ experiment.port }}" class="input is-small" min="1" max="65535" placeholder="8000">
                                 </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button onclick="saveRemoteServer()" class="button is-success is-small" style="flex: 1;">
+ <div class="ys-flex-gap-8-only">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="saveRemoteServer()"{% endif %} class="button is-success is-small ys-flex-1">
                                         <i class="mdi mdi-check"></i> Save
                                     </button>
-                                    <button onclick="cancelRemoteServerEdit()" class="button is-light is-small" style="flex: 1;">
+ <button {% if configuration_update_required %}disabled{% else %}onclick="cancelRemoteServerEdit()"{% endif %} class="button is-light is-small ys-flex-1">
                                         <i class="mdi mdi-close"></i> Cancel
                                     </button>
                                 </div>
                             </div>
+                            {% if configuration_update_required %}
+ <div class="ys-mt-center">
+                                <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
+ <i class="mdi mdi-select-all ys-icon-lg"></i>
+                                </a>
+                                {% if notebooks %}
+                                    {% if jupyter_instance.status!='stopped' %}
+                                    <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
+                                    </a>
+                                    {% else %}
+                                    <a id="start-jupyter-btn" class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
+                                    </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                            {% endif %}
                             
                             <!-- Status message area -->
-                            <div id="remote-status-message" style="margin-top: 10px; display: none;"></div>
+ <div id="remote-status-message" class="ys-hidden-mt10"></div>
                         </div>
                         
-                        <script>
-                            function toggleRemoteServerEdit() {
-                                document.getElementById('remote-display-mode').style.display = 'none';
-                                document.getElementById('remote-edit-mode').style.display = 'block';
-                            }
-                            
-                            function cancelRemoteServerEdit() {
-                                document.getElementById('remote-edit-mode').style.display = 'none';
-                                document.getElementById('remote-display-mode').style.display = 'block';
-                            }
-                            
-                            function testRemoteServer() {
-                                const host = document.getElementById('display-host').textContent;
-                                const port = document.getElementById('display-port').textContent;
-                                const statusDiv = document.getElementById('remote-status-message');
-                                
-                                statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Testing connection...</div>';
-                                statusDiv.style.display = 'block';
-                                
-                                fetch(`/admin/test_remote_server/{{ experiment.idexp }}`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({ host: host, port: port })
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        statusDiv.innerHTML = `<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> ${data.message}</div>`;
-                                        setTimeout(() => { statusDiv.style.display = 'none'; }, 5000);
-                                    } else {
-                                        statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
-                                    }
-                                })
-                                .catch(error => {
-                                    statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error testing connection</div>';
-                                });
-                            }
-                            
-                            function saveRemoteServer() {
-                                const host = document.getElementById('edit-host').value.trim();
-                                const port = parseInt(document.getElementById('edit-port').value);
-                                const statusDiv = document.getElementById('remote-status-message');
-                                
-                                if (!host) {
-                                    alert('Please enter a host address');
-                                    return;
-                                }
-                                
-                                if (!port || port < 1 || port > 65535) {
-                                    alert('Please enter a valid port (1-65535)');
-                                    return;
-                                }
-                                
-                                statusDiv.innerHTML = '<div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; padding: 8px; font-size: 0.85em;"><i class="mdi mdi-loading mdi-spin"></i> Updating server settings...</div>';
-                                statusDiv.style.display = 'block';
-                                
-                                fetch(`/admin/update_remote_server/{{ experiment.idexp }}`, {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                    },
-                                    body: JSON.stringify({ host: host, port: port })
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    if (data.success) {
-                                        document.getElementById('display-host').textContent = host;
-                                        document.getElementById('display-port').textContent = port;
-                                        cancelRemoteServerEdit();
-                                        statusDiv.innerHTML = '<div style="background: #d4edda; border: 1px solid #28a745; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #155724;"><i class="mdi mdi-check-circle"></i> Server settings updated successfully</div>';
-                                        setTimeout(() => { statusDiv.style.display = 'none'; }, 3000);
-                                    } else {
-                                        statusDiv.innerHTML = `<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> ${data.message}</div>`;
-                                    }
-                                })
-                                .catch(error => {
-                                    statusDiv.innerHTML = '<div style="background: #f8d7da; border: 1px solid #dc3545; border-radius: 4px; padding: 8px; font-size: 0.85em; color: #721c24;"><i class="mdi mdi-alert-circle"></i> Error updating server settings</div>';
-                                });
-                            }
-                        </script>
+
                         {% else %}
                         <!-- Local experiment controls -->
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Control panel for simulation server, web interface, and data analysis environment.
                         </p>
                         
-                        <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 15px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+ <div class="box-content ys-section-box">
                             <div class="box-lines">
-                                <div class="box-line" style="padding-bottom: 5px; margin-bottom: 5px;">
-                                    <span class="left" style="display: flex; align-items: center;">
+ <div class="box-line ys-pb-mb-5">
+ <span class="left ys-flex-ai-center">
                                         Server Controls
                                     </span>
-                                    <span class="right" style="display: flex; gap: 8px; align-items: center;">
-                                        <div style="display: flex; gap: 3px;">
+ <span class="right ys-flex-gap-8">
+ <div class="ys-flex-gap-3">
                                             {% if experiment.running == 0 %}
-                                            <a class="link-tooltip" href="#" onclick="startExperimentServer('{{ experiment.idexp }}'); return false;" title="Run Experiment">
-                                                <i class="mdi mdi-play-box-outline" style="font-size: 24px;"></i>
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/start_experiment/{{ experiment.idexp }}" onclick="showLoading('Starting experiment server...');" title="Run Experiment">
+ <i class="mdi mdi-play-box-outline ys-icon-lg"></i>
                                             </a>
                                             {% endif %}
+                                            {% endif %}
                                         {% if experiment.running == 1 and can_manage_experiment %}
-                                            <a class="link-tooltip" href="#" onclick="stopExperimentServer('{{ experiment.idexp }}'); return false;" title="Stop Experiment">
-                                                <i class="mdi mdi-stop active" style="font-size: 24px;"></i>
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-stop ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/stop_experiment/{{ experiment.idexp }}" onclick="showLoading('Stopping experiment server...');" title="Stop Experiment">
+ <i class="mdi mdi-stop active ys-icon-lg"></i>
                                             </a>
+                                            {% endif %}
                                         {% endif %}
-                                            <a id="load-experiment-btn" class="link-tooltip" href="#" onclick="selectExperiment('{{ experiment.idexp }}'); return false;" title="Load Experiment">
-                                                <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%}" style="font-size: 24px;"></i>
+                                            <a id="load-experiment-btn" class="link-tooltip" href="/admin/select_experiment/{{ experiment.idexp }}" onclick="showLoading('Loading experiment interface...');" title="Load Experiment">
+ <i class="mdi mdi-select-all {% if experiment.status == 1 %}active{%endif%} ys-icon-lg"></i>
                                             </a>
                                             {% if experiment.status == 1 %}
-                                            <a class="link-tooltip" href="#" onclick="joinExperiment('{{ experiment.idexp }}'); return false;" title="Join This Experiment">
-                                                <i class="mdi mdi-login" style="font-size: 24px;"></i>
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-login ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/join_experiment/{{ experiment.idexp }}" onclick="showLoading('Joining experiment...');" title="Join This Experiment">
+ <i class="mdi mdi-login ys-icon-lg"></i>
                                             </a>
+                                            {% endif %}
                                             {% endif %}
                                         </div>
                                         {% if notebooks %}
-                                        <div id="jupyter-controls" style="display: flex; gap: 3px; padding-left: 8px; border-left: 1px solid #ddd;">
+ <div id="jupyter-controls" class="ys-flex-divider">
                                             {% if jupyter_instance.status!='stopped' %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-flask-empty-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="#" onclick="stopJupyter('{{ jupyter_instance.exp_id }}'); return false;" title="Stop JupyterLab">
-                                                <i class="mdi mdi-flask-empty-outline" style="font-size: 24px; color: #dc3545;"></i>
+ <i class="mdi mdi-flask-empty-outline ys-icon-danger"></i>
                                             </a>
+                                            {% endif %}
                                             <a class="link-tooltip" href="/admin/lab/{{ experiment.idexp }}" {% if not is_pyinstaller %}target="_blank"{% endif %} title="Open JupyterLab">
-                                                <i class="mdi mdi-open-in-new" style="font-size: 24px; color: #039be5;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-brand"></i>
                                             </a>
                                             {% else %}
                                             <a id="start-jupyter-btn" class="link-tooltip" href="#" onclick="startJupyter('{{ experiment.idexp }}'); return false;" title="Start JupyterLab">
-                                                <i class="mdi mdi-flask-outline" style="font-size: 24px; color: #039be5;"></i>
+ <i class="mdi mdi-flask-outline ys-icon-brand"></i>
                                             </a>
                                             {% endif %}
                                         </div>
@@ -505,230 +389,149 @@
                         </div>
                         
                         <!-- Server Information Box (for local experiments) -->
-                        <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 8px 12px; margin-top: 10px;">
-                            <div style="font-size: 0.8em; color: #6c757d; margin-bottom: 4px; font-weight: 500;">Server Address</div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em;">
-                                <span style="color: #495057;">Host:</span>
-                                <span style="color: #212529; font-family: monospace; font-weight: 600;">{{ experiment.server }}</span>
+ <div class="ys-code-sm">
+ <div class="ys-label-muted">Server Address</div>
+ <div class="ys-flex-between-sm">
+ <span class="ys-text-dark-gray">Host:</span>
+ <span class="ys-mono-bold">{{ experiment.server }}</span>
                             </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.85em; margin-top: 2px;">
-                                <span style="color: #495057;">Port:</span>
-                                <span style="color: #212529; font-family: monospace; font-weight: 600;">{{ experiment.port }}</span>
+ <div class="ys-flex-between-sm-mt">
+ <span class="ys-text-dark-gray">Port:</span>
+ <span class="ys-mono-bold">{{ experiment.port }}</span>
                             </div>
                         </div>
                         {% endif %}
                     </div>
 
-                    <script>
-                        // Experiment server control functions
-                        function startExperimentServer(expId) {
-                            showLoading('Starting experiment server...');
-                            window.location.href = `/admin/start_experiment/${expId}`;
-                        }
 
-                        function stopExperimentServer(expId) {
-                            showLoading('Stopping experiment server...');
-                            window.location.href = `/admin/stop_experiment/${expId}`;
-                        }
-
-                        function selectExperiment(expId) {
-                            showLoading('Loading experiment interface...');
-                            window.location.href = `/admin/select_experiment/${expId}`;
-                        }
-
-                        function joinExperiment(expId) {
-                            showLoading('Joining experiment...');
-                            window.location.href = `/admin/join_experiment/${expId}`;
-                        }
-                    </script>
 
                     {% if notebooks %}
-                    <script>
-                        function startJupyter(expId) {
-                            showLoading('Starting JupyterLab...');
-                            fetch(`/admin/lab_start/${expId}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    location.reload();
-                                })
-                                .catch(error => {
-                                    console.error('Error starting JupyterLab:', error);
-                                    hideLoading();
-                                    showToast('Error starting JupyterLab', 'error');
-                                    setTimeout(() => location.reload(), 1500);
-                                });
-                        }
 
-                        function stopJupyter(instanceId) {
-                            showLoading('Stopping JupyterLab...');
-                            fetch(`/admin/lab_stop/${instanceId}`)
-                                .then(response => response.json())
-                                .then(data => {
-                                    location.reload();
-                                })
-                                .catch(error => {
-                                    console.error('Error stopping JupyterLab:', error);
-                                    hideLoading();
-                                    showToast('Error stopping JupyterLab', 'error');
-                                    setTimeout(() => location.reload(), 1500);
-                                });
-                        }
-                    </script>
                     {% endif %}
 
-                    <div id="simulation-clients-section" class="dashboard-box" style="flex: 1 1 auto; display: flex; flex-direction: column;">
+ <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}">
                         <h3 class="title is-5 is-thin">Simulation Clients</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Manage clients running agent populations for this experiment.
                         </p>
-                        <div class="box-content" style="flex: 1;">
+                        {% if configuration_update_required %}
+ <div class="ys-config-locked-note">
+                            Client creation and execution stay disabled until <b>Update Configuration</b> is executed.
+                        </div>
+                        {% endif %}
+ <div class="box-content ys-flex-1">
                             {% if len(clients) == 0 %}
                             <div class="box-line">
                                 <span class="left">No clients registered</span>
                             </div>
                             {% else %}
                             {% for client in clients %}
-                            <div class="box-content" style="background: #fafafa; border: 1px solid #e6e6e6; border-radius: 8px; padding-left: 15px; padding-right: 15px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
-                                <div class="box-line" style="padding-left: 0px; padding-top: 8px; padding-bottom: 8px;">
-                                    <span class="left" style="font-size: 0.9em; display: flex; align-items: center; gap: 5px;">
-                                        <i class="mdi mdi-account-cog" style="font-size: 16px; color: #7f8c8d;"></i>
+ <div class="box-content ys-section-box-sm">
+ <div class="box-line ys-cell-pad">
+ <span class="left ys-text-flex-sm">
+ <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
                                         {{ client.name }}
-                                        {% if opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations) %}
+                                        {% if (opinion_dynamics_enabled or (experiment.annotations and 'opinions' in experiment.annotations)) and not configuration_update_required %}
                                         <a href="/admin/opinion_configuration_standard/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
                                             <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6; margin-left: 2px;"></i>
                                         </a>
                                         {% endif %}
-                                        {% if client_executions.get(client.id, False) %}
+                                        {% if client_executions.get(client.id, False) and not configuration_update_required %}
                                         <a href="/admin/client_details/{{client.id}}" class="link-tooltip" title="View Client Details">
-                                            <i class="mdi mdi-open-in-new" style="font-size: 16px; color: #039be5;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-md-brand"></i>
                                         </a>
                                         {% endif %}
                                     </span>
-                                    <span class="right" style="width: 55%; display: flex; align-items: center; gap: 10px;">
-                                        <div class="sleek-progress-container" style="flex: 1; position: relative; background: linear-gradient(to right, #f5f5f5 0%, #e8e8e8 100%); border-radius: 20px; height: 24px; overflow: hidden; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08);">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar" 
-                                                 style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: linear-gradient(90deg, #039be5 0%, #4facfe 100%); border-radius: 20px; transition: width 0.4s ease-in-out, background 0.3s ease; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(3,155,229,0.3);">
-                                                <span style="font-size: 0.75em; font-weight: 600; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.2);">0%</span>
+ <span class="right ys-value-col-55 ys-detail-progress-wrap">
+ <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar">
+ <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
-                                        <div style="display: flex; gap: 3px;">
+ <div class="ys-flex-gap-3 ys-detail-progress-actions">
                                             {% if client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
-                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="event.preventDefault(); showLoading('Starting client...'); setTimeout(() => { window.location.href = this.href; }, 100);">
-                                                <i class="mdi mdi-play-box-outline" style="font-size: 20px;"></i>
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/run_client/{{ client.id }}/{{ experiment.idexp }}" title="Run Client" onclick="showLoading('Starting client...');">
+ <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
                                             </a>
+                                            {% endif %}
                                             {% endif %}
                                             {% if client.status == 1 %}
-                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="event.preventDefault(); showLoading('Pausing client...'); setTimeout(() => { window.location.href = this.href; }, 100);">
-                                                <i class="mdi mdi-pause active" style="font-size: 20px;"></i>
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-pause ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/pause_client/{{ client.id }}/{{ experiment.idexp }}" title="Pause Client" onclick="showLoading('Pausing client...');">
+ <i class="mdi mdi-pause active ys-icon-xl"></i>
                                             </a>
                                             {% endif %}
+                                            {% endif %}
                                             {% if client.status == 0 %}
+                                            {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-delete ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
                                             <a class="link-tooltip" href="/admin/delete_client/{{ client.id }}" 
                                                onclick="showLoading('Deleting client...');" 
                                                title="Delete Client">
-                                                <i class="mdi mdi-delete" style="font-size: 20px;"></i>
+ <i class="mdi mdi-delete ys-icon-xl"></i>
                                             </a>
+                                            {% endif %}
                                             {% endif %}
                                         </div>
                                     </span>
                                 </div>
                                 
-                                <script>
-                                    $(document).ready(function () {
-                                        $.ajax({
-                                            url: `/admin/progress/{{client.id}}`,
-                                            method: 'GET'
-                                        });
 
-                                        function pollProgress() {
-                                            $.ajax({
-                                                url: '/admin/progress/{{client.id}}',
-                                                method: 'GET',
-                                                dataType: 'json',
-                                                success: function (data) {
-                                                    const progressBar = $('#progress-bar-{{client.id}}');
-                                                    
-                                                    // Check if this is an infinite client
-                                                    if (data.infinite) {
-                                                        // For infinite clients, show green bar with elapsed time
-                                                        progressBar.css('width', '100%');
-                                                        progressBar.css('background', 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)');
-                                                        progressBar.css('box-shadow', '0 2px 6px rgba(34,197,94,0.3)');
-                                                        
-                                                        // Format elapsed time display
-                                                        const days = data.elapsed_days || 0;
-                                                        const hours = data.elapsed_hours || 0;
-                                                        let timeText = '';
-                                                        if (days > 0) {
-                                                            timeText = days + 'd ' + hours + 'h';
-                                                        } else {
-                                                            timeText = hours + 'h elapsed';
-                                                        }
-                                                        progressBar.find('span').text('∞ ' + timeText);
-                                                        
-                                                        // Keep polling for infinite clients
-                                                        setTimeout(pollProgress, 1000);
-                                                    } else {
-                                                        // Cap percentage at 100 to prevent overflow
-                                                        const percentage = Math.min(100, Math.max(0, data.progress || 0));
-                                                        progressBar.css('width', percentage + '%');
-                                                        progressBar.find('span').text(percentage + '%');
-                                                        
-                                                        // Update gradient based on progress
-                                                        if (percentage >= 75) {
-                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #00d1b2 100%)');
-                                                            progressBar.css('box-shadow', '0 2px 6px rgba(0,209,178,0.3)');
-                                                        } else if (percentage >= 50) {
-                                                            progressBar.css('background', 'linear-gradient(90deg, #039be5 0%, #5596e6 100%)');
-                                                            progressBar.css('box-shadow', '0 2px 6px rgba(85,150,230,0.3)');
-                                                        }
-                                                        
-                                                        if (percentage < 100) {
-                                                            setTimeout(pollProgress, 500);
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                        }
-                                        pollProgress();
-                                    });
-                                </script>
                             </div>
                             {% endfor %}
                             {% endif %}
 
-                            <div style="text-align: center; margin-top: 10px;">
-                                 <hr style="margin-bottom: 5px; margin-top: 5px;">
+ <div class="ys-text-center-mt10">
+ <hr class="ys-my-5">
+                                {% if configuration_update_required %}
+ <span class="link-tooltip" title="Update configuration first">
+ <i class="mdi mdi-plus-circle-outline ys-icon-muted"></i>
+                                </span>
+                                {% else %}
                                 <a class="link-tooltip" href="/admin/clients/{{ experiment.idexp }}" title="Add Client">
-                                    <i class="mdi mdi-plus-circle-outline" style="font-size: 24px;"></i>
+ <i class="mdi mdi-plus-circle-outline ys-icon-lg"></i>
                                 </a>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="column is-12-mobile is-4-tablet" style="display: flex; flex-direction: column;">
+ <div class="column is-12-mobile is-4-tablet ys-flex-col">
                     <!--Box-->
-                    <div class="dashboard-box is-compact" style="flex: 1; display: flex; flex-direction: column;">
+ <div class="dashboard-box is-compact ys-flex-col-1">
                         <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
-                        <div class="help-block" style="flex: 1;">
+ <div class="help-block ys-flex-1">
 
                             <p>
                                 <b>Server & Analysis Controls</b><br>
                                 Unified control panel for managing the simulation server, web interface, and data analysis tools.<br><br>
-                                <i class="mdi mdi-play-box-outline" style="font-size: 16px;"></i> Start the experiment server<br>
-                                <i class="mdi mdi-stop" style="font-size: 16px;"></i> Stop the experiment server<br>
-                                <i class="mdi mdi-select-all" style="font-size: 16px;"></i> Load experiment's web interface<br>
-                                <i class="mdi mdi-plus-box" style="font-size: 16px;"></i> Join the web interface<br>
+ <i class="mdi mdi-tune ys-icon-md"></i> First update <b>Experiment Configuration</b> to unlock execution controls<br>
+ <i class="mdi mdi-select-all ys-icon-md"></i> Load experiment's web interface is available before the unlock step<br>
+ <i class="mdi mdi-play-box-outline ys-icon-md"></i> Start the experiment server only after configuration is updated<br>
+ <i class="mdi mdi-stop ys-icon-md"></i> Stop the experiment server only after configuration is updated<br>
+ <i class="mdi mdi-plus-box ys-icon-md"></i> Create/run clients only after configuration is updated<br>
                                 {% if notebooks %}
-                                <i class="mdi mdi-flask-outline" style="font-size: 16px;"></i> Start/Stop JupyterLab for data analysis<br>
+ <i class="mdi mdi-flask-outline ys-icon-md"></i> Start/open JupyterLab remains available during the configuration step<br>
                                 {% endif %}
                             </p>
                             <hr>
                             <p>
                                 <b>LLM Prompts</b><br>
                                 Define the instructions that LLM agents follow during the experiment.<br><br>
-                                <i class="mdi mdi-credit-card" style="font-size: 16px;"></i> Edit prompts to customize agent behavior
+ <i class="mdi mdi-credit-card ys-icon-md"></i> Edit prompts to customize agent behavior
                             </p>
 
                         </div>
@@ -738,14 +541,13 @@
                     <!--Opinion Evolution Box-->
                     <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">Opinion Evolution</h3>
-                        <div class="box-content" style="flex: 1;">
+ <div class="box-content ys-flex-1">
                             <p style="font-size: 0.9em; margin-bottom: 1em;">
                                 Visualize how agent opinions evolve over time across different topics.
                             </p>
-                            <div style="text-align: center;">
+ <div class="text-center">
                                 <a href="/admin/opinion_evolution/{{ experiment.idexp }}" 
-                                   class="button is-info is-fullwidth" 
-                                   style="display: flex; align-items: center; justify-content: center; gap: 0.5em;">
+                                   class="button is-info is-fullwidth ys-flex-center-gap">
                                     <i class="mdi mdi-chart-line"></i>
                                     <span>View Opinion Evolution</span>
                                 </a>
@@ -765,36 +567,36 @@
                         <div class="plot-section-header">
                             <h3 class="title is-5 is-thin">Server Trends Analysis</h3>
                             <div class="plot-section-controls">
-                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
-                                    <input type="checkbox" id="autoRefreshTrends" checked style="cursor: pointer;">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshTrends" checked class="ys-pointer">
                                     <span>Auto-refresh</span>
                                 </label>
                                 <input type="number" id="refreshIntervalTrends" min="5" max="300" value="30" 
-                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+ class="ys-num-input"
                                        title="Refresh interval in seconds (5-300)">
-                                <span style="font-size: 0.85em;">sec</span>
-                                <button id="refreshTrendsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshTrendsBtn" class="button is-small is-info ys-flex-gap-half">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
                             </div>
                         </div>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Trend analysis of server compute time and simulation time progression.
                         </p>
 
-                        <div id="trends-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
-                            <i class="mdi mdi-alert" style="color: #856404;"></i>
-                            <span id="trends-error-text" style="color: #856404;"></span>
+ <div id="trends-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="trends-error-text" class="ys-text-warning-dark"></span>
                         </div>
 
                         <!-- Aggregation selector -->
-                        <div style="margin-bottom: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
-                            <span style="font-weight: 600; margin-right: 1em;">Aggregation:</span>
-                            <div style="display: inline-block;">
-                                <label style="margin-right: 1em; cursor: pointer;">
+ <div class="ys-info-box">
+ <span class="ys-label-mr">Aggregation:</span>
+ <div class="d-inline-block">
+ <label class="ys-mr-click-em">
                                     <input type="radio" name="aggregation" value="daily" checked> Daily
                                 </label>
-                                <label style="cursor: pointer;">
+ <label class="ys-pointer">
                                     <input type="radio" name="aggregation" value="hourly"> Hourly
                                 </label>
                             </div>
@@ -804,24 +606,24 @@
                         <div class="columns">
                             <div class="column is-6">
                                 <!-- Server Compute Time (stacked) -->
-                                <div class="box-content" style="margin-bottom: 1em;">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Server Compute Time</h4>
-                                    <div style="position: relative; height: 135px;">
+ <div class="box-content ys-mb-1em">
+ <h4 class="subtitle is-6 ys-mb-half-em">Server Compute Time</h4>
+ <div class="ys-chart-sm">
                                         <canvas id="serverComputeTimeTrendChart"></canvas>
                                     </div>
                                 </div>
                                 <!-- Client Compute Time (stacked) -->
                                 <div class="box-content">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 0.5em;">Client Compute Time</h4>
-                                    <div style="position: relative; height: 135px;">
+ <h4 class="subtitle is-6 ys-mb-half-em">Client Compute Time</h4>
+ <div class="ys-chart-sm">
                                         <canvas id="clientComputeTimeTrendChart"></canvas>
                                     </div>
                                 </div>
                             </div>
                             <div class="column is-6">
                                 <div class="box-content">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Simulation Time Trend</h4>
-                                    <div style="position: relative; height: 300px;">
+ <h4 class="subtitle is-6 ys-mb-1em">Simulation Time Trend</h4>
+ <div class="ys-chart-container">
                                         <canvas id="simulationTimeTrendChart"></canvas>
                                     </div>
                                 </div>
@@ -829,410 +631,19 @@
                         </div>
 
                         <!-- Forecast Section -->
-                        <div id="forecast-section" style="margin-top: 1em; padding: 1em; background: #e8f4f8; border-radius: 4px; border-left: 4px solid #039be5;">
-                            <h4 class="subtitle is-6" style="margin-bottom: 0.5em; color: #0277bd;">
+ <div id="forecast-section" class="ys-info-highlight">
+ <h4 class="subtitle is-6 ys-mb-link">
                                 <i class="mdi mdi-clock-outline"></i> Remaining Time Forecast
                             </h4>
-                            <div id="forecast-content" style="font-size: 0.9em; color: #555;">
-                                <p style="margin: 0.25em 0;"><strong>Total simulation time so far:</strong> <span id="forecast-elapsed">-</span></p>
-                                <p style="margin: 0.25em 0;"><strong>Average time per slot:</strong> <span id="forecast-avg-slot">-</span></p>
-                                <p style="margin: 0.25em 0;"><strong>Remaining slots:</strong> <span id="forecast-remaining-slots">-</span></p>
-                                <p style="margin: 0.25em 0; font-size: 1.1em; color: #0277bd;"><strong>Estimated remaining time:</strong> <span id="forecast-remaining-time">-</span></p>
+ <div id="forecast-content" class="ys-text-sm-body">
+ <p class="ys-my-quarter"><strong>Total simulation time so far:</strong> <span id="forecast-elapsed">-</span></p>
+ <p class="ys-my-quarter"><strong>Average time per slot:</strong> <span id="forecast-avg-slot">-</span></p>
+ <p class="ys-my-quarter"><strong>Remaining slots:</strong> <span id="forecast-remaining-slots">-</span></p>
+ <p class="ys-item-primary"><strong>Estimated remaining time:</strong> <span id="forecast-remaining-time">-</span></p>
                             </div>
                         </div>
 
-                        <script>
-                            // Global variables for trend charts
-                            let serverComputeTimeTrendChart = null;
-                            let clientComputeTimeTrendChart = null;
-                            let simulationTimeTrendChart = null;
-                            let trendsData = {
-                                daily_compute: {},
-                                daily_simulation: {},
-                                hourly_compute: {},
-                                hourly_simulation: {},
-                                client_daily_compute: {},
-                                client_hourly_compute: {}
-                            };
-                            let trendsAutoRefreshInterval = null;
 
-                            // Function to detect and remove outliers from simulation time data
-                            function removeOutliers(data) {
-                                if (data.length < 3) {
-                                    return data; // Not enough data to detect outliers
-                                }
-                                
-                                // Calculate median and MAD (Median Absolute Deviation)
-                                const sorted = [...data].filter(v => v > 0).sort((a, b) => a - b);
-                                if (sorted.length === 0) {
-                                    return data;
-                                }
-                                
-                                const median = sorted[Math.floor(sorted.length / 2)];
-                                const deviations = sorted.map(val => Math.abs(val - median));
-                                const mad = deviations.sort((a, b) => a - b)[Math.floor(deviations.length / 2)];
-                                
-                                // Use modified Z-score with MAD
-                                // Outliers are values more than 3.5 MAD from the median
-                                const threshold = 3.5;
-                                const cleanData = [];
-                                const validValues = data.filter(v => {
-                                    if (v === 0) return true; // Keep zeros
-                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
-                                    return modifiedZScore <= threshold;
-                                });
-                                
-                                // Calculate mean of valid values for replacement
-                                const validNonZero = validValues.filter(v => v > 0);
-                                const meanValid = validNonZero.length > 0 
-                                    ? validNonZero.reduce((a, b) => a + b, 0) / validNonZero.length 
-                                    : median;
-                                
-                                // Replace outliers with mean of valid values
-                                return data.map(v => {
-                                    if (v === 0) return v; // Keep zeros
-                                    const modifiedZScore = Math.abs(0.6745 * (v - median) / (mad || 1));
-                                    return modifiedZScore > threshold ? meanValid : v;
-                                });
-                            }
-
-                            // Function to update trend charts
-                            function updateTrendCharts() {
-                                const aggregation = document.querySelector('input[name="aggregation"]:checked').value;
-                                
-                                let computeData, simulationData, labels;
-                                if (aggregation === 'daily') {
-                                    const days = Object.keys(trendsData.daily_compute).sort((a, b) => parseInt(a) - parseInt(b));
-                                    labels = days.map(d => `Day ${d}`);
-                                    computeData = days.map(d => trendsData.daily_compute[d]);
-                                    const rawSimulationData = days.map(d => trendsData.daily_simulation[d] || 0);
-                                    simulationData = removeOutliers(rawSimulationData);
-                                } else {
-                                    const hours = Object.keys(trendsData.hourly_compute).sort((a, b) => {
-                                        const [dayA, hourA] = a.split('-').map(Number);
-                                        const [dayB, hourB] = b.split('-').map(Number);
-                                        return dayA !== dayB ? dayA - dayB : hourA - hourB;
-                                    });
-                                    labels = hours.map(h => {
-                                        const [day, hour] = h.split('-');
-                                        return `D${day}H${hour}`;
-                                    });
-                                    computeData = hours.map(h => trendsData.hourly_compute[h]);
-                                    const rawSimulationData = hours.map(h => trendsData.hourly_simulation[h] || 0);
-                                    simulationData = removeOutliers(rawSimulationData);
-                                }
-
-                                // Destroy existing server compute time chart before recreating
-                                if (serverComputeTimeTrendChart) {
-                                    serverComputeTimeTrendChart.destroy();
-                                }
-                                
-                                // Create/recreate server compute time chart
-                                if (labels.length > 0) {
-                                    serverComputeTimeTrendChart = new Chart('serverComputeTimeTrendChart', {
-                                        type: 'line',
-                                        data: {
-                                            labels: labels,
-                                            datasets: [{
-                                                label: 'Server (s)',
-                                                data: computeData,
-                                                borderColor: 'rgba(33, 150, 243, 1)',
-                                                backgroundColor: 'rgba(33, 150, 243, 0.1)',
-                                                borderWidth: 2,
-                                                tension: 0.3,
-                                                fill: true
-                                            }]
-                                        },
-                                        options: {
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { display: true, position: 'top' }
-                                            },
-                                            scales: {
-                                                y: { beginAtZero: true }
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // Prepare client compute time datasets
-                                const clientComputeDatasets = [];
-                                const clientComputeData = aggregation === 'daily' ? trendsData.client_daily_compute : trendsData.client_hourly_compute;
-                                if (clientComputeData) {
-                                    const colors = [
-                                        'rgba(255, 99, 132, 1)',
-                                        'rgba(255, 159, 64, 1)',
-                                        'rgba(255, 205, 86, 1)',
-                                        'rgba(75, 192, 192, 1)',
-                                        'rgba(153, 102, 255, 1)',
-                                        'rgba(201, 203, 207, 1)'
-                                    ];
-                                    let colorIndex = 0;
-
-                                    Object.keys(clientComputeData).forEach(clientName => {
-                                        const clientData = labels.map(label => {
-                                            // Extract day or day-hour from label
-                                            let key;
-                                            if (aggregation === 'daily') {
-                                                key = parseInt(label.replace('Day ', ''));
-                                            } else {
-                                                const match = label.match(/D(\d+)H(\d+)/);
-                                                if (match) {
-                                                    key = `${match[1]}-${match[2]}`;
-                                                }
-                                            }
-                                            return clientComputeData[clientName][key] || 0;
-                                        });
-
-                                        const color = colors[colorIndex % colors.length];
-                                        clientComputeDatasets.push({
-                                            label: `${clientName} (s)`,
-                                            data: clientData,
-                                            borderColor: color,
-                                            backgroundColor: color.replace('1)', '0.1)'),
-                                            borderWidth: 2,
-                                            tension: 0.3,
-                                            fill: false
-                                        });
-                                        colorIndex++;
-                                    });
-                                }
-
-                                // Destroy existing client compute time chart before recreating
-                                if (clientComputeTimeTrendChart) {
-                                    clientComputeTimeTrendChart.destroy();
-                                }
-                                
-                                // Create/recreate client compute time chart
-                                if (labels.length > 0 && clientComputeDatasets.length > 0) {
-                                    clientComputeTimeTrendChart = new Chart('clientComputeTimeTrendChart', {
-                                        type: 'line',
-                                        data: {
-                                            labels: labels,
-                                            datasets: clientComputeDatasets
-                                        },
-                                        options: {
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { display: true, position: 'top' }
-                                            },
-                                            scales: {
-                                                y: { beginAtZero: true }
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // Destroy existing simulation time chart before recreating
-                                if (simulationTimeTrendChart) {
-                                    simulationTimeTrendChart.destroy();
-                                }
-                                
-                                // Create/recreate simulation time chart
-                                if (labels.length > 0) {
-                                    simulationTimeTrendChart = new Chart('simulationTimeTrendChart', {
-                                        type: 'line',
-                                        data: {
-                                            labels: labels,
-                                            datasets: [{
-                                                label: 'Simulation Time (s)',
-                                                data: simulationData,
-                                                borderColor: 'rgba(76, 175, 80, 1)',
-                                                backgroundColor: 'rgba(76, 175, 80, 0.1)',
-                                                borderWidth: 2,
-                                                tension: 0.3,
-                                                fill: true
-                                            }]
-                                        },
-                                        options: {
-                                            responsive: true,
-                                            maintainAspectRatio: false,
-                                            plugins: {
-                                                legend: { display: true }
-                                            },
-                                            scales: {
-                                                y: { beginAtZero: true }
-                                            }
-                                        }
-                                    });
-                                }
-
-                                // Update forecast - always locked to daily view
-                                updateForecast('daily');
-                            }
-
-                            // Function to update forecast
-                            function updateForecast(aggregation) {
-                                const computeData = aggregation === 'daily' ? trendsData.daily_compute : trendsData.hourly_compute;
-                                const rawSimulationData = aggregation === 'daily' ? trendsData.daily_simulation : trendsData.hourly_simulation;
-                                
-                                const keys = Object.keys(computeData).sort((a, b) => {
-                                    if (aggregation === 'daily') return parseInt(a) - parseInt(b);
-                                    const [dayA, hourA] = a.split('-').map(Number);
-                                    const [dayB, hourB] = b.split('-').map(Number);
-                                    return dayA !== dayB ? dayA - dayB : hourA - hourB;
-                                });
-
-                                if (keys.length === 0) {
-                                    document.getElementById('forecast-elapsed').textContent = 'No data';
-                                    document.getElementById('forecast-avg-slot').textContent = 'No data';
-                                    document.getElementById('forecast-remaining-slots').textContent = 'No data';
-                                    document.getElementById('forecast-remaining-time').textContent = 'No data';
-                                    return;
-                                }
-
-                                // Apply outlier removal to simulation data for more accurate forecasting
-                                const rawValues = keys.map(k => rawSimulationData[k] || 0);
-                                const cleanedValues = removeOutliers(rawValues);
-                                
-                                // Calculate total simulation time using cleaned data
-                                const totalSimulationTime = cleanedValues.reduce((sum, val) => sum + val, 0);
-                                const completedSlots = keys.length;
-                                const avgTimePerSlot = totalSimulationTime / completedSlots;
-
-                                // Use actual expected duration and remaining time from client_execution table
-                                // Accounts for clients starting at different times by using max remaining rounds
-                                // max_remaining_rounds: maximum rounds remaining across all clients (accounts for late starts)
-                                // total_expected_rounds: maximum expected duration among all clients
-                                const totalExpectedDays = trendsData.total_expected_days || 0;
-                                const totalExpectedRounds = trendsData.total_expected_rounds || 0;
-                                const maxRemainingRounds = trendsData.max_remaining_rounds || 0;
-                                const maxRemainingDays = trendsData.max_remaining_days || 0;
-                                
-                                let totalSlots, remainingSlots;
-                                
-                                if (aggregation === 'daily') {
-                                    // Use actual remaining days from the client that has the most work left
-                                    // This accounts for clients starting at different times
-                                    totalSlots = Math.ceil(totalExpectedDays);
-                                    remainingSlots = Math.max(0, Math.ceil(maxRemainingDays));
-                                } else {
-                                    // Use actual remaining rounds from the client that has the most work left
-                                    // This accounts for clients starting at different times
-                                    totalSlots = totalExpectedRounds;
-                                    remainingSlots = Math.max(0, maxRemainingRounds);
-                                }
-
-                                // If we don't have expected duration from DB, fall back to estimation
-                                if (totalSlots === 0) {
-                                    const maxKey = keys[keys.length - 1];
-                                    if (aggregation === 'daily') {
-                                        totalSlots = parseInt(maxKey) + 5;
-                                    } else {
-                                        const [maxDay, maxHour] = maxKey.split('-').map(Number);
-                                        totalSlots = (maxDay + 2) * 24;
-                                    }
-                                    remainingSlots = totalSlots - completedSlots;
-                                }
-
-                                const estimatedRemainingTime = avgTimePerSlot * remainingSlots;
-
-                                // Format time display
-                                function formatTime(seconds) {
-                                    const hours = Math.floor(seconds / 3600);
-                                    const minutes = Math.floor((seconds % 3600) / 60);
-                                    const secs = Math.floor(seconds % 60);
-                                    if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
-                                    if (minutes > 0) return `${minutes}m ${secs}s`;
-                                    return `${secs}s`;
-                                }
-
-                                document.getElementById('forecast-elapsed').textContent = formatTime(totalSimulationTime);
-                                document.getElementById('forecast-avg-slot').textContent = formatTime(avgTimePerSlot);
-                                document.getElementById('forecast-remaining-slots').textContent = remainingSlots;
-                                document.getElementById('forecast-remaining-time').textContent = formatTime(estimatedRemainingTime);
-                            }
-
-                            // Function to load trends data
-                            function loadTrendsData() {
-                                // Hide error message
-                                document.getElementById('trends-error-message').style.display = 'none';
-                                
-                                // Disable refresh button while loading
-                                const refreshBtn = document.getElementById('refreshTrendsBtn');
-                                if (refreshBtn) {
-                                    refreshBtn.disabled = true;
-                                    refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
-                                }
-
-                                fetch('/admin/experiment_trends/{{ experiment.idexp }}')
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.error) {
-                                            document.getElementById('trends-error-message').style.display = 'block';
-                                            document.getElementById('trends-error-text').textContent = data.error;
-                                            return;
-                                        }
-
-                                        trendsData = data;
-                                        updateTrendCharts();
-                                    })
-                                    .catch(error => {
-                                        console.error('Error fetching trends:', error);
-                                        document.getElementById('trends-error-message').style.display = 'block';
-                                        document.getElementById('trends-error-text').textContent = 'Failed to load trends: ' + error.message;
-                                    })
-                                    .finally(() => {
-                                        // Re-enable refresh button
-                                        if (refreshBtn) {
-                                            refreshBtn.disabled = false;
-                                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
-                                        }
-                                    });
-                            }
-
-                            // Load trends data on page load
-                            loadTrendsData();
-
-                            // Auto-refresh functionality
-                            function startTrendsAutoRefresh() {
-                                if (trendsAutoRefreshInterval) {
-                                    clearInterval(trendsAutoRefreshInterval);
-                                }
-                                const intervalSeconds = parseInt(document.getElementById('refreshIntervalTrends').value) || 30;
-                                const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
-                                trendsAutoRefreshInterval = setInterval(loadTrendsData, intervalMs);
-                            }
-
-                            function stopTrendsAutoRefresh() {
-                                if (trendsAutoRefreshInterval) {
-                                    clearInterval(trendsAutoRefreshInterval);
-                                    trendsAutoRefreshInterval = null;
-                                }
-                            }
-
-                            // Auto-refresh checkbox handler
-                            document.getElementById('autoRefreshTrends').addEventListener('change', function() {
-                                if (this.checked) {
-                                    startTrendsAutoRefresh();
-                                } else {
-                                    stopTrendsAutoRefresh();
-                                }
-                            });
-
-                            // Refresh interval input handler
-                            document.getElementById('refreshIntervalTrends').addEventListener('change', function() {
-                                // Restart auto-refresh with new interval if currently enabled
-                                if (document.getElementById('autoRefreshTrends').checked) {
-                                    startTrendsAutoRefresh();
-                                }
-                            });
-
-                            // Start auto-refresh if checkbox is checked
-                            if (document.getElementById('autoRefreshTrends').checked) {
-                                startTrendsAutoRefresh();
-                            }
-
-                            // Refresh button click handler
-                            document.getElementById('refreshTrendsBtn').addEventListener('click', loadTrendsData);
-
-                            // Handle aggregation change
-                            document.querySelectorAll('input[name="aggregation"]').forEach(radio => {
-                                radio.addEventListener('change', updateTrendCharts);
-                            });
-                        </script>
                     </div>
                 </div>
             </div>
@@ -1244,41 +655,41 @@
                         <div class="plot-section-header">
                             <h3 class="title is-5 is-thin">Server Logs Analysis</h3>
                             <div class="plot-section-controls">
-                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
-                                    <input type="checkbox" id="autoRefreshLogs" checked style="cursor: pointer;">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshLogs" checked class="ys-pointer">
                                     <span>Auto-refresh</span>
                                 </label>
                                 <input type="number" id="refreshIntervalLogs" min="5" max="300" value="30" 
-                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+ class="ys-num-input"
                                        title="Refresh interval in seconds (5-300)">
-                                <span style="font-size: 0.85em;">sec</span>
-                                <button id="refreshLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshLogsBtn" class="button is-small is-info ys-flex-gap-half">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
                             </div>
                         </div>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Real-time analysis of server API calls from _server.log file.
                         </p>
 
-                        <div id="logs-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
-                            <i class="mdi mdi-alert" style="color: #856404;"></i>
-                            <span id="logs-error-text" style="color: #856404;"></span>
+ <div id="logs-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="logs-error-text" class="ys-text-warning-dark"></span>
                         </div>
 
                         <div class="columns">
                             <div class="column is-6">
                                 <div class="box-content">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Call Volume by Path</h4>
-                                    <div style="position: relative; height: 300px;">
+ <h4 class="subtitle is-6 ys-mb-1em">Call Volume by Path</h4>
+ <div class="ys-chart-container">
                                         <canvas id="callVolumeChart"></canvas>
                                     </div>
                                 </div>
                             </div>
                             <div class="column is-6">
                                 <div class="box-content">
-                                    <h4 class="subtitle is-6" style="margin-bottom: 1em;">Mean Duration by Path (seconds)</h4>
-                                    <div style="position: relative; height: 300px;">
+ <h4 class="subtitle is-6 ys-mb-1em">Mean Duration by Path (seconds)</h4>
+ <div class="ys-chart-container">
                                         <canvas id="meanDurationChart"></canvas>
                                     </div>
                                 </div>
@@ -1286,344 +697,24 @@
                         </div>
 
                         <!-- Path Filter Controls -->
-                        <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em;">
-                                <h4 class="subtitle is-6" style="margin: 0;">Filter Paths</h4>
+ <div class="box-content ys-info-box-top">
+ <div class="ys-flex-between-mb">
+ <h4 class="subtitle is-6 m-0">Filter Paths</h4>
                                 <div>
-                                    <button id="selectAllPaths" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
+ <button id="selectAllPaths" class="button is-small is-light ys-mr-half-em">Select All</button>
                                     <button id="deselectAllPaths" class="button is-small is-light">Deselect All</button>
                                 </div>
                             </div>
-                            <div id="pathFilters" style="display: flex; flex-wrap: wrap; gap: 0.4em;">
+ <div id="pathFilters" class="ys-flex-wrap-gap">
                                 <!-- Checkboxes will be dynamically generated here -->
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling */
-                            #pathFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #pathFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #039be5;
-                                box-shadow: 0 1px 3px rgba(3, 155, 229, 0.1);
-                            }
-
-                            #pathFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #039be5;
-                            }
-
-                            #pathFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #pathFilters label:has(input:checked) {
-                                background: #e3f2fd;
-                                border-color: #039be5;
-                            }
-
-                            #pathFilters label:has(input:checked) span {
-                                color: #0277bd;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>
 
-            <script>
-                // Global variables to store charts and data
-                let callVolumeChartInstance = null;
-                let meanDurationChartInstance = null;
-                let allPathsData = {
-                    paths: [],
-                    callVolume: {},
-                    meanDuration: {}
-                };
-                let logsAutoRefreshInterval = null;
 
-                // Function to update charts based on selected paths
-                function updateCharts() {
-                    const checkboxes = document.querySelectorAll('#pathFilters input[type="checkbox"]');
-                    const selectedPaths = [];
-                    
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.checked) {
-                            selectedPaths.push(checkbox.value);
-                        }
-                    });
-
-                    // If no paths selected, show all
-                    const pathsToShow = selectedPaths.length > 0 ? selectedPaths : allPathsData.paths;
-                    
-                    // Prepare filtered data
-                    const volumeData = pathsToShow.map(path => allPathsData.callVolume[path] || 0);
-                    const durationData = pathsToShow.map(path => allPathsData.meanDuration[path] || 0);
-
-                    // Update Call Volume Chart
-                    if (callVolumeChartInstance) {
-                        callVolumeChartInstance.data.labels = pathsToShow;
-                        callVolumeChartInstance.data.datasets[0].data = volumeData;
-                        callVolumeChartInstance.update();
-                    }
-
-                    // Update Mean Duration Chart
-                    if (meanDurationChartInstance) {
-                        meanDurationChartInstance.data.labels = pathsToShow;
-                        meanDurationChartInstance.data.datasets[0].data = durationData;
-                        meanDurationChartInstance.update();
-                    }
-                }
-
-                // Function to create filter checkboxes
-                function createPathFilters(paths) {
-                    const filterContainer = document.getElementById('pathFilters');
-                    filterContainer.innerHTML = '';
-                    
-                    paths.forEach(path => {
-                        const label = document.createElement('label');
-                        
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        checkbox.value = path;
-                        checkbox.checked = true;
-                        checkbox.addEventListener('change', updateCharts);
-                        
-                        const span = document.createElement('span');
-                        span.textContent = path;
-                        
-                        label.appendChild(checkbox);
-                        label.appendChild(span);
-                        filterContainer.appendChild(label);
-                    });
-                }
-
-                // Select All button handler
-                document.getElementById('selectAllPaths').addEventListener('click', function() {
-                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = true;
-                    });
-                    updateCharts();
-                });
-
-                // Deselect All button handler
-                document.getElementById('deselectAllPaths').addEventListener('click', function() {
-                    document.querySelectorAll('#pathFilters input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
-                    updateCharts();
-                });
-
-                // Function to fetch and display server logs data
-                function loadServerLogsData() {
-                    // Hide error message
-                    document.getElementById('logs-error-message').style.display = 'none';
-                    
-                    // Disable refresh button while loading
-                    const refreshBtn = document.getElementById('refreshLogsBtn');
-                    if (refreshBtn) {
-                        refreshBtn.disabled = true;
-                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
-                    }
-
-                    fetch('/admin/experiment_logs/{{ experiment.idexp }}')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                document.getElementById('logs-error-message').style.display = 'block';
-                                document.getElementById('logs-error-text').textContent = data.error;
-                                return;
-                            }
-
-                            const callVolume = data.call_volume || {};
-                            const meanDuration = data.mean_duration || {};
-
-                            // Store data globally
-                            allPathsData.paths = Object.keys(callVolume).sort();
-                            allPathsData.callVolume = callVolume;
-                            allPathsData.meanDuration = meanDuration;
-
-                            // Create filter checkboxes
-                            createPathFilters(allPathsData.paths);
-
-                            // Prepare data for charts
-                            const volumeData = allPathsData.paths.map(path => callVolume[path]);
-                            const durationData = allPathsData.paths.map(path => meanDuration[path]);
-
-                            // Destroy existing charts before creating new ones
-                            if (callVolumeChartInstance) {
-                                callVolumeChartInstance.destroy();
-                            }
-                            if (meanDurationChartInstance) {
-                                meanDurationChartInstance.destroy();
-                            }
-
-                            // Call Volume Chart
-                            callVolumeChartInstance = new Chart("callVolumeChart", {
-                                type: 'bar',
-                                data: {
-                                    labels: allPathsData.paths,
-                                    datasets: [{
-                                        label: 'Number of Calls',
-                                        data: volumeData,
-                                        backgroundColor: 'rgba(3, 155, 229, 0.6)',
-                                        borderColor: 'rgba(3, 155, 229, 1)',
-                                        borderWidth: 1,
-                                        borderRadius: 4
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                            padding: 8,
-                                            titleFont: { size: 12 },
-                                            bodyFont: { size: 11 },
-                                            callbacks: {
-                                                label: function(context) {
-                                                    return 'Calls: ' + context.parsed.y;
-                                                }
-                                            }
-                                        }
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            ticks: {
-                                                precision: 0
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-
-                            // Mean Duration Chart
-                            meanDurationChartInstance = new Chart("meanDurationChart", {
-                            type: 'bar',
-                            data: {
-                                labels: allPathsData.paths,
-                                datasets: [{
-                                    label: 'Mean Duration (s)',
-                                    data: durationData,
-                                    backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                                    borderColor: 'rgba(76, 175, 80, 1)',
-                                    borderWidth: 1,
-                                    borderRadius: 4
-                                }]
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    },
-                                    tooltip: {
-                                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                        padding: 8,
-                                        titleFont: { size: 12 },
-                                        bodyFont: { size: 11 },
-                                        callbacks: {
-                                            label: function(context) {
-                                                return 'Duration: ' + context.parsed.y.toFixed(4) + 's';
-                                            }
-                                        }
-                                    }
-                                },
-                                scales: {
-                                    y: {
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: function(value) {
-                                                return value.toFixed(4);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        });
-                    })
-                    .catch(error => {
-                        console.error('Error fetching logs:', error);
-                        document.getElementById('logs-error-message').style.display = 'block';
-                        document.getElementById('logs-error-text').textContent = 'Failed to load server logs: ' + error.message;
-                    })
-                    .finally(() => {
-                        // Re-enable refresh button
-                        if (refreshBtn) {
-                            refreshBtn.disabled = false;
-                            refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
-                        }
-                    });
-                }
-
-                // Load server logs data on page load
-                loadServerLogsData();
-
-                // Auto-refresh functionality
-                function startLogsAutoRefresh() {
-                    if (logsAutoRefreshInterval) {
-                        clearInterval(logsAutoRefreshInterval);
-                    }
-                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalLogs').value) || 30;
-                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
-                    logsAutoRefreshInterval = setInterval(loadServerLogsData, intervalMs);
-                }
-
-                function stopLogsAutoRefresh() {
-                    if (logsAutoRefreshInterval) {
-                        clearInterval(logsAutoRefreshInterval);
-                        logsAutoRefreshInterval = null;
-                    }
-                }
-
-                // Auto-refresh checkbox handler
-                document.getElementById('autoRefreshLogs').addEventListener('change', function() {
-                    if (this.checked) {
-                        startLogsAutoRefresh();
-                    } else {
-                        stopLogsAutoRefresh();
-                    }
-                });
-
-                // Refresh interval input handler
-                document.getElementById('refreshIntervalLogs').addEventListener('change', function() {
-                    // Restart auto-refresh with new interval if currently enabled
-                    if (document.getElementById('autoRefreshLogs').checked) {
-                        startLogsAutoRefresh();
-                    }
-                });
-
-                // Start auto-refresh if checkbox is checked
-                if (document.getElementById('autoRefreshLogs').checked) {
-                    startLogsAutoRefresh();
-                }
-
-                // Refresh button click handler
-                document.getElementById('refreshLogsBtn').addEventListener('click', loadServerLogsData);
-            </script>
 
             <!-- Client Logs Visualization Section -->
             {% if len(clients) > 0 %}
@@ -1633,28 +724,28 @@
                         <div class="plot-section-header">
                             <h3 class="title is-5 is-thin">Client Logs Analysis</h3>
                             <div class="plot-section-controls">
-                                <label style="display: flex; align-items: center; gap: 0.5em; cursor: pointer; font-size: 0.85em;">
-                                    <input type="checkbox" id="autoRefreshClientLogs" checked style="cursor: pointer;">
+ <label class="ys-flex-click-sm">
+ <input type="checkbox" id="autoRefreshClientLogs" checked class="ys-pointer">
                                     <span>Auto-refresh</span>
                                 </label>
                                 <input type="number" id="refreshIntervalClientLogs" min="5" max="300" value="30" 
-                                       style="width: 60px; padding: 0.25em 0.5em; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85em;"
+ class="ys-num-input"
                                        title="Refresh interval in seconds (5-300)">
-                                <span style="font-size: 0.85em;">sec</span>
-                                <button id="refreshClientLogsBtn" class="button is-small is-info" style="display: flex; align-items: center; gap: 0.5em;">
+ <span class="ys-text-sm">sec</span>
+ <button id="refreshClientLogsBtn" class="button is-small is-info ys-flex-gap-half">
                                     <i class="mdi mdi-refresh"></i> Refresh Data
                                 </button>
                             </div>
                         </div>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Analysis of client(s) execution.
                         </p>
 
                         <!-- Client selector -->
-                        <div class="box-content" style="margin-bottom: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
-                            <label for="clientSelector" style="font-weight: 600; margin-bottom: 0.5em; display: block;">Select Client:</label>
+ <div class="box-content ys-info-box">
+ <label for="clientSelector" class="ys-label-block">Select Client:</label>
                             <div class="select is-fullwidth">
-                                <select id="clientSelector" style="width: 100%;">
+ <select id="clientSelector" class="w-100">
                                     <option value="">-- Select a client --</option>
                                     {% for client in clients %}
                                     <option value="{{ client.id }}">{{ client.name }}</option>
@@ -1663,25 +754,25 @@
                             </div>
                         </div>
 
-                        <div id="client-logs-error-message" style="display: none; padding: 1em; background: #fff3cd; border: 1px solid #ffc107; border-radius: 4px; margin-bottom: 1em;">
-                            <i class="mdi mdi-alert" style="color: #856404;"></i>
-                            <span id="client-logs-error-text" style="color: #856404;"></span>
+ <div id="client-logs-error-message" class="ys-warning-panel">
+ <i class="mdi mdi-alert ys-text-warning-dark"></i>
+ <span id="client-logs-error-text" class="ys-text-warning-dark"></span>
                         </div>
 
-                        <div id="client-logs-content" style="display: none;">
+ <div id="client-logs-content" class="d-none">
                             <div class="columns">
                                 <div class="column is-6">
                                     <div class="box-content">
-                                        <h4 class="subtitle is-6" style="margin-bottom: 1em;">Call Volume by Method</h4>
-                                        <div style="position: relative; height: 300px;">
+ <h4 class="subtitle is-6 ys-mb-1em">Call Volume by Method</h4>
+ <div class="ys-chart-container">
                                             <canvas id="clientCallVolumeChart"></canvas>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="column is-6">
                                     <div class="box-content">
-                                        <h4 class="subtitle is-6" style="margin-bottom: 1em;">Mean Execution Time by Method (seconds)</h4>
-                                        <div style="position: relative; height: 300px;">
+ <h4 class="subtitle is-6 ys-mb-1em">Mean Execution Time by Method (seconds)</h4>
+ <div class="ys-chart-container">
                                             <canvas id="clientMeanExecutionTimeChart"></canvas>
                                         </div>
                                     </div>
@@ -1689,406 +780,34 @@
                             </div>
 
                             <!-- Method Filter Controls -->
-                            <div class="box-content" style="margin-top: 1em; padding: 1em; background: #f9f9f9; border-radius: 4px;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75em;">
-                                    <h4 class="subtitle is-6" style="margin: 0;">Filter Methods</h4>
+ <div class="box-content ys-info-box-top">
+ <div class="ys-flex-between-mb">
+ <h4 class="subtitle is-6 m-0">Filter Methods</h4>
                                     <div>
-                                        <button id="selectAllMethods" class="button is-small is-light" style="margin-right: 0.5em;">Select All</button>
+ <button id="selectAllMethods" class="button is-small is-light ys-mr-half-em">Select All</button>
                                         <button id="deselectAllMethods" class="button is-small is-light">Deselect All</button>
                                     </div>
                                 </div>
-                                <div id="methodFilters" style="display: flex; flex-wrap: wrap; gap: 0.4em;">
+ <div id="methodFilters" class="ys-flex-wrap-gap">
                                     <!-- Checkboxes will be dynamically generated here -->
                                 </div>
                             </div>
                         </div>
 
-                        <style>
-                            /* Modern checkbox styling for methods */
-                            #methodFilters label {
-                                display: inline-flex;
-                                align-items: center;
-                                padding: 0.35em 0.65em;
-                                background: white;
-                                border: 1px solid #e0e0e0;
-                                border-radius: 6px;
-                                cursor: pointer;
-                                font-size: 0.8em;
-                                transition: all 0.2s ease;
-                                user-select: none;
-                            }
-
-                            #methodFilters label:hover {
-                                background: #f5f9ff;
-                                border-color: #ff6b6b;
-                                box-shadow: 0 1px 3px rgba(255, 107, 107, 0.1);
-                            }
-
-                            #methodFilters input[type="checkbox"] {
-                                margin: 0;
-                                margin-right: 0.4em;
-                                width: 14px;
-                                height: 14px;
-                                cursor: pointer;
-                                accent-color: #ff6b6b;
-                            }
-
-                            #methodFilters label span {
-                                color: #555;
-                                font-weight: 500;
-                                white-space: nowrap;
-                            }
-
-                            #methodFilters label:has(input:checked) {
-                                background: #ffe3e3;
-                                border-color: #ff6b6b;
-                            }
-
-                            #methodFilters label:has(input:checked) span {
-                                color: #c92a2a;
-                            }
-                        </style>
                     </div>
                 </div>
             </div>
 
-            <script>
-                // Global variables to store client charts and data
-                let clientCallVolumeChartInstance = null;
-                let clientMeanExecutionTimeChartInstance = null;
-                let allClientMethodsData = {
-                    methods: [],
-                    callVolume: {},
-                    meanExecutionTime: {}
-                };
-                let clientLogsAutoRefreshInterval = null;
 
-                // Function to update client charts based on selected methods
-                function updateClientCharts() {
-                    const checkboxes = document.querySelectorAll('#methodFilters input[type="checkbox"]');
-                    const selectedMethods = [];
-                    
-                    checkboxes.forEach(checkbox => {
-                        if (checkbox.checked) {
-                            selectedMethods.push(checkbox.value);
-                        }
-                    });
-
-                    // If no methods selected, show all
-                    const methodsToShow = selectedMethods.length > 0 ? selectedMethods : allClientMethodsData.methods;
-                    
-                    // Prepare filtered data
-                    const volumeData = methodsToShow.map(method => allClientMethodsData.callVolume[method] || 0);
-                    const executionTimeData = methodsToShow.map(method => allClientMethodsData.meanExecutionTime[method] || 0);
-
-                    // Update Call Volume Chart
-                    if (clientCallVolumeChartInstance) {
-                        clientCallVolumeChartInstance.data.labels = methodsToShow;
-                        clientCallVolumeChartInstance.data.datasets[0].data = volumeData;
-                        clientCallVolumeChartInstance.update();
-                    }
-
-                    // Update Mean Execution Time Chart
-                    if (clientMeanExecutionTimeChartInstance) {
-                        clientMeanExecutionTimeChartInstance.data.labels = methodsToShow;
-                        clientMeanExecutionTimeChartInstance.data.datasets[0].data = executionTimeData;
-                        clientMeanExecutionTimeChartInstance.update();
-                    }
-                }
-
-                // Function to create method filter checkboxes
-                function createMethodFilters(methods) {
-                    const filterContainer = document.getElementById('methodFilters');
-                    filterContainer.innerHTML = '';
-                    
-                    methods.forEach(method => {
-                        const label = document.createElement('label');
-                        
-                        const checkbox = document.createElement('input');
-                        checkbox.type = 'checkbox';
-                        checkbox.value = method;
-                        checkbox.checked = true;
-                        checkbox.addEventListener('change', updateClientCharts);
-                        
-                        const span = document.createElement('span');
-                        span.textContent = method;
-                        
-                        label.appendChild(checkbox);
-                        label.appendChild(span);
-                        filterContainer.appendChild(label);
-                    });
-                }
-
-                // Function to load client logs
-                function loadClientLogs(clientId) {
-                    // Clear previous data
-                    if (clientCallVolumeChartInstance) {
-                        clientCallVolumeChartInstance.destroy();
-                        clientCallVolumeChartInstance = null;
-                    }
-                    if (clientMeanExecutionTimeChartInstance) {
-                        clientMeanExecutionTimeChartInstance.destroy();
-                        clientMeanExecutionTimeChartInstance = null;
-                    }
-
-                    // Hide content and error initially
-                    document.getElementById('client-logs-content').style.display = 'none';
-                    document.getElementById('client-logs-error-message').style.display = 'none';
-
-                    if (!clientId) {
-                        return;
-                    }
-
-                    // Disable refresh button while loading
-                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
-                    if (refreshBtn) {
-                        refreshBtn.disabled = true;
-                        refreshBtn.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Loading...';
-                    }
-
-                    // Fetch and display client logs data
-                    fetch(`/admin/client_logs/${clientId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.error) {
-                                document.getElementById('client-logs-error-message').style.display = 'block';
-                                document.getElementById('client-logs-error-text').textContent = data.error;
-                                return;
-                            }
-
-                            const callVolume = data.call_volume || {};
-                            const meanExecutionTime = data.mean_execution_time || {};
-
-                            // Check if there's any data
-                            if (Object.keys(callVolume).length === 0) {
-                                document.getElementById('client-logs-error-message').style.display = 'block';
-                                document.getElementById('client-logs-error-text').textContent = 'No log data available for this client.';
-                                return;
-                            }
-
-                            // Show content
-                            document.getElementById('client-logs-content').style.display = 'block';
-
-                            // Store data globally
-                            allClientMethodsData.methods = Object.keys(callVolume).sort();
-                            allClientMethodsData.callVolume = callVolume;
-                            allClientMethodsData.meanExecutionTime = meanExecutionTime;
-
-                            // Create filter checkboxes
-                            createMethodFilters(allClientMethodsData.methods);
-
-                            // Prepare data for charts
-                            const volumeData = allClientMethodsData.methods.map(method => callVolume[method]);
-                            const executionTimeData = allClientMethodsData.methods.map(method => meanExecutionTime[method]);
-
-                            // Call Volume Chart
-                            clientCallVolumeChartInstance = new Chart("clientCallVolumeChart", {
-                                type: 'bar',
-                                data: {
-                                    labels: allClientMethodsData.methods,
-                                    datasets: [{
-                                        label: 'Number of Calls',
-                                        data: volumeData,
-                                        backgroundColor: 'rgba(255, 107, 107, 0.6)',
-                                        borderColor: 'rgba(255, 107, 107, 1)',
-                                        borderWidth: 1,
-                                        borderRadius: 4
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                            padding: 8,
-                                            titleFont: { size: 12 },
-                                            bodyFont: { size: 11 },
-                                            callbacks: {
-                                                label: function(context) {
-                                                    return 'Calls: ' + context.parsed.y;
-                                                }
-                                            }
-                                        }
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            ticks: {
-                                                precision: 0
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-
-                            // Mean Execution Time Chart
-                            clientMeanExecutionTimeChartInstance = new Chart("clientMeanExecutionTimeChart", {
-                                type: 'bar',
-                                data: {
-                                    labels: allClientMethodsData.methods,
-                                    datasets: [{
-                                        label: 'Mean Execution Time (s)',
-                                        data: executionTimeData,
-                                        backgroundColor: 'rgba(255, 140, 0, 0.6)',
-                                        borderColor: 'rgba(255, 140, 0, 1)',
-                                        borderWidth: 1,
-                                        borderRadius: 4
-                                    }]
-                                },
-                                options: {
-                                    responsive: true,
-                                    maintainAspectRatio: false,
-                                    plugins: {
-                                        legend: {
-                                            display: false
-                                        },
-                                        tooltip: {
-                                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                                            padding: 8,
-                                            titleFont: { size: 12 },
-                                            bodyFont: { size: 11 },
-                                            callbacks: {
-                                                label: function(context) {
-                                                    return 'Time: ' + context.parsed.y.toFixed(4) + 's';
-                                                }
-                                            }
-                                        }
-                                    },
-                                    scales: {
-                                        y: {
-                                            beginAtZero: true,
-                                            ticks: {
-                                                callback: function(value) {
-                                                    return value.toFixed(4);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            });
-                        })
-                        .catch(error => {
-                            console.error('Error fetching client logs:', error);
-                            document.getElementById('client-logs-error-message').style.display = 'block';
-                            document.getElementById('client-logs-error-text').textContent = 'Failed to load client logs: ' + error.message;
-                        })
-                        .finally(() => {
-                            // Re-enable refresh button
-                            const refreshBtn = document.getElementById('refreshClientLogsBtn');
-                            if (refreshBtn) {
-                                refreshBtn.disabled = false;
-                                refreshBtn.innerHTML = '<i class="mdi mdi-refresh"></i> Refresh Data';
-                            }
-                        });
-                }
-
-                // Function to update refresh button state based on client selection
-                function updateClientRefreshButtonState() {
-                    const clientId = document.getElementById('clientSelector').value;
-                    const refreshBtn = document.getElementById('refreshClientLogsBtn');
-                    if (refreshBtn) {
-                        refreshBtn.disabled = !clientId;
-                    }
-                }
-
-                // Client selector change handler
-                document.getElementById('clientSelector').addEventListener('change', function() {
-                    loadClientLogs(this.value);
-                    updateClientRefreshButtonState();
-                });
-
-                // Refresh button click handler for client logs
-                const ERROR_MESSAGE_AUTO_HIDE_DELAY = 3000; // milliseconds
-                document.getElementById('refreshClientLogsBtn').addEventListener('click', function() {
-                    const clientId = document.getElementById('clientSelector').value;
-                    if (clientId) {
-                        loadClientLogs(clientId);
-                    } else {
-                        // Show brief feedback that a client must be selected
-                        document.getElementById('client-logs-error-message').style.display = 'block';
-                        document.getElementById('client-logs-error-text').textContent = 'Please select a client first.';
-                        setTimeout(() => {
-                            document.getElementById('client-logs-error-message').style.display = 'none';
-                        }, ERROR_MESSAGE_AUTO_HIDE_DELAY);
-                    }
-                });
-
-                // Initialize button state on page load
-                updateClientRefreshButtonState();
-
-                // Auto-refresh functionality for client logs
-                function startClientLogsAutoRefresh() {
-                    if (clientLogsAutoRefreshInterval) {
-                        clearInterval(clientLogsAutoRefreshInterval);
-                    }
-                    const intervalSeconds = parseInt(document.getElementById('refreshIntervalClientLogs').value) || 30;
-                    const intervalMs = Math.max(5, Math.min(300, intervalSeconds)) * 1000; // Clamp between 5-300 seconds
-                    clientLogsAutoRefreshInterval = setInterval(function() {
-                        const clientId = document.getElementById('clientSelector').value;
-                        if (clientId) {
-                            loadClientLogs(clientId);
-                        }
-                    }, intervalMs);
-                }
-
-                function stopClientLogsAutoRefresh() {
-                    if (clientLogsAutoRefreshInterval) {
-                        clearInterval(clientLogsAutoRefreshInterval);
-                        clientLogsAutoRefreshInterval = null;
-                    }
-                }
-
-                // Auto-refresh checkbox handler
-                document.getElementById('autoRefreshClientLogs').addEventListener('change', function() {
-                    if (this.checked) {
-                        startClientLogsAutoRefresh();
-                    } else {
-                        stopClientLogsAutoRefresh();
-                    }
-                });
-
-                // Refresh interval input handler
-                document.getElementById('refreshIntervalClientLogs').addEventListener('change', function() {
-                    // Restart auto-refresh with new interval if currently enabled
-                    if (document.getElementById('autoRefreshClientLogs').checked) {
-                        startClientLogsAutoRefresh();
-                    }
-                });
-
-                // Start auto-refresh if checkbox is checked and client is selected
-                if (document.getElementById('autoRefreshClientLogs').checked) {
-                    startClientLogsAutoRefresh();
-                }
-
-                // Select All button handler for methods
-                document.getElementById('selectAllMethods').addEventListener('click', function() {
-                    document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = true;
-                    });
-                    updateClientCharts();
-                });
-
-                // Deselect All button handler for methods
-                document.getElementById('deselectAllMethods').addEventListener('click', function() {
-                    document.querySelectorAll('#methodFilters input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = false;
-                    });
-                    updateClientCharts();
-                });
-            </script>
             {% endif %}
 
             <!-- Additional Row for Registered Users and Error Reporting -->
             <div class="columns is-multiline">
                 {% if len(users) > 0 %}
                 <div class="column is-12-mobile is-6-tablet is-6-desktop">
-                    <div class="dashboard-box" style="height: 100%;">
+ <div class="dashboard-box ys-h-100">
                         <h3 class="title is-5 is-thin">Registered Users</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Users with access to participate in this experiment.
                         </p>
 
@@ -2098,7 +817,7 @@
                                     <span class="left">
                                         {% for reg_user, user_exp in users %}
                                             <a href="/admin/user_details/{{ reg_user.id }}"
-                                               style="border: #0d95e8 1px solid; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block;">{{ reg_user.username }}</a>
+ class="ys-tag-info">{{ reg_user.username }}</a>
                                         {% endfor %}
                                     </span>
                                 </div>
@@ -2110,95 +829,41 @@
 
                 {% if telemetry_enabled %}
                 <div class="column is-12-mobile is-6-tablet is-6-desktop">
-                    <div class="dashboard-box" style="height: 100%;">
+ <div class="dashboard-box ys-h-100">
                         <h3 class="title is-5 is-thin">Something went wrong?</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Help us improve YSocial: submit the experiment log!
                         </p>
 
                         <div class="box-content">
                             <div class="box-lines">
-                                <p style="font-size: 0.85em; color: #777; margin-bottom: 1em;">
+ <p class="ys-label-hint2">
                                     This will compress and send your experiment's log files and configuration to help us diagnose issues and improve the platform.
                                 </p>
-                                <div class="field" style="margin-bottom: 1em;">
-                                    <label class="label" style="font-size: 0.9em;">Describe the problem (optional):</label>
+ <div class="field ys-mb-1em">
+ <label class="label ys-text-090">Describe the problem (optional):</label>
                                     <div class="control">
                                         <textarea 
                                             id="problem-description-{{ experiment.idexp }}"
-                                            class="textarea" 
+                                            class="textarea ys-text-sm" 
                                             placeholder="What issue did you encounter? What were you trying to do when the error occurred?"
-                                            rows="3"
-                                            style="font-size: 0.85em;"></textarea>
+                                            rows="3"></textarea>
                                     </div>
-                                    <p class="help" style="font-size: 0.8em;">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
+ <p class="help ys-text-080">Please describe what you were doing and what went wrong. This helps us understand and fix the issue faster.</p>
                                 </div>
                                 <button 
                                     id="submit-logs-btn-{{ experiment.idexp }}"
-                                    class="button is-info is-small" 
-                                    onclick="submitExperimentLogs({{ experiment.idexp }})"
-                                    style="width: 100%;">
+                                    class="button is-info is-small w-100" 
+                                    onclick="submitExperimentLogs({{ experiment.idexp }})">
                                     <span class="icon"><i class="mdi mdi-upload"></i></span>
                                     <span>Submit Logs</span>
                                 </button>
-                                <div id="submit-logs-message-{{ experiment.idexp }}" style="margin-top: 0.5em; font-size: 0.85em; display: none;"></div>
+ <div id="submit-logs-message-{{ experiment.idexp }}" class="ys-hidden-note"></div>
                             </div>
                         </div>
                     </div>
 
-                    <script>
-                        function submitExperimentLogs(expId) {
-                            const btn = document.getElementById(`submit-logs-btn-${expId}`);
-                            const messageDiv = document.getElementById(`submit-logs-message-${expId}`);
-                            const descriptionTextarea = document.getElementById(`problem-description-${expId}`);
-                            
-                            // Disable button and show loading
-                            btn.disabled = true;
-                            btn.innerHTML = '<span class="icon"><i class="mdi mdi-loading mdi-spin"></i></span><span>Submitting...</span>';
-                            messageDiv.style.display = 'none';
-                            
-                            // Get the problem description
-                            const problemDescription = descriptionTextarea.value.trim();
-                            
-                            // Submit logs with description
-                            fetch(`/admin/submit_experiment_logs/${expId}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    problem_description: problemDescription
-                                })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                // Show message
-                                messageDiv.style.display = 'block';
-                                if (data.success) {
-                                    messageDiv.style.color = '#28a745';
-                                    messageDiv.innerHTML = `<i class="mdi mdi-check-circle"></i> ${data.message}`;
-                                    // Clear the textarea on success
-                                    descriptionTextarea.value = '';
-                                } else {
-                                    messageDiv.style.color = '#dc3545';
-                                    messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> ${data.message}`;
-                                }
-                                
-                                // Re-enable button
-                                btn.disabled = false;
-                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
-                            })
-                            .catch(error => {
-                                messageDiv.style.display = 'block';
-                                messageDiv.style.color = '#dc3545';
-                                messageDiv.innerHTML = `<i class="mdi mdi-alert-circle"></i> Error: ${error.message}`;
-                                
-                                // Re-enable button
-                                btn.disabled = false;
-                                btn.innerHTML = '<span class="icon"><i class="mdi mdi-upload"></i></span><span>Submit Logs</span>';
-                            });
-                        }
-                    </script>
+
                 </div>
                 {% endif %}
             </div>
@@ -2209,4 +874,11 @@
 
 {% include "admin/tutorials/exp_details_tutorial.html" %}
 
+<script>
+var YS_DATA_EXP = {
+    expId: {{ experiment.idexp | tojson }},
+    clientId: null
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-experiments.js') }}"></script>
 {% include "admin/footer.html" %}    

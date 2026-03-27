@@ -133,7 +133,7 @@
                         {% include "forum/components/thread-post.html" %}
                         <div id="child-{{ thread['post_id'] }}">
                             {% for child_comment in thread['children'] %}
-                            <div class="reddit-thread-children" style="padding-left: 20px;">
+ <div class="reddit-thread-children ys-pl-20">
                                 {% with thread=child_comment, depth=1 %}
                                 {% include "forum/components/list.html" %}
                                 {% endwith %}

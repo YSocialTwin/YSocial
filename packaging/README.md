@@ -344,7 +344,7 @@ Your selection: 1 2 3  # Remove app forms and installation tracking
 ### DMG Customization
 
 1. **Custom Background:**
-   - Uses `images/YSocial_v.png` (the splash screen image)
+   - Uses `y_web/static/assets/images/platform/YSocial_v.png` (the splash screen image)
    - Placed in `.background/` folder (hidden from user)
    - Applied to DMG window via AppleScript
 
@@ -591,7 +591,7 @@ hdiutil detach /Volumes/YSocial -force
 **Problem:** Custom background doesn't appear in DMG.
 
 **Solution:**
-1. Verify image exists: `ls -lh images/YSocial_v.png`
+1. Verify image exists: `ls -lh y_web/static/assets/images/platform/YSocial_v.png`
 2. Check image format (PNG recommended)
 3. Try opening DMG and manually setting background as test
 4. Ensure `.background` folder permissions are correct
@@ -685,7 +685,7 @@ The scripts automatically:
 
 ## Background Image Details
 
-The DMG uses the YSocial splash screen image (`images/YSocial_v.png`), which features:
+The DMG uses the YSocial splash screen image (`y_web/static/assets/images/platform/YSocial_v.png`), which features:
 - YSocial logo
 - Robot illustration
 - Author credits

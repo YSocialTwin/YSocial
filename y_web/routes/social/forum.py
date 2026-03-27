@@ -749,6 +749,11 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         for add in res_additional:
             res.append(add)
 
+    has_more = bool(
+        (posts is not None and getattr(posts, "has_next", False))
+        or (additional is not None and getattr(additional, "has_next", False))
+    )
+
     html = render_template(
         "forum/components/posts.html",
         items=res,
@@ -758,4 +763,4 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         bool=bool,
         len=len,
     )
-    return jsonify({"html": html, "has_more": len(res) > 0})
+    return jsonify({"html": html, "has_more": has_more})

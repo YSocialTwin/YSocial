@@ -12,7 +12,13 @@ from collections import defaultdict
 from datetime import datetime
 
 from y_web import db
-from y_web.src.hpc.log_offset import _commit_with_retry
+from y_web.src.hpc.log_offset import (
+    _commit_with_retry,
+    get_log_file_offset,
+    reset_hpc_client_metrics,
+    reset_hpc_server_metrics,
+    update_log_file_offset,
+)
 from y_web.src.models import (
     Client,
     Client_Execution,

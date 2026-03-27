@@ -121,7 +121,7 @@
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
                     <!-- Create Post Button -->
-                    <div class="columns is-vcentered" style="margin-bottom: 20px;">
+ <div class="columns is-vcentered ys-mb-20">
                         <div class="column is-narrow">
                             <div class="select">
                                 <select id="feed-type-select">
@@ -137,7 +137,7 @@
                                 id="feed-search-form"
                                 action="{{ url_for('main.search_reddit', exp_id=exp_id) }}"
                                 method="get"
-                                style="display: flex; gap: 8px; align-items: center;"
+ class="ys-flex-gap-8"
                             >
                                 <input
                                     id="feed-search-input"
@@ -169,7 +169,7 @@
                         <div class="column">
                             <div id="create-post-trigger" class="card is-create-trigger" style="cursor: pointer; padding: 15px; border: 1px dashed #dbdbdb; text-align: center; color: #7a7a7a;">
                                 <div class="create-post-prompt">
-                                    <i data-feather="plus" style="margin-right: 8px;"></i>
+ <i data-feather="plus" class="ys-mr-8"></i>
                                     <span>Create Post</span>
                                 </div>
                             </div>
@@ -177,11 +177,11 @@
                         {% endif %}
                     </div>
                     {% if view_mode == 'search' %}
-                    <div id="search-summary" class="notification is-light" style="margin-bottom: 16px;">
-                        <span id="search-summary-results" {% if not search_query %}style="display: none;"{% endif %}>
+ <div id="search-summary" class="notification is-light ys-mb-16">
+ <span id="search-summary-results" {% if not search_query %}class="d-none"{% endif %}>
                             Search results for <strong>"<span id="search-summary-query">{{ search_query }}</span>"</strong><span id="search-summary-total">{% if search_total is not none %} ({{ search_total }}){% endif %}</span>
                         </span>
-                        <span id="search-summary-empty" {% if search_query %}style="display: none;"{% endif %}>
+ <span id="search-summary-empty" {% if search_query %}class="d-none"{% endif %}>
                             Enter a query to search posts, users, and shared links.
                         </span>
                     </div>
@@ -276,11 +276,11 @@
 
                                             <!-- Media attachment controls (Media posts) -->
                                             <div id="image-source-toggle" class="reddit-field is-hidden" style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+ <label class="ys-inline-flex-bold">
                                                     <input type="radio" name="image-source" value="url" />
                                                     <span>Media URL</span>
                                                 </label>
-                                                <label style="display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+ <label class="ys-inline-flex-bold">
                                                     <input type="radio" name="image-source" value="upload" checked />
                                                     <span>Upload</span>
                                                 </label>
@@ -585,10 +585,10 @@
                     >
                         {% include "forum/components/posts.html" %}
                     </div>
-                    <div id="loading-indicator" class="feed-loading-indicator has-text-centered" style="display: none;">
+ <div id="loading-indicator" class="feed-loading-indicator has-text-centered d-none">
                         <p>Loading more posts...</p>
                     </div>
-                    <div id="end-of-feed" class="feed-end-indicator has-text-centered" style="display: none;">
+ <div id="end-of-feed" class="feed-end-indicator has-text-centered d-none">
                         <p>You've reached the end!</p>
                     </div>
                 </div>

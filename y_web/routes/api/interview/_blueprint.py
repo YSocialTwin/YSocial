@@ -5,7 +5,7 @@ from pathlib import Path
 
 from flask import Blueprint
 
-api_interview = Blueprint("api_interview", __name__)
+api_interview = Blueprint("api_interview", __name__, url_prefix="/api/interview")
 _Y_WEB_DIR = Path(__file__).resolve().parents[2]
 
 _MEMORY_MODE_LEGACY = "legacy"

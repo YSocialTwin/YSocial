@@ -1,34 +1,34 @@
 <!-- Release Update Banner (Admin Only) -->
 {% if new_release_available and release_info %}
 <div id="release-banner" style="background: linear-gradient(to right, #e3f2fd 0%, #f5f5f5 100%); border-left: 4px solid #039be5; border-radius: 4px; margin-bottom: 20px; position: relative; z-index: 1000;">
-    <div style="padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
-            <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #039be5; border-radius: 50%; flex-shrink: 0;">
-                <i class="mdi mdi-arrow-up-bold" style="color: white; font-size: 18px;"></i>
+ <div class="ys-panel-header">
+ <div class="ys-flex-grow-row">
+ <div class="ys-icon-circle-brand">
+ <i class="mdi mdi-arrow-up-bold ys-icon-white"></i>
             </div>
-            <div style="flex: 1;">
-                <div style="font-size: 13px; color: #666; margin-bottom: 2px;">New Release Available!</div>
-                <div style="font-size: 14px; color: #363636; font-weight: 500;">
-                    {{ release_info.release_name }} <span style="color: #039be5; font-weight: 600;">(v{{ release_info.latest_version_tag }})</span>
-                    <span style="color: #999; font-size: 12px; margin-left: 8px;">{{ release_info.published_at[:10] if release_info.published_at else '' }}</span>
+ <div class="ys-flex-1">
+ <div class="ys-text-xs-hint">New Release Available!</div>
+ <div class="ys-text-sm-dark">
+ {{ release_info.release_name }} <span class="ys-text-brand-bold">(v{{ release_info.latest_version_tag }})</span>
+ <span class="ys-badge-count">{{ release_info.published_at[:10] if release_info.published_at else '' }}</span>
                 </div>
             </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+ <div class="ys-flex-gap-8">
             {% if release_info.download_url %}
             {% set is_github_page = 'github.com' in release_info.download_url and '/releases/tag/' in release_info.download_url %}
-            <a href="#" onclick="openExternalUrl(event, '{{ release_info.download_url }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #039be5; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
+ <a href="#" onclick="openExternalUrl(event, '{{ release_info.download_url }}')" class="ys-btn-brand">
                 {% if is_github_page %}
-                <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-md"></i>
                 <span>View Release</span>
                 {% else %}
-                <i class="mdi mdi-download" style="font-size: 16px;"></i>
+ <i class="mdi mdi-download ys-icon-md"></i>
                 <span>Download</span>
                 {% endif %}
             </a>
             {% endif %}
-            <button onclick="document.getElementById('release-banner').style.display='none';" style="background: transparent; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.borderColor='#039be5'; this.style.color='#039be5';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
-                <i class="mdi mdi-close" style="font-size: 14px;"></i>
+ <button onclick="document.getElementById('release-banner').style.display='none';" class="ys-btn-outline-gray" onmouseover="this.style.borderColor='#039be5'; this.style.color='#039be5';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
+ <i class="mdi mdi-close ys-text-14"></i>
             </button>
         </div>
     </div>
@@ -38,109 +38,31 @@
 <!-- Blog Post Banner (Admin Only) -->
 {% if new_blog_post_available and blog_post %}
 <div id="blog-banner" style="background: linear-gradient(to right, #fff3e0 0%, #f5f5f5 100%); border-left: 4px solid #ff9800; border-radius: 4px; margin-bottom: 20px; position: relative; z-index: 999;">
-    <div style="padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
-        <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 200px;">
+ <div class="ys-panel-header">
+ <div class="ys-flex-grow-row">
             <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: #ff9800; border-radius: 50%; flex-shrink: 0;">
-                <i class="mdi mdi-post" style="color: white; font-size: 18px;"></i>
+ <i class="mdi mdi-post ys-icon-white"></i>
             </div>
-            <div style="flex: 1;">
-                <div style="font-size: 13px; color: #666; margin-bottom: 2px;">New Blog Post!</div>
-                <div style="font-size: 14px; color: #363636; font-weight: 500;">
+ <div class="ys-flex-1">
+ <div class="ys-text-xs-hint">New Blog Post!</div>
+ <div class="ys-text-sm-dark">
                     {{ blog_post.title }}
-                    <span style="color: #999; font-size: 12px; margin-left: 8px;">{{ blog_post.published_at[:10] if blog_post.published_at else '' }}</span>
+ <span class="ys-badge-count">{{ blog_post.published_at[:10] if blog_post.published_at else '' }}</span>
                 </div>
             </div>
         </div>
-        <div style="display: flex; gap: 8px; align-items: center;">
+ <div class="ys-flex-gap-8">
             <a href="#" onclick="markBlogPostAsRead(event, {{ blog_post.id }}, '{{ blog_post.link }}')" style="display: inline-flex; align-items: center; gap: 6px; background: #ff9800; color: white; padding: 6px 14px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500; transition: background 0.2s;">
-                <i class="mdi mdi-open-in-new" style="font-size: 16px;"></i>
+ <i class="mdi mdi-open-in-new ys-icon-md"></i>
                 <span>Read Article</span>
             </a>
-            <button onclick="dismissBlogPost({{ blog_post.id }})" style="background: transparent; border: 1px solid #ddd; color: #666; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; transition: all 0.2s;" onmouseover="this.style.borderColor='#ff9800'; this.style.color='#ff9800';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
-                <i class="mdi mdi-close" style="font-size: 14px;"></i>
+ <button onclick="dismissBlogPost({{ blog_post.id }})" class="ys-btn-outline-gray" onmouseover="this.style.borderColor='#ff9800'; this.style.color='#ff9800';" onmouseout="this.style.borderColor='#ddd'; this.style.color='#666';">
+ <i class="mdi mdi-close ys-text-14"></i>
             </button>
         </div>
     </div>
 </div>
 
-<script>
-/**
- * Open an external URL in the system's default browser.
- * This function works in both regular browser mode and PyInstaller desktop mode.
- * 
- * @param {Event} event - The click event (to prevent default link behavior)
- * @param {string} url - The URL to open
- */
-function openExternalUrl(event, url) {
-    event.preventDefault();
-    
-    // Try using the backend endpoint first (works in PyInstaller mode)
-    fetch('/admin/open_external_url', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin',
-        body: JSON.stringify({ url: url })
-    }).then(response => {
-        if (!response.ok) {
-            // Fallback to window.open if backend fails (e.g., in regular browser mode)
-            console.log('Backend open_external_url failed, falling back to window.open');
-            window.open(url, '_blank');
-        }
-    }).catch(error => {
-        console.error('Error opening external URL:', error);
-        // Fallback to window.open on network error
-        window.open(url, '_blank');
-    });
-}
-
-function markBlogPostAsRead(event, postId, link) {
-    // Prevent default link behavior
-    event.preventDefault();
-    
-    // Mark blog post as read when link is clicked
-    fetch('/admin/mark_blog_post_read/' + postId, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin'
-    }).then(response => {
-        if (response.ok) {
-            // Hide the banner
-            document.getElementById('blog-banner').style.display = 'none';
-        } else {
-            console.error('Failed to mark blog post as read:', response.status);
-        }
-        // Open the link after marking as read (or even if marking failed)
-        openExternalUrl(event, link);
-    }).catch(error => {
-        console.error('Error marking blog post as read:', error);
-        // Still open the link even if marking failed
-        openExternalUrl(event, link);
-    });
-}
-
-function dismissBlogPost(postId) {
-    // Mark blog post as read when dismissed
-    fetch('/admin/mark_blog_post_read/' + postId, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        credentials: 'same-origin'
-    }).then(response => {
-        if (response.ok) {
-            document.getElementById('blog-banner').style.display = 'none';
-        } else {
-            console.error('Failed to dismiss blog post:', response.status);
-        }
-    }).catch(error => {
-        console.error('Error dismissing blog post:', error);
-    });
-}
-</script>
 {% endif %}
 
 <div class="dashboard-toolbar">
@@ -159,64 +81,9 @@ function dismissBlogPost(postId) {
         </label> -->
         <div class="buttons header-buttons">
             <!-- Tutorial Replay Button - only shown on pages with tutorials -->
-            <button id="tutorial-replay-btn" class="button is-solid live-button has-icon tutorial-icon-button" onclick="replayPageTutorial()" title="Replay Tutorial" style="display: none;">
+ <button id="tutorial-replay-btn" class="button is-solid live-button has-icon tutorial-icon-button d-none" onclick="replayPageTutorial()" title="Replay Tutorial">
                 <i data-feather="help-circle"></i>
             </button>
-            <script>
-                // Show tutorial button only if a tutorial exists for this page
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Wait a bit for tutorial scripts to register their functions
-                    setTimeout(function() {
-                        // Check for any available tutorial functions
-                        const tutorialFunctions = [
-                            'startExpDetailsTutorial',
-                            'startExperimentsTutorial',
-                            'startDashboardTutorial',
-                            'startAgentsTutorial',
-                            'startPopulationsTutorial',
-                            'startUsersTutorial',
-                            'startClientsTutorial',
-                            'startPagesTutorial',
-                            'startClientDetailsTutorial',
-                            'startUserDetailsTutorial',
-                            'startMiscellaneaTutorial'
-                        ];
-                        
-                        const hasTutorial = tutorialFunctions.some(fn => typeof window[fn] === 'function');
-                        
-                        if (hasTutorial) {
-                            document.getElementById('tutorial-replay-btn').style.display = 'inline-flex';
-                        }
-                    }, 1500);
-                });
-                
-                function replayPageTutorial() {
-                    // Call the appropriate tutorial function based on what's available
-                    if (typeof window.startExpDetailsTutorial === 'function') {
-                        window.startExpDetailsTutorial();
-                    } else if (typeof window.startExperimentsTutorial === 'function') {
-                        window.startExperimentsTutorial();
-                    } else if (typeof window.startDashboardTutorial === 'function') {
-                        window.startDashboardTutorial();
-                    } else if (typeof window.startAgentsTutorial === 'function') {
-                        window.startAgentsTutorial();
-                    } else if (typeof window.startPopulationsTutorial === 'function') {
-                        window.startPopulationsTutorial();
-                    } else if (typeof window.startUsersTutorial === 'function') {
-                        window.startUsersTutorial();
-                    } else if (typeof window.startClientsTutorial === 'function') {
-                        window.startClientsTutorial();
-                    } else if (typeof window.startPagesTutorial === 'function') {
-                        window.startPagesTutorial();
-                    } else if (typeof window.startClientDetailsTutorial === 'function') {
-                        window.startClientDetailsTutorial();
-                    } else if (typeof window.startUserDetailsTutorial === 'function') {
-                        window.startUserDetailsTutorial();
-                    } else if (typeof window.startMiscellaneaTutorial === 'function') {
-                        window.startMiscellaneaTutorial();
-                    }
-                }
-            </script>
             {% if active_experiments %}
                 {% if active_experiments|length == 1 %}
                     {# Single experiment - direct link #}
@@ -256,7 +123,7 @@ function dismissBlogPost(postId) {
                 <div class="dropdown-trigger">
                     <button class="button is-solid live-button has-icon notification-menu-button" aria-haspopup="true" aria-controls="download-notifications-menu" title="Notifications">
                         <i data-feather="bell"></i>
-                        <span id="download-notifications-badge" class="download-notification-badge" style="display:none;">0</span>
+ <span id="download-notifications-badge" class="download-notification-badge d-none">0</span>
                     </button>
                 </div>
                 <div class="dropdown-menu" id="download-notifications-menu" role="menu">
@@ -293,335 +160,5 @@ function dismissBlogPost(postId) {
     </div>
 </div>
 
-<script>
-function escapeHtml(text) {
-    if (text === null || text === undefined) {
-        return '';
-    }
-    return String(text)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-}
+{% include "admin/_flash_messages.html" %}
 
-function renderDownloadNotifications(items, unreadCount) {
-    const list = document.getElementById('download-notifications-list');
-    const badge = document.getElementById('download-notifications-badge');
-    if (!list || !badge) {
-        return;
-    }
-
-    if (unreadCount > 0) {
-        badge.style.display = 'inline-flex';
-        badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
-    } else {
-        badge.style.display = 'none';
-    }
-
-    const rows = [];
-    if (!items || items.length === 0) {
-        rows.push('<div class=\"dropdown-item\">No notifications yet.</div>');
-    } else {
-        items.slice(0, 5).forEach(item => {
-            const statusTagClass =
-                item.status === 'ready'
-                    ? 'is-success'
-                    : (item.status === 'failed' ? 'is-danger' : (item.status === 'processing' ? 'is-info' : 'is-light'));
-            const unreadClass = item.is_read ? '' : ' download-item-unread';
-            const action = item.action_url
-                ? `<a class=\"download-notification-link\" href=\"${item.action_url}\">Open</a>`
-                : '';
-            let relatedHtml = '';
-            if (item.related_experiments && item.related_experiments.length > 0) {
-                const firstExp = item.related_experiments[0];
-                const extraCount = item.related_experiments.length - 1;
-                const moreLabel = extraCount > 0 ? ` <span class="download-related-more">+${extraCount}</span>` : '';
-                relatedHtml = `
-                    <div class=\"download-notification-related\">
-                        <a class=\"download-notification-link\" href=\"${firstExp.url}\">${escapeHtml(firstExp.name)}</a>${moreLabel}
-                    </div>
-                `;
-            }
-            rows.push(`
-                <div class=\"dropdown-item download-notification-item${unreadClass}\">
-                    <div class=\"download-notification-title\">${escapeHtml(item.title)}</div>
-                    <div class=\"download-notification-meta\">
-                        <span class=\"tag ${statusTagClass}\">${escapeHtml(item.status)}</span>
-                        ${action}
-                    </div>
-                    <div class=\"download-notification-message\">${escapeHtml(item.message)}</div>
-                    ${relatedHtml}
-                </div>
-            `);
-        });
-    }
-
-    rows.push('<hr class=\"dropdown-divider\">');
-    rows.push('<a class=\"dropdown-item has-text-weight-semibold\" href=\"/admin/notifications\">See all</a>');
-    list.innerHTML = rows.join('');
-}
-
-async function refreshDownloadNotifications() {
-    try {
-        const response = await fetch('/admin/notifications/data?limit=5', {
-            credentials: 'same-origin'
-        });
-        if (!response.ok) {
-            return;
-        }
-        const payload = await response.json();
-        renderDownloadNotifications(payload.items || [], payload.unread_count || 0);
-    } catch (error) {
-        console.error('Failed to refresh download notifications:', error);
-    }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    refreshDownloadNotifications();
-    setInterval(refreshDownloadNotifications, 15000);
-
-    const menus = document.querySelectorAll('.dashboard-toolbar .header-buttons .toolbar-menu');
-    menus.forEach((menu) => {
-        const trigger = menu.querySelector('.dropdown-trigger > button');
-        const panel = menu.querySelector('.dropdown-menu');
-        if (!trigger || !panel) return;
-
-        trigger.addEventListener('click', (event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            const shouldOpen = !menu.classList.contains('is-active');
-            menus.forEach((m) => m.classList.remove('is-active'));
-            if (shouldOpen) {
-                menu.classList.add('is-active');
-            }
-        });
-
-        panel.addEventListener('click', (event) => {
-            event.stopPropagation();
-        });
-    });
-
-    document.addEventListener('click', () => {
-        menus.forEach((m) => m.classList.remove('is-active'));
-    });
-
-    document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            menus.forEach((m) => m.classList.remove('is-active'));
-        }
-    });
-});
-</script>
-
-<!-- Header Responsive Styles -->
-<style>
-.download-notification-badge {
-    margin-left: 0.35rem;
-    min-width: 18px;
-    height: 18px;
-    border-radius: 999px;
-    background: #dc3545;
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    align-items: center;
-    justify-content: center;
-    padding: 0 5px;
-}
-
-.download-notification-item {
-    min-width: 0;
-    max-width: 100%;
-    padding: 6px 8px !important;
-}
-
-.download-item-unread {
-    background-color: #f4faff;
-}
-
-.download-notification-title {
-    font-weight: 600;
-    font-size: 0.8rem;
-    margin-bottom: 0.15rem;
-    line-height: 1.2;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-    word-break: break-word;
-}
-
-.download-notification-message {
-    color: #6b7280;
-    font-size: 0.76rem;
-    margin-top: 0.15rem;
-    line-height: 1.25;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.download-notification-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.download-notification-link {
-    font-size: 0.74rem;
-}
-
-.download-notification-related {
-    margin-top: 0.15rem;
-    font-size: 0.72rem;
-    line-height: 1.2;
-    word-break: break-word;
-}
-
-.download-related-more {
-    color: #6b7280;
-}
-
-.notification-menu-button {
-    min-width: 44px;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-}
-
-.notification-dropdown-wrap {
-    margin-right: 0;
-}
-
-.notification-dropdown-wrap .dropdown-menu {
-    right: 0;
-    left: auto;
-    min-width: 260px !important;
-    width: 280px;
-    max-width: calc(100vw - 24px);
-    padding: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
-#download-notifications-menu .dropdown-content {
-    padding: 4px 0;
-    overflow: visible;
-}
-
-#download-notifications-menu .dropdown-item {
-    margin: 0 !important;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.account-menu-button {
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-}
-
-.tutorial-icon-button {
-    min-width: 44px;
-    padding-left: 10px !important;
-    padding-right: 10px !important;
-}
-
-.dashboard-toolbar .header-buttons {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.dashboard-toolbar .header-buttons > * {
-    margin: 0 !important;
-}
-
-.dashboard-toolbar .header-buttons .button {
-    margin: 0 !important;
-}
-
-.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-menu {
-    margin-top: 6px;
-    padding: 0 !important;
-    border: 0 !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
-.dashboard-toolbar .header-buttons .toolbar-menu.is-active .dropdown-menu {
-    display: block;
-}
-
-.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-content {
-    border: 1px solid #e4e8ef;
-    border-radius: 6px;
-    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.12);
-    padding: 4px 0;
-}
-
-.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-item {
-    border: none !important;
-    font-size: 0.78rem;
-    line-height: 1.25;
-    transition: background-color 0.15s ease !important;
-    transform: none !important;
-}
-
-.dashboard-toolbar .header-buttons .toolbar-menu .dropdown-divider {
-    margin: 4px 0;
-}
-
-/* Mobile header button styles */
-@media screen and (max-width: 1024px) {
-    .dashboard-toolbar {
-        flex-wrap: wrap;
-        padding: 10px 15px;
-        margin-left: 50px; /* Space for hamburger menu */
-    }
-    
-    .dashboard-toolbar .actions {
-        width: 100%;
-    }
-    
-    .dashboard-toolbar .header-buttons {
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        gap: 6px;
-        width: 100%;
-        justify-content: flex-end;
-        overflow: visible;
-    }
-    
-    .dashboard-toolbar .header-buttons .btn-text {
-        display: none;
-    }
-
-    .dashboard-toolbar .header-buttons .button {
-        padding: 8px;
-        font-size: 0.8em;
-        white-space: nowrap;
-        flex-shrink: 0;
-        min-width: 40px;
-    }
-    
-    .dashboard-toolbar .header-buttons .button svg {
-        width: 16px;
-        height: 16px;
-    }
-
-    .dashboard-toolbar .header-buttons .toolbar-menu .dropdown-menu {
-        right: 0 !important;
-        left: auto !important;
-        width: min(280px, calc(100vw - 18px)) !important;
-        min-width: 210px !important;
-    }
-
-    .dashboard-toolbar .header-buttons .toolbar-menu.is-active .dropdown-menu {
-        display: block;
-    }
-}
-</style>

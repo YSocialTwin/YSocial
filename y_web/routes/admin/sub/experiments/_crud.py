@@ -41,6 +41,7 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.src.external_runtime import get_runtime_status
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -114,7 +115,31 @@ from ._blueprint import (
 )
 from ._data import experiment_details
 from ._helpers import *  # noqa: F401,F403
-from ._helpers import _current_admin_user_or_none
+from ._helpers import (
+    _current_admin_user_or_none,
+    _experiment_configuration_update_required,
+)
+
+
+def _external_repo_availability():
+    """Detect which simulator repositories are available under external/."""
+    microblogging = (
+        get_runtime_status("microblogging_server").installed
+        and get_runtime_status("microblogging_client").installed
+    )
+    hpc = get_runtime_status("hpc_simulator").installed
+    forum = (
+        get_runtime_status("forum_server").installed
+        and get_runtime_status("forum_client").installed
+    )
+
+    return {
+        "microblogging": microblogging,
+        "hpc": hpc,
+        "forum": forum,
+    }
+
+
 from ._notifications import _enqueue_user_notification, _resolve_bulk_experiment_ids
 from ._schedule import _get_clients_to_start
 
@@ -174,6 +199,7 @@ def settings():
         .all()
     )
     exp_groups = [group[0] for group in exp_groups]  # Extract from tuples
+    repo_availability = _external_repo_availability()
 
     return render_template(
         "admin/settings.html",
@@ -186,6 +212,7 @@ def settings():
         exp_has_infinite=exp_has_infinite,
         exp_groups=exp_groups,
         active_experiments=active_experiments,
+        repo_availability=repo_availability,
     )
 
 
@@ -236,6 +263,19 @@ def visibility_settings():
     shared_rows = shared_rows.order_by(
         Exps.exp_name.asc(), Admin_users.username.asc()
     ).all()
+    shared_visibility_rows = [
+        {
+            "exp_id": row[2].idexp,
+            "experiment_name": row[2].exp_name,
+            "experiment_url": url_for(
+                "experiments.experiment_details", uid=row[2].idexp
+            ),
+            "group_name": row[2].exp_group if row[2].exp_group else "-",
+            "researcher_id": row[1].id,
+            "researcher_name": row[1].username,
+        }
+        for row in shared_rows
+    ]
 
     return render_template(
         "admin/visibility_settings.html",
@@ -243,6 +283,7 @@ def visibility_settings():
         researcher_users=researcher_users,
         group_names=group_names,
         shared_rows=shared_rows,
+        shared_visibility_rows=shared_visibility_rows,
         current_admin_user=user,
     )
 
@@ -1575,13 +1616,17 @@ def generate_standard_config(
     perspective_api,
     sentiment_annotation,
     emotion_annotation,
-    opinions_enabled,
     db_uri,
     topics,
     data_path,
+    opinion_dynamics_enabled=None,
     is_remote=False,
+    opinions_enabled=None,
 ):
     """Generate config file for Standard simulator type."""
+    if opinion_dynamics_enabled is None:
+        opinion_dynamics_enabled = bool(opinions_enabled)
+
     config = {
         "platform_type": platform_type,
         "name": exp_name,
@@ -1595,11 +1640,13 @@ def generate_standard_config(
         ),
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
-        "opinions_enabled": opinions_enabled,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
         "is_remote": is_remote,
+        "experiment_configuration_confirmed": False,
+        "memory": {"enabled": False},
     }
 
     return config
@@ -1620,10 +1667,15 @@ def generate_hpc_config(
     emotion_annotation,
     topics,
     data_path,
+    opinion_dynamics_enabled=None,
     db_config_dict=None,
     is_remote=False,
+    opinions_enabled=None,
 ):
     """Generate config file for HPC simulator type."""
+    if opinion_dynamics_enabled is None:
+        opinion_dynamics_enabled = bool(opinions_enabled)
+
     # Build database configuration section
     database_config = {
         "type": db_type,
@@ -1661,6 +1713,7 @@ def generate_hpc_config(
             "sliding_window_days": redis_sliding_window_days,
         },
         "posts": {"visibility_rounds": 36},
+        "experiment_configuration_confirmed": False,
         # Server-side fallback. Client-specific recommendation limits are set
         # in each HPC client config at client creation time.
         "recommendations": {"default_limit": 5},
@@ -1701,6 +1754,7 @@ def generate_hpc_config(
         "perspective_api": perspective_api,
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
+        "opinion_dynamics_enabled": opinion_dynamics_enabled,
         "database_uri": db_uri,
         "topics": [t.strip() for t in topics if t.strip()],
         "data_path": data_path,
@@ -1723,6 +1777,36 @@ def create_experiment():
         "simulator_type", "Standard"
     )  # Default to Standard
     exp_group = request.form.get("exp_group", "").strip()  # Get experiment group
+    repo_availability = _external_repo_availability()
+
+    if platform_type == "forum" and not repo_availability["forum"]:
+        flash(
+            "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present.",
+            "error",
+        )
+        return redirect(url_for("experiments.settings"))
+
+    if platform_type == "microblogging":
+        if simulator_type == "HPC":
+            if not repo_availability["hpc"]:
+                if repo_availability["microblogging"]:
+                    simulator_type = "Standard"
+                else:
+                    flash(
+                        "HPC microblogging experiments are unavailable because YSimulator is not present.",
+                        "error",
+                    )
+                    return redirect(url_for("experiments.settings"))
+        else:
+            if not repo_availability["microblogging"]:
+                if repo_availability["hpc"]:
+                    simulator_type = "HPC"
+                else:
+                    flash(
+                        "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present.",
+                        "error",
+                    )
+                    return redirect(url_for("experiments.settings"))
 
     if platform_type == "forum":
         simulator_type = "Standard"
@@ -1795,7 +1879,7 @@ def create_experiment():
 
     # Get LLM agents setting (convert to integer for database compatibility)
     llm_agents_enabled = 1 if request.form.get("llm_agents_enabled") == "true" else 0
-    opinions_enabled = request.form.get("opinion_annotation") == "true"
+    opinion_dynamics_enabled = request.form.get("opinion_annotation") == "true"
 
     # Get annotation settings
     toxicity_annotation = request.form.get("toxicity_annotation") == "true"
@@ -1806,7 +1890,7 @@ def create_experiment():
     emotion_annotation = request.form.get("emotion_annotation") == "true"
 
     if platform_type == "forum":
-        opinions_enabled = False
+        opinion_dynamics_enabled = False
         toxicity_annotation = False
         perspective_api = None
         sentiment_annotation = False
@@ -1981,6 +2065,7 @@ def create_experiment():
             ),
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
+            opinion_dynamics_enabled=opinion_dynamics_enabled,
             topics=topics,
             data_path=data_path,
             db_config_dict=db_config_dict,
@@ -2000,7 +2085,7 @@ def create_experiment():
             ),
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
-            opinions_enabled=opinions_enabled,
+            opinion_dynamics_enabled=opinion_dynamics_enabled,
             db_uri=db_uri,
             topics=topics,
             data_path=data_path,
@@ -2028,7 +2113,7 @@ def create_experiment():
         annotations += "sentiment,"
     if emotion_annotation:
         annotations += "emotion,"
-    if opinions_enabled:
+    if opinion_dynamics_enabled:
         annotations += "opinions,"
     # remove trailing comma
     annotations = annotations.rstrip(",")
@@ -2118,6 +2203,9 @@ def delete_simulation(exp_id):
     if exp and not user_can_manage_experiment(admin_user, exp):
         flash("You do not have permission to delete this experiment.", "error")
         return settings()
+    if exp and int(getattr(exp, "running", 0) or 0) == 1:
+        flash("Stop the experiment before deleting it.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=exp.idexp))
 
     deleted, error_message = _delete_simulation_internal(exp_id)
     if not deleted and error_message:
@@ -2276,7 +2364,8 @@ def delete_simulations_bulk():
         flash("Invalid experiment IDs provided.", "error")
         return redirect(url_for("experiments.settings"))
 
-    normalized_ids = _resolve_bulk_experiment_ids(exp_ids)
+    admin_user = _current_admin_user_or_none()
+    normalized_ids = _resolve_bulk_experiment_ids(exp_ids, admin_user=admin_user)
 
     if not normalized_ids:
         flash("No experiments selected for deletion.", "warning")
@@ -2284,7 +2373,6 @@ def delete_simulations_bulk():
 
     deleted_count = 0
     failed_ids = []
-    admin_user = _current_admin_user_or_none()
 
     for eid in normalized_ids:
         exp = Exps.query.filter_by(idexp=eid).first()
@@ -2320,6 +2408,13 @@ def start_experiment(uid):
     if not user_can_view_experiment(admin_user, exp):
         flash("You are not allowed to start this experiment.", "error")
         return redirect(url_for("experiments.settings"))
+
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before starting the server or creating clients.",
+            "warning",
+        )
+        return experiment_details(uid)
 
     # check if the experiment is already running
     if exp.running == 1:
@@ -2358,6 +2453,13 @@ def stop_experiment(uid):
     if not user_can_manage_experiment(admin_user, exp):
         flash("You do not have permission to stop this experiment.", "error")
         return redirect(url_for("experiments.settings"))
+
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before changing server or client execution state.",
+            "warning",
+        )
+        return experiment_details(uid)
 
     # check if the experiment is already running
     if exp.running == 0:
@@ -2474,7 +2576,7 @@ def prompts_forum(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if experiment.simulator_type == "HPC":
         return redirect(url_for("experiments.prompts_hpc", uid=uid))
@@ -2509,7 +2611,7 @@ def prompts_hpc(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":
@@ -2580,7 +2682,7 @@ def update_prompts_hpc(uid):
 
     if not experiment:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     # Ensure this is an HPC experiment
     if experiment.simulator_type != "HPC":

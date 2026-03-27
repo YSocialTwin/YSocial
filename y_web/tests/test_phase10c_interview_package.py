@@ -21,6 +21,7 @@ def test_api_interview_blueprint():
 
     assert isinstance(interview.api_interview, Blueprint)
     assert interview.api_interview.name == "api_interview"
+    assert interview.api_interview.url_prefix == "/api/interview"
 
 
 def test_pick_listening_port_accessible():

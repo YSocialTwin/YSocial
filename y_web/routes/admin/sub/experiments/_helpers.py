@@ -22,6 +22,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
+import requests
 from flask import (
     Blueprint,
     current_app,
@@ -135,6 +136,96 @@ def _get_experiment_folder(base_dir, experiment, db_type):
     )
 
 
+def _experiment_configuration_box_present(experiment):
+    """Return whether experiment_details should show a configuration block."""
+    if experiment is None:
+        return False
+    return True
+
+
+def _experiment_uses_llm_agents(experiment):
+    """Resolve whether an experiment is configured to use LLM agents."""
+    if experiment is None:
+        return False
+
+    default_enabled = bool(getattr(experiment, "llm_agents_enabled", 0))
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        exp_folder = _get_experiment_folder(
+            get_writable_path(), experiment, _get_database_type()
+        )
+        if not os.path.isdir(exp_folder):
+            return default_enabled
+
+        client_files = [
+            filename
+            for filename in os.listdir(exp_folder)
+            if filename.endswith(".json") and filename.startswith("client")
+        ]
+        if not client_files:
+            return default_enabled
+
+        saw_llm_config = False
+        for client_file in client_files:
+            client_path = os.path.join(exp_folder, client_file)
+            try:
+                with open(client_path, "r") as f:
+                    client_config = json.load(f)
+            except Exception:
+                continue
+
+            llm_agents_value = (
+                client_config.get("agents", {}).get("llm_agents")
+                if isinstance(client_config, dict)
+                else None
+            )
+            if llm_agents_value is None:
+                continue
+
+            saw_llm_config = True
+            if not (
+                isinstance(llm_agents_value, list)
+                and len(llm_agents_value) == 1
+                and llm_agents_value[0] is None
+            ):
+                return True
+
+        if saw_llm_config:
+            return False
+    except Exception:
+        pass
+
+    return default_enabled
+
+
+def _experiment_configuration_update_required(experiment):
+    """Return whether experiment workflows must stay locked until config is acknowledged."""
+    if not _experiment_configuration_box_present(experiment):
+        return False
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        base_dir = get_writable_path()
+        cfg_path = os.path.join(
+            _get_experiment_folder(base_dir, experiment, _get_database_type()),
+            (
+                "server_config.json"
+                if getattr(experiment, "simulator_type", "Standard") == "HPC"
+                else "config_server.json"
+            ),
+        )
+        if not os.path.exists(cfg_path):
+            return True
+        with open(cfg_path, "r") as f:
+            config = json.load(f)
+        return not bool(config.get("experiment_configuration_confirmed"))
+    except Exception:
+        return True
+
+
 def _normalize_rss_feed_item(item):
     """Normalize a forum RSS feed definition."""
     if not isinstance(item, dict):
@@ -178,8 +269,7 @@ def _normalize_image_feed_item(item):
     if not isinstance(item, dict):
         return None
 
-    subreddit = str(item.get("subreddit", "")).strip().lower()
-    subreddit = subreddit[2:] if subreddit.startswith("r/") else subreddit
+    subreddit = _normalize_subreddit_input(item.get("subreddit", ""))
     if not subreddit:
         return None
 
@@ -219,11 +309,51 @@ def _normalize_image_feeds_payload(feeds):
     return normalized_feeds
 
 
+def _normalize_subreddit_input(value):
+    """Normalize a subreddit identifier from a slug, /r/ path, or Reddit URL."""
+    raw_value = str(value or "").strip()
+    if not raw_value:
+        return ""
+
+    lowered = raw_value.lower()
+    if lowered.startswith("http://") or lowered.startswith("https://"):
+        parsed = urlparse(raw_value)
+        host = parsed.netloc.lower()
+        if host.endswith("reddit.com"):
+            parts = [part for part in parsed.path.split("/") if part]
+            if len(parts) >= 2 and parts[0].lower() == "r":
+                return parts[1].strip().lower()
+        return ""
+
+    lowered = lowered[2:] if lowered.startswith("r/") else lowered
+    lowered = lowered.strip("/")
+    return lowered
+
+
 def _read_feed_with_headers(feed_url):
     """Fetch a forum feed with explicit headers to avoid upstream blocks."""
-    request_obj = Request(feed_url, headers=FORUM_FEED_REQUEST_HEADERS)
-    with urlopen(request_obj, timeout=15) as response:
-        return response.read()
+    try:
+        response = requests.get(
+            feed_url,
+            headers=FORUM_FEED_REQUEST_HEADERS,
+            timeout=15,
+            allow_redirects=True,
+        )
+        response.raise_for_status()
+        return response.content
+    except requests.HTTPError as exc:
+        response = exc.response
+        if response is not None:
+            raise HTTPError(
+                feed_url,
+                response.status_code,
+                response.reason,
+                response.headers,
+                None,
+            ) from exc
+        raise
+    except requests.RequestException as exc:
+        raise URLError(str(exc)) from exc
 
 
 def _parse_required_feed_limit(form_key, cast, label, minimum=None):

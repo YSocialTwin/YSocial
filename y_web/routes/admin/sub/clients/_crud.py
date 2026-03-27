@@ -16,12 +16,16 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.routes.admin.sub.experiments._helpers import (
+    _experiment_configuration_update_required,
+    _experiment_uses_llm_agents,
+)
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     population_matches_platform,
 )
-from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
     AgeClass,
@@ -49,6 +53,68 @@ from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
 
 
+def _collect_population_agent_attributes(population_id):
+    """Return normalized per-agent attributes for a population, skipping broken rows."""
+    agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
+    agents = []
+    for link in agent_links:
+        agent = Agent.query.filter_by(id=link.agent_id).first()
+        if agent is not None:
+            agents.append(agent)
+
+    return {
+        "agents": agents,
+        "political_leanings": sorted(
+            {a.leaning for a in agents if getattr(a, "leaning", None) not in (None, "")}
+        ),
+        "ages": sorted(
+            {int(a.age) for a in agents if getattr(a, "age", None) not in (None, "")}
+        ),
+        "toxicity_levels": sorted(
+            {
+                a.toxicity
+                for a in agents
+                if getattr(a, "toxicity", None) not in (None, "")
+            }
+        ),
+        "languages": sorted(
+            {
+                a.language
+                for a in agents
+                if getattr(a, "language", None) not in (None, "")
+            }
+        ),
+        "llm_agents": sorted(
+            {a.ag_type for a in agents if getattr(a, "ag_type", None) not in (None, "")}
+        ),
+        "education_levels": sorted(
+            {
+                a.education_level
+                for a in agents
+                if getattr(a, "education_level", None) not in (None, "")
+            }
+        ),
+    }
+
+
+def _apply_population_attributes_to_client_config(config, population_id):
+    summary = _collect_population_agent_attributes(population_id)
+    ages = summary["ages"]
+    if not summary["agents"] or not ages:
+        return False
+
+    config["agents"]["political_leanings"] = summary["political_leanings"]
+    config["agents"]["age"]["min"] = min(ages)
+    config["agents"]["age"]["max"] = max(ages)
+    config["agents"]["toxicity_levels"] = summary["toxicity_levels"]
+    config["agents"]["languages"] = summary["languages"]
+    config["agents"]["llm_agents"] = summary["llm_agents"]
+    config["agents"]["education_levels"] = summary["education_levels"]
+    config["agents"]["round_actions"] = {"min": 1, "max": 3}
+    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    return True
+
+
 def _build_client_creation_context(idexp, recsys_mode):
     """Build the shared context used by client creation pages."""
     ensure_population_username_type_column()
@@ -73,9 +139,7 @@ def _build_client_creation_context(idexp, recsys_mode):
     )
     topics_list = [{"id": t.id, "name": t.name} for t in topics_objs]
 
-    llm_agents_enabled = (
-        exp.llm_agents_enabled if hasattr(exp, "llm_agents_enabled") else True
-    )
+    llm_agents_enabled = _experiment_uses_llm_agents(exp) if exp is not None else True
 
     crecsys_all = Content_Recsys.query.all()
     frecsys_all = Follow_Recsys.query.all()
@@ -93,6 +157,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "model": "",
     }
     experiment_memory_enabled = False
+    memory_configuration_supported = False
+    experiment_opinion_dynamics_enabled = False
     exp_llm_defaults = {
         "llm": "http://127.0.0.1:11434/v1",
         "llm_api_key": "NULL",
@@ -126,9 +192,7 @@ def _build_client_creation_context(idexp, recsys_mode):
                 experiment_clock["feed_refresh"] = raw_clock.get(
                     "feed_refresh", "hourly"
                 )
-                raw_memory = experiment_config.get("memory", {}) or {}
-                if isinstance(raw_memory, dict):
-                    experiment_memory_enabled = bool(raw_memory.get("enabled"))
+                experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
                 raw_embeddings = experiment_config.get("memory_embeddings", {}) or {}
                 if isinstance(raw_embeddings, dict):
                     experiment_embedding_settings["service"] = str(
@@ -142,6 +206,14 @@ def _build_client_creation_context(idexp, recsys_mode):
                     ).strip()
         except Exception:
             pass
+
+    if exp is not None:
+        experiment_opinion_dynamics_enabled = (
+            _opinion_dynamics_enabled_for_client_creation(exp)
+        )
+        memory_configuration_supported = bool(
+            exp.simulator_type != "HPC" and llm_agents_enabled
+        )
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = (
@@ -191,6 +263,8 @@ def _build_client_creation_context(idexp, recsys_mode):
         "topics": topics_list,
         "experiment_clock": experiment_clock,
         "experiment_memory_enabled": experiment_memory_enabled,
+        "memory_configuration_supported": memory_configuration_supported,
+        "experiment_opinion_dynamics_enabled": experiment_opinion_dynamics_enabled,
         "experiment_embedding_settings": experiment_embedding_settings,
         "exp_llm_defaults": exp_llm_defaults,
     }
@@ -205,7 +279,7 @@ def clients(idexp):
     exp = Exps.query.filter_by(idexp=idexp).first()
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     experiment_mode = _get_experiment_mode(exp)
     if experiment_mode == "hpc":
@@ -225,11 +299,17 @@ def clients_standard(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type == "forum":
         return redirect(url_for("clientsr.clients_forum", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     return render_template("admin/clients.html", **context)
 
@@ -244,11 +324,17 @@ def clients_forum(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return redirect(url_for("clientsr.clients_hpc", idexp=idexp))
     if exp.platform_type != "forum":
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     return render_template("admin/clients_forum.html", **context)
 
@@ -263,12 +349,19 @@ def clients_hpc(idexp):
     exp = context["experiment"]
     if exp is None:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         if exp.platform_type == "forum":
             return redirect(url_for("clientsr.clients_forum", idexp=idexp))
         return redirect(url_for("clientsr.clients_standard", idexp=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
 
+    context["embedded_vllm_available"] = bool(is_vllm_installed())
     return render_template("admin/clients_hpc.html", **context)
 
 
@@ -431,14 +524,18 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "temperature": 0.9,
             "llm_api_key": "NULL",
             "llm_max_tokens": -1,
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
         llm_v_config = {
-            "address": llm,
+            "address": llm_v,
             "port": 11434,
-            "model": "minicpm-v",
-            "temperature": 0.5,
-            "llm_api_key": "NULL",
-            "llm_max_tokens": 300,
+            "model": llm_v_agent or "minicpm-v:latest",
+            "temperature": float(llm_v_temperature or "0.5"),
+            "llm_api_key": llm_v_api_key or "NULL",
+            "llm_max_tokens": int(llm_v_max_tokens or "300"),
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
     elif llm_backend == "vllm":
         llm_config = {
@@ -480,14 +577,18 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "temperature": float(form_data.get("llm_temperature", "0.7")),
             "llm_api_key": "NULL",
             "llm_max_tokens": -1,
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
         llm_v_config = {
-            "address": llm,
+            "address": llm_v,
             "port": 11434,
-            "model": "minicpm-v",
-            "temperature": 0.5,
-            "llm_api_key": "NULL",
-            "llm_max_tokens": 300,
+            "model": form_data.get("llm_v_agent", "minicpm-v:latest"),
+            "temperature": float(form_data.get("llm_v_temperature", "0.5")),
+            "llm_api_key": form_data.get("llm_v_api_key", "NULL"),
+            "llm_max_tokens": int(form_data.get("llm_v_max_tokens", "300")),
+            "api_format": "auto",
+            "batching_policy": "auto",
         }
 
     # Get activity profiles for population
@@ -747,6 +848,16 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     import faker
 
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
+        opinions_enabled = True
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
+        opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
+
     population_data = {"agents": []}
     for idx, agent in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=agent.id).first()
@@ -762,11 +873,6 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         )
         activity_profile_name = (
             activity_profile_obj.name if activity_profile_obj else "Always On"
-        )
-
-        # Get opinions enabled from experiment annotations
-        opinions_enabled = "opinions" in (
-            exp.annotations.split(",") if exp.annotations else []
         )
 
         agent_data = {
@@ -799,7 +905,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "activity_profile": activity_profile_name,
             "archetype": archetype_assignments[idx],
             "opinions": (
-                {i: random.random() for i in interests} if opinions_enabled else None
+                {i: random.random() for i in interests}
+                if bool(opinions_enabled)
+                else None
             ),
             "llm": bool(exp.llm_agents_enabled),
         }
@@ -1173,14 +1281,12 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
 
     flash(f"HPC client '{name}' created successfully")
 
-    # Check if opinions annotation is present and redirect to opinion configuration
-    opinions_enabled = "opinions" in (
-        exp.annotations.split(",") if exp.annotations else []
-    )
-    if opinions_enabled:
+    if bool(opinions_enabled):
         return redirect(
             url_for(
-                "clientsr.opinion_configuration", idexp=exp.idexp, client_id=client.id
+                "clientsr.opinion_configuration_hpc",
+                idexp=exp.idexp,
+                client_id=client.id,
             )
         )
 
@@ -1199,7 +1305,7 @@ def _create_standard_client_internal():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
             "Use the dedicated HPC client creation route for this experiment.", "error"
@@ -1320,8 +1426,21 @@ def _create_standard_client_internal():
     llm_agents_enabled = (
         exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
     )
+    experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
+    if not experiment_memory_enabled:
+        memory_enabled = False
+        memory_semantic_enabled = False
+        memory_embedding_async = False
 
-    opinions_enabled = False
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
+        opinions_enabled = True
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
+        opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
 
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
@@ -1776,6 +1895,7 @@ def _create_standard_client_internal():
         pass
 
     config = {
+        "name": name,
         "servers": {
             "llm": llm,
             "llm_api_key": llm_api_key,
@@ -1816,6 +1936,9 @@ def _create_standard_client_internal():
                 "share_image": float(share_image) if share_image is not None else 0,
             },
             "emotion_annotation": emotion_annotation,
+            "opinion_dynamics": {
+                "enabled": bool(opinions_enabled),
+            },
             "agent_archetypes": {
                 "enabled": enable_archetypes,
                 "distribution": {
@@ -1887,7 +2010,7 @@ def _create_standard_client_internal():
             "political_leaning": [],
             "toxicity_levels": [],
             "languages": [],
-            "llm_agents": [],
+            "llm_agents": [] if llm_agents_enabled else [None],
             "education_levels": [],
             "round_actions": {"min": 1, "max": 3},
             "n_interests": {"min": 1, "max": 5},
@@ -1959,40 +2082,12 @@ def _create_standard_client_internal():
         },
     }
 
-    # get population agents
-    agents = Agent_Population.query.filter_by(population_id=population_id).all()
-    # get agents political leaning
-    political_leaning = set(
-        [Agent.query.filter_by(id=a.agent_id).first().leaning for a in agents]
-    )
-    # get agents' age
-    age = set([Agent.query.filter_by(id=a.agent_id).first().age for a in agents])
-    # get agents toxicity levels
-    toxicity = set(
-        [Agent.query.filter_by(id=a.agent_id).first().toxicity for a in agents]
-    )
-    # get agents' language
-    language = set(
-        [Agent.query.filter_by(id=a.agent_id).first().language for a in agents]
-    )
-    # get agents' type
-    ag_type = set(
-        [Agent.query.filter_by(id=a.agent_id).first().ag_type for a in agents]
-    )
-    # get agents' education level
-    education_level = set(
-        [Agent.query.filter_by(id=a.agent_id).first().education_level for a in agents]
-    )
-
-    config["agents"]["political_leanings"] = list(political_leaning)
-    config["agents"]["age"]["min"] = min(age)
-    config["agents"]["age"]["max"] = max(age)
-    config["agents"]["toxicity_levels"] = list(toxicity)
-    config["agents"]["languages"] = list(language)
-    config["agents"]["llm_agents"] = list(ag_type)
-    config["agents"]["education_levels"] = list(education_level)
-    config["agents"]["round_actions"] = {"min": 1, "max": 3}
-    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    if not _apply_population_attributes_to_client_config(config, population_id):
+        flash(
+            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            "error",
+        )
+        return redirect(request.referrer)
 
     with open(
         f"{BASE_DIR}{os.sep}y_web{os.sep}experiments{os.sep}{uid}{os.sep}client_{name}-{population.name}.json",
@@ -2436,6 +2531,15 @@ def _create_standard_client_internal():
         }
     )
 
+    if bool(opinions_enabled):
+        return redirect(
+            url_for(
+                "clientsr.opinion_configuration_standard",
+                idexp=exp_id,
+                client_id=client.id,
+            )
+        )
+
     # load experiment_details page
     from ..experiments import experiment_details
 
@@ -2454,7 +2558,7 @@ def _create_forum_client_internal():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         flash(
             "Use the dedicated HPC client creation route for this experiment.", "error"
@@ -2573,12 +2677,21 @@ def _create_forum_client_internal():
     llm_agents_enabled = (
         exp.llm_agents_enabled if (exp and hasattr(exp, "llm_agents_enabled")) else True
     )
+    experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
+    if not experiment_memory_enabled:
+        memory_enabled = False
+        memory_semantic_enabled = False
+        memory_embedding_async = False
 
-    annotations = {an: None for an in exp.annotations.split(",")}
-    if "opinions" in annotations:
+    posted_opinion_flag = (
+        str(request.form.get("experiment_opinion_dynamics_enabled", "")).strip().lower()
+    )
+    if posted_opinion_flag in {"true", "1", "yes", "on"}:
         opinions_enabled = True
-    else:
+    elif posted_opinion_flag in {"false", "0", "no", "off"}:
         opinions_enabled = False
+    else:
+        opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
 
     # Get LLM parameters from form, or use defaults if LLM agents are disabled
     if llm_agents_enabled:
@@ -3009,6 +3122,7 @@ def _create_forum_client_internal():
     }
 
     config = {
+        "name": name,
         "servers": {
             "llm": llm,
             "llm_api_key": llm_api_key,
@@ -3049,6 +3163,9 @@ def _create_forum_client_internal():
                 "share_image": float(share_image) if share_image is not None else 0,
             },
             "emotion_annotation": emotion_annotation,
+            "opinion_dynamics": {
+                "enabled": bool(opinions_enabled),
+            },
             "agent_archetypes": {
                 "enabled": enable_archetypes,
                 "distribution": {
@@ -3120,7 +3237,7 @@ def _create_forum_client_internal():
             "political_leaning": [],
             "toxicity_levels": [],
             "languages": [],
-            "llm_agents": [],
+            "llm_agents": [] if llm_agents_enabled else [None],
             "education_levels": [],
             "round_actions": {"min": 1, "max": 3},
             "n_interests": {"min": 1, "max": 5},
@@ -3191,40 +3308,12 @@ def _create_forum_client_internal():
         },
     }
 
-    # get population agents
-    agents = Agent_Population.query.filter_by(population_id=population_id).all()
-    # get agents political leaning
-    political_leaning = set(
-        [Agent.query.filter_by(id=a.agent_id).first().leaning for a in agents]
-    )
-    # get agents' age
-    age = set([Agent.query.filter_by(id=a.agent_id).first().age for a in agents])
-    # get agents toxicity levels
-    toxicity = set(
-        [Agent.query.filter_by(id=a.agent_id).first().toxicity for a in agents]
-    )
-    # get agents' language
-    language = set(
-        [Agent.query.filter_by(id=a.agent_id).first().language for a in agents]
-    )
-    # get agents' type
-    ag_type = set(
-        [Agent.query.filter_by(id=a.agent_id).first().ag_type for a in agents]
-    )
-    # get agents' education level
-    education_level = set(
-        [Agent.query.filter_by(id=a.agent_id).first().education_level for a in agents]
-    )
-
-    config["agents"]["political_leanings"] = list(political_leaning)
-    config["agents"]["age"]["min"] = min(age)
-    config["agents"]["age"]["max"] = max(age)
-    config["agents"]["toxicity_levels"] = list(toxicity)
-    config["agents"]["languages"] = list(language)
-    config["agents"]["llm_agents"] = list(ag_type)
-    config["agents"]["education_levels"] = list(education_level)
-    config["agents"]["round_actions"] = {"min": 1, "max": 3}
-    config["agents"]["n_interests"] = {"min": 1, "max": 5}
+    if not _apply_population_attributes_to_client_config(config, population_id):
+        flash(
+            "The selected population has no usable agents or is missing age data. Rebuild or re-upload the population before creating a client.",
+            "error",
+        )
+        return redirect(request.referrer)
 
     # check db type
     if "database_server.db" in exp.db_name:  # sqlite
@@ -3394,7 +3483,9 @@ def _create_forum_client_internal():
                 "activity_profile": activity_profile_name,
                 "archetype": archetype_assignments[idx],
                 "opinions": (
-                    {i: random.random() for i in ints[0]} if opinions_enabled else None
+                    {i: random.random() for i in ints[0]}
+                    if bool(opinions_enabled)
+                    else None
                 ),  # @todo: check initial opinions
             }
         )
@@ -3706,10 +3797,13 @@ def _create_forum_client_internal():
         }
     )
 
-    # Check if opinions annotation is present and redirect to opinion configuration
-    if opinions_enabled:
+    if bool(opinions_enabled):
         return redirect(
-            url_for("clientsr.opinion_configuration", idexp=exp_id, client_id=client.id)
+            url_for(
+                "clientsr.opinion_configuration_forum",
+                idexp=exp_id,
+                client_id=client.id,
+            )
         )
 
     # load experiment_details page
@@ -3746,7 +3840,7 @@ def create_hpc_client_route():
 
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
     if getattr(exp, "simulator_type", "Standard") != "HPC":
         flash(
             "Use the dedicated standard or forum client creation route for this experiment.",
@@ -3769,7 +3863,7 @@ def create_client():
     exp = Exps.query.filter_by(idexp=exp_id).first()
     if not exp:
         flash("Experiment not found.", "error")
-        return redirect(url_for("experiments.experiments"))
+        return redirect(url_for("experiments.settings"))
 
     if getattr(exp, "simulator_type", "Standard") == "HPC":
         return create_hpc_client_route()
@@ -3848,6 +3942,85 @@ def _read_json_if_exists(path):
         return None
     with open(path, "r") as handle:
         return json.load(handle)
+
+
+def _opinion_dynamics_enabled_for_client_creation(experiment):
+    """Resolve whether opinion dynamics are active for client creation flows."""
+    if experiment is None:
+        return False
+
+    annotations = {
+        item.strip()
+        for item in (experiment.annotations or "").split(",")
+        if item and item.strip()
+    }
+    default_enabled = "opinions" in annotations
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        config_name = (
+            "server_config.json"
+            if getattr(experiment, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        )
+        config_path = os.path.join(
+            get_writable_path(),
+            "y_web",
+            "experiments",
+            _get_experiment_folder_name(experiment),
+            config_name,
+        )
+        config = _read_json_if_exists(config_path)
+        if isinstance(config, dict):
+            return bool(
+                config.get(
+                    "opinion_dynamics_enabled",
+                    config.get("opinions_enabled", default_enabled),
+                )
+            )
+    except Exception:
+        pass
+
+    return default_enabled
+
+
+def _memory_enabled_for_client_creation(experiment):
+    """Resolve whether experiment-level memory is enabled for client creation flows."""
+    if experiment is None:
+        return False
+
+    supported = bool(
+        getattr(experiment, "simulator_type", "Standard") != "HPC"
+        and bool(getattr(experiment, "llm_agents_enabled", 0))
+    )
+    if not supported:
+        return False
+
+    try:
+        from y_web.src.system.path_utils import get_writable_path
+
+        config_name = (
+            "server_config.json"
+            if getattr(experiment, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        )
+        config_path = os.path.join(
+            get_writable_path(),
+            "y_web",
+            "experiments",
+            _get_experiment_folder_name(experiment),
+            config_name,
+        )
+        config = _read_json_if_exists(config_path)
+        if isinstance(config, dict):
+            memory_cfg = config.get("memory")
+            if isinstance(memory_cfg, dict):
+                return bool(memory_cfg.get("enabled"))
+    except Exception:
+        pass
+
+    return False
 
 
 def _get_client_population_pages(client):
