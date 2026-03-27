@@ -41,6 +41,7 @@ from y_web.src.experiment.access import (
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.src.external_runtime import get_runtime_status
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -122,16 +123,15 @@ from ._helpers import (
 
 def _external_repo_availability():
     """Detect which simulator repositories are available under external/."""
-    repo_root = pathlib.Path(__file__).resolve().parents[5]
-    external_dir = repo_root / "external"
-
-    def present(name):
-        path = external_dir / name
-        return path.exists() and path.is_dir()
-
-    microblogging = present("YServer") and present("YClient")
-    hpc = present("YSimulator")
-    forum = present("YServerReddit") and present("YClientReddit")
+    microblogging = (
+        get_runtime_status("microblogging_server").installed
+        and get_runtime_status("microblogging_client").installed
+    )
+    hpc = get_runtime_status("hpc_simulator").installed
+    forum = (
+        get_runtime_status("forum_server").installed
+        and get_runtime_status("forum_client").installed
+    )
 
     return {
         "microblogging": microblogging,

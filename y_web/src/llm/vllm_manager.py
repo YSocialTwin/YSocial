@@ -6,6 +6,8 @@ the vLLM local LLM server, plus a generic OpenAI-compatible model listing
 function that works with any LLM backend.
 """
 
+import importlib.util
+import shutil
 import subprocess
 import time
 from urllib.parse import urlparse
@@ -14,7 +16,19 @@ import requests
 
 
 def is_vllm_installed():
-    """Check if vLLM is installed."""
+    """Check if a supported embedded vLLM runtime is installed in the current environment."""
+    for module_name in ("vllm", "vllm_mlx", "vllm_metal"):
+        try:
+            if importlib.util.find_spec(module_name) is not None:
+                print(f"{module_name} is installed.")
+                return True
+        except (ImportError, ValueError):
+            pass
+
+    if shutil.which("vllm"):
+        print("vLLM CLI is installed.")
+        return True
+
     try:
         subprocess.run(
             ["vllm", "--version"], capture_output=True, text=True, check=True

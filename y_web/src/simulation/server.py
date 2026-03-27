@@ -503,8 +503,8 @@ def start_server(exp):
     ):
         raise FileNotFoundError(
             f"Server script not found: {script_path}\n"
-            f"Please ensure the YServer submodule is initialized.\n"
-            f"Run: git submodule update --init --recursive"
+            f"Please ensure YServer is cloned under external/YServer.\n"
+            f"You can install or update it from the Admin > Plugins panel."
         )
 
     # Validate that config file exists

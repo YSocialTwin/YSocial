@@ -312,9 +312,11 @@ def test_create_experiment_enforces_external_repo_availability():
     ).read_text(encoding="utf-8")
 
     assert "def _external_repo_availability():" in source
-    assert 'present("YServer") and present("YClient")' in source
-    assert 'present("YSimulator")' in source
-    assert 'present("YServerReddit") and present("YClientReddit")' in source
+    assert 'get_runtime_status("microblogging_server").installed' in source
+    assert '"microblogging_client"' in source
+    assert 'get_runtime_status("hpc_simulator").installed' in source
+    assert 'get_runtime_status("forum_server").installed' in source
+    assert '"forum_client"' in source
     assert (
         "Forum experiments are unavailable because YServerReddit and YClientReddit are not both present."
         in source
@@ -322,4 +324,65 @@ def test_create_experiment_enforces_external_repo_availability():
     assert (
         "Microblogging experiments are unavailable because neither YServer/YClient nor YSimulator is present."
         in source
+    )
+
+
+def test_external_runtime_panel_sidebar_link_and_templates_exist():
+    head_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/head.html"
+    ).read_text(encoding="utf-8")
+    panel_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtimes.html"
+    ).read_text(encoding="utf-8")
+    logs_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/external_runtime_logs.html"
+    ).read_text(encoding="utf-8")
+
+    assert "sidebar-external-runtimes" in head_template
+    assert "url_for('experiments.external_runtimes')" in head_template
+    assert "External Runtime Plugins" in panel_template
+    assert "GitHub session" in panel_template
+    assert 'name="github_token"' in panel_template
+    assert "Anonymous GitHub access" in panel_template
+    assert "Installation source" in panel_template
+    assert 'name="install_source"' in panel_template
+    assert "GitHub Release" in panel_template
+    assert "Git checkout" in panel_template
+    assert "Install Plugin" in panel_template
+    assert "Advanced maintenance" in panel_template
+    assert "<details" in panel_template
+    assert "Not installed" in panel_template
+    assert "Private" in panel_template
+    assert "Public" in panel_template
+    assert "Install Dependencies" in panel_template
+    assert (
+        "Dependency installation uses the same Python interpreter currently running YSocial"
+        in panel_template
+    )
+    assert "action='delete'" in panel_template
+    assert "View Logs" in panel_template
+    assert "Operation Output" in panel_template
+    assert '{% include "admin/footer.html" %}' in panel_template
+    assert "Operation Log" in logs_template
+    assert '{% include "admin/footer.html" %}' in logs_template
+
+
+def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+    ).read_text(encoding="utf-8")
+
+    assert (
+        'option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}'
+        in template
+    )
+    assert (
+        "Install one of: <code>vllm</code>, <code>vllm-mlx</code>, or <code>vllm-metal</code>."
+        in template
+    )
+    assert (
+        'context["embedded_vllm_available"] = bool(is_vllm_installed())' in route_source
     )

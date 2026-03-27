@@ -151,6 +151,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# External runtime repositories are managed as standalone clones
+/external/
+
 # mypy
 .mypy_cache/
 .dmypy.json
