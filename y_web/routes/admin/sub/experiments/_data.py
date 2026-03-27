@@ -754,7 +754,9 @@ def update_experiment_config(uid):
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
-        config["perspective_api"] = perspective_api if toxicity_enabled else None
+        config["perspective_api"] = (
+            perspective_api if (toxicity_enabled and perspective_api) else None
+        )
         config["experiment_configuration_confirmed"] = True
         memory_config = config.get("memory")
         if not isinstance(memory_config, dict):
@@ -801,7 +803,7 @@ def update_experiment_config(uid):
                     client_config["simulation"]["emotion_annotation"] = emotion_enabled
                     client_config["simulation"]["enable_toxicity"] = toxicity_enabled
                     client_config["simulation"]["perspective_api_key"] = (
-                        perspective_api if toxicity_enabled else None
+                        perspective_api if (toxicity_enabled and perspective_api) else None
                     )
 
                     if not isinstance(client_config.get("opinion_dynamics"), dict):

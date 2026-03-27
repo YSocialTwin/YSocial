@@ -35,6 +35,10 @@ def test_reddit_emotion_payload_detection_accepts_labeled_payloads():
     assert agent._looks_like_emotion_payload("Emotion: joy")
     assert agent._looks_like_emotion_payload("Emotions: joy, sadness")
     assert agent._looks_like_emotion_payload("Detected emotions [joy, anger]")
+    assert agent._looks_like_emotion_payload(
+        "Here are the emotions identified in the text using the GoEmotions taxonomy:\n"
+        "- joy\n- sadness\n- anger"
+    )
 
 
 def test_reddit_generated_content_extractor_skips_labeled_emotion_payload():
@@ -62,3 +66,40 @@ def test_reddit_generated_content_extractor_skips_labeled_emotion_payload():
         skip_emotion_like=True,
     )
     assert extracted == "actual generated post"
+
+
+def test_reddit_generated_content_extractor_skips_verbose_emotion_analysis():
+    module = _load_module()
+    agent = _make_agent(module)
+
+    class ChatOwner:
+        def __init__(self):
+            self.chat_messages = {}
+
+        def last_message(self, _peer_agent):
+            return {
+                "content": (
+                    "Here are the emotions identified in the text using the GoEmotions taxonomy:\n"
+                    "- joy\n- sadness\n- anger"
+                )
+            }
+
+    peer = object()
+    owner = ChatOwner()
+    owner.chat_messages[peer] = [
+        {"content": "this post actually reacts to the thread"},
+        {
+            "content": (
+                "Here are the emotions identified in the text using the GoEmotions taxonomy:\n"
+                "- joy\n- sadness\n- anger"
+            )
+        },
+    ]
+
+    extracted = agent._extract_generated_chat_content(
+        owner,
+        peer,
+        prompt_hint="ignored",
+        skip_emotion_like=True,
+    )
+    assert extracted == "this post actually reacts to the thread"

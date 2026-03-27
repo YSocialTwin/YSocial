@@ -239,6 +239,8 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert 'name="emotion_annotation"' in forum
     assert 'name="sentiment_annotation"' in forum
     assert 'name="perspective_api"' in forum
+    assert "Detoxify is used when empty" in standard
+    assert "Detoxify is used when empty" in forum
     assert "/admin/opinion_configuration_forum/" in forum
     assert "/admin/opinion_evolution/" in forum
     assert (

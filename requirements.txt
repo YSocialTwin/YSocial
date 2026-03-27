@@ -42,6 +42,7 @@ colorama>=0.4.4
 faker>=18.0.0
 feedparser>=6.0.0
 perspective>=1.0.0
+detoxify>=0.5.2
 pillow
 pyOpenSSL>=22.0.0
 pycparser>=2.21

@@ -126,8 +126,8 @@
                                     </div>
                                     {% if llm_agents_enabled_effective %}
  <div id="perspective_api_field_exp" class="ys-mt-8">
-                                        <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (required for toxicity)</label>
-                                        <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza..." style="font-size: 0.84rem;">
+                                        <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (optional; Detoxify is used when empty)</label>
+                                        <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza... (optional)" style="font-size: 0.84rem;">
                                     </div>
                                     {% else %}
                                     <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
