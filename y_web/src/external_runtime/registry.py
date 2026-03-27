@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import json
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
@@ -39,7 +39,9 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         github_repo="YSocialTwin/YClient",
         repo_url="git@github.com:YSocialTwin/YClient.git",
         default_branch="main",
-        install_commands=(("python", "-m", "pip", "install", "-r", "requirements_client.txt"),),
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
+        ),
         validate_entrypoints=("y_client", "requirements_client.txt"),
         validate_import="y_client",
         is_private=False,
@@ -53,7 +55,9 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         github_repo="YSocialTwin/YServer",
         repo_url="git@github.com:YSocialTwin/YServer.git",
         default_branch="main",
-        install_commands=(("python", "-m", "pip", "install", "-r", "requirements_server.txt"),),
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
+        ),
         validate_entrypoints=("y_server", "requirements_server.txt"),
         validate_import="y_server",
         is_private=False,
@@ -67,7 +71,9 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         github_repo="YSocialTwin/YClientReddit",
         repo_url="git@github.com:YSocialTwin/YClientReddit.git",
         default_branch="main",
-        install_commands=(("python", "-m", "pip", "install", "-r", "requirements_client.txt"),),
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements_client.txt"),
+        ),
         validate_entrypoints=("y_client", "requirements_client.txt"),
         validate_import="y_client",
     ),
@@ -80,7 +86,9 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         github_repo="YSocialTwin/YServerReddit",
         repo_url="git@github.com:YSocialTwin/YServerReddit.git",
         default_branch="main",
-        install_commands=(("python", "-m", "pip", "install", "-r", "requirements_server.txt"),),
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements_server.txt"),
+        ),
         validate_entrypoints=("y_server", "requirements_server.txt"),
         validate_import="y_server",
     ),
@@ -93,7 +101,9 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         github_repo="YSocialTwin/YSimulator",
         repo_url="git@github.com:YSocialTwin/YSimulator.git",
         default_branch="main",
-        install_commands=(("python", "-m", "pip", "install", "-r", "requirements.txt"),),
+        install_commands=(
+            ("python", "-m", "pip", "install", "-r", "requirements.txt"),
+        ),
         validate_entrypoints=("run_server.py", "run_client.py"),
         validate_import="YSimulator",
     ),
@@ -134,11 +144,7 @@ def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
             result[str(repo_key)] = "*"
             continue
         if isinstance(value, list):
-            usernames = tuple(
-                str(item).strip()
-                for item in value
-                if str(item).strip()
-            )
+            usernames = tuple(str(item).strip() for item in value if str(item).strip())
             result[str(repo_key)] = usernames
     return result
 

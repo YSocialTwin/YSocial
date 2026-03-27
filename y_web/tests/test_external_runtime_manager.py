@@ -19,8 +19,12 @@ def runtime_repo_spec(tmp_path, monkeypatch):
 
     subprocess.run(["git", "init", "--bare", str(remote)], check=True)
     subprocess.run(["git", "init", "-b", "main", str(work)], check=True)
-    subprocess.run(["git", "-C", str(work), "config", "user.email", "test@example.com"], check=True)
-    subprocess.run(["git", "-C", str(work), "config", "user.name", "Test User"], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "config", "user.email", "test@example.com"], check=True
+    )
+    subprocess.run(
+        ["git", "-C", str(work), "config", "user.name", "Test User"], check=True
+    )
 
     pkg = work / "testruntime"
     pkg.mkdir()
@@ -31,14 +35,18 @@ def runtime_repo_spec(tmp_path, monkeypatch):
 
     subprocess.run(["git", "-C", str(work), "add", "."], check=True)
     subprocess.run(["git", "-C", str(work), "commit", "-m", "initial"], check=True)
-    subprocess.run(["git", "-C", str(work), "remote", "add", "origin", str(remote)], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "remote", "add", "origin", str(remote)], check=True
+    )
     subprocess.run(["git", "-C", str(work), "push", "-u", "origin", "main"], check=True)
 
     subprocess.run(["git", "-C", str(work), "checkout", "-b", "develop"], check=True)
     (pkg / "__init__.py").write_text("VALUE = 2\n", encoding="utf-8")
     subprocess.run(["git", "-C", str(work), "add", "."], check=True)
     subprocess.run(["git", "-C", str(work), "commit", "-m", "develop"], check=True)
-    subprocess.run(["git", "-C", str(work), "push", "-u", "origin", "develop"], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "push", "-u", "origin", "develop"], check=True
+    )
 
     spec = registry.ExternalRuntimeSpec(
         key="test_runtime",
@@ -83,7 +91,15 @@ def test_update_runtime_repo_switches_branch(runtime_repo_spec):
 def test_fetch_runtime_repo_normalizes_origin_remote(runtime_repo_spec):
     manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
     subprocess.run(
-        ["git", "-C", str(runtime_repo_spec.path), "remote", "set-url", "origin", "https://github.com/example/legacy.git"],
+        [
+            "git",
+            "-C",
+            str(runtime_repo_spec.path),
+            "remote",
+            "set-url",
+            "origin",
+            "https://github.com/example/legacy.git",
+        ],
         check=True,
     )
 
@@ -97,7 +113,9 @@ def test_fetch_runtime_repo_normalizes_origin_remote(runtime_repo_spec):
 
 def test_update_runtime_repo_rejects_dirty_worktree(runtime_repo_spec):
     manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
-    (runtime_repo_spec.path / "testruntime" / "__init__.py").write_text("VALUE = 99\n", encoding="utf-8")
+    (runtime_repo_spec.path / "testruntime" / "__init__.py").write_text(
+        "VALUE = 99\n", encoding="utf-8"
+    )
 
     with pytest.raises(manager.ExternalRuntimeError, match="local modifications"):
         manager.update_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
@@ -119,7 +137,9 @@ def test_delete_runtime_repo_removes_clone(runtime_repo_spec):
     assert not runtime_repo_spec.path.exists()
 
 
-def test_download_runtime_release_installs_non_git_runtime(runtime_repo_spec, monkeypatch):
+def test_download_runtime_release_installs_non_git_runtime(
+    runtime_repo_spec, monkeypatch
+):
     archive_buffer = io.BytesIO()
     with zipfile.ZipFile(archive_buffer, "w") as archive:
         archive.writestr("repo-release/testruntime/__init__.py", "VALUE = 3\n")
@@ -130,9 +150,22 @@ def test_download_runtime_release_installs_non_git_runtime(runtime_repo_spec, mo
     monkeypatch.setattr(
         manager,
         "_list_releases",
-        lambda spec, github_token=None: ([{"tag": "v1.0.0", "name": "v1.0.0", "zipball_url": "https://example.test/archive.zip"}], None),
+        lambda spec, github_token=None: (
+            [
+                {
+                    "tag": "v1.0.0",
+                    "name": "v1.0.0",
+                    "zipball_url": "https://example.test/archive.zip",
+                }
+            ],
+            None,
+        ),
     )
-    monkeypatch.setattr(manager, "_download_release_archive", lambda spec, release, github_token=None: archive_buffer.getvalue())
+    monkeypatch.setattr(
+        manager,
+        "_download_release_archive",
+        lambda spec, release, github_token=None: archive_buffer.getvalue(),
+    )
 
     manager.download_runtime_release(runtime_repo_spec.key, "v1.0.0", actor="tester")
     status = manager.get_runtime_status(runtime_repo_spec.key)
@@ -143,10 +176,14 @@ def test_download_runtime_release_installs_non_git_runtime(runtime_repo_spec, mo
     assert (runtime_repo_spec.path / "testruntime" / "__init__.py").exists()
 
 
-def test_update_runtime_repo_rejects_release_archive_install(runtime_repo_spec, monkeypatch):
+def test_update_runtime_repo_rejects_release_archive_install(
+    runtime_repo_spec, monkeypatch
+):
     runtime_repo_spec.path.mkdir(parents=True)
     (runtime_repo_spec.path / "testruntime").mkdir()
-    (runtime_repo_spec.path / "testruntime" / "__init__.py").write_text("VALUE = 4\n", encoding="utf-8")
+    (runtime_repo_spec.path / "testruntime" / "__init__.py").write_text(
+        "VALUE = 4\n", encoding="utf-8"
+    )
     (runtime_repo_spec.path / "requirements.txt").write_text("\n", encoding="utf-8")
 
     with pytest.raises(manager.ExternalRuntimeError, match="release archive"):

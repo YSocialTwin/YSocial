@@ -36,12 +36,12 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
-from y_web.src.external_runtime import get_runtime_status
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.src.external_runtime import get_runtime_status
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -123,13 +123,15 @@ from ._helpers import (
 
 def _external_repo_availability():
     """Detect which simulator repositories are available under external/."""
-    microblogging = get_runtime_status("microblogging_server").installed and get_runtime_status(
-        "microblogging_client"
-    ).installed
+    microblogging = (
+        get_runtime_status("microblogging_server").installed
+        and get_runtime_status("microblogging_client").installed
+    )
     hpc = get_runtime_status("hpc_simulator").installed
-    forum = get_runtime_status("forum_server").installed and get_runtime_status(
-        "forum_client"
-    ).installed
+    forum = (
+        get_runtime_status("forum_server").installed
+        and get_runtime_status("forum_client").installed
+    )
 
     return {
         "microblogging": microblogging,

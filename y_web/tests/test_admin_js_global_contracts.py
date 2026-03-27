@@ -355,7 +355,10 @@ def test_external_runtime_panel_sidebar_link_and_templates_exist():
     assert "Private" in panel_template
     assert "Public" in panel_template
     assert "Install Dependencies" in panel_template
-    assert "Dependency installation uses the same Python interpreter currently running YSocial" in panel_template
+    assert (
+        "Dependency installation uses the same Python interpreter currently running YSocial"
+        in panel_template
+    )
     assert "action='delete'" in panel_template
     assert "View Logs" in panel_template
     assert "Operation Output" in panel_template
@@ -372,6 +375,14 @@ def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
     ).read_text(encoding="utf-8")
 
-    assert 'option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}' in template
-    assert "Install one of: <code>vllm</code>, <code>vllm-mlx</code>, or <code>vllm-metal</code>." in template
-    assert 'context["embedded_vllm_available"] = bool(is_vllm_installed())' in route_source
+    assert (
+        'option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}'
+        in template
+    )
+    assert (
+        "Install one of: <code>vllm</code>, <code>vllm-mlx</code>, or <code>vllm-metal</code>."
+        in template
+    )
+    assert (
+        'context["embedded_vllm_available"] = bool(is_vllm_installed())' in route_source
+    )
