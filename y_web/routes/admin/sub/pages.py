@@ -13,7 +13,10 @@ from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.models import (
+from y_web.src.content.feeds import get_feed
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.models import (
     ActivityProfile,
     Leanings,
     Page,
@@ -23,13 +26,12 @@ from y_web.models import (
     PopulationActivityProfile,
     Topic_List,
 )
-from y_web.utils import (
-    get_feed,
-    get_llm_models,
-    get_ollama_models,
+from y_web.src.system.desktop_file_handler import send_file_desktop
+from y_web.src.system.miscellanea import (
+    check_privileges,
+    llm_backend_status,
+    ollama_status,
 )
-from y_web.utils.desktop_file_handler import send_file_desktop
-from y_web.utils.miscellanea import check_privileges, llm_backend_status, ollama_status
 
 pages = Blueprint("pages", __name__)
 
@@ -95,7 +97,7 @@ def create_page():
     db.session.add(page)
     db.session.commit()
 
-    from y_web.telemetry import Telemetry
+    from y_web.src.telemetry import Telemetry
 
     telemetry = Telemetry(user=current_user)
     telemetry.log_event(
@@ -327,7 +329,7 @@ def upload_page_collection():
 
     collection = request.files["collection"]
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
 
@@ -419,7 +421,7 @@ def download_pages():
             }
         )
 
-    from y_web.utils.path_utils import get_writable_path
+    from y_web.src.system.path_utils import get_writable_path
 
     BASE = get_writable_path()
 

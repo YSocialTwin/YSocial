@@ -3,6 +3,10 @@ Test to verify that experiment_clients endpoint updates Client_Execution
 from log files before returning data.
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_experiment_clients_updates_from_logs():
     """

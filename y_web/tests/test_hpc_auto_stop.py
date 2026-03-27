@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_hpc_client_completion_stops_all_when_last_client_finishes():
     """Test that when the last HPC client finishes, all clients and server are stopped."""

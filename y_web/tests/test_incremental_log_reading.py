@@ -12,17 +12,19 @@ import pytest
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-from y_web.models import (
-    ClientLogMetrics,
-    LogFileOffset,
-    ServerLogMetrics,
-)
-from y_web.utils.log_metrics import (
+from y_web.src.hpc.log_parser import (
     get_log_file_offset,
     parse_client_log_incremental,
     parse_server_log_incremental,
     update_log_file_offset,
 )
+from y_web.src.models import (
+    ClientLogMetrics,
+    LogFileOffset,
+    ServerLogMetrics,
+)
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -297,7 +299,7 @@ class TestIncrementalLogReading:
 
     def test_client_log_rotation_resets_offset(self, app, db):
         """Test that client log rotation is detected and offset is reset."""
-        from y_web.utils.log_metrics import update_client_log_metrics
+        from y_web.src.hpc.log_metrics import update_client_log_metrics
 
         with app.app_context():
             # Create a temporary log file

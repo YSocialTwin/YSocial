@@ -11,7 +11,14 @@ from flask import flash, jsonify, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.data_access import (
+from y_web.routes.social._blueprint import main
+from y_web.routes.social.helpers import (
+    _expand_tree,
+    _forum_logged_user,
+    _get_discussions,
+    is_admin,
+)
+from y_web.src.data_access import (
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
@@ -22,7 +29,11 @@ from y_web.data_access import (
     get_user_friends,
     get_user_recent_posts,
 )
-from y_web.models import (
+from y_web.src.forum.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
+)
+from y_web.src.models import (
     Admin_users,
     Agent,
     Emotions,
@@ -36,18 +47,7 @@ from y_web.models import (
     Rounds,
     User_mgmt,
 )
-from y_web.recsys_support import get_suggested_posts, get_suggested_users
-from y_web.reddit.service import (
-    _format_display_time,
-    _format_display_time_from_created_at,
-)
-from y_web.routes.social._blueprint import main
-from y_web.routes.social.helpers import (
-    _expand_tree,
-    _forum_logged_user,
-    _get_discussions,
-    is_admin,
-)
+from y_web.src.recsys import get_suggested_posts, get_suggested_users
 
 
 @main.get("/feed")
@@ -73,7 +73,7 @@ def feeed_logged():
 
     # Get experiment user ID (not admin user ID)
     # Temporarily bind to experiment database to query user
-    from y_web.experiment_context import get_db_bind_key_for_exp
+    from y_web.src.experiment.context import get_db_bind_key_for_exp
 
     bind_key = get_db_bind_key_for_exp(exp.idexp)
 
@@ -82,7 +82,7 @@ def feeed_logged():
     try:
         # Use the experiment's database bind
         from y_web import db
-        from y_web.models import User_mgmt
+        from y_web.src.models import User_mgmt
 
         # Temporarily override db_exp bind to query correct database
         original_bind = db.get_app().config["SQLALCHEMY_BINDS"].get("db_exp")
@@ -632,7 +632,7 @@ def get_thread(exp_id, post_id):
             else (posts[0].shared_from, "Unknown")
         )
 
-    from y_web.data_access import augment_text, get_elicited_emotions, get_topics
+    from y_web.src.data_access import augment_text, get_elicited_emotions, get_topics
 
     discussion_tree = {
         "post": augment_text(posts[0].tweet, exp_id),
@@ -807,15 +807,21 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 
     max_post_per_page = 10
     username = ""
+    render_user_id = current_user.id
     posts, additional = None, None
 
     if user_id == "all":
         posts, additional = get_suggested_posts("all", "", page, max_post_per_page)
     elif user_id != "all":
         user = User_mgmt.query.filter_by(id=user_id).first()
+        if not user:
+            user = User_mgmt.query.filter_by(username=current_user.username).first()
+        if not user:
+            return jsonify({"html": "", "has_more": False}), 404
+        render_user_id = user.id
         recsys = user.recsys_type
         posts, additional = get_suggested_posts(
-            user_id, recsys, page, max_post_per_page
+            user.id, recsys, page, max_post_per_page
         )
         username = user.username
 
@@ -837,16 +843,21 @@ def api_feed(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         for add in res_additional:
             res.append(add)
 
+    has_more = bool(
+        (posts is not None and getattr(posts, "has_next", False))
+        or (additional is not None and getattr(additional, "has_next", False))
+    )
+
     html = render_template(
         "microblogging/components/posts.html",
         items=res,
         enumerate=enumerate,
-        user_id=user_id if user_id != "all" else current_user.id,
+        user_id=render_user_id,
         str=str,
         bool=bool,
         len=len,
     )
-    return jsonify({"html": html, "has_more": len(res) > 0})
+    return jsonify({"html": html, "has_more": has_more})
 
 
 @main.get("/<int:exp_id>/api/hashtag_posts/<hashtag_id>/<int:page>")

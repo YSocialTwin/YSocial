@@ -15,6 +15,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_ray_config_exists_immediately():
     """Test that validation passes when ray_config.temp exists immediately."""

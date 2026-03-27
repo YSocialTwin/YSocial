@@ -6,6 +6,8 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 class TestClientFormFields:
     """Test client form optional fields"""

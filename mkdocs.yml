@@ -1,0 +1,39 @@
+site_name: YSocial Documentation
+site_description: Comprehensive documentation for the YSocial social media digital twin platform.
+site_url: https://ysocialtwin.github.io/YSocial/
+repo_url: https://github.com/YSocialTwin/YSocial
+repo_name: YSocialTwin/YSocial
+site_dir: site
+use_directory_urls: true
+
+nav:
+  - Overview: index.md
+  - Features: features.md
+  - Getting Started:
+      - Installation Modalities: installation.md
+      - Execution Modalities: running.md
+  - Configuration:
+      - Configuration Layers: configuration.md
+      - Parameters Reference: reference/parameters.md
+      - Runtime Layout: project-structure.md
+  - Reference:
+      - CLI Reference: reference/cli.md
+      - External Runtime Management: reference/external-runtime-management.md
+      - Usage Examples: USAGE_EXAMPLES.md
+  - Packaging:
+      - PyInstaller Builds: packaging.md
+      - macOS Code Signing: MACOS_CODE_SIGNING.md
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: "2-2"

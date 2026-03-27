@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_hpc_client_creates_client_execution_record():
     """Test that start_hpc_client creates Client_Execution record for progress tracking."""

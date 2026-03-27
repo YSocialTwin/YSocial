@@ -11,6 +11,8 @@ import tempfile
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_hpc_experiment_detection_logic():
     """Test logic for detecting HPC vs Standard experiments."""

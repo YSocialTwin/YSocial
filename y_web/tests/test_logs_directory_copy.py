@@ -13,6 +13,8 @@ import tempfile
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_logs_directory_created_empty():
     """Test that logs directory is created but empty during copy."""
@@ -204,6 +206,10 @@ def test_logs_directory_case_sensitive():
 
         # Create Logs directory (uppercase - should be copied)
         Logs_dir = os.path.join(source_dir, "Logs")
+        if os.path.exists(Logs_dir):
+            pytest.skip(
+                "Case-sensitive directory distinction is unavailable on this filesystem"
+            )
         os.makedirs(Logs_dir)
         with open(os.path.join(Logs_dir, "file.txt"), "w") as f:
             f.write("text")

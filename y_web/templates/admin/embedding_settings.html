@@ -15,16 +15,10 @@
 
             <div class="columns">
                 <div class="column is-8">
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
 
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">{{ platform_label }} Memory Embeddings</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configure the embedding backend used by {{ server_label }} for semantic memory indexing and retrieval. If left unconfigured, memory falls back to lexical retrieval only.
                         </p>
 
@@ -32,35 +26,35 @@
                             <div class="box-content">
                                 <div class="box-line">
                                     <span class="left">Embedding Service</span>
-                                    <span class="right" style="width: 50%;">
+ <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
-                                            <select name="embedding_service" id="embedding_service" class="input">
+                                            <select name="embedding_service" id="embedding_service" class="input" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
                                                 <option value="" {% if not embedding_settings.service %}selected{% endif %}>Disabled</option>
                                                 <option value="ollama" {% if embedding_settings.service == 'ollama' %}selected{% endif %}>Ollama</option>
                                             </select>
                                         </div>
                                     </span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only Ollama is currently supported for memory embeddings.</p>
+ <p class="ys-text-xs-hint2">Only Ollama is currently supported for memory embeddings.</p>
 
                                 <div class="box-line">
                                     <span class="left">Ollama Host</span>
-                                    <span class="right" style="width: 50%;">
-                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434">
+ <span class="right ys-w-50">
+                                        <input type="text" name="embedding_host" id="embedding_host" class="input" value="{{ embedding_settings.host }}" placeholder="http://127.0.0.1:11434" oninput="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()" onchange="window.syncEmbeddingSettingsControls && window.syncEmbeddingSettingsControls()">
                                     </span>
                                 </div>
                                 <div style="display: flex; align-items: center; gap: 0.75em; margin-bottom: 0.5em;">
-                                    <button type="button" id="fetch_embedding_models" class="button is-light is-small">
+                                    <button type="button" id="fetch_embedding_models" class="button is-light is-small" onclick="return window.fetchEmbeddingModels ? window.fetchEmbeddingModels() : false;">
                                         <i class="mdi mdi-download"></i>
                                         <span>Fetch Embedding Models</span>
                                     </button>
                                     <span id="embedding_fetch_status" style="font-size: 0.85em; color: #666;"></span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Model discovery is enabled only after an Ollama host is provided.</p>
+ <p class="ys-text-xs-hint2">Model discovery is enabled only after an Ollama host is provided.</p>
 
                                 <div class="box-line">
                                     <span class="left">Embedding Model</span>
-                                    <span class="right" style="width: 50%;">
+ <span class="right ys-w-50">
                                         <div class="select is-fullwidth">
                                             <select name="embedding_model" id="embedding_model" class="input">
                                                 <option value="">Select an embedding model</option>
@@ -71,9 +65,9 @@
                                         </div>
                                     </span>
                                 </div>
-                                <p style="font-size: 0.8em; color: #888; margin-bottom: 1em;">Only embedding-capable models are shown in this selector.</p>
+ <p class="ys-text-xs-hint2">Only embedding-capable models are shown in this selector.</p>
 
-                                <div class="button-wrap" style="margin-top: 1.5em;">
+ <div class="button-wrap ys-mt-15em">
                                     <button type="submit" class="button is-solid primary-button is-fullwidth">Save Embedding Settings</button>
                                 </div>
                             </div>
@@ -107,103 +101,7 @@
     </div>
 </div>
 
-<script>
-function syncEmbeddingSettingsControls() {
-    const service = document.getElementById('embedding_service');
-    const host = document.getElementById('embedding_host');
-    const fetchButton = document.getElementById('fetch_embedding_models');
-    const model = document.getElementById('embedding_model');
-    const enabled = service && service.value === 'ollama';
 
-    if (host) {
-        host.disabled = !enabled;
-    }
-    if (fetchButton) {
-        fetchButton.disabled = !enabled || !(host && host.value.trim());
-    }
-    if (model) {
-        model.disabled = !enabled;
-        if (!enabled) {
-            model.value = '';
-        }
-    }
-}
 
-function fetchEmbeddingModels() {
-    const service = document.getElementById('embedding_service');
-    const host = document.getElementById('embedding_host');
-    const model = document.getElementById('embedding_model');
-    const status = document.getElementById('embedding_fetch_status');
-
-    if (!service || service.value !== 'ollama') {
-        status.textContent = 'Select Ollama first.';
-        status.style.color = '#d9822b';
-        return;
-    }
-
-    const hostValue = host.value.trim();
-    if (!hostValue) {
-        status.textContent = 'Enter an Ollama host first.';
-        status.style.color = '#c62828';
-        return;
-    }
-
-    status.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> Fetching...';
-    status.style.color = '#666';
-
-    fetch(`/admin/api/fetch_embedding_models?llm_url=${encodeURIComponent(hostValue)}`)
-        .then(async (response) => {
-            const data = await response.json();
-            if (!response.ok || data.error || data.success === false) {
-                throw new Error(data.error || data.message || 'Failed to fetch embedding models.');
-            }
-            return data;
-        })
-        .then((data) => {
-            const currentValue = model.value;
-            model.innerHTML = '<option value="">Select an embedding model</option>';
-            data.models.forEach((name) => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                if (name === currentValue) {
-                    option.selected = true;
-                }
-                model.appendChild(option);
-            });
-            if (data.models.length === 0) {
-                status.textContent = 'No embedding models found on this host.';
-                status.style.color = '#d9822b';
-            } else {
-                status.textContent = `${data.models.length} embedding model(s) loaded.`;
-                status.style.color = '#2e7d32';
-                if (!currentValue) {
-                    model.selectedIndex = 1;
-                }
-            }
-        })
-        .catch((error) => {
-            status.textContent = error.message || 'Connection failed.';
-            status.style.color = '#c62828';
-        });
-}
-
-window.addEventListener('DOMContentLoaded', function() {
-    const service = document.getElementById('embedding_service');
-    const host = document.getElementById('embedding_host');
-    const fetchButton = document.getElementById('fetch_embedding_models');
-
-    if (service) {
-        service.addEventListener('change', syncEmbeddingSettingsControls);
-    }
-    if (host) {
-        host.addEventListener('input', syncEmbeddingSettingsControls);
-    }
-    if (fetchButton) {
-        fetchButton.addEventListener('click', fetchEmbeddingModels);
-    }
-    syncEmbeddingSettingsControls();
-});
-</script>
-
+<script src="{{ url_for('static', filename='assets/js/admin-settings.js') }}"></script>
 {% include "admin/footer.html" %}

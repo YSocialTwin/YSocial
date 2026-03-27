@@ -4,7 +4,7 @@
         {% if len(thread['children'])>0 %}
         {% set data = thread['children'] %}
         {% for c in data %}
-        <div style="padding-left: 20px;">
+ <div class="ys-pl-20">
             {% with thread=c %}
             {% include "microblogging/components/list.html" %}
             {% endwith %}

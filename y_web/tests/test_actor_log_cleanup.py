@@ -12,6 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_actor_log_cleanup_removes_last_two_lines():
     """Test that the last two completion log lines are removed from actor log."""

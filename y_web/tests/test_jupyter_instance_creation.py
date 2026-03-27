@@ -5,6 +5,10 @@ Verifies that when uploading an experiment, a Jupyter instance entry
 is created in the database with status "stopped".
 """
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_jupyter_instance_creation():
     """Test that Jupyter instance is created for new experiment."""

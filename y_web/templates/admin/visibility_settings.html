@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
 <div class="view-wrapper is-dashboard">
     <div id="creator-dashboard" class="dashboard-container">
@@ -7,12 +8,6 @@
         <div class="dashboard-body">
             <div class="columns">
                 <div class="column is-12">
-                    {% for message in get_flashed_messages(with_categories=true) %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message[1] }}
-                    </div>
-                    {% endfor %}
                 </div>
             </div>
 
@@ -30,8 +25,8 @@
                     <div class="dashboard-box">
                         <h4 class="title is-6 is-thin">Share Single Experiment</h4>
                         <form method="POST" action="/admin/visibility_settings/experiment">
-                            <div class="field" style="margin-bottom: 12px;">
-                                <label class="label" style="font-size: 0.85em;">Experiment</label>
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Experiment</label>
                                 <div class="control">
                                     <div class="select is-fullwidth">
                                         <select name="exp_id" required>
@@ -44,8 +39,8 @@
                                 </div>
                             </div>
 
-                            <div class="field" style="margin-bottom: 12px;">
-                                <label class="label" style="font-size: 0.85em;">Researcher Users</label>
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Researcher Users</label>
                                 <div class="control">
                                     <div class="select is-multiple is-fullwidth">
                                         <select name="researcher_ids" multiple size="8" required>
@@ -55,10 +50,10 @@
                                         </select>
                                     </div>
                                 </div>
-                                <p style="font-size: 0.78em; color: #666; margin-top: 6px;">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
+ <p class="ys-text-tiny-mt6">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
                             </div>
 
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+ <div class="ys-flex-wrap-gap-8b">
                                 <button class="button is-solid is-info" type="submit" name="action" value="grant">Grant Visibility</button>
                                 <button class="button is-solid is-danger" type="submit" name="action" value="revoke">Revoke Visibility</button>
                             </div>
@@ -70,8 +65,8 @@
                     <div class="dashboard-box">
                         <h4 class="title is-6 is-thin">Share Entire Group</h4>
                         <form method="POST" action="/admin/visibility_settings/group">
-                            <div class="field" style="margin-bottom: 12px;">
-                                <label class="label" style="font-size: 0.85em;">Group</label>
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Group</label>
                                 <div class="control">
                                     <div class="select is-fullwidth">
                                         <select name="group_name" required>
@@ -84,8 +79,8 @@
                                 </div>
                             </div>
 
-                            <div class="field" style="margin-bottom: 12px;">
-                                <label class="label" style="font-size: 0.85em;">Researcher Users</label>
+ <div class="field ys-mb-12">
+ <label class="label ys-text-sm">Researcher Users</label>
                                 <div class="control">
                                     <div class="select is-multiple is-fullwidth">
                                         <select name="researcher_ids" multiple size="8" required>
@@ -95,10 +90,10 @@
                                         </select>
                                     </div>
                                 </div>
-                                <p style="font-size: 0.78em; color: #666; margin-top: 6px;">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
+ <p class="ys-text-tiny-mt6">Hold Ctrl (Windows/Linux) or Cmd (Mac) to select multiple users.</p>
                             </div>
 
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+ <div class="ys-flex-wrap-gap-8b">
                                 <button class="button is-solid is-info" type="submit" name="action" value="grant">Grant Group Visibility</button>
                                 <button class="button is-solid is-danger" type="submit" name="action" value="revoke">Revoke Group Visibility</button>
                             </div>
@@ -110,34 +105,7 @@
                     <div class="dashboard-box">
                         <h4 class="title is-6 is-thin">Current Researcher Visibility</h4>
                         {% if shared_rows %}
-                        <div style="overflow-x: auto;">
-                            <table class="table is-fullwidth is-striped is-narrow">
-                                <thead>
-                                    <tr>
-                                        <th>Experiment</th>
-                                        <th>Group</th>
-                                        <th>Researcher</th>
-                                        <th style="width: 120px;">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for row in shared_rows %}
-                                    <tr>
-                                        <td><a href="/admin/experiment_details/{{ row[2].idexp }}">{{ row[2].exp_name }}</a></td>
-                                        <td>{{ row[2].exp_group if row[2].exp_group else '-' }}</td>
-                                        <td>{{ row[1].username }}</td>
-                                        <td>
-                                            <form method="POST" action="/admin/visibility_settings/revoke_assignment" style="margin: 0;">
-                                                <input type="hidden" name="exp_id" value="{{ row[2].idexp }}">
-                                                <input type="hidden" name="researcher_id" value="{{ row[1].id }}">
-                                                <button class="button is-small is-danger is-light" type="submit">Revoke</button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                        <div id="researcher-visibility-table"></div>
                         {% else %}
                         <p style="font-size: 0.9em; color: #666;">No visibility grants configured yet.</p>
                         {% endif %}
@@ -148,4 +116,10 @@
     </div>
 </div>
 
+<script>
+var YS_DATA_VISIBILITY = {
+    rows: {{ shared_visibility_rows | tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-visibility.js') }}"></script>
 {% include "admin/footer.html" %}

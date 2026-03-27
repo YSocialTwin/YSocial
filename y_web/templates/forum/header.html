@@ -33,95 +33,10 @@
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/app.css') }}"/>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='assets/css/reddit/core.css') }}"/>
     <link href="{{ url_for('static', filename='assets/vendor/mdi/css/materialdesignicons.min.css') }}" rel="stylesheet">
-    <style>
-        .sim-clock-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.35);
-            padding: 4px 12px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #fff;
-            background: rgba(0, 0, 0, 0.3);
-            white-space: nowrap;
-        }
-
-        .sim-clock-pill .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            background: currentColor;
-        }
-
-        .sim-clock-pill .sim-clock-label {
-            display: flex;
-            flex-direction: column;
-            line-height: 1.1;
-        }
-
-        .sim-clock-pill .sim-clock-label small {
-            font-weight: 400;
-            opacity: 0.8;
-        }
-
-        .sim-clock-pill.is-success {
-            color: #38ef7d;
-            border-color: rgba(56, 239, 125, 0.6);
-        }
-
-        .sim-clock-pill.is-danger {
-            color: #ff7a7a;
-            border-color: rgba(255, 122, 122, 0.6);
-        }
-
-        .reply-notif-bell {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-        }
-
-        .reply-notif-badge {
-            position: absolute;
-            top: 6px;
-            right: 6px;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 6px;
-            border-radius: 999px;
-            background: #ff4500;
-            color: #fff;
-            font-size: 11px;
-            font-weight: 700;
-            line-height: 18px;
-            text-align: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='assets/css/reddit/forum-components.css') }}"/>
 </head>
 <body>
-<script id="__bs_script__">//<![CDATA[
-(function () {
-    try {
-        var script = document.createElement('script');
-        if ('async') {
-            script.async = true;
-        }
-        script.src = "{{ url_for('static', filename='/assets/js/browser-sync-client.js') }}";
-        if (document.body) {
-            document.body.appendChild(script);
-        } else if (document.head) {
-            document.head.appendChild(script);
-        }
-    } catch (e) {
-        console.error("Browsersync: could not append script tag", e);
-    }
-})()
-//]]></script>
+{% include 'shared/browser_sync.html' %}
 
 <!-- Google Tag Manager (noscript) -->
 <noscript
@@ -130,7 +45,7 @@
             src="https://www.googletagmanager.com/ns.html?id=GTM-KQHJPZP"
             height="0"
             width="0"
-            style="display: none; visibility: hidden"
+ class="ys-invisible"
     ></iframe
     >
 </noscript>
@@ -177,7 +92,7 @@
 
                 {% if reply_notif_url %}
                 <a class="navbar-item reply-notif-bell" href="{{ reply_notif_url }}" aria-label="Notifications">
-                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}"></i>
+                    <i class="mdi mdi-bell-outline" style="{% if (reply_notif_unread_count|default(0))|int > 0 %} color: #ff4500;{% endif %}" {# dynamic #}></i>
                     {% if (reply_notif_unread_count|default(0))|int > 0 %}
                     <span class="reply-notif-badge">{{ reply_notif_unread_count }}</span>
                     {% endif %}

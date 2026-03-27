@@ -14,6 +14,8 @@ import tempfile
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_log_file_exclusion_pattern():
     """Test that log file pattern matches all log files including rotated logs."""

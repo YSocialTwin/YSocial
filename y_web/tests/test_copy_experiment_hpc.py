@@ -14,6 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_hpc_config_detection():
     """Test that HPC experiments are correctly detected by config file."""

@@ -78,32 +78,32 @@
                             />
 
                         </div>
-                        <div style="text-align: center; max-width: 500px; margin: 0 auto;">
-                            <h2 style="margin-bottom: 10px;"><b>Internal Server Error</b></h2>
-                            <p style="font-size: 1.2em; color: #999; margin-bottom: 20px;">
+ <div class="ys-center-content">
+ <h2 class="ys-mb-10"><b>Internal Server Error</b></h2>
+ <p class="ys-subtitle">
                                 Error {{ error.status_code if error else '500' }}
                             </p>
-                            <p style="margin-bottom: 30px; line-height: 1.6;">
+ <p class="ys-mb-lh">
                                 {{ error.error_description if error else 'Something went wrong on our end.' }}<br>
                                 We're working to fix the issue. Please try again later.
                             </p>
                             
                             {% if error and error.requested_url %}
-                            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: left;">
-                                <p style="margin: 5px 0; font-size: 0.9em;"><strong>Debug Information:</strong></p>
-                                <p style="margin: 5px 0; font-size: 0.85em; word-break: break-all;">
+ <div class="ys-code-block">
+ <p class="ys-item-sm"><strong>Debug Information:</strong></p>
+ <p class="ys-item-sm-break">
                                     <strong>URL:</strong> {{ error.requested_url }}
                                 </p>
                                 {% if error.method %}
-                                <p style="margin: 5px 0; font-size: 0.85em;">
+ <p class="ys-item-sm2">
                                     <strong>Method:</strong> {{ error.method }}
                                 </p>
                                 {% endif %}
                             </div>
                             {% endif %}
                             
-                            <div style="margin-top: 30px;">
-                                <a href="/" class="button is-solid primary-button" style="padding: 10px 30px; text-decoration: none;">
+ <div class="ys-mt-30">
+ <a href="/" class="button is-solid primary-button ys-btn-lg">
                                     Go to Homepage
                                 </a>
                             </div>

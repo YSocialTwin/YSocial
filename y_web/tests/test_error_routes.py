@@ -5,6 +5,8 @@ Tests for error routes and error page rendering.
 import pytest
 from flask import Blueprint
 
+pytestmark = pytest.mark.unit
+
 
 class TestErrorRoutesStructure:
     """Test error routes module structure"""

@@ -11,6 +11,8 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():

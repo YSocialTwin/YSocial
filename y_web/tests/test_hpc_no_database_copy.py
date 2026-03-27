@@ -6,6 +6,10 @@ import os
 import shutil
 import tempfile
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_hpc_detection_logic():
     """Test that HPC experiments are correctly detected by presence of server_config.json"""

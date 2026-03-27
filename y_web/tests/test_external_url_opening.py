@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_webbrowser_import():
     """Test that webbrowser module can be imported"""

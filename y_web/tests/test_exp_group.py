@@ -7,13 +7,16 @@ and can be set during experiment creation.
 
 import pytest
 
+pytestmark = pytest.mark.integration
+
 
 def _setup_exps_model_for_test(app):
     """Helper function to set up Exps model for testing.
 
     This avoids duplicate code and provides consistent test setup.
     """
-    from y_web.models import Exps, db
+    from y_web import db
+    from y_web.src.models import Exps
 
     with app.app_context():
         # Override bind_key for testing to use the test database
@@ -29,7 +32,7 @@ def _setup_exps_model_for_test(app):
 
 def test_exps_model_has_exp_group_field():
     """Test that Exps model has exp_group field."""
-    from y_web.models import Exps
+    from y_web.src.models import Exps
 
     # Check that the model has the exp_group attribute
     assert hasattr(Exps, "exp_group"), "Exps model should have exp_group field"

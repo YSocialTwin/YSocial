@@ -1,0 +1,315 @@
+"""
+HPC client process management.
+
+Provides functions for starting and stopping HPC client processes,
+extracted from y_web.utils.external_processes.
+"""
+
+import os
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from y_web import db
+from y_web.src.models import Client_Execution
+from y_web.src.system.path_utils import get_base_path, get_writable_path
+
+
+def start_hpc_client(exp, cli, population):
+    """
+    Start an HPC client using subprocess.Popen.
+
+    This function launches an HPC client process for an experiment using the
+    run_client.py script from the external/YSimulator folder. The process PID
+    is stored in the database for later management and graceful termination.
+
+    Args:
+        exp: the experiment object
+        cli: the client object
+        population: the population object
+
+    Returns:
+        subprocess.Popen: The started process object
+    """
+    # Import helpers from external_processes to avoid duplication.
+    # These imports work because external_processes defines them before delegating here.
+    from y_web.src.simulation.server import detect_env_handler
+
+    # Get base path - this will be bundle location when frozen, repo root otherwise
+    base_path = get_base_path()
+
+    # Get writable path for experiments directory
+    writable_base = get_writable_path()
+    y_web_dir = os.path.join(writable_base, "y_web")
+
+    # Construct experiment folder path
+    if "database_server.db" in exp.db_name:
+        # db_name format: "experiments/uid/database_server.db"
+        exp_folder = os.path.join(
+            y_web_dir, exp.db_name.split("database_server.db")[0].rstrip("/\\")
+        )
+    else:
+        uid = exp.db_name.removeprefix("experiments_")
+        exp_folder = os.path.join(y_web_dir, "experiments", uid)
+
+    # Construct paths for config, agents, and prompts files
+    client_config = os.path.join(
+        exp_folder, f"client_{cli.name}-{population.name}.json"
+    )
+    agents_file = os.path.join(exp_folder, f"{population.name}.json")
+    prompts_file = os.path.join(exp_folder, "prompts.json")
+
+    # Validate that required files exist
+    for file_path, file_name in [
+        (client_config, "client config"),
+        (agents_file, "agents"),
+        (prompts_file, "prompts"),
+    ]:
+        if not Path(file_path).exists():
+            raise FileNotFoundError(
+                f"{file_name.capitalize()} file not found: {file_path}\n"
+                f"Please ensure the HPC experiment is properly configured."
+            )
+
+    # Validate ray_config.temp exists (required for HPC client startup)
+    # Wait up to 60 seconds (6 attempts x 10 seconds) for the file to appear
+    ray_config_path = os.path.join(exp_folder, "ray_config.temp")
+    max_attempts = 6
+    wait_seconds = 10
+
+    for attempt in range(1, max_attempts + 1):
+        if Path(ray_config_path).exists():
+            break
+
+        if attempt < max_attempts:
+            print(
+                f"ray_config.temp not found (attempt {attempt}/{max_attempts}). "
+                f"Waiting {wait_seconds} seconds..."
+            )
+            time.sleep(wait_seconds)
+        else:
+            # Final attempt failed
+            error_msg = (
+                f"ray_config.temp file not found after {max_attempts} attempts "
+                f"({max_attempts * wait_seconds} seconds): {ray_config_path}\n"
+                f"The HPC server may not have fully initialized yet. "
+                f"Please wait and try again, or check the server logs for errors."
+            )
+            raise FileNotFoundError(error_msg)
+
+    # Remove completion log entries from actor log if restarting
+    # Actor logs are in logs/{client_name}_actor.log
+    logs_folder = os.path.join(exp_folder, "logs")
+    actor_log_path = os.path.join(logs_folder, f"{cli.name}_actor.log")
+
+    if os.path.exists(actor_log_path):
+        try:
+            # Read all lines from the actor log
+            with open(actor_log_path, "r", encoding="utf-8") as f:
+                lines = f.readlines()
+
+            # Remove the last two lines if they exist
+            # These are the completion messages that should be cleared on restart
+            if len(lines) >= 2:
+                lines = lines[:-2]
+
+                # Write back the modified content
+                with open(actor_log_path, "w", encoding="utf-8") as f:
+                    f.writelines(lines)
+
+                print(f"Removed completion log entries from {actor_log_path}")
+        except Exception as e:
+            # Log the error but don't fail the client start
+            print(f"Warning: Could not clean actor log {actor_log_path}: {e}")
+
+    # Determine the script path based on platform type
+    if exp.platform_type == "microblogging":
+        script_path = os.path.join(base_path, "external", "YSimulator", "run_client.py")
+    else:
+        raise NotImplementedError(f"Unsupported platform {exp.platform_type}")
+
+    # Validate that script_path exists (skip check for PyInstaller bundles)
+    is_frozen = getattr(sys, "frozen", False)
+    has_meipass = hasattr(sys, "_MEIPASS")
+    is_bundle_exe = "python" not in Path(sys.executable).name.lower()
+
+    if (
+        not (is_frozen or has_meipass or is_bundle_exe)
+        and not Path(script_path).exists()
+    ):
+        raise FileNotFoundError(
+            f"Client script not found: {script_path}\n"
+            f"Please ensure YSimulator is cloned under external/YSimulator.\n"
+            f"You can install or update it from the Admin > Plugins panel."
+        )
+
+    # Get the Python executable to use
+    python_cmd = detect_env_handler()
+
+    # Build the command
+    if is_frozen or has_meipass or is_bundle_exe:
+        # Running from PyInstaller bundle
+        cmd = [
+            sys.executable,
+            "--run-hpc-client-subprocess",
+            "--config",
+            client_config,
+            "--agents",
+            agents_file,
+            "--prompts",
+            prompts_file,
+        ]
+    elif (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
+        # Handle commands like "pipenv run python"
+        cmd_parts = python_cmd.split()
+        cmd = cmd_parts + [
+            script_path,
+            "--config",
+            client_config,
+            "--agents",
+            agents_file,
+            "--prompts",
+            prompts_file,
+        ]
+    else:
+        # Simple python executable path (may contain spaces on Windows)
+        cmd = [
+            python_cmd,
+            script_path,
+            "--config",
+            client_config,
+            "--agents",
+            agents_file,
+            "--prompts",
+            prompts_file,
+        ]
+
+    print(f"Starting HPC client {cli.name} for experiment {exp.idexp}...")
+    print(f"Config: {client_config}")
+    print(f"Agents: {agents_file}")
+    print(f"Prompts: {prompts_file}")
+
+    env = os.environ.copy()
+
+    try:
+        # Start the process with Popen
+        if sys.platform.startswith("win"):
+            try:
+                creationflags = subprocess.CREATE_NO_WINDOW
+            except AttributeError:
+                creationflags = 0x08000000
+            process = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                creationflags=creationflags,
+                env=env,
+            )
+        else:
+            process = subprocess.Popen(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                start_new_session=True,
+                env=env,
+            )
+        print(f"HPC client process started with PID: {process.pid}")
+    except Exception as e:
+        print(f"Error starting HPC client process: {e}")
+        raise
+
+    # Save the PID to the database for persistent tracking
+    cli.pid = process.pid
+    db.session.commit()
+
+    # Initialize or get Client_Execution record for progress tracking
+    # This is essential for HPC clients to track simulation progress
+    client_exec = Client_Execution.query.filter_by(client_id=cli.id).first()
+    if not client_exec:
+        # Create new Client_Execution record
+        # For infinite clients (days = -1), set expected_duration_rounds to -1
+        expected_rounds = -1 if cli.days == -1 else cli.days * 24
+        client_exec = Client_Execution(
+            client_id=cli.id,
+            elapsed_time=0,
+            expected_duration_rounds=expected_rounds,
+            last_active_hour=-1,
+            last_active_day=-1,
+        )
+        db.session.add(client_exec)
+        db.session.commit()
+        print(
+            f"Created Client_Execution record for HPC client {cli.name} (expected rounds: {expected_rounds})"
+        )
+    else:
+        print(f"Client_Execution record already exists for HPC client {cli.name}")
+
+    return process
+
+
+def stop_hpc_client(cli):
+    """
+    Terminate an HPC client process using the PID stored in the database.
+
+    This function terminates an HPC client process that was started using the
+    start_hpc_client() function and has its PID stored in the database.
+    It handles graceful shutdown using SIGTERM, followed by SIGKILL if needed.
+    It clears the PID from the database after termination.
+
+    Args:
+        cli: the client object whose HPC client process should be terminated
+
+    Returns:
+        bool: True if process was found and terminated, False otherwise
+    """
+    # Import here to avoid circular import issues.
+    from y_web.src.simulation.port_manager import (
+        __terminate_process as _terminate_process,
+    )
+
+    try:
+        if not cli.pid:
+            print(f"No tracked HPC client process found for client {cli.name}")
+            return False
+
+        pid = cli.pid
+        print(f"Terminating HPC client process with PID {pid}...")
+
+        try:
+            # Try graceful termination first
+            os.kill(pid, signal.SIGTERM)
+
+            # Wait up to 5 seconds for graceful shutdown
+            for _ in range(50):  # 50 * 0.1s = 5 seconds
+                try:
+                    os.kill(pid, 0)  # Check if process still exists
+                    time.sleep(0.1)
+                except OSError:
+                    # Process no longer exists
+                    print(f"HPC client process {pid} terminated gracefully.")
+                    break
+            else:
+                # If we get here, process is still running after timeout
+                print(
+                    f"HPC client process {pid} did not terminate gracefully, forcing kill..."
+                )
+                _terminate_process(pid)
+                time.sleep(0.5)
+                print(f"HPC client process {pid} killed.")
+
+        except OSError as e:
+            # Process doesn't exist
+            print(f"HPC client process {pid} no longer exists: {e}")
+
+        # Clear PID from database
+        cli.pid = None
+        db.session.commit()
+        return True
+
+    except Exception as e:
+        print(f"Error terminating HPC client process: {e}")
+        return False

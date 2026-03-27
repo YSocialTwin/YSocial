@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestExtendSimulationHPCConfig:
     """Test that extend_simulation updates HPC client config files correctly"""

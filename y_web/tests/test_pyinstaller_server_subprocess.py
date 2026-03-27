@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestServerSubprocessHandling:
     """Test PyInstaller subprocess handling for server processes"""

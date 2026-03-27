@@ -18,7 +18,13 @@ from flask import (
 )
 from flask_login import current_user, login_required
 
-from y_web.models import (
+from y_web.src.experiment.access import (
+    get_visible_experiment_query,
+    user_can_manage_experiment,
+)
+from y_web.src.llm.ollama_manager import get_ollama_models
+from y_web.src.llm.vllm_manager import get_llm_models, get_vllm_models
+from y_web.src.models import (
     Admin_users,
     Client,
     Client_Execution,
@@ -27,28 +33,22 @@ from y_web.models import (
     Ollama_Pull,
     User_Experiment,
 )
-from y_web.utils import (
+from y_web.src.system.jupyter_utils import get_jupyter_instances
+from y_web.src.system.miscellanea import (
     check_connection,
     check_privileges,
     get_db_port,
     get_db_server,
     get_db_type,
-    get_llm_models,
-    get_ollama_models,
-    get_vllm_models,
+    llm_backend_status,
+    ollama_status,
 )
-from y_web.utils.experiment_access import (
-    get_visible_experiment_query,
-    user_can_manage_experiment,
-)
-from y_web.utils.jupyter_utils import get_jupyter_instances
-from y_web.utils.miscellanea import llm_backend_status, ollama_status
 
 admin = Blueprint("admin", __name__)
 
 
 def _normalize_llm_models_url(llm_url: str) -> str:
-    """Normalize a user-provided OpenAI-compatible models endpoint base URL."""
+    """Normalize a user-provided LLM base URL for model discovery."""
     llm_url = str(llm_url or "").strip()
     if not llm_url:
         return ""
@@ -56,10 +56,9 @@ def _normalize_llm_models_url(llm_url: str) -> str:
         llm_url = f"http://{llm_url}"
     if llm_url.endswith("/"):
         llm_url = llm_url[:-1]
-    if llm_url.endswith("/v1/models"):
-        return llm_url[:-7]
-    if not llm_url.endswith("/v1"):
-        llm_url = f"{llm_url}/v1"
+    for suffix in ("/v1/models", "/models", "/api/tags", "/v1"):
+        if llm_url.endswith(suffix):
+            return llm_url[: -len(suffix)]
     return llm_url
 
 

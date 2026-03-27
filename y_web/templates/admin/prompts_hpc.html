@@ -21,17 +21,10 @@
                 <!--Dashboard column-->
                 <div class="column is-8">
 
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <!--Dashboard box-->
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">HPC LLM Prompts Configuration</h3>
-                        <p style="font-size: 0.9em; color: #666; margin-bottom: 1em;">
+ <p class="ys-text-small">
                             Configure system and user prompt templates for the HPC simulator. These templates use structured system/user patterns for LLM interactions.
                         </p>
                         <div class="box-content">
@@ -40,32 +33,32 @@
                                     
                                     <!-- Persona Configuration -->
                                     <h4 class="title is-6 is-thin">Persona Configuration</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Define agent persona templates and archetype-specific behaviors.</p>
+ <p class="ys-label-hint">Define agent persona templates and archetype-specific behaviors.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">Persona Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="persona_template" class="textarea">{{ prompts.persona_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Validator Persona</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_0" class="textarea">{{ (prompts.personas|default({}))['0']|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Broadcaster Persona</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_1" class="textarea">{{ (prompts.personas|default({}))['1']|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Explorer Persona</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="personas_2" class="textarea">{{ (prompts.personas|default({}))['2']|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -74,18 +67,18 @@
 
                                     <!-- Generate Post -->
                                     <h4 class="title is-6 is-thin">Generate Post</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for generating original social media posts.</p>
+ <p class="ys-label-hint">Prompts for generating original social media posts.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_post_system_template" class="textarea">{{ (prompts.generate_post|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="4" name="generate_post_user_template" class="textarea">{{ (prompts.generate_post|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -94,18 +87,18 @@
 
                                     <!-- Decide Reaction -->
                                     <h4 class="title is-6 is-thin">Decide Reaction</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for deciding how to react to posts (like, comment, or ignore).</p>
+ <p class="ys-label-hint">Prompts for deciding how to react to posts (like, comment, or ignore).</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="decide_reaction_system_template" class="textarea">{{ (prompts.decide_reaction|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_reaction_user_template" class="textarea">{{ (prompts.decide_reaction|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -114,18 +107,18 @@
 
                                     <!-- Generate Comment -->
                                     <h4 class="title is-6 is-thin">Generate Comment</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for generating comments on posts.</p>
+ <p class="ys-label-hint">Prompts for generating comments on posts.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_comment_system_template" class="textarea">{{ (prompts.generate_comment|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_comment_user_template" class="textarea">{{ (prompts.generate_comment|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -134,18 +127,18 @@
 
                                     <!-- Generate Read Reaction -->
                                     <h4 class="title is-6 is-thin">Generate Read Reaction</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for emotional reactions to discovered content.</p>
+ <p class="ys-label-hint">Prompts for emotional reactions to discovered content.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="generate_read_reaction_system_template" class="textarea">{{ (prompts.generate_read_reaction|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="7" name="generate_read_reaction_user_template" class="textarea">{{ (prompts.generate_read_reaction|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -154,18 +147,18 @@
 
                                     <!-- Decide Search Action -->
                                     <h4 class="title is-6 is-thin">Decide Search Action</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for engagement decisions after searching for content.</p>
+ <p class="ys-label-hint">Prompts for engagement decisions after searching for content.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_search_action_system_template" class="textarea">{{ (prompts.decide_search_action|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="8" name="decide_search_action_user_template" class="textarea">{{ (prompts.decide_search_action|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -174,18 +167,18 @@
 
                                     <!-- Generate News Commentary -->
                                     <h4 class="title is-6 is-thin">Generate News Commentary</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for news pages to share articles.</p>
+ <p class="ys-label-hint">Prompts for news pages to share articles.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_news_commentary_system_template" class="textarea">{{ (prompts.generate_news_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_news_commentary_user_template" class="textarea">{{ (prompts.generate_news_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -194,32 +187,32 @@
 
                                     <!-- Follow Decisions -->
                                     <h4 class="title is-6 is-thin">Follow Decisions</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for deciding whether to follow users.</p>
+ <p class="ys-label-hint">Prompts for deciding whether to follow users.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">Decide Follow (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="1" name="decide_follow_system_template" class="textarea">{{ (prompts.decide_follow|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Decide Follow (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="decide_follow_user_template" class="textarea">{{ (prompts.decide_follow|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Decide Secondary Follow (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="1" name="decide_secondary_follow_system_template" class="textarea">{{ (prompts.decide_secondary_follow|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Decide Secondary Follow (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="decide_secondary_follow_user_template" class="textarea">{{ (prompts.decide_secondary_follow|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -228,53 +221,53 @@
 
                                     <!-- Opinion & Emotion Extraction -->
                                     <h4 class="title is-6 is-thin">Content Analysis</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for extracting topics, emotions, and opinions from content.</p>
+ <p class="ys-label-hint">Prompts for extracting topics, emotions, and opinions from content.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">Extract Topics (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="extract_article_topics_system_template" class="textarea">{{ (prompts.extract_article_topics|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Extract Topics (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_article_topics_user_template" class="textarea">{{ (prompts.extract_article_topics|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Extract Emotions (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_emotions_system_template" class="textarea">{{ (prompts.extract_emotions|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Extract Emotions (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="extract_emotions_user_template" class="textarea">{{ (prompts.extract_emotions|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Infer Opinion (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="infer_article_opinion_system_template" class="textarea">{{ (prompts.infer_article_opinion|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Infer Opinion (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="6" name="infer_article_opinion_user_template" class="textarea">{{ (prompts.infer_article_opinion|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Evaluate Opinion (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="evaluate_opinion_system_template" class="textarea">{{ (prompts.evaluate_opinion|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -283,32 +276,32 @@
 
                                     <!-- Image Processing -->
                                     <h4 class="title is-6 is-thin">Image Processing</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for describing and commenting on images.</p>
+ <p class="ys-label-hint">Prompts for describing and commenting on images.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">Describe Image (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="describe_image_system_template" class="textarea">{{ (prompts.describe_image|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Describe Image (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="2" name="describe_image_user_template" class="textarea">{{ (prompts.describe_image|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Image Commentary (System)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_image_commentary_system_template" class="textarea">{{ (prompts.generate_image_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">Image Commentary (User)</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_image_commentary_user_template" class="textarea">{{ (prompts.generate_image_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>
@@ -317,18 +310,18 @@
 
                                     <!-- Share Commentary -->
                                     <h4 class="title is-6 is-thin">Generate Share Commentary</h4>
-                                    <p style="font-size: 0.85em; color: #777; margin-bottom: 0.5em;">Prompts for resharing posts with commentary.</p>
+ <p class="ys-label-hint">Prompts for resharing posts with commentary.</p>
                                     
                                     <div class="box-line">
                                         <span class="left">System Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="3" name="generate_share_commentary_system_template" class="textarea">{{ (prompts.generate_share_commentary|default({})).system_template|default('') }}</textarea>
                                         </span>
                                     </div>
                                     
                                     <div class="box-line">
                                         <span class="left">User Template</span>
-                                        <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                             <textarea rows="5" name="generate_share_commentary_user_template" class="textarea">{{ (prompts.generate_share_commentary|default({})).user_template|default('') }}</textarea>
                                         </span>
                                     </div>

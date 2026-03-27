@@ -162,22 +162,24 @@ if os.path.exists(version_file_path):
 
 # Add the client process runner script (executed as subprocess, not imported)
 runner_script_path = os.path.join(
-    basedir, "y_web", "utils", "y_client_process_runner.py"
+    basedir, "y_web", "src", "simulation", "client_runner.py"
 )
 if os.path.exists(runner_script_path):
-    datas += [(runner_script_path, "y_web/utils")]
+    datas += [(runner_script_path, "y_web/src/simulation")]
 
 # Add the server process runner script (executed as subprocess, not imported)
 server_runner_script_path = os.path.join(
-    basedir, "y_web", "utils", "y_server_process_runner.py"
+    basedir, "y_web", "src", "simulation", "server_runner.py"
 )
 if os.path.exists(server_runner_script_path):
-    datas += [(server_runner_script_path, "y_web/utils")]
+    datas += [(server_runner_script_path, "y_web/src/simulation")]
 
 # Add sample notebook template
-sample_notebook_path = os.path.join(basedir, "y_web", "utils", "sample_notebook")
+sample_notebook_path = os.path.join(
+    basedir, "y_web", "src", "system", "sample_notebook"
+)
 if os.path.exists(sample_notebook_path):
-    datas += [(sample_notebook_path, "y_web/utils/sample_notebook")]
+    datas += [(sample_notebook_path, "y_web/src/system/sample_notebook")]
 
 # Add database schema directory
 if os.path.exists(os.path.join(basedir, "y_web", "db")):

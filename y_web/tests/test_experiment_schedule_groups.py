@@ -11,6 +11,9 @@ from unittest.mock import MagicMock
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 # Maximum number of HPC experiments allowed per schedule group
 # This constant matches the one in y_web/routes_admin/experiments_routes.py
 MAX_HPC_PER_GROUP = 4

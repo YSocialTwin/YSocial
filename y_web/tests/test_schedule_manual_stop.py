@@ -9,6 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_stop_scheduled_experiment_removes_from_group():
     """Test that stopping a scheduled experiment removes it from the running group."""

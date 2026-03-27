@@ -4,6 +4,8 @@ Test for client details agent type extraction with safe handling of page agents.
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 class TestClientDetailsAgentType:
     """Test safe agent type extraction in client details pages"""

@@ -8,6 +8,10 @@ Client_Execution records are properly updated with progress information.
 import os
 import tempfile
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def test_is_hpc_flag_passed_to_update_client_log_metrics():
     """

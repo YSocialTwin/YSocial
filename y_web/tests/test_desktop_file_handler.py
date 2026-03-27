@@ -10,13 +10,16 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
 from flask import Flask
 
-from y_web.utils.desktop_file_handler import (
+from y_web.src.system.desktop_file_handler import (
     get_webview_window,
     is_desktop_mode,
     send_file_desktop,
 )
+
+pytestmark = pytest.mark.integration
 
 
 class TestDesktopModeDetection(unittest.TestCase):
@@ -107,13 +110,14 @@ class TestSendFileDesktop(unittest.TestCase):
         html_content = response.get_data(as_text=True)
         self.assertIn("custom_name.json", html_content)
 
-    @patch("y_web.utils.desktop_file_handler.send_file")
+    @patch("y_web.src.system.desktop_file_handler.send_file")
     def test_send_file_desktop_browser_mode(self, mock_send_file):
         """Test that send_file_desktop works in browser mode too."""
         self.app.config["DESKTOP_MODE"] = False
         mock_send_file.return_value = Mock()
 
-        response = send_file_desktop(self.temp_file.name, as_attachment=True)
+        with self.app.test_request_context("/download"):
+            response = send_file_desktop(self.temp_file.name, as_attachment=True)
 
         # Should still call send_file
         mock_send_file.assert_called_once()

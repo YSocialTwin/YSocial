@@ -18,6 +18,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_port_range_validation():
     """Test that ports are validated to be in 5000-6000 range."""

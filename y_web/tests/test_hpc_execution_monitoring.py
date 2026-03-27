@@ -15,6 +15,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask
 
+pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():
@@ -64,7 +66,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_message_found(self, app, db):
         """Test detecting 'Client shutdown complete' message in log."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a temporary log file with shutdown message
         with tempfile.NamedTemporaryFile(
@@ -91,7 +93,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_message_not_found(self, app, db):
         """Test when shutdown message is not present."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a temporary log file without shutdown message
         with tempfile.NamedTemporaryFile(
@@ -114,7 +116,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_empty_file(self, app, db):
         """Test handling of empty log file."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create an empty log file
         with tempfile.NamedTemporaryFile(
@@ -131,7 +133,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_invalid_json(self, app, db):
         """Test handling of invalid JSON in log."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         # Create a log file with invalid JSON
         with tempfile.NamedTemporaryFile(
@@ -152,7 +154,7 @@ class TestHPCExecutionLogMonitoring:
 
     def test_check_shutdown_missing_file(self, app, db):
         """Test handling of missing log file."""
-        from y_web.utils.log_metrics import check_hpc_client_execution_completion
+        from y_web.src.hpc.log_metrics import check_hpc_client_execution_completion
 
         with app.app_context():
             result = check_hpc_client_execution_completion(
@@ -162,8 +164,8 @@ class TestHPCExecutionLogMonitoring:
 
     def test_mark_client_as_completed(self, app, db):
         """Test marking a client as completed."""
-        from y_web.models import Client, Client_Execution, Exps, Population
-        from y_web.utils.log_metrics import mark_hpc_client_as_completed
+        from y_web.src.hpc.log_metrics import mark_hpc_client_as_completed
+        from y_web.src.models import Client, Client_Execution, Exps, Population
 
         with app.app_context():
             # Create test data
@@ -220,11 +222,11 @@ class TestHPCExecutionLogMonitoring:
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
 
-    @patch("y_web.utils.external_processes.stop_hpc_server")
+    @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_all_clients_completed(self, mock_stop, app, db):
         """Test terminating experiment when all clients are completed."""
-        from y_web.models import Client, Exps, Population
-        from y_web.utils.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.models import Client, Exps, Population
 
         with app.app_context():
             # Create test data
@@ -263,7 +265,7 @@ class TestHPCExecutionLogMonitoring:
             db.session.commit()
 
             # Create Client_Execution records indicating each client truly completed
-            from y_web.models import Client_Execution
+            from y_web.src.models import Client_Execution
 
             for client in clients_created:
                 client_exec = Client_Execution(
@@ -284,11 +286,11 @@ class TestHPCExecutionLogMonitoring:
             assert updated_exp.exp_status == "completed"
             mock_stop.assert_called_once_with(exp.idexp)
 
-    @patch("y_web.utils.external_processes.stop_hpc_server")
+    @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_some_clients_running(self, mock_stop, app, db):
         """Test that experiment is not terminated when some clients are still running."""
-        from y_web.models import Client, Exps, Population
-        from y_web.utils.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.hpc.log_metrics import check_and_terminate_hpc_experiment
+        from y_web.src.models import Client, Exps, Population
 
         with app.app_context():
             # Create test data

@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask import Flask
 
+pytestmark = pytest.mark.integration
+
 
 class TestTutorialRoutes:
     """Tests for the tutorial wizard routes."""
@@ -53,7 +55,7 @@ class TestTutorialRoutes:
 
     def test_tutorial_shown_field_exists(self):
         """Test that tutorial_shown field is defined in Admin_users model."""
-        from y_web.models import Admin_users
+        from y_web.src.models import Admin_users
 
         # Check that the column exists in the model
         columns = [column.name for column in Admin_users.__table__.columns]
@@ -61,7 +63,7 @@ class TestTutorialRoutes:
 
     def test_tutorial_shown_default_value(self):
         """Test that tutorial_shown defaults to False."""
-        from y_web.models import Admin_users
+        from y_web.src.models import Admin_users
 
         # Get the default value from the column definition
         tutorial_shown_column = Admin_users.__table__.columns["tutorial_shown"]
@@ -336,7 +338,7 @@ class TestExpDetailsTutorialRoutes:
 
     def test_exp_details_tutorial_shown_field_exists(self):
         """Test that exp_details_tutorial_shown field is defined in Admin_users model."""
-        from y_web.models import Admin_users
+        from y_web.src.models import Admin_users
 
         # Check that the column exists in the model
         columns = [column.name for column in Admin_users.__table__.columns]
@@ -344,7 +346,7 @@ class TestExpDetailsTutorialRoutes:
 
     def test_exp_details_tutorial_shown_default_value(self):
         """Test that exp_details_tutorial_shown defaults to False."""
-        from y_web.models import Admin_users
+        from y_web.src.models import Admin_users
 
         # Get the default value from the column definition
         tutorial_shown_column = Admin_users.__table__.columns[

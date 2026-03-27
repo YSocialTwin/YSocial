@@ -13,6 +13,9 @@ from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 # We'll use the conftest fixtures
 
 

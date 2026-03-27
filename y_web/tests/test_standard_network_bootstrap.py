@@ -4,6 +4,9 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
+
 ROOT = Path("/Users/rossetti/PycharmProjects/YWeb")
 EXTERNAL_YCLIENT = ROOT / "external" / "YClient"
 if str(EXTERNAL_YCLIENT) not in sys.path:

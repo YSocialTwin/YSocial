@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 
 def test_stop_schedule_handles_hpc_correctly():
     """Test that stop_schedule uses correct functions for HPC experiments."""

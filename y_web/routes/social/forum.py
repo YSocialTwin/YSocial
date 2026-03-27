@@ -14,14 +14,32 @@ from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
 
 from y_web import db
-from y_web.data_access import (
+from y_web.routes.social._blueprint import main
+from y_web.routes.social.helpers import (
+    _expand_tree,
+    _experiment_memory_enabled,
+    _forum_current_profile_pic,
+    _forum_logged_user,
+    _forum_memory_enabled,
+    _forum_profile_pic,
+    _forum_resolve_back_url,
+    _get_discussions,
+    is_admin,
+)
+from y_web.src.content.text_utils import process_reddit_post, strip_tags
+from y_web.src.data_access import (
     augment_text,
     get_elicited_emotions,
     get_topics,
     get_trending_hashtags,
     get_unanswered_mentions,
 )
-from y_web.models import (
+from y_web.src.forum.service import (
+    _format_display_time,
+    _format_display_time_from_created_at,
+    fetch_feed_page,
+)
+from y_web.src.models import (
     Admin_users,
     Agent,
     Articles,
@@ -35,25 +53,7 @@ from y_web.models import (
     User_mgmt,
     Websites,
 )
-from y_web.recsys_support import get_suggested_users
-from y_web.reddit.service import (
-    _format_display_time,
-    _format_display_time_from_created_at,
-    fetch_feed_page,
-)
-from y_web.routes.social._blueprint import main
-from y_web.routes.social.helpers import (
-    _expand_tree,
-    _experiment_memory_enabled,
-    _forum_current_profile_pic,
-    _forum_logged_user,
-    _forum_memory_enabled,
-    _forum_profile_pic,
-    _forum_resolve_back_url,
-    _get_discussions,
-    is_admin,
-)
-from y_web.utils.text_utils import process_reddit_post, strip_tags
+from y_web.src.recsys import get_suggested_users
 
 
 @main.get("/<int:exp_id>/interview")
@@ -749,6 +749,11 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         for add in res_additional:
             res.append(add)
 
+    has_more = bool(
+        (posts is not None and getattr(posts, "has_next", False))
+        or (additional is not None and getattr(additional, "has_next", False))
+    )
+
     html = render_template(
         "forum/components/posts.html",
         items=res,
@@ -758,4 +763,4 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         bool=bool,
         len=len,
     )
-    return jsonify({"html": html, "has_more": len(res) > 0})
+    return jsonify({"html": html, "has_more": has_more})

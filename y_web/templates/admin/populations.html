@@ -1,4 +1,5 @@
 {% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
  <div class="view-wrapper is-dashboard">
         <!--Dashboard container-->
@@ -18,208 +19,6 @@
 
                                 <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
-                                <style>
-
-                              #table td {
-                                vertical-align: middle !important;
-                              }
-                            </style>
-
-
-                                <script>
-  const tableDiv = document.getElementById('table');
-
-  const updateUrl = (prev, query) => {
-    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-  };
-
-  const editableCellAttributes = (data, row, col) => {
-    if (row) {
-      return {
-        contentEditable: 'true',
-        'data-element-id': row.cells[0].data,
-        'data-column-id': col.id
-      };
-    } else {
-      return {};
-    }
-  };
-
-  new gridjs.Grid({
-    columns: [
-      { id: 'id', hidden: true },
-      { id: 'name', name: 'Name', attributes: editableCellAttributes },
-      { id: "size", name: 'Agents' },
-      { 
-        id: 'education', 
-        name: 'Education',
-        sort: false,
-        formatter: (cell) => {
-          if (!cell || cell.length === 0) {
-            return '';
-          }
-          const tags = cell.map(item => 
-            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
-          ).join(' ');
-          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
-        }
-      },
-      { 
-        id: 'leanings', 
-        name: 'Political Leaning',
-        sort: false,
-        formatter: (cell) => {
-          if (!cell || cell.length === 0) {
-            return '';
-          }
-          const tags = cell.map(item => 
-            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
-          ).join(' ');
-          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
-        }
-      },
-      { 
-        id: 'toxicity', 
-        name: 'Toxicity',
-        sort: false,
-        formatter: (cell) => {
-          if (!cell || cell.length === 0) {
-            return '';
-          }
-          const tags = cell.map(item => 
-            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${item}</span>`
-          ).join(' ');
-          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
-        }
-      },
-      { 
-        id: 'activity_profiles', 
-        name: 'Activity Profiles',
-        sort: false,
-        formatter: (cell) => {
-          if (!cell || cell.length === 0) {
-            return '';
-          }
-          const tags = cell.map(profile => 
-            `<span style="display: inline-block; background-color: #039be5; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75rem; margin: 2px;">${profile}</span>`
-          ).join(' ');
-          return gridjs.html(`<div style="display: flex; flex-wrap: wrap; gap: 4px;">${tags}</div>`);
-        }
-      },
-      {
-        id: 'actions',
-        name: 'Actions',
-        sort: false,
-        formatter: (cell, row) => {
-          const id = row.cells[0].data;
-          return gridjs.html(`
-            <div style="display: flex; gap: 8px; justify-content: center;">
-              <a href="/admin/population_details/${id}"
-                 style="background-color: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                Details
-              </a>
-               <a href="/admin/delete_population/${id}"
-                 style="background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">
-                Delete
-              </a>
-            </div>
-          `);
-        }
-      },
-    ],
-    server: {
-      url: '/admin/populations_data',
-      then: results => results.data,
-      total: results => results.total,
-    },
-    search: {
-      enabled: true,
-      server: {
-        url: (prev, search) => {
-          return updateUrl(prev, { search });
-        },
-      },
-    },
-    sort: {
-      enabled: true,
-      multiColumn: true,
-      server: {
-        url: (prev, columns) => {
-          const columnIds = ['id', 'name', 'size', 'education', 'leanings', 'toxicity', 'activity_profiles'];
-          const sort = columns.map(col => (col.direction === 1 ? '+' : '-') + columnIds[col.index]);
-          return updateUrl(prev, { sort });
-        },
-      },
-    },
-    pagination: {
-      enabled: true,
-      server: {
-        url: (prev, page, limit) => {
-          return updateUrl(prev, { start: page * limit, length: limit });
-        },
-      },
-    },
-  }).render(tableDiv);
-
-  let savedValue;
-
-  // Handle inline edits
-  tableDiv.addEventListener('focusin', ev => {
-    if (ev.target.tagName === 'TD') {
-      savedValue = ev.target.textContent;
-    }
-  });
-
-  tableDiv.addEventListener('focusout', ev => {
-    if (ev.target.tagName === 'TD') {
-      if (savedValue !== ev.target.textContent) {
-        fetch('/admin/populations_data', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: ev.target.dataset.elementId,
-            [ev.target.dataset.columnId]: ev.target.textContent
-          }),
-        });
-      }
-      savedValue = undefined;
-    }
-  });
-
-  tableDiv.addEventListener('keydown', ev => {
-    if (ev.target.tagName === 'TD') {
-      if (ev.key === 'Escape') {
-        ev.target.textContent = savedValue;
-        ev.target.blur();
-      } else if (ev.key === 'Enter') {
-        ev.preventDefault();
-        ev.target.blur();
-      }
-    }
-  });
-
-  // Handle delete button clicks
-  tableDiv.addEventListener('click', function (event) {
-    const target = event.target;
-    if (target.classList.contains('delete-button')) {
-      const id = target.getAttribute('data-id');
-      if (confirm('Are you sure you want to delete this population?')) {
-        fetch(`/admin/delete_population/${id}`, {
-          method: 'DELETE',
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('Failed to delete');
-          location.reload(); // Refresh the table
-        })
-        .catch(err => {
-          alert('Error deleting population.');
-          console.error(err);
-        });
-      }
-    }
-  });
-</script>
-
 
 
                             </div>
@@ -231,110 +30,12 @@
                     <!--Dashboard column-->
                     <div class="column is-8">
 
-                        {% for message in get_flashed_messages() %}
-                        <div class="alert alert-warning">
-                            <button type="button" class="close" data-dismiss="alert">&times;</button>
-                            {{ message }}
-                        </div>
-                        {% endfor %}
-
                         <!--Dashboard box-->
                         <div class="dashboard-box" id="box-create-population">
                             <h3 class="title is-5 is-thin">Create Synthetic Population</h3>
                             <div class="box-content">
                                 <form action="/admin/create_population" id="popcreate_form" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating population...');">
                                 <div class="box-lines">
-
-                                    <style>
-                                        .form-section-header {
-                                            font-size: 0.95em;
-                                            font-weight: 600;
-                                            color: #333;
-                                            margin: 20px 0 8px 0;
-                                            padding-bottom: 5px;
-                                            border-bottom: 1px solid #e0e0e0;
-                                        }
-                                        .form-section-description {
-                                            font-size: 0.85em;
-                                            color: #666;
-                                            margin-bottom: 15px;
-                                            line-height: 1.4;
-                                        }
-                                        .multi-select-wrapper {
-                                            position: relative;
-                                        }
-                                        .multi-select-display {
-                                            min-height: 38px;
-                                            padding: 6px 10px;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            background: white;
-                                            cursor: pointer;
-                                            display: flex;
-                                            flex-wrap: wrap;
-                                            gap: 5px;
-                                            align-items: center;
-                                        }
-                                        .multi-select-display:hover {
-                                            border-color: #22c55e;
-                                        }
-                                        .multi-select-tag {
-                                            background: #22c55e;
-                                            color: white;
-                                            padding: 3px 8px;
-                                            border-radius: 3px;
-                                            font-size: 0.85em;
-                                            display: inline-flex;
-                                            align-items: center;
-                                            gap: 5px;
-                                        }
-                                        .multi-select-tag-remove {
-                                            cursor: pointer;
-                                            font-weight: bold;
-                                        }
-                                        .multi-select-placeholder {
-                                            color: #999;
-                                            font-size: 0.9em;
-                                        }
-                                        .multi-select-dropdown {
-                                            position: absolute;
-                                            top: 100%;
-                                            left: 0;
-                                            right: 0;
-                                            max-height: 200px;
-                                            overflow-y: auto;
-                                            background: white;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                                            z-index: 1000;
-                                            display: none;
-                                            margin-top: 2px;
-                                        }
-                                        .multi-select-dropdown.active {
-                                            display: block;
-                                        }
-                                        .multi-select-option {
-                                            padding: 8px 12px;
-                                            cursor: pointer;
-                                            font-size: 0.9em;
-                                            transition: background 0.15s;
-                                        }
-                                        .multi-select-option:hover {
-                                            background: #f0f0f0;
-                                        }
-                                        .multi-select-option.selected {
-                                            background: #e8f5e9;
-                                            color: #22c55e;
-                                            font-weight: 500;
-                                        }
-                                        .tutorial-section {
-                                            padding: 10px;
-                                            margin: -10px;
-                                            margin-bottom: 10px;
-                                            border-radius: 4px;
-                                        }
-                                    </style>
 
                                     <div id="section-basic-info" class="tutorial-section">
                                     <div class="form-section-header">Basic Information</div>
@@ -343,16 +44,16 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Population Name <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
+ <span class="left text-danger">Population Name <span>*</span></span>
+ <span class="right ys-w-70"><input type="text" id="pop_name" name="pop_name" class="input" required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
-                                        <span class="right" style="width: 70%;"><input type="text" name="pop_descr" class="input"></span>
+ <span class="right ys-w-70"><input type="text" name="pop_descr" class="input"></span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Platform <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Population Platform <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="select is-fullwidth">
                                                 <select name="username_type" class="input" required>
                                                     <option value="microblogging">Microblogging</option>
@@ -362,7 +63,7 @@
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Population Size <span style="color: red;">*</span></span>
+ <span class="left text-danger">Population Size <span>*</span></span>
                                         <div class="slider-timeline">
                                             <input id="n_agents" name="n_agents" type="number" value="100" min="1" class="input" required>
                                         </div>
@@ -401,8 +102,8 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Age Classes <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Age Classes <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="age_classes_display_wrapper" onclick="toggleDropdown('age_classes')">
                                                     <span id="age_classes_display" class="multi-select-placeholder">Click to select age classes...</span>
@@ -417,30 +118,30 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="age_classes_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="age_classes_percentages_container">
                                         <span class="left">Age Classes %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="age_classes_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="age_classes_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="age_classes_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="age_classes_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
 
                                     <div class="box-line">
                                         <span class="left">Gender Distribution</span>
                                         <span class="right" style="width: 70%; display: flex; align-items: center; gap: 15px;">
-                                            <div style="display: flex; align-items: center; gap: 5px;">
-                                                <label for="male_percentage" style="margin: 0; font-size: 0.9em;">Male:</label>
+ <div class="ys-flex-gap-5">
+ <label for="male_percentage" class="ys-m0-sm">Male:</label>
                                                 <input type="number" id="male_percentage" name="male_percentage" value="50" min="0" max="100" 
-                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+ class="ys-num-input2"
                                                        oninput="updateFemalePercentage()">
-                                                <span style="font-size: 0.9em;">%</span>
+ <span class="ys-text-090">%</span>
                                             </div>
-                                            <div style="display: flex; align-items: center; gap: 5px;">
-                                                <label for="female_percentage" style="margin: 0; font-size: 0.9em;">Female:</label>
+ <div class="ys-flex-gap-5">
+ <label for="female_percentage" class="ys-m0-sm">Female:</label>
                                                 <input type="number" id="female_percentage" name="female_percentage" value="50" min="0" max="100" 
-                                                       style="width: 60px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px;"
+ class="ys-num-input2"
                                                        oninput="updateMalePercentage()">
-                                                <span style="font-size: 0.9em;">%</span>
+ <span class="ys-text-090">%</span>
                                             </div>
                                             <small id="gender_validation" style="color: #666; display: none;">Total must equal 100%</small>
                                         </span>
@@ -454,8 +155,8 @@
                                     </div>
 
                                     <div class="box-line">
-                                        <span class="left">Education Levels <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Education Levels <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="education_levels_display_wrapper" onclick="toggleDropdown('education_levels')">
                                                     <span id="education_levels_display" class="multi-select-placeholder">Click to select education levels...</span>
@@ -470,16 +171,16 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="education_levels_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="education_levels_percentages_container">
                                         <span class="left">Education %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="education_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="education_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="education_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="education_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Political Leanings <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Political Leanings <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="political_leanings_display_wrapper" onclick="toggleDropdown('political_leanings')">
                                                     <span id="political_leanings_display" class="multi-select-placeholder">Click to select political leanings...</span>
@@ -494,16 +195,16 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="political_leanings_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="political_leanings_percentages_container">
                                         <span class="left">Political %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="political_leanings_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="political_leanings_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="political_leanings_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="political_leanings_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     <div class="box-line">
-                                        <span class="left">Toxicity Levels <span style="color: red;">*</span></span>
-                                        <span class="right" style="width: 70%;">
+ <span class="left text-danger">Toxicity Levels <span>*</span></span>
+ <span class="right ys-w-70">
                                             <div class="multi-select-wrapper">
                                                 <div class="multi-select-display" id="toxicity_levels_display_wrapper" onclick="toggleDropdown('toxicity_levels')">
                                                     <span id="toxicity_levels_display" class="multi-select-placeholder">Click to select toxicity levels...</span>
@@ -518,69 +219,27 @@
                                             </div>
                                         </span>
                                     </div>
-                                    <div class="box-line" id="toxicity_levels_percentages_container" style="display: none;">
+ <div class="box-line d-none" id="toxicity_levels_percentages_container">
                                         <span class="left">Toxicity %</span>
-                                        <span class="right" style="width: 70%;">
-                                            <div id="toxicity_levels_percentages" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                                            <div id="toxicity_levels_validation" class="percentage-validation-compact" style="display: none; margin-top: 8px;"></div>
+ <span class="right ys-w-70">
+ <div id="toxicity_levels_percentages" class="ys-flex-col-gap-8"></div>
+ <div id="toxicity_levels_validation" class="percentage-validation-compact ys-hidden-mt"></div>
                                         </span>
                                     </div>
                                     </div><!-- End section-social-attributes -->
 
                                     <div id="section-profession-categories" class="tutorial-section">
-                                    <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleProfessionBackgrounds()">
-                                        <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+ <div class="form-section-header ys-clickable" onclick="toggleProfessionBackgrounds()">
+ <span id="profession-backgrounds-toggle">▶</span> Profession Categories <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
                                         Select profession categories to be used during agent generation. By default, all categories are available.
                                     </div>
 
-                                    <style>
-                                        .profession-backgrounds-section {
-                                            max-height: 0;
-                                            overflow: hidden;
-                                            transition: max-height 0.3s ease-out;
-                                        }
-                                        .profession-backgrounds-section.expanded {
-                                            max-height: 400px;
-                                            transition: max-height 0.5s ease-in;
-                                        }
-                                        .profession-tag {
-                                            display: inline-block;
-                                            background-color: #22c55e;
-                                            color: white;
-                                            padding: 6px 12px;
-                                            margin: 4px;
-                                            border-radius: 4px;
-                                            font-size: 0.85em;
-                                            cursor: pointer;
-                                            transition: all 0.2s;
-                                            border: 2px solid #22c55e;
-                                        }
-                                        .profession-tag.inactive {
-                                            background-color: #e5e7eb;
-                                            color: #6b7280;
-                                            border-color: #d1d5db;
-                                        }
-                                        .profession-tag:hover {
-                                            transform: scale(1.05);
-                                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                                        }
-                                        .profession-tags-container {
-                                            display: flex;
-                                            flex-wrap: wrap;
-                                            gap: 4px;
-                                            padding: 15px;
-                                            background: #f9fafb;
-                                            border-radius: 6px;
-                                            border: 1px solid #e5e7eb;
-                                        }
-                                    </style>
-
                                     <div class="profession-backgrounds-section" id="profession-backgrounds-section">
                                         <div class="box-line">
                                             <span class="left">Available Categories</span>
-                                            <span class="right" style="width: 70%;">
+ <span class="right ys-w-70">
                                                 <div class="profession-tags-container" id="profession-tags-container">
                                                     {% for background in profession_backgrounds %}
                                                     <span class="profession-tag" data-background="{{ background }}" onclick="toggleProfessionTag(this)">
@@ -595,528 +254,18 @@
                                         </div>
                                     </div>
 
-                                    <script>
-                                        // Profession backgrounds selection (all active by default)
-                                        let selectedProfessionBackgrounds = new Set(
-                                            {{ profession_backgrounds | tojson | safe }}
-                                        );
 
-                                        function toggleProfessionBackgrounds() {
-                                            const section = document.getElementById('profession-backgrounds-section');
-                                            const toggle = document.getElementById('profession-backgrounds-toggle');
-                                            section.classList.toggle('expanded');
-                                            toggle.textContent = section.classList.contains('expanded') ? '▼' : '▶';
-                                        }
 
-                                        function toggleProfessionTag(tagElement) {
-                                            const background = tagElement.dataset.background;
-                                            
-                                            if (selectedProfessionBackgrounds.has(background)) {
-                                                selectedProfessionBackgrounds.delete(background);
-                                                tagElement.classList.add('inactive');
-                                            } else {
-                                                selectedProfessionBackgrounds.add(background);
-                                                tagElement.classList.remove('inactive');
-                                            }
-                                            
-                                            // Update validation state
-                                            updateProfessionValidation();
-                                        }
-                                        
-                                        function updateProfessionValidation() {
-                                            // Provide visual feedback if no categories selected
-                                            const container = document.getElementById('profession-tags-container');
-                                            if (selectedProfessionBackgrounds.size === 0) {
-                                                container.style.borderColor = '#fcc';
-                                            } else {
-                                                container.style.borderColor = '#e5e7eb';
-                                            }
-                                        }
 
-                                        // Add hidden inputs for profession backgrounds before form submission
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            const form = document.getElementById('popcreate_form');
-                                            form.addEventListener('submit', function(e) {
-                                                // Validate that at least one profession category is selected
-                                                if (selectedProfessionBackgrounds.size === 0) {
-                                                    e.preventDefault();
-                                                    alert('Please select at least one Profession Category. This field is required.');
-                                                    return false;
-                                                }
-                                                
-                                                // Remove old hidden inputs for profession backgrounds
-                                                const oldInputs = form.querySelectorAll('input[name="profession_backgrounds"]');
-                                                oldInputs.forEach(input => input.remove());
-                                                
-                                                // Add new hidden inputs for selected profession backgrounds
-                                                selectedProfessionBackgrounds.forEach(background => {
-                                                    const input = document.createElement('input');
-                                                    input.type = 'hidden';
-                                                    input.name = 'profession_backgrounds';
-                                                    input.value = background;
-                                                    form.appendChild(input);
-                                                });
-                                            }, true); // Use capture phase to run before other handlers
-                                        });
-                                    </script>
-
-                                    <script>
-                                        // Multi-select functionality with percentages
-                                        const multiSelectData = {
-                                            education_levels: {},  // Changed to object: {id: {label, percentage}}
-                                            political_leanings: {},
-                                            toxicity_levels: {},
-                                            age_classes: {}
-                                        };
-
-                                        function updateFemalePercentage() {
-                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
-                                            const femalePercentage = 100 - malePercentage;
-                                            if (femalePercentage >= 0 && femalePercentage <= 100) {
-                                                document.getElementById('female_percentage').value = femalePercentage;
-                                                document.getElementById('gender_validation').style.display = 'none';
-                                            } else {
-                                                document.getElementById('gender_validation').style.display = 'inline';
-                                                document.getElementById('gender_validation').style.color = '#e74c3c';
-                                            }
-                                        }
-
-                                        function updateMalePercentage() {
-                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
-                                            const malePercentage = 100 - femalePercentage;
-                                            if (malePercentage >= 0 && malePercentage <= 100) {
-                                                document.getElementById('male_percentage').value = malePercentage;
-                                                document.getElementById('gender_validation').style.display = 'none';
-                                            } else {
-                                                document.getElementById('gender_validation').style.display = 'inline';
-                                                document.getElementById('gender_validation').style.color = '#e74c3c';
-                                            }
-                                        }
-
-                                        function toggleDropdown(fieldName) {
-                                            const dropdown = document.getElementById(fieldName + '_dropdown');
-                                            dropdown.classList.toggle('active');
-                                            
-                                            // Close other dropdowns
-                                            document.querySelectorAll('.multi-select-dropdown').forEach(dd => {
-                                                if (dd.id !== fieldName + '_dropdown') {
-                                                    dd.classList.remove('active');
-                                                }
-                                            });
-                                        }
-
-                                        function toggleOption(fieldName, label, id) {
-                                            const data = multiSelectData[fieldName];
-                                            
-                                            if (data[id]) {
-                                                delete data[id];
-                                            } else {
-                                                data[id] = {label: label, percentage: 0};
-                                            }
-                                            
-                                            updateDisplay(fieldName);
-                                            updateOptionStyles(fieldName);
-                                            updatePercentages(fieldName);
-                                        }
-
-                                        function removeTag(fieldName, id) {
-                                            const data = multiSelectData[fieldName];
-                                            if (data[id]) {
-                                                delete data[id];
-                                            }
-                                            updateDisplay(fieldName);
-                                            updateOptionStyles(fieldName);
-                                            updatePercentages(fieldName);
-                                        }
-
-                                        function updateDisplay(fieldName) {
-                                            const display = document.getElementById(fieldName + '_display');
-                                            const data = multiSelectData[fieldName];
-                                            const items = Object.entries(data);
-                                            
-                                            if (items.length === 0) {
-                                                display.innerHTML = '<span class="multi-select-placeholder">Click to select...</span>';
-                                            } else {
-                                                display.innerHTML = items.map(([id, item]) => 
-                                                    `<span class="multi-select-tag">
-                                                        ${item.label}
-                                                        <span class="multi-select-tag-remove" onclick="event.stopPropagation(); removeTag('${fieldName}', '${id}')">×</span>
-                                                    </span>`
-                                                ).join('');
-                                            }
-                                            
-                                            // Trigger validation check when display updates
-                                            if (typeof validateFormFields === 'function') {
-                                                validateFormFields();
-                                            }
-                                        }
-
-                                        function updateOptionStyles(fieldName) {
-                                            const dropdown = document.getElementById(fieldName + '_dropdown');
-                                            const data = multiSelectData[fieldName];
-                                            
-                                            dropdown.querySelectorAll('.multi-select-option').forEach(option => {
-                                                const label = option.textContent.trim();
-                                                const isSelected = Object.values(data).some(item => item.label === label);
-                                                if (isSelected) {
-                                                    option.classList.add('selected');
-                                                } else {
-                                                    option.classList.remove('selected');
-                                                }
-                                            });
-                                        }
-
-                                        function updatePercentages(fieldName) {
-                                            const data = multiSelectData[fieldName];
-                                            const items = Object.entries(data);
-                                            const container = document.getElementById(fieldName + '_percentages');
-                                            const containerRow = document.getElementById(fieldName + '_percentages_container');
-                                            
-                                            if (items.length === 0) {
-                                                containerRow.style.display = 'none';
-                                                return;
-                                            }
-                                            
-                                            containerRow.style.display = '';
-                                            
-                                            // Check if all percentages are 0 (uninitialized)
-                                            const allZero = items.every(([id, item]) => item.percentage === 0);
-                                            
-                                            // Only split evenly if all percentages are 0 (uninitialized)
-                                            // This preserves hardcoded defaults for age_classes while maintaining
-                                            // the even split behavior for other fields
-                                            if (allZero) {
-                                                const evenSplit = parseFloat((100 / items.length).toFixed(2));
-                                                items.forEach(([id, item]) => {
-                                                    item.percentage = evenSplit;
-                                                });
-                                            }
-                                            
-                                            // Render percentage inputs
-                                            container.innerHTML = items.map(([id, item]) => `
-                                                <div style="display: flex; align-items: center; gap: 8px; padding: 6px; background: #f9f9f9; border-radius: 4px;">
-                                                    <span style="flex: 1; font-size: 0.9em; font-weight: 500;">${item.label}</span>
-                                                    <input type="number" 
-                                                           class="percentage-input-compact" 
-                                                           min="0" 
-                                                           max="100" 
-                                                           step="0.01"
-                                                           value="${item.percentage}"
-                                                           onchange="updatePercentageValue('${fieldName}', '${id}', this.value)"
-                                                           style="width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 3px; text-align: center;">
-                                                    <span style="font-size: 0.85em; color: #666;">%</span>
-                                                </div>
-                                            `).join('');
-                                            
-                                            validatePercentageTotal(fieldName);
-                                        }
-
-                                        function updatePercentageValue(fieldName, id, value) {
-                                            const data = multiSelectData[fieldName];
-                                            if (data[id]) {
-                                                data[id].percentage = parseFloat(value) || 0;
-                                            }
-                                            validatePercentageTotal(fieldName);
-                                        }
-
-                                        function validatePercentageTotal(fieldName) {
-                                            const data = multiSelectData[fieldName];
-                                            const items = Object.values(data);
-                                            const validation = document.getElementById(fieldName + '_validation');
-                                            
-                                            if (items.length === 0) {
-                                                validation.style.display = 'none';
-                                                return;
-                                            }
-                                            
-                                            const total = items.reduce((sum, item) => sum + item.percentage, 0);
-                                            validation.style.display = 'block';
-                                            
-                                            if (Math.abs(total - 100) < 0.01) {
-                                                validation.className = 'percentage-validation-compact success';
-                                                validation.textContent = `✓ Total: ${total.toFixed(2)}%`;
-                                            } else {
-                                                validation.className = 'percentage-validation-compact error';
-                                                validation.textContent = `⚠ Total: ${total.toFixed(2)}% (must equal 100%)`;
-                                            }
-                                        }
-
-                                        // Close dropdowns when clicking outside
-                                        document.addEventListener('click', function(e) {
-                                            if (!e.target.closest('.multi-select-wrapper')) {
-                                                document.querySelectorAll('.multi-select-dropdown').forEach(dd => {
-                                                    dd.classList.remove('active');
-                                                });
-                                            }
-                                        });
-
-                                        // Add hidden inputs before form submission
-                                        document.getElementById('popcreate_form').addEventListener('submit', function(e) {
-                                            // Validate gender percentages
-                                            const malePercentage = parseInt(document.getElementById('male_percentage').value) || 0;
-                                            const femalePercentage = parseInt(document.getElementById('female_percentage').value) || 0;
-                                            if (malePercentage + femalePercentage !== 100) {
-                                                e.preventDefault();
-                                                alert('Gender distribution must total 100%');
-                                                return false;
-                                            }
-                                            
-                                            // Validate that age_classes is selected (mandatory field)
-                                            const ageClassesData = multiSelectData['age_classes'];
-                                            const ageClassesItems = Object.values(ageClassesData);
-                                            if (ageClassesItems.length === 0) {
-                                                e.preventDefault();
-                                                alert('Please select at least one Age Class. This field is required.');
-                                                return false;
-                                            }
-                                            
-                                            // Validate percentages before submission
-                                            const fieldsToValidate = ['education_levels', 'political_leanings', 'toxicity_levels', 'age_classes'];
-                                            for (const fieldName of fieldsToValidate) {
-                                                const data = multiSelectData[fieldName];
-                                                const items = Object.values(data);
-                                                if (items.length > 0) {
-                                                    const total = items.reduce((sum, item) => sum + item.percentage, 0);
-                                                    if (Math.abs(total - 100) > 0.01) {
-                                                        e.preventDefault();
-                                                        alert(`Please ensure ${fieldName.replace(/_/g, ' ')} percentages sum to 100%`);
-                                                        return false;
-                                                    }
-                                                }
-                                            }
-                                            
-                                            // Validate activity profiles percentages
-                                            if (assignedProfiles.length > 0 && !validatePercentages()) {
-                                                e.preventDefault();
-                                                alert('Please ensure that the total percentage of assigned activity profiles equals 100%');
-                                                return false;
-                                            }
-                                            
-                                            // Remove old hidden inputs
-                                            this.querySelectorAll('input[name="education_levels"], input[name="political_leanings"], input[name="toxicity_levels"], input[name="age_classes"]').forEach(input => input.remove());
-                                            this.querySelectorAll('input[name="education_levels_percentages"], input[name="political_leanings_percentages"], input[name="toxicity_levels_percentages"], input[name="age_classes_percentages"]').forEach(input => input.remove());
-                                            
-                                            // Add new hidden inputs for multi-select values (IDs for backward compatibility)
-                                            Object.keys(multiSelectData).forEach(fieldName => {
-                                                const data = multiSelectData[fieldName];
-                                                Object.entries(data).forEach(([id, item]) => {
-                                                    const input = document.createElement('input');
-                                                    input.type = 'hidden';
-                                                    input.name = fieldName;
-                                                    input.value = id;
-                                                    this.appendChild(input);
-                                                });
-                                            });
-                                            
-                                            // Add hidden inputs for percentages (JSON format for easy parsing)
-                                            Object.keys(multiSelectData).forEach(fieldName => {
-                                                const data = multiSelectData[fieldName];
-                                                const percentageData = {};
-                                                Object.entries(data).forEach(([id, item]) => {
-                                                    percentageData[id] = item.percentage;
-                                                });
-                                                
-                                                const input = document.createElement('input');
-                                                input.type = 'hidden';
-                                                input.name = fieldName + '_percentages';
-                                                input.value = JSON.stringify(percentageData);
-                                                this.appendChild(input);
-                                            });
-                                        });
-
-                                        // Initialize age classes with default values
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            // Hardcoded default percentages for age classes
-                                            const defaultPercentages = {
-                                                'Youth': 35,
-                                                'Adults': 42,
-                                                'Middle-aged': 18,
-                                                'Elderly': 5
-                                            };
-                                            
-                                            const ageClassDefaults = {
-                                                {% for age_class in age_classes %}
-                                                '{{ age_class.id }}': {
-                                                    label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
-                                                    percentage: defaultPercentages['{{ age_class.name }}'] || 0
-                                                }{% if not loop.last %},{% endif %}
-                                                {% endfor %}
-                                            };
-                                            
-                                            // Set default age classes
-                                            multiSelectData.age_classes = ageClassDefaults;
-                                            updateDisplay('age_classes');
-                                            updateOptionStyles('age_classes');
-                                            updatePercentages('age_classes');
-                                        });
-                                    </script>
                                     </div><!-- End section-profession-categories -->
 
                                     <div id="section-activity-engagement" class="tutorial-section">
-                                    <div class="form-section-header" style="cursor: pointer; user-select: none;" onclick="toggleActivityProfiles()">
-                                        <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span style="font-size: 0.85em; font-weight: normal; color: #999;">(Optional - Click to expand)</span>
+ <div class="form-section-header ys-clickable" onclick="toggleActivityProfiles()">
+ <span id="activity-profiles-toggle">▼</span> Activity & Engagement Configuration <span class="ys-text-sm-normal">(Optional - Click to expand)</span>
                                     </div>
                                     <div class="form-section-description">
                                         Configure agent activity patterns and engagement behavior. Define when agents are active during the day by assigning activity profiles, and specify how many actions users perform once active using statistical distributions.
                                     </div>
-
-                                    <style>
-                                        .activity-profiles-section {
-                                            max-height: 0;
-                                            overflow: hidden;
-                                            transition: max-height 0.3s ease-out;
-                                        }
-                                        .activity-profiles-section.expanded {
-                                            max-height: 800px;
-                                            transition: max-height 0.5s ease-in;
-                                        }
-                                        .activity-profiles-compact {
-                                            display: flex;
-                                            flex-direction: column;
-                                            gap: 15px;
-                                            margin-bottom: 20px;
-                                        }
-                                        .profiles-section {
-                                            border: 1px solid #e0e0e0;
-                                            border-radius: 6px;
-                                            padding: 12px;
-                                            background-color: #fafafa;
-                                        }
-                                        .profiles-section-title {
-                                            font-size: 0.9em;
-                                            font-weight: 600;
-                                            color: #555;
-                                            margin-bottom: 10px;
-                                        }
-                                        .profile-item-compact {
-                                            background: white;
-                                            border: 1px solid #ddd;
-                                            border-radius: 4px;
-                                            padding: 6px 8px;
-                                            margin-bottom: 0;
-                                            cursor: move;
-                                            transition: all 0.2s ease;
-                                            display: flex;
-                                            flex-direction: column;
-                                            gap: 4px;
-                                            align-items: stretch;
-                                            font-size: 0.8em;
-                                            width: 100%;
-                                        }
-                                        .profile-item-compact:hover {
-                                            border-color: #22c55e;
-                                            box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
-                                        }
-                                        .profile-item-compact.dragging {
-                                            opacity: 0.5;
-                                        }
-                                        .profile-name-compact {
-                                            font-weight: 500;
-                                            white-space: nowrap;
-                                            overflow: hidden;
-                                            text-overflow: ellipsis;
-                                            font-size: 0.9em;
-                                        }
-                                        .profile-heatmap-compact {
-                                            display: flex;
-                                            gap: 1px;
-                                            height: 10px;
-                                            width: 100%;
-                                        }
-                                        .heatmap-hour {
-                                            flex: 1;
-                                            height: 100%;
-                                            background: #e5e7eb;
-                                            border-radius: 1px;
-                                        }
-                                        .heatmap-hour.active {
-                                            background: #22c55e;
-                                        }
-                                        #available-profiles {
-                                            display: grid;
-                                            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                                            gap: 8px;
-                                        }
-                                        .assigned-profiles-grid {
-                                            display: flex;
-                                            flex-wrap: wrap;
-                                            gap: 8px;
-                                        }
-                                        .assigned-profile-compact {
-                                            background: white;
-                                            border: 1px solid #22c55e;
-                                            border-radius: 4px;
-                                            padding: 6px 8px;
-                                            display: inline-flex;
-                                            align-items: center;
-                                            gap: 6px;
-                                            font-size: 0.8em;
-                                        }
-                                        .assigned-profile-name-compact {
-                                            font-weight: 500;
-                                            color: #333;
-                                        }
-                                        .percentage-input-compact {
-                                            width: 60px;
-                                            padding: 4px 6px;
-                                            border: 1px solid #ddd;
-                                            border-radius: 3px;
-                                            text-align: center;
-                                            font-size: 0.85em;
-                                        }
-                                        .remove-profile-btn-compact {
-                                            background: #dc3545;
-                                            color: white;
-                                            border: none;
-                                            border-radius: 3px;
-                                            padding: 3px 8px;
-                                            cursor: pointer;
-                                            font-size: 0.75em;
-                                            transition: background 0.2s;
-                                        }
-                                        .remove-profile-btn-compact:hover {
-                                            background: #c82333;
-                                        }
-                                        .drag-over-compact {
-                                            background-color: #e8f5e9;
-                                            border-color: #22c55e;
-                                        }
-                                        .percentage-validation-compact {
-                                            margin-top: 8px;
-                                            padding: 8px;
-                                            border-radius: 4px;
-                                            font-size: 0.8em;
-                                        }
-                                        .percentage-validation-compact.error {
-                                            background: #fee;
-                                            border: 1px solid #fcc;
-                                            color: #c00;
-                                        }
-                                        .percentage-validation-compact.success {
-                                            background: #efe;
-                                            border: 1px solid #cfc;
-                                            color: #0a0;
-                                        }
-                                        .percentage-input-compact {
-                                            width: 80px;
-                                            padding: 6px;
-                                            border: 1px solid #ddd;
-                                            border-radius: 3px;
-                                            text-align: center;
-                                            font-size: 0.9em;
-                                        }
-                                        .percentage-input-compact:focus {
-                                            outline: none;
-                                            border-color: #22c55e;
-                                            box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
-                                        }
-                                        .empty-state-compact {
-                                            text-align: center;
-                                            color: #999;
-                                            font-size: 0.8em;
-                                            padding: 15px;
-                                        }
-                                    </style>
 
                                     <div class="activity-profiles-section" id="activity-profiles-section">
                                         <div class="activity-profiles-compact">
@@ -1146,40 +295,40 @@
                                                 <div id="assigned-profiles">
                                                     <div class="empty-state-compact">Drag profiles here to assign them</div>
                                                 </div>
-                                                <div id="percentage-validation" class="percentage-validation-compact" style="display: none;"></div>
+ <div id="percentage-validation" class="percentage-validation-compact d-none"></div>
                                             </div>
 
                                             <div class="profiles-section">
                                                 <div class="profiles-section-title">Actions Per User Once Active</div>
-                                                <div style="display: flex; flex-direction: column; gap: 12px;">
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Min:</label>
+ <div class="ys-flex-col-gap-12">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Min:</label>
                                                         <input type="number" 
                                                                id="actions_min" 
                                                                name="actions_min" 
                                                                class="input" 
-                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                min="1" 
                                                                value="1"
                                                                placeholder="Minimum actions">
                                                     </div>
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Max:</label>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Max:</label>
                                                         <input type="number" 
                                                                id="actions_max" 
                                                                name="actions_max" 
                                                                class="input" 
-                                                               style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                min="1" 
                                                                value="10"
                                                                placeholder="Maximum actions">
                                                     </div>
-                                                    <div style="display: flex; gap: 10px; align-items: center;">
-                                                        <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Distribution:</label>
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Distribution:</label>
                                                         <select id="actions_distribution" 
                                                                 name="actions_distribution" 
                                                                 class="input" 
-                                                                style="flex: 1; padding: 6px; font-size: 0.9em;"
+ class="ys-flex-input"
                                                                 onchange="updateDistributionParams()">
                                                             <option value="Uniform" selected>Uniform</option>
                                                             <option value="Poisson">Poisson</option>
@@ -1189,53 +338,53 @@
                                                     </div>
                                                     
                                                     <!-- Distribution-specific parameter fields -->
-                                                    <div id="poisson-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">Lambda (λ):</label>
+ <div id="poisson-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">Lambda (λ):</label>
                                                             <input type="number" 
                                                                    id="poisson_lambda" 
                                                                    name="poisson_lambda" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.01" 
                                                                    value="0.88"
                                                                    placeholder="Lambda parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Rate parameter</span>
+ <span class="ys-text-tiny-gray">Rate parameter</span>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div id="geometric-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">p:</label>
+ <div id="geometric-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">p:</label>
                                                             <input type="number" 
                                                                    id="geometric_p" 
                                                                    name="geometric_p" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.01" 
                                                                    min="0" 
                                                                    max="1" 
                                                                    value="0.6667"
                                                                    placeholder="Probability parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Success probability (0-1)</span>
+ <span class="ys-text-tiny-gray">Success probability (0-1)</span>
                                                         </div>
                                                     </div>
                                                     
-                                                    <div id="zipf-params" style="display: none; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
-                                                        <div style="display: flex; gap: 10px; align-items: center;">
-                                                            <label style="flex: 0 0 60px; font-size: 0.85em; font-weight: 500;">s:</label>
+ <div id="zipf-params" class="ys-hidden-sub">
+ <div class="ys-flex-gap-10">
+ <label class="ys-col-60">s:</label>
                                                             <input type="number" 
                                                                    id="zipf_s" 
                                                                    name="zipf_s" 
                                                                    class="input" 
-                                                                   style="flex: 1; padding: 6px; font-size: 0.9em;" 
+ class="ys-flex-input" 
                                                                    step="0.1" 
                                                                    value="2.5"
                                                                    placeholder="Exponent parameter"
                                                                    disabled>
-                                                            <span style="font-size: 0.75em; color: #666;">Exponent parameter</span>
+ <span class="ys-text-tiny-gray">Exponent parameter</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1245,256 +394,7 @@
 
                                     <input type="hidden" name="activity_profiles_data" id="activity_profiles_data" value="">
 
-                                    <script>
-                                        // Toggle activity profiles section
-                                        function toggleActivityProfiles() {
-                                            const section = document.getElementById('activity-profiles-section');
-                                            const toggle = document.getElementById('activity-profiles-toggle');
-                                            section.classList.toggle('expanded');
-                                            toggle.textContent = section.classList.contains('expanded') ? '▲' : '▼';
-                                        }
 
-                                        // Drag and drop functionality for activity profiles
-                                        let assignedProfiles = [];
-
-                                        function initDragAndDrop() {
-                                            const availableContainer = document.getElementById('available-profiles');
-                                            const assignedContainer = document.getElementById('assigned-profiles');
-
-                                            // Make profile items draggable
-                                            document.querySelectorAll('.profile-item-compact').forEach(item => {
-                                                item.addEventListener('dragstart', handleDragStart);
-                                                item.addEventListener('dragend', handleDragEnd);
-                                            });
-
-                                            // Make assigned profiles area droppable
-                                            assignedContainer.addEventListener('dragover', handleDragOver);
-                                            assignedContainer.addEventListener('drop', handleDrop);
-                                            assignedContainer.addEventListener('dragleave', handleDragLeave);
-                                        }
-
-                                        function handleDragStart(e) {
-                                            e.currentTarget.classList.add('dragging');
-                                            e.dataTransfer.effectAllowed = 'copy';
-                                            e.dataTransfer.setData('text/plain', JSON.stringify({
-                                                id: e.currentTarget.dataset.profileId,
-                                                name: e.currentTarget.dataset.profileName,
-                                                hours: e.currentTarget.dataset.profileHours
-                                            }));
-                                        }
-
-                                        function handleDragEnd(e) {
-                                            e.currentTarget.classList.remove('dragging');
-                                        }
-
-                                        function handleDragOver(e) {
-                                            e.preventDefault();
-                                            e.dataTransfer.dropEffect = 'copy';
-                                            e.currentTarget.classList.add('drag-over-compact');
-                                        }
-
-                                        function handleDragLeave(e) {
-                                            if (e.currentTarget === e.target) {
-                                                e.currentTarget.classList.remove('drag-over-compact');
-                                            }
-                                        }
-
-                                        function handleDrop(e) {
-                                            e.preventDefault();
-                                            e.currentTarget.classList.remove('drag-over-compact');
-                                            
-                                            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                                            
-                                            // Check if profile is already assigned
-                                            if (assignedProfiles.find(p => p.id === data.id)) {
-                                                return; // Already assigned
-                                            }
-
-                                            // Add to assigned profiles
-                                            assignedProfiles.push({
-                                                id: data.id,
-                                                name: data.name,
-                                                hours: data.hours,
-                                                percentage: 0
-                                            });
-
-                                            renderAssignedProfiles();
-                                            validatePercentages();
-                                        }
-
-                                        function renderAssignedProfiles() {
-                                            const container = document.getElementById('assigned-profiles');
-                                            
-                                            if (assignedProfiles.length === 0) {
-                                                container.innerHTML = '<div class="empty-state-compact">Drag profiles here to assign them</div>';
-                                                return;
-                                            }
-
-                                            container.innerHTML = '<div class="assigned-profiles-grid">' + assignedProfiles.map(profile => `
-                                                <div class="assigned-profile-compact">
-                                                    <span class="assigned-profile-name-compact">${profile.name}</span>
-                                                    <input type="number" 
-                                                           class="percentage-input-compact" 
-                                                           min="0" 
-                                                           max="100" 
-                                                           step="0.01"
-                                                           placeholder="%" 
-                                                           value="${profile.percentage || ''}"
-                                                           onchange="updatePercentage('${profile.id}', this.value)">
-                                                    <span style="font-size: 0.75em; color: #666;">%</span>
-                                                    <button type="button" class="remove-profile-btn-compact" onclick="removeProfile('${profile.id}')">×</button>
-                                                </div>
-                                            `).join('') + '</div>';
-                                        }
-
-                                        function updatePercentage(profileId, percentage) {
-                                            const profile = assignedProfiles.find(p => p.id === profileId);
-                                            if (profile) {
-                                                profile.percentage = parseFloat(percentage) || 0;
-                                                validatePercentages();
-                                                updateHiddenField();
-                                            }
-                                        }
-
-                                        function removeProfile(profileId) {
-                                            assignedProfiles = assignedProfiles.filter(p => p.id !== profileId);
-                                            renderAssignedProfiles();
-                                            validatePercentages();
-                                            updateHiddenField();
-                                        }
-
-                                        function validatePercentages() {
-                                            const validation = document.getElementById('percentage-validation');
-                                            const total = assignedProfiles.reduce((sum, p) => sum + (p.percentage || 0), 0);
-                                            
-                                            if (assignedProfiles.length === 0) {
-                                                validation.style.display = 'none';
-                                                return true;
-                                            }
-
-                                            validation.style.display = 'block';
-                                            
-                                            if (Math.abs(total - 100) < 0.01) {
-                                                validation.className = 'percentage-validation-compact success';
-                                                validation.textContent = `✓ Total: ${total.toFixed(2)}% - Perfect!`;
-                                                return true;
-                                            } else {
-                                                validation.className = 'percentage-validation-compact error';
-                                                validation.textContent = `⚠ Total: ${total.toFixed(2)}% - Must equal 100%`;
-                                                return false;
-                                            }
-                                        }
-
-                                        function updateHiddenField() {
-                                            const data = assignedProfiles.map(p => ({
-                                                id: p.id,
-                                                name: p.name,
-                                                percentage: p.percentage || 0
-                                            }));
-                                            document.getElementById('activity_profiles_data').value = JSON.stringify(data);
-                                        }
-
-                                        // Initialize on page load
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            initDragAndDrop();
-                                            
-                                            // Set "Always On" as default with 100%
-                                            {% if activity_profiles %}
-                                                {% for profile in activity_profiles %}
-                                                    {% if profile.name == 'Always On' %}
-                                                        assignedProfiles.push({
-                                                            id: '{{ profile.id }}',
-                                                            name: '{{ profile.name }}',
-                                                            hours: '{{ profile.hours }}',
-                                                            percentage: 100
-                                                        });
-                                                        renderAssignedProfiles();
-                                                        validatePercentages();
-                                                        updateHiddenField();
-                                                    {% endif %}
-                                                {% endfor %}
-                                            {% endif %}
-                                        });
-
-                                        // Function to show/hide distribution-specific parameters
-                                        function updateDistributionParams() {
-                                            const distribution = document.getElementById('actions_distribution').value;
-                                            
-                                            // Hide all parameter sections and disable their inputs
-                                            const poissonParams = document.getElementById('poisson-params');
-                                            const geometricParams = document.getElementById('geometric-params');
-                                            const zipfParams = document.getElementById('zipf-params');
-                                            
-                                            poissonParams.style.display = 'none';
-                                            geometricParams.style.display = 'none';
-                                            zipfParams.style.display = 'none';
-                                            
-                                            document.getElementById('poisson_lambda').disabled = true;
-                                            document.getElementById('geometric_p').disabled = true;
-                                            document.getElementById('zipf_s').disabled = true;
-                                            
-                                            // Show the relevant parameter section and enable its input
-                                            switch(distribution) {
-                                                case 'Poisson':
-                                                    poissonParams.style.display = 'block';
-                                                    document.getElementById('poisson_lambda').disabled = false;
-                                                    break;
-                                                case 'Geometric':
-                                                    geometricParams.style.display = 'block';
-                                                    document.getElementById('geometric_p').disabled = false;
-                                                    break;
-                                                case 'Zipf':
-                                                    zipfParams.style.display = 'block';
-                                                    document.getElementById('zipf_s').disabled = false;
-                                                    break;
-                                                // Uniform doesn't need extra parameters
-                                            }
-                                        }
-
-                                        // Form validation to enable/disable submit button
-                                        function validateFormFields() {
-                                            const popName = document.getElementById('pop_name').value.trim();
-                                            const nAgents = document.getElementById('n_agents').value;
-                                            const hasEducation = Object.keys(multiSelectData.education_levels).length > 0;
-                                            const hasPolitical = Object.keys(multiSelectData.political_leanings).length > 0;
-                                            const hasToxicity = Object.keys(multiSelectData.toxicity_levels).length > 0;
-                                            
-                                            const submitBtn = document.getElementById('create_population_btn');
-                                            const isValid = popName && nAgents && hasEducation && hasPolitical && hasToxicity;
-                                            
-                                            submitBtn.disabled = !isValid;
-                                            
-                                            // Visual feedback for required fields
-                                            if (!hasEducation) {
-                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#fcc';
-                                            } else {
-                                                document.getElementById('education_levels_display_wrapper').style.borderColor = '#ddd';
-                                            }
-                                            
-                                            if (!hasPolitical) {
-                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#fcc';
-                                            } else {
-                                                document.getElementById('political_leanings_display_wrapper').style.borderColor = '#ddd';
-                                            }
-                                            
-                                            if (!hasToxicity) {
-                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#fcc';
-                                            } else {
-                                                document.getElementById('toxicity_levels_display_wrapper').style.borderColor = '#ddd';
-                                            }
-                                            
-                                            return isValid;
-                                        }
-
-                                        // Add event listeners to all fields that affect validation
-                                        document.addEventListener('DOMContentLoaded', function() {
-                                            document.getElementById('pop_name').addEventListener('input', validateFormFields);
-                                            document.getElementById('n_agents').addEventListener('input', validateFormFields);
-                                            
-                                            // Initial validation
-                                            validateFormFields();
-                                        });
-                                    </script>
                                     </div><!-- End section-activity-engagement -->
 
                                 </div>
@@ -1507,85 +407,12 @@
                             </div>
                         </div>
 
-
                         <!--Dashboard box-->
 
                     </div>
 
-
                     <!--Dashboard column-->
                     <div class="column is-4">
-                        <!--Box-->
-                        <style>
-                            .sidebar-box {
-                                background: #fff;
-                                border: 1px solid #e5e7eb;
-                                border-radius: 6px;
-                                padding: 16px;
-                                margin-bottom: 16px;
-                                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-                            }
-                            .sidebar-box h3 {
-                                font-size: 1em;
-                                font-weight: 600;
-                                color: #1f2937;
-                                margin: 0 0 12px 0;
-                                padding-bottom: 8px;
-                                border-bottom: 1px solid #e5e7eb;
-                            }
-                            .sidebar-box .help-block {
-                                font-size: 0.85em;
-                                line-height: 1.5;
-                                color: #6b7280;
-                            }
-                            .sidebar-box .help-block p {
-                                margin: 0 0 10px 0;
-                            }
-                            .sidebar-box .help-block p:last-child {
-                                margin-bottom: 0;
-                            }
-                            .sidebar-box .help-block b {
-                                color: #374151;
-                                font-weight: 600;
-                            }
-                            .sidebar-box .box-line {
-                                margin-bottom: 10px;
-                                display: flex;
-                                flex-direction: column;
-                            }
-                            .sidebar-box .box-line .left {
-                                font-size: 0.85em;
-                                font-weight: 500;
-                                color: #374151;
-                                margin-bottom: 4px;
-                            }
-                            .sidebar-box .box-line .right {
-                                width: 100%;
-                            }
-                            .sidebar-box .input {
-                                width: 100%;
-                                padding: 8px 10px;
-                                border: 1px solid #d1d5db;
-                                border-radius: 4px;
-                                font-size: 0.9em;
-                                transition: border-color 0.2s;
-                            }
-                            .sidebar-box .input:focus {
-                                outline: none;
-                                border-color: #22c55e;
-                                box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
-                            }
-                            .sidebar-box .button-wrap {
-                                margin-top: 12px;
-                            }
-                            .sidebar-box .button {
-                                width: 100%;
-                                padding: 8px 16px;
-                                font-size: 0.9em;
-                                font-weight: 500;
-                            }
-                        </style>
-                        
                         <div class="sidebar-box">
                             <h3>Guide</h3>
                             <div class="help-block">
@@ -1607,48 +434,6 @@
                         <div class="sidebar-box" id="box-load-population">
                             <h3>Load Population from file</h3>
                             <form action="/admin/upload_population" enctype="multipart/form-data" method="POST">
-                                <style>
-                                    .file-upload-wrapper {
-                                        position: relative;
-                                        overflow: hidden;
-                                        display: block;
-                                        margin-bottom: 12px;
-                                    }
-                                    .file-upload-wrapper input[type=file] {
-                                        position: absolute;
-                                        left: -9999px;
-                                    }
-                                    .file-upload-label {
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        padding: 10px 12px;
-                                        background: #f9fafb;
-                                        border: 1px dashed #d1d5db;
-                                        border-radius: 4px;
-                                        cursor: pointer;
-                                        transition: all 0.2s;
-                                        font-size: 0.85em;
-                                    }
-                                    .file-upload-label:hover {
-                                        background: #f3f4f6;
-                                        border-color: #22c55e;
-                                    }
-                                    .file-upload-icon {
-                                        margin-right: 8px;
-                                        font-size: 1.1em;
-                                    }
-                                    .file-upload-text {
-                                        color: #6b7280;
-                                    }
-                                    .file-name-display {
-                                        margin-top: 6px;
-                                        font-size: 0.8em;
-                                        color: #22c55e;
-                                        font-weight: 500;
-                                        text-align: center;
-                                    }
-                                </style>
                                 <div class="file-upload-wrapper">
                                     <input type="file" id="population_file" name="population_file" accept=".json" onchange="displayFileName(this)">
                                     <label for="population_file" class="file-upload-label">
@@ -1674,16 +459,7 @@
                                     </button>
                                 </div>
                             </form>
-                            <script>
-                                function displayFileName(input) {
-                                    const display = document.getElementById('file-name-display');
-                                    if (input.files && input.files[0]) {
-                                        display.textContent = '✓ ' + input.files[0].name;
-                                    } else {
-                                        display.textContent = '';
-                                    }
-                                }
-                            </script>
+
                         </div>
 
                         <div class="sidebar-box" id="box-empty-population">
@@ -1739,88 +515,6 @@
                                     </span>
                                 </div>
 
-                                        <style>
-                                            .merge-populations-container {
-                                                margin: 15px 0;
-                                            }
-                                            .merge-section-title {
-                                                font-size: 0.85em;
-                                                font-weight: 600;
-                                                color: #555;
-                                                margin-bottom: 8px;
-                                            }
-                                            .merge-available-populations {
-                                                border: 1px solid #e0e0e0;
-                                                border-radius: 4px;
-                                                padding: 10px;
-                                                background-color: #fafafa;
-                                                min-height: 100px;
-                                                max-height: 200px;
-                                                overflow-y: auto;
-                                            }
-                                            .merge-selected-populations {
-                                                border: 2px dashed #22c55e;
-                                                border-radius: 4px;
-                                                padding: 10px;
-                                                background-color: #f0fdf4;
-                                                min-height: 100px;
-                                                max-height: 200px;
-                                                overflow-y: auto;
-                                            }
-                                            .merge-population-item {
-                                                background: white;
-                                                border: 1px solid #ddd;
-                                                border-radius: 3px;
-                                                padding: 6px 10px;
-                                                margin-bottom: 5px;
-                                                cursor: move;
-                                                transition: all 0.2s ease;
-                                                display: flex;
-                                                justify-content: space-between;
-                                                align-items: center;
-                                                font-size: 0.85em;
-                                            }
-                                            .merge-population-item:hover {
-                                                border-color: #22c55e;
-                                                box-shadow: 0 1px 3px rgba(34, 197, 94, 0.2);
-                                            }
-                                            .merge-population-item.dragging {
-                                                opacity: 0.5;
-                                            }
-                                            .merge-population-name {
-                                                font-weight: 500;
-                                                flex: 1;
-                                            }
-                                            .merge-population-size {
-                                                color: #666;
-                                                font-size: 0.9em;
-                                                margin-left: 8px;
-                                            }
-                                            .merge-drag-over {
-                                                background-color: #dcfce7;
-                                                border-color: #22c55e;
-                                            }
-                                            .merge-empty-state {
-                                                text-align: center;
-                                                color: #999;
-                                                font-size: 0.8em;
-                                                padding: 20px;
-                                            }
-                                            .merge-remove-btn {
-                                                background: #dc3545;
-                                                color: white;
-                                                border: none;
-                                                border-radius: 3px;
-                                                padding: 2px 6px;
-                                                cursor: pointer;
-                                                font-size: 0.75em;
-                                                margin-left: 8px;
-                                            }
-                                            .merge-remove-btn:hover {
-                                                background: #c82333;
-                                            }
-                                        </style>
-
                                         <div class="merge-populations-container">
                                             <div class="merge-section-title">Available Populations (Drag to select)</div>
                                             <div class="merge-available-populations" id="merge-available-populations">
@@ -1845,163 +539,7 @@
                             </form>
                         </div>
 
-                        <script>
-                            // Merge populations drag and drop functionality
-                            let mergeAvailablePopulations = [];
-                            let mergeSelectedPopulations = [];
 
-                            // Load populations from the API
-                            function loadMergePopulations() {
-                                fetch('/admin/populations_data')
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        mergeAvailablePopulations = data.data.map(pop => ({
-                                            id: pop.id,
-                                            name: pop.name,
-                                            size: pop.size || 0,
-                                            username_type: pop.username_type || 'microblogging'
-                                        }));
-                                        renderMergeAvailablePopulations();
-                                    })
-                                    .catch(error => {
-                                        console.error('Error loading populations:', error);
-                                        document.getElementById('merge-available-populations').innerHTML = 
-                                            '<div class="merge-empty-state">Error loading populations</div>';
-                                    });
-                            }
-
-                            function renderMergeAvailablePopulations() {
-                                const container = document.getElementById('merge-available-populations');
-                                const selectedType = document.getElementById('merged_population_type').value;
-                                
-                                // Filter out already selected populations
-                                const available = mergeAvailablePopulations.filter(pop => 
-                                    !mergeSelectedPopulations.find(selected => selected.id === pop.id) &&
-                                    pop.username_type === selectedType
-                                );
-
-                                if (available.length === 0) {
-                                    container.innerHTML = '<div class="merge-empty-state">No populations available</div>';
-                                    return;
-                                }
-
-                                container.innerHTML = available.map(pop => `
-                                    <div class="merge-population-item" 
-                                         draggable="true" 
-                                         data-pop-id="${pop.id}"
-                                         data-pop-name="${pop.name}"
-                                         data-pop-size="${pop.size}"
-                                         data-pop-type="${pop.username_type}">
-                                        <span class="merge-population-name">${pop.name}</span>
-                                        <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
-                                    </div>
-                                `).join('');
-
-                                // Add drag event listeners
-                                container.querySelectorAll('.merge-population-item').forEach(item => {
-                                    item.addEventListener('dragstart', handleMergeDragStart);
-                                    item.addEventListener('dragend', handleMergeDragEnd);
-                                });
-                            }
-
-                            function renderMergeSelectedPopulations() {
-                                const container = document.getElementById('merge-selected-populations');
-                                
-                                if (mergeSelectedPopulations.length === 0) {
-                                    container.innerHTML = '<div class="merge-empty-state">Drag populations here</div>';
-                                    return;
-                                }
-
-                                container.innerHTML = mergeSelectedPopulations.map(pop => `
-                                    <div class="merge-population-item">
-                                        <span class="merge-population-name">${pop.name}</span>
-                                        <span class="merge-population-size">${pop.size} agents, ${pop.username_type}</span>
-                                        <button type="button" class="merge-remove-btn" onclick="removeMergePopulation(${pop.id})">×</button>
-                                    </div>
-                                `).join('');
-
-                                // Update hidden field
-                                document.getElementById('selected_population_ids').value = 
-                                    mergeSelectedPopulations.map(p => p.id).join(',');
-                            }
-
-                            function handleMergeDragStart(e) {
-                                e.currentTarget.classList.add('dragging');
-                                e.dataTransfer.effectAllowed = 'move';
-                                e.dataTransfer.setData('text/plain', JSON.stringify({
-                                    id: e.currentTarget.dataset.popId,
-                                    name: e.currentTarget.dataset.popName,
-                                    size: e.currentTarget.dataset.popSize,
-                                    username_type: e.currentTarget.dataset.popType
-                                }));
-                            }
-
-                            function handleMergeDragEnd(e) {
-                                e.currentTarget.classList.remove('dragging');
-                            }
-
-                            function handleMergeDragOver(e) {
-                                e.preventDefault();
-                                e.dataTransfer.dropEffect = 'move';
-                                e.currentTarget.classList.add('merge-drag-over');
-                            }
-
-                            function handleMergeDragLeave(e) {
-                                if (e.currentTarget === e.target) {
-                                    e.currentTarget.classList.remove('merge-drag-over');
-                                }
-                            }
-
-                            function handleMergeDrop(e) {
-                                e.preventDefault();
-                                e.currentTarget.classList.remove('merge-drag-over');
-                                
-                                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                                
-                                // Add to selected if not already there
-                                const parsedId = parseInt(data.id, 10);
-                                if (!mergeSelectedPopulations.find(p => p.id === parsedId)) {
-                                    mergeSelectedPopulations.push({
-                                        id: parsedId,
-                                        name: data.name,
-                                        size: parseInt(data.size, 10) || 0,
-                                        username_type: data.username_type || document.getElementById('merged_population_type').value
-                                    });
-                                    renderMergeSelectedPopulations();
-                                    renderMergeAvailablePopulations();
-                                }
-                            }
-
-                            function removeMergePopulation(popId) {
-                                mergeSelectedPopulations = mergeSelectedPopulations.filter(p => p.id !== popId);
-                                renderMergeSelectedPopulations();
-                                renderMergeAvailablePopulations();
-                            }
-
-                            // Initialize merge drag and drop
-                            document.addEventListener('DOMContentLoaded', function() {
-                                loadMergePopulations();
-                                document.getElementById('merged_population_type').addEventListener('change', function() {
-                                    mergeSelectedPopulations = [];
-                                    renderMergeSelectedPopulations();
-                                    renderMergeAvailablePopulations();
-                                });
-                                
-                                const selectedContainer = document.getElementById('merge-selected-populations');
-                                selectedContainer.addEventListener('dragover', handleMergeDragOver);
-                                selectedContainer.addEventListener('drop', handleMergeDrop);
-                                selectedContainer.addEventListener('dragleave', handleMergeDragLeave);
-                            });
-
-                            // Form validation
-                            document.getElementById('merge_populations_form').addEventListener('submit', function(e) {
-                                if (mergeSelectedPopulations.length < 2) {
-                                    e.preventDefault();
-                                    alert('Please select at least 2 populations to merge');
-                                    return false;
-                                }
-                            });
-                        </script>
 
                     </div>
                 </div>
@@ -2010,7 +548,20 @@
 
     </div>
 
-
-
 {% include "admin/tutorials/populations_tutorial.html" %}
+<script>
+var YS_DATA_POPULATIONS = {
+    professionBackgrounds: {{ profession_backgrounds | tojson | safe }},
+    ageClasses: {
+        {% for age_class in age_classes %}
+        '{{ age_class.id }}': {
+            label: '{{ age_class.name }} ({{ age_class.age_start }}-{{ age_class.age_end }})',
+            name: '{{ age_class.name }}'
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    },
+    alwaysOnProfile: {% if activity_profiles %}{% for profile in activity_profiles %}{% if profile.name == 'Always On' %}{ id: '{{ profile.id }}', name: '{{ profile.name }}', hours: '{{ profile.hours }}' }{% endif %}{% endfor %}{% else %}null{% endif %}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-populations.js') }}"></script>
 {% include "admin/footer.html" %}

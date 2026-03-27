@@ -1,276 +1,5 @@
 {% include "admin/head.html" %}
-
-<style>
-    /* Compact tag-based styling inspired by profession categories */
-    .dimension-tag {
-        display: inline-block;
-        background-color: #22c55e;
-        color: white;
-        padding: 6px 12px;
-        margin: 4px;
-        border-radius: 4px;
-        font-size: 0.85em;
-        cursor: pointer;
-        transition: all 0.2s;
-        border: 2px solid #22c55e;
-        user-select: none;
-    }
-    
-    .dimension-tag.inactive {
-        background-color: #e5e7eb;
-        color: #6b7280;
-        border-color: #d1d5db;
-    }
-    
-    .dimension-tag:hover {
-        transform: scale(1.05);
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .dimension-tag.selected {
-        background-color: #039be5;
-        border-color: #039be5;
-    }
-    
-    .dimension-tag .remove-btn {
-        margin-left: 6px;
-        cursor: pointer;
-        font-weight: bold;
-    }
-    
-    .dimensions-container {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        padding: 12px;
-        background: #f9fafb;
-        border-radius: 6px;
-        border: 1px solid #e5e7eb;
-        min-height: 50px;
-    }
-    
-    #topics-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-        gap: 12px;
-        max-width: 100%;
-    }
-    
-    @media (min-width: 1400px) {
-        #topics-container {
-            grid-template-columns: repeat(4, 1fr);
-        }
-    }
-    
-    @media (min-width: 1000px) and (max-width: 1399px) {
-        #topics-container {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
-    
-    @media (min-width: 768px) and (max-width: 999px) {
-        #topics-container {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (max-width: 767px) {
-        #topics-container {
-            grid-template-columns: 1fr;
-        }
-    }
-    
-    .topic-config-box {
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        padding: 12px;
-        background-color: white;
-    }
-    
-    .topic-config-box h5 {
-        margin-bottom: 10px;
-        font-weight: 600;
-        color: #039be5;
-        font-size: 0.95em;
-    }
-    
-    .segment-config {
-        display: flex;
-        align-items: center;
-        margin: 6px 0;
-        gap: 10px;
-    }
-    
-    .segment-label {
-        flex: 1;
-        font-weight: 500;
-        font-size: 0.9em;
-        min-width: 120px;
-    }
-    
-    .segment-select {
-        flex: 2;
-    }
-    
-    /* Update Rule Button Styling */
-    .update-rule-button {
-        flex: 1;
-        min-width: 250px;
-        padding: 14px 16px;
-        border: 2px solid #e5e7eb;
-        border-radius: 6px;
-        background-color: white;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-align: left;
-        font-size: 0.9em;
-        color: #374151;
-    }
-    
-    .update-rule-button:hover:not(.disabled) {
-        border-color: #039be5;
-        box-shadow: 0 2px 8px rgba(3, 155, 229, 0.15);
-        transform: translateY(-1px);
-    }
-    
-    .update-rule-button.selected {
-        border-color: #039be5;
-        background-color: #e0f2fe;
-        box-shadow: 0 0 0 3px rgba(3, 155, 229, 0.1);
-    }
-    
-    .update-rule-button.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: #f9fafb;
-    }
-    
-    .segment-select select {
-        width: 100%;
-        font-size: 0.9em;
-        padding: 6px;
-    }
-    
-    /* Distribution Preview Styling */
-    .dist-preview {
-        padding: 12px;
-        background: white;
-        border-radius: 4px;
-        border: 1px solid #e5e7eb;
-        transition: all 0.2s;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        min-height: 150px;
-    }
-    
-    .dist-preview:hover {
-        border-color: #039be5;
-        box-shadow: 0 2px 4px rgba(3, 155, 229, 0.1);
-    }
-    
-    .dist-name {
-        font-size: 0.9em;
-        color: #374151;
-        font-weight: 600;
-        line-height: 1.3;
-    }
-
-    .dist-header {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: 8px;
-    }
-
-    .dist-type-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: #e0f2fe;
-        color: #0369a1;
-        font-size: 0.72em;
-        font-weight: 600;
-        text-transform: uppercase;
-        white-space: nowrap;
-    }
-
-    .dist-body {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .dist-meta-label {
-        font-size: 0.74em;
-        color: #6b7280;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.02em;
-    }
-
-    .dist-params {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-
-    .dist-param {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 4px 8px;
-        border-radius: 999px;
-        background: #f3f4f6;
-        color: #374151;
-        font-size: 0.78em;
-        line-height: 1.2;
-        max-width: 100%;
-    }
-
-    .dist-param-key {
-        font-weight: 600;
-        color: #111827;
-    }
-
-    .dist-note {
-        font-size: 0.78em;
-        color: #4b5563;
-        line-height: 1.4;
-        padding: 8px 10px;
-        border-radius: 4px;
-        background: #f9fafb;
-        border: 1px dashed #d1d5db;
-    }
-
-    .dist-note.is-custom {
-        background: #eff6ff;
-        border-color: #bfdbfe;
-        color: #1d4ed8;
-    }
-    
-    .form-section-header {
-        font-weight: 600;
-        font-size: 0.95em;
-        margin-bottom: 8px;
-        color: #374151;
-    }
-    
-    .form-section-description {
-        font-size: 0.85em;
-        color: #6b7280;
-        margin-bottom: 12px;
-    }
-    
-    .empty-state {
-        color: #999;
-        text-align: center;
-        padding: 12px;
-        font-size: 0.9em;
-    }
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
 
 <div class="view-wrapper is-dashboard">
     <!--Dashboard container-->
@@ -293,16 +22,9 @@
                 <div class="column is-12">
                     <!--Dashboard box-->
 
-                    {% for message in get_flashed_messages() %}
-                    <div class="alert alert-warning">
-                        <button type="button" class="close" data-dismiss="alert">&times;</button>
-                        {{ message }}
-                    </div>
-                    {% endfor %}
-
                     <div class="dashboard-box" id="box-opinion-config">
                         <h3 class="title is-5 is-thin">Opinion Distribution Configuration</h3>
-                        <p style="margin-bottom: 15px; color: #666; font-size: 0.9em;">
+ <p class="ys-mb-hint">
                             Configure how opinions are distributed across different population segments for each simulation topic.
                         </p>
                         
@@ -312,7 +34,7 @@
                             <input type="hidden" name="segmentation" id="segmentation-input" value="">
 
                             <!-- Segmentation Selection -->
-                            <div class="box-content" style="margin-bottom: 20px;">
+ <div class="box-content ys-mb-20">
                                 <div class="form-section-header">1. Select Population Segmentation Dimensions (Optional)</div>
                                 <div class="form-section-description">
                                     Click on dimensions to add or remove them from segmentation. Active dimensions are shown in blue. Without selection, a global "All Population" segment is used.
@@ -335,9 +57,9 @@
                                 </div>
                                 
                                 <!-- Distribution Visualizations -->
-                                <div style="margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 12px; font-size: 0.9em; color: #374151;">Available Distributions:</div>
-                                    <div id="distributions-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+ <div class="ys-info-card">
+ <div class="ys-label-dark">Available Distributions:</div>
+ <div id="distributions-grid" class="ys-grid-180">
                                         <!-- Distributions will be dynamically generated here -->
                                     </div>
                                 </div>
@@ -355,7 +77,7 @@
                             </div>
 
                             <!-- Opinion Update Rule Configuration -->
-                            <div class="box-content" id="update-rule-configuration" style="margin-top: 20px;">
+ <div class="box-content ys-mt-20" id="update-rule-configuration">
                                 <div class="form-section-header">3. Select Opinion Update Rule</div>
                                 <div class="form-section-description">
                                     Choose how agent opinions are updated during the simulation.
@@ -363,45 +85,45 @@
                                 
                                 <input type="hidden" name="update_rule" id="update_rule_input" value="bounded_confidence">
                                 
-                                <div style="margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+ <div class="ys-mb-flex-wrap">
                                     <button type="button" class="update-rule-button selected" data-rule="bounded_confidence" onclick="selectUpdateRule(this, 'bounded_confidence')">
-                                        <div style="font-weight: 600; margin-bottom: 4px;">Bounded Confidence</div>
-                                        <div style="font-size: 0.8em; opacity: 0.9;">Agents update opinions based on similarity with others</div>
+ <div class="ys-label-sm">Bounded Confidence</div>
+ <div class="ys-text-xs-faded">Agents update opinions based on similarity with others</div>
                                     </button>
                                     
                                     <button type="button" class="update-rule-button{% if not llm_agents_enabled %} disabled{% endif %}" data-rule="llm_evaluation" onclick="selectUpdateRule(this, 'llm_evaluation')" {% if not llm_agents_enabled %}disabled{% endif %}>
-                                        <div style="font-weight: 600; margin-bottom: 4px;">LLM Evaluation</div>
-                                        <div style="font-size: 0.8em; opacity: 0.9;">Agents use LLM to evaluate and update opinions</div>
-                                        {% if not llm_agents_enabled %}<div style="font-size: 0.75em; color: #f59e0b; margin-top: 4px;">⚠ Requires LLM agents enabled</div>{% endif %}
+ <div class="ys-label-sm">LLM Evaluation</div>
+ <div class="ys-text-xs-faded">Agents use LLM to evaluate and update opinions</div>
+ {% if not llm_agents_enabled %}<div class="ys-text-amber-mt">⚠ Requires LLM agents enabled</div>{% endif %}
                                     </button>
                                 </div>
                                 
                                 <!-- Bounded Confidence Parameters -->
-                                <div id="bounded-confidence-params" style="display: block; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9em;">Bounded Confidence Parameters</div>
+ <div id="bounded-confidence-params" class="ys-block-panel">
+ <div class="ys-label-md">Bounded Confidence Parameters</div>
                                     
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+ <div class="ys-grid-200">
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Epsilon (Confidence Bound)</label>
-                                            <input type="number" class="input" name="bc_epsilon" value="0.25" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0.25</small>
+ <label class="label ys-text-sm-mb">Epsilon (Confidence Bound)</label>
+ <input type="number" class="input ys-input-sm" name="bc_epsilon" value="0.25" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.25</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Mu (Averaging Weight)</label>
-                                            <input type="number" class="input" name="bc_mu" value="0.5" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0.5</small>
+ <label class="label ys-text-sm-mb">Mu (Averaging Weight)</label>
+ <input type="number" class="input ys-input-sm" name="bc_mu" value="0.5" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0.5</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Theta (Backfire Strength)</label>
-                                            <input type="number" class="input" name="bc_theta" value="0" min="0" max="1" step="0.01" style="font-size: 0.9em; padding: 6px;">
-                                            <small style="color: #6b7280; font-size: 0.8em;">Range: 0-1, Default: 0</small>
+ <label class="label ys-text-sm-mb">Theta (Backfire Strength)</label>
+ <input type="number" class="input ys-input-sm" name="bc_theta" value="0" min="0" max="1" step="0.01">
+ <small class="ys-text-xs-gray">Range: 0-1, Default: 0</small>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Cold Start Strategy</label>
-                                            <select class="input" name="bc_cold_start" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="bc_cold_start">
                                                 <option value="neutral">Neutral (0.5)</option>
                                                 <option value="inherited">Inherited</option>
                                             </select>
@@ -410,32 +132,32 @@
                                 </div>
                                 
                                 <!-- LLM Evaluation Parameters -->
-                                <div id="llm-evaluation-params" style="display: none; padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
-                                    <div style="font-weight: 600; margin-bottom: 10px; font-size: 0.9em;">LLM Evaluation Parameters</div>
+ <div id="llm-evaluation-params" class="ys-hidden-panel">
+ <div class="ys-label-md">LLM Evaluation Parameters</div>
                                     
-                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px;">
+ <div class="ys-grid-250">
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Cold Start Strategy</label>
-                                            <select class="input" name="llm_cold_start" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Cold Start Strategy</label>
+ <select class="input ys-input-sm" name="llm_cold_start">
                                                 <option value="neutral">Neutral (0.5)</option>
                                                 <option value="inherited">Inherited</option>
                                             </select>
                                         </div>
                                         
                                         <div>
-                                            <label class="label" style="font-size: 0.85em; margin-bottom: 4px;">Evaluation Scope</label>
-                                            <select class="input" name="llm_evaluation_scope" style="font-size: 0.9em; padding: 6px;">
+ <label class="label ys-text-sm-mb">Evaluation Scope</label>
+ <select class="input ys-input-sm" name="llm_evaluation_scope">
                                                 <option value="interlocutor_only">Interlocutor Only</option>
                                                 <option value="interlocutor_and_friends">Interlocutor + First-Order Friends</option>
                                             </select>
-                                            <small style="color: #6b7280; font-size: 0.8em;">Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions</small>
+ <small class="ys-text-xs-gray">Choose whether to consider only the interlocutor's opinion or also first-order friends' opinions</small>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <!-- Action Buttons -->
-                            <div class="box-content" style="margin-top: 20px; display: flex; gap: 10px;">
+ <div class="box-content ys-mt-flex-gap">
                                 <button type="submit" class="button is-solid accent-button" id="submit-btn">
                                     Save Configuration
                                 </button>
@@ -451,288 +173,7 @@
     </div>
 </div>
 
-<script>
-    const topics = {{ topics | tojson }};
-    const distributions = {{ distributions | tojson }};
-    const segmentationOptions = {{ segmentation_options | tojson }};
-    const segmentValues = {{ segment_values | tojson }};
-    
-    let selectedDimensions = [];
-    
-    function formatDistributionParamValue(value) {
-        if (Array.isArray(value)) {
-            return value.join(', ');
-        }
-        if (value && typeof value === 'object') {
-            return JSON.stringify(value);
-        }
-        return String(value);
-    }
+<script>var YS_DATA_OPINION = { topics: {{ topics | tojson }}, distributions: {{ distributions | tojson }}, segmentationOptions: {{ segmentation_options | tojson }}, segmentValues: {{ segment_values | tojson }}, bins: {{ bins | tojson }}, labels: {{ labels | tojson }} };</script>
 
-    function buildDistributionParamsMarkup(parameters) {
-        const entries = Object.entries(parameters || {});
-        if (!entries.length) {
-            return '<div class="dist-note">No fixed parameters defined for this distribution.</div>';
-        }
-
-        return `
-            <div class="dist-meta-label">Fixed Parameters</div>
-            <div class="dist-params">
-                ${entries.map(([key, value]) => `
-                    <span class="dist-param">
-                        <span class="dist-param-key">${key}:</span>
-                        <span>${formatDistributionParamValue(value)}</span>
-                    </span>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    function buildDistributionNote(type) {
-        const supportedPreviewTypes = new Set([
-            'uniform',
-            'normal',
-            'beta',
-            'exponential',
-            'gamma',
-            'lognormal',
-            'bimodal',
-            'polarized'
-        ]);
-
-        if (supportedPreviewTypes.has(type)) {
-            return '<div class="dist-note">Sampling uses the backend implementation for this distribution type. The parameters above come directly from the database definition.</div>';
-        }
-
-        return `<div class="dist-note is-custom">Custom distribution type <strong>${type}</strong>. Sampling is delegated to the backend implementation, so newly added DB-driven distributions remain available without template changes.</div>`;
-    }
-
-    // Initialize distribution previews directly from database definitions
-    function initializeDistributionPreviews() {
-        const grid = document.getElementById('distributions-grid');
-        if (!grid) return;
-        
-        grid.innerHTML = '';
-
-        distributions.forEach((dist) => {
-            const preview = document.createElement('div');
-            preview.className = 'dist-preview';
-            const distType = dist.type || 'custom';
-
-            preview.innerHTML = `
-                <div class="dist-header">
-                    <div class="dist-name">${dist.name}</div>
-                    <span class="dist-type-badge">${distType}</span>
-                </div>
-                <div class="dist-body">
-                    ${buildDistributionParamsMarkup(dist.parameters)}
-                    ${buildDistributionNote(distType)}
-                </div>
-            `;
-
-            grid.appendChild(preview);
-        });
-    }
-    
-    function toggleDimension(tag) {
-        const id = tag.getAttribute('data-id');
-        const name = tag.getAttribute('data-name');
-        
-        if (tag.classList.contains('inactive')) {
-            // Activate dimension
-            tag.classList.remove('inactive');
-            tag.classList.add('selected');
-            selectedDimensions.push(id);
-        } else {
-            // Deactivate dimension
-            tag.classList.remove('selected');
-            tag.classList.add('inactive');
-            selectedDimensions = selectedDimensions.filter(d => d !== id);
-        }
-        
-        // Update form
-        updateSegmentation();
-    }
-    
-    function updateSegmentation() {
-        // Update hidden input
-        document.getElementById('segmentation-input').value = selectedDimensions.join(',');
-        
-        // Always generate segment configurations (even if no dimensions selected)
-        generateSegmentConfigurations();
-    }
-    
-    function selectUpdateRule(button, ruleValue) {
-        // Don't allow selecting disabled rules
-        if (button.classList.contains('disabled')) {
-            return;
-        }
-        
-        // Update button states
-        document.querySelectorAll('.update-rule-button').forEach(btn => {
-            btn.classList.remove('selected');
-        });
-        button.classList.add('selected');
-        
-        // Update hidden input
-        document.getElementById('update_rule_input').value = ruleValue;
-        
-        // Toggle parameter sections
-        const bcParams = document.getElementById('bounded-confidence-params');
-        const llmParams = document.getElementById('llm-evaluation-params');
-        
-        if (ruleValue === 'bounded_confidence') {
-            bcParams.style.display = 'block';
-            llmParams.style.display = 'none';
-        } else if (ruleValue === 'llm_evaluation') {
-            bcParams.style.display = 'none';
-            llmParams.style.display = 'block';
-        }
-    }
-    
-    function toggleUpdateRuleOptions() {
-        // Legacy function for compatibility - can be removed
-        const selectedRule = document.getElementById('update_rule_input').value;
-        const bcParams = document.getElementById('bounded-confidence-params');
-        const llmParams = document.getElementById('llm-evaluation-params');
-        
-        if (selectedRule === 'bounded_confidence') {
-            bcParams.style.display = 'block';
-            llmParams.style.display = 'none';
-        } else if (selectedRule === 'llm_evaluation') {
-            bcParams.style.display = 'none';
-            llmParams.style.display = 'block';
-        }
-    }
-    
-    function generateSegmentConfigurations() {
-        // Generate segments based on selected dimensions using actual values from population
-        const segments = generateSegments(selectedDimensions);
-        console.log('Generated segments:', segments);
-        
-        // Update each topic's segment configuration
-        topics.forEach(topic => {
-            console.log('Processing topic:', topic);
-            // topic.id is a number, so we can safely use it directly
-            const containerId = 'segments-topic-' + topic.id;
-            console.log('Looking for container:', containerId);
-            const container = document.getElementById(containerId);
-            if (!container) {
-                console.error('Container not found:', containerId);
-                return;
-            }
-            console.log('Container found:', container);
-            
-            // Clear container using DOM methods
-            while (container.firstChild) {
-                container.removeChild(container.firstChild);
-            }
-            
-            segments.forEach((segment, segmentIndex) => {
-                console.log('Creating segment config for:', segment);
-                const segmentDiv = document.createElement('div');
-                segmentDiv.className = 'segment-config';
-                
-                const label = document.createElement('div');
-                label.className = 'segment-label';
-                label.textContent = segment;
-                
-                const selectWrapper = document.createElement('div');
-                selectWrapper.className = 'segment-select';
-                
-                const select = document.createElement('select');
-                select.className = 'input';
-                // Use index-based naming to avoid collisions
-                select.name = `dist_topic_${topic.id}_segment_${segmentIndex}`;
-                select.setAttribute('data-segment-name', segment);
-                
-                // Add distribution options with first one as default
-                distributions.forEach((dist, idx) => {
-                    const option = document.createElement('option');
-                    option.value = dist.name;
-                    option.textContent = dist.name;
-                    // Set first distribution as default
-                    if (idx === 0) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                });
-                
-                selectWrapper.appendChild(select);
-                
-                segmentDiv.appendChild(label);
-                segmentDiv.appendChild(selectWrapper);
-                container.appendChild(segmentDiv);
-            });
-            console.log('Finished processing topic:', topic.name);
-        });
-    }
-    
-    function generateSegments(dimensions) {
-        // Use actual segment values from the population data
-        
-        // If no dimensions selected, return a default segment for "All Population"
-        if (dimensions.length === 0) {
-            return ['All Population'];
-        }
-        
-        // Generate combinations using actual values from the population
-        let segments = [''];
-        
-        dimensions.forEach(dim => {
-            const values = segmentValues[dim] || [];
-            if (values.length === 0) {
-                // If no values for this dimension, skip it
-                return;
-            }
-            
-            const newSegments = [];
-            
-            segments.forEach(segment => {
-                values.forEach(value => {
-                    newSegments.push(segment ? `${segment} - ${value}` : value);
-                });
-            });
-            
-            segments = newSegments;
-        });
-        
-        return segments;
-    }
-    
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize DB-driven distribution previews
-        initializeDistributionPreviews();
-        
-        // Debug: Log the data received from backend
-        console.log('Topics:', topics);
-        console.log('Segment Values:', segmentValues);
-        console.log('Distributions:', distributions);
-        
-        // Set up event listeners for dimension tags
-        const dimensionTags = document.querySelectorAll('.dimension-tag');
-        dimensionTags.forEach(tag => {
-            tag.addEventListener('click', function() {
-                toggleDimension(this);
-            });
-        });
-        
-        // Set up close button event listener
-        const closeBtn = document.getElementById('close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', function() {
-                const redirectUrl = this.getAttribute('data-redirect-url');
-                if (redirectUrl) {
-                    window.location.href = redirectUrl;
-                }
-            });
-        }
-        
-        // Initialize with default "All Population" segment for each topic
-        console.log('Initializing segment configurations...');
-        generateSegmentConfigurations();
-    });
-</script>
-
+<script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>
 {% include "admin/footer.html" %}

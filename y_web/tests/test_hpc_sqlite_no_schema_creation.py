@@ -10,6 +10,10 @@ import os
 import tempfile
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
+pytestmark = pytest.mark.unit
+
 
 def _schema_creation_logic(db_type, simulator_type, db_uri, ensure_fn):
     """
