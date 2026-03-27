@@ -221,9 +221,7 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
     assert "<b>Experiment Configuration</b>" in standard
     assert "<b>Experiment Configuration</b>" in forum
-    assert (
-        "Enable or disable runtime annotations and memory." in forum
-    )
+    assert "Enable or disable runtime annotations and memory." in forum
     assert "{% if can_manage_experiment %}" in forum
     assert "<span>Opinion Dynamics</span>" in forum
     assert "<span>Memory</span>" in forum
@@ -248,7 +246,7 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     )
     assert "{% if memory_configuration_supported and memory_module_enabled %}" in forum
     assert (
-        'llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)'
+        "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)"
         in route_source
     )
 

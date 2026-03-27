@@ -121,7 +121,7 @@ def test_opinion_evolution_uses_agent_opinion_row_id_tie_breaker():
     ).read()
 
     assert "Agent_Opinion.id," in source
-    assert '(day, hour, tid, row_id)' in source
+    assert "(day, hour, tid, row_id)" in source
     assert '"row_id": row_id' in source
 
 

@@ -2,7 +2,6 @@ import importlib.util
 import sys
 from pathlib import Path
 
-
 MODULE_PATH = Path(
     "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py"
 )
