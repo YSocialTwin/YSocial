@@ -1,0 +1,64 @@
+import importlib.util
+import sys
+from pathlib import Path
+
+
+MODULE_PATH = Path(
+    "/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit/y_client/classes/base_agent.py"
+)
+PACKAGE_ROOT = Path("/Users/rossetti/PycharmProjects/YWeb/external/YClientReddit")
+
+
+def _load_module():
+    module_name = "reddit_base_agent_under_test_emotion_payload"
+    if module_name in sys.modules:
+        return sys.modules[module_name]
+
+    sys.path.insert(0, str(PACKAGE_ROOT))
+    spec = importlib.util.spec_from_file_location(module_name, MODULE_PATH)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _make_agent(module):
+    agent = module.Agent.__new__(module.Agent)
+    agent.emotions = ["joy", "sadness", "anger", "fear", "surprise", "disgust"]
+    return agent
+
+
+def test_reddit_emotion_payload_detection_accepts_labeled_payloads():
+    module = _load_module()
+    agent = _make_agent(module)
+
+    assert agent._looks_like_emotion_payload("Emotion: joy")
+    assert agent._looks_like_emotion_payload("Emotions: joy, sadness")
+    assert agent._looks_like_emotion_payload("Detected emotions [joy, anger]")
+
+
+def test_reddit_generated_content_extractor_skips_labeled_emotion_payload():
+    module = _load_module()
+    agent = _make_agent(module)
+
+    class ChatOwner:
+        def __init__(self):
+            self.chat_messages = {}
+
+        def last_message(self, _peer_agent):
+            return {"content": "Emotion: joy"}
+
+    peer = object()
+    owner = ChatOwner()
+    owner.chat_messages[peer] = [
+        {"content": "actual generated post"},
+        {"content": "Emotion: joy"},
+    ]
+
+    extracted = agent._extract_generated_chat_content(
+        owner,
+        peer,
+        prompt_hint="ignored",
+        skip_emotion_like=True,
+    )
+    assert extracted == "actual generated post"

@@ -375,6 +375,51 @@ def _invalidate_stale_opinion_evolution_cache(expid):
     return True
 
 
+def _is_legacy_opinion_cache_state(cache_entry):
+    """Return True when a cached opinion state lacks row-order information.
+
+    Older cache entries only stored day/hour and therefore cannot distinguish
+    multiple Standard opinion updates written within the same simulation hour.
+    """
+    if cache_entry is None or not getattr(cache_entry, "latest_opinions_state", None):
+        return False
+    try:
+        state = json.loads(cache_entry.latest_opinions_state)
+    except Exception:
+        return True
+
+    for topics in state.values():
+        if not isinstance(topics, dict):
+            continue
+        for opinion_state in topics.values():
+            if not isinstance(opinion_state, dict):
+                continue
+            return "row_id" not in opinion_state
+    return False
+
+
+def _is_invalid_opinion_cache_entry(cache_entry):
+    """Return True when a cached aggregate is internally inconsistent."""
+    if cache_entry is None:
+        return False
+    try:
+        binned = json.loads(cache_entry.binned_data or "{}")
+        if not isinstance(binned, dict):
+            return True
+        total_binned = sum(int(v) for v in binned.values())
+    except Exception:
+        return True
+
+    total_opinions = int(cache_entry.total_opinions or 0)
+    unique_agents = int(cache_entry.unique_agents or 0)
+
+    if unique_agents > total_opinions:
+        return True
+    if total_binned != total_opinions:
+        return True
+    return _is_legacy_opinion_cache_state(cache_entry)
+
+
 @experiments.route("/admin/opinion_groups_data")
 @login_required
 def opinion_groups_data():
@@ -817,6 +862,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
     # Query all opinions with timestamp info for these rounds
     base_query = (
         db.session.query(
+            Agent_Opinion.id,
             Agent_Opinion.agent_id,
             Agent_Opinion.topic_id,
             Agent_Opinion.tid,
@@ -843,9 +889,9 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
 
     # Organize opinions by (day, hour) for incremental processing
     opinions_by_time = defaultdict(list)
-    for agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
+    for row_id, agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
         opinions_by_time[(opinion_day, opinion_hour)].append(
-            (agent_id, topic_id, opinion)
+            (row_id, agent_id, topic_id, opinion)
         )
 
     # Sort time keys chronologically
@@ -872,7 +918,9 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
                 break
 
             # Update latest_at_time with opinions from this time
-            for agent_id, topic_id, opinion in opinions_by_time[(time_day, time_hour)]:
+            for row_id, agent_id, topic_id, opinion in sorted(
+                opinions_by_time[(time_day, time_hour)], key=lambda item: item[0]
+            ):
                 key = (agent_id, topic_id)
                 latest_at_time[key] = opinion
 
@@ -1097,6 +1145,7 @@ def generate_agent_timeseries_data(
     # Query all opinions with timestamp info for these rounds
     base_query = (
         db.session.query(
+            Agent_Opinion.id,
             Agent_Opinion.agent_id,
             Agent_Opinion.topic_id,
             Agent_Opinion.tid,
@@ -1121,9 +1170,9 @@ def generate_agent_timeseries_data(
     opinions_by_time = defaultdict(list)
     agent_first_opinion = {}  # Track first observed opinion for each agent
 
-    for agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
+    for row_id, agent_id, topic_id, tid, opinion, opinion_day, opinion_hour in all_opinions:
         opinions_by_time[(opinion_day, opinion_hour)].append(
-            (agent_id, topic_id, opinion)
+            (row_id, agent_id, topic_id, opinion)
         )
         # Track first observed opinion for color coding (chronologically)
         if agent_id not in agent_first_opinion:
@@ -1168,7 +1217,9 @@ def generate_agent_timeseries_data(
                 break
 
             # Update latest_at_time with opinions from this time
-            for agent_id, topic_id, opinion in opinions_by_time[(time_day, time_hour)]:
+            for row_id, agent_id, topic_id, opinion in sorted(
+                opinions_by_time[(time_day, time_hour)], key=lambda item: item[0]
+            ):
                 key = (agent_id, topic_id)
                 latest_at_time[key] = opinion
                 # Also maintain agent-only index for faster lookup
@@ -1278,15 +1329,30 @@ def count_social_interactions(all_opinions):
     """
     social_interactions = 0
 
-    for (
-        agent_id,
-        topic_id,
-        tid,
-        opinion,
-        id_interacted_with,
-        day,
-        hour,
-    ) in all_opinions:
+    for row in all_opinions:
+        if len(row) == 8:
+            (
+                _row_id,
+                agent_id,
+                topic_id,
+                tid,
+                opinion,
+                id_interacted_with,
+                day,
+                hour,
+            ) = row
+        else:
+            (
+                agent_id,
+                topic_id,
+                tid,
+                opinion,
+                id_interacted_with,
+                day,
+                hour,
+            ) = row
+        if id_interacted_with == agent_id:
+            continue
         # Check if interaction is valid: not null, not zero, and if string, not empty
         if id_interacted_with is not None and id_interacted_with != 0:
             # Convert to string and check if non-empty
@@ -1343,6 +1409,13 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
         # to avoid performance degradation from excessive logging
         cache_entry = None
 
+    if cache_entry and _is_invalid_opinion_cache_entry(cache_entry):
+        OpinionEvolutionCache.query.filter_by(
+            exp_id=expid, topic_id=filter_topic_id
+        ).delete()
+        db.session.commit()
+        cache_entry = None
+
     # Cache hit - return cached data (no expiry, cache persists)
     if cache_entry:
         # Extract all needed data from cache_entry while session is still valid
@@ -1382,6 +1455,13 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             # If query fails (e.g., column doesn't exist), fall back to full computation
             # Reduce logging to avoid performance impact
             previous_cache = None
+
+    if previous_cache and _is_invalid_opinion_cache_entry(previous_cache):
+        OpinionEvolutionCache.query.filter_by(
+            exp_id=expid, topic_id=filter_topic_id
+        ).delete()
+        db.session.commit()
+        previous_cache = None
 
     if (
         previous_cache
@@ -1437,6 +1517,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
 
             # Query new opinions
             new_opinions_query = db.session.query(
+                Agent_Opinion.id,
                 Agent_Opinion.agent_id,
                 Agent_Opinion.topic_id,
                 Agent_Opinion.tid,
@@ -1454,6 +1535,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             # Create list format for count_social_interactions
             new_opinions_with_rounds = [
                 (
+                    row_id,
                     agent_id,
                     topic_id,
                     tid,
@@ -1462,7 +1544,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
                     round_time_map[tid][0],
                     round_time_map[tid][1],
                 )
-                for agent_id, topic_id, tid, opinion, id_interacted_with in new_opinions
+                for row_id, agent_id, topic_id, tid, opinion, id_interacted_with in new_opinions
                 if tid in round_time_map
             ]
 
@@ -1481,16 +1563,20 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
                 id_interacted_with,
                 day,
                 hour,
+                row_id,
             ) in new_opinions_with_rounds:
                 key = (agent_id, topic_id)
 
                 # Update if this is newer than what we have
-                if key not in latest_opinions or (day, hour) > (
+                if key not in latest_opinions or (day, hour, tid, row_id) > (
                     latest_opinions[key]["day"],
                     latest_opinions[key]["hour"],
+                    latest_opinions[key].get("tid", -1),
+                    latest_opinions[key].get("row_id", -1),
                 ):
                     latest_opinions[key] = {
                         "tid": tid,
+                        "row_id": row_id,
                         "opinion": opinion,
                         "id_interacted_with": id_interacted_with,
                         "day": day,
@@ -1512,6 +1598,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
 
         base_query = (
             db.session.query(
+                Agent_Opinion.id,
                 Agent_Opinion.agent_id,
                 Agent_Opinion.topic_id,
                 Agent_Opinion.tid,
@@ -1532,6 +1619,7 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
         # Keep only the latest opinion per (agent_id, topic_id) pair
         latest_opinions = {}
         for (
+            row_id,
             agent_id,
             topic_id,
             tid,
@@ -1541,12 +1629,15 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
             hour,
         ) in all_opinions:
             key = (agent_id, topic_id)
-            if key not in latest_opinions or (day, hour) > (
+            if key not in latest_opinions or (day, hour, tid, row_id) > (
                 latest_opinions[key]["day"],
                 latest_opinions[key]["hour"],
+                latest_opinions[key].get("tid", -1),
+                latest_opinions[key].get("row_id", -1),
             ):
                 latest_opinions[key] = {
                     "tid": tid,
+                    "row_id": row_id,
                     "opinion": opinion,
                     "id_interacted_with": id_interacted_with,
                     "day": day,
@@ -1593,6 +1684,8 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
 
             latest_opinions_for_storage[agent_key][topic_key] = {
                 "opinion": data["opinion"],
+                "tid": data.get("tid"),
+                "row_id": data.get("row_id"),
                 "day": data["day"],
                 "hour": data["hour"],
             }
@@ -1741,6 +1834,7 @@ def opinion_evolution(expid):
         # Get all opinions where tid (FK to Rounds) is in the rounds up to our time
         base_query = (
             db.session.query(
+                Agent_Opinion.id,
                 Agent_Opinion.agent_id,
                 Agent_Opinion.topic_id,
                 Agent_Opinion.tid,
@@ -1771,14 +1865,18 @@ def opinion_evolution(expid):
             id_interacted_with,
             day,
             hour,
+            row_id,
         ) in all_opinions:
             key = (agent_id, topic_id)
-            if key not in latest_opinions or (day, hour) > (
+            if key not in latest_opinions or (day, hour, tid, row_id) > (
                 latest_opinions[key]["day"],
                 latest_opinions[key]["hour"],
+                latest_opinions[key].get("tid", -1),
+                latest_opinions[key].get("row_id", -1),
             ):
                 latest_opinions[key] = {
                     "tid": tid,
+                    "row_id": row_id,
                     "opinion": opinion,
                     "id_interacted_with": id_interacted_with,
                     "day": day,

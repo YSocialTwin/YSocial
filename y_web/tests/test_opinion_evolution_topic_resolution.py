@@ -112,3 +112,24 @@ def test_opinion_evolution_js_refreshes_group_trends_state():
         in source
     )
     assert "_maxTimeValue = config.maxTick ||" in source
+
+
+def test_opinion_evolution_uses_agent_opinion_row_id_tie_breaker():
+    source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        "r",
+    ).read()
+
+    assert "Agent_Opinion.id," in source
+    assert '(day, hour, tid, row_id)' in source
+    assert '"row_id": row_id' in source
+
+
+def test_opinion_evolution_ignores_legacy_cache_without_row_order():
+    source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py",
+        "r",
+    ).read()
+
+    assert "def _is_legacy_opinion_cache_state(cache_entry):" in source
+    assert '"row_id" not in opinion_state' in source

@@ -711,12 +711,6 @@ def update_experiment_config(uid):
         sentiment_enabled = False
         perspective_api = ""
 
-    if getattr(exp, "platform_type", "") == "forum":
-        toxicity_enabled = False
-        emotion_enabled = False
-        sentiment_enabled = False
-        perspective_api = ""
-
     memory_configuration_supported = bool(
         exp.simulator_type != "HPC" and llm_agents_enabled_effective
     )

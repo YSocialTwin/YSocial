@@ -80,10 +80,33 @@
                         {% if can_manage_experiment %}
                                 <hr>
                                 <b>Experiment Configuration</b>
-                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Forum experiments expose a single runtime configuration here. Update it before starting or stopping the server and before managing clients.</p>
+                            <p style="font-size: 0.82em; color: #777; margin-bottom: 0.45em;">Enable or disable runtime annotations and memory. Update this configuration before starting or stopping the server and before managing clients.</p>
                             <form method="POST" action="/admin/update_experiment_config/{{ experiment.idexp }}">
                                 <div class="exp-config-card">
                                     <div class="exp-config-grid">
+                                        {% if llm_agents_enabled_effective %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Toxicity</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="emotion_annotation" {% if emotion_annotation_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Emotion</span>
+                                        </div>
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="sentiment_annotation" {% if sentiment_annotation_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Sentiment</span>
+                                        </div>
+                                        {% endif %}
                                         <div class="exp-config-item">
                                             <label class="switch-small">
                                                 <input type="checkbox" name="opinion_dynamics_enabled" {% if opinion_dynamics_enabled %}checked{% endif %}>
@@ -91,10 +114,26 @@
                                             </label>
                                             <span>Opinion Dynamics</span>
                                         </div>
+                                        {% if memory_configuration_supported %}
+                                        <div class="exp-config-item">
+                                            <label class="switch-small">
+                                                <input type="checkbox" name="memory_enabled" {% if memory_module_enabled %}checked{% endif %}>
+                                                <span class="slider-small round"></span>
+                                            </label>
+                                            <span>Memory</span>
+                                        </div>
+                                        {% endif %}
                                     </div>
+                                    {% if llm_agents_enabled_effective %}
+                                    <div id="perspective_api_field_exp" class="ys-mt-8">
+                                        <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (required for toxicity)</label>
+                                        <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza..." style="font-size: 0.84rem;">
+                                    </div>
+                                    {% else %}
                                     <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
-                                        Generated-content annotations are unavailable for forum experiments. Opinion dynamics is available for both rule-based and LLM runs.
+                                        LLM annotations (toxicity, sentiment, emotion) are unavailable for rule-based forum experiments. Opinion dynamics remains available; memory is available only for LLM forum experiments.
                                     </div>
+                                    {% endif %}
                                 </div>
  <button type="submit" class="button is-small is-info ys-mt-8">Update Configuration</button>
                             </form>

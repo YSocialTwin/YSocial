@@ -93,11 +93,12 @@ def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():
         "r",
     ).read()
 
-    forum_section = data_source.split(
-        'if getattr(exp, "platform_type", "") == "forum":', 1
-    )[1].split("memory_configuration_supported =", 1)[0]
-
-    assert "opinion_dynamics_enabled = False" not in forum_section
+    assert "opinion_dynamics_enabled = False" not in data_source
+    assert 'if getattr(exp, "platform_type", "") == "forum":' not in (
+        data_source.split(
+            "def update_experiment_config(uid):", 1
+        )[1].split("memory_configuration_supported =", 1)[0]
+    )
 
 
 def test_forum_experiments_always_require_configuration_box_for_lock_workflow():

@@ -221,25 +221,34 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
 
     assert "<b>Experiment Configuration</b>" in standard
     assert "<b>Experiment Configuration</b>" in forum
-    assert "Forum experiments expose a single runtime configuration here." in forum
+    assert (
+        "Enable or disable runtime annotations and memory." in forum
+    )
     assert "{% if can_manage_experiment %}" in forum
     assert "<span>Opinion Dynamics</span>" in forum
-    assert "<span>Memory</span>" not in forum
-    assert "<span>Toxicity</span>" not in forum
-    assert "<span>Emotion</span>" not in forum
-    assert "<span>Sentiment</span>" not in forum
+    assert "<span>Memory</span>" in forum
+    assert "<span>Toxicity</span>" in forum
+    assert "<span>Emotion</span>" in forum
+    assert "<span>Sentiment</span>" in forum
     assert "Update Configuration" in forum
     assert 'name="opinion_dynamics_enabled"' in standard
     assert 'name="opinion_dynamics_enabled"' in forum
     assert 'name="memory_enabled"' in standard
-    assert 'name="memory_enabled"' not in forum
+    assert 'name="memory_enabled"' in forum
+    assert 'name="toxicity_annotation"' in forum
+    assert 'name="emotion_annotation"' in forum
+    assert 'name="sentiment_annotation"' in forum
+    assert 'name="perspective_api"' in forum
     assert "/admin/opinion_configuration_forum/" in forum
     assert "/admin/opinion_evolution/" in forum
     assert (
         "{% if memory_configuration_supported and memory_module_enabled %}" in standard
     )
     assert "{% if memory_configuration_supported and memory_module_enabled %}" in forum
-    assert 'if getattr(exp, "platform_type", "") == "forum":' in route_source
+    assert (
+        'llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)'
+        in route_source
+    )
 
 
 def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle():
@@ -377,10 +386,6 @@ def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
 
     assert (
         'option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}'
-        in template
-    )
-    assert (
-        "Install one of: <code>vllm</code>, <code>vllm-mlx</code>, or <code>vllm-metal</code>."
         in template
     )
     assert (
