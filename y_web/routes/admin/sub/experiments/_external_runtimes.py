@@ -10,16 +10,16 @@ from flask_login import current_user, login_required
 from y_web.src.external_runtime import (
     ExternalRuntimeError,
     clone_runtime_repo,
-    download_runtime_release,
     delete_runtime_repo,
+    download_runtime_release,
     fetch_runtime_repo,
     get_grouped_runtime_status,
+    install_runtime_dependencies,
     log_external_runtime_action,
     read_external_runtime_logs,
-    runtime_visible_to_user,
     runtime_spec,
+    runtime_visible_to_user,
     update_runtime_repo,
-    install_runtime_dependencies,
     validate_runtime_repo,
 )
 from y_web.src.models import Admin_users, Exps
@@ -52,7 +52,9 @@ def _require_admin_user():
 def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
     base_query = Exps.query.filter(Exps.is_remote == 0)
     if group_key == "microblogging":
-        query = base_query.filter(Exps.platform_type == "microblogging", Exps.simulator_type != "HPC")
+        query = base_query.filter(
+            Exps.platform_type == "microblogging", Exps.simulator_type != "HPC"
+        )
     elif group_key == "forum":
         query = base_query.filter(Exps.platform_type == "forum")
     elif group_key == "hpc":
@@ -102,7 +104,9 @@ def external_runtimes():
     }
     recent_logs = read_external_runtime_logs(limit=120)
     selected_repo_key = (request.args.get("repo_key") or "").strip()
-    selected_repo_logs = read_external_runtime_logs(limit=30, repo_key=selected_repo_key or None)
+    selected_repo_logs = read_external_runtime_logs(
+        limit=30, repo_key=selected_repo_key or None
+    )
     return render_template(
         "admin/external_runtimes.html",
         grouped_runtime_status=grouped_status,
@@ -164,11 +168,23 @@ def external_runtime_action(repo_key: str, action: str):
     branch = (request.form.get("branch") or spec.default_branch).strip()
     release_tag = (request.form.get("release_tag") or "").strip() or None
     install_source = (request.form.get("install_source") or "release").strip().lower()
-    if action in {"acquire", "download_release", "clone", "fetch", "update", "install", "delete"}:
+    if action in {
+        "acquire",
+        "download_release",
+        "clone",
+        "fetch",
+        "update",
+        "install",
+        "delete",
+    }:
         active_experiments = _runtime_group_active_experiments(spec.group)
         if active_experiments:
             names = ", ".join(exp.exp_name for exp in active_experiments[:3])
-            extra = "" if len(active_experiments) <= 3 else f" and {len(active_experiments) - 3} more"
+            extra = (
+                ""
+                if len(active_experiments) <= 3
+                else f" and {len(active_experiments) - 3} more"
+            )
             flash(
                 f"Stop active {spec.group_label.lower()} experiments before modifying {spec.label}: {names}{extra}.",
                 "error",

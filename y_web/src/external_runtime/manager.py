@@ -167,7 +167,9 @@ def _run_command(
         )
     except subprocess.TimeoutExpired as exc:
         cmd = " ".join(shlex.quote(part) for part in command)
-        raise ExternalRuntimeError(f"Command timed out after {timeout}s ({cmd})") from exc
+        raise ExternalRuntimeError(
+            f"Command timed out after {timeout}s ({cmd})"
+        ) from exc
 
     output = (process.stdout or "") + (process.stderr or "")
     if process.returncode != 0:
@@ -219,11 +221,17 @@ def _branch_list_for_repo(spec, git_managed: bool) -> list[str]:
 
 def _ahead_behind(path: Path) -> tuple[int | None, int | None, str | None]:
     try:
-        tracking = _safe_git(path, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]).strip()
+        tracking = _safe_git(
+            path, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"]
+        ).strip()
     except Exception:
         return None, None, None
 
-    counts = _safe_git(path, ["rev-list", "--left-right", "--count", f"{tracking}...HEAD"]).strip().split()
+    counts = (
+        _safe_git(path, ["rev-list", "--left-right", "--count", f"{tracking}...HEAD"])
+        .strip()
+        .split()
+    )
     if len(counts) != 2:
         return None, None, tracking
     behind = int(counts[0])
@@ -276,7 +284,9 @@ def _release_summary(payload: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _list_releases(spec, github_token: str | None = None) -> tuple[list[dict[str, Any]], str | None]:
+def _list_releases(
+    spec, github_token: str | None = None
+) -> tuple[list[dict[str, Any]], str | None]:
     url = f"https://api.github.com/repos/{spec.github_repo}/releases?per_page=10"
     try:
         response = _github_api_request(url, github_token=github_token)
@@ -301,12 +311,16 @@ def _list_releases(spec, github_token: str | None = None) -> tuple[list[dict[str
     return releases, None
 
 
-def _find_release(spec, release_tag: str | None, github_token: str | None = None) -> dict[str, Any]:
+def _find_release(
+    spec, release_tag: str | None, github_token: str | None = None
+) -> dict[str, Any]:
     releases, error = _list_releases(spec, github_token=github_token)
     if error:
         raise ExternalRuntimeError(error)
     if not releases:
-        raise ExternalRuntimeError(f"No GitHub releases are available for {spec.label}.")
+        raise ExternalRuntimeError(
+            f"No GitHub releases are available for {spec.label}."
+        )
 
     desired_tag = (release_tag or releases[0]["tag"]).strip()
     for release in releases:
@@ -338,10 +352,14 @@ def _extract_archive_bytes(archive_bytes: bytes, destination: Path) -> None:
             shutil.move(str(item), str(destination / item.name))
 
 
-def _download_release_archive(spec, release: dict[str, Any], github_token: str | None = None) -> bytes:
+def _download_release_archive(
+    spec, release: dict[str, Any], github_token: str | None = None
+) -> bytes:
     url = release.get("zipball_url") or release.get("tarball_url")
     if not url:
-        raise ExternalRuntimeError(f"Release {release.get('tag')} does not expose a downloadable archive.")
+        raise ExternalRuntimeError(
+            f"Release {release.get('tag')} does not expose a downloadable archive."
+        )
 
     try:
         response = requests.get(
@@ -378,11 +396,15 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
 
     if git_managed:
         try:
-            current_branch = _safe_git(path, ["branch", "--show-current"]).strip() or None
+            current_branch = (
+                _safe_git(path, ["branch", "--show-current"]).strip() or None
+            )
         except Exception:
             current_branch = None
         try:
-            current_commit = _safe_git(path, ["rev-parse", "--short", "HEAD"]).strip() or None
+            current_commit = (
+                _safe_git(path, ["rev-parse", "--short", "HEAD"]).strip() or None
+            )
         except Exception:
             current_commit = None
         try:
@@ -436,7 +458,10 @@ def get_grouped_runtime_status(github_token: str | None = None) -> list[dict[str
             {
                 "group": group_key,
                 "label": group_label,
-                "repos": [get_runtime_status(spec.key, github_token=github_token).to_dict() for spec in specs],
+                "repos": [
+                    get_runtime_status(spec.key, github_token=github_token).to_dict()
+                    for spec in specs
+                ],
             }
         )
     return groups
@@ -469,7 +494,9 @@ def download_runtime_release(
             f"Destination: {spec.path}",
         ]
     )
-    log_external_runtime_action(repo_key, "download_release", actor, release["tag"], True, output)
+    log_external_runtime_action(
+        repo_key, "download_release", actor, release["tag"], True, output
+    )
 
 
 def clone_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
@@ -491,7 +518,9 @@ def fetch_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
     if not status.git_managed:
-        raise ExternalRuntimeError(f"{spec.label} was installed from a release archive. Use the advanced clone option for git operations.")
+        raise ExternalRuntimeError(
+            f"{spec.label} was installed from a release archive. Use the advanced clone option for git operations."
+        )
     branch_name = _resolve_branch(spec, branch)
     output_parts = [
         _normalize_origin_remote(spec),
@@ -502,7 +531,9 @@ def fetch_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
 
 
 def _checkout_branch(path: Path, branch_name: str) -> str:
-    local_branches = _safe_git(path, ["branch", "--format=%(refname:short)"]).splitlines()
+    local_branches = _safe_git(
+        path, ["branch", "--format=%(refname:short)"]
+    ).splitlines()
     if branch_name in [item.strip() for item in local_branches]:
         return _safe_git(path, ["checkout", branch_name])
 
@@ -541,9 +572,13 @@ def update_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
     if not status.git_managed:
-        raise ExternalRuntimeError(f"{spec.label} was installed from a release archive. Delete it and use the advanced clone option if you need branch-based updates.")
+        raise ExternalRuntimeError(
+            f"{spec.label} was installed from a release archive. Delete it and use the advanced clone option if you need branch-based updates."
+        )
     if status.dirty:
-        raise ExternalRuntimeError(f"{spec.label} has local modifications. Clean the worktree before updating.")
+        raise ExternalRuntimeError(
+            f"{spec.label} has local modifications. Clean the worktree before updating."
+        )
 
     branch_name = _resolve_branch(spec, branch)
     output_parts = [
@@ -552,7 +587,14 @@ def update_runtime_repo(repo_key: str, branch: str | None, actor: str) -> None:
         _checkout_branch(spec.path, branch_name),
         _safe_git(spec.path, ["pull", "--ff-only", "origin", branch_name]),
     ]
-    log_external_runtime_action(repo_key, "update", actor, branch_name, True, "\n".join(part for part in output_parts if part))
+    log_external_runtime_action(
+        repo_key,
+        "update",
+        actor,
+        branch_name,
+        True,
+        "\n".join(part for part in output_parts if part),
+    )
 
 
 def install_runtime_dependencies(repo_key: str, actor: str) -> None:
@@ -568,8 +610,17 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     output_parts.append(f"Using interpreter: {sys.executable}")
     for command in spec.install_commands:
         resolved = [sys.executable if token == "python" else token for token in command]
-        output_parts.append(_run_command(resolved, cwd=spec.path, env=env, timeout=1800))
-    log_external_runtime_action(repo_key, "install", actor, None, True, "\n".join(part for part in output_parts if part))
+        output_parts.append(
+            _run_command(resolved, cwd=spec.path, env=env, timeout=1800)
+        )
+    log_external_runtime_action(
+        repo_key,
+        "install",
+        actor,
+        None,
+        True,
+        "\n".join(part for part in output_parts if part),
+    )
 
 
 def validate_runtime_repo(repo_key: str, actor: str) -> str:
@@ -577,9 +628,13 @@ def validate_runtime_repo(repo_key: str, actor: str) -> str:
     status = get_runtime_status(repo_key)
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
-    missing = [entry for entry in spec.validate_entrypoints if not (spec.path / entry).exists()]
+    missing = [
+        entry for entry in spec.validate_entrypoints if not (spec.path / entry).exists()
+    ]
     if missing:
-        raise ExternalRuntimeError(f"{spec.label} is missing required files: {', '.join(missing)}")
+        raise ExternalRuntimeError(
+            f"{spec.label} is missing required files: {', '.join(missing)}"
+        )
 
     output_parts = [f"Required files present: {', '.join(spec.validate_entrypoints)}"]
     if spec.validate_import:

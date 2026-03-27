@@ -3,8 +3,8 @@
 from .manager import (
     ExternalRuntimeError,
     clone_runtime_repo,
-    download_runtime_release,
     delete_runtime_repo,
+    download_runtime_release,
     fetch_runtime_repo,
     get_grouped_runtime_status,
     get_runtime_status,
