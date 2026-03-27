@@ -517,7 +517,7 @@
                                         <div class="select">
                                             <select name="llm_backend" id="llm_backend" onchange="toggleLLMFields()">
                                                 <option value="ollama" selected>LLM Service</option>
-                                                <option value="vllm">Embedded vLLM</option>
+                                                <option value="vllm" {% if not embedded_vllm_available %}disabled{% endif %}>Embedded vLLM</option>
                                             </select>
                                         </div>
                                     </div>

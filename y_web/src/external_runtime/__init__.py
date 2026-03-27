@@ -3,6 +3,7 @@
 from .manager import (
     ExternalRuntimeError,
     clone_runtime_repo,
+    download_runtime_release,
     delete_runtime_repo,
     fetch_runtime_repo,
     get_grouped_runtime_status,
@@ -13,12 +14,18 @@ from .manager import (
     update_runtime_repo,
     validate_runtime_repo,
 )
-from .registry import SUPPORTED_EXTERNAL_REPOS, grouped_runtime_specs, runtime_spec
+from .registry import (
+    SUPPORTED_EXTERNAL_REPOS,
+    grouped_runtime_specs,
+    runtime_spec,
+    runtime_visible_to_user,
+)
 
 __all__ = [
     "SUPPORTED_EXTERNAL_REPOS",
     "ExternalRuntimeError",
     "clone_runtime_repo",
+    "download_runtime_release",
     "delete_runtime_repo",
     "fetch_runtime_repo",
     "get_grouped_runtime_status",
@@ -28,6 +35,7 @@ __all__ = [
     "log_external_runtime_action",
     "read_external_runtime_logs",
     "runtime_spec",
+    "runtime_visible_to_user",
     "update_runtime_repo",
     "validate_runtime_repo",
 ]

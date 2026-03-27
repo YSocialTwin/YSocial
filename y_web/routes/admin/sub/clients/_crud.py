@@ -25,7 +25,7 @@ from y_web.src.agents.platform import (
     infer_population_username_type,
     population_matches_platform,
 )
-from y_web.src.llm.vllm_manager import get_llm_models
+from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
     AgeClass,
@@ -361,6 +361,7 @@ def clients_hpc(idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
+    context["embedded_vllm_available"] = bool(is_vllm_installed())
     return render_template("admin/clients_hpc.html", **context)
 
 

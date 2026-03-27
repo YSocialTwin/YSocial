@@ -6,12 +6,35 @@
 
         <div class="dashboard-body">
             <div class="columns">
-                <div class="column is-12">
+                <div class="column is-8">
                     <div class="dashboard-box">
                         <h3 class="title is-5 is-thin">External Runtime Plugins</h3>
                         <div class="box-content">
+                            <div style="border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; padding: 14px 16px; margin-bottom: 18px;">
+                                <div class="ys-text-sm-dark" style="font-weight: 700; margin-bottom: 6px;">GitHub session</div>
+                                <div class="ys-text-xs-hint" style="margin-bottom: 12px;">
+                                    Optionally connect a GitHub token for this admin session to avoid anonymous API rate limits and access private release assets.
+                                </div>
+                                <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" onsubmit="showLoading('Updating GitHub session...');">
+                                    <input type="hidden" name="github_session_action" value="connect">
+                                    <input type="password" name="github_token" class="input" style="min-width: 320px; flex: 1 1 320px;" placeholder="{% if github_session_authenticated %}Token stored for this session{% else %}GitHub personal access token{% endif %}">
+                                    <button type="submit" class="button is-solid primary-button">Connect</button>
+                                </form>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px;">
+                                    {% if github_session_authenticated %}
+                                    <span class="badge badge-success">Authenticated</span>
+                                    <form method="POST" action="{{ url_for('experiments.external_runtime_github_session') }}" onsubmit="showLoading('Updating GitHub session...');">
+                                        <input type="hidden" name="github_session_action" value="disconnect">
+                                        <button type="submit" class="button is-light">Disconnect</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="badge badge-secondary">Anonymous GitHub access</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                             <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
-                                Manage the cloned runtime repositories used by the platform. Updates are blocked while dependent experiments are active.
+                                Install plugin runtimes from GitHub releases when available. Git clone and branch-based pulls remain available as advanced operations.
                             </p>
                             <p class="ys-text-sm-muted" style="margin-bottom: 20px;">
                                 Dependency installation uses the same Python interpreter currently running YSocial:
@@ -36,76 +59,142 @@
 
                                 <div style="padding: 14px 16px; display: grid; gap: 16px;">
                                     {% for repo in group_info.repos %}
-                                    <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; background: white;">
-                                        <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
-                                            <div style="min-width: 260px; flex: 1 1 360px;">
-                                                <div class="ys-flex-gap-8" style="align-items: center; margin-bottom: 8px;">
-                                                    <strong style="font-size: 1rem; color: #111827;">{{ repo.label }}</strong>
-                                                    {% if repo.installed %}
-                                                    <span class="badge badge-success">Installed</span>
-                                                    {% else %}
-                                                    <span class="badge badge-secondary">Missing</span>
-                                                    {% endif %}
-                                                    {% if repo.is_symlink %}
-                                                    <span class="badge badge-warning">Symlink</span>
-                                                    {% endif %}
-                                                    {% if repo.dirty %}
-                                                    <span class="badge badge-danger">Dirty</span>
-                                                    {% endif %}
-                                                </div>
-                                                <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Path:</strong> {{ repo.path }}</div>
-                                                <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Repository:</strong> {{ repo.repo_url }}</div>
-                                                <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Branch:</strong> {{ repo.current_branch or 'n/a' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</div>
-                                                <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Tracking:</strong> {{ repo.tracking_branch or 'n/a' }}{% if repo.ahead is not none and repo.behind is not none %} · ahead {{ repo.ahead }} / behind {{ repo.behind }}{% endif %}</div>
-                                                <div class="ys-text-xs-hint"><strong>Dependency files:</strong> {{ 'ready' if repo.dependency_files_ready else 'missing' }} · <strong>Validation files:</strong> {{ 'ready' if repo.validation_ready else 'missing' }}</div>
+                                    <details style="border: 1px solid #e5e7eb; border-radius: 10px; background: white;">
+                                        <summary style="cursor: pointer; list-style: none; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center;">
+                                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                                <strong style="font-size: 1rem; color: #111827;">{{ repo.label }}</strong>
+                                                {% if repo.installed %}
+                                                <span class="badge badge-success">Installed</span>
+                                                {% else %}
+                                                <span class="badge badge-secondary">Not installed</span>
+                                                {% endif %}
+                                                {% if repo.git_managed %}
+                                                <span class="badge badge-info">Git</span>
+                                                {% elif repo.installed %}
+                                                <span class="badge badge-warning">Release</span>
+                                                {% endif %}
+                                                {% if repo.is_private %}
+                                                <span class="badge badge-danger">Private</span>
+                                                {% else %}
+                                                <span class="badge badge-success">Public</span>
+                                                {% endif %}
+                                                {% if repo.is_symlink %}
+                                                <span class="badge badge-warning">Symlink</span>
+                                                {% endif %}
+                                                {% if repo.dirty %}
+                                                <span class="badge badge-danger">Dirty</span>
+                                                {% endif %}
                                             </div>
+                                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                                                <span class="ys-text-xs-hint">{{ repo.github_repo }}</span>
+                                                <span class="ys-text-xs-hint">{{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</span>
+                                            </div>
+                                        </summary>
 
-                                            <div style="flex: 1 1 420px; min-width: 320px;">
-                                                <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: grid; gap: 10px;" onsubmit="showLoading('Running external runtime action...');">
-                                                    <div>
-                                                        <label class="ys-field-label">Branch</label>
-                                                        <select name="branch" class="input w-100">
-                                                            {% for branch_name in repo.available_branches %}
-                                                            <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
+                                        <div style="padding: 0 16px 16px 16px; display: grid; gap: 14px; border-top: 1px solid #e5e7eb;">
+                                            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; padding-top: 14px;">
+                                                <div style="min-width: 260px; flex: 1 1 320px;">
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Repository:</strong> {{ repo.github_repo }}</div>
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Source state:</strong> {{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</div>
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Tracking:</strong> {{ repo.tracking_branch or 'n/a' }}{% if repo.ahead is not none and repo.behind is not none %} · ahead {{ repo.ahead }} / behind {{ repo.behind }}{% endif %}</div>
+                                                    <div class="ys-text-xs-hint"><strong>Dependencies:</strong> {{ 'ready' if repo.dependency_files_ready else 'missing' }} · <strong>Validation:</strong> {{ 'ready' if repo.validation_ready else 'missing' }}</div>
+                                                </div>
 
+                                                <div style="min-width: 220px; flex: 0 1 260px; display: grid; gap: 8px;">
+                                                    {% if repo.latest_release_tag %}
+                                                    <div class="ys-text-xs-hint"><strong>Latest release:</strong> {{ repo.latest_release_tag }}</div>
+                                                    {% elif repo.release_error %}
+                                                    <div class="ys-text-xs-hint" style="color: #b45309;"><strong>Release lookup:</strong> {{ repo.release_error }}</div>
+                                                    {% else %}
+                                                    <div class="ys-text-xs-hint"><strong>Release lookup:</strong> no releases published</div>
+                                                    {% endif %}
                                                     <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                                                        {% if not repo.installed %}
-                                                        <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='clone') }}" class="button is-solid primary-button">
-                                                            Clone
-                                                        </button>
-                                                        {% else %}
-                                                        <button type="submit" class="button is-solid primary-button">
-                                                            Fetch
-                                                        </button>
-                                                        <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" class="button is-solid primary-button" {% if repo.dirty %}disabled title="Clean the worktree before updating."{% endif %}>
-                                                            Update
-                                                        </button>
-                                                        <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" class="button is-solid primary-button">
-                                                            Install Dependencies
-                                                        </button>
-                                                        <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" class="button is-solid primary-button">
-                                                            Validate
-                                                        </button>
-                                                        {% endif %}
                                                         {% if repo.exists %}
-                                                        <button type="submit"
-                                                                formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}"
-                                                                class="button is-light"
-                                                                onclick="return confirm('Delete {{ repo.label }} from external/? This removes the local clone or link.');">
-                                                            Delete
-                                                        </button>
+                                                        <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='delete') }}" onsubmit="showLoading('Running external runtime action...');">
+                                                            <button type="submit"
+                                                                    class="button is-light"
+                                                                    onclick="return confirm('Delete {{ repo.label }} from external/? This removes the local plugin files.');">
+                                                                Delete
+                                                            </button>
+                                                        </form>
                                                         {% endif %}
                                                         <a href="{{ url_for('experiments.external_runtime_logs', repo_key=repo.key) }}" class="button is-light">
                                                             View Logs
                                                         </a>
                                                     </div>
-                                                </form>
+                                                </div>
                                             </div>
+
+                                            <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='acquire') }}" style="display: grid; gap: 12px;" onsubmit="showLoading('Running external runtime action...');">
+                                                <div class="ys-text-sm-dark" style="font-weight: 700;">Installation source</div>
+                                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                                                    <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
+                                                        <span style="display: flex; gap: 8px; align-items: center;">
+                                                            <input type="radio" name="install_source" value="release" {% if repo.releases_enabled %}checked{% endif %} {% if repo.installed %}disabled{% endif %}>
+                                                            <strong>GitHub Release</strong>
+                                                        </span>
+                                                        <span class="ys-text-xs-hint">Standard option. Works without git if releases are published.</span>
+                                                        <select name="release_tag" class="input w-100" {% if not repo.releases_enabled or repo.installed %}disabled{% endif %}>
+                                                            {% if repo.available_releases %}
+                                                                {% for release in repo.available_releases %}
+                                                                <option value="{{ release.tag }}">{{ release.tag }}{% if release.prerelease %} · prerelease{% endif %}{% if release.name and release.name != release.tag %} · {{ release.name }}{% endif %}</option>
+                                                                {% endfor %}
+                                                            {% else %}
+                                                                <option value="">{{ repo.release_error or 'No releases available' }}</option>
+                                                            {% endif %}
+                                                        </select>
+                                                    </label>
+
+                                                    <label style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f8fafc; display: grid; gap: 6px;">
+                                                        <span style="display: flex; gap: 8px; align-items: center;">
+                                                            <input type="radio" name="install_source" value="git" {% if not repo.releases_enabled %}checked{% endif %} {% if repo.installed %}disabled{% endif %}>
+                                                            <strong>Git checkout</strong>
+                                                        </span>
+                                                        <span class="ys-text-xs-hint">Advanced option. Use when you need a specific branch.</span>
+                                                        <select name="branch" class="input w-100" {% if repo.installed %}disabled{% endif %}>
+                                                            {% for branch_name in repo.available_branches %}
+                                                            <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </label>
+                                                </div>
+
+                                                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                                                    <button type="submit" class="button is-solid primary-button" {% if repo.installed %}disabled{% endif %}>
+                                                        Install Plugin
+                                                    </button>
+                                                    {% if repo.installed %}
+                                                    <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='install') }}" class="button is-solid primary-button">
+                                                        Install Dependencies
+                                                    </button>
+                                                    <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='validate') }}" class="button is-solid primary-button">
+                                                        Validate
+                                                    </button>
+                                                    {% endif %}
+                                                </div>
+                                            </form>
+
+                                            <details style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; background: #f8fafc;">
+                                                <summary style="cursor: pointer; font-weight: 700; color: #111827;">Advanced maintenance</summary>
+                                                <div style="display: grid; gap: 10px; margin-top: 12px;">
+                                                    <div class="ys-text-xs-hint">Available only for git-managed plugins. Release-installed plugins must be deleted and reinstalled if you want a git checkout.</div>
+                                                    <form method="POST" action="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='fetch') }}" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" onsubmit="showLoading('Running external runtime action...');">
+                                                        <select name="branch" class="input" style="min-width: 220px;">
+                                                            {% for branch_name in repo.available_branches %}
+                                                            <option value="{{ branch_name }}" {% if branch_name == (repo.current_branch or repo.default_branch) %}selected{% endif %}>{{ branch_name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                        <button type="submit" class="button is-light" {% if not repo.git_managed %}disabled{% endif %}>
+                                                            Fetch
+                                                        </button>
+                                                        <button type="submit" formaction="{{ url_for('experiments.external_runtime_action', repo_key=repo.key, action='update') }}" class="button is-light" {% if not repo.git_managed or repo.dirty %}disabled{% endif %} title="{% if repo.dirty %}Clean the worktree before updating.{% endif %}">
+                                                            Update
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            </details>
                                         </div>
-                                    </div>
+                                    </details>
                                     {% endfor %}
                                 </div>
                             </div>
@@ -113,27 +202,51 @@
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="columns">
-                <div class="column is-12">
+                <div class="column is-4">
+                    <div class="dashboard-box">
+                        <h3 class="title is-6 is-thin">Operation Output</h3>
+                        <div class="box-content">
+                            <p class="ys-text-sm-muted" style="margin-bottom: 16px;">
+                                Inspect the latest terminal output for dependency installation and other plugin actions.
+                            </p>
+
+                            {% if selected_repo_key and selected_repo_logs %}
+                            <div style="display: grid; gap: 10px; max-height: 720px; overflow: auto;">
+                                {% for entry in selected_repo_logs %}
+                                <details {% if loop.first %}open{% endif %} style="border: 1px solid #e5e7eb; border-radius: 10px; background: #fff;">
+                                    <summary style="cursor: pointer; padding: 12px 14px; font-weight: 700; color: #111827;">
+                                        {{ entry.repo_key }} · {{ entry.action }}
+                                        <span class="badge {% if entry.success %}badge-success{% else %}badge-danger{% endif %}" style="margin-left: 8px;">{{ 'success' if entry.success else 'failure' }}</span>
+                                    </summary>
+                                    <div style="padding: 0 14px 14px 14px;">
+                                        <div class="ys-text-xs-hint" style="margin-bottom: 8px;">
+                                            {{ entry.timestamp }} · {{ entry.actor }}{% if entry.branch %} · {{ entry.branch }}{% endif %}
+                                        </div>
+                                        <pre style="margin: 0; white-space: pre-wrap; font-size: 12px; color: #374151; background: #f8fafc; border-radius: 8px; padding: 10px;">{{ entry.output }}</pre>
+                                    </div>
+                                </details>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="ys-text-sm-muted">Select a plugin action to inspect its terminal output here.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
                     <div class="dashboard-box">
                         <h3 class="title is-6 is-thin">Recent Runtime Operations</h3>
                         <div class="box-content">
                             {% if recent_runtime_logs %}
-                            <div style="display: grid; gap: 10px; max-height: 460px; overflow: auto;">
-                                {% for entry in recent_runtime_logs %}
+                            <div style="display: grid; gap: 10px; max-height: 420px; overflow: auto;">
+                                {% for entry in recent_runtime_logs[:12] %}
                                 <div style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; background: #fff;">
                                     <div class="ys-flex-gap-8" style="flex-wrap: wrap; align-items: center; margin-bottom: 8px;">
                                         <strong>{{ entry.repo_key }}</strong>
                                         <span class="badge {% if entry.success %}badge-success{% else %}badge-danger{% endif %}">{{ entry.action }}</span>
                                         <span class="ys-text-xs-hint">{{ entry.timestamp }}</span>
-                                        <span class="ys-text-xs-hint">{{ entry.actor }}</span>
-                                        {% if entry.branch %}
-                                        <span class="ys-text-xs-hint">branch {{ entry.branch }}</span>
-                                        {% endif %}
                                     </div>
-                                    <pre style="margin: 0; white-space: pre-wrap; font-size: 12px; color: #374151; background: #f8fafc; border-radius: 8px; padding: 10px;">{{ entry.output }}</pre>
+                                    <div class="ys-text-xs-hint">{{ entry.actor }}{% if entry.branch %} · {{ entry.branch }}{% endif %}</div>
                                 </div>
                                 {% endfor %}
                             </div>
@@ -147,3 +260,5 @@
         </div>
     </div>
 </div>
+
+{% include "admin/footer.html" %}

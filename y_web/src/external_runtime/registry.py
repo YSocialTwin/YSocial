@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
+import os
 from pathlib import Path
 from typing import Sequence
 
@@ -17,11 +19,14 @@ class ExternalRuntimeSpec:
     group_label: str
     label: str
     path: Path
+    github_repo: str
     repo_url: str
     default_branch: str
     install_commands: tuple[tuple[str, ...], ...]
     validate_entrypoints: tuple[str, ...]
     validate_import: str | None = None
+    is_private: bool = True
+    visible_to_usernames: tuple[str, ...] = ()
 
 
 SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
@@ -31,11 +36,13 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group_label="Microblogging",
         label="YClient",
         path=EXTERNAL_DIR / "YClient",
+        github_repo="YSocialTwin/YClient",
         repo_url="git@github.com:YSocialTwin/YClient.git",
         default_branch="main",
         install_commands=(("python", "-m", "pip", "install", "-r", "requirements_client.txt"),),
         validate_entrypoints=("y_client", "requirements_client.txt"),
         validate_import="y_client",
+        is_private=False,
     ),
     "microblogging_server": ExternalRuntimeSpec(
         key="microblogging_server",
@@ -43,11 +50,13 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group_label="Microblogging",
         label="YServer",
         path=EXTERNAL_DIR / "YServer",
+        github_repo="YSocialTwin/YServer",
         repo_url="git@github.com:YSocialTwin/YServer.git",
         default_branch="main",
         install_commands=(("python", "-m", "pip", "install", "-r", "requirements_server.txt"),),
         validate_entrypoints=("y_server", "requirements_server.txt"),
         validate_import="y_server",
+        is_private=False,
     ),
     "forum_client": ExternalRuntimeSpec(
         key="forum_client",
@@ -55,6 +64,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group_label="Forum",
         label="YClientReddit",
         path=EXTERNAL_DIR / "YClientReddit",
+        github_repo="YSocialTwin/YClientReddit",
         repo_url="git@github.com:YSocialTwin/YClientReddit.git",
         default_branch="main",
         install_commands=(("python", "-m", "pip", "install", "-r", "requirements_client.txt"),),
@@ -67,6 +77,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group_label="Forum",
         label="YServerReddit",
         path=EXTERNAL_DIR / "YServerReddit",
+        github_repo="YSocialTwin/YServerReddit",
         repo_url="git@github.com:YSocialTwin/YServerReddit.git",
         default_branch="main",
         install_commands=(("python", "-m", "pip", "install", "-r", "requirements_server.txt"),),
@@ -79,6 +90,7 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         group_label="HPC",
         label="YSimulator",
         path=EXTERNAL_DIR / "YSimulator",
+        github_repo="YSocialTwin/YSimulator",
         repo_url="git@github.com:YSocialTwin/YSimulator.git",
         default_branch="main",
         install_commands=(("python", "-m", "pip", "install", "-r", "requirements.txt"),),
@@ -105,3 +117,45 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         for group_key in ordered_groups
         if group_key in groups
     ]
+
+
+def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
+    raw = os.getenv("YSOCIAL_PLUGIN_VISIBILITY", "").strip()
+    if not raw:
+        return {}
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return {}
+
+    result: dict[str, tuple[str, ...] | str] = {}
+    for repo_key, value in payload.items():
+        if value == "*":
+            result[str(repo_key)] = "*"
+            continue
+        if isinstance(value, list):
+            usernames = tuple(
+                str(item).strip()
+                for item in value
+                if str(item).strip()
+            )
+            result[str(repo_key)] = usernames
+    return result
+
+
+def runtime_visible_to_user(spec: ExternalRuntimeSpec, admin_user) -> bool:
+    if admin_user is None:
+        return False
+    if not spec.is_private:
+        return True
+
+    overrides = _visibility_overrides().get(spec.key)
+    if overrides == "*":
+        return True
+    if isinstance(overrides, tuple):
+        return admin_user.username in overrides
+
+    if spec.visible_to_usernames:
+        return admin_user.username in spec.visible_to_usernames
+
+    return getattr(admin_user, "role", None) == "admin"
