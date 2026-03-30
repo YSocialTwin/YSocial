@@ -391,7 +391,11 @@ def _experiment_memory_enabled(exp_id):
         "y_web",
         "experiments",
         str(uid),
-        "config_server.json",
+        (
+            "server_config.json"
+            if getattr(exp, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        ),
     )
     if not os.path.exists(config_path):
         return False
@@ -416,13 +420,17 @@ def _experiment_memory_enabled(exp_id):
         exp_dir = os.path.dirname(config_path)
         try:
             for entry in os.listdir(exp_dir):
-                if not entry.startswith("client_") or not entry.endswith(".json"):
+                is_standard_client = entry.startswith("client_") and entry.endswith(
+                    ".json"
+                )
+                is_hpc_client = entry.endswith("_config.json") and entry != "server_config.json"
+                if not is_standard_client and not is_hpc_client:
                     continue
                 client_path = os.path.join(exp_dir, entry)
                 try:
                     with open(client_path, "r", encoding="utf-8") as client_handle:
                         client_config = json.load(client_handle) or {}
-                    # Microblogging client configs nest under "agents"
+                    # Microblogging and HPC client configs nest under "agents"
                     agents_cfg = client_config.get("agents")
                     if isinstance(agents_cfg, dict) and bool(
                         agents_cfg.get("memory_enabled")

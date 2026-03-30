@@ -60,7 +60,9 @@ def _mock_exp(platform_type="forum", db_name="experiments/test-uid-123"):
 # ---------------------------------------------------------------------------
 
 
-def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
+def _call_experiment_memory_enabled(
+    exp_dir_path, platform_type="forum", simulator_type="Standard"
+):
     """
     Call _experiment_memory_enabled with the DB mocked and the filesystem
     redirected to *exp_dir_path* (a real directory containing config_server.json
@@ -80,6 +82,7 @@ def _call_experiment_memory_enabled(exp_dir_path, platform_type="forum"):
 
     mock_exp = MagicMock()
     mock_exp.platform_type = platform_type
+    mock_exp.simulator_type = simulator_type
     mock_exp.db_name = f"experiments/{uid}"
 
     with patch("y_web.routes.social.helpers.Exps") as mock_exps:
@@ -104,10 +107,16 @@ def exp_tmpdir(tmp_path):
     def write_config(data):
         (exp_dir / "config_server.json").write_text(json.dumps(data))
 
+    def write_hpc_config(data):
+        (exp_dir / "server_config.json").write_text(json.dumps(data))
+
     def write_client(index, data):
         (exp_dir / f"client_{index}.json").write_text(json.dumps(data))
 
-    return exp_dir, write_config, write_client
+    def write_hpc_client(name, data):
+        (exp_dir / f"{name}_config.json").write_text(json.dumps(data))
+
+    return exp_dir, write_config, write_hpc_config, write_client, write_hpc_client
 
 
 class TestExperimentMemoryEnabledMainPy:
@@ -117,13 +126,13 @@ class TestExperimentMemoryEnabledMainPy:
 
     def test_nested_format_true(self, exp_tmpdir):
         """config_server.json: {"memory": {"enabled": true}} → True."""
-        exp_dir, write_config, _ = exp_tmpdir
+        exp_dir, write_config, _, _, _ = exp_tmpdir
         write_config({"memory": {"enabled": True}})
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is True
 
     def test_nested_format_false(self, exp_tmpdir):
         """config_server.json: {"memory": {"enabled": false}} → False (no client files)."""
-        exp_dir, write_config, _ = exp_tmpdir
+        exp_dir, write_config, _, _, _ = exp_tmpdir
         write_config({"memory": {"enabled": False}})
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is False
 
@@ -131,19 +140,19 @@ class TestExperimentMemoryEnabledMainPy:
 
     def test_flat_format_config_server_forum(self, exp_tmpdir):
         """config_server.json flat {"memory_enabled": true} → True for forum."""
-        exp_dir, write_config, _ = exp_tmpdir
+        exp_dir, write_config, _, _, _ = exp_tmpdir
         write_config({"memory_enabled": True})
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is True
 
     def test_flat_format_config_server_microblogging(self, exp_tmpdir):
         """config_server.json flat {"memory_enabled": true} → True for microblogging."""
-        exp_dir, write_config, _ = exp_tmpdir
+        exp_dir, write_config, _, _, _ = exp_tmpdir
         write_config({"memory_enabled": True})
         assert _call_experiment_memory_enabled(str(exp_dir), "microblogging") is True
 
     def test_flat_format_config_server_false_no_clients(self, exp_tmpdir):
         """Flat {"memory_enabled": false} with no client files → False."""
-        exp_dir, write_config, _ = exp_tmpdir
+        exp_dir, write_config, _, _, _ = exp_tmpdir
         write_config({"memory_enabled": False})
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is False
 
@@ -151,7 +160,7 @@ class TestExperimentMemoryEnabledMainPy:
 
     def test_forum_client_file_flat_memory_enabled(self, exp_tmpdir):
         """Forum client_1.json with flat "memory_enabled": true → True."""
-        exp_dir, write_config, write_client = exp_tmpdir
+        exp_dir, write_config, _, write_client, _ = exp_tmpdir
         write_config({"memory": {"enabled": False}})
         write_client(
             1,
@@ -165,7 +174,7 @@ class TestExperimentMemoryEnabledMainPy:
 
     def test_forum_client_file_flat_memory_disabled(self, exp_tmpdir):
         """Forum client_1.json with "memory_enabled": false → False."""
-        exp_dir, write_config, write_client = exp_tmpdir
+        exp_dir, write_config, _, write_client, _ = exp_tmpdir
         write_config({})
         write_client(1, {"memory_enabled": False})
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is False
@@ -174,14 +183,14 @@ class TestExperimentMemoryEnabledMainPy:
 
     def test_microblogging_client_agents_nested(self, exp_tmpdir):
         """Microblogging client_1.json: {"agents": {"memory_enabled": true}} → True."""
-        exp_dir, write_config, write_client = exp_tmpdir
+        exp_dir, write_config, _, write_client, _ = exp_tmpdir
         write_config({})
         write_client(1, {"agents": {"memory_enabled": True}})
         assert _call_experiment_memory_enabled(str(exp_dir), "microblogging") is True
 
     def test_user_reported_flat_config_as_client_file(self, exp_tmpdir):
         """The exact user-reported flat config in a forum client file → True."""
-        exp_dir, write_config, write_client = exp_tmpdir
+        exp_dir, write_config, _, write_client, _ = exp_tmpdir
         write_config({})
         write_client(
             1,
@@ -194,6 +203,29 @@ class TestExperimentMemoryEnabledMainPy:
             },
         )
         assert _call_experiment_memory_enabled(str(exp_dir), "forum") is True
+
+    def test_hpc_server_config_memory_enabled(self, exp_tmpdir):
+        """server_config.json nested memory enabled should unlock interview for HPC."""
+        exp_dir, _, write_hpc_config, _, _ = exp_tmpdir
+        write_hpc_config({"memory": {"enabled": True}})
+        assert (
+            _call_experiment_memory_enabled(
+                str(exp_dir), "microblogging", simulator_type="HPC"
+            )
+            is True
+        )
+
+    def test_hpc_client_config_agents_memory_enabled(self, exp_tmpdir):
+        """HPC *_config.json agents.memory_enabled should be detected as fallback."""
+        exp_dir, _, write_hpc_config, _, write_hpc_client = exp_tmpdir
+        write_hpc_config({"memory": {"enabled": False}})
+        write_hpc_client("demo_client", {"agents": {"memory_enabled": True}})
+        assert (
+            _call_experiment_memory_enabled(
+                str(exp_dir), "microblogging", simulator_type="HPC"
+            )
+            is True
+        )
 
 
 # ---------------------------------------------------------------------------
