@@ -659,9 +659,11 @@ def update_embedding_settings(uid):
 
     config_path = os.path.join(
         experiment_dir,
-        "server_config.json"
-        if experiment.simulator_type == "HPC"
-        else "config_server.json",
+        (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        ),
     )
     config = {}
     if os.path.exists(config_path):

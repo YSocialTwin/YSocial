@@ -3996,9 +3996,7 @@ def _memory_enabled_for_client_creation(experiment):
     if experiment is None:
         return False
 
-    supported = bool(
-        bool(_experiment_uses_llm_agents(experiment))
-    )
+    supported = bool(bool(_experiment_uses_llm_agents(experiment)))
     if not supported:
         return False
 
