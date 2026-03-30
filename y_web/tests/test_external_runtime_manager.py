@@ -80,12 +80,48 @@ def test_clone_runtime_repo_uses_selected_branch(runtime_repo_spec):
     assert "main" in status.available_branches
 
 
+def test_runtime_status_lists_remote_branches_before_clone(
+    runtime_repo_spec, monkeypatch
+):
+    monkeypatch.setattr(
+        manager,
+        "_list_remote_branches",
+        lambda spec, github_token=None: (["main", "develop", "release"], None),
+    )
+
+    status = manager.get_runtime_status(runtime_repo_spec.key)
+
+    assert status.installed is False
+    assert status.available_branches == ["develop", "main", "release"]
+
+
 def test_update_runtime_repo_switches_branch(runtime_repo_spec):
     manager.clone_runtime_repo(runtime_repo_spec.key, "develop", actor="tester")
 
     manager.update_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
     status = manager.get_runtime_status(runtime_repo_spec.key)
     assert status.current_branch == "main"
+
+
+def test_fetch_then_update_can_target_remote_only_branch(runtime_repo_spec):
+    manager.clone_runtime_repo(runtime_repo_spec.key, "main", actor="tester")
+
+    work = runtime_repo_spec.path.parent.parent / "work"
+    subprocess.run(["git", "-C", str(work), "checkout", "-b", "feature-x"], check=True)
+    (work / "testruntime" / "__init__.py").write_text("VALUE = 3\n", encoding="utf-8")
+    subprocess.run(["git", "-C", str(work), "add", "."], check=True)
+    subprocess.run(
+        ["git", "-C", str(work), "commit", "-m", "feature branch"], check=True
+    )
+    subprocess.run(
+        ["git", "-C", str(work), "push", "-u", "origin", "feature-x"], check=True
+    )
+
+    manager.fetch_runtime_repo(runtime_repo_spec.key, "feature-x", actor="tester")
+    manager.update_runtime_repo(runtime_repo_spec.key, "feature-x", actor="tester")
+
+    status = manager.get_runtime_status(runtime_repo_spec.key)
+    assert status.current_branch == "feature-x"
 
 
 def test_fetch_runtime_repo_normalizes_origin_remote(runtime_repo_spec):

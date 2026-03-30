@@ -195,8 +195,52 @@ def _resolve_branch(spec, selected_branch: str | None) -> str:
     return branch or spec.default_branch
 
 
-def _branch_list_for_repo(spec, git_managed: bool) -> list[str]:
+def _list_remote_branches(
+    spec, github_token: str | None = None
+) -> tuple[list[str], str | None]:
+    url = f"https://api.github.com/repos/{spec.github_repo}/branches?per_page=100"
+    try:
+        response = _github_api_request(url, github_token=github_token)
+    except ExternalRuntimeError as exc:
+        return [], str(exc)
+    if response.status_code == 404:
+        return [], None
+    if response.status_code == 403:
+        return [], "GitHub branch lookup denied or rate limited."
+    if response.status_code >= 400:
+        return [], f"GitHub branch lookup failed ({response.status_code})."
+
+    try:
+        payload = response.json()
+    except ValueError:
+        return [], "GitHub branch response was not valid JSON."
+    if not isinstance(payload, list):
+        return [], "GitHub branch response was not a list."
+
+    branches: list[str] = []
+    for item in payload:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or "").strip()
+        if name:
+            branches.append(name)
+    return sorted(set(branches)), None
+
+
+def _branch_list_for_repo(
+    spec, git_managed: bool, github_token: str | None = None
+) -> tuple[list[str], str | None]:
     branches: set[str] = set()
+    branch_error = None
+
+    remote_branches, remote_error = _list_remote_branches(
+        spec, github_token=github_token
+    )
+    if remote_branches:
+        branches.update(remote_branches)
+    elif remote_error:
+        branch_error = remote_error
+
     try:
         if git_managed:
             local_output = _safe_git(spec.path, ["branch", "--format=%(refname:short)"])
@@ -216,7 +260,7 @@ def _branch_list_for_repo(spec, git_managed: bool) -> list[str]:
         pass
 
     branches.add(spec.default_branch)
-    return sorted(branches)
+    return sorted(branches), branch_error
 
 
 def _ahead_behind(path: Path) -> tuple[int | None, int | None, str | None]:
@@ -414,7 +458,9 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
         ahead, behind, tracking_branch = _ahead_behind(path)
 
     releases, release_error = _list_releases(spec, github_token=github_token)
-    branches = _branch_list_for_repo(spec, git_managed)
+    branches, branch_error = _branch_list_for_repo(
+        spec, git_managed, github_token=github_token
+    )
     path_kind = "missing"
     if exists:
         path_kind = "symlink" if path.is_symlink() else "directory"
@@ -444,7 +490,7 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
         available_releases=releases,
         latest_release_tag=releases[0]["tag"] if releases else None,
         releases_enabled=bool(releases),
-        release_error=release_error,
+        release_error=release_error or branch_error,
         path_kind=path_kind,
         python_executable=sys.executable,
         is_private=spec.is_private,
@@ -535,17 +581,39 @@ def _checkout_branch(path: Path, branch_name: str) -> str:
         path, ["branch", "--format=%(refname:short)"]
     ).splitlines()
     if branch_name in [item.strip() for item in local_branches]:
-        return _safe_git(path, ["checkout", branch_name])
+        output_parts = [_safe_git(path, ["checkout", branch_name])]
+        try:
+            output_parts.append(
+                _safe_git(
+                    path,
+                    ["branch", "--set-upstream-to", f"origin/{branch_name}", branch_name],
+                )
+            )
+        except Exception:
+            pass
+        return "\n".join(part for part in output_parts if part)
 
-    remote_branches = _safe_git(path, ["ls-remote", "--heads", "origin"])
+    remote_branches = _safe_git(path, ["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"])
     remote_branch_names = {
-        line.split()[1].removeprefix("refs/heads/")
+        line.strip().removeprefix("origin/")
         for line in remote_branches.splitlines()
-        if len(line.split()) == 2 and line.split()[1].startswith("refs/heads/")
+        if line.strip()
     }
     if branch_name not in remote_branch_names:
         raise ExternalRuntimeError(f"Branch {branch_name} was not found on origin")
-    return _safe_git(path, ["checkout", "-B", branch_name, f"origin/{branch_name}"])
+    output_parts = [
+        _safe_git(path, ["checkout", "-B", branch_name, f"origin/{branch_name}"])
+    ]
+    try:
+        output_parts.append(
+            _safe_git(
+                path,
+                ["branch", "--set-upstream-to", f"origin/{branch_name}", branch_name],
+            )
+        )
+    except Exception:
+        pass
+    return "\n".join(part for part in output_parts if part)
 
 
 def _normalize_origin_remote(spec) -> str:

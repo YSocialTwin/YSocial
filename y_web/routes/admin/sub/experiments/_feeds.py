@@ -692,9 +692,7 @@ def update_embedding_settings(uid):
         json.dump(config, handle, indent=2)
 
     flash("Embedding settings updated successfully.", "success")
-    return redirect(
-        request.referrer or url_for("experiments.embedding_settings", uid=uid)
-    )
+    return redirect(url_for("experiments.experiment_details", uid=uid))
 
 
 @experiments.route("/admin/update_forum_avatar_mode/<int:uid>", methods=["POST"])
