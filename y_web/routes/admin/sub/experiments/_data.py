@@ -803,7 +803,9 @@ def update_experiment_config(uid):
                     client_config["simulation"]["emotion_annotation"] = emotion_enabled
                     client_config["simulation"]["enable_toxicity"] = toxicity_enabled
                     client_config["simulation"]["perspective_api_key"] = (
-                        perspective_api if (toxicity_enabled and perspective_api) else None
+                        perspective_api
+                        if (toxicity_enabled and perspective_api)
+                        else None
                     )
 
                     if not isinstance(client_config.get("opinion_dynamics"), dict):

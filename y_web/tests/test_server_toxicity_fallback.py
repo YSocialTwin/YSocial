@@ -58,7 +58,9 @@ def _install_fake_detoxify(prediction):
 
 def test_yserver_uses_detoxify_when_toxicity_active_without_api_key():
     module = _load_module(
-        Path("/Users/rossetti/PycharmProjects/YWeb/external/YServer/y_server/content_analysis/textual_data.py"),
+        Path(
+            "/Users/rossetti/PycharmProjects/YWeb/external/YServer/y_server/content_analysis/textual_data.py"
+        ),
         "yserver_textual_data_test",
     )
     _install_fake_detoxify(
@@ -88,7 +90,9 @@ def test_yserver_uses_detoxify_when_toxicity_active_without_api_key():
 
 def test_yserver_reddit_uses_detoxify_when_toxicity_active_without_api_key():
     module = _load_module(
-        Path("/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/content_analysis/textual_data.py"),
+        Path(
+            "/Users/rossetti/PycharmProjects/YWeb/external/YServerReddit/y_server/content_analysis/textual_data.py"
+        ),
         "yserver_reddit_textual_data_test",
     )
     _install_fake_detoxify(
