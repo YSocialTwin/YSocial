@@ -3,13 +3,13 @@ Content annotation using Large Language Models.
 
 Provides the ContentAnnotator class for analyzing text content using LLMs
 to extract emotions (GoEmotions taxonomy) and topics from social media posts.
-Uses the Autogen framework for agent-based interaction with LLMs.
+Uses the shared LangChain-compatible adapter for agent-style interaction with LLMs.
 """
 
 import os
 import re
 
-from autogen import AssistantAgent
+from y_web.src.llm.autogen_compat import AssistantAgent
 
 
 class ContentAnnotator(object):

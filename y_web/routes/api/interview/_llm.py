@@ -258,8 +258,7 @@ def _generate_reply(
     if not model:
         raise RuntimeError("LLM model not configured")
 
-    # Import autogen lazily so importing this module doesn't break tooling environments.
-    from autogen import AssistantAgent
+    from y_web.src.llm.autogen_compat import AssistantAgent
 
     cfg = {
         "cache_seed": None,

@@ -53,7 +53,7 @@ class TestCanonicalLlmPackageImports:
 
             assert ContentAnnotator is not None
         except ImportError:
-            pytest.skip("autogen not available")
+            pytest.skip("langchain adapter dependencies not available")
 
     def test_image_annotator_importable(self):
         try:
@@ -61,7 +61,7 @@ class TestCanonicalLlmPackageImports:
 
             assert Annotator is not None
         except ImportError:
-            pytest.skip("autogen not available")
+            pytest.skip("langchain adapter dependencies not available")
 
 
 class TestLegacyShimIdentity:
@@ -72,7 +72,7 @@ class TestLegacyShimIdentity:
 
             assert ca1 is ca2
         except ImportError:
-            pytest.skip("autogen not available")
+            pytest.skip("langchain adapter dependencies not available")
 
     def test_llm_annotations_image_shim(self):
         try:
@@ -81,7 +81,7 @@ class TestLegacyShimIdentity:
 
             assert a1 is a2
         except ImportError:
-            pytest.skip("autogen not available")
+            pytest.skip("langchain adapter dependencies not available")
 
     def test_external_processes_ollama_shim_identity(self):
         from y_web.src.llm.ollama_manager import is_ollama_running
