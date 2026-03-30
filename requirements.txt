@@ -52,5 +52,3 @@ ysights
 gunicorn
 gevent
 jupyterlab
-
-flaml[automl] # For AutoML capabilities, including hyperparameter tuning and model selection.
