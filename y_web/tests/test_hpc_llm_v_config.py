@@ -256,6 +256,20 @@ class TestHPCLLMVConfig:
         assert '"server_config.json"' in source
         assert "memory_configuration_supported = bool(llm_agents_enabled)" in source
 
+    def test_create_hpc_client_initializes_ollama_vision_fields_before_use(self):
+        source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        ).read()
+
+        create_block = source.split("def create_hpc_client(", 1)[1].split(
+            "# Get activity profiles for population", 1
+        )[0]
+        assert 'llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")' in create_block
+        assert 'llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")' in create_block
+        assert 'llm_v_temperature = form_data.get("llm_v_temperature", "0.5")' in create_block
+        assert 'llm_v_api_key = form_data.get("llm_v_api_key", "NULL")' in create_block
+        assert 'llm_v_max_tokens = form_data.get("llm_v_max_tokens", "300")' in create_block
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

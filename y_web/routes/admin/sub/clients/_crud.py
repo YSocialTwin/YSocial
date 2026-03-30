@@ -511,6 +511,11 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     )  # Changed default from vllm to ollama for HPC
 
     llm = request.form.get("llm")
+    llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")
+    llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")
+    llm_v_temperature = form_data.get("llm_v_temperature", "0.5")
+    llm_v_api_key = form_data.get("llm_v_api_key", "NULL")
+    llm_v_max_tokens = form_data.get("llm_v_max_tokens", "300")
 
     # Check if LLM agents are enabled
     llm_agents_enabled = (
