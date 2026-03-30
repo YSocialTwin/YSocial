@@ -623,7 +623,7 @@ def feed_limits(uid):
 @experiments.route("/admin/embedding_settings/<int:uid>", methods=["GET"])
 @login_required
 def embedding_settings(uid):
-    """Display and edit memory embedding backend settings for standard/forum experiments."""
+    """Display and edit memory embedding backend settings."""
     experiment, experiment_dir, error_response = (
         _load_memory_capable_experiment_context(uid)
     )
@@ -635,10 +635,14 @@ def embedding_settings(uid):
         experiment=experiment,
         embedding_settings=_read_experiment_embedding_settings(experiment_dir),
         platform_label=(
-            "Forum" if experiment.platform_type == "forum" else "Microblogging"
+            "HPC"
+            if experiment.simulator_type == "HPC"
+            else ("Forum" if experiment.platform_type == "forum" else "Microblogging")
         ),
         server_label=(
-            "YServerReddit" if experiment.platform_type == "forum" else "YServer"
+            "YSimulator"
+            if experiment.simulator_type == "HPC"
+            else ("YServerReddit" if experiment.platform_type == "forum" else "YServer")
         ),
     )
 
@@ -646,14 +650,19 @@ def embedding_settings(uid):
 @experiments.route("/admin/update_embedding_settings/<int:uid>", methods=["POST"])
 @login_required
 def update_embedding_settings(uid):
-    """Persist memory embedding backend settings to config_server.json."""
+    """Persist memory embedding backend settings to experiment server config."""
     experiment, experiment_dir, error_response = (
         _load_memory_capable_experiment_context(uid)
     )
     if error_response is not None:
         return error_response
 
-    config_path = os.path.join(experiment_dir, "config_server.json")
+    config_path = os.path.join(
+        experiment_dir,
+        "server_config.json"
+        if experiment.simulator_type == "HPC"
+        else "config_server.json",
+    )
     config = {}
     if os.path.exists(config_path):
         try:

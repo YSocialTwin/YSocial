@@ -283,6 +283,9 @@ def test_client_creation_pages_use_experiment_memory_gate():
     forum = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html"
     ).read_text(encoding="utf-8")
+    hpc = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+    ).read_text(encoding="utf-8")
 
     assert "experimentMemoryEnabled" in standard
     assert "memoryConfigurationSupported" in standard
@@ -293,6 +296,12 @@ def test_client_creation_pages_use_experiment_memory_gate():
     assert "memoryConfigurationSupported" in forum
     assert "{% if memory_configuration_supported %}" in forum
     assert "{% if not experiment_memory_enabled %}" in forum
+
+    assert "experimentMemoryEnabled" in hpc
+    assert "memoryConfigurationSupported" in hpc
+    assert "standard_memory_enabled" in hpc
+    assert "{% if not experiment_memory_enabled %}" in hpc
+    assert "Agent Memory (Run-Scoped)" in hpc
 
 
 def test_client_forms_use_fetch_based_vision_model_selection():
@@ -391,3 +400,19 @@ def test_hpc_clients_template_disables_embedded_vllm_when_unavailable():
     assert (
         'context["embedded_vllm_available"] = bool(is_vllm_installed())' in route_source
     )
+
+
+def test_embedding_settings_template_and_routes_support_hpc_memory_embeddings():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/embedding_settings.html"
+    ).read_text(encoding="utf-8")
+    helper_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_feeds.py"
+    ).read_text(encoding="utf-8")
+
+    assert "Experiments do not assume any embedding backend." in template
+    assert "server_config.json" in helper_source
+    assert 'if experiment.simulator_type == "HPC"' in route_source

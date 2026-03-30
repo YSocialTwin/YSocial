@@ -72,10 +72,7 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
         "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)"
         in data_source
     )
-    assert (
-        'experiment.simulator_type != "HPC" and llm_agents_enabled_effective'
-        in data_source
-    )
+    assert "bool(llm_agents_enabled_effective)" in data_source
     assert "if memory_configuration_supported:" in data_source
     assert 'memory_enabled = _is_checked("memory_enabled")' in data_source
     assert 'memory_config["enabled"] = bool(memory_enabled)' in data_source
@@ -84,7 +81,28 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
         "experiment_memory_enabled = _memory_enabled_for_client_creation(exp)"
         in clients_source
     )
-    assert 'and bool(getattr(experiment, "llm_agents_enabled", 0))' in clients_source
+    assert "bool(_experiment_uses_llm_agents(experiment))" in clients_source
+
+
+def test_hpc_server_config_generation_and_embedding_routes_support_memory():
+    crud_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
+        "r",
+    ).read()
+    helpers_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_helpers.py",
+        "r",
+    ).read()
+    feeds_source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_feeds.py",
+        "r",
+    ).read()
+
+    assert '"memory": {"enabled": False}' in crud_source
+    assert "This page is only available for Standard and Forum experiments." not in (
+        helpers_source
+    )
+    assert '"server_config.json"' in feeds_source
 
 
 def test_forum_opinion_dynamics_is_not_forced_off_for_rule_based_runs():

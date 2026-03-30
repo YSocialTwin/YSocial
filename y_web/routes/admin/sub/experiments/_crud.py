@@ -1717,6 +1717,7 @@ def generate_hpc_config(
         # Server-side fallback. Client-specific recommendation limits are set
         # in each HPC client config at client creation time.
         "recommendations": {"default_limit": 5},
+        "memory": {"enabled": False},
         "simulation": {
             "agent_archetypes": {
                 "enabled": True,

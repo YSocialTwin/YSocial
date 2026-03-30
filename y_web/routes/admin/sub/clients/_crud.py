@@ -171,7 +171,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         "llm_v_temperature": 0.5,
     }
 
-    if exp is not None and getattr(exp, "simulator_type", "Standard") != "HPC":
+    if exp is not None:
         try:
             from y_web.src.system.path_utils import get_writable_path
 
@@ -181,7 +181,15 @@ def _build_client_creation_context(idexp, recsys_mode):
             else:
                 exp_uid = exp.db_name.removeprefix("experiments_")
             config_path = os.path.join(
-                writable_base, "y_web", "experiments", exp_uid, "config_server.json"
+                writable_base,
+                "y_web",
+                "experiments",
+                exp_uid,
+                (
+                    "server_config.json"
+                    if getattr(exp, "simulator_type", "Standard") == "HPC"
+                    else "config_server.json"
+                ),
             )
             if os.path.exists(config_path):
                 with open(config_path, "r") as config_file:
@@ -211,9 +219,7 @@ def _build_client_creation_context(idexp, recsys_mode):
         experiment_opinion_dynamics_enabled = (
             _opinion_dynamics_enabled_for_client_creation(exp)
         )
-        memory_configuration_supported = bool(
-            exp.simulator_type != "HPC" and llm_agents_enabled
-        )
+        memory_configuration_supported = bool(llm_agents_enabled)
 
     if exp is not None and getattr(exp, "platform_type", "microblogging") == "forum":
         latest_client = (
@@ -3991,8 +3997,7 @@ def _memory_enabled_for_client_creation(experiment):
         return False
 
     supported = bool(
-        getattr(experiment, "simulator_type", "Standard") != "HPC"
-        and bool(getattr(experiment, "llm_agents_enabled", 0))
+        bool(_experiment_uses_llm_agents(experiment))
     )
     if not supported:
         return False

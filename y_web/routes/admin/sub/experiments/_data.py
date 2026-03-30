@@ -488,9 +488,7 @@ def experiment_details(uid):
     forum_feed_health = None
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
     memory_module_enabled = False
-    memory_configuration_supported = bool(
-        experiment.simulator_type != "HPC" and llm_agents_enabled_effective
-    )
+    memory_configuration_supported = bool(llm_agents_enabled_effective)
     toxicity_annotation_enabled = bool(
         experiment.annotations and "toxicity" in experiment.annotations
     )
@@ -711,9 +709,7 @@ def update_experiment_config(uid):
         sentiment_enabled = False
         perspective_api = ""
 
-    memory_configuration_supported = bool(
-        exp.simulator_type != "HPC" and llm_agents_enabled_effective
-    )
+    memory_configuration_supported = bool(llm_agents_enabled_effective)
     if memory_configuration_supported:
         memory_enabled = _is_checked("memory_enabled")
     else:
@@ -813,6 +809,10 @@ def update_experiment_config(uid):
                     client_config["opinion_dynamics"][
                         "enabled"
                     ] = opinion_dynamics_enabled
+                    if not isinstance(client_config.get("agents"), dict):
+                        client_config["agents"] = {}
+                    if not memory_enabled:
+                        client_config["agents"]["memory_enabled"] = False
                 else:
                     if not isinstance(client_config.get("simulation"), dict):
                         client_config["simulation"] = {}

@@ -238,6 +238,24 @@ class TestHPCLLMVConfig:
         assert "function fetchVisionModelsForClient()" in js
         assert "function isVisionModelName(modelName)" in js
 
+    def test_hpc_template_exposes_memory_configuration_section(self):
+        template = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
+        ).read()
+
+        assert "Agent Memory (Run-Scoped)" in template
+        assert 'id="standard_memory_enabled"' in template
+        assert 'name="memory_embedding_model"' in template
+        assert 'name="memory_embedding_async"' in template
+
+    def test_hpc_client_creation_context_supports_memory_gate(self):
+        source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        ).read()
+
+        assert '"server_config.json"' in source
+        assert "memory_configuration_supported = bool(llm_agents_enabled)" in source
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

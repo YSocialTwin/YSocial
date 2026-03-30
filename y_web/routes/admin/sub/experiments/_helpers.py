@@ -537,24 +537,13 @@ def _load_forum_experiment_context(uid, require_manage=True):
 
 
 def _load_memory_capable_experiment_context(uid, require_manage=True):
-    """Load a standard/forum experiment and its writable directory."""
+    """Load a memory-capable experiment and its writable directory."""
     check_privileges(current_user.username)
 
     experiment = Exps.query.filter_by(idexp=uid).first()
     if not experiment:
         flash("Experiment not found", "error")
         return None, None, redirect(url_for("experiments.settings"))
-
-    if getattr(experiment, "simulator_type", "Standard") == "HPC":
-        flash(
-            "This page is only available for Standard and Forum experiments.",
-            "warning",
-        )
-        return (
-            None,
-            None,
-            redirect(url_for("experiments.experiment_details", uid=uid)),
-        )
 
     admin_user = _current_admin_user_or_none()
     if require_manage and not user_can_manage_experiment(admin_user, experiment):
@@ -732,8 +721,12 @@ def _read_forum_embedding_settings(experiment_dir):
 
 
 def _read_experiment_embedding_settings(experiment_dir):
-    """Load persisted memory embedding settings from config_server.json."""
+    """Load persisted memory embedding settings from experiment server config."""
     config_path = os.path.join(experiment_dir, "config_server.json")
+    if not os.path.exists(config_path):
+        hpc_config_path = os.path.join(experiment_dir, "server_config.json")
+        if os.path.exists(hpc_config_path):
+            config_path = hpc_config_path
     settings = dict(DEFAULT_EXPERIMENT_EMBEDDING_SETTINGS)
     if not os.path.exists(config_path):
         return settings

@@ -248,6 +248,72 @@
 
 
                                     </div><!-- End section-simulation-params -->
+                                    <div id="section-memory" class="tutorial-section">
+                                    <div class="form-section-header">Agent Memory (Run-Scoped)</div>
+                                    <div class="form-section-description">
+                                        Configure optional client-side memory retrieval and summarization for HPC runs. Memory is disabled by default.
+                                    </div>
+                                    {% if not experiment_memory_enabled %}
+                                    <div class="ys-text-xs-meta" style="margin-bottom: 10px;">
+                                        Enable <b>Memory</b> in <a href="/admin/experiment_details/{{ experiment.idexp }}">Experiment Configuration</a> before configuring client-level memory.
+                                    </div>
+                                    {% endif %}
+                                    <div class="box-line">
+                                        <span class="left">Enable Memory</span>
+ <span class="right ys-w-70">
+ <label class="ys-flex-click">
+                                                <input type="checkbox" id="standard_memory_enabled" name="memory_enabled" onchange="toggleStandardMemorySettings()" {% if not experiment_memory_enabled %}disabled{% endif %}>
+ <span class="ys-text-brand">Activate run-scoped memory</span>
+                                            </label>
+                                        </span>
+                                    </div>
+ <div id="standard_memory_config_fields" class="ys-collapsible-panel">
+                                        <div class="box-line">
+                                            <span class="left">Enable Semantic Retrieval</span>
+ <span class="right ys-w-70">
+ <label class="ys-flex-click">
+                                                    <input type="checkbox" name="memory_semantic_enabled" id="standard_memory_semantic_enabled" onchange="syncStandardEmbeddingFieldsState()">
+ <span class="ys-text-brand">Enable embedding-backed retrieval</span>
+                                                </label>
+                                            </span>
+                                        </div>
+ <div class="box-line ys-w-70"><span class="left">Pair Limit</span><span class="right"><input type="number" name="memory_pair_limit" class="input" min="1" max="50" step="1" value="5" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Prompt Max Chars</span><span class="right"><input type="number" name="memory_prompt_max_chars" class="input" min="200" max="6000" step="50" value="1600" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Search Top-K</span><span class="right"><input type="number" name="memory_search_k" class="input" min="1" max="50" step="1" value="8" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Search Time Window (rounds)</span><span class="right"><input type="number" name="memory_search_time_window_rounds" class="input" min="1" max="1000" step="1" value="40" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Total Max Chars</span><span class="right"><input type="number" name="memory_total_max_chars" class="input" min="500" max="12000" step="50" value="2200" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Cadence (rounds)</span><span class="right"><input type="number" name="memory_reflection_cadence_rounds" class="input" min="1" max="100" step="1" value="3" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Cold Start Window</span><span class="right"><input type="number" name="memory_cold_start_window" class="input" min="0" max="100" step="1" value="5" required></span></div>
+                                        <div class="box-line">
+                                            <span class="left">Show Advanced Parameters</span>
+ <span class="right ys-w-70">
+                                                <input type="checkbox" id="show_standard_memory_advanced_params" onchange="toggleStandardMemoryAdvancedParams()">
+                                            </span>
+                                        </div>
+                                        <div id="standard_memory_advanced_params_fields" style="display: none; margin-left: 20px; padding: 10px; background: #f3f4f6; border-radius: 4px; margin-bottom: 10px;">
+ <div class="box-line ys-w-70"><span class="left">Social Decay (lambda)</span><span class="right"><input type="number" name="memory_social_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.05" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Social Corruption Rate</span><span class="right"><input type="number" name="memory_social_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.02" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Social Resummarize Every (events)</span><span class="right"><input type="number" name="memory_social_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Decay (lambda)</span><span class="right"><input type="number" name="memory_thread_decay_lambda" class="input" min="0" max="5" step="0.001" value="0.03" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Corruption Rate</span><span class="right"><input type="number" name="memory_thread_corruption_rate" class="input" min="0" max="1" step="0.001" value="0.01" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Thread Resummarize Every (events)</span><span class="right"><input type="number" name="memory_thread_resummarize_every_events" class="input" min="1" max="100" step="1" value="4" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Evidence Tail Max</span><span class="right"><input type="number" name="memory_evidence_tail_max" class="input" min="0" max="100" step="1" value="8" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Digest Update Cadence (rounds)</span><span class="right"><input type="number" name="memory_digest_update_cadence_rounds" class="input" min="1" max="100" step="1" value="3" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Digest Events Limit</span><span class="right"><input type="number" name="memory_digest_events_limit" class="input" min="10" max="1000" step="5" value="80" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Search Max Chars</span><span class="right"><input type="number" name="memory_search_max_chars" class="input" min="300" max="1800" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier A Max Chars</span><span class="right"><input type="number" name="memory_tier_a_max_chars" class="input" min="100" max="2000" step="25" value="350" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier B Max Chars</span><span class="right"><input type="number" name="memory_tier_b_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier C Max Chars</span><span class="right"><input type="number" name="memory_tier_c_max_chars" class="input" min="400" max="3200" step="50" value="900" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Tier C Uncertainty</span><span class="right"><input type="number" name="memory_tier_c_uncertainty_threshold" class="input" min="0" max="1" step="0.01" value="0.45" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Min Events</span><span class="right"><input type="number" name="memory_reflection_min_events" class="input" min="1" max="500" step="1" value="12" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Trigger Sum</span><span class="right"><input type="number" name="memory_reflection_trigger_importance_sum" class="input" min="0" max="20" step="0.1" value="3.5" required></span></div>
+ <div class="box-line ys-w-70"><span class="left">Reflection Max Items</span><span class="right"><input type="number" name="memory_reflection_max_items_per_run" class="input" min="1" max="5000" step="1" value="60" required></span></div>
+ <div class="box-line ys-w-70 ys-hint-text"><span class="left">Embedding Model</span><span class="right"><input type="text" name="memory_embedding_model" id="standard_memory_embedding_model" class="input" value="{{ experiment_embedding_settings.model or 'embeddinggemma:latest' }}" disabled><small>Used only when semantic retrieval is enabled.</small></span></div>
+ <div class="box-line ys-w-70 ys-flex-click ys-text-brand"><span class="left">Async Embedding</span><span class="right"><label><input type="checkbox" name="memory_embedding_async" id="standard_memory_embedding_async" disabled><span>Background indexing</span></label></span></div>
+ <div class="box-line ys-w-70"><span class="left">Importance Mode</span><span class="right"><input type="text" name="memory_importance_mode" class="input" value="heuristic_then_batch_llm"></span></div>
+                                        </div>
+                                    </div>
+                                    </div><!-- End section-memory -->
                                     <div id="section-actions-relevance" class="tutorial-section">
                                     <div class="form-section-header">Agents' Actions Relevance</div>
                                     <div class="form-section-description">
@@ -1368,7 +1434,9 @@
 {% include "admin/tutorials/clients_tutorial.html" %}
 <script>
 var YS_DATA_CLIENTS = {
-    llmAgentsEnabled: {{ llm_agents_enabled | tojson }}
+    llmAgentsEnabled: {{ llm_agents_enabled | tojson }},
+    experimentMemoryEnabled: {{ experiment_memory_enabled | tojson }},
+    memoryConfigurationSupported: {{ memory_configuration_supported | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-clients.js') }}"></script>
