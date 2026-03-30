@@ -457,6 +457,86 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     recommendations_default_limit = int(
         form_data.get("recommendations_default_limit", "12")
     )
+    memory_enabled = form_data.get("memory_enabled") in {"on", "true", "1", "yes"}
+    memory_pair_limit = int(form_data.get("memory_pair_limit", "5"))
+    memory_prompt_max_chars = int(form_data.get("memory_prompt_max_chars", "1600"))
+    memory_social_decay_lambda = float(
+        form_data.get("memory_social_decay_lambda", "0.05")
+    )
+    memory_social_corruption_rate = float(
+        form_data.get("memory_social_corruption_rate", "0.02")
+    )
+    memory_social_resummarize_every_events = int(
+        form_data.get("memory_social_resummarize_every_events", "4")
+    )
+    memory_thread_decay_lambda = float(
+        form_data.get("memory_thread_decay_lambda", "0.03")
+    )
+    memory_thread_corruption_rate = float(
+        form_data.get("memory_thread_corruption_rate", "0.01")
+    )
+    memory_thread_resummarize_every_events = int(
+        form_data.get("memory_thread_resummarize_every_events", "4")
+    )
+    memory_evidence_tail_max = int(form_data.get("memory_evidence_tail_max", "8"))
+    memory_digest_update_cadence_rounds = int(
+        form_data.get("memory_digest_update_cadence_rounds", "3")
+    )
+    memory_digest_events_limit = int(
+        form_data.get("memory_digest_events_limit", "80")
+    )
+    memory_cold_start_window = int(form_data.get("memory_cold_start_window", "5"))
+    memory_semantic_enabled = form_data.get("memory_semantic_enabled") in {
+        "on",
+        "true",
+        "1",
+        "yes",
+    }
+    memory_search_k = int(form_data.get("memory_search_k", "8"))
+    memory_search_max_chars = int(form_data.get("memory_search_max_chars", "900"))
+    memory_search_time_window_rounds = int(
+        form_data.get("memory_search_time_window_rounds", "40")
+    )
+    memory_tier_a_max_chars = int(form_data.get("memory_tier_a_max_chars", "350"))
+    memory_tier_b_max_chars = int(form_data.get("memory_tier_b_max_chars", "900"))
+    memory_tier_c_max_chars = int(form_data.get("memory_tier_c_max_chars", "900"))
+    memory_total_max_chars = int(form_data.get("memory_total_max_chars", "2200"))
+    memory_tier_c_uncertainty_threshold = float(
+        form_data.get("memory_tier_c_uncertainty_threshold", "0.45")
+    )
+    memory_reflection_cadence_rounds = int(
+        form_data.get("memory_reflection_cadence_rounds", "3")
+    )
+    memory_reflection_min_events = int(
+        form_data.get("memory_reflection_min_events", "12")
+    )
+    memory_reflection_trigger_importance_sum = float(
+        form_data.get("memory_reflection_trigger_importance_sum", "3.5")
+    )
+    memory_reflection_max_items_per_run = int(
+        form_data.get("memory_reflection_max_items_per_run", "60")
+    )
+    memory_embedding_model = str(
+        form_data.get("memory_embedding_model", "snowflake-arctic-embed:110m")
+    ).strip()
+    memory_embedding_async = form_data.get("memory_embedding_async") in {
+        "on",
+        "true",
+        "1",
+        "yes",
+    }
+    memory_importance_mode = str(
+        form_data.get("memory_importance_mode", "heuristic_then_batch_llm")
+    ).strip()
+
+    if not memory_semantic_enabled:
+        memory_embedding_async = False
+
+    experiment_memory_enabled = _memory_enabled_for_client_creation(exp)
+    if not experiment_memory_enabled:
+        memory_enabled = False
+        memory_semantic_enabled = False
+        memory_embedding_async = False
 
     # Follow action decay parameters
     follow_decay_enabled = form_data.get("follow_decay_enabled") == "on"
@@ -768,6 +848,41 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "probability_new_agents": percentage_new_agents_iteration,
             "percentage_new_agents": percentage_new_agents_iteration,
         },
+        "memory_enabled": bool(memory_enabled),
+        "memory_pair_limit": memory_pair_limit,
+        "memory_prompt_max_chars": memory_prompt_max_chars,
+        "memory_social_decay_lambda": memory_social_decay_lambda,
+        "memory_social_corruption_rate": memory_social_corruption_rate,
+        "memory_social_resummarize_every_events": memory_social_resummarize_every_events,
+        "memory_thread_decay_lambda": memory_thread_decay_lambda,
+        "memory_thread_corruption_rate": memory_thread_corruption_rate,
+        "memory_thread_resummarize_every_events": memory_thread_resummarize_every_events,
+        "memory_evidence_tail_max": memory_evidence_tail_max,
+        "memory_digest_update_cadence_rounds": memory_digest_update_cadence_rounds,
+        "memory_digest_events_limit": memory_digest_events_limit,
+        "memory_cold_start_window": memory_cold_start_window,
+        "memory_semantic_enabled": bool(memory_semantic_enabled),
+        "memory_search_k": memory_search_k,
+        "memory_search_max_chars": memory_search_max_chars,
+        "memory_search_time_window_rounds": memory_search_time_window_rounds,
+        "memory_tier_a_max_chars": memory_tier_a_max_chars,
+        "memory_tier_b_max_chars": memory_tier_b_max_chars,
+        "memory_tier_c_max_chars": memory_tier_c_max_chars,
+        "memory_total_max_chars": memory_total_max_chars,
+        "memory_tier_c_uncertainty_threshold": memory_tier_c_uncertainty_threshold,
+        "memory_reflection_cadence_rounds": memory_reflection_cadence_rounds,
+        "memory_reflection_min_events": memory_reflection_min_events,
+        "memory_reflection_trigger_importance_sum": memory_reflection_trigger_importance_sum,
+        "memory_reflection_max_items_per_run": memory_reflection_max_items_per_run,
+        "memory_embedding_model": memory_embedding_model,
+        "memory_embedding_async": bool(memory_embedding_async),
+        "memory_importance_mode": memory_importance_mode,
+        "memory_backend": (
+            "hybrid_semantic" if bool(memory_semantic_enabled) else "simple_recent"
+        ),
+        "memory_prompt_mode": "subtle_timeline",
+        "memory_reply_context_max_chars": max_length_thread_reading * 320,
+        "memory_vote_signal_only": False,
     }
 
     # Logging config

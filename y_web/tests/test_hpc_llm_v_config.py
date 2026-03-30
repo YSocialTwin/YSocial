@@ -238,6 +238,19 @@ class TestHPCLLMVConfig:
         assert "function fetchVisionModelsForClient()" in js
         assert "function isVisionModelName(modelName)" in js
 
+    def test_create_hpc_client_source_persists_memory_contract(self):
+        source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py"
+        ).read()
+        create_block = source.split("def create_hpc_client(", 1)[1].split(
+            "def generate_hpc_client_config(", 1
+        )[0]
+
+        assert 'memory_enabled = form_data.get("memory_enabled")' in create_block
+        assert '"memory_enabled": bool(memory_enabled)' in create_block
+        assert '"memory_embedding_model": memory_embedding_model' in create_block
+        assert '"memory_backend": (' in create_block
+
     def test_hpc_template_exposes_memory_configuration_section(self):
         template = open(
             "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html"
