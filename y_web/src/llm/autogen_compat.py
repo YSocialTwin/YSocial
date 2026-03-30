@@ -1,16 +1,15 @@
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass
 import json
 import mimetypes
 import os
 import re
+from dataclasses import dataclass
 from typing import Any
 from urllib.parse import urlparse
 
 import requests
-
 
 _IMAGE_TAG_RE = re.compile(r"<img\s+([^>\s]+)\s*>", re.IGNORECASE)
 
@@ -174,7 +173,9 @@ def _image_url_to_data_url(image_url: str) -> str:
     return f"data:{content_type};base64,{encoded}"
 
 
-def _invoke_chat_completions(*, llm_config: dict | None, messages: list[dict[str, Any]]) -> str:
+def _invoke_chat_completions(
+    *, llm_config: dict | None, messages: list[dict[str, Any]]
+) -> str:
     cfg = _normalize_llm_config(llm_config)
     payload: dict[str, Any] = {
         "model": cfg.model,
@@ -203,7 +204,9 @@ def _invoke_chat_completions(*, llm_config: dict | None, messages: list[dict[str
         raise RuntimeError(f"Unexpected LLM response schema: {data!r}") from exc
 
 
-def _invoke_text_model(*, llm_config: dict | None, system_prompt: str, user_prompt: str) -> str:
+def _invoke_text_model(
+    *, llm_config: dict | None, system_prompt: str, user_prompt: str
+) -> str:
     try:
         from langchain_core.messages import HumanMessage, SystemMessage
     except Exception:
@@ -292,7 +295,9 @@ class AssistantAgent:
             user_prompt=message,
         )
 
-    def _store_transcript(self, peer_agent: "AssistantAgent", transcript: list[dict[str, Any]]) -> None:
+    def _store_transcript(
+        self, peer_agent: "AssistantAgent", transcript: list[dict[str, Any]]
+    ) -> None:
         copied = [dict(entry) for entry in transcript]
         self.chat_messages[peer_agent] = copied
         peer_agent.chat_messages[self] = [dict(entry) for entry in transcript]

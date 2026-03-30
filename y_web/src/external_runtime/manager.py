@@ -586,14 +586,21 @@ def _checkout_branch(path: Path, branch_name: str) -> str:
             output_parts.append(
                 _safe_git(
                     path,
-                    ["branch", "--set-upstream-to", f"origin/{branch_name}", branch_name],
+                    [
+                        "branch",
+                        "--set-upstream-to",
+                        f"origin/{branch_name}",
+                        branch_name,
+                    ],
                 )
             )
         except Exception:
             pass
         return "\n".join(part for part in output_parts if part)
 
-    remote_branches = _safe_git(path, ["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"])
+    remote_branches = _safe_git(
+        path, ["for-each-ref", "--format=%(refname:short)", "refs/remotes/origin"]
+    )
     remote_branch_names = {
         line.strip().removeprefix("origin/")
         for line in remote_branches.splitlines()
