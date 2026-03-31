@@ -349,7 +349,10 @@ def create_comment_reddit(
         # Mirror agent behavior for replies: notify parent author even without explicit @mention.
         # This keeps human replies visible in the mention-driven agent reply loop.
         parent_author_id = parent.user_id
-        if parent_author_id != actor_user.id and parent_author_id not in mentioned_user_ids:
+        if (
+            parent_author_id != actor_user.id
+            and parent_author_id not in mentioned_user_ids
+        ):
             mention_record = Mentions(
                 user_id=parent_author_id, post_id=comment.id, round=round_id
             )

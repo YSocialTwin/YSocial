@@ -138,7 +138,7 @@ def test_forum_queries_include_image_post_subreddit_communities():
     assert 'func.lower(ImagePosts.subreddit).label("image_subreddit")' in query_source
     assert "Post.id.in_(image_subquery)" in query_source
     assert 'func.lower(ImagePosts.subreddit).label("rss")' in query_source
-    assert 'reddit.com/media?url=' in formatter_source
+    assert "reddit.com/media?url=" in formatter_source
     assert '"subreddit": row[4] or ""' in formatter_source
 
 
