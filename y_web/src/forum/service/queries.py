@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from sqlalchemy import case, func, or_, text
+from sqlalchemy import and_, case, func, or_, text
 from sqlalchemy.orm import aliased
 
 from y_web import db
@@ -40,11 +41,231 @@ from y_web.src.forum.service.formatters import (
 from y_web.src.models import (
     Articles,
     Images,
+    Interests,
     Post,
+    Post_topics,
     Reactions,
     Rounds,
     User_mgmt,
+    Websites,
 )
+
+
+def _normalize_sidebar_slug(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    raw = raw.replace("\\", "/")
+    match = re.search(r"(?:^|/)r/([a-z0-9_]+)", raw)
+    if match:
+        return match.group(1)
+    raw = raw.removeprefix("y/").removeprefix("r/").strip("/")
+    raw = re.sub(r"[^a-z0-9_/-]+", "-", raw)
+    raw = raw.strip("-_/")
+    return raw.split("/")[0] if raw else ""
+
+
+def _subreddit_slug_from_sources(*values: str) -> str:
+    for value in values:
+        slug = _normalize_sidebar_slug(value or "")
+        if slug:
+            return slug
+    return ""
+
+
+def _community_entry(slug: str, kind: str) -> Dict[str, str]:
+    return {"slug": slug, "label": f"y/{slug}", "kind": kind}
+
+
+def _build_root_post_community_map(root_ids: List[int]) -> Dict[int, List[Dict[str, str]]]:
+    normalized_root_ids = [int(root_id) for root_id in root_ids if root_id]
+    if not normalized_root_ids:
+        return {}
+
+    root_rows = (
+        db.session.query(
+            Post.id.label("post_id"),
+            Websites.rss.label("website_rss"),
+            Articles.link.label("article_link"),
+        )
+        .outerjoin(Articles, Articles.id == Post.news_id)
+        .outerjoin(Websites, Websites.id == Articles.website_id)
+        .filter(Post.id.in_(normalized_root_ids))
+        .all()
+    )
+    topic_rows = (
+        db.session.query(
+            Post_topics.post_id.label("post_id"),
+            func.lower(Interests.interest).label("topic_slug"),
+        )
+        .join(Interests, Interests.iid == Post_topics.topic_id)
+        .filter(Post_topics.post_id.in_(normalized_root_ids))
+        .order_by(Post_topics.post_id.asc(), Interests.interest.asc())
+        .all()
+    )
+
+    topic_map: Dict[int, List[str]] = {}
+    for row in topic_rows:
+        slug = _normalize_sidebar_slug(row.topic_slug or "")
+        if not slug:
+            continue
+        topic_map.setdefault(int(row.post_id), [])
+        if slug not in topic_map[int(row.post_id)]:
+            topic_map[int(row.post_id)].append(slug)
+
+    root_map: Dict[int, List[Dict[str, str]]] = {}
+    for row in root_rows:
+        post_id = int(row.post_id)
+        subreddit_slug = _subreddit_slug_from_sources(
+            row.website_rss or "",
+            row.article_link or "",
+        )
+        if subreddit_slug:
+            root_map[post_id] = [_community_entry(subreddit_slug, "subreddit")]
+            continue
+        root_map[post_id] = [
+            _community_entry(topic_slug, "topic")
+            for topic_slug in topic_map.get(post_id, [])
+        ]
+
+    return root_map
+
+
+def _collect_ranked_communities_from_post_rows(
+    post_rows: Iterable[Any], limit: int
+) -> List[Dict[str, str]]:
+    ordered_root_ids: List[int] = []
+    seen_roots: set[int] = set()
+    for row in post_rows:
+        root_id = int(getattr(row, "thread_id", None) or getattr(row, "id", 0) or 0)
+        if not root_id or root_id in seen_roots:
+            continue
+        seen_roots.add(root_id)
+        ordered_root_ids.append(root_id)
+
+    root_map = _build_root_post_community_map(ordered_root_ids)
+    communities: List[Dict[str, str]] = []
+    seen_slugs: set[str] = set()
+    for root_id in ordered_root_ids:
+        for community in root_map.get(root_id, []):
+            slug = str(community.get("slug") or "").strip().lower()
+            if not slug or slug in seen_slugs:
+                continue
+            seen_slugs.add(slug)
+            communities.append(community)
+            if len(communities) >= limit:
+                return communities
+    return communities
+
+
+def _apply_community_filter(base_query, community_slug: Optional[str]):
+    slug = str(community_slug or "").strip().lower()
+    if not slug:
+        return base_query
+
+    website_subquery = (
+        db.session.query(Post.id)
+        .join(Articles, Articles.id == Post.news_id)
+        .join(Websites, Websites.id == Articles.website_id)
+        .filter(
+            or_(
+                func.lower(Websites.rss).like(f"%/r/{slug}%"),
+                func.lower(Articles.link).like(f"%/r/{slug}%"),
+            )
+        )
+    )
+
+    topic_subquery = (
+        db.session.query(Post_topics.post_id)
+        .join(Interests, Interests.iid == Post_topics.topic_id)
+        .filter(func.lower(Interests.interest) == slug)
+    )
+
+    return base_query.filter(
+        or_(
+            Post.id.in_(website_subquery),
+            Post.id.in_(topic_subquery),
+        )
+    )
+
+
+def fetch_available_communities() -> List[Dict[str, str]]:
+    subreddit_rows = (
+        db.session.query(func.lower(Websites.rss).label("rss"))
+        .join(Articles, Articles.website_id == Websites.id)
+        .join(Post, Post.news_id == Articles.id)
+        .filter(
+            Post.comment_to == -1,
+            Websites.rss.isnot(None),
+            Websites.rss != "",
+        )
+        .distinct()
+        .order_by(text("rss asc"))
+        .all()
+    )
+
+    topic_rows = (
+        db.session.query(func.lower(Interests.interest).label("slug"))
+        .join(Post_topics, Post_topics.topic_id == Interests.iid)
+        .join(Post, Post.id == Post_topics.post_id)
+        .filter(
+            Post.comment_to == -1,
+            or_(Post.news_id.is_(None), Post.news_id.in_([-1, 0])),
+            Interests.interest.isnot(None),
+            Interests.interest != "",
+        )
+        .distinct()
+        .order_by(text("slug asc"))
+        .all()
+    )
+
+    communities: List[Dict[str, str]] = []
+    seen: set[str] = set()
+
+    for row in subreddit_rows:
+        rss_value = str(row.rss or "").strip().lower()
+        match = None
+        if rss_value:
+            import re
+
+            match = re.search(r"(?:^|/)r/([a-z0-9_]+)", rss_value)
+        slug = match.group(1) if match else ""
+        if not slug or slug in seen:
+            continue
+        seen.add(slug)
+        communities.append({"slug": slug, "label": f"y/{slug}", "kind": "subreddit"})
+
+    for row in topic_rows:
+        slug = str(row.slug or "").strip().lower()
+        if not slug or slug in seen:
+            continue
+        seen.add(slug)
+        communities.append({"slug": slug, "label": f"y/{slug}", "kind": "topic"})
+
+    return communities
+
+
+def fetch_recent_active_communities(limit: int = 8) -> List[Dict[str, str]]:
+    recent_posts = (
+        db.session.query(Post.id, Post.thread_id)
+        .order_by(Post.id.desc())
+        .limit(max(limit * 12, 96))
+        .all()
+    )
+    return _collect_ranked_communities_from_post_rows(recent_posts, limit)
+
+
+def fetch_user_communities(user_id: int, limit: int = 8) -> List[Dict[str, str]]:
+    if not user_id:
+        return []
+    user_posts = (
+        db.session.query(Post.id, Post.thread_id)
+        .filter(Post.user_id == int(user_id))
+        .order_by(Post.id.desc())
+        .limit(max(limit * 12, 96))
+        .all()
+    )
+    return _collect_ranked_communities_from_post_rows(user_posts, limit)
 
 
 def _reaction_aggregates_subquery():
@@ -494,12 +715,14 @@ def fetch_feed_page(
     feed_type: str = "new",
     search_query: str = "",
     exclude_user_ids: Optional[List[int]] = None,
+    community_slug: Optional[str] = None,
 ) -> FeedPage:
     sys.stderr.write(
         f"[DEBUG] fetch_feed_page called with feed_type={feed_type}, page={page}, per_page={per_page}\n"
     )
     sys.stderr.flush()
     base_query = db.session.query(Post).filter(Post.comment_to == -1).options()
+    base_query = _apply_community_filter(base_query, community_slug)
 
     if feed_user_id is not None:
         base_query = base_query.filter(Post.user_id == feed_user_id)

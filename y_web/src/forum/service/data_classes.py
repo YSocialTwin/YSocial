@@ -10,6 +10,7 @@ class ArticlePreview:
     summary: str
     url: str
     source: str
+    subreddit: str = ""
     image: Optional[Dict[str, str]] = None  # {"url": ..., "description": ...}
 
 
@@ -21,6 +22,7 @@ def _article_payload(article: Optional[ArticlePreview]) -> Any:
         "summary": article.summary,
         "url": article.url,
         "source": article.source,
+        "subreddit": article.subreddit,
         "image": article.image,
     }
 

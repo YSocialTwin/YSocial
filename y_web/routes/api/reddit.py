@@ -631,6 +631,7 @@ def api_feed(exp_id: int):
     feed_type = request.args.get("feed_type", default="new")
     search_query = (request.args.get("q") or "").strip()
     target_user_id = request.args.get("user_id", type=int)
+    community_slug = (request.args.get("community_slug") or "").strip()
 
     if target_user_id:
         user = User_mgmt.query.filter_by(id=target_user_id).first()
@@ -645,6 +646,7 @@ def api_feed(exp_id: int):
             feed_user_id=target_user_id,
             feed_type=feed_type,
             search_query=search_query,
+            community_slug=community_slug,
         )
         items = [post.to_dict() for post in page_obj.posts]
         has_more = page_obj.page * page_obj.per_page < page_obj.total
@@ -669,6 +671,7 @@ def api_feed(exp_id: int):
         per_page=per_page,
         feed_type=feed_type,
         search_query=search_query,
+        community_slug=community_slug,
     )
     items = [post.to_dict() for post in page_obj.posts]
     has_more = page_obj.page * page_obj.per_page < page_obj.total
@@ -806,6 +809,7 @@ def api_post(exp_id: int):
     title = (payload.get("title") or "").strip()
     body = (payload.get("body") or "").strip()
     url = payload.get("url")
+    community_slug = (payload.get("community_slug") or "").strip()
 
     if title:
         content = f"TITLE: {title}"
@@ -822,7 +826,7 @@ def api_post(exp_id: int):
         return _json_error("content is required.", 400)
 
     try:
-        post = create_post_reddit(current_user, content, url)
+        post = create_post_reddit(current_user, content, url, community_slug)
     except ValueError as exc:
         return _json_error(str(exc), 400)
 

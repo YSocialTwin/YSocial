@@ -71,6 +71,20 @@ def _comment_dedupe_key(text: str) -> Optional[str]:
     return hashlib.sha1(normalized.encode("utf-8")).hexdigest()
 
 
+def _normalize_community_slug(value: str) -> str:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    raw = raw.replace("\\", "/")
+    match = re.search(r"(?:^|/)r/([a-z0-9_]+)", raw)
+    if match:
+        return match.group(1)
+    raw = raw.removeprefix("y/").removeprefix("r/").strip("/")
+    raw = re.sub(r"[^a-z0-9_/-]+", "-", raw)
+    raw = raw.strip("-_/")
+    return raw.split("/")[0] if raw else ""
+
+
 def _ensure_experiment_context(user) -> None:
     """
     Ensure the experiment database context is set up for the current user.
@@ -341,7 +355,9 @@ def create_comment_reddit(
         raise ValueError(f"Failed to create comment: {exc}")
 
 
-def create_post_reddit(user, content: str, url: Optional[str] = None) -> Post:
+def create_post_reddit(
+    user, content: str, url: Optional[str] = None, community_slug: Optional[str] = None
+) -> Post:
     """
     Create a new Reddit-style post.
 
@@ -378,6 +394,7 @@ def create_post_reddit(user, content: str, url: Optional[str] = None) -> Post:
     img_id = None
     news_id = None
     normalized_url = _normalize_external_url(url or "")
+    selected_community_slug = _normalize_community_slug(community_slug or "")
     # DB columns for links are sized at 200 chars; cap to avoid insert failures.
     if normalized_url and len(normalized_url) > 200:
         normalized_url = normalized_url[:200]
@@ -538,6 +555,13 @@ def create_post_reddit(user, content: str, url: Optional[str] = None) -> Post:
             hashtags = []
             mentions = []
             topics = []
+
+        if selected_community_slug:
+            already_present = {
+                _normalize_community_slug(topic_name) for topic_name in (topics or [])
+            }
+            if selected_community_slug not in already_present:
+                topics = list(topics or []) + [selected_community_slug]
 
         # Process topics (create if doesn't exist)
         for topic_name in topics:

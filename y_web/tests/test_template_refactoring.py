@@ -567,6 +567,19 @@ class TestForumHeaderInterviewLink:
             interview_in_dropdown != -1
         ), "Interview link must be present inside the desktop nav-drop account-items dropdown"
 
+
+class TestForumFeedSidebarComponent:
+    """Verify the forum feed delegates the sidebar to a reusable component."""
+
+    def test_forum_feed_uses_sidebar_component(self):
+        feed_path = os.path.join(TEMPLATES_DIR, "forum", "feed.html")
+        with open(feed_path) as fh:
+            content = fh.read()
+
+        assert (
+            '{% include "forum/components/sidebar.html" %}' in content
+        ), "forum/feed.html must include the reusable sidebar component"
+
     def test_forum_header_interview_in_mobile_hamburger_menu(self):
         """Interview link must also be present inside the mobile hamburger navbar-menu."""
         header_path = os.path.join(TEMPLATES_DIR, "forum", "header.html")

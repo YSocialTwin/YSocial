@@ -185,6 +185,7 @@ def _resolve_article(article: Optional[Articles]) -> Optional[ArticlePreview]:
         return None
     website = Websites.query.filter_by(id=article.website_id).first()
     source = website.name if website else ""
+    subreddit = (getattr(website, "subreddit", "") or "").strip() if website else ""
 
     # Fetch image associated with this article
     image = None
@@ -229,6 +230,7 @@ def _resolve_article(article: Optional[Articles]) -> Optional[ArticlePreview]:
         summary=summary,
         url=article.link,
         source=source,
+        subreddit=subreddit,
         image=image,
     )
 

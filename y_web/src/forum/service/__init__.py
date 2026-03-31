@@ -46,7 +46,10 @@ from y_web.src.forum.service.queries import (  # noqa: F401
     _share_count_subquery,
     _viewer_vote_subquery,
     build_user_feed_posts,
+    fetch_available_communities,
     fetch_feed_page,
     fetch_thread,
+    fetch_recent_active_communities,
+    fetch_user_communities,
     serialize_feed_posts,
 )

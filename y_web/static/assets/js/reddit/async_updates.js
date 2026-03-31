@@ -41,6 +41,7 @@
         imageFile: "#image-file",
         feedUpload: "#feed-upload",
         annotation: "#activities",
+        communitySelect: "#post-community",
         postTypeTabs: "[data-post-type-tab]",
         imageSourceInputs: 'input[name="image-source"]',
     };
@@ -58,6 +59,7 @@
         searchQuery: "",
         viewMode: "feed",
         userId: null,
+        communitySlug: null,
         hasMore: false,
         isLoading: false,
     };
@@ -270,6 +272,7 @@
                 ? (window.redditFeedConfig.searchQuery || "").trim()
                 : "";
         feedState.userId = window.redditFeedConfig.userId || null;
+        feedState.communitySlug = window.redditFeedConfig.communitySlug || null;
         feedState.hasMore = !!window.redditFeedConfig.hasMore;
 
         var params = new URLSearchParams(window.location.search || "");
@@ -305,7 +308,7 @@
 
     function getCurrentFeedUrl() {
         var path = window.location.pathname || "";
-        if (path.indexOf("/rfeed") === -1 && path.indexOf("/rsearch") === -1) {
+        if (path.indexOf("/rfeed") === -1 && path.indexOf("/rsearch") === -1 && path.indexOf("/subforum/") === -1) {
             return "";
         }
         return path + (window.location.search || "");
@@ -336,6 +339,9 @@
         };
         if (feedState.userId) {
             params.user_id = feedState.userId;
+        }
+        if (feedState.communitySlug) {
+            params.community_slug = feedState.communitySlug;
         }
         if (feedState.viewMode === "search" && feedState.searchQuery) {
             params.q = feedState.searchQuery;
@@ -1151,6 +1157,16 @@
         $(FEED_SELECTORS.linkUrl).val("");
         $(FEED_SELECTORS.imageUrl).val("");
         $(FEED_SELECTORS.annotation).val("");
+        if (
+            window.redditFeedConfig &&
+            window.redditFeedConfig.defaultCommunitySlug
+        ) {
+            $(FEED_SELECTORS.communitySelect).val(
+                window.redditFeedConfig.defaultCommunitySlug,
+            );
+        } else {
+            $(FEED_SELECTORS.communitySelect).prop("selectedIndex", 0);
+        }
         clearUploadPreview();
         setActivePostTypeTab("text");
         setRadioValue(FEED_SELECTORS.imageSourceInputs, "upload");
@@ -1192,6 +1208,7 @@
         var linkUrl = ($(FEED_SELECTORS.linkUrl).val() || "").trim();
         var imageUrl = ($(FEED_SELECTORS.imageUrl).val() || "").trim();
         var annotation = $(FEED_SELECTORS.annotation).val() || "";
+        var communitySlug = ($(FEED_SELECTORS.communitySelect).val() || "").trim();
 
         var content = combinePostContent(title, body);
         if (annotation) {
@@ -1216,6 +1233,7 @@
             title: title,
             body: body,
             url: url,
+            communitySlug: communitySlug,
             postType: composeState.postType,
             imageSource: composeState.imageSource,
         };
@@ -1230,6 +1248,10 @@
         var payload = gatherPostPayload();
         if (!payload.content) {
             notify("Title is required to publish a post.", "error");
+            return;
+        }
+        if (!payload.communitySlug) {
+            notify("Select a community before publishing.", "error");
             return;
         }
 
@@ -1252,6 +1274,7 @@
                     title: payload.title,
                     body: payload.body,
                     url: data.url,
+                    community_slug: payload.communitySlug,
                 });
             });
         } else {
@@ -1276,6 +1299,7 @@
                 title: payload.title,
                 body: payload.body,
                 url: payload.url,
+                community_slug: payload.communitySlug,
             });
         }
 

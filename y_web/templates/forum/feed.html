@@ -113,17 +113,18 @@
 
         <!-- Feed page main wrapper -->
         <div id="activity-feed" class="view-wrap true-dom is-hidden">
-            <div class="columns">
-                <!-- Left side column - REMOVED FOR REDDIT STYLE -->
+            <div class="columns forum-feed-layout">
+                <div class="column is-3 is-hidden-touch">
+                    {% include "forum/components/sidebar.html" %}
+                </div>
 
-                <!-- Main column - Full width Reddit style -->
-                <div class="column is-8 is-offset-2">
+                <div class="column is-9-tablet is-7-desktop">
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
                     <!-- Create Post Button -->
- <div class="columns is-vcentered ys-mb-20">
-                        <div class="column is-narrow">
-                            <div class="select">
+                    <div class="forum-feed-toolbar ys-mb-20">
+                        <div class="forum-feed-toolbar-left">
+                            <div class="select forum-feed-sort-select">
                                 <select id="feed-type-select">
                                     <option value="new" {% if feed_type == 'new' %}selected{% endif %}>New</option>
                                     <option value="hot" {% if feed_type == 'hot' %}selected{% endif %}>Hot</option>
@@ -132,12 +133,12 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="column">
+                        <div class="forum-feed-toolbar-main">
                             <form
                                 id="feed-search-form"
                                 action="{{ url_for('main.search_reddit', exp_id=exp_id) }}"
                                 method="get"
- class="ys-flex-gap-8"
+                                class="forum-feed-search"
                             >
                                 <input
                                     id="feed-search-input"
@@ -146,7 +147,6 @@
                                     type="search"
                                     placeholder="Search posts, users, links..."
                                     value="{{ search_query|default('', true) }}"
-                                    style="max-width: 420px;"
                                 />
                                 <input
                                     id="feed-search-feed-type"
@@ -154,25 +154,25 @@
                                     name="feed_type"
                                     value="{{ feed_type }}"
                                 />
-                                <button id="feed-search-button" class="button is-light" type="submit">
+                                <button id="feed-search-button" class="button forum-feed-search-button" type="submit">
                                     Search
                                 </button>
                             </form>
                         </div>
                         {% if view_mode == 'search' %}
-                        <div class="column is-narrow">
-                            <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
+                        <div class="forum-feed-toolbar-right">
+                            <a class="button forum-feed-secondary-button" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
                                 Back to Feed
                             </a>
                         </div>
                         {% else %}
-                        <div class="column">
-                            <div id="create-post-trigger" class="card is-create-trigger" style="cursor: pointer; padding: 15px; border: 1px dashed #dbdbdb; text-align: center; color: #7a7a7a;">
+                        <div class="forum-feed-toolbar-right">
+                            <button id="create-post-trigger" class="forum-feed-create-trigger" type="button">
                                 <div class="create-post-prompt">
- <i data-feather="plus" class="ys-mr-8"></i>
+                                    <i data-feather="plus" class="ys-mr-8"></i>
                                     <span>Create Post</span>
                                 </div>
-                            </div>
+                            </button>
                         </div>
                         {% endif %}
                     </div>
@@ -184,6 +184,19 @@
  <span id="search-summary-empty" {% if search_query %}class="d-none"{% endif %}>
                             Enter a query to search posts, users, and shared links.
                         </span>
+                    </div>
+                    {% endif %}
+
+                    {% if view_mode == 'subforum' and current_subforum_label %}
+                    <div class="forum-subforum-banner ys-mb-16">
+                        <div>
+                            <span class="forum-subforum-kicker">Subforum</span>
+                            <h2>{{ current_subforum_label }}</h2>
+                            <p>Posts associated with this community, sorted with the same feed modes as /rfeed.</p>
+                        </div>
+                        <a class="button is-light" href="/{{ exp_id }}/rfeed/all/feed/rf/1?feed_type={{ feed_type }}">
+                            Back to Feed
+                        </a>
                     </div>
                     {% endif %}
 
@@ -262,6 +275,24 @@
                                                     placeholder="Text (optional)"
                                                     rows="4"
                                                 ></textarea>
+                                            </div>
+
+                                            <div class="reddit-field forum-compose-community-field">
+                                                <label class="forum-compose-community-label" for="post-community">
+                                                    Community
+                                                </label>
+                                                <div class="select forum-compose-community-select">
+                                                    <select id="post-community" name="community_slug">
+                                                        <option value="" {% if not current_subforum_slug %}selected{% endif %} disabled>
+                                                            Select community
+                                                        </option>
+                                                        {% for community in available_communities %}
+                                                        <option value="{{ community.slug }}" {% if current_subforum_slug == community.slug %}selected{% endif %}>
+                                                            {{ community.label }}
+                                                        </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
                                             </div>
 
                                             <!-- Link URL Field (Link posts) -->
@@ -516,55 +547,6 @@
                                 </div>
                                 <!-- /Compose form -->
 
-                                <!-- General extended options -->
-                                <div id="extended-options" class="compose-options is-hidden">
-                                    <div class="columns is-multiline is-full">
-
-                                        <!--
-                                        <div class="column is-6 is-narrower">
-                                            <div
-                                                    id="extended-show-activities"
-                                                    class="compose-option is-centered"
-                                            >
-                                                <img src="{{ url_for('static', filename='assets/img/icons/emoji/emoji-1.svg') }}"
-                                                     alt=""/>
-                                                <span>Share Link</span>
-                                            </div>
-                                        </div>
-                                        -->
-
-                                        <!-- Share link action -->
-                                        <!--
-                                        <div class="column is-6 is-narrower">
-                                            <div id="open-link-suboption" class="compose-option is-centered">
-                                                <i data-feather="link-2"></i>
-                                                <span>Share Image</span>
-                                            </div>
-                                        </div>
-                                        -->
-                                    </div>
-                                </div>
-                                <!-- /General extended options -->
-
-                                <!-- General basic options -->
-                                <div id="basic-options" class="compose-options">
-                                    <!-- Upload action -->
-
-                                    <!-- Mood
-                                    <div id="show-activities" class="compose-option">
-                                        <img src="{{ url_for('static', filename='assets/img/icons/emoji/emoji-1.svg') }}"
-                                             alt=""/>
-                                        <span>Activity</span>
-                                    </div> -->
-                                    <!-- Expand action -->
-                                    <div id="open-extended-options" class="compose-option">
-                                        <i data-feather="more-horizontal"></i>
-                                    </div>
-                                </div>
-                                <!-- /General basic options -->
-
-                                <!-- Hidden Options -->
-
                                 <!-- Add Post button immediately below fields -->
                                 <div class="reddit-field" style="text-align: right; margin-top: 1rem;">
                                     <button id="publish-button" type="button" class="button is-solid accent-button" disabled>Post</button>
@@ -593,8 +575,6 @@
                     </div>
                 </div>
                 <!-- /Middle column -->
-
-                <!-- Right side column - REMOVED FOR REDDIT STYLE -->
             </div>
         </div>
         <!-- /Feed page main wrapper -->
@@ -617,6 +597,8 @@ window.redditFeedConfig = Object.freeze({
     feedType: {{ feed_type|tojson }},
     searchQuery: {{ search_query|default('', true)|tojson }},
     userId: {{ feed_user_id|tojson }},
+    communitySlug: {{ current_subforum_slug|tojson }},
+    defaultCommunitySlug: {{ current_subforum_slug|tojson }},
     hasMore: {{ has_more|tojson }},
     viewMode: {{ view_mode|default('feed', true)|tojson }},
     expId: {{ exp_id }}
