@@ -37,8 +37,8 @@ from y_web.src.data_access.trends import (  # noqa: F401
 
 # users
 from y_web.src.data_access.users import (  # noqa: F401
-    count_followers,
     count_followees,
+    count_followers,
     get_mutual_friends,
     get_user_friends,
     get_user_recent_interests,

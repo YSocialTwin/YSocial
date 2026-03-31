@@ -1,20 +1,12 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.src.models import (
-    Admin_users,
-    Exps,
-    Follow,
-    ForumChatMessage,
-    ForumChatSession,
-    User_mgmt,
-)
 from y_web.routes.api.interview._facts import (
     _build_facts_snapshot,
     _format_facts_pack,
@@ -38,6 +30,14 @@ from y_web.routes.api.interview._server import (
     _memory_server_unavailable,
 )
 from y_web.routes.social.helpers import _experiment_memory_enabled
+from y_web.src.models import (
+    Admin_users,
+    Exps,
+    Follow,
+    ForumChatMessage,
+    ForumChatSession,
+    User_mgmt,
+)
 
 api_social = Blueprint("api_social", __name__, url_prefix="/api/social")
 
@@ -193,7 +193,9 @@ def _social_chat_upsert_session(
     )
     if session is not None:
         if not session.target_profile_pic:
-            session.target_profile_pic = _resolve_interview_profile_pic(target_user, exp)
+            session.target_profile_pic = _resolve_interview_profile_pic(
+                target_user, exp
+            )
         return session
 
     interests = _get_top_interests_for_user(int(target_user.id))
@@ -533,8 +535,8 @@ def api_social_chat_send_message(exp_id: int, session_id: int):
     db.session.add(assistant_msg)
     session.last_message_preview = str(reply or "(no reply)")[:180]
     session.last_message_at = datetime.now(timezone.utc)
-    session.target_profile_pic = session.target_profile_pic or _resolve_interview_profile_pic(
-        target_user, exp
+    session.target_profile_pic = (
+        session.target_profile_pic or _resolve_interview_profile_pic(target_user, exp)
     )
     db.session.commit()
 

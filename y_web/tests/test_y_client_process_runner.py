@@ -116,5 +116,9 @@ def test_process_agent_validator_keeps_forum_share_aliases():
         action in selected_actions
         for action in ("READ", "NEWS", "SHARE_LINK", "SHARE_IMAGE")
     )
-    assert "SHARE_LINK" in selected_actions or "SHARE_IMAGE" in selected_actions or "NEWS" in selected_actions
+    assert (
+        "SHARE_LINK" in selected_actions
+        or "SHARE_IMAGE" in selected_actions
+        or "NEWS" in selected_actions
+    )
     assert "POST" not in selected_actions
