@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
 import os
 import struct
 import uuid
+from datetime import datetime, timezone
 from io import BytesIO
 
 from flask import Blueprint, jsonify, render_template, request
@@ -24,6 +24,29 @@ try:
     from y_web.src.llm.url_summarizer import UrlSummarizer
 except Exception:
     UrlSummarizer = None
+from y_web.routes.api.interview._facts import (
+    _build_facts_snapshot,
+    _format_facts_pack,
+)
+from y_web.routes.api.interview._llm import (
+    _generate_reply,
+    _resolve_llm_backend,
+    _sanitize_interview_reply,
+)
+from y_web.routes.api.interview._memory import (
+    _build_memory_snapshot,
+    _build_persona_snapshot,
+    _detect_run_id_from_server_log,
+    _format_memory_pack,
+    _get_top_interests_for_user,
+    _resolve_interview_profile_pic,
+)
+from y_web.routes.api.interview._server import (
+    _ensure_experiment_db_bind,
+    _ensure_experiment_server_db_binding,
+    _memory_server_unavailable,
+)
+from y_web.routes.social.helpers import _experiment_memory_enabled
 from y_web.src.forum.actions import (
     apply_vote,
     create_comment_reddit,
@@ -57,29 +80,6 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.system.path_utils import get_writable_path
-from y_web.routes.api.interview._llm import (
-    _generate_reply,
-    _resolve_llm_backend,
-    _sanitize_interview_reply,
-)
-from y_web.routes.api.interview._memory import (
-    _build_memory_snapshot,
-    _build_persona_snapshot,
-    _detect_run_id_from_server_log,
-    _format_memory_pack,
-    _get_top_interests_for_user,
-    _resolve_interview_profile_pic,
-)
-from y_web.routes.api.interview._facts import (
-    _build_facts_snapshot,
-    _format_facts_pack,
-)
-from y_web.routes.api.interview._server import (
-    _ensure_experiment_db_bind,
-    _ensure_experiment_server_db_binding,
-    _memory_server_unavailable,
-)
-from y_web.routes.social.helpers import _experiment_memory_enabled
 
 try:
     from y_web.src.models import ContentShown
@@ -127,7 +127,9 @@ def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
         target_id = int(getattr(event, "user_id", 0) or 0)
         if not target_id or target_id in latest_actions:
             continue
-        latest_actions[target_id] = str(getattr(event, "action", "") or "").strip().lower()
+        latest_actions[target_id] = (
+            str(getattr(event, "action", "") or "").strip().lower()
+        )
 
     for target_id, action in latest_actions.items():
         if action == "follow":
@@ -160,14 +162,18 @@ def _forum_chat_message_payload(message: ForumChatMessage) -> dict:
     }
 
 
-def _forum_chat_session_payload(session: ForumChatSession, *, include_messages=False) -> dict:
+def _forum_chat_session_payload(
+    session: ForumChatSession, *, include_messages=False
+) -> dict:
     payload = {
         "id": int(session.id),
         "target_user_id": int(session.target_user_id),
         "target_username": str(session.target_username or ""),
         "target_profile_pic": str(session.target_profile_pic or ""),
         "last_message_preview": str(session.last_message_preview or ""),
-        "last_message_at": session.last_message_at.isoformat() if session.last_message_at else None,
+        "last_message_at": (
+            session.last_message_at.isoformat() if session.last_message_at else None
+        ),
         "created_at": session.created_at.isoformat() if session.created_at else None,
         "updated_at": session.updated_at.isoformat() if session.updated_at else None,
         "run_id": str(session.run_id or ""),
@@ -189,12 +195,18 @@ def _forum_chat_render_memory_pack(snapshot: dict | None) -> str:
         return ""
 
 
-def _forum_chat_build_transcript(session: ForumChatSession, *, max_messages: int = 12) -> str:
+def _forum_chat_build_transcript(
+    session: ForumChatSession, *, max_messages: int = 12
+) -> str:
     messages = sorted(session.messages or [], key=lambda item: int(item.id))
     tail = messages[-max_messages:]
     lines = []
     for msg in tail:
-        role = "You" if str(msg.role or "") == "user" else str(session.target_username or "Agent")
+        role = (
+            "You"
+            if str(msg.role or "") == "user"
+            else str(session.target_username or "Agent")
+        )
         content = str(msg.content or "").strip()
         if not content:
             continue
@@ -238,7 +250,9 @@ def _forum_chat_upsert_session(
     )
     if session is not None:
         if not session.target_profile_pic:
-            session.target_profile_pic = _resolve_interview_profile_pic(target_user, exp)
+            session.target_profile_pic = _resolve_interview_profile_pic(
+                target_user, exp
+            )
         return session
 
     interests = _get_top_interests_for_user(int(target_user.id))
@@ -1235,7 +1249,11 @@ def api_forum_chat_bootstrap(exp_id: int):
     )
     sessions = (
         ForumChatSession.query.filter_by(owner_user_id=int(owner_user.id))
-        .order_by(ForumChatSession.last_message_at.desc(), ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
+        .order_by(
+            ForumChatSession.last_message_at.desc(),
+            ForumChatSession.updated_at.desc(),
+            ForumChatSession.id.desc(),
+        )
         .all()
     )
     sessions = [
@@ -1254,7 +1272,11 @@ def api_forum_chat_bootstrap(exp_id: int):
                 "profession": str(getattr(agent, "profession", "") or ""),
                 "preview": str((sess.last_message_preview if sess else "") or ""),
                 "session_id": int(sess.id) if sess else None,
-                "last_message_at": sess.last_message_at.isoformat() if (sess and sess.last_message_at) else None,
+                "last_message_at": (
+                    sess.last_message_at.isoformat()
+                    if (sess and sess.last_message_at)
+                    else None
+                ),
             }
         )
 
@@ -1398,7 +1420,9 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
     db.session.add(assistant_msg)
     session.last_message_preview = str(reply or "(no reply)")[:180]
     session.last_message_at = datetime.now(timezone.utc)
-    session.target_profile_pic = session.target_profile_pic or _resolve_interview_profile_pic(target_user, exp)
+    session.target_profile_pic = (
+        session.target_profile_pic or _resolve_interview_profile_pic(target_user, exp)
+    )
     db.session.commit()
 
     return _json_success(

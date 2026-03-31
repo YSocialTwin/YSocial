@@ -62,9 +62,15 @@ def test_forum_chat_memory_query_uses_latest_message_and_recent_history():
     session = SimpleNamespace(
         target_username="agent12",
         messages=[
-            SimpleNamespace(id=1, role="user", content="we were talking about the library vote"),
-            SimpleNamespace(id=2, role="assistant", content="yes, and the censorship issue too"),
-            SimpleNamespace(id=3, role="user", content="what about the mayor's statement?"),
+            SimpleNamespace(
+                id=1, role="user", content="we were talking about the library vote"
+            ),
+            SimpleNamespace(
+                id=2, role="assistant", content="yes, and the censorship issue too"
+            ),
+            SimpleNamespace(
+                id=3, role="user", content="what about the mayor's statement?"
+            ),
         ],
     )
 
@@ -84,8 +90,13 @@ def test_forum_chat_routes_are_exposed():
 
     assert '@api_reddit.get("/<int:exp_id>/chat/bootstrap")' in route_source
     assert '@api_reddit.post("/<int:exp_id>/chat/session")' in route_source
-    assert '@api_reddit.get("/<int:exp_id>/chat/session/<int:session_id>")' in route_source
-    assert '@api_reddit.post("/<int:exp_id>/chat/session/<int:session_id>/message")' in route_source
+    assert (
+        '@api_reddit.get("/<int:exp_id>/chat/session/<int:session_id>")' in route_source
+    )
+    assert (
+        '@api_reddit.post("/<int:exp_id>/chat/session/<int:session_id>/message")'
+        in route_source
+    )
     assert "Forum chat is unavailable because memory is disabled." in route_source
     assert "You can chat only with followed agents." in route_source
     assert "_forum_chat_followed_agent_ids" in route_source
@@ -131,7 +142,10 @@ def test_chat_component_is_reusable_and_mounted_on_feed_and_thread():
     assert "assets/js/reddit/forum-chat.js" in profile_template
     assert "assets/js/reddit/forum-chat.js" in notifications_template
     assert "forum-profile-follow-btn" in profile_template
-    assert "/{{ exp_id }}/follow/{{ user['user_data']['id'] }}/{{ logged_id }}" in profile_template
+    assert (
+        "/{{ exp_id }}/follow/{{ user['user_data']['id'] }}/{{ logged_id }}"
+        in profile_template
+    )
 
 
 def test_forum_chat_js_escapes_rendered_content():
@@ -172,7 +186,13 @@ def test_forum_profile_posts_include_community_metadata_and_feed_type():
 
     assert '"primary_community": primary_community' in posts_source
     assert '"display_time": display_time if is_forum else None' in posts_source
-    assert "article_preview = _resolve_article(article) if is_forum else None" in posts_source
+    assert (
+        "article_preview = _resolve_article(article) if is_forum else None"
+        in posts_source
+    )
     assert "_primary_community_payload(article_preview, topics)" in posts_source
-    assert 'rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)' in common_source
+    assert (
+        "rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)"
+        in common_source
+    )
     assert 'feed_type="new"' in common_source
