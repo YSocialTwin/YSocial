@@ -482,9 +482,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     memory_digest_update_cadence_rounds = int(
         form_data.get("memory_digest_update_cadence_rounds", "3")
     )
-    memory_digest_events_limit = int(
-        form_data.get("memory_digest_events_limit", "80")
-    )
+    memory_digest_events_limit = int(form_data.get("memory_digest_events_limit", "80"))
     memory_cold_start_window = int(form_data.get("memory_cold_start_window", "5"))
     memory_semantic_enabled = form_data.get("memory_semantic_enabled") in {
         "on",

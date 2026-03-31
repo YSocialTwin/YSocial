@@ -1,5 +1,6 @@
-from y_web.routes.social.forum import _build_forum_sidebar_communities
 from pathlib import Path
+
+from y_web.routes.social.forum import _build_forum_sidebar_communities
 
 
 def test_sidebar_prefers_subreddit_and_deduplicates_entries():
@@ -86,9 +87,16 @@ def test_forum_compose_and_api_forward_selected_community_slug():
     assert 'communitySelect: "#post-community"' in js_source
     assert "community_slug: payload.communitySlug" in js_source
     assert 'notify("Select a community before publishing.", "error");' in js_source
-    assert 'community_slug = (payload.get("community_slug") or "").strip()' in api_source
-    assert "create_post_reddit(current_user, content, url, community_slug)" in api_source
-    assert "selected_community_slug = _normalize_community_slug(community_slug or \"\")" in action_source
+    assert (
+        'community_slug = (payload.get("community_slug") or "").strip()' in api_source
+    )
+    assert (
+        "create_post_reddit(current_user, content, url, community_slug)" in api_source
+    )
+    assert (
+        'selected_community_slug = _normalize_community_slug(community_slug or "")'
+        in action_source
+    )
 
 
 def test_forum_sidebar_template_contains_recent_and_user_sections():

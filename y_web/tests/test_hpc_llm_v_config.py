@@ -277,11 +277,23 @@ class TestHPCLLMVConfig:
         create_block = source.split("def create_hpc_client(", 1)[1].split(
             "# Get activity profiles for population", 1
         )[0]
-        assert 'llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")' in create_block
-        assert 'llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")' in create_block
-        assert 'llm_v_temperature = form_data.get("llm_v_temperature", "0.5")' in create_block
+        assert (
+            'llm_v = form_data.get("llm_v", "http://127.0.0.1:11434/v1")'
+            in create_block
+        )
+        assert (
+            'llm_v_agent = form_data.get("llm_v_agent", "minicpm-v:latest")'
+            in create_block
+        )
+        assert (
+            'llm_v_temperature = form_data.get("llm_v_temperature", "0.5")'
+            in create_block
+        )
         assert 'llm_v_api_key = form_data.get("llm_v_api_key", "NULL")' in create_block
-        assert 'llm_v_max_tokens = form_data.get("llm_v_max_tokens", "300")' in create_block
+        assert (
+            'llm_v_max_tokens = form_data.get("llm_v_max_tokens", "300")'
+            in create_block
+        )
 
 
 if __name__ == "__main__":

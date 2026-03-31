@@ -77,7 +77,9 @@ def _community_entry(slug: str, kind: str) -> Dict[str, str]:
     return {"slug": slug, "label": f"y/{slug}", "kind": kind}
 
 
-def _build_root_post_community_map(root_ids: List[int]) -> Dict[int, List[Dict[str, str]]]:
+def _build_root_post_community_map(
+    root_ids: List[int],
+) -> Dict[int, List[Dict[str, str]]]:
     normalized_root_ids = [int(root_id) for root_id in root_ids if root_id]
     if not normalized_root_ids:
         return {}
