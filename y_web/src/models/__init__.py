@@ -73,6 +73,8 @@ from y_web.src.models.experiment import (  # noqa: F401
     Articles,
     Emotions,
     Follow,
+    ForumChatMessage,
+    ForumChatSession,
     Hashtags,
     ImagePosts,
     Images,

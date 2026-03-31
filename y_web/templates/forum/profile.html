@@ -29,7 +29,7 @@
             </div>
         </div>
 
-        <div class="forum-profile-layout">
+        <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
             <aside>
                 <div class="forum-profile-card">
                     <h3>About</h3>
@@ -78,6 +78,13 @@
                     </div>
                 </div>
             </section>
+
+            {% if forum_memory_enabled %}
+            <aside class="forum-profile-chat-column is-hidden-touch">
+                {% set forum_chat_page_kind = 'profile' %}
+                {% include "forum/components/chat_panel.html" %}
+            </aside>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -119,5 +126,8 @@
 <script>var YS_DATA_FORUM_PROFILE = { expId: "{{exp_id}}", userId: "{{user_id}}", mode: "{{mode}}", page: {{ page }} };</script>
 
 <script src="{{ url_for('static', filename='assets/js/forum-profile.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

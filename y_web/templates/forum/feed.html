@@ -118,7 +118,7 @@
                     {% include "forum/components/sidebar.html" %}
                 </div>
 
-                <div class="column is-9-tablet is-7-desktop">
+                <div class="column is-9-tablet is-6-desktop">
                     <!-- Publishing Area -->
                     <!-- /partials/pages/feed/compose-card.html -->
                     <!-- Create Post Button -->
@@ -575,6 +575,13 @@
                     </div>
                 </div>
                 <!-- /Middle column -->
+
+                {% if forum_memory_enabled %}
+                <div class="column is-3 is-hidden-touch">
+                    {% set forum_chat_page_kind = view_mode|default('feed', true) %}
+                    {% include "forum/components/chat_panel.html" %}
+                </div>
+                {% endif %}
             </div>
         </div>
         <!-- /Feed page main wrapper -->
@@ -643,6 +650,9 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
 
 <!-- profile js -->
 

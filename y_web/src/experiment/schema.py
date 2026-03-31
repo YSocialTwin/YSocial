@@ -24,6 +24,35 @@ _SQLITE_TABLES = {
             last_seen_reply_id INTEGER NOT NULL DEFAULT 0
         )
     """,
+    "forum_chat_sessions": """
+        CREATE TABLE IF NOT EXISTS forum_chat_sessions (
+            id INTEGER PRIMARY KEY,
+            owner_user_id INTEGER NOT NULL REFERENCES user_mgmt(id),
+            owner_username TEXT NOT NULL,
+            target_user_id INTEGER NOT NULL REFERENCES user_mgmt(id),
+            target_username TEXT NOT NULL,
+            target_profile_pic TEXT,
+            run_id TEXT,
+            llm_model TEXT,
+            llm_base_url TEXT,
+            persona_snapshot TEXT,
+            memory_snapshot_json TEXT,
+            last_message_preview TEXT,
+            last_message_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    "forum_chat_messages": """
+        CREATE TABLE IF NOT EXISTS forum_chat_messages (
+            id INTEGER PRIMARY KEY,
+            session_id INTEGER NOT NULL REFERENCES forum_chat_sessions(id) ON DELETE CASCADE,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            meta_json TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
 }
 
 _SQLITE_COLUMNS = {
@@ -61,6 +90,35 @@ _POSTGRES_TABLES = {
         CREATE TABLE IF NOT EXISTS reply_inbox_state (
             user_id INTEGER PRIMARY KEY REFERENCES user_mgmt(id) ON DELETE CASCADE,
             last_seen_reply_id INTEGER NOT NULL DEFAULT 0
+        )
+    """,
+    "forum_chat_sessions": """
+        CREATE TABLE IF NOT EXISTS forum_chat_sessions (
+            id SERIAL PRIMARY KEY,
+            owner_user_id INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            owner_username VARCHAR(50) NOT NULL,
+            target_user_id INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            target_username VARCHAR(50) NOT NULL,
+            target_profile_pic TEXT,
+            run_id TEXT,
+            llm_model VARCHAR(200),
+            llm_base_url VARCHAR(300),
+            persona_snapshot TEXT,
+            memory_snapshot_json TEXT,
+            last_message_preview TEXT,
+            last_message_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    "forum_chat_messages": """
+        CREATE TABLE IF NOT EXISTS forum_chat_messages (
+            id SERIAL PRIMARY KEY,
+            session_id INTEGER NOT NULL REFERENCES forum_chat_sessions(id) ON DELETE CASCADE,
+            role VARCHAR(12) NOT NULL,
+            content TEXT NOT NULL,
+            meta_json TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """,
 }
