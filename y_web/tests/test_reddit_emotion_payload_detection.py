@@ -24,6 +24,7 @@ def _load_module():
 def _make_agent(module):
     agent = module.Agent.__new__(module.Agent)
     agent.emotions = ["joy", "sadness", "anger", "fear", "surprise", "disgust"]
+    agent.emotion_annotation_enabled = True
     return agent
 
 
@@ -102,3 +103,35 @@ def test_reddit_generated_content_extractor_skips_verbose_emotion_analysis():
         skip_emotion_like=True,
     )
     assert extracted == "this post actually reacts to the thread"
+
+
+def test_reddit_emotion_payload_detection_accepts_rationale_lists():
+    module = _load_module()
+    agent = _make_agent(module)
+    agent.emotions = [
+        "admiration",
+        "disapproval",
+        "curiosity",
+        "disappointment",
+        "remorse",
+        "caring",
+        "fear",
+    ]
+
+    assert agent._looks_like_emotion_payload(
+        "admiration for the individual's passionate advocacy of library values\n"
+        "disapproval for the potential motives behind censorship\n"
+        "curiosity about the decision-making process used by Lithuanian libraries\n"
+        "disappointment with the lack of consultation"
+    )
+
+
+def test_reddit_emotion_handler_turns_follow_toggle():
+    module = _load_module()
+    agent = _make_agent(module)
+
+    agent.emotion_annotation_enabled = False
+    assert agent._handler_auto_reply_turns() == 0
+
+    agent.emotion_annotation_enabled = True
+    assert agent._handler_auto_reply_turns() == 1
