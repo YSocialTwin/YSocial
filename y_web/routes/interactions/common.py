@@ -42,11 +42,18 @@ def follow(exp_id, user_id, follower_id):
     # get the last round id from Rounds
     current_round = Rounds.query.order_by(Rounds.id.desc()).first()
 
-    # Handle both int and UUID follower_id (Standard vs HPC experiments)
-    try:
-        follower_id_converted = int(follower_id)
-    except (ValueError, TypeError):
-        follower_id_converted = follower_id
+    acting_user = User_mgmt.query.filter_by(
+        username=getattr(current_user, "username", "") or ""
+    ).first()
+
+    if acting_user is not None:
+        follower_id_converted = acting_user.id
+    else:
+        # Handle both int and UUID follower_id (Standard vs HPC experiments)
+        try:
+            follower_id_converted = int(follower_id)
+        except (ValueError, TypeError):
+            follower_id_converted = follower_id
 
     # check
     followed = (
@@ -59,7 +66,7 @@ def follow(exp_id, user_id, follower_id):
         if followed.action == "follow":
             try:
                 new_follow = Follow(
-                    follower_id=follower_id,
+                    follower_id=follower_id_converted,
                     user_id=user_id,
                     action="unfollow",
                     round=current_round.id,
@@ -70,7 +77,7 @@ def follow(exp_id, user_id, follower_id):
                 db.session.rollback()
                 new_follow = Follow(
                     id=str(uuid.uuid4()),
-                    follower_id=follower_id,
+                    follower_id=follower_id_converted,
                     user_id=user_id,
                     action="unfollow",
                     round=current_round.id,
@@ -82,7 +89,7 @@ def follow(exp_id, user_id, follower_id):
     # add the user to the Follow table
     try:
         new_follow = Follow(
-            follower_id=follower_id,
+            follower_id=follower_id_converted,
             user_id=user_id,
             action="follow",
             round=current_round.id,
@@ -93,7 +100,7 @@ def follow(exp_id, user_id, follower_id):
         db.session.rollback()
         new_follow = Follow(
             id=str(uuid.uuid4()),
-            follower_id=follower_id,
+            follower_id=follower_id_converted,
             user_id=user_id,
             action="follow",
             round=current_round.id,

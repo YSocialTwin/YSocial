@@ -1,22 +1,3 @@
-$(document).on('click','#follow',function(e)
-                   {
-      e.preventDefault();
-      $.ajax({
-        type:'GET',
-        url:(window.EXP_PREFIX || '') + '/follow/'+  document.getElementById("follow").getAttribute("res"),
-        //data:{
-        //  todo:$("#follow").val()
-        //},
-        //success:function()
-        //{
-        //  window.location.reload();
-        //}
-      })
-    });
-
-
-
-
 $(document).on('click','#publish-button',function(e) {
     $(document).ajaxStop(function (){
         window.location.reload();
@@ -365,4 +346,3 @@ $(document).on('click','.cancel-notification',function(e) {
         },
       })
     });
-

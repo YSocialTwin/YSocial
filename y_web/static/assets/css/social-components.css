@@ -1077,6 +1077,74 @@
   padding: 32px 10px;
 }
 
+.ys-profile-header-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.ys-profile-follow-btn,
+.ys-profile-follow-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.ys-profile-follow-btn:hover,
+.ys-profile-follow-btn:focus-visible,
+.ys-profile-follow-menu-btn:hover,
+.ys-profile-follow-menu-btn:focus-visible {
+  color: #1e40af;
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow: 0 12px 28px rgba(59, 130, 246, 0.16);
+  transform: translateY(-1px);
+}
+
+.ys-profile-follow-btn.is-following,
+.ys-profile-follow-menu-btn.is-following {
+  background: #ffffff;
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+.ys-profile-follow-btn.is-following:hover,
+.ys-profile-follow-btn.is-following:focus-visible,
+.ys-profile-follow-menu-btn.is-following:hover,
+.ys-profile-follow-menu-btn.is-following:focus-visible {
+  color: #0f172a;
+  border-color: rgba(100, 116, 139, 0.3);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+}
+
+.ys-profile-follow-menu-form {
+  display: inline-flex;
+  margin: 0;
+}
+
+.profile-menu .button.ys-profile-follow-menu-btn {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  border-color: rgba(59, 130, 246, 0.18);
+}
+
+.profile-menu .button.ys-profile-follow-menu-btn.is-following {
+  background: #ffffff;
+  color: #475569;
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
 @media (max-width: 1215px) {
   .microblog-chat-panel {
     right: 16px;

@@ -63,7 +63,7 @@ def _resolve_server_runtime_paths(base_path, platform_type):
 
 
 def _ensure_image_post_module_in_config(config_path):
-    """Backfill image_post for older Standard/Forum experiment configs."""
+    """Keep image_post aligned with the actual server runtime contract."""
     try:
         with open(config_path, "r", encoding="utf-8") as handle:
             config = json.load(handle)
@@ -74,10 +74,22 @@ def _ensure_image_post_module_in_config(config_path):
     if not isinstance(modules, list):
         return
 
-    if "image" not in modules or "image_post" in modules:
+    platform_type = str(config.get("platform_type") or "").strip().lower()
+    changed = False
+
+    if platform_type == "forum":
+        if "image" in modules and "image_post" not in modules:
+            modules = [*modules, "image_post"]
+            changed = True
+    else:
+        if "image_post" in modules:
+            modules = [module for module in modules if module != "image_post"]
+            changed = True
+
+    if not changed:
         return
 
-    config["modules"] = [*modules, "image_post"]
+    config["modules"] = modules
     with open(config_path, "w", encoding="utf-8") as handle:
         json.dump(config, handle, indent=4)
 

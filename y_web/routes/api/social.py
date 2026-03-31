@@ -213,38 +213,33 @@ def _social_chat_upsert_session(
 def _social_chat_refresh_runtime_context(
     *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
 ) -> dict:
-    run_id = str(session.run_id or "").strip()
+    if not session.persona_snapshot:
+        interests = _get_top_interests_for_user(int(target_user.id))
+        session.persona_snapshot = _build_persona_snapshot(target_user, interests, exp)
 
+    run_id = str(session.run_id or "").strip() or None
     if not run_id:
         detected = _detect_run_id_from_server_log(
             exp, agent_user_id=int(target_user.id), probe_memory_coverage=True
         )
-        run_id = str(detected.get("run_id") or "").strip()
-        session.run_id = run_id or None
+        run_id = str(detected.get("run_id") or "").strip() or None
+        session.run_id = run_id
 
-    try:
-        _ensure_experiment_server_db_binding(exp)
-    except Exception:
-        pass
-
-    memory_snapshot = {}
-    if run_id:
+    snapshot = {}
+    db_binding = _ensure_experiment_server_db_binding(exp)
+    if run_id and not _memory_server_unavailable(db_binding):
         try:
-            memory_snapshot = _build_memory_snapshot(
+            snapshot = _build_memory_snapshot(
                 exp,
-                int(target_user.id),
-                run_id,
+                run_id=run_id,
+                agent_user_id=int(target_user.id),
+                memory_mode="semantic",
                 query_text=query_text,
-                events_limit=10,
-                search_k=6,
             )
         except Exception:
-            memory_snapshot = {}
-
-    session.memory_snapshot_json = (
-        json.dumps(memory_snapshot) if memory_snapshot else session.memory_snapshot_json
-    )
-    return memory_snapshot
+            snapshot = {}
+    session.memory_snapshot_json = json.dumps(snapshot or {})
+    return snapshot or {}
 
 
 def _social_chat_generate_reply(
@@ -264,14 +259,23 @@ def _social_chat_generate_reply(
         exp=exp, target_user=target_user, session=session, query_text=memory_query
     )
     memory_pack = _social_chat_render_memory_pack(memory_snapshot)
-    facts_snapshot = _build_facts_snapshot(exp, target_user)
+    facts_snapshot = _build_facts_snapshot(
+        agent_user_id=int(target_user.id),
+        admin_text=memory_query,
+    )
     facts_pack = _format_facts_pack(facts_snapshot, max_chars=2200).strip()
     persona_snapshot = str(session.persona_snapshot or "").strip()
     transcript = _social_chat_build_transcript(session)
 
-    backend = _resolve_llm_backend(admin_user)
-    if not backend.ok:
-        raise RuntimeError(backend.error or "No admin LLM runtime available.")
+    mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
+        backend_mode="admin",
+        exp=exp,
+        agent_user=target_user,
+        admin_user=admin_user,
+    )
+    del mode
+    session.llm_model = str(model or "")
+    session.llm_base_url = str(base_url or "")
 
     system_prompt = (
         "You are having a private direct-message chat with another participant on a "
@@ -289,26 +293,39 @@ def _social_chat_generate_reply(
         "If information is uncertain, answer cautiously instead of inventing details."
     )
 
-    reply = _generate_reply(backend, system_prompt=system_prompt, user_message=user_message)
-    reply = _sanitize_interview_reply(
+    prompt_parts = []
+    if transcript:
+        prompt_parts.append(f"RECENT CHAT\n{transcript}")
+    prompt_parts.append(f"{owner_user.username}: {user_message.strip()}")
+    composed_prompt = "\n\n".join(prompt_parts).strip()
+
+    reply = _generate_reply(
+        model=model,
+        base_url=base_url,
+        api_key=api_key,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        system_message=system_prompt,
+        user_message=composed_prompt,
+    )
+    reply, sanitize_meta = _sanitize_interview_reply(
         reply,
-        persona_snapshot=persona_snapshot,
-        memory_snapshot=memory_snapshot,
         facts_snapshot=facts_snapshot,
+        memory_snapshot=memory_snapshot,
+        strict_no_inference=False,
     )
     if not reply:
         reply = "I do not have much to add right now."
 
     meta = {
         "run_id": str(session.run_id or ""),
-        "llm_model": backend.model,
-        "llm_base_url": backend.base_url,
+        "llm_model": str(model or ""),
+        "llm_base_url": str(base_url or ""),
         "memory_query_text": memory_query,
         "memory_snapshot_present": bool(memory_snapshot),
         "facts_snapshot_present": bool(facts_snapshot),
+        "sanitize_meta": sanitize_meta,
     }
-    session.llm_model = backend.model
-    session.llm_base_url = backend.base_url
     return reply, meta
 
 

@@ -78,6 +78,146 @@ def test_microblog_chat_memory_query_uses_latest_message_and_recent_history():
     assert "education vote" in query
 
 
+def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch):
+    from y_web.routes.api import social
+
+    calls = {}
+
+    monkeypatch.setattr(
+        social,
+        "_get_top_interests_for_user",
+        lambda user_id: ["policy", "education"],
+    )
+    monkeypatch.setattr(
+        social,
+        "_build_persona_snapshot",
+        lambda target_user, interests, exp: f"persona:{target_user.username}:{','.join(interests)}",
+    )
+    monkeypatch.setattr(
+        social,
+        "_detect_run_id_from_server_log",
+        lambda exp, agent_user_id, probe_memory_coverage=True: {"run_id": "run-42"},
+    )
+    monkeypatch.setattr(
+        social,
+        "_ensure_experiment_server_db_binding",
+        lambda exp: {"ok": True},
+    )
+    monkeypatch.setattr(social, "_memory_server_unavailable", lambda binding: False)
+
+    def fake_build_memory_snapshot(exp, *, run_id, agent_user_id, memory_mode=None, query_text=None):
+        calls["run_id"] = run_id
+        calls["agent_user_id"] = agent_user_id
+        calls["memory_mode"] = memory_mode
+        calls["query_text"] = query_text
+        return {"semantic_items": [{"text": "posted about schools"}]}
+
+    monkeypatch.setattr(social, "_build_memory_snapshot", fake_build_memory_snapshot)
+
+    session = SimpleNamespace(
+        run_id="",
+        persona_snapshot="",
+        memory_snapshot_json="",
+    )
+    exp = SimpleNamespace(idexp=9)
+    target_user = SimpleNamespace(id=12, username="agent12")
+
+    snapshot = social._social_chat_refresh_runtime_context(
+        exp=exp,
+        target_user=target_user,
+        session=session,
+        query_text="schools and education",
+    )
+
+    assert session.run_id == "run-42"
+    assert session.persona_snapshot == "persona:agent12:policy,education"
+    assert calls["run_id"] == "run-42"
+    assert calls["agent_user_id"] == 12
+    assert calls["memory_mode"] == "semantic"
+    assert calls["query_text"] == "schools and education"
+    assert snapshot["semantic_items"][0]["text"] == "posted about schools"
+
+
+def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monkeypatch):
+    from y_web.routes.api import social
+
+    exp = SimpleNamespace(idexp=9)
+    owner_user = SimpleNamespace(id=1, username="alice")
+    target_user = SimpleNamespace(id=12, username="agent12")
+    session = SimpleNamespace(
+        run_id="run-42",
+        persona_snapshot="Agent persona",
+        llm_model="",
+        llm_base_url="",
+        target_username="agent12",
+        messages=[
+            SimpleNamespace(id=1, role="user", content="we talked about education"),
+            SimpleNamespace(id=2, role="assistant", content="I posted about it before"),
+        ],
+    )
+
+    monkeypatch.setattr(social, "_social_chat_admin_user", lambda exp: SimpleNamespace())
+    monkeypatch.setattr(
+        social,
+        "_social_chat_refresh_runtime_context",
+        lambda **kwargs: {"semantic_items": [{"text": "posted about education funding"}]},
+    )
+    monkeypatch.setattr(
+        social,
+        "_format_memory_pack",
+        lambda snapshot, max_chars=2200: "MEMORY: posted about education funding",
+    )
+    monkeypatch.setattr(
+        social,
+        "_build_facts_snapshot",
+        lambda **kwargs: {"top_posts": [{"post_id": 7, "text": "education funding matters"}]},
+    )
+    monkeypatch.setattr(
+        social,
+        "_format_facts_pack",
+        lambda snapshot, max_chars=2200: "FACTS: post_id=7 education funding matters",
+    )
+    monkeypatch.setattr(
+        social,
+        "_resolve_llm_backend",
+        lambda **kwargs: ("admin", "llama3.2", "http://127.0.0.1:11434/v1", "NULL", 0.7, 450),
+    )
+
+    llm_calls = {}
+
+    def fake_generate_reply(**kwargs):
+        llm_calls.update(kwargs)
+        return "I remember posting about education funding."
+
+    monkeypatch.setattr(social, "_generate_reply", fake_generate_reply)
+
+    sanitize_calls = {}
+
+    def fake_sanitize(reply, **kwargs):
+        sanitize_calls["reply"] = reply
+        sanitize_calls.update(kwargs)
+        return reply, {"sanitized": False}
+
+    monkeypatch.setattr(social, "_sanitize_interview_reply", fake_sanitize)
+
+    reply, meta = social._social_chat_generate_reply(
+        exp=exp,
+        target_user=target_user,
+        owner_user=owner_user,
+        session=session,
+        user_message="what have you posted about education?",
+    )
+
+    assert reply == "I remember posting about education funding."
+    assert "MEMORY CONTEXT" in llm_calls["system_message"]
+    assert "FACTS CONTEXT" in llm_calls["system_message"]
+    assert "RECENT CHAT" in llm_calls["user_message"]
+    assert "alice: what have you posted about education?" in llm_calls["user_message"]
+    assert sanitize_calls["strict_no_inference"] is False
+    assert meta["memory_snapshot_present"] is True
+    assert meta["facts_snapshot_present"] is True
+
+
 def test_microblog_chat_routes_are_exposed():
     from y_web.routes.api import social
 
