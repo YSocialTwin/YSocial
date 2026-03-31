@@ -5,7 +5,11 @@ from typing import Tuple
 from sqlalchemy import func
 
 from y_web import db
-from y_web.src.forum.actions.posts import _ensure_experiment_context, _get_current_round
+from y_web.src.forum.actions.posts import (
+    _ensure_experiment_context,
+    _get_current_round,
+    _resolve_experiment_actor,
+)
 from y_web.src.models import Post, Post_Sentiment, Post_topics, Reactions
 
 
@@ -47,6 +51,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
 
     # Ensure experiment database context is set up
     _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
 
     post = Post.query.filter_by(id=post_id).first()
     if post is None:
@@ -56,7 +61,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
 
     try:
         existing_reaction = (
-            Reactions.query.filter_by(post_id=post_id, user_id=user.id)
+            Reactions.query.filter_by(post_id=post_id, user_id=actor_user.id)
             .order_by(Reactions.id.desc())
             .first()
         )
@@ -73,7 +78,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
         if existing_reaction is None:
             reaction = Reactions(
                 post_id=post_id,
-                user_id=user.id,
+                user_id=actor_user.id,
                 round=round_id,
                 type=action,
             )
@@ -107,7 +112,7 @@ def apply_vote(user, post_id: int, action: str) -> Tuple[int, int]:
 
             reaction_sentiment = Post_Sentiment(
                 post_id=post_id,
-                user_id=user.id,
+                user_id=actor_user.id,
                 pos=0 if action == "dislike" else 1,
                 neg=0 if action == "like" else 1,
                 neu=0,

@@ -356,6 +356,26 @@ class TestCanonicalForumFunctions:
         url = "https://i.redd.it/image.jpg"
         assert _upgrade_reddit_image_url(url) == url
 
+    def test_normalize_forum_local_image_path_static_uploads(self):
+        from y_web.src.forum.service.formatters import (
+            _normalize_forum_local_image_path,
+        )
+
+        assert (
+            _normalize_forum_local_image_path("uploads/forum_feed_images/example.jpg")
+            == "/static/uploads/forum_feed_images/example.jpg"
+        )
+
+    def test_normalize_forum_local_image_path_upload_passthrough(self):
+        from y_web.src.forum.service.formatters import (
+            _normalize_forum_local_image_path,
+        )
+
+        assert (
+            _normalize_forum_local_image_path("/uploads/reddit/3/example.jpg")
+            == "/uploads/reddit/3/example.jpg"
+        )
+
     def test_article_summary_needs_enrichment_empty(self):
         from y_web.src.forum.service.formatters import _article_summary_needs_enrichment
 

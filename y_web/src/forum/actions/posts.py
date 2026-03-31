@@ -179,7 +179,6 @@ def create_comment_reddit(
     # Ensure experiment database context is set up
     _ensure_experiment_context(user)
     actor_user = _resolve_experiment_actor(user)
-    actor_user = _resolve_experiment_actor(user)
 
     parent = Post.query.filter_by(id=parent_id).first()
     if parent is None:
@@ -390,6 +389,7 @@ def create_post_reddit(
 
     # Ensure experiment database context is set up
     _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
 
     round_id = _get_current_round()
 

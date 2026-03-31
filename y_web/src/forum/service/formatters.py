@@ -306,6 +306,18 @@ def _upgrade_reddit_image_url(url: str) -> str:
     return url
 
 
+def _normalize_forum_local_image_path(local_path: str) -> str:
+    value = str(local_path or "").strip()
+    if not value:
+        return ""
+    if value.startswith(("http://", "https://", "/static/", "/uploads/")):
+        return value
+    if value.startswith("uploads/"):
+        # Legacy forum feed bootstrap stores files under y_web/static/uploads/...
+        return f"/static/{value}"
+    return value
+
+
 def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]]:
     """Resolve image from image_posts table (standalone images shared by agents)."""
     if not image_post_id:
@@ -325,12 +337,12 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
                 {"id": image_post_id},
             ).fetchone()
             if row and row[0]:
+                local_path = _normalize_forum_local_image_path(row[2] or "")
                 high_res_url = str(row[3] or "").strip()
                 base_url = str(row[0] or "").strip()
-                # Prefer the canonical/high-res URL whenever it exists.
-                # The stored `url` can be a resized Reddit preview variant that browsers
-                # do not always render reliably in the forum feed.
-                source_url = high_res_url or base_url
+                # Historical working behavior for forum feed images used locally
+                # downloaded files first. Fall back to high_res_url, then remote URL.
+                source_url = local_path or high_res_url or base_url
                 url = _upgrade_reddit_image_url(source_url)
                 return {
                     "url": url,

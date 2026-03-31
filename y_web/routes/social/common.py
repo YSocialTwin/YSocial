@@ -5,7 +5,9 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
         update_password.
 """
 
-from flask import flash, redirect, render_template, request, url_for
+import os
+
+from flask import flash, redirect, render_template, request, send_from_directory, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
@@ -44,6 +46,7 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_users
+from y_web.src.system.path_utils import get_writable_path
 
 
 def _latest_follow_action(*, follower_id, user_id):
@@ -53,6 +56,12 @@ def _latest_follow_action(*, follower_id, user_id):
         .first()
     )
     return str(getattr(follow_event, "action", "") or "").strip().lower()
+
+
+@main.get("/uploads/<path:relative_path>")
+def serve_upload(relative_path: str):
+    uploads_root = os.path.join(get_writable_path(), "y_web", "uploads")
+    return send_from_directory(uploads_root, relative_path)
 
 
 @main.route("/")

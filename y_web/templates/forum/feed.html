@@ -649,6 +649,17 @@ window.redditFeedConfig = Object.freeze({
 <script src="{{ url_for('static', filename='assets/js/webcam.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/compose.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/autocompletes.js') }}"></script>
+<script>
+window.redditContext = Object.freeze({
+    loggedUserId: {{ logged_id }},
+    isAdmin: {{ 'true' if is_admin else 'false' }}
+});
+window.redditFeedConfig = Object.freeze({
+    expId: {{ exp_id }},
+    loggedUserId: {{ logged_id }},
+    viewMode: '{{ 'subforum' if active_community else 'feed' }}'
+});
+</script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 {% if forum_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
