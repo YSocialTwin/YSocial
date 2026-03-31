@@ -21,8 +21,8 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
-    count_followers,
     count_followees,
+    count_followers,
     get_mutual_friends,
     get_top_user_hashtags,
     get_unanswered_mentions,

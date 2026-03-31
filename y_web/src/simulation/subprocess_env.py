@@ -5,7 +5,6 @@ Helpers for building subprocess environments for simulation runtimes.
 import os
 from typing import Dict, Optional
 
-
 _STRIP_ENV_KEYS = (
     "WERKZEUG_RUN_MAIN",
     "WERKZEUG_SERVER_FD",

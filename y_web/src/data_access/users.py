@@ -75,8 +75,12 @@ def get_mutual_friends(user_a, user_b, limit=10):
         List of dicts with keys ``id``, ``username``, ``profile_pic``
     """
     active_pairs = _active_follow_pairs()
-    friends_a = {target_id for source_id, target_id in active_pairs if source_id == int(user_a)}
-    friends_b = {target_id for source_id, target_id in active_pairs if source_id == int(user_b)}
+    friends_a = {
+        target_id for source_id, target_id in active_pairs if source_id == int(user_a)
+    }
+    friends_b = {
+        target_id for source_id, target_id in active_pairs if source_id == int(user_b)
+    }
     mutual_friends = list(friends_a & friends_b)
 
     res = []
@@ -123,11 +127,19 @@ def get_user_friends(user_id, limit=12, page=1):
 
     active_pairs = _active_follow_pairs()
     followee_ids = sorted(
-        [target_id for source_id, target_id in active_pairs if source_id == int(user_id)],
+        [
+            target_id
+            for source_id, target_id in active_pairs
+            if source_id == int(user_id)
+        ],
         reverse=True,
     )
     follower_ids = sorted(
-        [source_id for source_id, target_id in active_pairs if target_id == int(user_id)],
+        [
+            source_id
+            for source_id, target_id in active_pairs
+            if target_id == int(user_id)
+        ],
         reverse=True,
     )
 

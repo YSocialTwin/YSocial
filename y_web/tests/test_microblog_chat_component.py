@@ -63,9 +63,17 @@ def test_microblog_chat_memory_query_uses_latest_message_and_recent_history():
     session = SimpleNamespace(
         target_username="agent12",
         messages=[
-            SimpleNamespace(id=1, role="user", content="we were talking about the education vote"),
-            SimpleNamespace(id=2, role="assistant", content="yes, and your earlier post about schools"),
-            SimpleNamespace(id=3, role="user", content="what about the mayor's statement?"),
+            SimpleNamespace(
+                id=1, role="user", content="we were talking about the education vote"
+            ),
+            SimpleNamespace(
+                id=2,
+                role="assistant",
+                content="yes, and your earlier post about schools",
+            ),
+            SimpleNamespace(
+                id=3, role="user", content="what about the mayor's statement?"
+            ),
         ],
     )
 
@@ -117,7 +125,9 @@ def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch
     )
     monkeypatch.setattr(social, "_memory_server_unavailable", lambda binding: False)
 
-    def fake_build_memory_snapshot(exp, *, run_id, agent_user_id, memory_mode=None, query_text=None):
+    def fake_build_memory_snapshot(
+        exp, *, run_id, agent_user_id, memory_mode=None, query_text=None
+    ):
         calls["run_id"] = run_id
         calls["agent_user_id"] = agent_user_id
         calls["memory_mode"] = memory_mode
@@ -168,11 +178,15 @@ def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monke
         ],
     )
 
-    monkeypatch.setattr(social, "_social_chat_admin_user", lambda exp: SimpleNamespace())
+    monkeypatch.setattr(
+        social, "_social_chat_admin_user", lambda exp: SimpleNamespace()
+    )
     monkeypatch.setattr(
         social,
         "_social_chat_refresh_runtime_context",
-        lambda **kwargs: {"semantic_items": [{"text": "posted about education funding"}]},
+        lambda **kwargs: {
+            "semantic_items": [{"text": "posted about education funding"}]
+        },
     )
     monkeypatch.setattr(
         social,
@@ -182,7 +196,9 @@ def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monke
     monkeypatch.setattr(
         social,
         "_build_facts_snapshot",
-        lambda **kwargs: {"top_posts": [{"post_id": 7, "text": "education funding matters"}]},
+        lambda **kwargs: {
+            "top_posts": [{"post_id": 7, "text": "education funding matters"}]
+        },
     )
     monkeypatch.setattr(
         social,
@@ -192,7 +208,14 @@ def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monke
     monkeypatch.setattr(
         social,
         "_resolve_llm_backend",
-        lambda **kwargs: ("admin", "llama3.2", "http://127.0.0.1:11434/v1", "NULL", 0.7, 450),
+        lambda **kwargs: (
+            "admin",
+            "llama3.2",
+            "http://127.0.0.1:11434/v1",
+            "NULL",
+            0.7,
+            450,
+        ),
     )
 
     llm_calls = {}
@@ -238,9 +261,16 @@ def test_microblog_chat_routes_are_exposed():
 
     assert '@api_social.get("/<int:exp_id>/chat/bootstrap")' in route_source
     assert '@api_social.post("/<int:exp_id>/chat/session")' in route_source
-    assert '@api_social.get("/<int:exp_id>/chat/session/<int:session_id>")' in route_source
-    assert '@api_social.post("/<int:exp_id>/chat/session/<int:session_id>/message")' in route_source
-    assert "Microblogging chat is unavailable because memory is disabled." in route_source
+    assert (
+        '@api_social.get("/<int:exp_id>/chat/session/<int:session_id>")' in route_source
+    )
+    assert (
+        '@api_social.post("/<int:exp_id>/chat/session/<int:session_id>/message")'
+        in route_source
+    )
+    assert (
+        "Microblogging chat is unavailable because memory is disabled." in route_source
+    )
     assert "You can chat only with followed agents." in route_source
     assert "_social_chat_followed_agent_ids" in route_source
     assert "_build_facts_snapshot" in route_source
