@@ -536,7 +536,7 @@ def create_tutorial_experiment():
             "port": port,
             "debug": "False",
             "reset_db": "False",
-            "modules": ["news", "voting", "image"],
+            "modules": ["news", "voting", "image", "image_post"],
             "perspective_api": None,
             "sentiment_annotation": False,
             "emotion_annotation": False,

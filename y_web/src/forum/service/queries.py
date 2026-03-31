@@ -160,6 +160,29 @@ def _collect_ranked_communities_from_post_rows(
     return communities
 
 
+def _primary_community_payload(
+    article: Optional[ArticlePreview], topics: List[Tuple[int, str, str]]
+) -> Optional[Dict[str, str]]:
+    subreddit_slug = _subreddit_slug_from_sources(
+        getattr(article, "subreddit", "") if article else "",
+        getattr(article, "url", "") if article else "",
+        getattr(article, "source", "") if article else "",
+    )
+    if subreddit_slug:
+        return _community_entry(subreddit_slug, "subreddit")
+
+    for topic in topics or []:
+        topic_name = ""
+        if isinstance(topic, (list, tuple)) and len(topic) >= 2:
+            topic_name = topic[1]
+        elif isinstance(topic, str):
+            topic_name = topic
+        topic_slug = _normalize_sidebar_slug(topic_name)
+        if topic_slug:
+            return _community_entry(topic_slug, "topic")
+    return None
+
+
 def _apply_community_filter(base_query, community_slug: Optional[str]):
     slug = str(community_slug or "").strip().lower()
     if not slug:
@@ -560,6 +583,7 @@ def _create_feed_post(
 
     emotions = get_elicited_emotions(post.id)
     topics = get_topics(post.id, post.user_id)
+    primary_community = _primary_community_payload(article, topics)
 
     comments, _ = _build_comment_payload(post, viewer_id)
 
@@ -594,6 +618,7 @@ def _create_feed_post(
         image_id=getattr(image_row, "id", None) if image_row else None,
         image_needs_enrichment=image_needs_enrichment,
         image=image,
+        primary_community=primary_community,
         emotions=emotions,
         topics=topics,
         comments=comments,

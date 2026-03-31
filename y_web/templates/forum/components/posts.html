@@ -34,7 +34,20 @@
                 </div>
                 <div class="user-info">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a>
-                    <span class="time">{{ item.get("display_time", "") }}</span>
+                    <span class="time">
+                        {{ item.get("display_time", "") }}
+                        {% if item.get("primary_community") %}
+                        <span class="forum-post-community-separator">·</span>
+                        <a
+                            class="forum-post-community-link"
+                            href="/{{ exp_id }}/subforum/{{ item['primary_community']['slug'] }}?feed_type={{ feed_type }}"
+                            onclick="event.stopPropagation()"
+                        >
+                            <i data-feather="hash" class="forum-post-community-icon"></i>
+                            <span>{{ item['primary_community']['label'] }}</span>
+                        </a>
+                        {% endif %}
+                    </span>
                 </div>
             </div>
             <!-- Right side dropdown -->

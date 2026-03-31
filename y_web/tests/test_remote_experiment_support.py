@@ -17,6 +17,7 @@ from y_web.routes.admin.sub.experiments import (
     generate_standard_config,
 )
 from y_web.src.models import Exps
+from y_web.src.simulation.server import _ensure_image_post_module_in_config
 
 pytestmark = pytest.mark.unit
 
@@ -53,6 +54,7 @@ def test_generate_standard_config_local_experiment():
     assert config["host"] == "127.0.0.1"
     assert config["port"] == 5000
     assert config["is_remote"] is False
+    assert config["modules"] == ["news", "voting", "image", "image_post"]
 
 
 def test_generate_standard_config_remote_experiment():
@@ -80,6 +82,7 @@ def test_generate_standard_config_remote_experiment():
     # Verify remote server info is in host and port fields
     assert config["host"] == "192.168.1.100"
     assert config["port"] == 8080
+    assert config["modules"] == ["news", "voting", "image", "image_post"]
 
 
 def test_generate_hpc_config_local_experiment():
@@ -161,6 +164,21 @@ def test_experiment_model_defaults():
 
     # Check column default is defined
     assert Exps.is_remote.default.arg == 0
+
+
+def test_ensure_image_post_module_in_config_backfills_legacy_standard_config():
+    """Legacy standard configs should gain image_post when image feeds are enabled."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        config_path = os.path.join(tmpdir, "config_server.json")
+        with open(config_path, "w", encoding="utf-8") as handle:
+            json.dump({"modules": ["news", "voting", "image"]}, handle)
+
+        _ensure_image_post_module_in_config(config_path)
+
+        with open(config_path, "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+
+    assert config["modules"] == ["news", "voting", "image", "image_post"]
 
 
 if __name__ == "__main__":

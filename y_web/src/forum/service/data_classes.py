@@ -85,6 +85,7 @@ class FeedPost:
     image_id: Optional[int]
     image_needs_enrichment: bool
     image: Any
+    primary_community: Optional[Dict[str, str]]
     emotions: List[Tuple[str, str, int]]
     topics: List[Tuple[int, str, str]]
     comments: List[Dict[str, Any]]
@@ -118,6 +119,7 @@ class FeedPost:
             "image_id": self.image_id,
             "image_needs_enrichment": bool(self.image_needs_enrichment),
             "image": self.image,
+            "primary_community": self.primary_community or None,
             "emotions": self.emotions,
             "topics": self.topics,
         }

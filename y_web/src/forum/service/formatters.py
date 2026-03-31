@@ -185,7 +185,17 @@ def _resolve_article(article: Optional[Articles]) -> Optional[ArticlePreview]:
         return None
     website = Websites.query.filter_by(id=article.website_id).first()
     source = website.name if website else ""
-    subreddit = (getattr(website, "subreddit", "") or "").strip() if website else ""
+    subreddit = ""
+    if website:
+        rss_value = (getattr(website, "rss", "") or "").strip().lower()
+        match = re.search(r"(?:^|/)r/([a-z0-9_]+)", rss_value)
+        if match:
+            subreddit = match.group(1)
+    if not subreddit and article.link:
+        link_value = (article.link or "").strip().lower()
+        match = re.search(r"(?:^|/)r/([a-z0-9_]+)", link_value)
+        if match:
+            subreddit = match.group(1)
 
     # Fetch image associated with this article
     image = None

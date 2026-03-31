@@ -533,6 +533,13 @@
         return "/profile/" + authorId + "/recent/1";
     }
 
+    function buildSubforumUrl(slug) {
+        var expId = getExpId();
+        var params = new URLSearchParams();
+        params.set("feed_type", feedState.feedType || "new");
+        return "/" + expId + "/subforum/" + encodeURIComponent(slug) + "?" + params.toString();
+    }
+
     function currentViewerCanDelete(authorId, loggedUserId) {
         var isAdmin = !!(window.redditContext && window.redditContext.isAdmin);
         return isAdmin || (loggedUserId && Number(authorId) === Number(loggedUserId));
@@ -725,6 +732,18 @@
         var score = likes - dislikes;
         var threadId = post.thread_id || post.post_id;
         var hasDeletePrivilege = currentViewerCanDelete(post.author_id, loggedUserId);
+        var communityMeta = "";
+        if (post.primary_community && post.primary_community.slug) {
+            communityMeta = [
+                '<span class="forum-post-community-separator">·</span>',
+                '<a class="forum-post-community-link" href="' +
+                    buildSubforumUrl(post.primary_community.slug) +
+                    '">',
+                '  <i data-feather="hash" class="forum-post-community-icon"></i>',
+                '  <span>' + escapeHtml(post.primary_community.label || "") + "</span>",
+                "</a>",
+            ].join("");
+        }
 
         var articleSection = "";
         if (post.article && post.article !== 0) {
@@ -890,6 +909,7 @@
                 "</a>",
             '          <span class="time">' +
                 formatDisplayTime(post) +
+                communityMeta +
                 "</span>",
             "        </div>",
             "      </div>",

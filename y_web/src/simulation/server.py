@@ -61,6 +61,26 @@ def _resolve_server_runtime_paths(base_path, platform_type):
     return server_dir, os.path.join(server_dir, "y_server_run.py")
 
 
+def _ensure_image_post_module_in_config(config_path):
+    """Backfill image_post for older Standard/Forum experiment configs."""
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return
+
+    modules = config.get("modules")
+    if not isinstance(modules, list):
+        return
+
+    if "image" not in modules or "image_post" in modules:
+        return
+
+    config["modules"] = [*modules, "image_post"]
+    with open(config_path, "w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=4)
+
+
 @deprecated
 def detect_env_handler_old():
     """Handle detect env handler old operation."""
@@ -514,6 +534,8 @@ def start_server(exp):
             f"Please ensure the experiment is properly configured."
         )
 
+    _ensure_image_post_module_in_config(config)
+
     # === ROBUST PORT ALLOCATION ===
     # Every time a YServer starts:
     # 1. Terminate processes holding the database file (for SQLite)
@@ -660,6 +682,8 @@ def start_server(exp):
         env = os.environ.copy()
         env["YSERVER_CONFIG"] = config
         env["YSERVER_LOG_FILE"] = str(Path(config).parent / "_server.log")
+        env["Y_SERVER_SUBPROCESS"] = "1"
+        env["Y_SOCIAL_SUBPROCESS"] = "1"
 
         # Create log files for server output
         log_dir = Path(config).parent
@@ -773,6 +797,8 @@ def start_server(exp):
         log_dir = Path(config).parent
         env = os.environ.copy()
         env["YSERVER_LOG_FILE"] = str(log_dir / "_server.log")
+        env["Y_SERVER_SUBPROCESS"] = "1"
+        env["Y_SOCIAL_SUBPROCESS"] = "1"
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 

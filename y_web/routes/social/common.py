@@ -44,6 +44,15 @@ from y_web.src.models import (
 from y_web.src.recsys import get_suggested_users
 
 
+def _latest_follow_action(*, follower_id, user_id):
+    follow_event = (
+        Follow.query.filter_by(follower_id=follower_id, user_id=user_id)
+        .order_by(Follow.id.desc())
+        .first()
+    )
+    return str(getattr(follow_event, "action", "") or "").strip().lower()
+
+
 @main.route("/")
 def index():
     """
@@ -157,9 +166,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
 
-    is_following = (
-        Follow.query.filter_by(follower_id=current_user.id, user_id=user_id).count() > 0
-    )
+    is_following = _latest_follow_action(
+        follower_id=logged_id, user_id=user.id
+    ) == "follow"
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
     total_comments = Post.query.filter(
@@ -227,7 +236,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
                 profile_pic = admin.profile_pic if admin else ""
 
     # Other functions as before
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)
     mutual_friends = get_mutual_friends(user_id, current_user.id)
     hashtags_top = get_top_user_hashtags(user_id, 5)
     interests = get_user_recent_interests(user_id, 5)
@@ -296,6 +305,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             sfollow=suggested_users,
             spages=suggested_pages,
             forum_memory_enabled=_forum_memory_enabled(exp_id),
+            can_follow_profile=int(user.id) != int(logged_id),
+            feed_type="new",
             **forum_context,
         )
 

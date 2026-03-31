@@ -108,3 +108,20 @@ def test_forum_sidebar_template_contains_recent_and_user_sections():
     assert "My Communities" in template
     assert "{% for community in recent_communities %}" in template
     assert "{% for community in my_communities %}" in template
+
+
+def test_forum_post_headers_render_primary_community_links():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/forum/components/posts.html"
+    ).read_text(encoding="utf-8")
+    js_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/reddit/async_updates.js"
+    ).read_text(encoding="utf-8")
+    query_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/forum/service/queries.py"
+    ).read_text(encoding="utf-8")
+
+    assert "primary_community" in template
+    assert "forum-post-community-link" in template
+    assert "buildSubforumUrl(post.primary_community.slug)" in js_source
+    assert "_primary_community_payload(article, topics)" in query_source

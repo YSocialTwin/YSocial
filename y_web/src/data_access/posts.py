@@ -14,6 +14,7 @@ from y_web.src.models import (
     Agent,
     Articles,
     Emotions,
+    Exps,
     Images,
     Interests,
     Mentions,
@@ -244,6 +245,20 @@ def get_user_recent_posts(
     if page < 1:
         page = 1
 
+    exp = Exps.query.filter_by(idexp=int(exp_id)).first() if exp_id is not None else None
+    is_forum = getattr(exp, "platform_type", "") == "forum"
+
+    if is_forum:
+        from y_web.src.content.text_utils import process_reddit_post  # noqa: PLC0415
+        from y_web.src.forum.service import (  # noqa: PLC0415
+            _format_display_time,
+            _format_display_time_from_created_at,
+            _resolve_article,
+        )
+        from y_web.src.forum.service.queries import (  # noqa: PLC0415
+            _primary_community_payload,
+        )
+
     user = User_mgmt.query.filter_by(id=user_id).first()
     username = user.username if user else "Unknown"
 
@@ -327,6 +342,35 @@ def get_user_recent_posts(
                     .profile_pic
                 )
 
+            comment_round = Rounds.query.filter_by(id=c.round).first()
+            comment_day = comment_round.day if comment_round is not None else "None"
+            comment_hour = comment_round.hour if comment_round is not None else "00"
+            comment_display_time = (
+                _format_display_time_from_created_at(getattr(c, "created_at", None))
+                if is_forum
+                else None
+            ) or (
+                _format_display_time(
+                    str(comment_day),
+                    f"{int(comment_hour):02d}"
+                    if str(comment_hour).isdigit()
+                    else str(comment_hour),
+                )
+                if is_forum
+                else None
+            )
+            comment_topics = get_topics(c.id, c.user_id)
+            if len(comment_topics) == 0:
+                comment_topics = []
+            comment_title, comment_body = (
+                process_reddit_post(c.tweet) if is_forum else ("", text)
+            )
+            processed_comment = (
+                augment_text(comment_body, exp_id)
+                if comment_body
+                else augment_text(text, exp_id)
+            )
+
             cms.append(
                 {
                     "post_id": c.id,
@@ -351,10 +395,12 @@ def get_user_recent_posts(
                         )
                     )(),
                     "author_id": c.user_id,
-                    "post": augment_text(text, exp_id),
+                    "title": comment_title if is_forum else "",
+                    "post": processed_comment,
                     "round": c.round,
-                    "day": Rounds.query.filter_by(id=c.round).first().day,
-                    "hour": Rounds.query.filter_by(id=c.round).first().hour,
+                    "day": comment_day,
+                    "hour": comment_hour,
+                    "display_time": comment_display_time if is_forum else None,
                     "likes": len(
                         list(Reactions.query.filter_by(post_id=c.id, type="like"))
                     ),
@@ -371,13 +417,14 @@ def get_user_recent_posts(
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
                     "emotions": emotions,
-                    "topics": get_topics(post.thread_id, post.user_id),
+                    "topics": comment_topics,
                 }
             )
 
         article = Articles.query.filter_by(id=post.news_id).first()
         if article is None:
             art = 0
+            article_preview = None
         else:
             art = {
                 "title": article.title,
@@ -385,6 +432,7 @@ def get_user_recent_posts(
                 "url": article.link,
                 "source": Websites.query.filter_by(id=article.website_id).first().name,
             }
+            article_preview = _resolve_article(article) if is_forum else None
 
         c = Rounds.query.filter_by(id=post.round).first()
         if c is None:
@@ -393,6 +441,18 @@ def get_user_recent_posts(
         else:
             day = c.day
             hour = c.hour
+        display_time = (
+            _format_display_time_from_created_at(getattr(post, "created_at", None))
+            if is_forum
+            else None
+        ) or (
+            _format_display_time(
+                str(day),
+                f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
+            )
+            if is_forum
+            else None
+        )
 
         emotions = get_elicited_emotions(post.id)
         image = Images.query.filter_by(id=post.image_id).first()
@@ -415,6 +475,18 @@ def get_user_recent_posts(
                 .first()
                 .profile_pic
             )
+        topics = get_topics(post.id, post.user_id)
+        if len(topics) == 0:
+            topics = []
+        primary_community = (
+            _primary_community_payload(article_preview, topics) if is_forum else None
+        )
+        title, post_body = (
+            process_reddit_post(post.tweet)
+            if is_forum
+            else ("", post.tweet.split(":")[-1])
+        )
+        processed_post = augment_text(post_body, exp_id) if post_body else ""
 
         res.append(
             {
@@ -445,10 +517,15 @@ def get_user_recent_posts(
                     User_mgmt.query.filter_by(id=post.user_id).first()
                 ),
                 "author_id": post.user_id,
-                "post": augment_text(post.tweet.split(":")[-1], exp_id),
+                "title": title if is_forum else "",
+                "post": processed_post,
                 "round": post.round,
                 "day": day,
                 "hour": hour,
+                "display_time": display_time if is_forum else None,
+                "created_at": getattr(post, "created_at", None).isoformat()
+                if getattr(post, "created_at", None)
+                else None,
                 "likes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="like").all())
                 ),
@@ -469,7 +546,8 @@ def get_user_recent_posts(
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,
-                "topics": get_topics(post.id, post.user_id),
+                "topics": topics,
+                "primary_community": primary_community,
             }
         )
 

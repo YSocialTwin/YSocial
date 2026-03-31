@@ -32,6 +32,7 @@
   }
 
   const storageKey = `ysocial:forum-chat:${expId}:collapsed`
+  const readStateKey = `ysocial:forum-chat:${expId}:read-state`
 
   function apiGet (url) {
     return fetch(url, { credentials: 'same-origin' }).then(async (res) => {
@@ -77,7 +78,7 @@
   }
 
   function formatMessageHtml (value) {
-    return escapeHtml(value).replace(/\n/g, '<br>')
+    return escapeHtml(String(value || '').replace(/^\s+/, '')).replace(/\n/g, '<br>')
   }
 
   function avatarMarkup (name, profilePic) {
@@ -89,7 +90,7 @@
 
   function renderCollapsedBadge () {
     if (!collapseBadge) return
-    const count = Array.isArray(state.sessions) ? state.sessions.length : 0
+    const count = getUnreadSessionCount()
     if (count > 0) {
       collapseBadge.textContent = count > 99 ? '99+' : String(count)
       collapseBadge.classList.remove('is-hidden')
@@ -97,6 +98,40 @@
       collapseBadge.textContent = ''
       collapseBadge.classList.add('is-hidden')
     }
+  }
+
+  function loadReadState () {
+    try {
+      const raw = localStorage.getItem(readStateKey)
+      const parsed = raw ? JSON.parse(raw) : {}
+      return parsed && typeof parsed === 'object' ? parsed : {}
+    } catch (err) {
+      return {}
+    }
+  }
+
+  function saveReadState (value) {
+    try {
+      localStorage.setItem(readStateKey, JSON.stringify(value || {}))
+    } catch (err) {}
+  }
+
+  function markSessionRead (session) {
+    if (!session || !session.id) return
+    const readState = loadReadState()
+    readState[String(session.id)] = String(session.last_message_at || '')
+    saveReadState(readState)
+  }
+
+  function isSessionUnread (session) {
+    if (!session || !session.id || !session.last_message_at) return false
+    const readState = loadReadState()
+    return String(readState[String(session.id)] || '') !== String(session.last_message_at || '')
+  }
+
+  function getUnreadSessionCount () {
+    if (!Array.isArray(state.sessions)) return 0
+    return state.sessions.filter(isSessionUnread).length
   }
 
   function setCollapsed (collapsed) {
@@ -163,13 +198,11 @@
       messagesEl.innerHTML = '<div class="forum-chat-empty forum-chat-empty-thread">No messages yet. Start the conversation.</div>'
       return
     }
-    messagesEl.innerHTML = messages.map(msg => `
-      <div class="forum-chat-bubble-row ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">
-        <div class="forum-chat-bubble ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">
-          ${formatMessageHtml(msg.content)}
-        </div>
-      </div>
-    `).join('')
+    messagesEl.innerHTML = messages.map(msg => (
+      `<div class="forum-chat-bubble-row ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">` +
+      `<div class="forum-chat-bubble ${msg.role === 'user' ? 'is-user' : 'is-assistant'}">${formatMessageHtml(msg.content)}</div>` +
+      `</div>`
+    )).join('')
     messagesEl.scrollTop = messagesEl.scrollHeight
   }
 
@@ -186,7 +219,9 @@
     targetAvatarEl.innerHTML = avatarMarkup(session.target_username, session.target_profile_pic)
     targetNameEl.textContent = session.target_username
     targetSubtitleEl.textContent = 'Private chat'
+    markSessionRead(session)
     renderMessages()
+    renderCollapsedBadge()
     if (window.feather && typeof window.feather.replace === 'function') {
       window.feather.replace()
     }
@@ -235,6 +270,7 @@
       const idx = state.sessions.findIndex(item => Number(item.id) === Number(nextSession.id))
       if (idx >= 0) state.sessions[idx] = nextSession
       else state.sessions.unshift(nextSession)
+      markSessionRead(nextSession)
       inputEl.value = ''
       renderMessages()
       renderList()
@@ -258,9 +294,10 @@
   collapseHandle.addEventListener('click', () => setCollapsed(!state.collapsed))
 
   try {
-    setCollapsed(localStorage.getItem(storageKey) === '1')
+    const persisted = localStorage.getItem(storageKey)
+    setCollapsed(persisted === null ? true : persisted === '1')
   } catch (err) {
-    setCollapsed(false)
+    setCollapsed(true)
   }
 
   loadBootstrap()

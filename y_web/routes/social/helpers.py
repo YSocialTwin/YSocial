@@ -130,6 +130,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         _format_display_time,
         _format_display_time_from_created_at,
     )
+    from y_web.src.forum.service.queries import _primary_community_payload
 
     # Get experiment user ID if not provided
     if exp_user_id is None:
@@ -291,6 +292,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
         topics = get_topics(post.id, post.user_id)
         if len(topics) == 0:
             topics = []
+        primary_community = (
+            _primary_community_payload(article, topics) if is_forum else None
+        )
 
         # Get author username safely
         author_user = User_mgmt.query.filter_by(id=post.user_id).first()
@@ -330,6 +334,9 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "day": day,
                 "hour": hour,
                 "display_time": display_time,
+                "created_at": getattr(post, "created_at", None).isoformat()
+                if getattr(post, "created_at", None)
+                else None,
                 "likes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="like"))
                 ),
@@ -349,6 +356,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": topics,
+                "primary_community": primary_community,
             }
         )
 

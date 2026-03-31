@@ -41,6 +41,7 @@ from y_web.src.models import (
     Admin_users,
     Articles,
     Exps,
+    Follow,
     ForumChatMessage,
     ForumChatSession,
     Images,
@@ -68,6 +69,10 @@ from y_web.routes.api.interview._memory import (
     _format_memory_pack,
     _get_top_interests_for_user,
     _resolve_interview_profile_pic,
+)
+from y_web.routes.api.interview._facts import (
+    _build_facts_snapshot,
+    _format_facts_pack,
 )
 from y_web.routes.api.interview._server import (
     _ensure_experiment_db_bind,
@@ -108,6 +113,26 @@ def _forum_chat_owner_user() -> User_mgmt | None:
     return User_mgmt.query.filter_by(
         username=getattr(current_user, "username", "") or ""
     ).first()
+
+
+def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
+    followed_ids: set[int] = set()
+    latest_actions: dict[int, str] = {}
+    follow_events = (
+        Follow.query.filter_by(follower_id=int(owner_user_id))
+        .order_by(Follow.id.desc())
+        .all()
+    )
+    for event in follow_events:
+        target_id = int(getattr(event, "user_id", 0) or 0)
+        if not target_id or target_id in latest_actions:
+            continue
+        latest_actions[target_id] = str(getattr(event, "action", "") or "").strip().lower()
+
+    for target_id, action in latest_actions.items():
+        if action == "follow":
+            followed_ids.add(target_id)
+    return followed_ids
 
 
 def _forum_chat_admin_user(exp: Exps) -> Admin_users | None:
@@ -177,6 +202,26 @@ def _forum_chat_build_transcript(session: ForumChatSession, *, max_messages: int
     return "\n".join(lines).strip()
 
 
+def _forum_chat_build_memory_query(
+    session: ForumChatSession, latest_user_message: str, *, max_messages: int = 4
+) -> str:
+    latest = str(latest_user_message or "").strip()
+    chunks = []
+    if latest:
+        chunks.append(latest)
+
+    messages = sorted(session.messages or [], key=lambda item: int(item.id))
+    tail = messages[-max_messages:]
+    for msg in reversed(tail):
+        content = str(getattr(msg, "content", "") or "").strip()
+        if not content or content == latest:
+            continue
+        chunks.append(content)
+
+    query = " | ".join(chunks).strip(" |")
+    return query or "private chat context and recent interactions"
+
+
 def _forum_chat_upsert_session(
     *,
     exp: Exps,
@@ -211,7 +256,7 @@ def _forum_chat_upsert_session(
 
 
 def _forum_chat_refresh_runtime_context(
-    *, exp: Exps, target_user: User_mgmt, session: ForumChatSession
+    *, exp: Exps, target_user: User_mgmt, session: ForumChatSession, query_text: str
 ) -> dict:
     if not session.persona_snapshot:
         interests = _get_top_interests_for_user(int(target_user.id))
@@ -234,7 +279,7 @@ def _forum_chat_refresh_runtime_context(
                 run_id=run_id,
                 agent_user_id=int(target_user.id),
                 memory_mode="semantic",
-                query_text="private chat context and recent interactions",
+                query_text=query_text,
             )
         except Exception:
             snapshot = {}
@@ -254,10 +299,19 @@ def _forum_chat_generate_reply(
     if admin_user is None:
         raise RuntimeError("No admin runtime is available for forum chat.")
 
+    memory_query = _forum_chat_build_memory_query(session, user_message)
     memory_snapshot = _forum_chat_refresh_runtime_context(
-        exp=exp, target_user=target_user, session=session
+        exp=exp,
+        target_user=target_user,
+        session=session,
+        query_text=memory_query,
     )
     memory_pack = _forum_chat_render_memory_pack(memory_snapshot)
+    facts_snapshot = _build_facts_snapshot(
+        agent_user_id=int(target_user.id),
+        admin_text=memory_query,
+    )
+    facts_pack = _format_facts_pack(facts_snapshot)
     transcript = _forum_chat_build_transcript(session)
 
     mode, model, base_url, api_key, temperature, max_tokens = _resolve_llm_backend(
@@ -282,6 +336,8 @@ def _forum_chat_generate_reply(
     )
     if memory_pack:
         system_message += f"\n\nMEMORY CONTEXT\n{memory_pack}"
+    if facts_pack:
+        system_message += f"\n\nFACTS CONTEXT\n{facts_pack}"
 
     prompt_parts = []
     if transcript:
@@ -300,11 +356,15 @@ def _forum_chat_generate_reply(
     )
     reply, sanitize_meta = _sanitize_interview_reply(
         reply,
-        facts_snapshot={},
+        facts_snapshot=facts_snapshot,
         memory_snapshot=memory_snapshot,
         strict_no_inference=False,
     )
-    return (reply or "").strip(), sanitize_meta or {}
+    meta = sanitize_meta or {}
+    meta["memory_query_text"] = memory_query
+    meta["memory_snapshot_present"] = bool(memory_snapshot)
+    meta["facts_snapshot_present"] = bool(facts_snapshot)
+    return (reply or "").strip(), meta
 
 
 def _upload_dir_for_exp(exp_id: int) -> str:
@@ -1163,11 +1223,13 @@ def api_forum_chat_bootstrap(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
+    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
     agents = (
         User_mgmt.query.filter(User_mgmt.is_page == 0)
         .filter(User_mgmt.user_type != "user")
         .filter(User_mgmt.id != int(owner_user.id))
+        .filter(User_mgmt.id.in_(followed_agent_ids or {-1}))
         .order_by(User_mgmt.username.asc())
         .all()
     )
@@ -1176,6 +1238,9 @@ def api_forum_chat_bootstrap(exp_id: int):
         .order_by(ForumChatSession.last_message_at.desc(), ForumChatSession.updated_at.desc(), ForumChatSession.id.desc())
         .all()
     )
+    sessions = [
+        sess for sess in sessions if int(sess.target_user_id) in followed_agent_ids
+    ]
 
     session_map = {int(sess.target_user_id): sess for sess in sessions}
     agent_payload = []
@@ -1218,6 +1283,7 @@ def api_forum_chat_open_session(exp_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
+    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
     payload = request.get_json(silent=True) or {}
     agent_user_id = payload.get("agent_user_id")
@@ -1234,6 +1300,8 @@ def api_forum_chat_open_session(exp_id: int):
     )
     if target_user is None:
         return _json_error("Target agent not found.", 404)
+    if int(target_user.id) not in followed_agent_ids:
+        return _json_error("You can chat only with followed agents.", 403)
 
     session = _forum_chat_upsert_session(
         exp=exp, owner_user=owner_user, target_user=target_user
@@ -1255,12 +1323,15 @@ def api_forum_chat_get_session(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
+    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
     session = ForumChatSession.query.filter_by(
         id=int(session_id), owner_user_id=int(owner_user.id)
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
+    if int(session.target_user_id) not in followed_agent_ids:
+        return _json_error("You can chat only with followed agents.", 403)
 
     return _json_success(_forum_chat_session_payload(session, include_messages=True))
 
@@ -1278,12 +1349,15 @@ def api_forum_chat_send_message(exp_id: int, session_id: int):
     owner_user = _forum_chat_owner_user()
     if owner_user is None:
         return _json_error("Forum user not found for current session.", 404)
+    followed_agent_ids = _forum_chat_followed_agent_ids(int(owner_user.id))
 
     session = ForumChatSession.query.filter_by(
         id=int(session_id), owner_user_id=int(owner_user.id)
     ).first()
     if session is None:
         return _json_error("Chat session not found.", 404)
+    if int(session.target_user_id) not in followed_agent_ids:
+        return _json_error("You can chat only with followed agents.", 403)
 
     target_user = User_mgmt.query.filter_by(id=int(session.target_user_id)).first()
     if target_user is None:

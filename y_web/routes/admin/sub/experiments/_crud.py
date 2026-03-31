@@ -1634,7 +1634,7 @@ def generate_standard_config(
         "port": port,
         "debug": "False",
         "reset_db": "False",
-        "modules": ["news", "voting", "image"],
+        "modules": ["news", "voting", "image", "image_post"],
         "perspective_api": (
             perspective_api if perspective_api and len(perspective_api) > 0 else None
         ),
