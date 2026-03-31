@@ -7,7 +7,14 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
 
 import os
 
-from flask import flash, redirect, render_template, request, send_from_directory, url_for
+from flask import (
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
