@@ -168,9 +168,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         flash("User not found in experiment", "error")
         return redirect(url_for("main.index"))
 
-    is_following = _latest_follow_action(
-        follower_id=logged_id, user_id=user.id
-    ) == "follow"
+    is_following = (
+        _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
+    )
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
     total_comments = Post.query.filter(

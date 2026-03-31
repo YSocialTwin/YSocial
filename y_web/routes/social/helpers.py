@@ -334,9 +334,11 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "day": day,
                 "hour": hour,
                 "display_time": display_time,
-                "created_at": getattr(post, "created_at", None).isoformat()
-                if getattr(post, "created_at", None)
-                else None,
+                "created_at": (
+                    getattr(post, "created_at", None).isoformat()
+                    if getattr(post, "created_at", None)
+                    else None
+                ),
                 "likes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="like"))
                 ),

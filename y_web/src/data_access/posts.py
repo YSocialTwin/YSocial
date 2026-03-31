@@ -245,7 +245,9 @@ def get_user_recent_posts(
     if page < 1:
         page = 1
 
-    exp = Exps.query.filter_by(idexp=int(exp_id)).first() if exp_id is not None else None
+    exp = (
+        Exps.query.filter_by(idexp=int(exp_id)).first() if exp_id is not None else None
+    )
     is_forum = getattr(exp, "platform_type", "") == "forum"
 
     if is_forum:
@@ -352,9 +354,11 @@ def get_user_recent_posts(
             ) or (
                 _format_display_time(
                     str(comment_day),
-                    f"{int(comment_hour):02d}"
-                    if str(comment_hour).isdigit()
-                    else str(comment_hour),
+                    (
+                        f"{int(comment_hour):02d}"
+                        if str(comment_hour).isdigit()
+                        else str(comment_hour)
+                    ),
                 )
                 if is_forum
                 else None
@@ -523,9 +527,11 @@ def get_user_recent_posts(
                 "day": day,
                 "hour": hour,
                 "display_time": display_time if is_forum else None,
-                "created_at": getattr(post, "created_at", None).isoformat()
-                if getattr(post, "created_at", None)
-                else None,
+                "created_at": (
+                    getattr(post, "created_at", None).isoformat()
+                    if getattr(post, "created_at", None)
+                    else None
+                ),
                 "likes": len(
                     list(Reactions.query.filter_by(post_id=post.id, type="like").all())
                 ),
