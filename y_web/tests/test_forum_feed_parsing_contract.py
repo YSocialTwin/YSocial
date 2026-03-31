@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from y_web.routes.admin.sub.experiments._feeds import _parse_admin_feed_metadata
 from y_web.routes.admin.sub.experiments._helpers import _normalize_subreddit_input
 
 pytestmark = pytest.mark.unit
@@ -46,3 +47,35 @@ def test_rss_feed_parser_prefers_feed_metadata_link():
 
     assert 'site_url = str(feed.feed.get("link") or "").strip()' in content
     assert '"url_site": site_url or site_host' in content
+
+
+def test_parse_admin_feed_metadata_accepts_reddit_listing_json():
+    feed_url = "https://www.reddit.com/r/politics/new.json?limit=100"
+    feed_content = b"""
+    {
+      "data": {
+        "children": [
+          {
+            "data": {
+              "subreddit_name_prefixed": "r/politics"
+            }
+          },
+          {
+            "data": {
+              "subreddit_name_prefixed": "r/politics"
+            }
+          }
+        ]
+      }
+    }
+    """
+
+    parsed = _parse_admin_feed_metadata(feed_url, feed_content)
+
+    assert parsed == {
+        "name": "r/politics",
+        "feed_url": "https://www.reddit.com/r/politics/new.json?limit=100",
+        "url_site": "https://www.reddit.com/r/politics/",
+        "description": "Reddit subreddit JSON listing for r/politics",
+        "entries_count": 2,
+    }

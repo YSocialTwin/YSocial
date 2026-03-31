@@ -214,8 +214,6 @@ def parse_rss_feed():
     """Parse an RSS URL and return basic feed metadata."""
     check_privileges(current_user.username)
 
-    import feedparser
-
     payload = request.get_json(silent=True) or {}
     feed_url = str(payload.get("feed_url", "")).strip()
     if not feed_url:
@@ -226,30 +224,84 @@ def parse_rss_feed():
 
     try:
         feed_content = _read_feed_with_headers(feed_url)
-        feed = feedparser.parse(feed_content)
-        if feed.bozo and not feed.entries:
+        parsed_feed = _parse_admin_feed_metadata(feed_url, feed_content)
+        if parsed_feed is None:
             return jsonify({"error": "Invalid RSS feed URL"}), 400
-        parsed_feed_url = getattr(feed, "href", "") or feed_url
-        parsed_url = urlparse(parsed_feed_url)
-        site_url = str(feed.feed.get("link") or "").strip()
-        site_host = urlparse(site_url).netloc or parsed_url.netloc
-        return jsonify(
-            {
-                "name": feed.feed.get(
-                    "title", site_host or parsed_url.netloc or feed_url
-                ),
-                "feed_url": parsed_feed_url,
-                "url_site": site_url or site_host,
-                "description": feed.feed.get("description", ""),
-                "entries_count": len(feed.entries),
-            }
-        )
+        return jsonify(parsed_feed)
     except HTTPError as exc:
         return jsonify({"error": f"Feed source returned HTTP {exc.code}."}), 400
     except URLError:
         return jsonify({"error": "Feed source could not be reached."}), 400
     except Exception as exc:
         return jsonify({"error": str(exc)}), 400
+
+
+def _parse_admin_feed_metadata(feed_url, feed_content):
+    """Parse a forum feed source, accepting RSS/Atom and Reddit JSON listings."""
+    import feedparser
+
+    feed = feedparser.parse(feed_content)
+    if not (feed.bozo and not feed.entries):
+        parsed_feed_url = getattr(feed, "href", "") or feed_url
+        parsed_url = urlparse(parsed_feed_url)
+        site_url = str(feed.feed.get("link") or "").strip()
+        site_host = urlparse(site_url).netloc or parsed_url.netloc
+        return {
+            "name": feed.feed.get("title", site_host or parsed_url.netloc or feed_url),
+            "feed_url": parsed_feed_url,
+            "url_site": site_url or site_host,
+            "description": feed.feed.get("description", ""),
+            "entries_count": len(feed.entries),
+        }
+
+    reddit_listing = _parse_reddit_json_listing(feed_url, feed_content)
+    if reddit_listing is not None:
+        return reddit_listing
+
+    return None
+
+
+def _parse_reddit_json_listing(feed_url, feed_content):
+    """Parse Reddit listing JSON metadata while preserving the original source URL."""
+    subreddit = _normalize_subreddit_input(feed_url)
+    if not subreddit:
+        return None
+
+    parsed_url = urlparse(feed_url)
+    if not parsed_url.path.lower().endswith(".json"):
+        return None
+
+    try:
+        payload = json.loads(feed_content.decode("utf-8"))
+    except Exception:
+        return None
+
+    if not isinstance(payload, dict):
+        return None
+
+    data = payload.get("data")
+    if not isinstance(data, dict):
+        return None
+
+    children = data.get("children")
+    if not isinstance(children, list):
+        return None
+
+    site_url = f"https://www.reddit.com/r/{quote(subreddit)}/"
+
+    first_entry = children[0] if children else {}
+    first_entry_data = first_entry.get("data", {}) if isinstance(first_entry, dict) else {}
+    display_name = str(
+        first_entry_data.get("subreddit_name_prefixed") or f"r/{subreddit}"
+    ).strip()
+
+    return {
+        "name": display_name or f"r/{subreddit}",
+        "feed_url": feed_url,
+        "url_site": site_url,
+        "description": f"Reddit subreddit JSON listing for r/{subreddit}",
+        "entries_count": len(children),
+    }
 
 
 @experiments.route("/admin/upload_rss_feeds/<int:uid>", methods=["POST"])
