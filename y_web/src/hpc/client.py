@@ -14,6 +14,7 @@ from pathlib import Path
 
 from y_web import db
 from y_web.src.models import Client_Execution
+from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 
@@ -195,7 +196,7 @@ def start_hpc_client(exp, cli, population):
     print(f"Agents: {agents_file}")
     print(f"Prompts: {prompts_file}")
 
-    env = os.environ.copy()
+    env = build_subprocess_env()
 
     try:
         # Start the process with Popen

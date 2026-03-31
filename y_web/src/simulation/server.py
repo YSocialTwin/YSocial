@@ -40,6 +40,7 @@ from y_web.src.simulation.process_registry import (
     _register_process,
     _unregister_process,
 )
+from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import (
     get_base_path,
     get_resource_path,
@@ -679,11 +680,14 @@ def start_server(exp):
                     cmd = ["gunicorn"] + gunicorn_args
 
         # Set environment variable for config file path
-        env = os.environ.copy()
-        env["YSERVER_CONFIG"] = config
-        env["YSERVER_LOG_FILE"] = str(Path(config).parent / "_server.log")
-        env["Y_SERVER_SUBPROCESS"] = "1"
-        env["Y_SOCIAL_SUBPROCESS"] = "1"
+        env = build_subprocess_env(
+            {
+                "YSERVER_CONFIG": config,
+                "YSERVER_LOG_FILE": str(Path(config).parent / "_server.log"),
+                "Y_SERVER_SUBPROCESS": "1",
+                "Y_SOCIAL_SUBPROCESS": "1",
+            }
+        )
 
         # Create log files for server output
         log_dir = Path(config).parent
@@ -795,10 +799,13 @@ def start_server(exp):
         # Create log files for server output to avoid pipe buffering issues
         # The server process should run independently without blocking on PIPE
         log_dir = Path(config).parent
-        env = os.environ.copy()
-        env["YSERVER_LOG_FILE"] = str(log_dir / "_server.log")
-        env["Y_SERVER_SUBPROCESS"] = "1"
-        env["Y_SOCIAL_SUBPROCESS"] = "1"
+        env = build_subprocess_env(
+            {
+                "YSERVER_LOG_FILE": str(log_dir / "_server.log"),
+                "Y_SERVER_SUBPROCESS": "1",
+                "Y_SOCIAL_SUBPROCESS": "1",
+            }
+        )
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 

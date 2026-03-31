@@ -23,6 +23,46 @@ from y_web.src.models import (
 )
 
 
+def _reduce_latest_follow_map(events, *, source_attr: str, target_attr: str):
+    latest = {}
+    for event in events or []:
+        try:
+            source_id = int(getattr(event, source_attr))
+            target_id = int(getattr(event, target_attr))
+            event_id = int(getattr(event, "id"))
+        except Exception:
+            continue
+        current = latest.get((source_id, target_id))
+        if current is None or event_id > current[0]:
+            latest[(source_id, target_id)] = (
+                event_id,
+                str(getattr(event, "action", "") or "").strip().lower(),
+            )
+    return latest
+
+
+def _active_follow_pairs():
+    events = Follow.query.order_by(Follow.id.asc()).all()
+    latest = _reduce_latest_follow_map(
+        events, source_attr="user_id", target_attr="follower_id"
+    )
+    return {
+        (user_id, follower_id)
+        for (user_id, follower_id), (_event_id, action) in latest.items()
+        if action == "follow" and user_id != follower_id
+    }
+
+
+def count_followees(user_id):
+    active_pairs = _active_follow_pairs()
+    return sum(1 for source_id, _target_id in active_pairs if source_id == int(user_id))
+
+
+def count_followers(user_id):
+    active_pairs = _active_follow_pairs()
+    return sum(1 for _source_id, target_id in active_pairs if target_id == int(user_id))
+
+
 def get_mutual_friends(user_a, user_b, limit=10):
     """Get the mutual friends between two users.
 
@@ -34,14 +74,10 @@ def get_mutual_friends(user_a, user_b, limit=10):
     Returns:
         List of dicts with keys ``id``, ``username``, ``profile_pic``
     """
-    friends_a = Follow.query.filter_by(user_id=user_a, action="follow").distinct()
-    friends_b = Follow.query.filter_by(user_id=user_b, action="follow").distinct()
-
-    mutual_friends = []
-    for f_a in friends_a:
-        for f_b in friends_b:
-            if f_a.follower_id == f_b.follower_id:
-                mutual_friends.append(f_a.follower_id)
+    active_pairs = _active_follow_pairs()
+    friends_a = {target_id for source_id, target_id in active_pairs if source_id == int(user_a)}
+    friends_b = {target_id for source_id, target_id in active_pairs if source_id == int(user_b)}
+    mutual_friends = list(friends_a & friends_b)
 
     res = []
     added = {}
@@ -85,21 +121,18 @@ def get_user_friends(user_id, limit=12, page=1):
     if page < 1:
         page = 1
 
-    number_followees = (
-        db.session.query(Follow.follower_id)
-        .filter(Follow.user_id == user_id, Follow.follower_id != user_id)
-        .group_by(Follow.follower_id)
-        .having(func.count(Follow.follower_id) % 2 == 1)
-        .count()
+    active_pairs = _active_follow_pairs()
+    followee_ids = sorted(
+        [target_id for source_id, target_id in active_pairs if source_id == int(user_id)],
+        reverse=True,
+    )
+    follower_ids = sorted(
+        [source_id for source_id, target_id in active_pairs if target_id == int(user_id)],
+        reverse=True,
     )
 
-    number_followers = (
-        db.session.query(Follow.user_id)
-        .filter(Follow.follower_id == user_id, Follow.user_id != user_id)
-        .group_by(Follow.user_id)
-        .having(func.count(Follow.user_id) % 2 == 1)
-        .count()
-    )
+    number_followees = len(followee_ids)
+    number_followers = len(follower_ids)
 
     followee_list = []
     followers_list = []
@@ -109,18 +142,14 @@ def get_user_friends(user_id, limit=12, page=1):
     ):
         return get_user_friends(user_id, limit=limit, page=page - 1)
 
-    if page * limit <= number_followees + limit:
-        followee_query = (
-            db.session.query(Follow.follower_id, User_mgmt.username, User_mgmt.id)
-            .filter(Follow.user_id == user_id, Follow.follower_id != user_id)
-            .join(User_mgmt, Follow.follower_id == User_mgmt.id)
-            .group_by(Follow.follower_id, User_mgmt.username, User_mgmt.id)
-            .having(func.count(Follow.follower_id) % 2 == 1)
-            .paginate(page=page, per_page=limit, error_out=False)
-        )
+    start = max(0, (page - 1) * limit)
+    end = start + limit
 
-        for f in followee_query.items:
-            uid_f = f.id
+    if start < number_followees:
+        for uid_f in followee_ids[start:end]:
+            f = User_mgmt.query.filter_by(id=uid_f).first()
+            if f is None:
+                continue
             followee_list.append(
                 {
                     "id": uid_f,
@@ -128,35 +157,16 @@ def get_user_friends(user_id, limit=12, page=1):
                     "number_reactions": Reactions.query.filter_by(
                         user_id=uid_f
                     ).count(),
-                    "number_followers": (
-                        db.session.query(Follow.user_id)
-                        .filter(Follow.follower_id == uid_f, Follow.user_id != uid_f)
-                        .group_by(Follow.user_id)
-                        .having(func.count(Follow.user_id) % 2 == 1)
-                        .count()
-                    ),
-                    "number_followees": (
-                        db.session.query(Follow.follower_id)
-                        .filter(Follow.user_id == uid_f, Follow.follower_id != uid_f)
-                        .group_by(Follow.follower_id)
-                        .having(func.count(Follow.follower_id) % 2 == 1)
-                        .count()
-                    ),
+                    "number_followers": count_followers(uid_f),
+                    "number_followees": count_followees(uid_f),
                 }
             )
 
-    if page * limit <= number_followers + limit:
-        followers_query = (
-            db.session.query(Follow.user_id, User_mgmt.username, User_mgmt.id)
-            .filter(Follow.follower_id == user_id, Follow.user_id != user_id)
-            .join(User_mgmt, Follow.user_id == User_mgmt.id)
-            .group_by(Follow.user_id, User_mgmt.username, User_mgmt.id)
-            .having(func.count(Follow.user_id) % 2 == 1)
-            .paginate(page=page, per_page=limit, error_out=False)
-        )
-
-        for f in followers_query.items:
-            uid_f = f.id
+    if start < number_followers:
+        for uid_f in follower_ids[start:end]:
+            f = User_mgmt.query.filter_by(id=uid_f).first()
+            if f is None:
+                continue
             followers_list.append(
                 {
                     "id": uid_f,
@@ -164,20 +174,8 @@ def get_user_friends(user_id, limit=12, page=1):
                     "number_reactions": Reactions.query.filter_by(
                         user_id=uid_f
                     ).count(),
-                    "number_followers": (
-                        db.session.query(Follow.user_id)
-                        .filter(Follow.follower_id == uid_f, Follow.user_id != uid_f)
-                        .group_by(Follow.user_id)
-                        .having(func.count(Follow.user_id) % 2 == 1)
-                        .count()
-                    ),
-                    "number_followees": (
-                        db.session.query(Follow.follower_id)
-                        .filter(Follow.user_id == uid_f, Follow.follower_id != uid_f)
-                        .group_by(Follow.follower_id)
-                        .having(func.count(Follow.follower_id) % 2 == 1)
-                        .count()
-                    ),
+                    "number_followers": count_followers(uid_f),
+                    "number_followees": count_followees(uid_f),
                 }
             )
 

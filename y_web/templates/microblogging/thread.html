@@ -367,6 +367,9 @@
     <!-- /Feed page main wrapper -->
 </div>
 
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
 
 <!-- Experiment context -->
 <script>
@@ -391,5 +394,8 @@
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
 
 <script src="{{ url_for('static', filename='assets/js/async_updates.js') }}"></script>
+{% if experiment_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

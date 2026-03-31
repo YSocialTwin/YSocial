@@ -72,3 +72,49 @@ def test_process_agent_binds_shared_sim_clock():
     assert result == ("alice", True)
     assert calls
     assert all(call[2] is sim_clock for call in calls)
+
+
+def test_process_agent_validator_keeps_forum_share_aliases():
+    selected_actions = []
+
+    class DummyAgent:
+        is_page = 0
+        round_actions = 1
+        name = "alice"
+        archetype = "validator"
+
+        def select_action(self, tid, actions, max_length_thread_reading):
+            selected_actions.extend(actions)
+
+    cl = SimpleNamespace(
+        actions_likelihood={
+            "READ": 1.0,
+            "NEWS": 1.0,
+            "SHARE_LINK": 1.0,
+            "SHARE_IMAGE": 1.0,
+            "POST": 1.0,
+        },
+        pages=[],
+        max_length_thread_reading=10,
+        sim_clock=object(),
+        config={"agents": {"llm_agents": []}},
+    )
+    exp = SimpleNamespace(platform_type="forum")
+
+    result = process_agent(
+        DummyAgent(),
+        {"enabled": True, "distribution": {}, "transitions": {}},
+        cl,
+        exp,
+        7,
+        None,
+        __import__("random").Random(1),
+    )
+
+    assert result == ("alice", True)
+    assert any(
+        action in selected_actions
+        for action in ("READ", "NEWS", "SHARE_LINK", "SHARE_IMAGE")
+    )
+    assert "SHARE_LINK" in selected_actions or "SHARE_IMAGE" in selected_actions or "NEWS" in selected_actions
+    assert "POST" not in selected_actions

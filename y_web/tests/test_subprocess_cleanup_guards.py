@@ -36,5 +36,5 @@ def test_server_subprocess_env_flags_are_set_in_startup_code():
     with open(mod.__file__, "r", encoding="utf-8") as handle:
         source = handle.read()
 
-    assert 'env["Y_SERVER_SUBPROCESS"] = "1"' in source
-    assert 'env["Y_SOCIAL_SUBPROCESS"] = "1"' in source
+    assert '"Y_SERVER_SUBPROCESS": "1"' in source
+    assert '"Y_SOCIAL_SUBPROCESS": "1"' in source

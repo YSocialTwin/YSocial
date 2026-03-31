@@ -21,6 +21,7 @@ from sklearn.utils import deprecated
 
 from y_web import db
 from y_web.src.models import Exps
+from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
 
 
@@ -103,7 +104,7 @@ def start_hpc_server(exp):
     python_cmd = detect_env_handler()
 
     # Set up environment (always needed, gunicorn branch adds extra vars)
-    env = os.environ.copy()
+    env = build_subprocess_env()
 
     if use_gunicorn:
         # Use gunicorn for PostgreSQL

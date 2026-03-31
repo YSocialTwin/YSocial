@@ -206,6 +206,10 @@
     </div>
 
 </div>
+
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
 <!-- Experiment context -->
 <script>
     window.EXP_ID = {{ exp_id if exp_id else 'null' }};
@@ -274,6 +278,9 @@
 
 <!-- elements page js -->
 
+{% if experiment_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
 </body>
 
 </html>

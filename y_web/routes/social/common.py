@@ -21,6 +21,8 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
+    count_followers,
+    count_followees,
     get_mutual_friends,
     get_top_user_hashtags,
     get_unanswered_mentions,
@@ -212,12 +214,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     )
     most_used_emotions = [(e[0], e[1], e[2]) for e in emotions]
 
-    total_followers = Follow.query.filter(
-        Follow.user_id == user_id, Follow.follower_id != user_id
-    ).count()
-    total_followee = Follow.query.filter(
-        Follow.follower_id == user_id, Follow.user_id != user_id
-    ).count()
+    total_followers = count_followers(user.id)
+    total_followee = count_followees(user.id)
 
     if getattr(exp, "platform_type", "") == "forum":
         profile_pic = _forum_profile_pic(user)

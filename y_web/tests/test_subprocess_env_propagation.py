@@ -113,13 +113,13 @@ def test_simulation_client_all_popen_calls_pass_env():
 
 
 def test_hpc_client_env_dict_built_before_popen():
-    """hpc/client.py: an env dict (``env = os.environ.copy()``) must be constructed."""
+    """hpc/client.py: an env dict must be constructed before the Popen calls."""
     import y_web.src.hpc.client as mod
 
     src = inspect.getsource(mod)
     assert re.search(
-        r"env\s*=\s*os\.environ\.copy\(\)", src
-    ), "hpc/client.py must build env = os.environ.copy() before the Popen calls"
+        r"env\s*=\s*build_subprocess_env\(", src
+    ), "hpc/client.py must build env via build_subprocess_env() before the Popen calls"
 
 
 def test_simulation_server_sqlite_env_contains_log_file_assignment():
@@ -128,8 +128,8 @@ def test_simulation_server_sqlite_env_contains_log_file_assignment():
 
     src = inspect.getsource(mod)
     assert (
-        'env["YSERVER_LOG_FILE"]' in src or "env['YSERVER_LOG_FILE']" in src
-    ), "simulation/server.py must assign env['YSERVER_LOG_FILE'] (Bug 2 fix)"
+        '"YSERVER_LOG_FILE"' in src
+    ), "simulation/server.py must set YSERVER_LOG_FILE in the subprocess env (Bug 2 fix)"
 
 
 def test_hpc_server_gunicorn_env_contains_config_assignment():
@@ -140,6 +140,56 @@ def test_hpc_server_gunicorn_env_contains_config_assignment():
     assert (
         'env["YSERVER_CONFIG"]' in src or "env['YSERVER_CONFIG']" in src
     ), "hpc/server.py must assign env['YSERVER_CONFIG'] (Bug 3 fix)"
+
+
+def test_subprocess_env_helper_strips_werkzeug_reloader_state(monkeypatch):
+    """Child processes must not inherit Flask/Werkzeug dev-server socket state."""
+    monkeypatch.setenv("WERKZEUG_RUN_MAIN", "true")
+    monkeypatch.setenv("WERKZEUG_SERVER_FD", "0")
+    monkeypatch.setenv("WERKZEUG_DEBUG_PIN", "off")
+    monkeypatch.setenv("FLASK_RUN_FROM_CLI", "true")
+
+    from y_web.src.simulation.subprocess_env import build_subprocess_env
+
+    env = build_subprocess_env({"Y_SERVER_SUBPROCESS": "1"})
+
+    assert "WERKZEUG_RUN_MAIN" not in env
+    assert "WERKZEUG_SERVER_FD" not in env
+    assert "WERKZEUG_DEBUG_PIN" not in env
+    assert "FLASK_RUN_FROM_CLI" not in env
+    assert env["Y_SERVER_SUBPROCESS"] == "1"
+
+
+def test_simulation_server_uses_sanitized_subprocess_env():
+    """simulation/server.py must sanitize inherited Flask/Werkzeug env vars."""
+    import y_web.src.simulation.server as mod
+
+    src = inspect.getsource(mod)
+    assert "build_subprocess_env" in src
+
+
+def test_simulation_client_uses_sanitized_subprocess_env():
+    """simulation/client.py must sanitize inherited Flask/Werkzeug env vars."""
+    import y_web.src.simulation.client as mod
+
+    src = inspect.getsource(mod)
+    assert "build_subprocess_env" in src
+
+
+def test_hpc_server_uses_sanitized_subprocess_env():
+    """hpc/server.py must sanitize inherited Flask/Werkzeug env vars."""
+    import y_web.src.hpc.server as mod
+
+    src = inspect.getsource(mod)
+    assert "build_subprocess_env" in src
+
+
+def test_hpc_client_uses_sanitized_subprocess_env():
+    """hpc/client.py must sanitize inherited Flask/Werkzeug env vars."""
+    import y_web.src.hpc.client as mod
+
+    src = inspect.getsource(mod)
+    assert "build_subprocess_env" in src
 
 
 # ---------------------------------------------------------------------------
