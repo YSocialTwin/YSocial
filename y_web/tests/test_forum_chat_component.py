@@ -83,6 +83,18 @@ def test_forum_chat_memory_query_uses_latest_message_and_recent_history():
     assert "library vote" in query
 
 
+def test_forum_chat_reply_strips_hashtags():
+    from y_web.routes.api import reddit
+
+    cleaned = reddit._strip_forum_chat_hashtags(
+        "i still think #politics is messy, but #war coverage matters"
+    )
+
+    assert "#" not in cleaned
+    assert "politics" in cleaned
+    assert "war" in cleaned
+
+
 def test_forum_chat_routes_are_exposed():
     from y_web.routes.api import reddit
 
@@ -103,6 +115,7 @@ def test_forum_chat_routes_are_exposed():
     assert "_build_facts_snapshot" in route_source
     assert "_format_facts_pack" in route_source
     assert "FACTS CONTEXT" in route_source
+    assert "Do not use hashtags in your replies." in route_source
     assert '"facts_snapshot_present"' in route_source
     assert "session.last_message_at =" in route_source
     assert "memory_query_text" in route_source
@@ -173,7 +186,7 @@ def test_profile_route_uses_latest_follow_event_for_forum_state():
 
     assert "def _latest_follow_action" in source
     assert "Follow.query.filter_by(follower_id=follower_id, user_id=user_id)" in source
-    assert "is_following = _latest_follow_action(" in source
+    assert "_latest_follow_action(follower_id=logged_id, user_id=user.id)" in source
 
 
 def test_forum_profile_posts_include_community_metadata_and_feed_type():

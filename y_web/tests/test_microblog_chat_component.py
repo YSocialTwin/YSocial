@@ -78,6 +78,18 @@ def test_microblog_chat_memory_query_uses_latest_message_and_recent_history():
     assert "education vote" in query
 
 
+def test_microblog_chat_reply_strips_hashtags():
+    from y_web.routes.api import social
+
+    cleaned = social._strip_social_chat_hashtags(
+        "i still think #policy matters, but #schools are where it hits"
+    )
+
+    assert "#" not in cleaned
+    assert "policy" in cleaned
+    assert "schools" in cleaned
+
+
 def test_microblog_chat_refresh_runtime_context_uses_semantic_memory(monkeypatch):
     from y_web.routes.api import social
 
@@ -211,6 +223,7 @@ def test_microblog_chat_generate_reply_injects_memory_facts_and_transcript(monke
     assert reply == "I remember posting about education funding."
     assert "MEMORY CONTEXT" in llm_calls["system_message"]
     assert "FACTS CONTEXT" in llm_calls["system_message"]
+    assert "Do not use hashtags in your replies." in llm_calls["system_message"]
     assert "RECENT CHAT" in llm_calls["user_message"]
     assert "alice: what have you posted about education?" in llm_calls["user_message"]
     assert sanitize_calls["strict_no_inference"] is False

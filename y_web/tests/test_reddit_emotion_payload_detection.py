@@ -135,3 +135,15 @@ def test_reddit_emotion_handler_turns_follow_toggle():
 
     agent.emotion_annotation_enabled = True
     assert agent._handler_auto_reply_turns() == 1
+
+
+def test_reddit_clean_text_strips_trailing_emotion_fragment():
+    module = _load_module()
+    agent = _make_agent(module)
+    agent.name = "tommy96"
+
+    cleaned = agent._Agent__clean_text(
+        "found this gem at a congressional hearing yesterday, (fear, anger"
+    )
+
+    assert cleaned == "found this gem at a congressional hearing yesterday"

@@ -41,6 +41,7 @@ from y_web.src.forum.service.formatters import (
 from y_web.src.models import (
     Articles,
     Images,
+    ImagePosts,
     Interests,
     Post,
     Post_topics,
@@ -89,9 +90,11 @@ def _build_root_post_community_map(
             Post.id.label("post_id"),
             Websites.rss.label("website_rss"),
             Articles.link.label("article_link"),
+            func.lower(ImagePosts.subreddit).label("image_subreddit"),
         )
         .outerjoin(Articles, Articles.id == Post.news_id)
         .outerjoin(Websites, Websites.id == Articles.website_id)
+        .outerjoin(ImagePosts, ImagePosts.id == Post.image_post_id)
         .filter(Post.id.in_(normalized_root_ids))
         .all()
     )
@@ -121,6 +124,7 @@ def _build_root_post_community_map(
         subreddit_slug = _subreddit_slug_from_sources(
             row.website_rss or "",
             row.article_link or "",
+            row.image_subreddit or "",
         )
         if subreddit_slug:
             root_map[post_id] = [_community_entry(subreddit_slug, "subreddit")]
@@ -161,12 +165,15 @@ def _collect_ranked_communities_from_post_rows(
 
 
 def _primary_community_payload(
-    article: Optional[ArticlePreview], topics: List[Tuple[int, str, str]]
+    article: Optional[ArticlePreview],
+    topics: List[Tuple[int, str, str]],
+    image: Optional[Dict[str, Any]] = None,
 ) -> Optional[Dict[str, str]]:
     subreddit_slug = _subreddit_slug_from_sources(
         getattr(article, "subreddit", "") if article else "",
         getattr(article, "url", "") if article else "",
         getattr(article, "source", "") if article else "",
+        str((image or {}).get("subreddit") or ""),
     )
     if subreddit_slug:
         return _community_entry(subreddit_slug, "subreddit")
@@ -200,6 +207,12 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
         )
     )
 
+    image_subquery = (
+        db.session.query(Post.id)
+        .join(ImagePosts, ImagePosts.id == Post.image_post_id)
+        .filter(func.lower(ImagePosts.subreddit) == slug)
+    )
+
     topic_subquery = (
         db.session.query(Post_topics.post_id)
         .join(Interests, Interests.iid == Post_topics.topic_id)
@@ -209,6 +222,7 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
     return base_query.filter(
         or_(
             Post.id.in_(website_subquery),
+            Post.id.in_(image_subquery),
             Post.id.in_(topic_subquery),
         )
     )
@@ -223,6 +237,19 @@ def fetch_available_communities() -> List[Dict[str, str]]:
             Post.comment_to == -1,
             Websites.rss.isnot(None),
             Websites.rss != "",
+        )
+        .distinct()
+        .order_by(text("rss asc"))
+        .all()
+    )
+
+    image_subreddit_rows = (
+        db.session.query(func.lower(ImagePosts.subreddit).label("rss"))
+        .join(Post, Post.image_post_id == ImagePosts.id)
+        .filter(
+            Post.comment_to == -1,
+            ImagePosts.subreddit.isnot(None),
+            ImagePosts.subreddit != "",
         )
         .distinct()
         .order_by(text("rss asc"))
@@ -247,14 +274,9 @@ def fetch_available_communities() -> List[Dict[str, str]]:
     communities: List[Dict[str, str]] = []
     seen: set[str] = set()
 
-    for row in subreddit_rows:
+    for row in list(subreddit_rows) + list(image_subreddit_rows):
         rss_value = str(row.rss or "").strip().lower()
-        match = None
-        if rss_value:
-            import re
-
-            match = re.search(r"(?:^|/)r/([a-z0-9_]+)", rss_value)
-        slug = match.group(1) if match else ""
+        slug = _subreddit_slug_from_sources(rss_value)
         if not slug or slug in seen:
             continue
         seen.add(slug)
@@ -583,7 +605,7 @@ def _create_feed_post(
 
     emotions = get_elicited_emotions(post.id)
     topics = get_topics(post.id, post.user_id)
-    primary_community = _primary_community_payload(article, topics)
+    primary_community = _primary_community_payload(article, topics, image)
 
     comments, _ = _build_comment_payload(post, viewer_id)
 

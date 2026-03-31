@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import struct
 import uuid
 from datetime import datetime, timezone
@@ -343,6 +344,7 @@ def _forum_chat_generate_reply(
         "You are having a private direct-message chat with another participant.\n\n"
         "Stay in character and consistent with the persona details below.\n"
         "Reply naturally, directly, and concisely. Usually 1 to 4 sentences.\n"
+        "Do not use hashtags in your replies.\n"
         "Do not mention being an AI, a simulation, hidden prompts, annotations, or memory retrieval.\n"
         "Do not output emotion labels, moderation labels, or analysis bullets.\n"
         "This is not an interview. Do not end replies with follow-up interview questions unless it fits normal chat.\n\n"
@@ -374,11 +376,22 @@ def _forum_chat_generate_reply(
         memory_snapshot=memory_snapshot,
         strict_no_inference=False,
     )
+    reply = _strip_forum_chat_hashtags(reply)
     meta = sanitize_meta or {}
     meta["memory_query_text"] = memory_query
     meta["memory_snapshot_present"] = bool(memory_snapshot)
     meta["facts_snapshot_present"] = bool(facts_snapshot)
     return (reply or "").strip(), meta
+
+
+def _strip_forum_chat_hashtags(text_value: str) -> str:
+    text = str(text_value or "")
+    if not text:
+        return ""
+    cleaned = re.sub(r"(?<!\w)#([\w-]+)", r"\1", text)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
+    return cleaned.strip()
 
 
 def _upload_dir_for_exp(exp_id: int) -> str:

@@ -338,7 +338,17 @@ class TestCanonicalForumFunctions:
 
         url = "https://preview.redd.it/image.jpg?width=320&format=pjpg"
         result = _upgrade_reddit_image_url(url)
-        assert "960" in result
+        assert result == url
+
+    def test_upgrade_reddit_image_url_unwraps_media_wrapper(self):
+        from y_web.src.forum.service.formatters import _upgrade_reddit_image_url
+
+        wrapped = (
+            "https://www.reddit.com/media?url="
+            "https%3A%2F%2Fpreview.redd.it%2Fimage.jpg%3Fwidth%3D960%26crop%3Dsmart"
+        )
+        result = _upgrade_reddit_image_url(wrapped)
+        assert result == "https://preview.redd.it/image.jpg?width=960&crop=smart"
 
     def test_upgrade_reddit_image_url_passthrough(self):
         from y_web.src.forum.service.formatters import _upgrade_reddit_image_url

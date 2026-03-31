@@ -124,4 +124,36 @@ def test_forum_post_headers_render_primary_community_links():
     assert "primary_community" in template
     assert "forum-post-community-link" in template
     assert "buildSubforumUrl(post.primary_community.slug)" in js_source
-    assert "_primary_community_payload(article, topics)" in query_source
+    assert "_primary_community_payload(article, topics, image)" in query_source
+
+
+def test_forum_queries_include_image_post_subreddit_communities():
+    query_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/forum/service/queries.py"
+    ).read_text(encoding="utf-8")
+    formatter_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/forum/service/formatters.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'func.lower(ImagePosts.subreddit).label("image_subreddit")' in query_source
+    assert "Post.id.in_(image_subquery)" in query_source
+    assert 'func.lower(ImagePosts.subreddit).label("rss")' in query_source
+    assert 'reddit.com/media?url=' in formatter_source
+    assert '"subreddit": row[4] or ""' in formatter_source
+
+
+def test_forum_manual_posts_do_not_auto_extract_topics():
+    action_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/forum/actions/posts.py"
+    ).read_text(encoding="utf-8")
+
+    assert "topics = annotator.annotate_topics(content)" not in action_source
+    assert "topics = []" in action_source
+
+
+def test_forum_comments_inherit_topics_from_thread_root():
+    action_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/forum/actions/posts.py"
+    ).read_text(encoding="utf-8")
+
+    assert "Post_topics(post_id=comment.id, topic_id=topic_id)" in action_source

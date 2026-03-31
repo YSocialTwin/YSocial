@@ -7,7 +7,7 @@ import re
 from datetime import datetime, time, timedelta
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
-from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
+from urllib.parse import parse_qs, urlparse
 from zoneinfo import ZoneInfo
 
 from bs4 import BeautifulSoup
@@ -293,24 +293,16 @@ def _media_type_from_url(url: str) -> str:
 
 
 def _upgrade_reddit_image_url(url: str) -> str:
-    """Transform Reddit thumbnail URL to larger preview URL if possible."""
+    """Normalize Reddit image URLs without rewriting them into broken preview variants."""
     if not url:
         return url
 
-    # preview.redd.it / external-preview.redd.it URLs can have size params for larger images
-    if "preview.redd.it" in url or "external-preview.redd.it" in url:
+    if "reddit.com/media?url=" in url:
         parsed = urlparse(url)
-        query = parse_qs(parsed.query, keep_blank_values=True)
-        if "width" in query:
-            query["width"] = ["960"]
-        else:
-            query["width"] = ["960"]
-        query.setdefault("format", ["pjpg"])
-        query.setdefault("auto", ["webp"])
-        new_query = urlencode(query, doseq=True)
-        return urlunparse(parsed._replace(query=new_query))
+        wrapped_url = parse_qs(parsed.query, keep_blank_values=True).get("url", [""])[0]
+        if wrapped_url:
+            url = wrapped_url
 
-    # i.redd.it URLs are already full size
     return url
 
 
@@ -327,20 +319,24 @@ def _resolve_image_post(image_post_id: Optional[int]) -> Optional[Dict[str, str]
         with engine.connect() as conn:
             row = conn.execute(
                 text(
-                    "SELECT url, description, local_path FROM image_posts WHERE id = :id LIMIT 1"
+                    "SELECT url, description, local_path, high_res_url, subreddit "
+                    "FROM image_posts WHERE id = :id LIMIT 1"
                 ),
                 {"id": image_post_id},
             ).fetchone()
             if row and row[0]:
-                # Prefer local path if available
-                if row[2]:  # local_path exists
-                    url = f"/static/{row[2]}"
-                else:
-                    url = _upgrade_reddit_image_url(row[0])
+                high_res_url = str(row[3] or "").strip()
+                base_url = str(row[0] or "").strip()
+                # Prefer the canonical/high-res URL whenever it exists.
+                # The stored `url` can be a resized Reddit preview variant that browsers
+                # do not always render reliably in the forum feed.
+                source_url = high_res_url or base_url
+                url = _upgrade_reddit_image_url(source_url)
                 return {
                     "url": url,
                     "description": row[1] or "",
                     "media_type": _media_type_from_url(url),
+                    "subreddit": row[4] or "",
                 }
     except Exception:
         pass

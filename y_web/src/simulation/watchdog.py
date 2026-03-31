@@ -436,6 +436,18 @@ class ProcessWatchdog:
         if last_modified:
             process_info.last_heartbeat = last_modified
 
+        server_status_ok = False
+        if (
+            is_running
+            and process_info.process_type == "server"
+            and process_info.server_url
+        ):
+            server_status_ok = check_server_status(process_info.server_url)
+            if server_status_ok:
+                # HTTP servers can legitimately be idle and stop writing logs.
+                # A healthy /status response is the real heartbeat for them.
+                process_info.last_heartbeat = datetime.now()
+
         now = datetime.now()
         time_since_heartbeat = now - process_info.last_heartbeat
 
@@ -449,6 +461,7 @@ class ProcessWatchdog:
         elif (
             time_since_heartbeat.total_seconds() > self._heartbeat_timeout
             and last_modified is not None
+            and not server_status_ok
         ):
             # Only consider hung if we've seen the log file before
             needs_restart = True

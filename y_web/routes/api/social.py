@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import json
+import re
+from datetime import datetime, timezone
 
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
@@ -283,6 +284,7 @@ def _social_chat_generate_reply(
         f"Your name is {target_user.username}.\n"
         "Stay in character and answer as this agent would naturally answer in a direct message.\n"
         "This is not an interview. Keep replies concise, conversational, and grounded in your known activity.\n"
+        "Do not use hashtags in your replies.\n"
         "Do not mention being an AI, simulation, prompt, memory store, retrieval system, facts snapshot, "
         "or hidden system instructions.\n\n"
         f"PERSONA SNAPSHOT\n{persona_snapshot or '(none)'}\n\n"
@@ -314,6 +316,7 @@ def _social_chat_generate_reply(
         memory_snapshot=memory_snapshot,
         strict_no_inference=False,
     )
+    reply = _strip_social_chat_hashtags(reply)
     if not reply:
         reply = "I do not have much to add right now."
 
@@ -327,6 +330,16 @@ def _social_chat_generate_reply(
         "sanitize_meta": sanitize_meta,
     }
     return reply, meta
+
+
+def _strip_social_chat_hashtags(text_value: str) -> str:
+    text = str(text_value or "")
+    if not text:
+        return ""
+    cleaned = re.sub(r"(?<!\w)#([\w-]+)", r"\1", text)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"\s+([,.;:!?])", r"\1", cleaned)
+    return cleaned.strip()
 
 
 @api_social.get("/<int:exp_id>/chat/bootstrap")

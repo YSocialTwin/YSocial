@@ -140,6 +140,15 @@ def _ensure_experiment_context(user) -> None:
         ][bind_key]
 
 
+def _resolve_experiment_actor(user):
+    username = str(getattr(user, "username", "") or "").strip()
+    if username:
+        exp_user = User_mgmt.query.filter_by(username=username).first()
+        if exp_user is not None:
+            return exp_user
+    return user
+
+
 def _get_current_round() -> int:
     """Get the current round ID, defaulting to 1 if none exist."""
     current_round = Rounds.query.order_by(Rounds.id.desc()).first()
@@ -169,6 +178,8 @@ def create_comment_reddit(
 
     # Ensure experiment database context is set up
     _ensure_experiment_context(user)
+    actor_user = _resolve_experiment_actor(user)
+    actor_user = _resolve_experiment_actor(user)
 
     parent = Post.query.filter_by(id=parent_id).first()
     if parent is None:
@@ -183,7 +194,7 @@ def create_comment_reddit(
         # Idempotency token guard (request-level dedupe)
         if safe_action_id:
             existing = Post.query.filter_by(
-                user_id=user.id, client_action_id=safe_action_id
+                user_id=actor_user.id, client_action_id=safe_action_id
             ).first()
             if existing is not None:
                 return existing, True
@@ -191,7 +202,7 @@ def create_comment_reddit(
         # Same-parent/same-round/same-text guard
         if dedupe_key:
             existing = Post.query.filter_by(
-                user_id=user.id,
+                user_id=actor_user.id,
                 comment_to=parent_id,
                 round=round_id,
                 dedupe_key=dedupe_key,
@@ -203,7 +214,7 @@ def create_comment_reddit(
         comment = Post(
             tweet=content,
             round=round_id,
-            user_id=user.id,
+            user_id=actor_user.id,
             comment_to=parent_id,
             thread_id=thread_id,
             dedupe_key=dedupe_key,
@@ -218,11 +229,11 @@ def create_comment_reddit(
             existing = None
             if safe_action_id:
                 existing = Post.query.filter_by(
-                    user_id=user.id, client_action_id=safe_action_id
+                    user_id=actor_user.id, client_action_id=safe_action_id
                 ).first()
             if existing is None and dedupe_key:
                 existing = Post.query.filter_by(
-                    user_id=user.id,
+                    user_id=actor_user.id,
                     comment_to=parent_id,
                     round=round_id,
                     dedupe_key=dedupe_key,
@@ -247,10 +258,10 @@ def create_comment_reddit(
         sentiment = vader_sentiment(content)
 
         # Process toxicity (handles API availability internally)
-        toxicity(content, user.username, comment.id, db)
+        toxicity(content, actor_user.username, comment.id, db)
 
         # Get user's LLM for annotations
-        admin_user = Admin_users.query.filter_by(username=user.username).first()
+        admin_user = Admin_users.query.filter_by(username=actor_user.username).first()
         llm = "llama3.2:latest"
         if admin_user and admin_user.llm:
             llm = admin_user.llm
@@ -270,10 +281,12 @@ def create_comment_reddit(
         post_topics_list = Post_topics.query.filter_by(post_id=thread_id).all()
         for topic in post_topics_list:
             topic_id = topic.topic_id
+            db.session.add(Post_topics(post_id=comment.id, topic_id=topic_id))
+            db.session.commit()
 
             post_sentiment = Post_Sentiment(
                 post_id=comment.id,
-                user_id=user.id,
+                user_id=actor_user.id,
                 pos=sentiment["pos"],
                 neg=sentiment["neg"],
                 neu=sentiment["neu"],
@@ -321,7 +334,7 @@ def create_comment_reddit(
                 username=mention.strip("@")
             ).first()
 
-            if mentioned_user is not None and mentioned_user.id != user.id:
+            if mentioned_user is not None and mentioned_user.id != actor_user.id:
                 if mentioned_user.id not in mentioned_user_ids:
                     mention_record = Mentions(
                         user_id=mentioned_user.id, post_id=comment.id, round=round_id
@@ -336,7 +349,7 @@ def create_comment_reddit(
         # Mirror agent behavior for replies: notify parent author even without explicit @mention.
         # This keeps human replies visible in the mention-driven agent reply loop.
         parent_author_id = parent.user_id
-        if parent_author_id != user.id and parent_author_id not in mentioned_user_ids:
+        if parent_author_id != actor_user.id and parent_author_id not in mentioned_user_ids:
             mention_record = Mentions(
                 user_id=parent_author_id, post_id=comment.id, round=round_id
             )
@@ -382,7 +395,7 @@ def create_post_reddit(
 
     # Check for recent duplicate from same user in same round
     existing = Post.query.filter(
-        Post.user_id == user.id,
+        Post.user_id == actor_user.id,
         Post.tweet == content,
         Post.round == round_id,
         Post.comment_to == -1,
@@ -400,7 +413,7 @@ def create_post_reddit(
         normalized_url = normalized_url[:200]
 
     # Admin user is stored in the admin DB; used for optional LLM URL/model config.
-    admin_user = Admin_users.query.filter_by(username=user.username).first()
+    admin_user = Admin_users.query.filter_by(username=actor_user.username).first()
     llm = "llama3.2:latest"
     llm_url = None
     if admin_user:
@@ -525,7 +538,7 @@ def create_post_reddit(
         post = Post(
             tweet=content,
             round=round_id,
-            user_id=user.id,
+            user_id=actor_user.id,
             comment_to=-1,  # -1 indicates top-level post
             image_id=img_id,
             news_id=news_id,
@@ -541,7 +554,7 @@ def create_post_reddit(
         sentiment = vader_sentiment(content)
 
         # Process toxicity (handles API availability internally)
-        toxicity(content, user.username, post.id, db)
+        toxicity(content, actor_user.username, post.id, db)
 
         # LLM-based annotations are optional in this stack.
         if ContentAnnotator is not None:
@@ -549,7 +562,7 @@ def create_post_reddit(
             emotions = annotator.annotate_emotions(content)
             hashtags = annotator.extract_components(content, c_type="hashtags")
             mentions = annotator.extract_components(content, c_type="mentions")
-            topics = annotator.annotate_topics(content)
+            topics = []
         else:
             emotions = []
             hashtags = []
@@ -576,7 +589,7 @@ def create_post_reddit(
 
             # Track user interest
             user_interest = User_interest(
-                user_id=user.id, interest_id=topic_id, round_id=round_id
+                user_id=actor_user.id, interest_id=topic_id, round_id=round_id
             )
             db.session.add(user_interest)
 
@@ -588,7 +601,7 @@ def create_post_reddit(
             # Track sentiment per topic
             post_sentiment = Post_Sentiment(
                 post_id=post.id,
-                user_id=user.id,
+                user_id=actor_user.id,
                 topic_id=topic_id,
                 pos=sentiment["pos"],
                 neg=sentiment["neg"],
