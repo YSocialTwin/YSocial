@@ -290,7 +290,9 @@ def _parse_reddit_json_listing(feed_url, feed_content):
     site_url = f"https://www.reddit.com/r/{quote(subreddit)}/"
 
     first_entry = children[0] if children else {}
-    first_entry_data = first_entry.get("data", {}) if isinstance(first_entry, dict) else {}
+    first_entry_data = (
+        first_entry.get("data", {}) if isinstance(first_entry, dict) else {}
+    )
     display_name = str(
         first_entry_data.get("subreddit_name_prefixed") or f"r/{subreddit}"
     ).strip()
