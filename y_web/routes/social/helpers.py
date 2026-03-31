@@ -423,7 +423,9 @@ def _experiment_memory_enabled(exp_id):
                 is_standard_client = entry.startswith("client_") and entry.endswith(
                     ".json"
                 )
-                is_hpc_client = entry.endswith("_config.json") and entry != "server_config.json"
+                is_hpc_client = (
+                    entry.endswith("_config.json") and entry != "server_config.json"
+                )
                 if not is_standard_client and not is_hpc_client:
                     continue
                 client_path = os.path.join(exp_dir, entry)

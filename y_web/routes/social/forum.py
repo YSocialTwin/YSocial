@@ -688,14 +688,20 @@ def subforum_reddit(exp_id, community_slug):
     recent_communities = fetch_recent_active_communities()
     my_communities = fetch_user_communities(exp_user_id)
     current_subforum = next(
-        (entry for entry in available_communities if entry.get("slug") == community_slug),
+        (
+            entry
+            for entry in available_communities
+            if entry.get("slug") == community_slug
+        ),
         None,
     ) or _resolve_sidebar_community(
         [{"article": {"subreddit": community_slug}, "topics": []}], community_slug
     )
 
     if len(res) == 0 and page > 1:
-        return redirect(f"/{exp_id}/subforum/{community_slug}?feed_type={feed_type}&page={page - 1}")
+        return redirect(
+            f"/{exp_id}/subforum/{community_slug}?feed_type={feed_type}&page={page - 1}"
+        )
 
     return render_template(
         "forum/feed.html",
