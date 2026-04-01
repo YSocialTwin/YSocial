@@ -654,7 +654,7 @@ def monitor_hpc_client_execution_logs():
         hpc_experiments = Exps.query.filter_by(simulator_type="HPC", running=1).all()
 
         if not hpc_experiments:
-            print("[HPC Monitor] No active HPC experiments found")
+            # print("[HPC Monitor] No active HPC experiments found")
             return
 
         print(

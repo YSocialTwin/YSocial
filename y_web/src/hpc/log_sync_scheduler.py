@@ -86,7 +86,7 @@ class LogSyncScheduler:
                         monitor_hpc_client_execution_logs,
                     )
 
-                    print("[HPC Monitor] Checking for completed clients...")
+                    # print("[HPC Monitor] Checking for completed clients...")
                     monitor_hpc_client_execution_logs()
 
                     # Update last check timestamp
@@ -94,7 +94,7 @@ class LogSyncScheduler:
 
                     # Sleep for configured interval before next check
                     interval = settings.check_interval_seconds
-                    print(f"[HPC Monitor] Next check in {interval} seconds...")
+                    # print(f"[HPC Monitor] Next check in {interval} seconds...")
                     self._stop_event.wait(interval)
 
             except Exception as e:
