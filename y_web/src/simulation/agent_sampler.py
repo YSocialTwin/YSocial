@@ -28,6 +28,24 @@ def _rule_based_agents_enabled(config):
     )
 
 
+def _validator_allowed_actions():
+    """
+    Actions available to the validator archetype.
+
+    Forum experiments replaced legacy SHARE with more specific sharing aliases.
+    Keep the old SHARE token for microblogging, but also allow the forum
+    link/image sharing actions so validators can still behave as content curators.
+    """
+    return {
+        "READ",
+        "SEARCH",
+        "SHARE",
+        "NEWS",
+        "SHARE_LINK",
+        "SHARE_IMAGE",
+    }
+
+
 def get_users_per_hour(population, agents, session):
     # get population activity profiles
     activity_profiles = defaultdict(list)
@@ -238,7 +256,7 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                 acts = [
                     a
                     for a, v in cl.actions_likelihood.items()
-                    if v > 0 and a in ["READ", "SHARE", "SEARCH"]
+                    if v > 0 and a in _validator_allowed_actions()
                 ]
                 if FakeAgent is not None and _rule_based_agents_enabled(
                     getattr(cl, "config", {})

@@ -5,7 +5,16 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
         update_password.
 """
 
-from flask import flash, redirect, render_template, request, url_for
+import os
+
+from flask import (
+    flash,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    url_for,
+)
 from flask_login import current_user, login_required
 from sqlalchemy import desc
 from sqlalchemy.sql.expression import func
@@ -21,6 +30,8 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
+    count_followees,
+    count_followers,
     get_mutual_friends,
     get_top_user_hashtags,
     get_unanswered_mentions,
@@ -42,6 +53,22 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_users
+from y_web.src.system.path_utils import get_writable_path
+
+
+def _latest_follow_action(*, follower_id, user_id):
+    follow_event = (
+        Follow.query.filter_by(follower_id=follower_id, user_id=user_id)
+        .order_by(Follow.id.desc())
+        .first()
+    )
+    return str(getattr(follow_event, "action", "") or "").strip().lower()
+
+
+@main.get("/uploads/<path:relative_path>")
+def serve_upload(relative_path: str):
+    uploads_root = os.path.join(get_writable_path(), "y_web", "uploads")
+    return send_from_directory(uploads_root, relative_path)
 
 
 @main.route("/")
@@ -158,7 +185,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         return redirect(url_for("main.index"))
 
     is_following = (
-        Follow.query.filter_by(follower_id=current_user.id, user_id=user_id).count() > 0
+        _latest_follow_action(follower_id=logged_id, user_id=user.id) == "follow"
     )
 
     total_posts = Post.query.filter_by(user_id=user_id, comment_to=-1).count()
@@ -203,12 +230,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     )
     most_used_emotions = [(e[0], e[1], e[2]) for e in emotions]
 
-    total_followers = Follow.query.filter(
-        Follow.user_id == user_id, Follow.follower_id != user_id
-    ).count()
-    total_followee = Follow.query.filter(
-        Follow.follower_id == user_id, Follow.user_id != user_id
-    ).count()
+    total_followers = count_followers(user.id)
+    total_followee = count_followees(user.id)
 
     if getattr(exp, "platform_type", "") == "forum":
         profile_pic = _forum_profile_pic(user)
@@ -227,7 +250,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
                 profile_pic = admin.profile_pic if admin else ""
 
     # Other functions as before
-    rp = get_user_recent_posts(user_id, page, 10, mode, current_user.id, exp_id)
+    rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)
     mutual_friends = get_mutual_friends(user_id, current_user.id)
     hashtags_top = get_top_user_hashtags(user_id, 5)
     interests = get_user_recent_interests(user_id, 5)
@@ -296,6 +319,8 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             sfollow=suggested_users,
             spages=suggested_pages,
             forum_memory_enabled=_forum_memory_enabled(exp_id),
+            can_follow_profile=int(user.id) != int(logged_id),
+            feed_type="new",
             **forum_context,
         )
 

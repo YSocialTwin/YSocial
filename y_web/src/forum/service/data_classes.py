@@ -10,6 +10,7 @@ class ArticlePreview:
     summary: str
     url: str
     source: str
+    subreddit: str = ""
     image: Optional[Dict[str, str]] = None  # {"url": ..., "description": ...}
 
 
@@ -21,6 +22,7 @@ def _article_payload(article: Optional[ArticlePreview]) -> Any:
         "summary": article.summary,
         "url": article.url,
         "source": article.source,
+        "subreddit": article.subreddit,
         "image": article.image,
     }
 
@@ -83,6 +85,7 @@ class FeedPost:
     image_id: Optional[int]
     image_needs_enrichment: bool
     image: Any
+    primary_community: Optional[Dict[str, str]]
     emotions: List[Tuple[str, str, int]]
     topics: List[Tuple[int, str, str]]
     comments: List[Dict[str, Any]]
@@ -116,6 +119,7 @@ class FeedPost:
             "image_id": self.image_id,
             "image_needs_enrichment": bool(self.image_needs_enrichment),
             "image": self.image,
+            "primary_community": self.primary_community or None,
             "emotions": self.emotions,
             "topics": self.topics,
         }

@@ -1,0 +1,81 @@
+<aside
+    id="microblog-chat-panel"
+    class="microblog-chat-panel is-collapsed"
+    data-exp-id="{{ exp_id }}"
+    data-page-kind="{{ microblog_chat_page_kind|default('feed', true) }}"
+>
+    <button
+        id="microblog-chat-collapse-handle"
+        type="button"
+        class="microblog-chat-collapse-handle"
+        aria-expanded="false"
+        aria-controls="microblog-chat-card"
+        title="Toggle chat panel"
+    >
+        <i data-feather="message-circle"></i>
+        <span
+            id="microblog-chat-collapse-badge"
+            class="microblog-chat-collapse-badge is-hidden"
+            aria-hidden="true"
+        ></span>
+    </button>
+
+        <div id="microblog-chat-card" class="microblog-chat-card">
+        <div class="microblog-chat-card-header">
+            <div>
+                <div class="microblog-chat-title">Chat</div>
+                <div class="microblog-chat-subtitle">Private chats with followed agents</div>
+            </div>
+            <div class="microblog-chat-header-actions">
+                <button id="microblog-chat-refresh" type="button" class="microblog-chat-icon-btn" title="Refresh">
+                    <i data-feather="refresh-cw"></i>
+                </button>
+                <button id="microblog-chat-collapse" type="button" class="microblog-chat-icon-btn" title="Collapse">
+                    <i data-feather="chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="microblog-chat-browser" class="microblog-chat-browser">
+            <div class="microblog-chat-search-row">
+                <input
+                    id="microblog-chat-search"
+                    type="search"
+                    class="input microblog-chat-search-input"
+                    placeholder="Search followed agents"
+                />
+            </div>
+            <div id="microblog-chat-list" class="microblog-chat-list"></div>
+        </div>
+
+        <div id="microblog-chat-thread" class="microblog-chat-thread is-hidden">
+            <div class="microblog-chat-thread-head">
+                <button id="microblog-chat-back" type="button" class="microblog-chat-icon-btn" title="Back">
+                    <i data-feather="arrow-left"></i>
+                </button>
+                <div class="microblog-chat-thread-target">
+                    <div id="microblog-chat-target-avatar" class="microblog-chat-thread-avatar"></div>
+                    <div class="microblog-chat-thread-meta">
+                        <div id="microblog-chat-target-name" class="microblog-chat-thread-name">Agent</div>
+                        <div id="microblog-chat-target-subtitle" class="microblog-chat-thread-subtitle">Private chat</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="microblog-chat-messages" class="microblog-chat-messages"></div>
+
+            <form id="microblog-chat-compose" class="microblog-chat-compose">
+                <textarea
+                    id="microblog-chat-input"
+                    class="textarea microblog-chat-input"
+                    rows="2"
+                    placeholder="Write a message..."
+                ></textarea>
+                <button id="microblog-chat-send" type="submit" class="microblog-chat-send-btn">
+                    <i data-feather="send"></i>
+                    <span>Send</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</aside>

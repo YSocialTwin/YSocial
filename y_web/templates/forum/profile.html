@@ -10,7 +10,17 @@
                     <img src="{{ viewed_profile_pic or 'https://via.placeholder.com/300x300' }}" alt="{{ user['user_data']['username'] }} avatar"/>
                 </div>
                 <div class="forum-profile-meta">
-                    <div class="forum-profile-name">{{ user['user_data']['username'] }}</div>
+                    <div class="forum-profile-name-row">
+                        <div class="forum-profile-name">{{ user['user_data']['username'] }}</div>
+                        {% if can_follow_profile %}
+                        <a
+                            href="/{{ exp_id }}/follow/{{ user['user_data']['id'] }}/{{ logged_id }}"
+                            class="forum-profile-follow-btn {% if is_following %}is-following{% endif %}"
+                        >
+                            {% if is_following %}Unfollow{% else %}Follow{% endif %}
+                        </a>
+                        {% endif %}
+                    </div>
                     <div class="forum-profile-subline">
                         {% if user['user_data'].is_page == 1 %}
                         Community Page
@@ -29,7 +39,7 @@
             </div>
         </div>
 
-        <div class="forum-profile-layout">
+        <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
             <aside>
                 <div class="forum-profile-card">
                     <h3>About</h3>
@@ -78,6 +88,13 @@
                     </div>
                 </div>
             </section>
+
+            {% if forum_memory_enabled %}
+            <aside class="forum-profile-chat-column is-hidden-touch">
+                {% set forum_chat_page_kind = 'profile' %}
+                {% include "forum/components/chat_panel.html" %}
+            </aside>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -119,5 +136,8 @@
 <script>var YS_DATA_FORUM_PROFILE = { expId: "{{exp_id}}", userId: "{{user_id}}", mode: "{{mode}}", page: {{ page }} };</script>
 
 <script src="{{ url_for('static', filename='assets/js/forum-profile.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

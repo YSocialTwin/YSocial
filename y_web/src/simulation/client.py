@@ -28,6 +28,7 @@ from y_web.src.simulation.process_registry import (
     _unregister_process,
 )
 from y_web.src.simulation.server import detect_env_handler
+from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 
@@ -300,12 +301,14 @@ def start_client(exp, cli, population, resume=True):
 
     # Set up environment with PYTHONPATH to ensure imports work
     # The subprocess needs to be able to import y_web modules
-    env = os.environ.copy()
-    env["YCLIENT_LOG_FILE"] = str(log_dir / f"{cli.name}_client.log")
-
-    # Mark this as a client subprocess so the atexit handler doesn't run cleanup
-    # This prevents the subprocess from killing all other experiments when it exits
-    env["Y_CLIENT_SUBPROCESS"] = "1"
+    env = build_subprocess_env(
+        {
+            "YCLIENT_LOG_FILE": str(log_dir / f"{cli.name}_client.log"),
+            # Mark this as a client subprocess so the atexit handler doesn't run cleanup
+            # This prevents the subprocess from killing all other experiments when it exits
+            "Y_CLIENT_SUBPROCESS": "1",
+        }
+    )
 
     if getattr(sys, "frozen", False):
         # Running from PyInstaller - modules are in the bundle

@@ -29,30 +29,6 @@
                                     alt=""
 
                             />
-
-                            {% if logged_id != user_id %}
-                            <div class="avatar-button">
-                                <i data-feather="plus"></i>
-                            </div>
-                            <div
-                                    id="follow-pop"
-                                    class="pop-button pop-shift is-left has-tooltip"
-                                    data-placement="top"
-                                    data-title="Follow"
-                            >
-                                <a class="inner" id="follow" res="{{ user_id }}">
-                                    {% if is_following %}
-                                    <i class="active-icon" data-feather="bell" status="{{ is_following  }}"></i>
-                                    <i class="inactive-icon" data-feather="bell-off"
-                                       status="{{ not is_following  }}"></i>
-                                    {% else %}
-                                    <i class="inactive-icon" data-feather="bell" status="{{ not is_following  }}"></i>
-                                    <i class="active-icon" data-feather="bell-off" status="{{ is_following  }}"></i>
-                                    {% endif %}
-                                </a>
-                            </div>
-                            {% endif %}
-
                         </div>
                         <div class="cover-overlay"></div>
                         <!--
@@ -110,6 +86,18 @@
                                class="button has-min-width">Feeds</a>
                         </div>
                         <div class="menu-end">
+                            {% if logged_id != user_id %}
+                            <form
+                                    method="post"
+                                    action="/{{exp_id}}/follow/{{ user_id }}/{{ logged_id }}"
+                                    class="ys-profile-follow-menu-form"
+                            >
+                                <button
+                                        type="submit"
+                                        class="button has-min-width ys-profile-follow-menu-btn {% if is_following %}is-following{% endif %}"
+                                >{% if is_following %}Unfollow{% else %}Follow{% endif %}</button>
+                            </form>
+                            {% endif %}
                             <a
                                     id="profile-friends-link"
                                     href="/{{exp_id}}/friends/{{ user_id }}/1"
@@ -126,7 +114,9 @@
                         </div>
 
                         <div class="subheader-middle">
-                            <h2>{{ user["user_data"]["username"] }}</h2>
+                            <div class="ys-profile-header-row">
+                                <h2>{{ user["user_data"]["username"] }}</h2>
+                            </div>
                         </div>
 
 
@@ -359,6 +349,10 @@
     <!-- /Container -->
 </div>
 
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
+
 <!-- Experiment context -->
 <script>
     window.EXP_ID = {{ exp_id if exp_id else 'null' }};
@@ -421,5 +415,8 @@
 <!-- elements page js -->
 
 <script src="{{ url_for('static', filename='assets/js/mb-profile.js') }}"></script>
+{% if experiment_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

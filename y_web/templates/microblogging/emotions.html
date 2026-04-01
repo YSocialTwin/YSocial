@@ -376,6 +376,9 @@
     </div>
 </div>
 
+{% if experiment_memory_enabled %}
+{% include "microblogging/components/chat_panel.html" %}
+{% endif %}
 
 <!-- Experiment context -->
 <script>
@@ -452,5 +455,8 @@
 <!-- elements page js -->
 
 <script src="{{ url_for('static', filename='assets/js/mb-emotions.js') }}"></script>
+{% if experiment_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

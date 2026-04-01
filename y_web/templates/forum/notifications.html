@@ -3,8 +3,9 @@
 <div class="view-wrapper">
     <div class="container">
         <div class="view-wrap">
-            <div class="columns">
-                <div class="column is-8 is-offset-2">
+            <div class="columns forum-feed-layout">
+                <div class="column is-2 is-hidden-touch"></div>
+                <div class="column is-10-tablet is-7-desktop">
                     <div class="box" style="padding: 18px 18px 10px;">
                         <div style="display:flex; align-items: baseline; justify-content: space-between; gap: 12px;">
  <h1 class="title is-4 mb-0">Notifications</h1>
@@ -73,6 +74,12 @@
                     </nav>
                     {% endif %}
                 </div>
+                {% if forum_memory_enabled %}
+                <div class="column is-3 is-hidden-touch">
+                    {% set forum_chat_page_kind = 'notifications' %}
+                    {% include "forum/components/chat_panel.html" %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -101,5 +108,8 @@ window.redditFeedConfig = Object.freeze({
 </script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

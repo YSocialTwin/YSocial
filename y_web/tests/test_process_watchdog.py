@@ -297,6 +297,92 @@ class TestProcessWatchdog:
         finally:
             os.unlink(temp_path)
 
+    @patch("y_web.src.simulation.watchdog.check_server_status", return_value=True)
+    def test_running_server_uses_status_endpoint_as_heartbeat(self, mock_status):
+        """A healthy server should not restart just because its log is quiet."""
+        from y_web.src.simulation.watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(heartbeat_timeout=5, restart_cooldown=0)
+        restart_callback = MagicMock(return_value=9999)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("initial log entry\n")
+            temp_path = f.name
+
+        try:
+            stale_time = time.time() - 120
+            os.utime(temp_path, (stale_time, stale_time))
+
+            watchdog.register_process(
+                process_id="server_process",
+                pid=os.getpid(),
+                log_file=temp_path,
+                restart_callback=restart_callback,
+                process_type="server",
+                server_url="http://localhost:5999",
+            )
+
+            process_info = watchdog._processes["server_process"]
+            process_info.last_heartbeat = datetime.now() - timedelta(seconds=120)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+
+            watchdog._check_process(process_info, results)
+
+            restart_callback.assert_not_called()
+            mock_status.assert_called_once_with("http://localhost:5999")
+            assert results["processes_healthy"] == 1
+        finally:
+            os.unlink(temp_path)
+
+    @patch("y_web.src.simulation.watchdog.check_server_status", return_value=False)
+    def test_running_server_restarts_when_status_fails_and_log_is_stale(
+        self, mock_status
+    ):
+        """A running server with stale heartbeat and failing /status should restart."""
+        from y_web.src.simulation.watchdog import ProcessWatchdog
+
+        watchdog = ProcessWatchdog(heartbeat_timeout=5, restart_cooldown=0)
+        restart_callback = MagicMock(return_value=9999)
+
+        with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+            f.write("initial log entry\n")
+            temp_path = f.name
+
+        try:
+            stale_time = time.time() - 120
+            os.utime(temp_path, (stale_time, stale_time))
+
+            watchdog.register_process(
+                process_id="server_process",
+                pid=os.getpid(),
+                log_file=temp_path,
+                restart_callback=restart_callback,
+                process_type="server",
+                server_url="http://localhost:5999",
+            )
+
+            process_info = watchdog._processes["server_process"]
+            process_info.last_heartbeat = datetime.now() - timedelta(seconds=120)
+            results = {
+                "processes_checked": 0,
+                "processes_restarted": 0,
+                "processes_healthy": 0,
+                "details": [],
+            }
+
+            watchdog._check_process(process_info, results)
+
+            restart_callback.assert_called_once()
+            mock_status.assert_called_once_with("http://localhost:5999")
+            assert results["processes_restarted"] == 1
+        finally:
+            os.unlink(temp_path)
+
     def test_max_restart_attempts(self):
         """Test that restart stops after max attempts."""
         from y_web.src.simulation.watchdog import ProcessWatchdog

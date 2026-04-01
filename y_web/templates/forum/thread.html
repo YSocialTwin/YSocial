@@ -115,11 +115,10 @@
         <!-- Feed page main wrapper -->
         <div id="profile-main" class="view-wrap is-headless thread-view">
             <!-- <div id="activity-feed" class="view-wrap true-dom is-hidden"> -->
-            <div class="columns">
-                <!-- Left side column - REMOVED FOR REDDIT STYLE -->
+            <div class="columns forum-feed-layout">
+                <div class="column is-2 is-hidden-touch"></div>
 
-                <!-- Main column - Full width Reddit style -->
-                <div class="column is-8 is-offset-2">
+                <div class="column is-10-tablet is-7-desktop">
                     <!-- Reddit-style navigation -->
                     <div class="reddit-thread-nav" style="margin-bottom: 20px; padding: 10px 0; border-bottom: 1px solid #e1e8ed;">
                         <a class="reddit-back-link" href="{{ back_url or ('/' ~ exp_id ~ '/rfeed') }}" style="color: #0079d3; text-decoration: none; font-size: 14px;">
@@ -145,7 +144,13 @@
                     <!-- fine -->
 
                 </div>
-                <!-- POST #1 -->
+
+                {% if forum_memory_enabled %}
+                <div class="column is-3 is-hidden-touch">
+                    {% set forum_chat_page_kind = 'thread' %}
+                    {% include "forum/components/chat_panel.html" %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -180,5 +185,8 @@ window.redditFeedConfig = Object.freeze({
 </script>
 <script src="{{ url_for('static', filename='assets/js/reddit/api_client.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/reddit/async_updates.js') }}"></script>
+{% if forum_memory_enabled %}
+<script src="{{ url_for('static', filename='assets/js/reddit/forum-chat.js') }}"></script>
+{% endif %}
 </body>
 </html>

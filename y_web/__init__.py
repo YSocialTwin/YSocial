@@ -117,9 +117,17 @@ def cleanup_db_jupyter_with_new_app():
         traceback.print_exc()
 
 
-# Only register atexit handler for the main application process, not subprocesses
-# Client subprocesses set Y_CLIENT_SUBPROCESS=1 to indicate they should not run cleanup
-if os.environ.get("Y_CLIENT_SUBPROCESS") != "1":
+def _is_simulation_subprocess():
+    """Return True when running in a spawned simulation subprocess."""
+    return (
+        os.environ.get("Y_CLIENT_SUBPROCESS") == "1"
+        or os.environ.get("Y_SERVER_SUBPROCESS") == "1"
+        or os.environ.get("Y_SOCIAL_SUBPROCESS") == "1"
+    )
+
+
+# Only register atexit handler for the main application process, not subprocesses.
+if not _is_simulation_subprocess():
     atexit.register(cleanup_db_jupyter_with_new_app)
 
 

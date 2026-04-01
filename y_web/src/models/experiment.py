@@ -150,6 +150,68 @@ class ReplyInboxState(db.Model):
     last_seen_reply_id = db.Column(db.Integer, nullable=False, default=0)
 
 
+class ForumChatSession(db.Model):
+    """
+    Persistent private chat thread between a forum user and a simulation agent.
+
+    Stored inside the experiment database so chat history follows the experiment.
+    """
+
+    __bind_key__ = "db_exp"
+    __tablename__ = "forum_chat_sessions"
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_user_id = db.Column(
+        db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True
+    )
+    owner_username = db.Column(db.String(50), nullable=False, index=True)
+    target_user_id = db.Column(
+        db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True
+    )
+    target_username = db.Column(db.String(50), nullable=False, index=True)
+    target_profile_pic = db.Column(db.String(400), nullable=True)
+    run_id = db.Column(db.Text, nullable=True, index=True)
+    llm_model = db.Column(db.String(200), nullable=True)
+    llm_base_url = db.Column(db.String(300), nullable=True)
+    persona_snapshot = db.Column(db.Text, nullable=True)
+    memory_snapshot_json = db.Column(db.Text, nullable=True)
+    last_message_preview = db.Column(db.Text, nullable=True)
+    last_message_at = db.Column(db.DateTime, nullable=True, default=db.func.now())
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=db.func.now(),
+        onupdate=db.func.now(),
+    )
+
+    messages = db.relationship(
+        "ForumChatMessage",
+        backref="session",
+        lazy=True,
+        cascade="all, delete-orphan",
+    )
+
+
+class ForumChatMessage(db.Model):
+    """One message inside a forum chat session."""
+
+    __bind_key__ = "db_exp"
+    __tablename__ = "forum_chat_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(
+        db.Integer,
+        db.ForeignKey("forum_chat_sessions.id"),
+        nullable=False,
+        index=True,
+    )
+    role = db.Column(db.String(12), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    meta_json = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+
+
 class Reactions(db.Model):
     """
     User reactions to posts (likes, shares, etc.).

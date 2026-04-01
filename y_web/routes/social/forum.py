@@ -6,6 +6,7 @@ Routes: interview, get_thread_reddit, feeed_logged_reddit,
         feed_reddit, search_reddit, api_feed_reddit.
 """
 
+import re
 from urllib.parse import urlencode
 
 from flask import abort, flash, jsonify, redirect, render_template, request, url_for
@@ -37,7 +38,10 @@ from y_web.src.data_access import (
 from y_web.src.forum.service import (
     _format_display_time,
     _format_display_time_from_created_at,
+    fetch_available_communities,
     fetch_feed_page,
+    fetch_recent_active_communities,
+    fetch_user_communities,
 )
 from y_web.src.models import (
     Admin_users,
@@ -54,6 +58,84 @@ from y_web.src.models import (
     Websites,
 )
 from y_web.src.recsys import get_suggested_users
+
+
+def _normalize_forum_community_slug(value):
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    raw = raw.replace("\\", "/")
+    match = re.search(r"(?:^|/)r/([a-z0-9_]+)", raw)
+    if match:
+        return match.group(1)
+    raw = raw.removeprefix("r/").strip("/")
+    raw = re.sub(r"[^a-z0-9_/-]+", "-", raw)
+    raw = raw.strip("-_/")
+    return raw.split("/")[0] if raw else ""
+
+
+def _build_forum_sidebar_communities(items):
+    communities = []
+    seen = set()
+
+    for item in items or []:
+        article = item.get("article") or {}
+        candidate_slug = ""
+
+        for source_value in (
+            article.get("subreddit"),
+            article.get("source"),
+            article.get("url"),
+        ):
+            candidate_slug = _normalize_forum_community_slug(source_value)
+            if candidate_slug:
+                break
+
+        if candidate_slug:
+            label = f"y/{candidate_slug}"
+            if label not in seen:
+                seen.add(label)
+                communities.append(
+                    {
+                        "slug": candidate_slug,
+                        "label": label,
+                        "kind": "subreddit",
+                    }
+                )
+            continue
+
+        for topic in item.get("topics") or []:
+            topic_name = ""
+            if isinstance(topic, (list, tuple)) and len(topic) >= 2:
+                topic_name = topic[1]
+            elif isinstance(topic, str):
+                topic_name = topic
+            topic_slug = _normalize_forum_community_slug(topic_name)
+            if not topic_slug:
+                continue
+            label = f"y/{topic_slug}"
+            if label in seen:
+                continue
+            seen.add(label)
+            communities.append(
+                {
+                    "slug": topic_slug,
+                    "label": label,
+                    "kind": "topic",
+                }
+            )
+
+    return communities
+
+
+def _resolve_sidebar_community(items, community_slug):
+    slug = _normalize_forum_community_slug(community_slug)
+    if not slug:
+        return None
+    for community in _build_forum_sidebar_communities(items):
+        if community.get("slug") == slug:
+            return community
+    return {"slug": slug, "label": f"y/{slug}", "kind": "topic"}
 
 
 @main.get("/<int:exp_id>/interview")
@@ -535,6 +617,9 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
 
     profile_pic = _forum_current_profile_pic(exp_id, logged_user)
     profile_pic_feed = _forum_current_profile_pic(exp_id, logged_user)
+    available_communities = fetch_available_communities()
+    recent_communities = fetch_recent_active_communities()
+    my_communities = fetch_user_communities(exp_user_id)
 
     return render_template(
         "forum/feed.html",
@@ -566,6 +651,93 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
         has_more=(page_obj.page * page_obj.per_page) < page_obj.total,
         exp_id=exp_id,
         forum_memory_enabled=_forum_memory_enabled(exp_id),
+        available_communities=available_communities,
+        recent_communities=recent_communities,
+        my_communities=my_communities,
+        current_subforum_slug=None,
+        current_subforum_label=None,
+    )
+
+
+@main.get("/<int:exp_id>/subforum/<string:community_slug>")
+@login_required
+def subforum_reddit(exp_id, community_slug):
+    page = max(request.args.get("page", type=int, default=1), 1)
+    max_post_per_page = 10
+    feed_type = request.args.get("feed_type", "new")
+
+    page_obj = fetch_feed_page(
+        viewer_id=current_user.id,
+        page=page,
+        per_page=max_post_per_page,
+        feed_type=feed_type,
+        search_query="",
+        community_slug=community_slug,
+    )
+    logged_user = _forum_logged_user()
+    exp_user_id = logged_user.id if logged_user else current_user.id
+    mentions = get_unanswered_mentions(logged_user.id) if logged_user else []
+    res = [post.to_dict() for post in page_obj.posts]
+    suggested_users = (
+        get_suggested_users(logged_user.username, pages=False) if logged_user else []
+    )
+    suggested_pages = (
+        get_suggested_users(logged_user.username, pages=True) if logged_user else []
+    )
+    available_communities = fetch_available_communities()
+    recent_communities = fetch_recent_active_communities()
+    my_communities = fetch_user_communities(exp_user_id)
+    current_subforum = next(
+        (
+            entry
+            for entry in available_communities
+            if entry.get("slug") == community_slug
+        ),
+        None,
+    ) or _resolve_sidebar_community(
+        [{"article": {"subreddit": community_slug}, "topics": []}], community_slug
+    )
+
+    if len(res) == 0 and page > 1:
+        return redirect(
+            f"/{exp_id}/subforum/{community_slug}?feed_type={feed_type}&page={page - 1}"
+        )
+
+    return render_template(
+        "forum/feed.html",
+        items=res,
+        page=page_obj.page,
+        profile_pic=_forum_current_profile_pic(exp_id, logged_user),
+        profile_pic_feed=_forum_current_profile_pic(exp_id, logged_user),
+        user_id="all",
+        feed_user_id=None,
+        timeline="feed",
+        username="",
+        mode="rf",
+        enumerate=enumerate,
+        len=len,
+        logged_username=current_user.username,
+        logged_id=exp_user_id,
+        trending_ht=get_trending_hashtags(),
+        str=str,
+        bool=bool,
+        mentions=mentions,
+        is_admin=is_admin(current_user.username),
+        sfollow=suggested_users,
+        spages=suggested_pages,
+        feed_type=feed_type,
+        search_query="",
+        view_mode="subforum",
+        search_total=None,
+        per_page=max_post_per_page,
+        has_more=(page_obj.page * page_obj.per_page) < page_obj.total,
+        exp_id=exp_id,
+        forum_memory_enabled=_forum_memory_enabled(exp_id),
+        available_communities=available_communities,
+        recent_communities=recent_communities,
+        my_communities=my_communities,
+        current_subforum_slug=current_subforum["slug"] if current_subforum else None,
+        current_subforum_label=current_subforum["label"] if current_subforum else None,
     )
 
 
@@ -604,6 +776,11 @@ def search_reddit(exp_id):
         has_more = False
         current_page = 1
         total_results = 0
+    available_communities = fetch_available_communities()
+    recent_communities = fetch_recent_active_communities()
+    my_communities = fetch_user_communities(
+        logged_user.id if logged_user else current_user.id
+    )
 
     if not res and page > 1:
         query = {"q": search_query, "feed_type": feed_type, "page": page - 1}
@@ -639,6 +816,11 @@ def search_reddit(exp_id):
         has_more=has_more,
         exp_id=exp_id,
         forum_memory_enabled=_forum_memory_enabled(exp_id),
+        available_communities=available_communities,
+        recent_communities=recent_communities,
+        my_communities=my_communities,
+        current_subforum_slug=None,
+        current_subforum_label=None,
     )
 
 
@@ -656,103 +838,20 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
         page = 1
 
     max_post_per_page = 10
-    username = ""
-    posts, additional = None, None
-
     feed_type = request.args.get("feed_type", "new")
+    community_slug = request.args.get("community_slug", "")
 
-    if user_id == "all":
-        if feed_type == "top":
-            posts_query = (
-                Post.query.filter_by(comment_to=-1)
-                .outerjoin(Reactions, Post.id == Reactions.post_id)
-                .add_columns(
-                    Post,
-                    func.sum(
-                        (Reactions.type == "like").cast(db.Integer)
-                        - (Reactions.type == "dislike").cast(db.Integer)
-                    ).label("score"),
-                )
-                .group_by(Post.id)
-                .order_by(desc("score"), desc(Post.id))
-            )
-            posts = posts_query.paginate(
-                page=page, per_page=max_post_per_page, error_out=False
-            )
-            additional = None
-        elif feed_type == "most_commented":
-            posts = (
-                Post.query.filter_by(comment_to=-1)
-                .order_by(desc(Post.id))
-                .paginate(page=page, per_page=max_post_per_page, error_out=False)
-            )
-            additional = None
-        else:
-            posts = (
-                Post.query.filter_by(comment_to=-1)
-                .order_by(desc(Post.id))
-                .paginate(page=page, per_page=max_post_per_page, error_out=False)
-            )
-            additional = None
-
-    elif user_id != "all":
-        user = User_mgmt.query.filter_by(id=user_id).first()
-        if feed_type == "top":
-            posts_query = (
-                Post.query.filter(Post.user_id != user_id, Post.comment_to == -1)
-                .outerjoin(Reactions, Post.id == Reactions.post_id)
-                .add_columns(
-                    Post,
-                    func.sum(
-                        (Reactions.type == "like").cast(db.Integer)
-                        - (Reactions.type == "dislike").cast(db.Integer)
-                    ).label("score"),
-                )
-                .group_by(Post.id)
-                .order_by(desc("score"), desc(Post.id))
-            )
-            posts = posts_query.paginate(
-                page=page, per_page=max_post_per_page, error_out=False
-            )
-            additional = None
-        elif feed_type == "most_commented":
-            posts = (
-                Post.query.filter(Post.comment_to == -1)
-                .order_by(desc(Post.id))
-                .paginate(page=page, per_page=max_post_per_page, error_out=False)
-            )
-            additional = None
-        else:
-            posts = (
-                Post.query.filter(Post.comment_to == -1)
-                .order_by(desc(Post.id))
-                .paginate(page=page, per_page=max_post_per_page, error_out=False)
-            )
-            additional = None
-        username = user.username
-
-    res, res_additional = [], []
-
-    # Get experiment user ID for reactions
-    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
-    exp_user_id = exp_user.id if exp_user else current_user.id
-
-    if posts is not None:
-        res = _get_discussions(posts, username, page, exp_id, exp_user_id)
-    if additional is not None:
-        res_additional = _get_discussions(
-            additional, username, page, exp_id, exp_user_id
-        )
-
-    # combine the posts and additional posts
-    if len(res_additional) > 0:
-        for add in res_additional:
-            res.append(add)
-
-    has_more = bool(
-        (posts is not None and getattr(posts, "has_next", False))
-        or (additional is not None and getattr(additional, "has_next", False))
+    page_obj = fetch_feed_page(
+        viewer_id=current_user.id,
+        page=page,
+        per_page=max_post_per_page,
+        feed_user_id=None if user_id == "all" else int(user_id),
+        feed_type=feed_type,
+        search_query="",
+        community_slug=community_slug,
     )
+    res = [post.to_dict() for post in page_obj.posts]
+    has_more = bool((page_obj.page * page_obj.per_page) < page_obj.total)
 
     html = render_template(
         "forum/components/posts.html",

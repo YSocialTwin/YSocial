@@ -40,6 +40,7 @@ from y_web.src.simulation.process_registry import (
     _register_process,
     _unregister_process,
 )
+from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import (
     get_base_path,
     get_resource_path,
@@ -59,6 +60,38 @@ def _resolve_server_runtime_paths(base_path, platform_type):
     else:
         raise NotImplementedError(f"Unsupported platform {platform_type}")
     return server_dir, os.path.join(server_dir, "y_server_run.py")
+
+
+def _ensure_image_post_module_in_config(config_path):
+    """Keep image_post aligned with the actual server runtime contract."""
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return
+
+    modules = config.get("modules")
+    if not isinstance(modules, list):
+        return
+
+    platform_type = str(config.get("platform_type") or "").strip().lower()
+    changed = False
+
+    if platform_type == "forum":
+        if "image" in modules and "image_post" not in modules:
+            modules = [*modules, "image_post"]
+            changed = True
+    else:
+        if "image_post" in modules:
+            modules = [module for module in modules if module != "image_post"]
+            changed = True
+
+    if not changed:
+        return
+
+    config["modules"] = modules
+    with open(config_path, "w", encoding="utf-8") as handle:
+        json.dump(config, handle, indent=4)
 
 
 @deprecated
@@ -514,6 +547,8 @@ def start_server(exp):
             f"Please ensure the experiment is properly configured."
         )
 
+    _ensure_image_post_module_in_config(config)
+
     # === ROBUST PORT ALLOCATION ===
     # Every time a YServer starts:
     # 1. Terminate processes holding the database file (for SQLite)
@@ -657,9 +692,14 @@ def start_server(exp):
                     cmd = ["gunicorn"] + gunicorn_args
 
         # Set environment variable for config file path
-        env = os.environ.copy()
-        env["YSERVER_CONFIG"] = config
-        env["YSERVER_LOG_FILE"] = str(Path(config).parent / "_server.log")
+        env = build_subprocess_env(
+            {
+                "YSERVER_CONFIG": config,
+                "YSERVER_LOG_FILE": str(Path(config).parent / "_server.log"),
+                "Y_SERVER_SUBPROCESS": "1",
+                "Y_SOCIAL_SUBPROCESS": "1",
+            }
+        )
 
         # Create log files for server output
         log_dir = Path(config).parent
@@ -771,8 +811,13 @@ def start_server(exp):
         # Create log files for server output to avoid pipe buffering issues
         # The server process should run independently without blocking on PIPE
         log_dir = Path(config).parent
-        env = os.environ.copy()
-        env["YSERVER_LOG_FILE"] = str(log_dir / "_server.log")
+        env = build_subprocess_env(
+            {
+                "YSERVER_LOG_FILE": str(log_dir / "_server.log"),
+                "Y_SERVER_SUBPROCESS": "1",
+                "Y_SOCIAL_SUBPROCESS": "1",
+            }
+        )
         stdout_log = log_dir / "server_stdout.log"
         stderr_log = log_dir / "server_stderr.log"
 
