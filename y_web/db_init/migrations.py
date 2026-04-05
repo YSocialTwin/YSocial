@@ -443,6 +443,44 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run download notifications migration: {e}")
 
     # ------------------------------------------------------------------
+    # plugin agent extension table
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_agent_ext_table import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_agent_ext_table import migrate_postgresql
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run agent_ext table migration: {e}")
+
+    # ------------------------------------------------------------------
+    # population pop_type column
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_population_pop_type import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_population_pop_type import migrate_postgresql
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run population pop_type migration: {e}")
+
+    # ------------------------------------------------------------------
     # Ensure all tables defined in models exist (including release_info)
     # ------------------------------------------------------------------
     try:

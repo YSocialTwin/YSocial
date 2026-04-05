@@ -249,6 +249,7 @@ class Population(db.Model):
     frecsys = db.Column(db.String(50))
     llm_url = db.Column(db.String(100))
     username_type = db.Column(db.String(50), nullable=False, default="microblogging")
+    pop_type = db.Column(db.String(50), nullable=True, default=None)
 
 
 class Agent(db.Model):
@@ -264,7 +265,7 @@ class Agent(db.Model):
     __tablename__ = "agents"
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    ag_type = db.Column(db.String(50), nullable=False)
+    ag_type = db.Column(db.String(50), nullable=True)
     gender = db.Column(db.String(10))
     leaning = db.Column(db.String(50))
     age = db.Column(db.Integer)
@@ -287,6 +288,18 @@ class Agent(db.Model):
         db.Integer, db.ForeignKey("activity_profiles.id"), nullable=True
     )
     archetype = db.Column(db.String(50), nullable=True, default=None)
+
+
+class Agent_Ext(db.Model):
+    """Stores plugin-specific agent features outside the core agent schema."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "agent_ext"
+    agent_id = db.Column(
+        db.Integer, db.ForeignKey("agents.id"), primary_key=True, nullable=False
+    )
+    feature_name = db.Column(db.String(100), primary_key=True, nullable=False)
+    feature_value = db.Column(db.Text, nullable=True)
 
 
 class Agent_Population(db.Model):

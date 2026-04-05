@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import io
+import json
 import subprocess
 import zipfile
 from pathlib import Path
@@ -52,6 +53,8 @@ def runtime_repo_spec(tmp_path, monkeypatch):
         key="test_runtime",
         group="hpc",
         group_label="HPC",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="TestRuntime",
         path=clone_target,
         github_repo="YSocialTwin/TestRuntime",
@@ -231,6 +234,8 @@ def test_runtime_visibility_respects_private_allowlist(monkeypatch):
         key="private_runtime",
         group="hpc",
         group_label="HPC",
+        category="agent_extensions",
+        category_label="Agent Extensions",
         label="PrivateRuntime",
         path=Path("/tmp/private-runtime"),
         github_repo="YSocialTwin/PrivateRuntime",
@@ -249,3 +254,144 @@ def test_runtime_visibility_respects_private_allowlist(monkeypatch):
 
     assert registry.runtime_visible_to_user(spec, User("alice", "admin")) is True
     assert registry.runtime_visible_to_user(spec, User("bob", "admin")) is False
+
+
+def test_grouped_runtime_specs_include_agent_plugins():
+    grouped = registry.grouped_runtime_specs()
+    group_keys = [group_key for group_key, _, _ in grouped]
+    assert "agent_plugins" in group_keys
+
+    plugin_spec = registry.runtime_spec("agent_plugins")
+    assert plugin_spec.github_repo == "YSocialTwin/y_agents_plugins"
+    assert plugin_spec.category == "agent_extensions"
+
+
+def test_install_runtime_dependencies_detects_pyproject_layout(
+    runtime_repo_spec, monkeypatch
+):
+    runtime_repo_spec.path.mkdir(parents=True)
+    (runtime_repo_spec.path / "pyproject.toml").write_text(
+        "[build-system]\nrequires = []\n", encoding="utf-8"
+    )
+    runtime_repo_spec = registry.ExternalRuntimeSpec(
+        key=runtime_repo_spec.key,
+        group=runtime_repo_spec.group,
+        group_label=runtime_repo_spec.group_label,
+        category=runtime_repo_spec.category,
+        category_label=runtime_repo_spec.category_label,
+        label=runtime_repo_spec.label,
+        path=runtime_repo_spec.path,
+        github_repo=runtime_repo_spec.github_repo,
+        repo_url=runtime_repo_spec.repo_url,
+        default_branch=runtime_repo_spec.default_branch,
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
+    )
+    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, runtime_repo_spec.key, runtime_repo_spec)
+    monkeypatch.setattr(
+        manager,
+        "get_runtime_status",
+        lambda repo_key, github_token=None: manager.RuntimeStatus(
+            key=runtime_repo_spec.key,
+            label=runtime_repo_spec.label,
+            group=runtime_repo_spec.group,
+            group_label=runtime_repo_spec.group_label,
+            category=runtime_repo_spec.category,
+            category_label=runtime_repo_spec.category_label,
+            path=str(runtime_repo_spec.path),
+            repo_url=runtime_repo_spec.repo_url,
+            github_repo=runtime_repo_spec.github_repo,
+            default_branch=runtime_repo_spec.default_branch,
+            installed=True,
+            exists=True,
+            git_managed=False,
+            is_symlink=False,
+            current_branch=None,
+            current_commit=None,
+            tracking_branch=None,
+            ahead=None,
+            behind=None,
+            dirty=False,
+            dependency_files_ready=True,
+            validation_ready=True,
+            available_branches=[runtime_repo_spec.default_branch],
+            available_releases=[],
+            latest_release_tag=None,
+            releases_enabled=False,
+            release_error=None,
+            path_kind="directory",
+            python_executable=manager.sys.executable,
+            is_private=False,
+        ),
+    )
+
+    commands = []
+
+    def fake_run(command, cwd, env=None, timeout=300):
+        commands.append(command)
+        return "ok"
+
+    monkeypatch.setattr(manager, "_run_command", fake_run)
+    manager.install_runtime_dependencies(runtime_repo_spec.key, actor="tester")
+
+    assert commands == [[manager.sys.executable, "-m", "pip", "install", "-e", "."]]
+
+
+def test_load_plugins_index_rebuilds_external_plugins_json(tmp_path, monkeypatch):
+    external_dir = tmp_path / "external"
+    meta_dir = external_dir / "sample_plugin" / "meta"
+    meta_dir.mkdir(parents=True)
+    info_payload = {
+        "plugin_name": "Sample Plugin",
+        "category": "Agent Extensions",
+        "group": "Moderation",
+        "description": "Example plugin metadata.",
+        "authors": ["Example Org"],
+        "repository_url": "https://github.com/example/sample_plugin",
+    }
+    (meta_dir / "info.json").write_text(
+        json.dumps(info_payload), encoding="utf-8"
+    )
+
+    monkeypatch.setattr(registry, "EXTERNAL_DIR", external_dir)
+    monkeypatch.setattr(registry, "PLUGINS_INDEX_PATH", external_dir / "plugins.json")
+
+    plugins = registry.load_plugins_index(refresh=True)
+
+    assert plugins == [info_payload]
+    saved_payload = json.loads(
+        (external_dir / "plugins.json").read_text(encoding="utf-8")
+    )
+    assert saved_payload == {"plugins": [info_payload]}
+
+
+def test_plugin_metadata_for_runtime_matches_repository_url(tmp_path, monkeypatch):
+    external_dir = tmp_path / "external"
+    monkeypatch.setattr(registry, "EXTERNAL_DIR", external_dir)
+    monkeypatch.setattr(registry, "PLUGINS_INDEX_PATH", external_dir / "plugins.json")
+
+    plugin_info = {
+        "plugin_name": "Sample Plugin",
+        "category": "Agent Extensions",
+        "group": "Moderation",
+        "description": "Example plugin metadata.",
+        "authors": ["Example Org"],
+        "repository_url": "https://github.com/example/sample_plugin",
+    }
+    spec = registry.ExternalRuntimeSpec(
+        key="sample_plugin",
+        group="agent_plugins",
+        group_label="Agent Plugins",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="sample_plugin",
+        path=external_dir / "sample_plugin",
+        github_repo="example/sample_plugin",
+        repo_url="git@github.com:example/sample_plugin.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+    )
+
+    assert registry.plugin_metadata_for_runtime(spec, [plugin_info]) == plugin_info

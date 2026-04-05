@@ -41,48 +41,81 @@
                                 <code>{{ current_python_executable }}</code>
                             </p>
 
-                            {% for group_info in grouped_runtime_status %}
-                            <div class="ys-panel-card" style="margin-bottom: 22px; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;">
-                                <div class="ys-panel-header" style="background: #f8fafc; border-bottom: 1px solid #e5e7eb;">
-                                    <div>
-                                        <div class="ys-text-sm-dark" style="font-weight: 700;">{{ group_info.label }}</div>
-                                        {% set active = active_group_usage.get(group_info.group, []) %}
-                                        <div class="ys-text-xs-hint">
-                                            {% if active %}
-                                                Active experiments: {{ active|map(attribute='exp_name')|join(', ') }}
+                            {% for category in runtime_categories %}
+                            <section class="ys-panel-card" style="margin-bottom: 22px; border: 1px solid #dbe3ef; border-radius: 14px; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);">
+                                <div class="ys-panel-header" style="background: #eef4ff; border-bottom: 1px solid #dbe3ef; padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap;">
+                                        <div>
+                                            <div class="ys-text-sm-dark" style="font-weight: 700; font-size: 1rem;">{{ category.label }}</div>
+                                            <div class="ys-text-xs-hint" style="margin-top: 4px;">{{ category.description }}</div>
+                                        </div>
+                                        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                                            <span class="badge badge-info">{{ category.repo_count }} repositories</span>
+                                            <span class="badge badge-success">{{ category.installed_count }} installed</span>
+                                            {% if category.active_experiment_count %}
+                                            <span class="badge badge-warning">{{ category.active_experiment_count }} active experiments</span>
                                             {% else %}
-                                                No active experiments using this runtime group.
+                                            <span class="badge badge-secondary">No active experiments</span>
                                             {% endif %}
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style="padding: 14px 16px; display: grid; gap: 16px;">
-                                    {% for repo in group_info.repos %}
-                                    <details style="border: 1px solid #e5e7eb; border-radius: 10px; background: white;">
+                                <div style="padding: 16px; display: grid; gap: 18px;">
+                                    {% for group_info in category.groups %}
+                                    <div style="border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: white;">
+                                        <div style="padding: 14px 16px; background: #f8fafc; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap;">
+                                            <div>
+                                                <div class="ys-text-sm-dark" style="font-weight: 700;">{{ group_info.label }}</div>
+                                                {% set active = group_info.active_experiments|default([]) %}
+                                                <div class="ys-text-xs-hint">
+                                                    {% if active %}
+                                                        Active experiments: {{ active|map(attribute='exp_name')|join(', ') }}
+                                                    {% elif group_info.description %}
+                                                        {{ group_info.description }}
+                                                    {% else %}
+                                                        No active experiments using this runtime group.
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                                <span class="badge badge-secondary">{{ group_info.repos|length }} repositories</span>
+                                                <span class="badge badge-info">{{ group_info.label }}</span>
+                                            </div>
+                                        </div>
+
+                                        <div style="padding: 14px 16px; display: grid; gap: 16px;">
+                                            {% for repo in group_info.repos %}
+                                            <details style="border: 1px solid #e5e7eb; border-radius: 10px; background: white;">
                                         <summary style="cursor: pointer; list-style: none; padding: 14px 16px; display: flex; justify-content: space-between; gap: 12px; align-items: center;">
-                                            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                                                <strong style="font-size: 1rem; color: #111827;">{{ repo.label }}</strong>
-                                                {% if repo.installed %}
-                                                <span class="badge badge-success">Installed</span>
-                                                {% else %}
-                                                <span class="badge badge-secondary">Not installed</span>
-                                                {% endif %}
-                                                {% if repo.git_managed %}
-                                                <span class="badge badge-info">Git</span>
-                                                {% elif repo.installed %}
-                                                <span class="badge badge-warning">Release</span>
-                                                {% endif %}
-                                                {% if repo.is_private %}
-                                                <span class="badge badge-danger">Private</span>
-                                                {% else %}
-                                                <span class="badge badge-success">Public</span>
-                                                {% endif %}
-                                                {% if repo.is_symlink %}
-                                                <span class="badge badge-warning">Symlink</span>
-                                                {% endif %}
-                                                {% if repo.dirty %}
-                                                <span class="badge badge-danger">Dirty</span>
+                                            <div style="display: grid; gap: 8px; min-width: 280px; flex: 1 1 420px;">
+                                                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                                                    <strong style="font-size: 1rem; color: #111827;">{{ repo.label }}</strong>
+                                                    {% if repo.installed %}
+                                                    <span class="badge badge-success">Installed</span>
+                                                    {% else %}
+                                                    <span class="badge badge-secondary">Not installed</span>
+                                                    {% endif %}
+                                                    {% if repo.git_managed %}
+                                                    <span class="badge badge-info">Git</span>
+                                                    {% elif repo.installed %}
+                                                    <span class="badge badge-warning">Release</span>
+                                                    {% endif %}
+                                                    {% if repo.is_private %}
+                                                    <span class="badge badge-danger">Private</span>
+                                                    {% else %}
+                                                    <span class="badge badge-success">Public</span>
+                                                    {% endif %}
+                                                    {% if repo.is_symlink %}
+                                                    <span class="badge badge-warning">Symlink</span>
+                                                    {% endif %}
+                                                    {% if repo.dirty %}
+                                                    <span class="badge badge-danger">Dirty</span>
+                                                    {% endif %}
+
+                                                </div>
+                                                {% if repo.plugin_description %}
+                                                <div class="ys-text-xs-hint">{{ repo.plugin_description }}</div>
                                                 {% endif %}
                                             </div>
                                             <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
@@ -95,6 +128,12 @@
                                             <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; flex-wrap: wrap; padding-top: 14px;">
                                                 <div style="min-width: 260px; flex: 1 1 320px;">
                                                     <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Repository:</strong> {{ repo.github_repo }}</div>
+                                                    {% if repo.plugin_repository_url %}
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Repository URL:</strong> <a href="{{ repo.plugin_repository_url }}">{{ repo.plugin_repository_url }}</a></div>
+                                                    {% endif %}
+                                                    {% if repo.plugin_authors %}
+                                                    <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Authors:</strong> {{ repo.plugin_authors|join(', ') }}</div>
+                                                    {% endif %}
                                                     <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Source state:</strong> {{ repo.current_branch or 'release archive' }}{% if repo.current_commit %} · {{ repo.current_commit }}{% endif %}</div>
                                                     <div class="ys-text-xs-hint" style="margin-bottom: 4px;"><strong>Tracking:</strong> {{ repo.tracking_branch or 'n/a' }}{% if repo.ahead is not none and repo.behind is not none %} · ahead {{ repo.ahead }} / behind {{ repo.behind }}{% endif %}</div>
                                                     <div class="ys-text-xs-hint"><strong>Dependencies:</strong> {{ 'ready' if repo.dependency_files_ready else 'missing' }} · <strong>Validation:</strong> {{ 'ready' if repo.validation_ready else 'missing' }}</div>
@@ -195,9 +234,12 @@
                                             </details>
                                         </div>
                                     </details>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
                                     {% endfor %}
                                 </div>
-                            </div>
+                            </section>
                             {% endfor %}
                         </div>
                     </div>

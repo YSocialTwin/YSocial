@@ -31,6 +31,7 @@ from y_web.src.models import (
     ActivityProfile,
     AgeClass,
     Agent,
+    Agent_Ext,
     Agent_Population,
     Agent_Profile,
     Content_Recsys,
@@ -58,6 +59,48 @@ from y_web.src.system.miscellanea import (
 )
 
 population = Blueprint("population", __name__)
+
+STANDARD_POPULATION_TYPE = None
+
+
+def _render_custom_population_details(population, exps, agents):
+    agent_rows = []
+    for agent, _ in agents:
+        activity_profile_name = None
+        if agent.activity_profile:
+            profile = ActivityProfile.query.get(agent.activity_profile)
+            activity_profile_name = profile.name if profile else None
+        ext_fields = {
+            ext.feature_name: ext.feature_value
+            for ext in Agent_Ext.query.filter_by(agent_id=agent.id).all()
+        }
+        agent_rows.append(
+            {
+                "id": agent.id,
+                "name": agent.name,
+                "ag_type": agent.ag_type,
+                "activity_profile": activity_profile_name,
+                "daily_activity_level": agent.daily_activity_level,
+                "ext_fields": ext_fields,
+            }
+        )
+
+    back_href = (
+        f"/admin/custom_agent/{population.pop_type}"
+        if population.pop_type
+        else "/admin/populations"
+    )
+    back_label = "Custom Agent Populations" if population.pop_type else "Populations"
+
+    return render_template(
+        "admin/custom_population_details.html",
+        population=population,
+        population_experiments=exps,
+        agent_rows=agent_rows,
+        live_size=len(agents),
+        back_href=back_href,
+        back_label=back_label,
+    )
 
 
 def _uniform_distribution_from_ids(selected_ids):
@@ -117,7 +160,12 @@ def create_population_empty():
     )
 
     # add the experiment to the database
-    pop = Population(name=name, descr=descr, username_type=username_type)
+    pop = Population(
+        name=name,
+        descr=descr,
+        username_type=username_type,
+        pop_type=STANDARD_POPULATION_TYPE,
+    )
 
     db.session.add(pop)
     db.session.commit()
@@ -296,6 +344,7 @@ def create_population():
         toxicity=toxicity_levels,
         llm_url=llm,
         username_type=username_type,
+        pop_type=STANDARD_POPULATION_TYPE,
     )
 
     db.session.add(population)
@@ -348,7 +397,7 @@ def populations_data():
         Rendered populations data template
     """
     ensure_population_username_type_column()
-    query = Population.query
+    query = Population.query.filter(Population.pop_type.is_(None))
 
     # search filter
     search = request.args.get("search")
@@ -367,7 +416,7 @@ def populations_data():
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in ["name", "descr", "size"]:
+            if name not in ["name", "descr", "size", "pop_type"]:
                 name = "name"
             col = getattr(Population, name)
             if direction == "-":
@@ -426,6 +475,7 @@ def populations_data():
                     if t_id.strip()
                 ],
                 "username_type": infer_population_username_type(pop) or "microblogging",
+                "pop_type": pop.pop_type or "standard",
                 "activity_profiles": population_profiles.get(pop.id, []),
             }
             for pop in res
@@ -508,6 +558,9 @@ def population_details(uid):
         .all()
     )
 
+    if population.pop_type is not None:
+        return _render_custom_population_details(population, exps, agents)
+
     # Fetch label mappings from database
     leanings_map = {str(l.id): l.leaning for l in Leanings.query.all()}
     education_map = {str(e.id): e.education_level for e in Education.query.all()}
@@ -538,6 +591,8 @@ def population_details(uid):
     # Count agents in each age class bin
     for a in agents:
         agent_age = a[0].age
+        if agent_age is None:
+            continue
         for idx, age_class in enumerate(age_classes):
             if age_class.age_start <= agent_age <= age_class.age_end:
                 age["total"][idx] += 1
@@ -800,6 +855,20 @@ def delete_population(uid):
         flash("Population is assigned to an experiment. Cannot delete.")
         return populations()
 
+    if population.pop_type is not None:
+        linked_agents = Agent_Population.query.filter_by(population_id=uid).all()
+        for link in linked_agents:
+            assigned_count = Agent_Population.query.filter_by(
+                agent_id=link.agent_id
+            ).count()
+            agent = Agent.query.filter_by(id=link.agent_id).first()
+            if agent and agent.ag_type == population.pop_type and assigned_count <= 1:
+                flash(
+                    "Cannot delete this custom population because at least one custom agent would be left without a population.",
+                    "error",
+                )
+                return redirect(f"/admin/custom_agent/{population.pop_type}")
+
     db.session.delete(population)
     db.session.commit()
 
@@ -817,6 +886,8 @@ def delete_population(uid):
         db.session.delete(pe)
         db.session.commit()
 
+    if population.pop_type is not None:
+        return redirect(f"/admin/custom_agent/{population.pop_type}")
     return populations()
 
 

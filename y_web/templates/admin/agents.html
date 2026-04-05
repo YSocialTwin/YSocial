@@ -11,18 +11,36 @@
 
             <div class="columns">
                 <div class="column is-12">
+                    {% if page_kind == 'hello' %}
+                    <div class="dashboard-box" id="box-hello-populations" style="margin-bottom: 24px;">
+                        <h3 class="title is-5 is-thin">Available Hello World Populations</h3>
+                        <div class="box-content">
+                            <div
+                                id="hello-populations-table"
+                                data-populations='{{ hello_populations|tojson }}'
+                            ></div>
+                        </div>
+                    </div>
+                    {% endif %}
 
                     <div class="dashboard-box" id="box-agents-table">
-                        <h3 class="title is-5 is-thin">Available Agents</h3>
+                        <h3 class="title is-5 is-thin">{{ table_title|default('Available Agents') }}</h3>
 
                         <div class="box-content">
 
-                            <div id="table"></div>
+                            <div
+                                id="table"
+                                data-grid-kind="{{ page_kind|default('standard') }}"
+                                data-list-endpoint="{{ list_endpoint|default('/admin/agents_data') }}"
+                                data-details-url-prefix="{{ details_url_prefix|default('/admin/agent_details/') }}"
+                                data-delete-url-prefix="{{ delete_url_prefix|default('/admin/delete_agent/') }}"
+                            ></div>
 
                             <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
 
                             
 
+                            {% if delete_orphaned_visible|default(true) %}
                             <div style="margin-top: 20px; text-align: right;">
  <form action="/admin/delete_orphaned_agents" method="POST" class="d-inline-block" onsubmit="if(confirm('Are you sure you want to delete all agents that do not belong to any population? This action cannot be undone.')) { showLoading('Deleting orphaned agents...'); return true; } return false;">
                                     <button type="submit" class="button is-solid" style="background-color: #dc3545; color: white; padding: 8px 16px; font-size: 0.9rem;">
@@ -30,6 +48,7 @@
                                     </button>
                                 </form>
                             </div>
+                            {% endif %}
 
                         </div>
                     </div>
@@ -43,9 +62,9 @@
                 <div class="column is-8">
                     <!--Dashboard box-->
                     <div class="dashboard-box" id="box-create-agent">
-                        <h3 class="title is-5 is-thin">Create Agent</h3>
+                        <h3 class="title is-5 is-thin">{{ create_title|default('Create Agent') }}</h3>
                         <div class="box-content">
-                            <form action="/admin/create_agent" enctype="multipart/form-data" method="POST" onsubmit="showLoading('Creating agent...');">
+                            <form action="{{ form_action|default('/admin/create_agent') }}" enctype="multipart/form-data" method="POST" onsubmit="showLoading('{{ loading_message|default('Creating agent...') }}');">
                                 <div class="box-lines">
                                     <div id="section-simulation-config" class="tutorial-section">
                                     <b>Simulation Configuration</b>
@@ -53,8 +72,11 @@
                                     <div class="box-line">
                                         <span class="left">Target Population</span>
                                         <div class="select">
-                                            <select name="population">
+                                            <select name="population" {% if page_kind == 'hello' %}id="hello_target_population"{% endif %}>
                                                 <option value="none"></option>
+                                                {% if page_kind == 'hello' %}
+                                                <option value="__new__">Create new Hello World population...</option>
+                                                {% endif %}
                                                 {% for population in populations %}
                                                 <option value="{{ population.id }}">{{ population.name }}</option>
                                                 {% endfor %}
@@ -62,7 +84,51 @@
                                         </div>
 
                                     </div>
+                                    {% if page_kind == 'hello' %}
+                                    <div id="hello-new-population-fields" style="display: none;">
+                                        <div class="box-line">
+                                            <span class="left">New Population Name</span>
+                                            <span class="right ys-w-70"><input type="text" name="new_population_name" class="input"></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">New Population Description</span>
+                                            <span class="right ys-w-70"><input type="text" name="new_population_descr" class="input"></span>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                     </div><!-- End section-simulation-config -->
+                                    {% if page_kind == 'hello' %}
+                                    <hr>
+                                    <div class="tutorial-section">
+                                    <b>Hello World Settings</b>
+                                    <div class="box-line">
+                                        <span class="left">Agent Name</span>
+                                        <span class="right ys-w-70"><input type="text" name="name" class="input" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Daily Budget</span>
+                                        <span class="right ys-w-70"><input type="number" name="daily_budget" class="input" value="24" min="1" required></span>
+                                    </div>
+                                    <div class="form-section-header-agent">Activity Profile</div>
+                                    <div class="form-section-description-agent">
+                                        Select when this agent can publish its fixed HELLO WORLD post.
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Activity Pattern</span>
+                                        <div class="select">
+                                            <select name="activity_profile" id="activity_profile_select">
+                                                {% if activity_profiles %}
+                                                    {% for profile in activity_profiles %}
+                                                    <option value="{{ profile.id }}" {% if profile.name == 'Always On' %}selected{% endif %}>
+                                                        {{ profile.name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    {% else %}
                                     <hr>
                                     <div id="section-demographic-info" class="tutorial-section">
                                     <b>Demographic Information</b>
@@ -277,11 +343,12 @@
                                             </div>
 
                                     </div>
+                                    {% endif %}
 
                                 </div>
                                 <div class="button-wrap">
                                     <button class="button is-solid primary-button is-fullwidth">
-                                        Create
+                                        {{ submit_label|default('Create') }}
                                     </button>
                                 </div>
                             </form>
@@ -293,19 +360,17 @@
                 <div class="column is-4">
                     <!--Box-->
                     <div class="dashboard-box is-compact" id="box-agents-help">
-                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <h3 class="title is-5 is-thin">{{ builder_intro_title|default('Quick Reference Guide') }}</h3>
                         <div class="help-block">
-
+                            {% for line in builder_intro_lines|default([]) %}
                             <p>
-                                <b>Synthetic Agents</b><br>
-                                Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits.
+                                <b>{{ line.title }}</b><br>
+                                {{ line.body }}
                             </p>
+                            {% if not loop.last %}
                             <hr>
-                            <p>
-                                <b>Profiles vs. Advanced Roleplay</b><br>
-                                The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts).<br><br>
-                                The advanced roleplay allows to specify a custom pre-prompt that <em>overrides</em> the other configuration variables.
-                            </p>
+                            {% endif %}
+                            {% endfor %}
 
                         </div>
                     </div>
@@ -317,6 +382,8 @@
 
 </div>
 
+{% if page_kind != 'hello' %}
 {% include "admin/tutorials/agents_tutorial.html" %}
+{% endif %}
 <script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
 {% include "admin/footer.html" %}

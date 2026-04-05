@@ -1,0 +1,101 @@
+{% include "admin/head.html" %}
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="{{ back_href }}">{{ back_label }}</a> > Details: {{ population.name }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-6">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Custom Population Overview</h3>
+                        <p class="ys-text-small">
+                            Simplified details for a custom population type that does not expose the full synthetic-population analytics model.
+                        </p>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left">Name</span>
+                                    <span class="right">{{ population.name }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Description</span>
+                                    <span class="right">{{ population.descr or '' }}</span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left">Assigned Agents</span>
+                                    <span class="right">{{ live_size }}</span>
+                                </div>
+                            </div>
+                            <div class="buttons" style="display: flex; justify-content: right; gap: 10px; margin-top: 20px;">
+                                <a class="button is-info ys-flex-gap-5" href="/admin/download_population/{{ population.id }}">
+                                    <i class="mdi mdi-download"></i>
+                                    <span>Download</span>
+                                </a>
+                                <a class="button is-danger ys-flex-gap-5" href="/admin/delete_population/{{ population.id }}">
+                                    <i class="mdi mdi-delete"></i>
+                                    <span>Delete</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-6">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Experiment Deployments</h3>
+                        <p class="ys-text-small">
+                            Experiments where this custom population is currently deployed.
+                        </p>
+                        <div class="box-content">
+                            <div class="box-lines">
+                                {% if population_experiments %}
+                                <div class="box-line">
+                                    <span class="left">Active Experiments</span>
+                                    <span class="right">
+                                        <ul>
+                                        {% for exp in population_experiments %}
+                                            <li><a href="/admin/experiment_details/{{ exp[1] }}">{{ exp[0] }}</a></li>
+                                        {% endfor %}
+                                        </ul>
+                                    </span>
+                                </div>
+                                {% else %}
+                                <div class="box-line">
+                                    <span class="left">No experiments yet</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin">Assigned Agents</h3>
+                        <div class="box-content">
+                            <div id="custom-population-agents-table"></div>
+                            <script src="{{ url_for('static', filename='assets/vendor/js/gridjs.umd.js') }}"></script>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var YS_CUSTOM_POP_AGENTS = {{ agent_rows|tojson }};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
+{% include "admin/footer.html" %}

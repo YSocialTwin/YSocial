@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 
 from flask import flash, redirect, render_template, request, session, url_for
@@ -15,7 +16,9 @@ from y_web.src.external_runtime import (
     fetch_runtime_repo,
     get_grouped_runtime_status,
     install_runtime_dependencies,
+    load_plugins_index,
     log_external_runtime_action,
+    plugin_metadata_for_runtime,
     read_external_runtime_logs,
     runtime_spec,
     runtime_visible_to_user,
@@ -59,6 +62,8 @@ def _runtime_group_active_experiments(group_key: str) -> list[Exps]:
         query = base_query.filter(Exps.platform_type == "forum")
     elif group_key == "hpc":
         query = base_query.filter(Exps.simulator_type == "HPC")
+    elif group_key == "agent_plugins":
+        return []
     else:
         return []
     return query.filter((Exps.running == 1) | (Exps.exp_status == "active")).all()
@@ -69,7 +74,13 @@ def _session_github_token() -> str | None:
     return token or None
 
 
+def _slugify(value: str) -> str:
+    slug = re.sub(r"[^a-z0-9]+", "_", (value or "").lower()).strip("_")
+    return slug or "group"
+
+
 def _visible_runtime_groups(admin_user, github_token: str | None):
+    plugins_index = load_plugins_index(refresh=True)
     all_groups = get_grouped_runtime_status(github_token=github_token)
     visible_groups = []
     for group_info in all_groups:
@@ -77,6 +88,34 @@ def _visible_runtime_groups(admin_user, github_token: str | None):
         for repo in group_info["repos"]:
             spec = runtime_spec(repo["key"])
             if runtime_visible_to_user(spec, admin_user):
+                repo = dict(repo)
+                plugin_metadata = plugin_metadata_for_runtime(spec, plugins_index)
+                if plugin_metadata:
+                    repo["label"] = plugin_metadata.get("plugin_name") or repo["label"]
+                    repo["plugin_metadata"] = plugin_metadata
+                    repo["plugin_name"] = (
+                        plugin_metadata.get("plugin_name") or repo["label"]
+                    )
+                    repo["plugin_category_label"] = (
+                        plugin_metadata.get("category") or repo["category_label"]
+                    )
+                    repo["plugin_group_label"] = (
+                        plugin_metadata.get("group") or repo["group_label"]
+                    )
+                    repo["plugin_description"] = (
+                        plugin_metadata.get("description") or ""
+                    )
+                    repo["plugin_authors"] = plugin_metadata.get("authors") or []
+                    repo["plugin_repository_url"] = (
+                        plugin_metadata.get("repository_url") or repo["repo_url"]
+                    )
+                else:
+                    repo["plugin_name"] = repo["label"]
+                    repo["plugin_category_label"] = repo["category_label"]
+                    repo["plugin_group_label"] = repo["group_label"]
+                    repo["plugin_description"] = ""
+                    repo["plugin_authors"] = []
+                    repo["plugin_repository_url"] = repo["repo_url"]
                 repos.append(repo)
         if repos:
             visible_groups.append(
@@ -87,6 +126,70 @@ def _visible_runtime_groups(admin_user, github_token: str | None):
                 }
             )
     return visible_groups
+
+
+def _runtime_categories(grouped_status, active_group_usage):
+    all_repos = [
+        repo
+        for group_info in grouped_status
+        for repo in group_info["repos"]
+    ]
+    categories = []
+    plugin_category_map: dict[str, dict] = {}
+    for repo in all_repos:
+        category_label = repo.get("plugin_category_label") or "Agent Extensions"
+        group_label = repo.get("plugin_group_label") or "Agent Plugins"
+        category_key = _slugify(str(category_label))
+        group_key = _slugify(str(group_label))
+
+        category_entry = plugin_category_map.setdefault(
+            category_key,
+            {
+                "key": category_key,
+                "label": category_label,
+                "description": f"Repositories classified under {category_label}.",
+                "groups": {},
+            },
+        )
+        group_entry = category_entry["groups"].setdefault(
+            group_key,
+            {
+                "group": group_key,
+                "label": group_label,
+                "description": f"Repositories grouped as {group_label}.",
+                "repos": [],
+                "active_experiments": [],
+            },
+        )
+        group_entry["repos"].append(repo)
+        runtime_group = repo.get("group")
+        for experiment in active_group_usage.get(runtime_group, []):
+            if experiment not in group_entry["active_experiments"]:
+                group_entry["active_experiments"].append(experiment)
+
+    for category_entry in plugin_category_map.values():
+        groups = list(category_entry["groups"].values())
+        repo_count = sum(len(group_info["repos"]) for group_info in groups)
+        installed_count = sum(
+            1
+            for group_info in groups
+            for repo in group_info["repos"]
+            if repo.get("installed")
+        )
+        categories.append(
+            {
+                "key": category_entry["key"],
+                "label": category_entry["label"],
+                "description": category_entry["description"],
+                "groups": groups,
+                "repo_count": repo_count,
+                "installed_count": installed_count,
+                "active_experiment_count": sum(
+                    len(group_info["active_experiments"]) for group_info in groups
+                ),
+            }
+        )
+    return categories
 
 
 @experiments.route("/admin/external_runtimes")
@@ -102,6 +205,7 @@ def external_runtimes():
         group_info["group"]: _runtime_group_active_experiments(group_info["group"])
         for group_info in grouped_status
     }
+    runtime_categories = _runtime_categories(grouped_status, active_group_usage)
     recent_logs = read_external_runtime_logs(limit=120)
     selected_repo_key = (request.args.get("repo_key") or "").strip()
     selected_repo_logs = read_external_runtime_logs(
@@ -110,6 +214,7 @@ def external_runtimes():
     return render_template(
         "admin/external_runtimes.html",
         grouped_runtime_status=grouped_status,
+        runtime_categories=runtime_categories,
         active_group_usage=active_group_usage,
         current_python_executable=sys.executable,
         recent_runtime_logs=recent_logs,

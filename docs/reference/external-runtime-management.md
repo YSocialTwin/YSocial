@@ -12,18 +12,27 @@ This panel manages the runtime repositories installed under:
 
 The panel is intentionally limited to a fixed whitelist of supported plugins. It does not expose arbitrary shell access or arbitrary repository URLs.
 
-## Supported Plugin Groups
+Installed plugins expose metadata through:
 
-Plugins are grouped by experiment family:
+- `external/<plugin>/meta/info.json`
+- `external/<plugin>/meta/registry.json`
+- aggregated index: `external/plugins.json`
 
-- `Microblogging`
-  - `YClient`
-  - `YServer`
-- `Forum`
-  - `YClientReddit`
-  - `YServerReddit`
-- `HPC`
-  - `YSimulator`
+## Supported Plugin Categories
+
+Plugins are organized into two top-level categories:
+
+- `Simulation Runtimes`
+  - `Microblogging`
+    - `YClient`
+    - `YServer`
+  - `Forum`
+    - `YClientReddit`
+    - `YServerReddit`
+  - `HPC`
+    - `YSimulator`
+- `Agent Plugins`
+  - `y_agents_plugins`
 
 The experiment creation flow already uses these plugin states to determine which experiment types are available.
 
@@ -121,6 +130,8 @@ This applies to:
 
 This avoids updating runtime code while active experiment processes may still be importing or executing it.
 
+`Agent Plugins` are shown as shared repositories rather than platform-specific runtime stacks, so they do not report a single experiment-family lock in the same way the simulation runtimes do.
+
 ## Dependency Installation
 
 Dependency installation always uses the same Python interpreter currently running YSocial.
@@ -147,7 +158,7 @@ Each plugin card shows compact status badges such as:
 - `Dirty`
 - `Symlink`
 
-Cards are folded by default so the page stays scannable.
+Cards are folded by default so the page stays scannable. The panel is split by category and group. For plugin repositories, category, group, description, authors, and repository URL are taken from `external/plugins.json`, which is rebuilt from installed plugin `meta/info.json` files.
 
 ## Logs and Output Inspection
 

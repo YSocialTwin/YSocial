@@ -6,18 +6,24 @@ including their profiles, demographics, personality traits, and behavioral
 settings.
 """
 
+import json
 import random
 import re
+from pathlib import Path
+from typing import Optional
 
-from flask import Blueprint, flash, render_template, request
+from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.agents.platform import normalize_population_username_type
+from y_web.src.external_runtime.registry import EXTERNAL_DIR, runtime_spec
 from y_web.src.llm.ollama_manager import get_ollama_models
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import (
     ActivityProfile,
     Agent,
+    Agent_Ext,
     Agent_Population,
     Agent_Profile,
     Content_Recsys,
@@ -26,6 +32,8 @@ from y_web.src.models import (
     Languages,
     Leanings,
     Nationalities,
+    Page,
+    Page_Population,
     Population,
     Profession,
     Toxicity_Levels,
@@ -39,74 +47,428 @@ from y_web.src.system.miscellanea import (
 agents = Blueprint("agents", __name__)
 
 
-@agents.route("/admin/agents")
-@login_required
-def agent_data():
-    """
-    Display agent management page.
+def _runtime_installed(repo_key: str) -> bool:
+    try:
+        return runtime_spec(repo_key).path.exists()
+    except Exception:
+        return False
 
-    Returns:
-        Rendered agent data template with available models
-    """
-    check_privileges(current_user.username)
 
-    models = get_llm_models()  # Use generic function for any LLM server
-
-    populations = Population.query.all()
-    llm_backend = llm_backend_status()
-
-    # get professions
-    professions = Profession.query.all()
-    nationalities = Nationalities.query.all()
-    educations = Education.query.all()
-    leanings = Leanings.query.all()
-    languages = Languages.query.all()
-    toxicity_levels = Toxicity_Levels.query.all()
-    activity_profiles = ActivityProfile.query.all()
-
-    return render_template(
-        "admin/agents.html",
-        populations=populations,
-        models=models,
-        llm_backend=llm_backend,
-        professions=professions,
-        nationalities=nationalities,
-        education_levels=educations,
-        leanings=leanings,
-        languages=languages,
-        toxicity_levels=toxicity_levels,
-        activity_profiles=activity_profiles,
+def _page_resources_available() -> bool:
+    return any(
+        _runtime_installed(repo_key)
+        for repo_key in ("microblogging_client", "microblogging_server", "hpc_simulator")
     )
 
 
-@agents.route("/admin/agents_data")
-@login_required
-def agents_data():
-    """Display agents data page."""
-    query = Agent.query
+def _deployment_group_key(tags: list[str]) -> str:
+    normalized = set(tags or [])
+    if {"microblogging", "forum"}.issubset(normalized):
+        return "all"
+    if normalized == {"microblogging"}:
+        return "microblogging"
+    if normalized == {"forum"}:
+        return "forum"
+    return "all"
 
-    # search filter
+
+def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
+    definitions = [
+        {
+            "key": "all",
+            "label": "All Experiments",
+            "description": "Agent types that can be deployed in both microblogging and forum simulations.",
+        },
+        {
+            "key": "microblogging",
+            "label": "Microblogging Only",
+            "description": "Agent types that currently target microblogging experiments only.",
+        },
+        {
+            "key": "forum",
+            "label": "Forum Only",
+            "description": "Agent types that currently target forum experiments only.",
+        },
+    ]
+
+    grouped = []
+    for definition in definitions:
+        section_cards = [
+            card for card in cards if _deployment_group_key(card.get("deployment_tags", [])) == definition["key"]
+        ]
+        if not section_cards:
+            continue
+        grouped.append(
+            {
+                "key": definition["key"],
+                "label": definition["label"],
+                "description": definition["description"],
+                "cards": section_cards,
+            }
+        )
+    return grouped
+
+
+def _manifest_paths():
+    manifests = []
+    for repo_dir in sorted(EXTERNAL_DIR.iterdir()) if EXTERNAL_DIR.exists() else []:
+        if not repo_dir.is_dir():
+            continue
+        manifest_path = repo_dir / Path("meta") / "registry.json"
+        if manifest_path.exists():
+            manifests.append((repo_dir.name, manifest_path))
+    return manifests
+
+
+def _custom_agent_slug(name: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
+    tokens = [token for token in cleaned.split() if token and token != "agent"]
+    if not tokens:
+        return "custom"
+    if len(tokens) == 1:
+        return tokens[0]
+    return tokens[0][0] + "".join(tokens[1:])
+
+
+def _plugin_agent_specs() -> list[dict]:
+    specs = []
+    for repo_name, manifest_path in _manifest_paths():
+        try:
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+
+        for entry in payload.get("agent_types", []):
+            agent_type = str(entry.get("agent_type") or "").strip()
+            if not agent_type:
+                continue
+            display_name = str(entry.get("display_name") or agent_type)
+            slug = _custom_agent_slug(display_name)
+            accepted_slugs = {slug, agent_type}
+            # Compatibility for existing Hello World records created before generalization.
+            if slug == "hworld":
+                accepted_slugs.add("hword")
+
+            specs.append(
+                {
+                    "slug": slug,
+                    "accepted_slugs": sorted(accepted_slugs),
+                    "agent_type": agent_type,
+                    "display_name": display_name,
+                    "description": str(
+                        entry.get("description") or "Plugin-defined agent type."
+                    ),
+                    "parameters": entry.get("parameters", []) or [],
+                    "repo_name": repo_name,
+                    "manifest_path": str(manifest_path),
+                }
+            )
+    return specs
+
+
+def _find_custom_agent_spec(agent_slug: Optional[str]):
+    if not agent_slug:
+        return None
+    for spec in _plugin_agent_specs():
+        if agent_slug in spec["accepted_slugs"]:
+            return spec
+    return None
+
+
+def _discover_plugin_agent_types() -> list[dict]:
+    plugin_cards = []
+    for spec in _plugin_agent_specs():
+        parameters = spec["parameters"]
+        required_parameters = [
+            str(parameter.get("name"))
+            for parameter in parameters
+            if parameter.get("required")
+        ]
+        optional_parameters = [
+            str(parameter.get("name"))
+            for parameter in parameters
+            if not parameter.get("required")
+        ]
+
+        plugin_cards.append(
+            {
+                "title": spec["display_name"],
+                "subtitle": f"Plugin agent type · {spec['repo_name']}",
+                "icon": "package",
+                "accent": "#7c3aed",
+                "surface": "linear-gradient(135deg, #faf5ff 0%, #f5f3ff 55%, #ffffff 100%)",
+                "border": "#ddd6fe",
+                "description": spec["description"],
+                "highlights": [
+                    f"Type id: {spec['agent_type']}",
+                    f"{len(required_parameters)} required parameters",
+                    (
+                        "Optional parameters: " + ", ".join(optional_parameters[:3])
+                        if optional_parameters
+                        else "No optional parameters declared"
+                    ),
+                ],
+                "meta": {
+                    "manifest_path": spec["manifest_path"],
+                    "required_parameters": required_parameters,
+                    "optional_parameters": optional_parameters,
+                    "repo_name": spec["repo_name"],
+                    "slug": spec["slug"],
+                },
+                "cta_label": f"Open {spec['display_name'].replace(' Agent', '')} Builder",
+                "cta_href": f"/admin/custom_agent/{spec['slug']}",
+                "secondary_label": "Configure this plugin agent from a manifest-driven custom agent page.",
+                "deployment_tags": ["microblogging", "forum"],
+                "is_plugin": True,
+            }
+        )
+
+    return plugin_cards
+
+
+def _agent_builder_context(**overrides):
+    context = {
+        "populations": Population.query.filter(Population.pop_type.is_(None)).all(),
+        "models": get_llm_models(),
+        "llm_backend": llm_backend_status(),
+        "professions": Profession.query.all(),
+        "nationalities": Nationalities.query.all(),
+        "education_levels": Education.query.all(),
+        "leanings": Leanings.query.all(),
+        "languages": Languages.query.all(),
+        "toxicity_levels": Toxicity_Levels.query.all(),
+        "activity_profiles": ActivityProfile.query.all(),
+        "page_kind": "standard",
+        "table_title": "Available Agents",
+        "create_title": "Create Agent",
+        "form_action": "/admin/create_agent",
+        "submit_label": "Create",
+        "loading_message": "Creating agent...",
+        "delete_orphaned_visible": True,
+        "list_endpoint": "/admin/agents_data",
+        "details_url_prefix": "/admin/agent_details/",
+        "delete_url_prefix": "/admin/delete_agent/",
+        "builder_intro_title": "Quick Reference Guide",
+        "builder_intro_lines": [
+            {
+                "title": "Synthetic Agents",
+                "body": "Virtual entities that represent social media users in simulations. They can be configured with different demographic information, interests, and personality traits.",
+            },
+            {
+                "title": "Profiles vs. Advanced Roleplay",
+                "body": "The agent profile is a set of predefined characteristics that can be used to specify its behavior (through LLM pre-prompts). The advanced roleplay allows to specify a custom pre-prompt that overrides the other configuration variables.",
+            },
+        ],
+        "hello_populations": [],
+    }
+    context.update(overrides)
+    return context
+
+
+def _render_standard_agent_builder():
+    return render_template("admin/agents.html", **_agent_builder_context())
+
+
+def _custom_population_rows(slug: str, accepted_slugs: list[str]) -> list[dict]:
+    populations = (
+        Population.query.filter(Population.pop_type.in_(accepted_slugs))
+        .order_by(Population.name.asc())
+        .all()
+    )
+    rows = []
+    for population in populations:
+        rows.append(
+            {
+                "id": population.id,
+                "name": population.name,
+                "descr": population.descr,
+                "agent_count": Agent_Population.query.filter_by(
+                    population_id=population.id
+                ).count(),
+            }
+        )
+    return rows
+
+
+def _custom_agent_rows(spec: dict) -> list[dict]:
+    query = Agent.query.filter(Agent.ag_type.in_(spec["accepted_slugs"])).order_by(
+        Agent.id.desc()
+    )
+    agents_res = query.all()
+    ext_map = _agent_ext_map([agent.id for agent in agents_res])
+    rows = []
+    for agent in agents_res:
+        activity_profile_name = None
+        if agent.activity_profile:
+            profile = ActivityProfile.query.get(agent.activity_profile)
+            activity_profile_name = profile.name if profile else None
+        row = {
+            "id": agent.id,
+            "name": agent.name,
+            "activity_profile": activity_profile_name or "Not assigned",
+        }
+        for parameter in spec["parameters"]:
+            param_name = str(parameter.get("name") or "")
+            if param_name in {"name", "activity_profile"}:
+                continue
+            value = ext_map.get(agent.id, {}).get(param_name, "")
+            if str(parameter.get("type") or "").startswith("array") and value:
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, list):
+                        value = ", ".join(str(item) for item in parsed)
+                except Exception:
+                    pass
+            row[param_name] = value
+        rows.append(row)
+    return rows
+
+
+def _custom_agent_grid_columns(spec: dict) -> list[dict]:
+    columns = [
+        {"id": "name", "name": "Name"},
+        {"id": "activity_profile", "name": "Activity Profile"},
+    ]
+    for parameter in spec["parameters"]:
+        param_name = str(parameter.get("name") or "")
+        if param_name in {"name", "activity_profile"}:
+            continue
+        columns.append(
+            {
+                "id": param_name,
+                "name": param_name.replace("_", " ").title(),
+            }
+        )
+    return columns
+
+
+def _render_custom_agent_builder(spec: dict):
+    return render_template(
+        "admin/custom_agent.html",
+        custom_spec=spec,
+        custom_populations=_custom_population_rows(spec["slug"], spec["accepted_slugs"]),
+        custom_agents=_custom_agent_rows(spec),
+        custom_agent_columns=_custom_agent_grid_columns(spec),
+        populations=Population.query.filter(
+            Population.pop_type.in_(spec["accepted_slugs"])
+        )
+        .order_by(Population.name.asc())
+        .all(),
+        activity_profiles=ActivityProfile.query.all(),
+    )
+
+
+def _population_matches_agent_type(agent_type, pop_type):
+    if agent_type in (None, ""):
+        return pop_type in (None, "")
+    spec = _find_custom_agent_spec(agent_type)
+    if spec:
+        return pop_type in spec["accepted_slugs"]
+    return pop_type in (None, "")
+
+
+def _resolve_custom_population_assignment(spec: dict):
+    population = request.form.get("population")
+    new_population_name = (request.form.get("new_population_name") or "").strip()
+    new_population_descr = (request.form.get("new_population_descr") or "").strip()
+    if population == "__new__":
+        if not new_population_name:
+            flash(f"A new {spec['display_name']} population name is required.", "error")
+            return None
+        existing = Population.query.filter_by(name=new_population_name).first()
+        if existing:
+            flash(
+                f"Population name '{new_population_name}' already exists. Please choose a different name.",
+                "error",
+            )
+            return None
+        pop = Population(
+            name=new_population_name,
+            descr=new_population_descr,
+            username_type="microblogging",
+            pop_type=spec["slug"],
+            size=0,
+        )
+        db.session.add(pop)
+        db.session.commit()
+        return pop
+
+    if not population or population == "none":
+        flash(
+            f"{spec['display_name']} agents must be assigned to at least one matching custom population.",
+            "error",
+        )
+        return None
+
+    pop = Population.query.filter_by(id=population).first()
+    if pop is None or pop.pop_type not in spec["accepted_slugs"]:
+        flash(
+            f"{spec['display_name']} agents can only be assigned to matching custom populations.",
+            "error",
+        )
+        return None
+    return pop
+
+
+def _agent_listing_query(ag_type_filter):
+    if ag_type_filter is None:
+        return Agent.query.filter(Agent.ag_type.is_(None))
+    return Agent.query.filter(Agent.ag_type == ag_type_filter)
+
+
+def _agent_ext_map(agent_ids):
+    if not agent_ids:
+        return {}
+    entries = Agent_Ext.query.filter(Agent_Ext.agent_id.in_(agent_ids)).all()
+    ext_map = {}
+    for entry in entries:
+        ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = entry.feature_value
+    return ext_map
+
+
+def _upsert_agent_ext(agent_id, feature_name, feature_value):
+    entry = Agent_Ext.query.filter_by(
+        agent_id=agent_id, feature_name=feature_name
+    ).first()
+    if entry is None:
+        entry = Agent_Ext(
+            agent_id=agent_id,
+            feature_name=feature_name,
+            feature_value=str(feature_value),
+        )
+        db.session.add(entry)
+    else:
+        entry.feature_value = str(feature_value)
+
+
+def _delete_agent_ext(agent_id):
+    for ext_entry in Agent_Ext.query.filter_by(agent_id=agent_id).all():
+        db.session.delete(ext_entry)
+
+
+def _agent_listing_response(ag_type_filter, *, hello_mode=False):
+    query = _agent_listing_query(ag_type_filter)
+
     search = request.args.get("search")
     if search:
         query = query.filter(db.or_(Agent.name.like(f"%{search}%")))
     total = query.count()
 
-    # sorting
     sort = request.args.get("sort")
     if sort:
         order = []
         for s in sort.split(","):
             direction = s[0]
             name = s[1:]
-            if name not in [
-                "name",
-                "profession",
-                "age",
-                "daily_activity_level",
-                "activity_profile",
-            ]:
+            allowed_columns = ["name", "activity_profile"]
+            if hello_mode:
+                allowed_columns.append("daily_budget")
+            else:
+                allowed_columns.extend(["profession", "age", "daily_activity_level"])
+            if name not in allowed_columns:
                 name = "name"
-            # Handle activity_profile sorting by joining with ActivityProfile table
+            if name == "daily_budget":
+                name = "daily_activity_level"
             if name == "activity_profile":
                 col = ActivityProfile.name
                 if direction == "-":
@@ -118,45 +480,196 @@ def agents_data():
                     col = col.desc()
                 order.append(col)
         if order:
-            # Join with ActivityProfile if sorting by activity_profile
             if any("activity_profile" in str(o) for o in order):
                 query = query.outerjoin(
                     ActivityProfile, Agent.activity_profile == ActivityProfile.id
                 )
             query = query.order_by(*order)
 
-    # pagination
     start = request.args.get("start", type=int, default=-1)
     length = request.args.get("length", type=int, default=-1)
     if start != -1 and length != -1:
         query = query.offset(start).limit(length)
 
-    # response
-    res = query.all()
+    agents_res = query.all()
+    ext_map = _agent_ext_map([agent.id for agent in agents_res]) if hello_mode else {}
 
     data = []
-    for agent in res:
+    for agent in agents_res:
         activity_profile_data = None
         if agent.activity_profile:
             profile = ActivityProfile.query.get(agent.activity_profile)
             if profile:
                 activity_profile_data = {"name": profile.name, "hours": profile.hours}
 
-        data.append(
+        row = {
+            "id": agent.id,
+            "name": agent.name,
+            "activity_profile": activity_profile_data,
+        }
+        if hello_mode:
+            row["daily_budget"] = (
+                ext_map.get(agent.id, {}).get(
+                    HELLO_WORLD_DAILY_BUDGET_FEATURE, agent.daily_activity_level
+                )
+            )
+        else:
+            row.update(
+                {
+                    "age": agent.age,
+                    "profession": agent.profession,
+                    "daily_activity_level": agent.daily_activity_level,
+                }
+            )
+        data.append(row)
+
+    return {"data": data, "total": total}
+
+
+def _agent_builder_for_type(agent_type):
+    if agent_type not in (None, ""):
+        spec = _find_custom_agent_spec(agent_type)
+        if spec:
+            return _render_custom_agent_builder(spec)
+    return _render_standard_agent_builder()
+
+
+@agents.route("/admin/agents_dashboard")
+@login_required
+def agents_dashboard():
+    """Display the agent resource hub used to access agent construction pages."""
+    check_privileges(current_user.username)
+
+    synthetic_agent_count = Agent.query.count()
+    page_count = Page.query.count()
+    population_count = Population.query.count()
+    activity_profile_count = ActivityProfile.query.count()
+    populations_with_agents = (
+        db.session.query(Agent_Population.population_id).distinct().count()
+    )
+    populations_with_pages = (
+        db.session.query(Page_Population.population_id).distinct().count()
+    )
+    media_page_count = Page.query.filter_by(page_type="media").count()
+    plugin_agent_cards = _discover_plugin_agent_types()
+    agent_resource_cards = [
+        {
+            "title": "Synthetic Agents",
+            "subtitle": "Built-in resource",
+            "icon": "cpu",
+            "accent": "#0f766e",
+            "surface": "linear-gradient(135deg, #ecfeff 0%, #f0fdfa 55%, #ffffff 100%)",
+            "border": "#99f6e4",
+            "description": "Design individual user personas with demographics, political leaning, personality traits, activity profiles, and role-play directives.",
+            "highlights": [
+                f"{synthetic_agent_count} agents currently defined",
+                f"{populations_with_agents} populations already contain custom agents",
+                f"{activity_profile_count} reusable activity profiles available",
+            ],
+            "cta_label": "Open Agent Builder",
+            "cta_href": "/admin/agents",
+            "secondary_label": "Manage existing agents, remove orphaned entries, and create fully custom profiles.",
+            "meta": {},
+            "deployment_tags": ["microblogging", "forum"],
+            "is_plugin": False,
+        }
+    ]
+
+    if _page_resources_available():
+        agent_resource_cards.append(
             {
-                "id": agent.id,
-                "name": " ".join(re.findall("[A-Z][^A-Z]*", agent.name)),
-                "age": agent.age,
-                "profession": agent.profession,
-                "daily_activity_level": agent.daily_activity_level,
-                "activity_profile": activity_profile_data,
+                "title": "News Pages",
+                "subtitle": "Built-in resource",
+                "icon": "file-text",
+                "accent": "#1d4ed8",
+                "surface": "linear-gradient(135deg, #eff6ff 0%, #eef2ff 55%, #ffffff 100%)",
+                "border": "#bfdbfe",
+                "description": "Create institutional and media pages that publish content, expose RSS feeds, and shape the information environment seen by agents.",
+                "highlights": [
+                    f"{page_count} pages currently defined",
+                    f"{media_page_count} media pages with news-oriented behavior",
+                    f"{populations_with_pages} populations already include pages",
+                ],
+                "cta_label": "Open Page Builder",
+                "cta_href": "/admin/pages",
+                "secondary_label": "Configure page identity, leaning, feed sources, and upload page collections in bulk.",
+                "meta": {},
+                "deployment_tags": ["microblogging"],
+                "is_plugin": False,
             }
         )
 
-    return {
-        "data": data,
-        "total": total,
-    }
+    agent_resource_cards.extend(plugin_agent_cards)
+    agent_resource_groups = _group_agent_resource_cards(agent_resource_cards)
+
+    return render_template(
+        "admin/agents_dashboard.html",
+        agent_resource_groups=agent_resource_groups,
+        agent_resources_summary={
+            "total_agents": synthetic_agent_count,
+            "total_pages": page_count,
+            "total_populations": population_count,
+            "activity_profiles": activity_profile_count,
+            "plugin_agent_types": len(plugin_agent_cards),
+            "page_resources_available": _page_resources_available(),
+            "resource_cards": len(agent_resource_cards),
+        },
+    )
+
+
+@agents.route("/admin/agents")
+@login_required
+def agent_data():
+    """
+    Display agent management page.
+
+    Returns:
+        Rendered agent data template with available models
+    """
+    check_privileges(current_user.username)
+
+    return _render_standard_agent_builder()
+
+
+@agents.route("/admin/custom_agent")
+@agents.route("/admin/custom_agent/<agent_slug>")
+@login_required
+def custom_agent_data(agent_slug=None):
+    """Display plugin-defined custom agent management page."""
+    check_privileges(current_user.username)
+    spec = _find_custom_agent_spec(agent_slug or request.args.get("slug"))
+    if spec is None:
+        flash("Custom agent type not found.", "error")
+        return redirect("/admin/agents_dashboard")
+    return _render_custom_agent_builder(spec)
+
+
+@agents.route("/admin/hello_agent")
+@login_required
+def hello_agent_data():
+    """Compatibility redirect for the previous Hello World route."""
+    spec = _find_custom_agent_spec("hello_world")
+    if spec is None:
+        flash("Hello World agent plugin is not currently installed.", "error")
+        return redirect("/admin/agents_dashboard")
+    return redirect(f"/admin/custom_agent/{spec['slug']}")
+
+
+@agents.route("/admin/agents_data")
+@login_required
+def agents_data():
+    """Display agents data page."""
+    return _agent_listing_response(None)
+
+
+@agents.route("/admin/hello_agents_data")
+@login_required
+def hello_agents_data():
+    """Display Hello World agents data page."""
+    spec = _find_custom_agent_spec("hello_world")
+    if spec is None:
+        return {"data": [], "total": 0}
+    return _agent_listing_response(spec["slug"], hello_mode=True)
 
 
 @agents.route("/admin/create_agent", methods=["POST"])
@@ -170,7 +683,7 @@ def create_agent():
     """
     check_privileges(current_user.username)
 
-    user_type = request.form.get("user_type")
+    user_type = (request.form.get("user_type") or "").strip() or None
     population = request.form.get("population")
     name = request.form.get("name")
     age = request.form.get("age")
@@ -189,12 +702,21 @@ def create_agent():
     profile_pic = request.form.get("profile_pic")
     daily_activity_level = request.form.get("daily_user_activity")
     profession = request.form.get("profession")
+    activity_profile_id = request.form.get("activity_profile") or None
 
     # Validate that agent name is unique
     existing_agent = Agent.query.filter_by(name=name).first()
     if existing_agent:
         flash(f"Agent name '{name}' already exists. Please choose a different name.")
-        return agent_data()
+        return _agent_builder_for_type(user_type)
+
+    if population not in (None, "", "none"):
+        assigned_population = Population.query.filter_by(id=population).first()
+        if assigned_population is None or not _population_matches_agent_type(
+            user_type, assigned_population.pop_type
+        ):
+            flash("Standard agents can only be assigned to standard populations.", "error")
+            return _agent_builder_for_type(user_type)
 
     agent = Agent(
         name=name,
@@ -215,6 +737,7 @@ def create_agent():
         profile_pic=profile_pic,
         daily_activity_level=int(daily_activity_level),
         profession=profession,
+        activity_profile=int(activity_profile_id) if activity_profile_id else None,
     )
 
     db.session.add(agent)
@@ -230,7 +753,71 @@ def create_agent():
         db.session.add(agent_profile)
         db.session.commit()
 
-    return agent_data()
+    return _agent_builder_for_type(user_type)
+
+
+@agents.route("/admin/create_custom_agent/<agent_slug>", methods=["POST"])
+@login_required
+def create_custom_agent(agent_slug):
+    """Create a plugin-defined custom agent."""
+    check_privileges(current_user.username)
+    spec = _find_custom_agent_spec(agent_slug)
+    if spec is None:
+        flash("Custom agent type not found.", "error")
+        return redirect("/admin/agents_dashboard")
+
+    name = (request.form.get("name") or "").strip()
+    activity_profile_id = request.form.get("activity_profile") or None
+    assigned_population = _resolve_custom_population_assignment(spec)
+    if assigned_population is None:
+        return _render_custom_agent_builder(spec)
+
+    existing_agent = Agent.query.filter_by(name=name).first()
+    if existing_agent:
+        flash(f"Agent name '{name}' already exists. Please choose a different name.")
+        return _render_custom_agent_builder(spec)
+
+    agent = Agent(
+        name=name,
+        ag_type=spec["slug"],
+        round_actions=1,
+        activity_profile=int(activity_profile_id) if activity_profile_id else None,
+    )
+    db.session.add(agent)
+    db.session.commit()
+
+    for parameter in spec["parameters"]:
+        param_name = str(parameter.get("name") or "")
+        if param_name in {"name", "activity_profile"}:
+            continue
+        raw_value = request.form.get(param_name)
+        if raw_value in (None, ""):
+            continue
+        if str(parameter.get("type") or "").startswith("array"):
+            value = json.dumps(
+                [item.strip() for item in str(raw_value).split(",") if item.strip()]
+            )
+        else:
+            value = raw_value
+        _upsert_agent_ext(agent.id, param_name, value)
+    db.session.commit()
+
+    ap = Agent_Population(agent_id=agent.id, population_id=assigned_population.id)
+    db.session.add(ap)
+    db.session.commit()
+
+    return _render_custom_agent_builder(spec)
+
+
+@agents.route("/admin/create_hello_agent", methods=["POST"])
+@login_required
+def create_hello_agent():
+    """Compatibility wrapper for the previous Hello World creation route."""
+    spec = _find_custom_agent_spec("hello_world")
+    if spec is None:
+        flash("Hello World agent plugin is not currently installed.", "error")
+        return redirect("/admin/agents_dashboard")
+    return create_custom_agent(spec["slug"])
 
 
 @agents.route("/admin/agent_details/<int:uid>")
@@ -254,8 +841,26 @@ def agent_details(uid):
 
     pops = [(p[1].name, p[1].id) for p in agent_populations]
 
-    # get all populations
-    populations = Population.query.all()
+    # get compatible populations only
+    if agent.ag_type not in (None, ""):
+        custom_spec = _find_custom_agent_spec(agent.ag_type)
+        if custom_spec:
+            populations = (
+                Population.query.filter(
+                    Population.pop_type.in_(custom_spec["accepted_slugs"])
+                )
+                .order_by(Population.name.asc())
+                .all()
+            )
+        else:
+            populations = []
+    else:
+        custom_spec = None
+        populations = (
+            Population.query.filter(Population.pop_type.is_(None))
+            .order_by(Population.name.asc())
+            .all()
+        )
 
     # Get agent's activity profile
     activity_profile = None
@@ -265,6 +870,18 @@ def agent_details(uid):
         ).first()
 
     llm_backend = llm_backend_status()
+    ext_features = {
+        ext.feature_name: ext.feature_value
+        for ext in Agent_Ext.query.filter_by(agent_id=uid).all()
+    }
+    back_href = (
+        f"/admin/custom_agent/{custom_spec['slug']}"
+        if custom_spec
+        else "/admin/agents"
+    )
+    back_label = (
+        f"{custom_spec['display_name']}s" if custom_spec else "Agents"
+    )
 
     return render_template(
         "admin/agent_details.html",
@@ -274,6 +891,9 @@ def agent_details(uid):
         populations=populations,
         activity_profile=activity_profile,
         llm_backend=llm_backend,
+        agent_ext_features=ext_features,
+        agent_back_href=back_href,
+        agent_back_label=back_label,
     )
 
 
@@ -290,6 +910,23 @@ def add_to_population():
 
     agent_id = request.form.get("agent_id")
     population_id = request.form.get("population_id")
+    agent = Agent.query.filter_by(id=agent_id).first()
+    target_population = Population.query.filter_by(id=population_id).first()
+
+    if agent is None or target_population is None:
+        flash("Invalid agent or population selection.", "error")
+        return agent_details(agent_id)
+
+    if not _population_matches_agent_type(agent.ag_type, target_population.pop_type):
+        custom_spec = _find_custom_agent_spec(agent.ag_type) if agent.ag_type else None
+        if custom_spec:
+            flash(
+                f"{custom_spec['display_name']} agents can only be assigned to matching custom populations.",
+                "error",
+            )
+        else:
+            flash("Standard agents can only be assigned to standard populations.", "error")
+        return agent_details(agent_id)
 
     # check if the agent is already in the population
     ap = Agent_Population.query.filter_by(
@@ -313,30 +950,31 @@ def delete_agent(uid):
     check_privileges(current_user.username)
 
     agent = Agent.query.filter_by(id=uid).first()
+    agent_type = agent.ag_type if agent else None
 
     # check if the agent is assigned to any population
     agent_pop = Agent_Population.query.filter_by(agent_id=uid).first()
     if agent_pop:
         # if the agent is assigned to any population, do not delete raise a warning
         flash("Agent is assigned to a population. Cannot delete.")
-        return agent_data()
+        return _agent_builder_for_type(agent_type)
 
     db.session.delete(agent)
-    db.session.commit()
 
     # delete agent_population entries
     agent_population = Agent_Population.query.filter_by(agent_id=uid).all()
     for ap in agent_population:
         db.session.delete(ap)
-        db.session.commit()
 
     # delete agent_profile entries
     agent_profile = Agent_Profile.query.filter_by(agent_id=uid).all()
     for ap in agent_profile:
         db.session.delete(ap)
-        db.session.commit()
 
-    return agent_data()
+    _delete_agent_ext(uid)
+    db.session.commit()
+
+    return _agent_builder_for_type(agent_type)
 
 
 @agents.route("/admin/delete_orphaned_agents", methods=["POST"])
@@ -359,6 +997,8 @@ def delete_orphaned_agents():
         agent_profiles = Agent_Profile.query.filter_by(agent_id=agent.id).all()
         for profile in agent_profiles:
             db.session.delete(profile)
+
+        _delete_agent_ext(agent.id)
 
         # Delete the agent
         db.session.delete(agent)

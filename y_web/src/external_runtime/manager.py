@@ -38,6 +38,8 @@ class RuntimeStatus:
     label: str
     group: str
     group_label: str
+    category: str
+    category_label: str
     path: str
     repo_url: str
     github_repo: str
@@ -286,9 +288,10 @@ def _ahead_behind(path: Path) -> tuple[int | None, int | None, str | None]:
 def _dependency_files_ready(spec) -> bool:
     if not spec.path.exists():
         return False
-    if not spec.install_commands:
-        return True
-    for command in spec.install_commands:
+    install_commands = _effective_install_commands(spec)
+    if not install_commands:
+        return False
+    for command in install_commands:
         if "-r" in command:
             req_path = spec.path / command[command.index("-r") + 1]
             if not req_path.exists():
@@ -299,7 +302,27 @@ def _dependency_files_ready(spec) -> bool:
 def _validate_prereqs(spec) -> bool:
     if not spec.path.exists():
         return False
+    if not spec.validate_entrypoints:
+        return True
     return all((spec.path / entry).exists() for entry in spec.validate_entrypoints)
+
+
+def _effective_install_commands(spec) -> tuple[tuple[str, ...], ...]:
+    if spec.install_commands:
+        return spec.install_commands
+
+    detected_commands: list[tuple[str, ...]] = []
+    requirements_path = spec.path / "requirements.txt"
+    pyproject_path = spec.path / "pyproject.toml"
+    setup_path = spec.path / "setup.py"
+
+    if requirements_path.exists():
+        detected_commands.append(
+            ("python", "-m", "pip", "install", "-r", "requirements.txt")
+        )
+    if pyproject_path.exists() or setup_path.exists():
+        detected_commands.append(("python", "-m", "pip", "install", "-e", "."))
+    return tuple(detected_commands)
 
 
 def _github_api_request(url: str, github_token: str | None = None) -> requests.Response:
@@ -470,6 +493,8 @@ def get_runtime_status(repo_key: str, github_token: str | None = None) -> Runtim
         label=spec.label,
         group=spec.group,
         group_label=spec.group_label,
+        category=spec.category,
+        category_label=spec.category_label,
         path=str(path),
         repo_url=spec.repo_url,
         github_repo=spec.github_repo,
@@ -678,12 +703,18 @@ def install_runtime_dependencies(repo_key: str, actor: str) -> None:
     if not status.installed:
         raise ExternalRuntimeError(f"{spec.label} is not installed")
 
+    install_commands = _effective_install_commands(spec)
+    if not install_commands:
+        raise ExternalRuntimeError(
+            f"{spec.label} does not expose a recognized dependency manifest. Expected requirements.txt, pyproject.toml, or setup.py."
+        )
+
     output_parts: list[str] = []
     env = os.environ.copy()
     env.setdefault("PIP_DISABLE_PIP_VERSION_CHECK", "1")
     env.setdefault("PYTHONUNBUFFERED", "1")
     output_parts.append(f"Using interpreter: {sys.executable}")
-    for command in spec.install_commands:
+    for command in install_commands:
         resolved = [sys.executable if token == "python" else token for token in command]
         output_parts.append(
             _run_command(resolved, cwd=spec.path, env=env, timeout=1800)
@@ -711,7 +742,12 @@ def validate_runtime_repo(repo_key: str, actor: str) -> str:
             f"{spec.label} is missing required files: {', '.join(missing)}"
         )
 
-    output_parts = [f"Required files present: {', '.join(spec.validate_entrypoints)}"]
+    if spec.validate_entrypoints:
+        output_parts = [
+            f"Required files present: {', '.join(spec.validate_entrypoints)}"
+        ]
+    else:
+        output_parts = ["No explicit required files configured for this plugin."]
     if spec.validate_import:
         script = (
             "import sys; "

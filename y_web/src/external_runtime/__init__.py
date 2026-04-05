@@ -15,13 +15,23 @@ from .manager import (
     validate_runtime_repo,
 )
 from .registry import (
+    PLUGIN_INFO_RELATIVE_PATH,
+    PLUGIN_REGISTRY_RELATIVE_PATH,
+    PLUGINS_INDEX_PATH,
     SUPPORTED_EXTERNAL_REPOS,
     grouped_runtime_specs,
+    load_plugins_index,
+    plugin_metadata_for_runtime,
     runtime_spec,
     runtime_visible_to_user,
+    scan_plugin_info_files,
+    sync_plugins_index,
 )
 
 __all__ = [
+    "PLUGIN_INFO_RELATIVE_PATH",
+    "PLUGIN_REGISTRY_RELATIVE_PATH",
+    "PLUGINS_INDEX_PATH",
     "SUPPORTED_EXTERNAL_REPOS",
     "ExternalRuntimeError",
     "clone_runtime_repo",
@@ -32,10 +42,14 @@ __all__ = [
     "get_runtime_status",
     "grouped_runtime_specs",
     "install_runtime_dependencies",
+    "load_plugins_index",
     "log_external_runtime_action",
+    "plugin_metadata_for_runtime",
     "read_external_runtime_logs",
     "runtime_spec",
     "runtime_visible_to_user",
+    "scan_plugin_info_files",
+    "sync_plugins_index",
     "update_runtime_repo",
     "validate_runtime_repo",
 ]

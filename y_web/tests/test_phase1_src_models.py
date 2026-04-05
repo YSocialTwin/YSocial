@@ -198,6 +198,11 @@ class TestCanonicalAdminImports:
             assert hasattr(cls, "__bind_key__"), f"{cls.__name__} missing __bind_key__"
             assert cls.__bind_key__ == "db_admin", f"{cls.__name__} wrong bind key"
 
+    def test_population_has_pop_type_column(self):
+        from y_web.src.models.admin import Population
+
+        assert "pop_type" in Population.__table__.columns
+
 
 class TestCanonicalConfigImports:
     """All config/lookup model classes must be importable from y_web.src.models.config."""

@@ -45,26 +45,14 @@
             position: 'right'
         },
         {
-            id: 'sidebar-agents',
-            selector: '#sidebar-agents',
-            title: '🤖 Synthetic Agents',
-            description: `<p>Create <b>custom agents</b> with specific personalities:</p>
+            id: 'sidebar-agents-dashboard',
+            selector: '#sidebar-agents-dashboard',
+            title: '🤖 Agent Resources',
+            description: `<p>Open the <b>agent workspace</b> to reach all major actor-construction tools:</p>
                 <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Define Big Five personality traits</li>
-                    <li>Set thematic interests</li>
-                    <li>Configure social behaviors</li>
-                </ul>`,
-            position: 'right'
-        },
-        {
-            id: 'sidebar-pages',
-            selector: '#sidebar-pages',
-            title: '📄 Pages',
-            description: `<p>Create and manage <b>news pages</b> for your simulations:</p>
-                <ul style="margin: 10px 0 0 18px; padding: 0; list-style: disc;">
-                    <li>Define page themes and topics</li>
-                    <li>Configure content generation</li>
-                    <li>Set posting schedules</li>
+                    <li>Create synthetic user agents</li>
+                    <li>Create media and institutional pages</li>
+                    <li>Choose the right construction flow for each resource</li>
                 </ul>`,
             position: 'right'
         },

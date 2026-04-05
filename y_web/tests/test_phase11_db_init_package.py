@@ -8,6 +8,7 @@ while maintaining full backward compatibility.
 
 import importlib
 import inspect
+from pathlib import Path
 
 import pytest
 
@@ -147,6 +148,40 @@ def test_migrations_function_signature():
     params = list(sig.parameters.keys())
     for required in ("app", "db_type", "db"):
         assert required in params, f"run_migrations must have a '{required}' parameter"
+
+
+def test_agent_ext_migration_module_exists():
+    """The agent_ext migration module must be present."""
+    mod = importlib.import_module("y_web.migrations.add_agent_ext_table")
+    assert callable(getattr(mod, "migrate_sqlite", None))
+    assert callable(getattr(mod, "migrate_postgresql", None))
+
+
+def test_agent_ext_migration_registered_in_startup_runner():
+    """run_migrations must invoke the agent_ext migration."""
+    path = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py"
+    )
+    content = path.read_text(encoding="utf-8")
+    assert "add_agent_ext_table" in content
+    assert "Failed to run agent_ext table migration" in content
+
+
+def test_population_pop_type_migration_module_exists():
+    """The population pop_type migration module must be present."""
+    mod = importlib.import_module("y_web.migrations.add_population_pop_type")
+    assert callable(getattr(mod, "migrate_sqlite", None))
+    assert callable(getattr(mod, "migrate_postgresql", None))
+
+
+def test_population_pop_type_migration_registered_in_startup_runner():
+    """run_migrations must invoke the population pop_type migration."""
+    path = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/db_init/migrations.py"
+    )
+    content = path.read_text(encoding="utf-8")
+    assert "add_population_pop_type" in content
+    assert "Failed to run population pop_type migration" in content
 
 
 # ---------------------------------------------------------------------------

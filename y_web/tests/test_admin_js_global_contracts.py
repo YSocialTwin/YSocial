@@ -200,6 +200,16 @@ def test_admin_head_loads_shared_admin_component_and_icon_css():
     assert "assets/vendor/mdi/css/materialdesignicons.min.css" in content
 
 
+def test_agents_grid_bootstrap_uses_data_attributes_instead_of_route_matching():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/agents.html"
+    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-pages.js").read_text(encoding="utf-8")
+
+    assert 'data-list-endpoint="{{ list_endpoint|default(\'/admin/agents_data\') }}"' in template
+    assert "document.querySelector('#table[data-list-endpoint]')" in script
+
+
 def test_admin_nav_unhides_notification_badge_with_bootstrap_class_toggle():
     path = STATIC_JS_DIR / "admin-nav.js"
     content = path.read_text(encoding="utf-8")

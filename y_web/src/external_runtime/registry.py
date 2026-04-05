@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
 ROOT = Path(__file__).resolve().parents[3]
 EXTERNAL_DIR = ROOT / "external"
+PLUGINS_INDEX_PATH = EXTERNAL_DIR / "plugins.json"
+PLUGIN_INFO_RELATIVE_PATH = Path("meta") / "info.json"
+PLUGIN_REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
 
 
 @dataclass(frozen=True)
@@ -17,6 +21,8 @@ class ExternalRuntimeSpec:
     key: str
     group: str
     group_label: str
+    category: str
+    category_label: str
     label: str
     path: Path
     github_repo: str
@@ -34,6 +40,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         key="microblogging_client",
         group="microblogging",
         group_label="Microblogging",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="YClient",
         path=EXTERNAL_DIR / "YClient",
         github_repo="YSocialTwin/YClient",
@@ -50,6 +58,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         key="microblogging_server",
         group="microblogging",
         group_label="Microblogging",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="YServer",
         path=EXTERNAL_DIR / "YServer",
         github_repo="YSocialTwin/YServer",
@@ -66,6 +76,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         key="forum_client",
         group="forum",
         group_label="Forum",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="YClientReddit",
         path=EXTERNAL_DIR / "YClientReddit",
         github_repo="YSocialTwin/YClientReddit",
@@ -81,6 +93,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         key="forum_server",
         group="forum",
         group_label="Forum",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="YServerReddit",
         path=EXTERNAL_DIR / "YServerReddit",
         github_repo="YSocialTwin/YServerReddit",
@@ -96,6 +110,8 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         key="hpc_simulator",
         group="hpc",
         group_label="HPC",
+        category="simulation_runtimes",
+        category_label="Simulation Runtimes",
         label="YSimulator",
         path=EXTERNAL_DIR / "YSimulator",
         github_repo="YSocialTwin/YSimulator",
@@ -106,6 +122,21 @@ SUPPORTED_EXTERNAL_REPOS: dict[str, ExternalRuntimeSpec] = {
         ),
         validate_entrypoints=("run_server.py", "run_client.py"),
         validate_import="YSimulator",
+    ),
+    "agent_plugins": ExternalRuntimeSpec(
+        key="agent_plugins",
+        group="agent_plugins",
+        group_label="Agent Plugins",
+        category="agent_extensions",
+        category_label="Agent Extensions",
+        label="y_agents_plugins",
+        path=EXTERNAL_DIR / "y_agents_plugins",
+        github_repo="YSocialTwin/y_agents_plugins",
+        repo_url="git@github.com:YSocialTwin/y_agents_plugins.git",
+        default_branch="main",
+        install_commands=(),
+        validate_entrypoints=(),
+        validate_import=None,
     ),
 }
 
@@ -121,12 +152,122 @@ def grouped_runtime_specs() -> list[tuple[str, str, Sequence[ExternalRuntimeSpec
         groups.setdefault(spec.group, []).append(spec)
         labels[spec.group] = spec.group_label
 
-    ordered_groups = ["microblogging", "forum", "hpc"]
+    ordered_groups = ["microblogging", "forum", "hpc", "agent_plugins"]
     return [
         (group_key, labels[group_key], tuple(groups.get(group_key, [])))
         for group_key in ordered_groups
         if group_key in groups
     ]
+
+
+def _normalize_repository_reference(value: str | None) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    raw = raw.removesuffix(".git").rstrip("/")
+    if raw.startswith("git@github.com:"):
+        raw = "https://github.com/" + raw.split("git@github.com:", 1)[1]
+    elif raw.startswith("ssh://git@github.com/"):
+        raw = "https://github.com/" + raw.split("ssh://git@github.com/", 1)[1]
+    return raw.rstrip("/")
+
+
+def _normalize_plugin_info(repo_dir: Path, payload: dict) -> dict:
+    authors = payload.get("authors") or []
+    if isinstance(authors, str):
+        authors = [authors]
+    elif not isinstance(authors, list):
+        authors = []
+
+    repository_url = str(
+        payload.get("repository_url")
+        or payload.get("repository url")
+        or f"https://github.com/YSocialTwin/{repo_dir.name}"
+    ).strip()
+
+    return {
+        "plugin_name": str(payload.get("plugin_name") or repo_dir.name).strip(),
+        "category": str(payload.get("category") or "Agent Extensions").strip(),
+        "group": str(payload.get("group") or "Agent Plugins").strip(),
+        "description": str(payload.get("description") or "").strip(),
+        "authors": [str(author).strip() for author in authors if str(author).strip()],
+        "repository_url": repository_url,
+    }
+
+
+def scan_plugin_info_files() -> list[dict]:
+    plugins: list[dict] = []
+    if not EXTERNAL_DIR.exists():
+        return plugins
+
+    for repo_dir in sorted(EXTERNAL_DIR.iterdir()):
+        if not repo_dir.is_dir():
+            continue
+        info_path = repo_dir / PLUGIN_INFO_RELATIVE_PATH
+        if not info_path.exists():
+            continue
+        try:
+            payload = json.loads(info_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if not isinstance(payload, dict):
+            continue
+        plugins.append(_normalize_plugin_info(repo_dir, payload))
+    return plugins
+
+
+def sync_plugins_index() -> list[dict]:
+    plugins = scan_plugin_info_files()
+    PLUGINS_INDEX_PATH.parent.mkdir(parents=True, exist_ok=True)
+    PLUGINS_INDEX_PATH.write_text(
+        json.dumps({"plugins": plugins}, indent=2, ensure_ascii=True) + "\n",
+        encoding="utf-8",
+    )
+    return plugins
+
+
+def load_plugins_index(refresh: bool = False) -> list[dict]:
+    if refresh or not PLUGINS_INDEX_PATH.exists():
+        return sync_plugins_index()
+
+    try:
+        payload = json.loads(PLUGINS_INDEX_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return sync_plugins_index()
+
+    if isinstance(payload, dict):
+        plugins = payload.get("plugins", [])
+    elif isinstance(payload, list):
+        plugins = payload
+    else:
+        return sync_plugins_index()
+
+    normalized = []
+    for item in plugins:
+        if not isinstance(item, dict):
+            continue
+        repo_name = re.sub(r"[^a-zA-Z0-9._-]+", "_", str(item.get("plugin_name") or "plugin"))
+        normalized.append(_normalize_plugin_info(EXTERNAL_DIR / repo_name, item))
+    return normalized
+
+
+def plugin_metadata_for_runtime(
+    spec: ExternalRuntimeSpec, plugins_index: list[dict] | None = None
+) -> dict | None:
+    plugins = plugins_index if plugins_index is not None else load_plugins_index()
+    match_keys = {
+        _normalize_repository_reference(spec.repo_url),
+        _normalize_repository_reference(f"https://github.com/{spec.github_repo}"),
+        spec.path.name.lower(),
+        spec.label.lower(),
+    }
+
+    for plugin in plugins:
+        plugin_name = str(plugin.get("plugin_name") or "").strip().lower()
+        repository_url = _normalize_repository_reference(plugin.get("repository_url"))
+        if repository_url in match_keys or plugin_name in match_keys:
+            return plugin
+    return None
 
 
 def _visibility_overrides() -> dict[str, tuple[str, ...] | str]:
