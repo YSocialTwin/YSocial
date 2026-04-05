@@ -57,7 +57,11 @@ def _runtime_installed(repo_key: str) -> bool:
 def _page_resources_available() -> bool:
     return any(
         _runtime_installed(repo_key)
-        for repo_key in ("microblogging_client", "microblogging_server", "hpc_simulator")
+        for repo_key in (
+            "microblogging_client",
+            "microblogging_server",
+            "hpc_simulator",
+        )
     )
 
 
@@ -94,7 +98,10 @@ def _group_agent_resource_cards(cards: list[dict]) -> list[dict]:
     grouped = []
     for definition in definitions:
         section_cards = [
-            card for card in cards if _deployment_group_key(card.get("deployment_tags", [])) == definition["key"]
+            card
+            for card in cards
+            if _deployment_group_key(card.get("deployment_tags", []))
+            == definition["key"]
         ]
         if not section_cards:
             continue
@@ -346,7 +353,9 @@ def _render_custom_agent_builder(spec: dict):
     return render_template(
         "admin/custom_agent.html",
         custom_spec=spec,
-        custom_populations=_custom_population_rows(spec["slug"], spec["accepted_slugs"]),
+        custom_populations=_custom_population_rows(
+            spec["slug"], spec["accepted_slugs"]
+        ),
         custom_agents=_custom_agent_rows(spec),
         custom_agent_columns=_custom_agent_grid_columns(spec),
         populations=Population.query.filter(
@@ -508,10 +517,8 @@ def _agent_listing_response(ag_type_filter, *, hello_mode=False):
             "activity_profile": activity_profile_data,
         }
         if hello_mode:
-            row["daily_budget"] = (
-                ext_map.get(agent.id, {}).get(
-                    HELLO_WORLD_DAILY_BUDGET_FEATURE, agent.daily_activity_level
-                )
+            row["daily_budget"] = ext_map.get(agent.id, {}).get(
+                HELLO_WORLD_DAILY_BUDGET_FEATURE, agent.daily_activity_level
             )
         else:
             row.update(
@@ -715,7 +722,9 @@ def create_agent():
         if assigned_population is None or not _population_matches_agent_type(
             user_type, assigned_population.pop_type
         ):
-            flash("Standard agents can only be assigned to standard populations.", "error")
+            flash(
+                "Standard agents can only be assigned to standard populations.", "error"
+            )
             return _agent_builder_for_type(user_type)
 
     agent = Agent(
@@ -875,13 +884,9 @@ def agent_details(uid):
         for ext in Agent_Ext.query.filter_by(agent_id=uid).all()
     }
     back_href = (
-        f"/admin/custom_agent/{custom_spec['slug']}"
-        if custom_spec
-        else "/admin/agents"
+        f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"
     )
-    back_label = (
-        f"{custom_spec['display_name']}s" if custom_spec else "Agents"
-    )
+    back_label = f"{custom_spec['display_name']}s" if custom_spec else "Agents"
 
     return render_template(
         "admin/agent_details.html",
@@ -925,7 +930,9 @@ def add_to_population():
                 "error",
             )
         else:
-            flash("Standard agents can only be assigned to standard populations.", "error")
+            flash(
+                "Standard agents can only be assigned to standard populations.", "error"
+            )
         return agent_details(agent_id)
 
     # check if the agent is already in the population

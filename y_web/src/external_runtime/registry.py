@@ -246,7 +246,9 @@ def load_plugins_index(refresh: bool = False) -> list[dict]:
     for item in plugins:
         if not isinstance(item, dict):
             continue
-        repo_name = re.sub(r"[^a-zA-Z0-9._-]+", "_", str(item.get("plugin_name") or "plugin"))
+        repo_name = re.sub(
+            r"[^a-zA-Z0-9._-]+", "_", str(item.get("plugin_name") or "plugin")
+        )
         normalized.append(_normalize_plugin_info(EXTERNAL_DIR / repo_name, item))
     return normalized
 

@@ -129,11 +129,7 @@ def _visible_runtime_groups(admin_user, github_token: str | None):
 
 
 def _runtime_categories(grouped_status, active_group_usage):
-    all_repos = [
-        repo
-        for group_info in grouped_status
-        for repo in group_info["repos"]
-    ]
+    all_repos = [repo for group_info in grouped_status for repo in group_info["repos"]]
     categories = []
     plugin_category_map: dict[str, dict] = {}
     for repo in all_repos:

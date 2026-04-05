@@ -34,8 +34,7 @@ def migrate_sqlite(db_path):
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE agent_ext (
                 agent_id INTEGER NOT NULL,
                 feature_name VARCHAR(100) NOT NULL,
@@ -43,8 +42,7 @@ def migrate_sqlite(db_path):
                 PRIMARY KEY (agent_id, feature_name),
                 FOREIGN KEY (agent_id) REFERENCES agents(id)
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX idx_agent_ext_feature_name ON agent_ext(feature_name)"
         )
@@ -70,28 +68,24 @@ def migrate_postgresql(host, port, database, user, password):
         )
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT table_name
             FROM information_schema.tables
             WHERE table_schema = 'public' AND table_name = 'agent_ext'
-            """
-        )
+            """)
         if cursor.fetchone():
             print("○ agent_ext table already exists in PostgreSQL database")
             conn.close()
             return True
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE agent_ext (
                 agent_id INTEGER NOT NULL REFERENCES agents(id),
                 feature_name VARCHAR(100) NOT NULL,
                 feature_value TEXT,
                 PRIMARY KEY (agent_id, feature_name)
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX idx_agent_ext_feature_name ON agent_ext(feature_name)"
         )

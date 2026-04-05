@@ -30,7 +30,9 @@ def migrate_sqlite(db_path):
         columns = [row[1] for row in cursor.fetchall()]
 
         if "pop_type" not in columns:
-            cursor.execute("ALTER TABLE population ADD COLUMN pop_type TEXT DEFAULT NULL")
+            cursor.execute(
+                "ALTER TABLE population ADD COLUMN pop_type TEXT DEFAULT NULL"
+            )
             print("✓ Added pop_type column to SQLite population table")
         else:
             print("○ pop_type column already exists in SQLite population table")
@@ -55,13 +57,11 @@ def migrate_postgresql(host, port, database, user, password):
         )
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
+        cursor.execute("""
             SELECT column_name
             FROM information_schema.columns
             WHERE table_schema = 'public' AND table_name = 'population'
-            """
-        )
+            """)
         columns = [row[0] for row in cursor.fetchall()]
 
         if "pop_type" not in columns:
