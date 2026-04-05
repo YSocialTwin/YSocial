@@ -21,6 +21,7 @@ from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     stop_client_for_experiment,
 )
+from y_web.src.simulation.adhoc_client import start_adhoc_client, stop_adhoc_client
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
@@ -478,3 +479,59 @@ def stop_client(uid, idexp):
             db.session.commit()
 
     return experiment_details(idexp)  # redirect(request.referrer)
+
+
+@clientsr.route("/admin/run_adhoc_client/<int:idexp>/<path:client_key>")
+@login_required
+def run_adhoc_client(idexp, client_key):
+    """Start a file-backed ad hoc plugin client."""
+    from ..experiments import experiment_details
+
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before running ad hoc clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    if exp.is_remote == 0 and exp.running == 0:
+        flash("Start the experiment server before running ad hoc clients.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    try:
+        start_adhoc_client(exp, client_key)
+    except FileNotFoundError as e:
+        flash(f"Error starting ad hoc client: {str(e)}", "error")
+    except Exception as e:
+        flash(f"Unexpected error starting ad hoc client: {str(e)}", "error")
+
+    return experiment_details(idexp)
+
+
+@clientsr.route("/admin/pause_adhoc_client/<int:idexp>/<path:client_key>")
+@login_required
+def pause_adhoc_client(idexp, client_key):
+    """Pause a file-backed ad hoc plugin client."""
+    from ..experiments import experiment_details
+
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before changing ad hoc client execution state.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    try:
+        stop_adhoc_client(exp, client_key, pause=True)
+    except FileNotFoundError as e:
+        flash(f"Error pausing ad hoc client: {str(e)}", "error")
+    except Exception as e:
+        flash(f"Unexpected error pausing ad hoc client: {str(e)}", "error")
+
+    return experiment_details(idexp)

@@ -474,7 +474,7 @@
 
                     {% endif %}
 
- <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}">
+                    <div id="simulation-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}">
                         <h3 class="title is-5 is-thin">Simulation Clients</h3>
  <p class="ys-text-small">
                             Manage clients running agent populations for this experiment.
@@ -492,13 +492,14 @@
                             {% else %}
                             {% for client in clients %}
  <div class="box-content ys-section-box-sm">
- <div class="box-line ys-cell-pad">
- <div class="left ys-text-flex-sm">
+ <div class="box-line ys-cell-pad" style="align-items: center; gap: 14px; flex-wrap: nowrap;">
+ <div class="left" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
  <i class="mdi mdi-account-cog ys-icon-md-muted"></i>
-                                        {{ client.name }}
+ <div class="ys-text-flex-sm" style="display: flex; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ client.name }}">{{ client.name }}</span>
                                         {% if opinion_dynamics_enabled and not configuration_update_required %}
                                         <a href="/admin/opinion_configuration_forum/{{ experiment.idexp }}?client_id={{ client.id }}" class="link-tooltip" title="Configure Opinion Dynamics">
-                                            <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6; margin-left: 2px;"></i>
+                                            <i class="mdi mdi-tune" style="font-size: 16px; color: #8b5cf6;"></i>
                                         </a>
                                         {% endif %}
                                         {% if client_executions.get(client.id, False) and not configuration_update_required %}
@@ -507,9 +508,10 @@
                                         </a>
                                         {% endif %}
                                     </div>
- <div class="right ys-value-col-55 ys-detail-progress-wrap">
+                                </div>
+ <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
  <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
-                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar">
+                                            <div id="progress-bar-{{client.id}}" class="sleek-progress-bar ys-progress-bar" data-progress-url="/admin/progress/{{ client.id }}">
  <span class="ys-badge-text">0%</span>
                                             </div>
                                         </div>
@@ -572,6 +574,105 @@
                             </div>
                         </div>
                     </div>
+
+                    {% if has_agent_plugins_installed %}
+                    <div id="adhoc-agent-clients-section" class="dashboard-box ys-flex-auto-col{% if configuration_update_required %} ys-config-locked-box{% endif %}" style="margin-top: 1.5rem;">
+                        <h3 class="title is-5 is-thin">AdHoc Agents' Clients</h3>
+                        <p class="ys-text-small">
+                            Manage agent-plugin runtimes that can extend this experiment with dedicated ad hoc agent execution flows.
+                        </p>
+                        {% if configuration_update_required %}
+                        <div class="ys-config-locked-note">
+                            Ad hoc agent client workflows stay disabled until <b>Update Configuration</b> is executed.
+                        </div>
+                        {% endif %}
+                        <div class="box-content ys-flex-1">
+                            {% if len(adhoc_clients) == 0 %}
+                            <div class="box-line">
+                                <span class="left">No ad hoc agents' clients registered yet</span>
+                            </div>
+                            {% else %}
+                            {% for agent_type_group in adhoc_clients|groupby('agent_type_display') %}
+                            <div class="box-line" style="padding-top: 10px; padding-bottom: 4px;">
+                                <span class="left">
+                                    <span class="tag is-info is-light">{{ agent_type_group.grouper }}</span>
+                                </span>
+                            </div>
+                            {% for adhoc_client in agent_type_group.list %}
+                            <div class="box-content ys-section-box-sm">
+                                <div class="box-line ys-cell-pad" style="align-items: center; gap: 14px; flex-wrap: nowrap;">
+                                    <div class="left" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
+                                        <i class="mdi mdi-puzzle-outline ys-icon-md-muted"></i>
+                                        <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow: hidden; flex: 1 1 auto;">
+                                            <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%;" title="{{ adhoc_client.name }}">{{ adhoc_client.name }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">
+                                        <div class="sleek-progress-container ys-progress-track ys-detail-progress-track">
+                                            <div
+                                                id="adhoc-progress-bar-{{ adhoc_client.client_key }}"
+                                                class="sleek-progress-bar ys-progress-bar adhoc-progress-bar"
+                                                data-progress-url="/admin/progress_adhoc/{{ experiment.idexp }}/{{ adhoc_client.client_key }}"
+                                            >
+                                                <span class="ys-badge-text">0%</span>
+                                            </div>
+                                        </div>
+                                        <div class="ys-flex-gap-3 ys-detail-progress-actions">
+                                            {% if adhoc_client.status == 0 and (experiment.running == 1 or experiment.is_remote == 1) %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-play-box-outline ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/run_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" title="Run Client" onclick="showLoading('Starting ad hoc client...');">
+                                                <i class="mdi mdi-play-box-outline ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if adhoc_client.status == 1 %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-pause ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/pause_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" title="Pause Client" onclick="showLoading('Pausing ad hoc client...');">
+                                                <i class="mdi mdi-pause active ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                            {% if adhoc_client.status == 0 %}
+                                            {% if configuration_update_required %}
+                                            <span class="link-tooltip" title="Update configuration first">
+                                                <i class="mdi mdi-delete ys-icon-muted"></i>
+                                            </span>
+                                            {% else %}
+                                            <a class="link-tooltip" href="/admin/delete_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" onclick="showLoading('Deleting ad hoc client...');" title="Delete Client">
+                                                <i class="mdi mdi-delete ys-icon-xl"></i>
+                                            </a>
+                                            {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% endfor %}
+                            {% endif %}
+                            <div class="ys-text-center-mt10">
+                                <hr class="ys-my-5">
+                                {% if configuration_update_required %}
+                                <span class="link-tooltip" title="Update configuration first">
+                                    <i class="mdi mdi-plus-circle-outline ys-icon-muted"></i>
+                                </span>
+                                {% else %}
+                                <a class="link-tooltip" href="/admin/clients_adhoc/{{ experiment.idexp }}" title="Create AdHoc Agent Client">
+                                    <i class="mdi mdi-plus-circle-outline ys-icon-lg"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
  <div class="column is-12-mobile is-4-tablet ys-flex-col">

@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.external_runtime import load_plugins_index
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -90,6 +91,7 @@ from y_web.src.simulation.execution_backend import (
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
+from y_web.src.simulation.adhoc_client import list_adhoc_clients
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
 from y_web.src.system.miscellanea import (
@@ -464,7 +466,6 @@ def experiment_details(uid):
 
     # Check if any client has infinite duration (days = -1)
     has_infinite_client = any(client.days == -1 for client in clients)
-
     # check database type
     dbtype = None
     if current_app.config["SQLALCHEMY_BINDS"]["db_exp"].startswith("sqlite"):
@@ -487,6 +488,21 @@ def experiment_details(uid):
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     forum_feed_health = None
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
+    try:
+        installed_agent_plugins = [
+            plugin
+            for plugin in load_plugins_index(refresh=True)
+            if str(plugin.get("group") or "").strip().lower() == "agent plugins"
+        ]
+    except Exception:
+        installed_agent_plugins = []
+    installed_agent_plugin_names = [
+        str(plugin.get("plugin_name") or "").strip()
+        for plugin in installed_agent_plugins
+        if str(plugin.get("plugin_name") or "").strip()
+    ]
+    has_agent_plugins_installed = False
+    adhoc_clients = []
     memory_module_enabled = False
     memory_configuration_supported = bool(llm_agents_enabled_effective)
     toxicity_annotation_enabled = bool(
@@ -578,6 +594,14 @@ def experiment_details(uid):
     except Exception:
         current_perspective_api = ""
 
+    has_agent_plugins_installed = (
+        bool(installed_agent_plugin_names)
+        and experiment.is_remote == 0
+        and bool(llm_agents_enabled_effective)
+        and not bool(configuration_update_required)
+    )
+    adhoc_clients = list_adhoc_clients(experiment) if has_agent_plugins_installed else []
+
     if experiment.platform_type == "forum":
         try:
             from y_web.src.system.path_utils import get_writable_path
@@ -602,6 +626,9 @@ def experiment_details(uid):
         clients=clients,
         client_executions=client_executions,
         has_infinite_client=has_infinite_client,
+        has_agent_plugins_installed=has_agent_plugins_installed,
+        installed_agent_plugin_names=installed_agent_plugin_names,
+        adhoc_clients=adhoc_clients,
         users=users,
         experiment_topics=experiment_topics,
         len=len,

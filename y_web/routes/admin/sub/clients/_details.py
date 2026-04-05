@@ -21,6 +21,7 @@ from y_web.src.models import (
     Population,
     Population_Experiment,
 )
+from y_web.src.simulation.adhoc_client import adhoc_progress_payload
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.miscellanea import (
     check_privileges,
@@ -354,6 +355,19 @@ def get_progress(client_id):
         progress = 0
 
     return json.dumps({"progress": progress, "infinite": False})
+
+
+@clientsr.route("/admin/progress_adhoc/<int:idexp>/<path:client_key>")
+def get_adhoc_progress(idexp, client_key):
+    """Return progress payload for a file-backed ad hoc client."""
+    experiment = Exps.query.filter_by(idexp=idexp).first()
+    if experiment is None:
+        return json.dumps({"progress": 0, "infinite": False})
+
+    try:
+        return json.dumps(adhoc_progress_payload(experiment, client_key))
+    except Exception:
+        return json.dumps({"progress": 0, "infinite": False})
 
 
 @clientsr.route("/admin/set_network/<int:uid>", methods=["POST"])

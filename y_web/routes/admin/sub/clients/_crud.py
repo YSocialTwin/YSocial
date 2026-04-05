@@ -1,18 +1,22 @@
 """CRUD routes and helpers for client creation and deletion."""
 
+from __future__ import annotations
+
 import json
 import logging
 import os
 import random
+import re
 import shutil
 import sys
 import traceback
 import uuid
+from pathlib import Path
 
 import faker
 import networkx as nx
 import numpy as np
-from flask import flash, redirect, render_template, request, url_for
+from flask import current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
@@ -20,6 +24,7 @@ from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
 )
+from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
@@ -30,6 +35,7 @@ from y_web.src.models import (
     ActivityProfile,
     AgeClass,
     Agent,
+    Agent_Ext,
     Agent_Population,
     Agent_Profile,
     Client,
@@ -46,11 +52,220 @@ from y_web.src.models import (
     Topic_List,
     User_mgmt,
 )
+from y_web.src.simulation.adhoc_client import (
+    delete_adhoc_client,
+    initialize_state_for_config,
+)
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
+
+
+def _custom_agent_slug(name: str) -> str:
+    cleaned = re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
+    tokens = [token for token in cleaned.split() if token and token != "agent"]
+    if not tokens:
+        return "custom"
+    if len(tokens) == 1:
+        return tokens[0]
+    return tokens[0][0] + "".join(tokens[1:])
+
+
+def _adhoc_agent_specs() -> list[dict]:
+    specs = []
+    if not EXTERNAL_DIR.exists():
+        return specs
+
+    for repo_dir in sorted(EXTERNAL_DIR.iterdir()):
+        if not repo_dir.is_dir():
+            continue
+        manifest_path = repo_dir / Path("meta") / "registry.json"
+        if not manifest_path.exists():
+            continue
+        try:
+            payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+
+        for entry in payload.get("agent_types", []):
+            agent_type = str(entry.get("agent_type") or "").strip()
+            if not agent_type:
+                continue
+            display_name = str(entry.get("display_name") or agent_type).strip()
+            slug = _custom_agent_slug(display_name)
+            accepted_slugs = {slug, agent_type}
+            if slug == "hworld":
+                accepted_slugs.add("hword")
+            specs.append(
+                {
+                    "slug": slug,
+                    "accepted_slugs": sorted(accepted_slugs),
+                    "agent_type": agent_type,
+                    "display_name": display_name,
+                    "description": str(entry.get("description") or "").strip(),
+                    "requires_llm": bool(entry.get("requires_llm", False)),
+                    "repo_name": repo_dir.name,
+                }
+            )
+    return specs
+
+
+def _adhoc_population_choices(idexp: str, specs: list[dict]) -> dict[str, list[dict]]:
+    pop_exp_associations = Population_Experiment.query.filter_by(id_exp=idexp).all()
+    population_ids = [pe.id_population for pe in pop_exp_associations]
+    pops = (
+        Population.query.filter(~Population.id.in_(population_ids)).all()
+        if population_ids
+        else Population.query.all()
+    )
+    custom_pops = [pop for pop in pops if pop.pop_type not in (None, "")]
+
+    choices = {}
+    for spec in specs:
+        matching = []
+        for pop in custom_pops:
+            if pop.pop_type in spec["accepted_slugs"]:
+                matching.append(
+                    {
+                        "id": pop.id,
+                        "name": pop.name,
+                        "descr": pop.descr or "",
+                    }
+                )
+        choices[spec["slug"]] = matching
+    return choices
+
+
+def _find_adhoc_agent_spec(agent_slug: str | None) -> dict | None:
+    if not agent_slug:
+        return None
+    for spec in _adhoc_agent_specs():
+        if agent_slug in spec["accepted_slugs"] or agent_slug == spec["slug"]:
+            return spec
+    return None
+
+
+def _sanitize_client_filename(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (value or "").strip())
+    cleaned = cleaned.strip("._")
+    return cleaned or "adhoc_client"
+
+
+def _adhoc_activity_profiles_for_population(population_id: int) -> dict[str, str]:
+    agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
+    agent_ids = [link.agent_id for link in agent_links]
+    if not agent_ids:
+        return {"Always On": ",".join(str(slot) for slot in range(24))}
+
+    profile_ids = [
+        profile_id
+        for (profile_id,) in db.session.query(Agent.activity_profile)
+        .filter(Agent.id.in_(agent_ids))
+        .all()
+        if profile_id is not None
+    ]
+    profiles = (
+        db.session.query(ActivityProfile)
+        .filter(ActivityProfile.id.in_(profile_ids))
+        .all()
+        if profile_ids
+        else []
+    )
+    if not profiles:
+        return {"Always On": ",".join(str(slot) for slot in range(24))}
+    return {profile.name: profile.hours for profile in profiles}
+
+
+def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) -> dict:
+    agent_links = Agent_Population.query.filter_by(population_id=population.id).all()
+    agents = [Agent.query.filter_by(id=link.agent_id).first() for link in agent_links]
+    agents = [agent for agent in agents if agent is not None]
+    ext_entries = Agent_Ext.query.filter(
+        Agent_Ext.agent_id.in_([agent.id for agent in agents])
+    ).all() if agents else []
+    ext_map: dict[int, dict[str, str]] = {}
+    for entry in ext_entries:
+        ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = entry.feature_value
+
+    payload = {"agents": []}
+    for agent in agents:
+        activity_profile_obj = (
+            db.session.query(ActivityProfile).filter_by(id=agent.activity_profile).first()
+        )
+        activity_profile_name = (
+            activity_profile_obj.name if activity_profile_obj else "Always On"
+        )
+        feature_values = ext_map.get(agent.id, {})
+        daily_budget = feature_values.get("daily_budget", agent.daily_activity_level or 1)
+        parameters = {
+            key: value
+            for key, value in feature_values.items()
+            if key != "daily_budget"
+        }
+        payload["agents"].append(
+            {
+                "name": agent.name,
+                "username": agent.name,
+                "email": f"{agent.name}@ysocial.it",
+                "password": agent.name,
+                "agent_type": spec["agent_type"],
+                "activity_profile": activity_profile_name,
+                "daily_budget": float(daily_budget),
+                "language": agent.language or "en",
+                "owner": owner,
+                "parameters": parameters,
+            }
+        )
+    return payload
+
+
+def _adhoc_llm_defaults_for_experiment(idexp):
+    defaults = {
+        "llm": "http://127.0.0.1:11434/v1",
+        "llm_api_key": "NULL",
+        "llm_max_tokens": -1,
+        "llm_temperature": 1.5,
+        "llm_v_agent": "qwen3-vl:8b",
+        "llm_v": "http://127.0.0.1:11434/v1",
+        "llm_v_api_key": "NULL",
+        "llm_v_max_tokens": 300,
+        "llm_v_temperature": 0.5,
+    }
+    latest_client = Client.query.filter_by(id_exp=idexp).order_by(Client.id.desc()).first()
+    if latest_client is None:
+        return defaults
+    defaults.update(
+        {
+            "llm": latest_client.llm or defaults["llm"],
+            "llm_api_key": latest_client.llm_api_key or defaults["llm_api_key"],
+            "llm_max_tokens": (
+                latest_client.llm_max_tokens
+                if latest_client.llm_max_tokens is not None
+                else defaults["llm_max_tokens"]
+            ),
+            "llm_temperature": (
+                latest_client.llm_temperature
+                if latest_client.llm_temperature is not None
+                else defaults["llm_temperature"]
+            ),
+            "llm_v_agent": latest_client.llm_v_agent or defaults["llm_v_agent"],
+            "llm_v": latest_client.llm_v or defaults["llm_v"],
+            "llm_v_api_key": latest_client.llm_v_api_key or defaults["llm_v_api_key"],
+            "llm_v_max_tokens": (
+                latest_client.llm_v_max_tokens
+                if latest_client.llm_v_max_tokens is not None
+                else defaults["llm_v_max_tokens"]
+            ),
+            "llm_v_temperature": (
+                latest_client.llm_v_temperature
+                if latest_client.llm_v_temperature is not None
+                else defaults["llm_v_temperature"]
+            ),
+        }
+    )
+    return defaults
 
 
 def _collect_population_agent_attributes(population_id):
@@ -369,6 +584,199 @@ def clients_hpc(idexp):
 
     context["embedded_vllm_available"] = bool(is_vllm_installed())
     return render_template("admin/clients_hpc.html", **context)
+
+
+@clientsr.route("/admin/clients_adhoc/<idexp>")
+@login_required
+def clients_adhoc(idexp):
+    """Render the dedicated ad hoc agent client creation page."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "Standard")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if exp.is_remote == 1:
+        flash("Ad hoc agent clients are not available for remote experiments.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if not _experiment_uses_llm_agents(exp):
+        flash("Ad hoc agent clients are not available for rule-based experiments.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    agent_specs = _adhoc_agent_specs()
+    if not agent_specs:
+        flash("No ad hoc agent plugins are currently installed.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    context.update(
+        {
+            "adhoc_agent_specs": agent_specs,
+            "adhoc_populations_by_type": _adhoc_population_choices(idexp, agent_specs),
+        }
+    )
+    return render_template("admin/clients_adhoc.html", **context)
+
+
+@clientsr.route("/admin/create_adhoc_client", methods=["POST"])
+@login_required
+def create_adhoc_client():
+    """Create plugin-runtime config files for an ad hoc agent client."""
+    check_privileges(current_user.username)
+
+    exp_id = request.form.get("id_exp")
+    exp = Exps.query.filter_by(idexp=exp_id).first()
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before creating clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=exp_id))
+
+    name = (request.form.get("name") or "").strip()
+    descr = (request.form.get("descr") or "").strip()
+    agent_type_slug = (request.form.get("agent_type") or "").strip()
+    population_id = request.form.get("population_id")
+    spec = _find_adhoc_agent_spec(agent_type_slug)
+
+    if not name:
+        flash("Client name is required.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+    if spec is None:
+        flash("Select a valid ad hoc agent type.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+
+    population = Population.query.filter_by(id=population_id).first()
+    if population is None or population.pop_type not in spec["accepted_slugs"]:
+        flash("Select a population compatible with the chosen ad hoc agent type.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+
+    agent_links = Agent_Population.query.filter_by(population_id=population.id).all()
+    if not agent_links:
+        flash("The selected population does not contain any agents.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    writable_base = get_writable_path()
+    exp_folder = os.path.join(
+        writable_base, "y_web", "experiments", _get_experiment_folder_name(exp)
+    )
+    os.makedirs(exp_folder, exist_ok=True)
+
+    safe_client_name = _sanitize_client_filename(name)
+    safe_agent_slug = _sanitize_client_filename(spec["slug"])
+    file_stem = f"{safe_agent_slug}_{safe_client_name}"
+
+    agents_filename = f"{exp_folder}{os.sep}adhoc_agents_{file_stem}.json"
+    config_filename = f"{exp_folder}{os.sep}adhoc_client_{file_stem}.json"
+
+    if os.path.exists(config_filename):
+        flash(f"An ad hoc client config named '{safe_client_name}' already exists.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+
+    activity_profiles = _adhoc_activity_profiles_for_population(population.id)
+    population_payload = _export_adhoc_population_json(
+        population, spec, owner=exp.owner
+    )
+
+    infinite_duration = str(request.form.get("infinite_duration", "")).strip().lower() in {
+        "on",
+        "true",
+        "1",
+        "yes",
+    }
+    days = int(request.form.get("days") or 30)
+    days = max(days, 1)
+    config_days = 365000 if infinite_duration else days
+    max_ticks = None if infinite_duration else config_days * 24
+
+    llm_defaults = _adhoc_llm_defaults_for_experiment(exp.idexp)
+    llm = (request.form.get("llm") or "").strip() or llm_defaults["llm"]
+    llm_api_key = (request.form.get("llm_api_key") or "").strip() or llm_defaults["llm_api_key"]
+    llm_max_tokens = int(request.form.get("llm_max_tokens") or llm_defaults["llm_max_tokens"])
+    llm_temperature = float(request.form.get("llm_temperature") or llm_defaults["llm_temperature"])
+    llm_model = (request.form.get("llm_agent") or "").strip()
+
+    client_payload = {
+        "database": {
+            "sqlite_path": (
+                os.path.join(exp_folder, "database_server.db")
+                if get_db_type() == "sqlite"
+                else None
+            ),
+            "sqlalchemy_url": (
+                None
+                if get_db_type() == "sqlite"
+                else current_app.config["SQLALCHEMY_BINDS"]["db_exp"]
+            ),
+            "poll_interval_seconds": 1.0,
+        },
+        "client": {
+            "client_id": safe_client_name,
+            "agent_type": spec["agent_type"],
+            "agents_json_path": agents_filename,
+            "servers": {
+                "llm": llm,
+                "llm_api_key": llm_api_key,
+                "llm_max_tokens": llm_max_tokens,
+                "llm_temperature": llm_temperature,
+                "llm_v": llm_defaults["llm_v"],
+                "llm_v_api_key": llm_defaults["llm_v_api_key"],
+                "llm_v_max_tokens": llm_defaults["llm_v_max_tokens"],
+                "llm_v_temperature": llm_defaults["llm_v_temperature"],
+                "api": f"http://{exp.server}:{exp.port}/",
+            },
+            "simulation": {
+                "days": config_days,
+                "slots": 24,
+                "population_json_path": agents_filename,
+                "activity_profiles": activity_profiles,
+                "run_until_stopped": infinite_duration,
+                "clock_mode": (request.form.get("clock_mode") or "simulated").strip().lower(),
+                "clock_timezone": (request.form.get("clock_timezone") or "Europe/Rome").strip(),
+                "feed_refresh": (request.form.get("clock_feed_refresh") or "hourly").strip(),
+            },
+            "agents": {
+                "llm_agents": [llm_model] if llm_model else [],
+                "llm_v_agent": llm_defaults["llm_v_agent"],
+                "reading_from_follower_ratio": float(request.form.get("reading_from_follower_ratio") or 0.6),
+                "max_length_thread_reading": int(request.form.get("max_length_thread_reading") or 10),
+            },
+            "agent_settings": {},
+            "recent_posts_limit": 25,
+            "max_ticks": max_ticks,
+            "metadata": {
+                "name": name,
+                "description": descr,
+                "population": population.name,
+                "population_id": population.id,
+                "population_name": population.name,
+                "agent_type_slug": spec["slug"],
+                "agent_type_display": spec["display_name"],
+                "plugin_repository": spec["repo_name"],
+            },
+        },
+    }
+
+    with open(agents_filename, "w", encoding="utf-8") as handle:
+        json.dump(population_payload, handle, indent=2)
+    with open(config_filename, "w", encoding="utf-8") as handle:
+        json.dump(client_payload, handle, indent=2)
+    initialize_state_for_config(config_filename)
+
+    flash(f"Ad hoc client configuration '{name}' saved.", "success")
+    return redirect(url_for("experiments.experiment_details", uid=exp_id))
 
 
 def generate_hpc_client_config(
@@ -4041,6 +4449,30 @@ def delete_client(uid):
     from ..experiments import experiment_details
 
     return experiment_details(exp_id)
+
+
+@clientsr.route("/admin/delete_adhoc_client/<int:idexp>/<path:client_key>")
+@login_required
+def delete_adhoc_client_route(idexp, client_key):
+    """Delete a file-backed ad hoc client and its sidecar files."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+
+    try:
+        delete_adhoc_client(exp, client_key)
+        flash("Ad hoc client deleted.", "success")
+    except FileNotFoundError:
+        flash("Ad hoc client configuration not found.", "error")
+    except Exception as exc:
+        flash(f"Could not delete ad hoc client: {exc}", "error")
+
+    from ..experiments import experiment_details
+
+    return experiment_details(idexp)
 
 
 def _get_experiment_mode(experiment):

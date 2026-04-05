@@ -1,0 +1,329 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-clients.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Create New AdHoc Agent Client
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-8">
+                    <div class="dashboard-box" id="box-new-client">
+                        <h3 class="title is-5 is-thin">New AdHoc Agent Client</h3>
+                        <div class="box-content">
+                            <form action="/admin/create_adhoc_client" method="POST" onsubmit="showLoading('Creating ad hoc client...');">
+                                <div class="box-lines">
+                                    <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
+
+                                    <div class="box-line">
+                                        <span class="left">Name</span>
+                                        <span class="right ys-w-70"><input type="text" name="name" id="adhoc_client_name" class="input" required></span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Description</span>
+                                        <span class="right ys-w-70">
+                                            <textarea name="descr" class="textarea" rows="3"></textarea>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Agent Type</span>
+                                        <span class="right ys-w-70">
+                                            <div class="select is-fullwidth">
+                                                <select name="agent_type" id="adhoc_agent_type" class="input" required>
+                                                    <option value=""></option>
+                                                    {% for spec in adhoc_agent_specs %}
+                                                    <option value="{{ spec.slug }}">{{ spec.display_name }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </span>
+                                    </div>
+                                    <div class="box-line">
+                                        <span class="left">Population</span>
+                                        <span class="right ys-w-70">
+                                            <div class="select is-fullwidth">
+                                                <select name="population_id" id="adhoc_population_id" class="input" required disabled>
+                                                    <option value=""></option>
+                                                </select>
+                                            </div>
+                                            <small id="adhoc_population_hint" class="ys-hint-text">Select an agent type to load compatible populations.</small>
+                                        </span>
+                                    </div>
+
+                                    <div id="section-simulation-params" class="tutorial-section">
+                                        <div class="form-section-header">Simulation Parameters</div>
+                                        <div class="form-section-description">
+                                            Configure the duration and behavioral settings for the ad hoc agent runtime.
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Simulation Length (days)</span>
+                                            <span class="right ys-value-col">
+                                                <input type="number" id="days_display" class="input" min="1" step="1" value="30">
+                                                <input type="hidden" name="days" id="days_input" value="30">
+                                                <label class="ys-flex-click-nowrap">
+                                                    <input type="checkbox" id="infinite_duration" name="infinite_duration" class="ys-pointer">
+                                                    <span class="ys-text-brand">Run until stopped</span>
+                                                </label>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Experiment Clock Mode</span>
+                                            <span class="right ys-w-70">
+                                                <div class="select w-100">
+                                                    <select name="clock_mode" class="input w-100">
+                                                        {% set selected_clock_mode = experiment_clock.get('mode', 'simulated') %}
+                                                        <option value="simulated" {% if selected_clock_mode == 'simulated' %}selected{% endif %}>Simulated (run as fast as possible)</option>
+                                                        <option value="real_time" {% if selected_clock_mode == 'real_time' %}selected{% endif %}>Real-time (one wall-clock hour per round)</option>
+                                                    </select>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Clock Timezone</span>
+                                            <span class="right ys-w-70">
+                                                <input type="text" name="clock_timezone" class="input" value="{{ experiment_clock.get('timezone', 'Europe/Rome') }}" placeholder="Europe/Rome" required>
+                                            </span>
+                                        </div>
+                                        <input type="hidden" name="clock_feed_refresh" value="{{ experiment_clock.get('feed_refresh', 'hourly') }}">
+                                    </div>
+
+                                    <div id="adhoc_llm_section" class="tutorial-section" style="display: none;">
+                                        <div class="form-section-header">Large Language Models</div>
+                                        <div class="form-section-description">
+                                            Configure the primary LLM only when it is required by the selected ad hoc agent type.
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Inference Backend</span>
+                                            <span class="right ys-w-70">
+                                                <div class="select is-fullwidth">
+                                                    <select name="llm_backend" id="llm_backend" class="input">
+                                                        <option value="ollama">Ollama / OpenAI-compatible</option>
+                                                        <option value="vllm">vLLM</option>
+                                                    </select>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">LLM URL</span>
+                                            <span class="right ys-w-70">
+                                                <div class="ys-flex-gap-8">
+                                                    <input type="text" id="custom_llm_url_client" name="llm" class="input ys-flex-1" value="{{ exp_llm_defaults.llm }}" placeholder="http://127.0.0.1:11434/v1">
+                                                    <button type="button" class="button is-solid" onclick="fetchAdhocModelsForClient()">Fetch Models</button>
+                                                </div>
+                                                <div id="llm_url_status_client" class="ys-badge-min"></div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">LLM Model</span>
+                                            <span class="right ys-w-70">
+                                                <div class="select is-fullwidth">
+                                                    <select name="llm_agent" id="models_select_client" class="input">
+                                                        <option value=""></option>
+                                                    </select>
+                                                </div>
+                                            </span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">API Key</span>
+                                            <span class="right ys-w-70"><input type="text" name="llm_api_key" class="input" value="{{ exp_llm_defaults.llm_api_key }}"></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Max Tokens</span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" value="{{ exp_llm_defaults.llm_max_tokens }}"></span>
+                                        </div>
+                                        <div class="box-line">
+                                            <span class="left">Temperature</span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="2" step="0.1" value="{{ exp_llm_defaults.llm_temperature }}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="button-wrap">
+                                    <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
+                                        Create
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column is-4">
+                    <div class="dashboard-box is-compact">
+                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <div class="help-block">
+                            <p>
+                                <b>AdHoc Clients</b><br>
+                                Configure a client dedicated to plugin-backed ad hoc agent families. Each client targets one custom agent type and one population of the same type.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Agent Type and Population</b><br>
+                                <em>Agent Type:</em> Mandatory. Select one of the installed custom agent families.<br>
+                                <em>Population:</em> Mandatory. Only populations with the same custom type are available.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Simulation Parameters</b><br>
+                                Reuse the standard scheduling and runtime controls, without forum-specific memory, recsys, network, or archetype configuration.
+                            </p>
+                            <hr>
+                            <p>
+                                <b>Large Language Models</b><br>
+                                The LLM section appears only for agent types that declare LLM requirements in their plugin registry.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const YS_ADHOC_CLIENTS = {
+    agentSpecs: {{ adhoc_agent_specs | tojson }},
+    populationsByType: {{ adhoc_populations_by_type | tojson }},
+    llmDefaults: {{ exp_llm_defaults | tojson }}
+};
+
+(function() {
+    let llmModelsFetched = false;
+    let llmModelSelected = false;
+
+    function selectedSpec() {
+        const slug = document.getElementById('adhoc_agent_type')?.value || '';
+        return YS_ADHOC_CLIENTS.agentSpecs.find(spec => spec.slug === slug) || null;
+    }
+
+    function updatePopulationChoices() {
+        const agentTypeSelect = document.getElementById('adhoc_agent_type');
+        const populationSelect = document.getElementById('adhoc_population_id');
+        const hint = document.getElementById('adhoc_population_hint');
+        if (!agentTypeSelect || !populationSelect || !hint) return;
+
+        const spec = selectedSpec();
+        const items = spec ? (YS_ADHOC_CLIENTS.populationsByType[spec.slug] || []) : [];
+        populationSelect.innerHTML = '<option value=""></option>';
+
+        items.forEach(pop => {
+            const option = document.createElement('option');
+            option.value = String(pop.id);
+            option.textContent = pop.name;
+            populationSelect.appendChild(option);
+        });
+
+        populationSelect.disabled = !spec || items.length === 0;
+        if (!spec) {
+            hint.textContent = 'Select an agent type to load compatible populations.';
+        } else if (items.length === 0) {
+            hint.textContent = 'No compatible populations are currently available for this agent type.';
+        } else {
+            hint.textContent = 'Select one of the populations compatible with the chosen agent type.';
+        }
+    }
+
+    function updateLlmSection() {
+        const spec = selectedSpec();
+        const section = document.getElementById('adhoc_llm_section');
+        const llmInputs = section ? section.querySelectorAll('input, select') : [];
+        const enabled = !!(spec && spec.requires_llm);
+        if (section) {
+            section.style.display = enabled ? 'block' : 'none';
+        }
+        llmInputs.forEach(input => {
+            if (input.name === 'llm' || input.name === 'llm_agent') {
+                input.required = enabled;
+            }
+        });
+        if (!enabled) {
+            llmModelsFetched = false;
+            llmModelSelected = false;
+        }
+    }
+
+    function updateCreateButton() {
+        const button = document.getElementById('create_client_button');
+        const name = document.getElementById('adhoc_client_name')?.value.trim() || '';
+        const agentType = document.getElementById('adhoc_agent_type')?.value || '';
+        const population = document.getElementById('adhoc_population_id')?.value || '';
+        const spec = selectedSpec();
+        const llmReady = !spec || !spec.requires_llm || (llmModelsFetched && llmModelSelected);
+        if (button) {
+            button.disabled = !(name && agentType && population && llmReady);
+        }
+    }
+
+    function fetchAdhocModelsForClient() {
+        const urlInput = document.getElementById('custom_llm_url_client');
+        const select = document.getElementById('models_select_client');
+        const status = document.getElementById('llm_url_status_client');
+        if (!urlInput || !select || !status) return;
+        const llmUrl = urlInput.value.trim();
+        if (!llmUrl) {
+            status.textContent = 'Provide an LLM URL first.';
+            return;
+        }
+        status.textContent = 'Fetching models...';
+        fetch(`/admin/api/fetch_models?llm_url=${encodeURIComponent(llmUrl)}`)
+            .then(response => response.json())
+            .then(data => {
+                select.innerHTML = '<option value=""></option>';
+                (data.models || []).forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model;
+                    option.textContent = model;
+                    select.appendChild(option);
+                });
+                llmModelsFetched = true;
+                llmModelSelected = false;
+                status.textContent = (data.models || []).length ? 'Models loaded.' : 'No models returned.';
+                updateCreateButton();
+            })
+            .catch(() => {
+                llmModelsFetched = false;
+                llmModelSelected = false;
+                status.textContent = 'Failed to fetch models.';
+                updateCreateButton();
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const nameInput = document.getElementById('adhoc_client_name');
+        const agentTypeSelect = document.getElementById('adhoc_agent_type');
+        const populationSelect = document.getElementById('adhoc_population_id');
+        const modelSelect = document.getElementById('models_select_client');
+        if (nameInput) nameInput.addEventListener('input', updateCreateButton);
+        if (agentTypeSelect) {
+            agentTypeSelect.addEventListener('change', function() {
+                updatePopulationChoices();
+                updateLlmSection();
+                updateCreateButton();
+            });
+        }
+        if (populationSelect) populationSelect.addEventListener('change', updateCreateButton);
+        if (modelSelect) {
+            modelSelect.addEventListener('change', function() {
+                llmModelSelected = this.value !== '';
+                updateCreateButton();
+            });
+        }
+        updatePopulationChoices();
+        updateLlmSection();
+        updateCreateButton();
+    });
+
+    Object.assign(window, {
+        fetchAdhocModelsForClient
+    });
+})();
+</script>
+
+{% include "admin/footer.html" %}

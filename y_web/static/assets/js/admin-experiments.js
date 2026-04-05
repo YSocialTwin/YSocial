@@ -654,24 +654,24 @@ var AdminExperiments = (function() {
   }
 
   function pollAllClientProgress() {
-      const progressBars = document.querySelectorAll('[id^="progress-bar-"]');
+      const progressBars = document.querySelectorAll('.ys-progress-bar[data-progress-url]');
       if (!progressBars.length) {
           return;
       }
 
       let shouldContinuePolling = false;
       progressBars.forEach((bar) => {
-          const clientId = bar.id.replace('progress-bar-', '');
-          if (!clientId) {
+          const progressUrl = bar.dataset.progressUrl;
+          if (!progressUrl) {
               return;
           }
 
           $.ajax({
-              url: `/admin/progress/${clientId}`,
+              url: progressUrl,
               method: 'GET',
               dataType: 'json',
               success: function (data) {
-                  applyProgressBarState($(`#progress-bar-${clientId}`), data);
+                  applyProgressBarState($(bar), data);
                   if (data.infinite || (data.progress || 0) < 100) {
                       shouldContinuePolling = true;
                   }
@@ -680,7 +680,7 @@ var AdminExperiments = (function() {
       });
 
       setTimeout(() => {
-          const hasActiveBars = Array.from(document.querySelectorAll('[id^="progress-bar-"] span'))
+          const hasActiveBars = Array.from(document.querySelectorAll('.ys-progress-bar[data-progress-url] span'))
               .some((span) => {
                   const text = span.textContent || '';
                   return text.startsWith('∞') || text !== '100%';
