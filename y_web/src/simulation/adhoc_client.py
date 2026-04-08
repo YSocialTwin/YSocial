@@ -78,7 +78,9 @@ def stderr_log_path_for_config(config_path: Path) -> Path:
 
 
 def client_log_path_for_config(config_path: Path) -> Path:
-    return config_path.with_name(f"{client_key_from_config_path(config_path)}_client.log")
+    return config_path.with_name(
+        f"{client_key_from_config_path(config_path)}_client.log"
+    )
 
 
 def read_json(path: Path) -> dict | None:
@@ -109,12 +111,18 @@ def _initial_state_from_config(config_path: Path, config: dict) -> dict:
         "client_key": client_key_from_config_path(config_path),
         "config_path": str(config_path),
         "agents_path": str(client.get("agents_json_path") or ""),
-        "name": str(metadata.get("name") or client.get("client_id") or config_path.stem),
+        "name": str(
+            metadata.get("name") or client.get("client_id") or config_path.stem
+        ),
         "description": str(metadata.get("description") or ""),
         "population_id": metadata.get("population_id"),
-        "population_name": str(metadata.get("population_name") or metadata.get("population") or ""),
+        "population_name": str(
+            metadata.get("population_name") or metadata.get("population") or ""
+        ),
         "agent_type_slug": str(metadata.get("agent_type_slug") or ""),
-        "agent_type_display": str(metadata.get("agent_type_display") or client.get("agent_type") or ""),
+        "agent_type_display": str(
+            metadata.get("agent_type_display") or client.get("agent_type") or ""
+        ),
         "agent_type_runtime": str(client.get("agent_type") or ""),
         "status": 0,
         "pid": None,
@@ -147,12 +155,16 @@ def ensure_state_for_config(config_path: Path) -> dict:
     merged.update(state)
     merged["config_path"] = str(config_path)
     merged["agents_path"] = str(
-        (config.get("client", {}) or {}).get("agents_json_path") or merged.get("agents_path") or ""
+        (config.get("client", {}) or {}).get("agents_json_path")
+        or merged.get("agents_path")
+        or ""
     )
     merged["updated_at"] = merged.get("updated_at") or _now_iso()
 
     pid = merged.get("pid")
-    if merged.get("status") == 1 and (not pid or not _is_running_adhoc_process(int(pid))):
+    if merged.get("status") == 1 and (
+        not pid or not _is_running_adhoc_process(int(pid))
+    ):
         merged["status"] = 0
         merged["pid"] = None
         merged["updated_at"] = _now_iso()
@@ -186,7 +198,10 @@ def _is_running_adhoc_process(pid: int) -> bool:
         if proc.status() == psutil.STATUS_ZOMBIE:
             return False
         cmdline = " ".join(proc.cmdline()).lower()
-        return "adhoc_client_runner.py" in cmdline or "--run-adhoc-client-subprocess" in cmdline
+        return (
+            "adhoc_client_runner.py" in cmdline
+            or "--run-adhoc-client-subprocess" in cmdline
+        )
     except psutil.ZombieProcess:
         return False
     except psutil.NoSuchProcess:
@@ -221,10 +236,27 @@ def _runner_command(config_path: Path, state_path: Path) -> tuple[list[str], str
 
     python_cmd = detect_env_handler()
     workspace_root = str(Path(__file__).resolve().parents[3])
-    if isinstance(python_cmd, str) and " " in python_cmd and not os.path.isabs(python_cmd):
-        cmd = python_cmd.split() + [runner_script, "--config", str(config_path), "--state", str(state_path)]
+    if (
+        isinstance(python_cmd, str)
+        and " " in python_cmd
+        and not os.path.isabs(python_cmd)
+    ):
+        cmd = python_cmd.split() + [
+            runner_script,
+            "--config",
+            str(config_path),
+            "--state",
+            str(state_path),
+        ]
     else:
-        cmd = [python_cmd, runner_script, "--config", str(config_path), "--state", str(state_path)]
+        cmd = [
+            python_cmd,
+            runner_script,
+            "--config",
+            str(config_path),
+            "--state",
+            str(state_path),
+        ]
     return cmd, workspace_root
 
 
@@ -293,7 +325,9 @@ def start_adhoc_client(experiment, client_key: str):
         }
     )
     write_json(state_path, state)
-    _register_process(f"adhoc_client_{experiment.idexp}_{client_key}", process, out_file, err_file)
+    _register_process(
+        f"adhoc_client_{experiment.idexp}_{client_key}", process, out_file, err_file
+    )
     return process
 
 

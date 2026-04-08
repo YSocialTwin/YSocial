@@ -24,12 +24,12 @@ from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
 )
-from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
     population_matches_platform,
 )
+from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
     ActivityProfile,
@@ -182,9 +182,13 @@ def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) 
     agent_links = Agent_Population.query.filter_by(population_id=population.id).all()
     agents = [Agent.query.filter_by(id=link.agent_id).first() for link in agent_links]
     agents = [agent for agent in agents if agent is not None]
-    ext_entries = Agent_Ext.query.filter(
-        Agent_Ext.agent_id.in_([agent.id for agent in agents])
-    ).all() if agents else []
+    ext_entries = (
+        Agent_Ext.query.filter(
+            Agent_Ext.agent_id.in_([agent.id for agent in agents])
+        ).all()
+        if agents
+        else []
+    )
     ext_map: dict[int, dict[str, str]] = {}
     for entry in ext_entries:
         ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = entry.feature_value
@@ -192,17 +196,19 @@ def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) 
     payload = {"agents": []}
     for agent in agents:
         activity_profile_obj = (
-            db.session.query(ActivityProfile).filter_by(id=agent.activity_profile).first()
+            db.session.query(ActivityProfile)
+            .filter_by(id=agent.activity_profile)
+            .first()
         )
         activity_profile_name = (
             activity_profile_obj.name if activity_profile_obj else "Always On"
         )
         feature_values = ext_map.get(agent.id, {})
-        daily_budget = feature_values.get("daily_budget", agent.daily_activity_level or 1)
+        daily_budget = feature_values.get(
+            "daily_budget", agent.daily_activity_level or 1
+        )
         parameters = {
-            key: value
-            for key, value in feature_values.items()
-            if key != "daily_budget"
+            key: value for key, value in feature_values.items() if key != "daily_budget"
         }
         payload["agents"].append(
             {
@@ -233,7 +239,9 @@ def _adhoc_llm_defaults_for_experiment(idexp):
         "llm_v_max_tokens": 300,
         "llm_v_temperature": 0.5,
     }
-    latest_client = Client.query.filter_by(id_exp=idexp).order_by(Client.id.desc()).first()
+    latest_client = (
+        Client.query.filter_by(id_exp=idexp).order_by(Client.id.desc()).first()
+    )
     if latest_client is None:
         return defaults
     defaults.update(
@@ -598,10 +606,15 @@ def clients_adhoc(idexp):
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
-        flash("Ad hoc agent clients are not available for remote experiments.", "warning")
+        flash(
+            "Ad hoc agent clients are not available for remote experiments.", "warning"
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
-        flash("Ad hoc agent clients are not available for rule-based experiments.", "warning")
+        flash(
+            "Ad hoc agent clients are not available for rule-based experiments.",
+            "warning",
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
@@ -658,7 +671,9 @@ def create_adhoc_client():
 
     population = Population.query.filter_by(id=population_id).first()
     if population is None or population.pop_type not in spec["accepted_slugs"]:
-        flash("Select a population compatible with the chosen ad hoc agent type.", "error")
+        flash(
+            "Select a population compatible with the chosen ad hoc agent type.", "error"
+        )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
     agent_links = Agent_Population.query.filter_by(population_id=population.id).all()
@@ -682,7 +697,10 @@ def create_adhoc_client():
     config_filename = f"{exp_folder}{os.sep}adhoc_client_{file_stem}.json"
 
     if os.path.exists(config_filename):
-        flash(f"An ad hoc client config named '{safe_client_name}' already exists.", "error")
+        flash(
+            f"An ad hoc client config named '{safe_client_name}' already exists.",
+            "error",
+        )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
     activity_profiles = _adhoc_activity_profiles_for_population(population.id)
@@ -690,7 +708,9 @@ def create_adhoc_client():
         population, spec, owner=exp.owner
     )
 
-    infinite_duration = str(request.form.get("infinite_duration", "")).strip().lower() in {
+    infinite_duration = str(
+        request.form.get("infinite_duration", "")
+    ).strip().lower() in {
         "on",
         "true",
         "1",
@@ -703,9 +723,15 @@ def create_adhoc_client():
 
     llm_defaults = _adhoc_llm_defaults_for_experiment(exp.idexp)
     llm = (request.form.get("llm") or "").strip() or llm_defaults["llm"]
-    llm_api_key = (request.form.get("llm_api_key") or "").strip() or llm_defaults["llm_api_key"]
-    llm_max_tokens = int(request.form.get("llm_max_tokens") or llm_defaults["llm_max_tokens"])
-    llm_temperature = float(request.form.get("llm_temperature") or llm_defaults["llm_temperature"])
+    llm_api_key = (request.form.get("llm_api_key") or "").strip() or llm_defaults[
+        "llm_api_key"
+    ]
+    llm_max_tokens = int(
+        request.form.get("llm_max_tokens") or llm_defaults["llm_max_tokens"]
+    )
+    llm_temperature = float(
+        request.form.get("llm_temperature") or llm_defaults["llm_temperature"]
+    )
     llm_model = (request.form.get("llm_agent") or "").strip()
 
     client_payload = {
@@ -743,15 +769,25 @@ def create_adhoc_client():
                 "population_json_path": agents_filename,
                 "activity_profiles": activity_profiles,
                 "run_until_stopped": infinite_duration,
-                "clock_mode": (request.form.get("clock_mode") or "simulated").strip().lower(),
-                "clock_timezone": (request.form.get("clock_timezone") or "Europe/Rome").strip(),
-                "feed_refresh": (request.form.get("clock_feed_refresh") or "hourly").strip(),
+                "clock_mode": (request.form.get("clock_mode") or "simulated")
+                .strip()
+                .lower(),
+                "clock_timezone": (
+                    request.form.get("clock_timezone") or "Europe/Rome"
+                ).strip(),
+                "feed_refresh": (
+                    request.form.get("clock_feed_refresh") or "hourly"
+                ).strip(),
             },
             "agents": {
                 "llm_agents": [llm_model] if llm_model else [],
                 "llm_v_agent": llm_defaults["llm_v_agent"],
-                "reading_from_follower_ratio": float(request.form.get("reading_from_follower_ratio") or 0.6),
-                "max_length_thread_reading": int(request.form.get("max_length_thread_reading") or 10),
+                "reading_from_follower_ratio": float(
+                    request.form.get("reading_from_follower_ratio") or 0.6
+                ),
+                "max_length_thread_reading": int(
+                    request.form.get("max_length_thread_reading") or 10
+                ),
             },
             "agent_settings": {},
             "recent_posts_limit": 25,

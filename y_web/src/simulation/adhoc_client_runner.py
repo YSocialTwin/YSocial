@@ -13,7 +13,6 @@ import sys
 import time
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[3]
 PLUGIN_SRC = ROOT / "external" / "y_agents_plugins" / "src"
 for candidate in (ROOT, PLUGIN_SRC):
@@ -23,15 +22,14 @@ for candidate in (ROOT, PLUGIN_SRC):
 
 from y_agents_plugins.config import AppConfig  # noqa: E402
 from y_agents_plugins.core import AgentContext  # noqa: E402
+from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
+from y_agents_plugins.llm import LangChainTextGenerator  # noqa: E402
 from y_agents_plugins.runtime.app import build_default_registry  # noqa: E402
-from y_agents_plugins.runtime.executor import ActionExecutor  # noqa: E402
 from y_agents_plugins.runtime.execution_logger import ExecutionLogger  # noqa: E402
+from y_agents_plugins.runtime.executor import ActionExecutor  # noqa: E402
 from y_agents_plugins.runtime.loader import AgentSpecLoader  # noqa: E402
 from y_agents_plugins.runtime.manifest import load_agent_type_manifest  # noqa: E402
 from y_agents_plugins.runtime.scheduler import ActivityProfileScheduler  # noqa: E402
-from y_agents_plugins.db import ExperimentDatabase  # noqa: E402
-from y_agents_plugins.llm import LangChainTextGenerator  # noqa: E402
-
 
 TERMINATE = False
 
@@ -66,7 +64,15 @@ def _install_signal_handlers():
     signal.signal(signal.SIGINT, _handler)
 
 
-def _update_tick_state(state_path: Path, state: dict, *, ticks: int, current_round, infinite: bool, expected_rounds: int):
+def _update_tick_state(
+    state_path: Path,
+    state: dict,
+    *,
+    ticks: int,
+    current_round,
+    infinite: bool,
+    expected_rounds: int,
+):
     state.update(
         {
             "status": 1,
@@ -211,11 +217,17 @@ def run(config_path: Path, state_path: Path) -> int:
             {
                 "status": 0,
                 "pid": None,
-                "completed": (not infinite and ticks >= expected_rounds and not TERMINATE),
+                "completed": (
+                    not infinite and ticks >= expected_rounds and not TERMINATE
+                ),
                 "progress": (
                     state.get("progress", 0)
                     if infinite
-                    else (100 if ticks >= expected_rounds else int(state.get("progress", 0) or 0))
+                    else (
+                        100
+                        if ticks >= expected_rounds
+                        else int(state.get("progress", 0) or 0)
+                    )
                 ),
                 "updated_at": _now_iso(),
             }
@@ -240,9 +252,15 @@ def run(config_path: Path, state_path: Path) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run a file-backed YSocial plugin client.")
-    parser.add_argument("--config", required=True, help="Path to the ad hoc client config.")
-    parser.add_argument("--state", required=True, help="Path to the ad hoc client state file.")
+    parser = argparse.ArgumentParser(
+        description="Run a file-backed YSocial plugin client."
+    )
+    parser.add_argument(
+        "--config", required=True, help="Path to the ad hoc client config."
+    )
+    parser.add_argument(
+        "--state", required=True, help="Path to the ad hoc client state file."
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s %(message)s")

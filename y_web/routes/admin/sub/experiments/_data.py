@@ -36,12 +36,12 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
-from y_web.src.external_runtime import load_plugins_index
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
     user_can_view_experiment,
 )
+from y_web.src.external_runtime import load_plugins_index
 from y_web.src.hpc.population_backup import restore_population_for_hpc_client
 from y_web.src.models import (
     ActivityProfile,
@@ -85,13 +85,13 @@ from y_web.src.models import (
     User_Experiment,
     User_mgmt,
 )
+from y_web.src.simulation.adhoc_client import list_adhoc_clients
 from y_web.src.simulation.execution_backend import (
     start_client_for_experiment,
     start_server_for_experiment,
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
-from y_web.src.simulation.adhoc_client import list_adhoc_clients
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
 from y_web.src.system.miscellanea import (
@@ -600,7 +600,9 @@ def experiment_details(uid):
         and bool(llm_agents_enabled_effective)
         and not bool(configuration_update_required)
     )
-    adhoc_clients = list_adhoc_clients(experiment) if has_agent_plugins_installed else []
+    adhoc_clients = (
+        list_adhoc_clients(experiment) if has_agent_plugins_installed else []
+    )
 
     if experiment.platform_type == "forum":
         try:
