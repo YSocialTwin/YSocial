@@ -16,6 +16,7 @@ from y_web.src.models import (
     Mentions,
     Post,
     Post_topics,
+    Reported,
     Reactions,
     Rounds,
     User_mgmt,
@@ -245,6 +246,50 @@ def react(exp_id):
         db.session.commit()
 
     return {"message": "Reaction added successfully", "status": 200}
+
+
+@user.route("/<int:exp_id>/report_content")
+@login_required
+def report_content(exp_id):
+    """Report a post or comment using the shared reported table."""
+    post_id = request.args.get("post_id")
+    report_type = str(request.args.get("type") or "offensive").strip().lower()
+
+    if report_type not in {"offensive", "toxic"}:
+        flash("Unsupported report type.", "error")
+        return redirect(request.referrer or url_for("main.index"))
+
+    exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
+    if not exp_user:
+        flash("User not found in experiment", "error")
+        return redirect(request.referrer or url_for("main.index"))
+
+    try:
+        post_id_converted = int(post_id)
+    except (ValueError, TypeError):
+        post_id_converted = post_id
+
+    target_post = Post.query.filter_by(id=post_id_converted).first()
+    current_round = Rounds.query.order_by(Rounds.id.desc()).first()
+    if target_post is None or current_round is None:
+        flash("Content not found.", "error")
+        return redirect(request.referrer or url_for("main.index"))
+
+    report_kwargs = {
+        "type": report_type,
+        "to_uid": target_post.user_id,
+        "to_post": target_post.id,
+        "from_uid": exp_user.id,
+        "tid": current_round.id,
+    }
+    if isinstance(target_post.id, str):
+        report_kwargs["id"] = str(uuid.uuid4())
+
+    report = Reported(**report_kwargs)
+    db.session.add(report)
+    db.session.commit()
+    flash("Content reported.", "success")
+    return redirect(request.referrer or url_for("main.index"))
 
 
 @user.route("/<int:exp_id>/delete_post")

@@ -13,7 +13,7 @@
      data-likes="{{ thread.get('likes', 0) }}"
      data-dislikes="{{ thread.get('dislikes', 0) }}"
      data-score="{{ thread.get('likes', 0) - thread.get('dislikes', 0) }}"
-     style="padding: 16px; margin-bottom: 20px; background: white; border-radius: 4px;">
+     style="padding: 16px; margin-bottom: 20px; background: {% if thread.get('is_moderation_comment') %}#fff4d6{% else %}white{% endif %}; border-radius: 4px; border-left: {% if thread.get('is_moderation_comment') %}4px solid #f0b429{% else %}0 solid transparent{% endif %};">
     <!-- Post header -->
     <div style="display: flex; align-items: center; margin-bottom: 8px;">
         <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">

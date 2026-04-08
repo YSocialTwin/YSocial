@@ -195,7 +195,8 @@
         <!-- Comments body -->
         <div class="comments-body has-slimscroll">
             <!-- Comment -->
-            <div class="original-post">
+            <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}"
+                 style="{% if item.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
                     <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
@@ -248,7 +249,8 @@
                 <hr>
             </div>
             {% for id1, cm in enumerate(item["comments"]) %}
-            <div class="media is-comment">
+            <div class="media is-comment{% if cm.get('is_moderation_comment') %} moderation-comment{% endif %}"
+                 style="{% if cm.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
                 <!-- User image -->
                 <div class="media-left">
                     <div class="image">
@@ -310,6 +312,11 @@
                             <i data-feather="repeat"></i>
                             <span>{{ cm["is_shared"] }}</span>
                         </div>
+                        {% if cm['author_id'] != logged_id %}
+                        <div class="share-count">
+                            <a href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive">Report</a>
+                        </div>
+                        {% endif %}
 
  <!-- <div class="reply text-end">
                    <a href="#">Reply</a>

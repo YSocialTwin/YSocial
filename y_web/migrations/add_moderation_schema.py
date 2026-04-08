@@ -29,6 +29,10 @@ def migrate_sqlite_server(db_path, quiet=False):
         post_columns = [column[1] for column in cursor.fetchall()]
         if "moderated" not in post_columns:
             cursor.execute("ALTER TABLE post ADD COLUMN moderated INTEGER DEFAULT 0")
+        if "is_moderation_comment" not in post_columns:
+            cursor.execute(
+                "ALTER TABLE post ADD COLUMN is_moderation_comment INTEGER DEFAULT 0"
+            )
 
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS sys_messages (
@@ -37,12 +41,43 @@ def migrate_sqlite_server(db_path, quiet=False):
                 to_uid INTEGER,
                 message TEXT NOT NULL,
                 from_round INTEGER,
-                to_round INTEGER,
+                duration INTEGER,
                 FOREIGN KEY(to_uid) REFERENCES user_mgmt(id),
-                FOREIGN KEY(from_round) REFERENCES rounds(id),
-                FOREIGN KEY(to_round) REFERENCES rounds(id)
+                FOREIGN KEY(from_round) REFERENCES rounds(id)
             )
             """)
+        cursor.execute("PRAGMA table_info(sys_messages)")
+        sys_message_columns = [column[1] for column in cursor.fetchall()]
+        if "to_round" in sys_message_columns:
+            cursor.execute("""
+                CREATE TABLE sys_messages__new (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    type TEXT NOT NULL,
+                    to_uid INTEGER,
+                    message TEXT NOT NULL,
+                    from_round INTEGER,
+                    duration INTEGER,
+                    FOREIGN KEY(to_uid) REFERENCES user_mgmt(id),
+                    FOREIGN KEY(from_round) REFERENCES rounds(id)
+                )
+                """)
+            cursor.execute("""
+                INSERT INTO sys_messages__new (id, type, to_uid, message, from_round, duration)
+                SELECT
+                    id,
+                    type,
+                    to_uid,
+                    message,
+                    from_round,
+                    CASE
+                        WHEN from_round IS NOT NULL AND to_round IS NOT NULL AND to_round >= from_round
+                            THEN to_round - from_round
+                        ELSE NULL
+                    END
+                FROM sys_messages
+                """)
+            cursor.execute("DROP TABLE sys_messages")
+            cursor.execute("ALTER TABLE sys_messages__new RENAME TO sys_messages")
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS reported (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,6 +136,9 @@ def migrate_postgresql_server(host, port, database, user, password):
         cursor.execute(
             "ALTER TABLE post ADD COLUMN IF NOT EXISTS moderated INTEGER DEFAULT 0"
         )
+        cursor.execute(
+            "ALTER TABLE post ADD COLUMN IF NOT EXISTS is_moderation_comment INTEGER DEFAULT 0"
+        )
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS sys_messages (
                 id SERIAL PRIMARY KEY,
@@ -108,8 +146,28 @@ def migrate_postgresql_server(host, port, database, user, password):
                 to_uid INTEGER REFERENCES user_mgmt(id),
                 message TEXT NOT NULL,
                 from_round INTEGER REFERENCES rounds(id),
-                to_round INTEGER REFERENCES rounds(id)
+                duration INTEGER
             )
+            """)
+        cursor.execute("ALTER TABLE sys_messages ADD COLUMN IF NOT EXISTS duration INTEGER")
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF EXISTS (
+                    SELECT 1
+                    FROM information_schema.columns
+                    WHERE table_name='sys_messages' AND column_name='to_round'
+                ) THEN
+                    UPDATE sys_messages
+                    SET duration = CASE
+                        WHEN duration IS NOT NULL THEN duration
+                        WHEN from_round IS NOT NULL AND to_round IS NOT NULL AND to_round >= from_round
+                            THEN to_round - from_round
+                        ELSE NULL
+                    END;
+                    ALTER TABLE sys_messages DROP COLUMN to_round;
+                END IF;
+            END $$;
             """)
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS reported (

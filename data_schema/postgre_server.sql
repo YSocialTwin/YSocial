@@ -168,7 +168,8 @@ CREATE TABLE post (
     client_action_id VARCHAR(96),
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     reaction_count INTEGER DEFAULT 0,
-    moderated INTEGER DEFAULT 0
+    moderated INTEGER DEFAULT 0,
+    is_moderation_comment INTEGER DEFAULT 0
 );
 
 CREATE TABLE sys_messages (
@@ -177,7 +178,7 @@ CREATE TABLE sys_messages (
     to_uid INTEGER REFERENCES user_mgmt(id),
     message TEXT NOT NULL,
     from_round INTEGER REFERENCES rounds(id),
-    to_round INTEGER REFERENCES rounds(id)
+    duration INTEGER
 );
 
 CREATE TABLE reported (

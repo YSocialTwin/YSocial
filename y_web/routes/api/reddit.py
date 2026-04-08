@@ -932,6 +932,9 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         "is_disliked": False,
         "emotions": emotions,
         "topics": topics,
+        "is_moderation_comment": bool(
+            int(getattr(comment, "is_moderation_comment", 0) or 0)
+        ),
         "children": [],  # New comments have no children yet
     }
 

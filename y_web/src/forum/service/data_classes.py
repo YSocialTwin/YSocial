@@ -90,6 +90,7 @@ class FeedPost:
     topics: List[Tuple[int, str, str]]
     comments: List[Dict[str, Any]]
     comment_total: int
+    is_moderation_comment: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -122,6 +123,7 @@ class FeedPost:
             "primary_community": self.primary_community or None,
             "emotions": self.emotions,
             "topics": self.topics,
+            "is_moderation_comment": bool(self.is_moderation_comment),
         }
 
 

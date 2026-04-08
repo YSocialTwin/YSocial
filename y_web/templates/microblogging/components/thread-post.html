@@ -2,7 +2,8 @@
     <div class="comments-wrap">
  <div class="comments-body has-slimscroll ys-p-1rem">
 
-            <div class="media is-comment">
+            <div class="media is-comment{% if thread.get('is_moderation_comment') %} moderation-comment{% endif %}"
+                 style="{% if thread.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
 
                 <div class="media-left">
                     <div class="image">
@@ -109,6 +110,17 @@
                      <!--   <hr class="dropdown-divider"/> -->
                         {% endif %}
 
+                        {% if thread['author_id'] != logged_id %}
+                        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive" class="dropdown-item">
+                            <div class="media">
+                                <i data-feather="flag"></i>
+                                <div class="media-content">
+                                    <h3>Report</h3>
+                                    <small>Report this comment.</small>
+                                </div>
+                            </div>
+                        </a>
+                        {% endif %}
                       <!--  <a href="#" class="dropdown-item">
                             <div class="media">
                                 <i data-feather="flag"></i>

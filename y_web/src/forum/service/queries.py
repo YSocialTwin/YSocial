@@ -529,6 +529,9 @@ def _build_comment_payload(
                 "is_shared": share_count,
                 "emotions": emotions,
                 "topics": topics,
+                "is_moderation_comment": bool(
+                    int(getattr(comment, "is_moderation_comment", 0) or 0)
+                ),
             }
         )
 
@@ -645,6 +648,7 @@ def _create_feed_post(
         topics=topics,
         comments=comments,
         comment_total=comment_count,
+        is_moderation_comment=bool(int(getattr(post, "is_moderation_comment", 0) or 0)),
     )
 
 

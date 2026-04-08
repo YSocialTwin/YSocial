@@ -13,7 +13,7 @@
      data-likes="{{ thread.get('likes', 0) }}"
      data-dislikes="{{ thread.get('dislikes', 0) }}"
      data-score="{{ thread.get('likes', 0) - thread.get('dislikes', 0) }}"
-     style="padding: 12px; margin-bottom: 8px; background: white; border-radius: 4px; border-left: 2px solid transparent;">
+     style="padding: 12px; margin-bottom: 8px; background: {% if thread.get('is_moderation_comment') %}#fff4d6{% else %}white{% endif %}; border-radius: 4px; border-left: {% if thread.get('is_moderation_comment') %}4px solid #f0b429{% else %}2px solid transparent{% endif %};">
     <!-- Comment header -->
     <div style="display: flex; align-items: center; margin-bottom: 4px;">
         <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">
@@ -77,6 +77,11 @@
         <button class="toggle-reply-button" type="button" data-reply-target="{{ thread['post_id'] }}" style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700;">
             Reply
         </button>
+        {% if thread['author_id'] != logged_id %}
+        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive" style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700; text-decoration: none;">
+            Report
+        </a>
+        {% endif %}
     </div>
 
     <!-- Reply form (initially hidden) -->

@@ -1635,12 +1635,29 @@
             ].join("");
         }
 
+        var commentBackground = comment.is_moderation_comment ? "#fff4d6" : "white";
+        var commentBorder = comment.is_moderation_comment
+            ? "4px solid #f0b429"
+            : "2px solid transparent";
+        var reportLinkHtml =
+            comment.author_id !== loggedUserId
+                ? '<a href="' +
+                  (window.EXP_PREFIX || "") +
+                  '/report_content?post_id=' +
+                  comment.post_id +
+                  '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 6px; font-size: 11px; font-weight: 700;">Report</a>'
+                : "";
+
         var html = [
             '<div class="reddit-comment post-detail-card" data-reddit-post data-post-id="' +
                 comment.post_id +
                 '" data-thread-id="' +
                 comment.thread_id +
-                '" data-vote="neutral" data-likes="0" data-dislikes="0" data-score="0" style="padding: 12px; margin-bottom: 8px; background: white; border-radius: 4px; border-left: 2px solid transparent;">',
+                '" data-vote="neutral" data-likes="0" data-dislikes="0" data-score="0" style="padding: 12px; margin-bottom: 8px; background: ' +
+                commentBackground +
+                '; border-radius: 4px; border-left: ' +
+                commentBorder +
+                ';">',
             '  <div style="display: flex; align-items: center; margin-bottom: 4px;">',
             '    <div style="display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0;">',
             '    <img src="' +
@@ -1679,6 +1696,7 @@
             '    <button style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 6px; border-radius: 2px; font-size: 11px; font-weight: 700;" data-reply-target="' +
                 comment.post_id +
                 '" class="toggle-reply-button">Reply</button>',
+            reportLinkHtml,
             "  </div>",
             '  <div style="margin-bottom: 8px;">',
             '    <p id="message-' + comment.post_id + '"></p>',

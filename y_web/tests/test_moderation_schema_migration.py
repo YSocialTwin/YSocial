@@ -31,9 +31,14 @@ def test_migrate_sqlite_server_adds_moderation_schema(tmp_path):
     cursor.execute("PRAGMA table_info(post)")
     post_columns = {row[1] for row in cursor.fetchall()}
     assert "moderated" in post_columns
+    assert "is_moderation_comment" in post_columns
 
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = {row[0] for row in cursor.fetchall()}
     assert "sys_messages" in tables
     assert "reported" in tables
+    cursor.execute("PRAGMA table_info(sys_messages)")
+    sys_message_columns = {row[1] for row in cursor.fetchall()}
+    assert "duration" in sys_message_columns
+    assert "to_round" not in sys_message_columns
     conn.close()

@@ -422,6 +422,9 @@ def get_user_recent_posts(
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
                     "emotions": emotions,
                     "topics": comment_topics,
+                    "is_moderation_comment": int(
+                        getattr(c, "is_moderation_comment", 0) or 0
+                    ),
                 }
             )
 
@@ -553,6 +556,9 @@ def get_user_recent_posts(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": topics,
+                "is_moderation_comment": int(
+                    getattr(post, "is_moderation_comment", 0) or 0
+                ),
                 "primary_community": primary_community,
             }
         )
@@ -762,6 +768,9 @@ def get_posts_associated_to_hashtags(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "is_moderation_comment": int(
+                    getattr(post, "is_moderation_comment", 0) or 0
+                ),
             }
         )
 
@@ -970,6 +979,9 @@ def get_posts_associated_to_interest(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "is_moderation_comment": int(
+                    getattr(post, "is_moderation_comment", 0) or 0
+                ),
             }
         )
 
@@ -1178,6 +1190,9 @@ def get_posts_associated_to_emotion(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "is_moderation_comment": int(
+                    getattr(post, "is_moderation_comment", 0) or 0
+                ),
             }
         )
 
