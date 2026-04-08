@@ -206,7 +206,10 @@ def test_agents_grid_bootstrap_uses_data_attributes_instead_of_route_matching():
     ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-pages.js").read_text(encoding="utf-8")
 
-    assert 'data-list-endpoint="{{ list_endpoint|default(\'/admin/agents_data\') }}"' in template
+    assert (
+        "data-list-endpoint=\"{{ list_endpoint|default('/admin/agents_data') }}\""
+        in template
+    )
     assert "document.querySelector('#table[data-list-endpoint]')" in script
 
 

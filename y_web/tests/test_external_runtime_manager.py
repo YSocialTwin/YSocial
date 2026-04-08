@@ -288,7 +288,9 @@ def test_install_runtime_dependencies_detects_pyproject_layout(
         validate_entrypoints=(),
         validate_import=None,
     )
-    monkeypatch.setitem(registry.SUPPORTED_EXTERNAL_REPOS, runtime_repo_spec.key, runtime_repo_spec)
+    monkeypatch.setitem(
+        registry.SUPPORTED_EXTERNAL_REPOS, runtime_repo_spec.key, runtime_repo_spec
+    )
     monkeypatch.setattr(
         manager,
         "get_runtime_status",
@@ -350,9 +352,7 @@ def test_load_plugins_index_rebuilds_external_plugins_json(tmp_path, monkeypatch
         "authors": ["Example Org"],
         "repository_url": "https://github.com/example/sample_plugin",
     }
-    (meta_dir / "info.json").write_text(
-        json.dumps(info_payload), encoding="utf-8"
-    )
+    (meta_dir / "info.json").write_text(json.dumps(info_payload), encoding="utf-8")
 
     monkeypatch.setattr(registry, "EXTERNAL_DIR", external_dir)
     monkeypatch.setattr(registry, "PLUGINS_INDEX_PATH", external_dir / "plugins.json")
