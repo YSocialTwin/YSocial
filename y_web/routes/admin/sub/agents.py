@@ -459,6 +459,20 @@ def _upsert_agent_ext(agent_id, feature_name, feature_value):
         entry.feature_value = str(feature_value)
 
 
+def _normalize_custom_agent_parameter_value(parameter: dict, raw_value: str):
+    param_type = str(parameter.get("type") or "").strip().lower()
+    value = str(raw_value).strip()
+    if param_type.startswith("array"):
+        return json.dumps([item.strip() for item in value.split(",") if item.strip()])
+    if param_type in {"number", "float"}:
+        normalized = value.replace(",", ".")
+        return str(float(normalized))
+    if param_type == "integer":
+        normalized = value.replace(",", ".")
+        return str(int(float(normalized)))
+    return value
+
+
 def _delete_agent_ext(agent_id):
     for ext_entry in Agent_Ext.query.filter_by(agent_id=agent_id).all():
         db.session.delete(ext_entry)
@@ -811,12 +825,16 @@ def create_custom_agent(agent_slug):
         raw_value = request.form.get(param_name)
         if raw_value in (None, ""):
             continue
-        if str(parameter.get("type") or "").startswith("array"):
-            value = json.dumps(
-                [item.strip() for item in str(raw_value).split(",") if item.strip()]
+        try:
+            value = _normalize_custom_agent_parameter_value(parameter, raw_value)
+        except ValueError:
+            flash(
+                f"Field '{param_name.replace('_', ' ')}' contains an invalid value.",
+                "error",
             )
-        else:
-            value = raw_value
+            db.session.delete(agent)
+            db.session.commit()
+            return _render_custom_agent_builder(spec)
         _upsert_agent_ext(agent.id, param_name, value)
     db.session.commit()
 
