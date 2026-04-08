@@ -47,6 +47,13 @@ from y_web.src.system.miscellanea import (
 agents = Blueprint("agents", __name__)
 
 
+PLUGIN_REGISTRY_RELATIVE_PATHS = (
+    Path("meta") / "registry.json",
+    Path("plugins_exposed") / "agent_types.json",
+    Path("plugin_exposed") / "agent_types.json",
+)
+
+
 def _runtime_installed(repo_key: str) -> bool:
     try:
         return runtime_spec(repo_key).path.exists()
@@ -121,9 +128,11 @@ def _manifest_paths():
     for repo_dir in sorted(EXTERNAL_DIR.iterdir()) if EXTERNAL_DIR.exists() else []:
         if not repo_dir.is_dir():
             continue
-        manifest_path = repo_dir / Path("meta") / "registry.json"
-        if manifest_path.exists():
-            manifests.append((repo_dir.name, manifest_path))
+        for relative_path in PLUGIN_REGISTRY_RELATIVE_PATHS:
+            manifest_path = repo_dir / relative_path
+            if manifest_path.exists():
+                manifests.append((repo_dir.name, manifest_path))
+                break
     return manifests
 
 
@@ -957,19 +966,20 @@ def delete_agent(uid):
     check_privileges(current_user.username)
 
     agent = Agent.query.filter_by(id=uid).first()
+    if agent is None:
+        flash("Agent not found.", "error")
+        return redirect("/admin/agents")
+
     agent_type = agent.ag_type if agent else None
 
-    # check if the agent is assigned to any population
-    agent_pop = Agent_Population.query.filter_by(agent_id=uid).first()
-    if agent_pop:
-        # if the agent is assigned to any population, do not delete raise a warning
+    agent_population = Agent_Population.query.filter_by(agent_id=uid).all()
+    if agent_population and agent_type in (None, ""):
         flash("Agent is assigned to a population. Cannot delete.")
         return _agent_builder_for_type(agent_type)
 
     db.session.delete(agent)
 
     # delete agent_population entries
-    agent_population = Agent_Population.query.filter_by(agent_id=uid).all()
     for ap in agent_population:
         db.session.delete(ap)
 

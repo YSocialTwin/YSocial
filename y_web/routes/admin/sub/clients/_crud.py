@@ -63,6 +63,13 @@ from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
 
 
+PLUGIN_REGISTRY_RELATIVE_PATHS = (
+    Path("meta") / "registry.json",
+    Path("plugins_exposed") / "agent_types.json",
+    Path("plugin_exposed") / "agent_types.json",
+)
+
+
 def _custom_agent_slug(name: str) -> str:
     cleaned = re.sub(r"[^a-z0-9]+", " ", (name or "").lower()).strip()
     tokens = [token for token in cleaned.split() if token and token != "agent"]
@@ -81,8 +88,13 @@ def _adhoc_agent_specs() -> list[dict]:
     for repo_dir in sorted(EXTERNAL_DIR.iterdir()):
         if not repo_dir.is_dir():
             continue
-        manifest_path = repo_dir / Path("meta") / "registry.json"
-        if not manifest_path.exists():
+        manifest_path = None
+        for relative_path in PLUGIN_REGISTRY_RELATIVE_PATHS:
+            candidate = repo_dir / relative_path
+            if candidate.exists():
+                manifest_path = candidate
+                break
+        if manifest_path is None:
             continue
         try:
             payload = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -105,7 +117,9 @@ def _adhoc_agent_specs() -> list[dict]:
                     "agent_type": agent_type,
                     "display_name": display_name,
                     "description": str(entry.get("description") or "").strip(),
-                    "requires_llm": bool(entry.get("requires_llm", False)),
+                    "requires_llm": bool(
+                        entry.get("requires_llm", entry.get("llm_required", False))
+                    ),
                     "repo_name": repo_dir.name,
                 }
             )

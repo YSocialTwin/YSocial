@@ -80,6 +80,7 @@ class Post(db.Model):
     created_at = db.Column(db.DateTime, nullable=True, default=db.func.now())
     shared_from = db.Column(db.Integer, default=-1)
     reaction_count = db.Column(db.Integer, default=0)
+    moderated = db.Column(db.Integer, default=0, nullable=False)
 
 
 class Hashtags(db.Model):
@@ -271,6 +272,30 @@ class Recommendations(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
     post_ids = db.Column(db.String(500), nullable=False)
     round = db.Column(db.Integer, nullable=False)
+
+
+class SysMessage(db.Model):
+    __bind_key__ = "db_exp"
+    __tablename__ = "sys_messages"
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False)
+    to_uid = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    from_round = db.Column(db.Integer, db.ForeignKey("rounds.id"), nullable=True)
+    to_round = db.Column(db.Integer, db.ForeignKey("rounds.id"), nullable=True)
+
+
+class Reported(db.Model):
+    __bind_key__ = "db_exp"
+    __tablename__ = "reported"
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False)
+    to_uid = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=True)
+    to_post = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=True)
+    from_uid = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False)
+    tid = db.Column(db.Integer, db.ForeignKey("rounds.id"), nullable=False)
 
 
 class Articles(db.Model):

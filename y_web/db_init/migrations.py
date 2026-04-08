@@ -336,6 +336,42 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run agent archetype field migration: {e}")
 
     # ------------------------------------------------------------------
+    # moderation schema in experiment databases
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_moderation_schema import (
+                migrate_experiment_databases as migrate_moderation_experiment_databases,
+                migrate_sqlite_server as migrate_moderation_sqlite_server,
+            )
+
+            if dummy_db_path:
+                migrate_moderation_sqlite_server(dummy_db_path, quiet=True)
+
+            from y_web.src.system.path_utils import get_writable_path
+
+            experiments_dir = os.path.join(get_writable_path(), "y_web", "experiments")
+            if os.path.exists(experiments_dir):
+                print("Migrating moderation schema for experiment databases...")
+                success, total = migrate_moderation_experiment_databases(
+                    experiments_dir, quiet=False
+                )
+                if total > 0:
+                    print(f"✓ Migrated {success}/{total} experiment databases")
+        elif db_type == "postgresql":
+            from y_web.migrations.add_moderation_schema import (
+                migrate_postgresql_server as migrate_moderation_postgresql_server,
+            )
+
+            if pg["password"]:
+                pg_dummy_db = os.getenv("PG_DBNAME_DUMMY", "dummy")
+                migrate_moderation_postgresql_server(
+                    pg["host"], pg["port"], pg_dummy_db, pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run moderation schema migration: {e}")
+
+    # ------------------------------------------------------------------
     # opinion evolution cache tables
     # ------------------------------------------------------------------
     try:

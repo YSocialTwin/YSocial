@@ -14,6 +14,10 @@ EXTERNAL_DIR = ROOT / "external"
 PLUGINS_INDEX_PATH = EXTERNAL_DIR / "plugins.json"
 PLUGIN_INFO_RELATIVE_PATH = Path("meta") / "info.json"
 PLUGIN_REGISTRY_RELATIVE_PATH = Path("meta") / "registry.json"
+LEGACY_PLUGIN_REGISTRY_PATHS = (
+    Path("plugins_exposed") / "agent_types.json",
+    Path("plugin_exposed") / "agent_types.json",
+)
 
 
 @dataclass(frozen=True)
@@ -213,6 +217,31 @@ def scan_plugin_info_files() -> list[dict]:
         if not isinstance(payload, dict):
             continue
         plugins.append(_normalize_plugin_info(repo_dir, payload))
+
+    plugin_repo = EXTERNAL_DIR / "y_agents_plugins"
+    if plugin_repo.is_dir() and not any(
+        plugin.get("plugin_name") == "y_agents_plugins" for plugin in plugins
+    ):
+        registry_path = None
+        for relative_path in (PLUGIN_REGISTRY_RELATIVE_PATH, *LEGACY_PLUGIN_REGISTRY_PATHS):
+            candidate = plugin_repo / relative_path
+            if candidate.exists():
+                registry_path = candidate
+                break
+        if registry_path is not None:
+            plugins.append(
+                _normalize_plugin_info(
+                    plugin_repo,
+                    {
+                        "plugin_name": "y_agents_plugins",
+                        "category": "Agent Extensions",
+                        "group": "Agent Plugins",
+                        "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
+                        "authors": ["YSocialTwin"],
+                        "repository_url": "https://github.com/YSocialTwin/y_agents_plugins",
+                    },
+                )
+            )
     return plugins
 
 

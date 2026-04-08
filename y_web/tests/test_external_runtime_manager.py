@@ -395,3 +395,29 @@ def test_plugin_metadata_for_runtime_matches_repository_url(tmp_path, monkeypatc
     )
 
     assert registry.plugin_metadata_for_runtime(spec, [plugin_info]) == plugin_info
+
+
+def test_load_plugins_index_detects_legacy_agent_plugin_layout(tmp_path, monkeypatch):
+    external_dir = tmp_path / "external"
+    legacy_dir = external_dir / "y_agents_plugins" / "plugins_exposed"
+    legacy_dir.mkdir(parents=True)
+    (legacy_dir / "agent_types.json").write_text(
+        json.dumps(
+            {
+                "agent_types": [
+                    {
+                        "agent_type": "hello_world",
+                        "display_name": "Hello World Agent",
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(registry, "EXTERNAL_DIR", external_dir)
+    monkeypatch.setattr(registry, "PLUGINS_INDEX_PATH", external_dir / "plugins.json")
+
+    plugins = registry.load_plugins_index(refresh=True)
+
+    assert any(plugin["plugin_name"] == "y_agents_plugins" for plugin in plugins)

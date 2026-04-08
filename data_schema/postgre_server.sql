@@ -167,7 +167,26 @@ CREATE TABLE post (
     dedupe_key     VARCHAR(64),
     client_action_id VARCHAR(96),
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reaction_count INTEGER DEFAULT 0
+    reaction_count INTEGER DEFAULT 0,
+    moderated INTEGER DEFAULT 0
+);
+
+CREATE TABLE sys_messages (
+    id SERIAL PRIMARY KEY,
+    type TEXT NOT NULL,
+    to_uid INTEGER REFERENCES user_mgmt(id),
+    message TEXT NOT NULL,
+    from_round INTEGER REFERENCES rounds(id),
+    to_round INTEGER REFERENCES rounds(id)
+);
+
+CREATE TABLE reported (
+    id SERIAL PRIMARY KEY,
+    type TEXT NOT NULL,
+    to_uid INTEGER REFERENCES user_mgmt(id),
+    to_post INTEGER REFERENCES post(id),
+    from_uid INTEGER NOT NULL REFERENCES user_mgmt(id),
+    tid INTEGER NOT NULL REFERENCES rounds(id)
 );
 
 CREATE TABLE reply_inbox_state (

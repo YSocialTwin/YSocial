@@ -13,6 +13,11 @@ var AdminPages = (function() {
         return '<div style="display: flex; gap: 8px; justify-content: center;"><a href="'+config.detailsUrlPrefix+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a><a href="'+config.deleteUrlPrefix+id+'" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Delete</a></div>';
     }
 
+    function buildDeleteLinkHtml(url, label, message) {
+        var escapedMessage = (message || 'Are you sure?').replace(/'/g, '&#39;');
+        return '<a href="'+url+'" onclick="return confirm(\''+escapedMessage+'\')" style="background-color: #dc3545; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">'+label+'</a>';
+    }
+
     function buildActivityProfileFormatter(cell) {
         if (!cell || !cell.hours) return gridjs.html('<span style="color: #999; font-size: 0.85em;">Not assigned</span>');
         var hours = cell.hours.split(',').map(function(h) { return parseInt(h.trim()); });
@@ -248,7 +253,7 @@ var AdminPages = (function() {
                     sort: false,
                     formatter: function(cell, row) {
                         var id = row.cells[0].data;
-                        return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a></div>');
+                        return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/population_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a>'+buildDeleteLinkHtml('/admin/delete_population/'+id, 'Delete', 'Are you sure you want to delete this population?')+'</div>');
                     }
                 }
             ],
@@ -368,7 +373,7 @@ var AdminPages = (function() {
             sort: false,
             formatter: function(cell, row) {
                 var id = row.cells[0].data;
-                return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a></div>');
+                return gridjs.html('<div style="display: flex; gap: 8px; justify-content: center;"><a href="/admin/agent_details/'+id+'" style="background-color: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-size: 0.85rem;">Details</a>'+buildDeleteLinkHtml('/admin/delete_agent/'+id, 'Delete', 'Are you sure you want to delete this agent?')+'</div>');
             }
         });
 

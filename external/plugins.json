@@ -51,12 +51,12 @@
       "repository_url": "https://github.com/YSocialTwin/YSimulator"
     },
     {
-      "plugin_name": "AdHoc Agents",
-      "category": "Extensions",
+      "plugin_name": "y_agents_plugins",
+      "category": "Agent Extensions",
       "group": "Agent Plugins",
-      "description": "Implementation of Role-Specific Ad-Hoc Agents (e.g., moderators).",
+      "description": "Plugin-defined ad hoc agent families for YSocial experiments.",
       "authors": [
-        "Giulio Rossetti"
+        "YSocialTwin"
       ],
       "repository_url": "https://github.com/YSocialTwin/y_agents_plugins"
     }

@@ -74,6 +74,7 @@
                                                 {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>(required)</small>{% endif %}
                                             </span>
                                             <span class="right ys-w-70">
+                                                {% set parameter_type = parameter.type|string %}
                                                 {% if parameter.name == 'activity_profile' %}
                                                 <div class="select is-fullwidth">
                                                     <select name="activity_profile" class="input" {% if parameter.required %}required{% endif %}>
@@ -82,9 +83,20 @@
                                                         {% endfor %}
                                                     </select>
                                                 </div>
-                                                {% elif parameter.type == 'number' %}
+                                                {% elif parameter_type.startswith('enum[') and parameter_type.endswith(']') %}
+                                                {% set enum_options = parameter_type[5:-1].split(',') %}
+                                                <div class="select is-fullwidth">
+                                                    <select name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>
+                                                        <option value=""></option>
+                                                        {% for option in enum_options %}
+                                                        {% set option_value = option.strip() %}
+                                                        <option value="{{ option_value }}">{{ option_value }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                {% elif parameter_type == 'number' %}
                                                 <input type="number" name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>
-                                                {% elif parameter.type.startswith('array') %}
+                                                {% elif parameter_type.startswith('array') %}
                                                 <textarea name="{{ parameter.name }}" class="textarea" placeholder="Comma-separated values" {% if parameter.required %}required{% endif %}></textarea>
                                                 {% else %}
                                                 <input type="text" name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>

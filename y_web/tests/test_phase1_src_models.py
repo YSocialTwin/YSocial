@@ -65,10 +65,12 @@ class TestCanonicalExperimentImports:
             Post_Sentiment,
             Post_topics,
             Post_Toxicity,
+            Reported,
             Reactions,
             Recommendations,
             ReplyInboxState,
             Rounds,
+            SysMessage,
             User_interest,
             User_mgmt,
             Voting,
@@ -100,6 +102,8 @@ class TestCanonicalExperimentImports:
             Post_Sentiment,
             Post_Toxicity,
             Agent_Opinion,
+            SysMessage,
+            Reported,
         ]
         for cls in exp_classes:
             assert hasattr(cls, "__bind_key__"), f"{cls.__name__} missing __bind_key__"
