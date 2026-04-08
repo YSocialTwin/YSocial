@@ -62,7 +62,6 @@ from y_web.src.system.path_utils import get_resource_path
 from ._blueprint import clientsr
 from ._helpers import _forum_effective_link_share, allocate_topics_by_percentage
 
-
 PLUGIN_REGISTRY_RELATIVE_PATHS = (
     Path("meta") / "registry.json",
     Path("plugins_exposed") / "agent_types.json",

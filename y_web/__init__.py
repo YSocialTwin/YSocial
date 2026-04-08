@@ -18,9 +18,9 @@ import json
 import os
 import sys
 
+import flask_sqlalchemy
 import sqlalchemy
 import sqlalchemy.orm
-import flask_sqlalchemy
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
@@ -39,7 +39,9 @@ def _ensure_flask_sqlalchemy_legacy_compat() -> None:
     errors during bootstrap.
     """
 
-    if not hasattr(sqlalchemy.orm, "relation") and hasattr(sqlalchemy.orm, "relationship"):
+    if not hasattr(sqlalchemy.orm, "relation") and hasattr(
+        sqlalchemy.orm, "relationship"
+    ):
         sqlalchemy.orm.relation = sqlalchemy.orm.relationship
 
     sqlalchemy_public = [
@@ -67,7 +69,9 @@ def _ensure_flask_sqlalchemy_legacy_compat() -> None:
     ]
 
     if not hasattr(sqlalchemy, "__all__"):
-        sqlalchemy.__all__ = [name for name in sqlalchemy_public if hasattr(sqlalchemy, name)]
+        sqlalchemy.__all__ = [
+            name for name in sqlalchemy_public if hasattr(sqlalchemy, name)
+        ]
     if not hasattr(sqlalchemy.orm, "__all__"):
         sqlalchemy.orm.__all__ = [
             name for name in orm_public if hasattr(sqlalchemy.orm, name)
