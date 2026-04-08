@@ -7,18 +7,20 @@ def test_migrate_sqlite_server_adds_moderation_schema(tmp_path):
     db_path = tmp_path / "experiment.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute("CREATE TABLE user_mgmt (id INTEGER PRIMARY KEY, username TEXT NOT NULL)")
-    cursor.execute("CREATE TABLE rounds (id INTEGER PRIMARY KEY, day INTEGER, hour INTEGER)")
     cursor.execute(
-        """
+        "CREATE TABLE user_mgmt (id INTEGER PRIMARY KEY, username TEXT NOT NULL)"
+    )
+    cursor.execute(
+        "CREATE TABLE rounds (id INTEGER PRIMARY KEY, day INTEGER, hour INTEGER)"
+    )
+    cursor.execute("""
         CREATE TABLE post (
             id INTEGER PRIMARY KEY,
             tweet TEXT NOT NULL,
             round INTEGER NOT NULL,
             user_id INTEGER NOT NULL
         )
-        """
-    )
+        """)
     conn.commit()
     conn.close()
 

@@ -223,7 +223,10 @@ def scan_plugin_info_files() -> list[dict]:
         plugin.get("plugin_name") == "y_agents_plugins" for plugin in plugins
     ):
         registry_path = None
-        for relative_path in (PLUGIN_REGISTRY_RELATIVE_PATH, *LEGACY_PLUGIN_REGISTRY_PATHS):
+        for relative_path in (
+            PLUGIN_REGISTRY_RELATIVE_PATH,
+            *LEGACY_PLUGIN_REGISTRY_PATHS,
+        ):
             candidate = plugin_repo / relative_path
             if candidate.exists():
                 registry_path = candidate

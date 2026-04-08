@@ -30,8 +30,7 @@ def migrate_sqlite_server(db_path, quiet=False):
         if "moderated" not in post_columns:
             cursor.execute("ALTER TABLE post ADD COLUMN moderated INTEGER DEFAULT 0")
 
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS sys_messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type TEXT NOT NULL,
@@ -43,10 +42,8 @@ def migrate_sqlite_server(db_path, quiet=False):
                 FOREIGN KEY(from_round) REFERENCES rounds(id),
                 FOREIGN KEY(to_round) REFERENCES rounds(id)
             )
-            """
-        )
-        cursor.execute(
-            """
+            """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS reported (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 type TEXT NOT NULL,
@@ -59,8 +56,7 @@ def migrate_sqlite_server(db_path, quiet=False):
                 FOREIGN KEY(from_uid) REFERENCES user_mgmt(id),
                 FOREIGN KEY(tid) REFERENCES rounds(id)
             )
-            """
-        )
+            """)
         conn.commit()
         conn.close()
         return True
@@ -105,8 +101,7 @@ def migrate_postgresql_server(host, port, database, user, password):
         cursor.execute(
             "ALTER TABLE post ADD COLUMN IF NOT EXISTS moderated INTEGER DEFAULT 0"
         )
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS sys_messages (
                 id SERIAL PRIMARY KEY,
                 type TEXT NOT NULL,
@@ -115,10 +110,8 @@ def migrate_postgresql_server(host, port, database, user, password):
                 from_round INTEGER REFERENCES rounds(id),
                 to_round INTEGER REFERENCES rounds(id)
             )
-            """
-        )
-        cursor.execute(
-            """
+            """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS reported (
                 id SERIAL PRIMARY KEY,
                 type TEXT NOT NULL,
@@ -127,8 +120,7 @@ def migrate_postgresql_server(host, port, database, user, password):
                 from_uid INTEGER NOT NULL REFERENCES user_mgmt(id),
                 tid INTEGER NOT NULL REFERENCES rounds(id)
             )
-            """
-        )
+            """)
         conn.commit()
         conn.close()
         return True

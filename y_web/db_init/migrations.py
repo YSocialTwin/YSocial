@@ -342,6 +342,8 @@ def _run_all_migrations(app, db_type, db):
         if db_type == "sqlite":
             from y_web.migrations.add_moderation_schema import (
                 migrate_experiment_databases as migrate_moderation_experiment_databases,
+            )
+            from y_web.migrations.add_moderation_schema import (
                 migrate_sqlite_server as migrate_moderation_sqlite_server,
             )
 
