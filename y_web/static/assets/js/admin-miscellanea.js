@@ -1941,6 +1941,205 @@ var AdminMiscellanea = (function() {
               pullProgress();
           });
 
+  const detoxifyState = {
+      lastStatus: (
+          window.YS_DATA_MISCELLANEA &&
+          YS_DATA_MISCELLANEA.detoxifyDownloadState &&
+          YS_DATA_MISCELLANEA.detoxifyDownloadState.status
+      ) || 'idle',
+      pollTimer: null
+  };
+
+  function detoxifyElements() {
+      return {
+          form: document.getElementById('detoxify-download-form'),
+          pathInput: document.getElementById('detoxify-download-path'),
+          button: document.getElementById('detoxify-download-button'),
+          progressBar: document.getElementById('detoxify-progress-bar'),
+          statusMessage: document.getElementById('detoxify-status-message'),
+          statusPill: document.getElementById('detoxify-status-pill'),
+          currentPath: document.getElementById('detoxify-current-path'),
+          readyNotice: document.getElementById('detoxify-ready-notice'),
+          errorNotice: document.getElementById('detoxify-error-notice')
+      };
+  }
+
+  function setDetoxifyButtonBusy(isBusy) {
+      const { button } = detoxifyElements();
+      if (!button) {
+          return;
+      }
+      button.disabled = !!isBusy;
+      button.textContent = isBusy ? 'Downloading...' : 'Download Model';
+  }
+
+  function resetDetoxifyPill(statusPill, status) {
+      if (!statusPill) {
+          return;
+      }
+      statusPill.classList.remove('is-success', 'is-info', 'is-danger', 'is-light');
+      if (status === 'ready') {
+          statusPill.classList.add('is-success');
+      } else if (status === 'running') {
+          statusPill.classList.add('is-info');
+      } else if (status === 'error') {
+          statusPill.classList.add('is-danger');
+      } else {
+          statusPill.classList.add('is-light');
+      }
+  }
+
+  function applyDetoxifyState(state) {
+      const {
+          pathInput,
+          progressBar,
+          statusMessage,
+          statusPill,
+          currentPath,
+          readyNotice,
+          errorNotice
+      } = detoxifyElements();
+      const safeState = state || {};
+      const status = safeState.status || 'idle';
+      const progress = Number.isFinite(Number(safeState.progress)) ? Number(safeState.progress) : 0;
+      const message = safeState.message || 'The selected path will be reused automatically by new YSocial simulation processes.';
+      const path = safeState.path || (pathInput ? pathInput.value : '');
+
+      if (statusPill) {
+          statusPill.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+          resetDetoxifyPill(statusPill, status);
+      }
+      if (progressBar) {
+          progressBar.style.width = `${progress}%`;
+          progressBar.setAttribute('aria-valuenow', `${progress}`);
+          progressBar.textContent = `${progress}%`;
+      }
+      if (statusMessage) {
+          statusMessage.textContent = message;
+      }
+      if (currentPath) {
+          currentPath.textContent = path;
+      }
+      if (pathInput && document.activeElement !== pathInput && path) {
+          pathInput.value = path;
+      }
+      if (readyNotice) {
+          readyNotice.classList.toggle('is-hidden', status !== 'ready');
+      }
+      if (errorNotice) {
+          errorNotice.classList.toggle('is-hidden', status !== 'error');
+          if (status === 'error') {
+              errorNotice.textContent = message;
+          }
+      }
+
+      setDetoxifyButtonBusy(status === 'running');
+
+      if (detoxifyState.lastStatus === 'running' && status === 'ready' && readyNotice) {
+          readyNotice.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
+      }
+      if (detoxifyState.lastStatus === 'running' && status === 'error') {
+          document.dispatchEvent(new CustomEvent('ys-notifications-refresh'));
+      }
+      detoxifyState.lastStatus = status;
+  }
+
+  function stopDetoxifyPolling() {
+      if (detoxifyState.pollTimer) {
+          window.clearTimeout(detoxifyState.pollTimer);
+          detoxifyState.pollTimer = null;
+      }
+  }
+
+  function scheduleDetoxifyPolling() {
+      stopDetoxifyPolling();
+      detoxifyState.pollTimer = window.setTimeout(fetchDetoxifyStatus, 1000);
+  }
+
+  function fetchDetoxifyStatus() {
+      if (!window.YS_DATA_MISCELLANEA || !YS_DATA_MISCELLANEA.detoxifyStatusUrl) {
+          return;
+      }
+      fetch(YS_DATA_MISCELLANEA.detoxifyStatusUrl, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+          .then(response => response.json())
+          .then(state => {
+              applyDetoxifyState(state);
+              if (state && state.status === 'running') {
+                  scheduleDetoxifyPolling();
+              } else {
+                  stopDetoxifyPolling();
+              }
+          })
+          .catch(() => {
+              scheduleDetoxifyPolling();
+          });
+  }
+
+  function initDetoxifyDownload() {
+      const { form, pathInput } = detoxifyElements();
+      if (!form || !pathInput) {
+          return;
+      }
+
+      applyDetoxifyState(
+          (window.YS_DATA_MISCELLANEA && YS_DATA_MISCELLANEA.detoxifyDownloadState) || {}
+      );
+
+      form.addEventListener('submit', function (event) {
+          event.preventDefault();
+          const downloadPath = pathInput.value.trim();
+          if (!downloadPath) {
+              pathInput.focus();
+              return;
+          }
+
+          setDetoxifyButtonBusy(true);
+
+          fetch(YS_DATA_MISCELLANEA.detoxifyStartUrl, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({ download_path: downloadPath })
+          })
+              .then(async response => {
+                  const payload = await response.json().catch(() => ({}));
+                  if (!response.ok) {
+                      throw new Error(payload.error || 'Unable to start the Detoxify download.');
+                  }
+                  return payload;
+              })
+              .then(state => {
+                  applyDetoxifyState(state);
+                  if (state && state.status === 'running') {
+                      scheduleDetoxifyPolling();
+                  }
+              })
+              .catch(error => {
+                  applyDetoxifyState({
+                      status: 'error',
+                      progress: 0,
+                      path: downloadPath,
+                      message: error.message || 'Unable to start the Detoxify download.'
+                  });
+              });
+      });
+
+      if (
+          window.YS_DATA_MISCELLANEA &&
+          YS_DATA_MISCELLANEA.detoxifyDownloadState &&
+          YS_DATA_MISCELLANEA.detoxifyDownloadState.status === 'running'
+      ) {
+          scheduleDetoxifyPolling();
+      }
+  }
+
+  initDetoxifyDownload();
+
   const llmModelsTableDiv = document.getElementById('llm-models-table');
 
   const updateUrlLLM = (prev, query) => {

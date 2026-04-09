@@ -111,6 +111,15 @@
  <i data-feather="message-square" class="ys-icon-xs"></i>
             Reply
         </button>
+        {% if thread['author_id'] != logged_id %}
+        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
+           class="forum-report-button{% if thread.get('is_reported') %} is-active{% endif %}"
+           style="display: flex; align-items: center; gap: 4px; background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 4px 8px; border-radius: 2px; font-size: 12px; font-weight: 700; text-decoration: none;">
+ <i data-feather="flag" class="ys-icon-xs"></i>
+            <span>Report</span>
+            <span>{{ thread.get("report_count", 0) }}</span>
+        </a>
+        {% endif %}
     </div>
 
     <!-- Reply form (initially hidden) -->

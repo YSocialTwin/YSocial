@@ -84,6 +84,7 @@ def run_server_main():
 
     debug = False
     app.config["perspective_api"] = config["perspective_api"]
+    app.config["toxicity_annotation"] = config.get("toxicity_annotation", False)
     app.config["sentiment_annotation"] = config["sentiment_annotation"]
     app.config["emotion_annotation"] = config["emotion_annotation"]
     # Pass the log file path to the server via app.config

@@ -19,6 +19,7 @@ from y_web.src.data_access.posts import (  # noqa: F401
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
+    get_report_count,
     get_topics,
     get_unanswered_mentions,
     get_user_recent_posts,

@@ -76,6 +76,7 @@ from y_web.src.models import (
     Post_Sentiment,
     Post_topics,
     Post_Toxicity,
+    Reported,
     Reactions,
     Rounds,
     User_mgmt,
@@ -114,6 +115,13 @@ def _forum_chat_owner_user() -> User_mgmt | None:
     return User_mgmt.query.filter_by(
         username=getattr(current_user, "username", "") or ""
     ).first()
+
+
+def _forum_viewer_id() -> int:
+    viewer = User_mgmt.query.filter_by(
+        username=getattr(current_user, "username", "") or ""
+    ).first()
+    return int(viewer.id) if viewer is not None else int(current_user.id)
 
 
 def _forum_chat_followed_agent_ids(owner_user_id: int) -> set[int]:
@@ -913,6 +921,9 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
     else:
         emotions = get_elicited_emotions(comment.id)
         topics = get_topics(comment.id, comment.user_id)
+    viewer_user = User_mgmt.query.filter_by(
+        username=getattr(current_user, "username", "") or ""
+    ).first()
 
     return {
         "post_id": comment.id,
@@ -930,6 +941,11 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         "dislikes": 0,
         "is_liked": False,
         "is_disliked": False,
+        "is_reported": bool(
+            viewer_user
+            and Reported.query.filter_by(to_post=comment.id, from_uid=viewer_user.id).first()
+        ),
+        "report_count": int(Reported.query.filter_by(to_post=comment.id).count()),
         "emotions": emotions,
         "topics": topics,
         "is_moderation_comment": bool(
@@ -957,7 +973,7 @@ def api_feed(exp_id: int):
 
         # Use fetch_feed_page for all feed types to ensure proper pagination
         page_obj = fetch_feed_page(
-            viewer_id=current_user.id,
+            viewer_id=_forum_viewer_id(),
             page=page,
             per_page=per_page,
             feed_user_id=target_user_id,
@@ -983,7 +999,7 @@ def api_feed(exp_id: int):
         )
 
     page_obj = fetch_feed_page(
-        viewer_id=current_user.id,
+        viewer_id=_forum_viewer_id(),
         page=page,
         per_page=per_page,
         feed_type=feed_type,
@@ -1027,7 +1043,7 @@ def api_search(exp_id: int):
         return _json_success([], meta)
 
     page_obj = fetch_feed_page(
-        viewer_id=current_user.id,
+        viewer_id=_forum_viewer_id(),
         page=page,
         per_page=per_page,
         feed_type=feed_type,
@@ -1056,7 +1072,7 @@ def api_search(exp_id: int):
 @login_required
 def api_thread(exp_id: int, post_id: int):
     try:
-        thread = fetch_thread(post_id, viewer_id=current_user.id)
+        thread = fetch_thread(post_id, viewer_id=_forum_viewer_id())
     except ValueError:
         return _json_error("Thread not found.", 404)
     return _json_success(thread)

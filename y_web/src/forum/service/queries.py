@@ -45,6 +45,7 @@ from y_web.src.models import (
     Interests,
     Post,
     Post_topics,
+    Reported,
     Reactions,
     Rounds,
     User_mgmt,
@@ -226,6 +227,36 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
             Post.id.in_(topic_subquery),
         )
     )
+
+
+def _fetch_viewer_report_map(viewer_id: Optional[int], post_ids: List[int]) -> Dict[int, bool]:
+    normalized_ids = [int(pid) for pid in post_ids if pid]
+    if not viewer_id or not normalized_ids:
+        return {}
+    rows = (
+        db.session.query(Reported.to_post)
+        .filter(Reported.from_uid == viewer_id, Reported.to_post.in_(normalized_ids))
+        .distinct()
+        .all()
+    )
+    return {int(row[0]): True for row in rows if row and row[0] is not None}
+
+
+def _fetch_report_count_map(post_ids: List[int]) -> Dict[int, int]:
+    normalized_ids = [int(pid) for pid in post_ids if pid]
+    if not normalized_ids:
+        return {}
+    rows = (
+        db.session.query(Reported.to_post, func.count(Reported.id))
+        .filter(Reported.to_post.in_(normalized_ids))
+        .group_by(Reported.to_post)
+        .all()
+    )
+    return {
+        int(row[0]): int(row[1])
+        for row in rows
+        if row and row[0] is not None and row[1] is not None
+    }
 
 
 def fetch_available_communities() -> List[Dict[str, str]]:
@@ -476,6 +507,8 @@ def _build_comment_payload(
     reaction_map = _fetch_reaction_map(comment_ids)
     share_map = _fetch_share_map(comment_ids)
     viewer_vote_map = _fetch_viewer_vote_map(viewer_id, comment_ids)
+    viewer_report_map = _fetch_viewer_report_map(viewer_id, comment_ids)
+    report_count_map = _fetch_report_count_map(comment_ids)
 
     comments = []
 
@@ -527,6 +560,8 @@ def _build_comment_payload(
                 "is_liked": viewer_vote == "like",
                 "is_disliked": viewer_vote == "dislike",
                 "is_shared": share_count,
+                "is_reported": bool(viewer_report_map.get(comment.id, False)),
+                "report_count": int(report_count_map.get(comment.id, 0)),
                 "emotions": emotions,
                 "topics": topics,
                 "is_moderation_comment": bool(
@@ -545,6 +580,8 @@ def _create_feed_post(
     comment_map: Dict[int, int],
     share_map: Dict[int, int],
     viewer_vote_map: Dict[int, str],
+    viewer_report_map: Dict[int, bool],
+    report_count_map: Dict[int, int],
 ) -> FeedPost:
     author = User_mgmt.query.filter_by(id=post.user_id).first()
     author_username = author.username if author else ""
@@ -649,6 +686,8 @@ def _create_feed_post(
         comments=comments,
         comment_total=comment_count,
         is_moderation_comment=bool(int(getattr(post, "is_moderation_comment", 0) or 0)),
+        is_reported=bool(viewer_report_map.get(post.id, False)),
+        report_count=int(report_count_map.get(post.id, 0)),
     )
 
 
@@ -664,6 +703,8 @@ def _build_feed_posts(posts: Iterable[Any], viewer_id: int) -> List[FeedPost]:
     comment_map = _fetch_comment_map(thread_ids)
     share_map = _fetch_share_map(post_ids)
     viewer_vote_map = _fetch_viewer_vote_map(viewer_id, post_ids)
+    viewer_report_map = _fetch_viewer_report_map(viewer_id, post_ids)
+    report_count_map = _fetch_report_count_map(post_ids)
 
     return [
         _create_feed_post(
@@ -673,6 +714,8 @@ def _build_feed_posts(posts: Iterable[Any], viewer_id: int) -> List[FeedPost]:
             comment_map=comment_map,
             share_map=share_map,
             viewer_vote_map=viewer_vote_map,
+            viewer_report_map=viewer_report_map,
+            report_count_map=report_count_map,
         )
         for post in normalized_posts
     ]
@@ -925,6 +968,8 @@ def _post_with_aggregates(
     reaction_map: Dict[int, Tuple[int, int]],
     share_map: Dict[int, int],
     viewer_vote_map: Dict[int, str],
+    viewer_report_map: Dict[int, bool],
+    report_count_map: Dict[int, int],
 ) -> Dict[str, Any]:
     likes, dislikes = reaction_map.get(post.id, (0, 0))
     viewer_vote = viewer_vote_map.get(post.id)
@@ -1002,6 +1047,8 @@ def _post_with_aggregates(
         "is_liked": viewer_vote == "like",
         "is_disliked": viewer_vote == "dislike",
         "is_shared": share_map.get(post.id, 0),
+        "is_reported": bool(viewer_report_map.get(post.id, False)),
+        "report_count": int(report_count_map.get(post.id, 0)),
         "emotions": get_elicited_emotions(post.id),
         "topics": get_topics(post.id, post.user_id),
     }
@@ -1022,6 +1069,8 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
     reaction_map = _fetch_reaction_map(post_ids)
     share_map = _fetch_share_map(post_ids)
     viewer_vote_map = _fetch_viewer_vote_map(viewer_id, post_ids)
+    viewer_report_map = _fetch_viewer_report_map(viewer_id, post_ids)
+    report_count_map = _fetch_report_count_map(post_ids)
 
     reverse_map: Dict[int, Optional[int]] = {}
     post_children: Dict[int, List[int]] = {}
@@ -1033,6 +1082,8 @@ def fetch_thread(post_id: int, viewer_id: int) -> Dict[str, Any]:
             reaction_map=reaction_map,
             share_map=share_map,
             viewer_vote_map=viewer_vote_map,
+            viewer_report_map=viewer_report_map,
+            report_count_map=report_count_map,
         )
         payload["children"] = []
 

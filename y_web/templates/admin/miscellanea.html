@@ -492,6 +492,83 @@
 
                     </div>
 
+                    <div class="misc-compact-box" id="box-detoxify-model">
+                        <h3>Local Toxicity Model</h3>
+                        <div class="help-block ys-mb-15">
+                            <p>Download the Detoxify model once and keep it available offline for future simulations.</p>
+                        </div>
+                        <div class="box-content">
+                            <form id="detoxify-download-form">
+                                <div class="box-lines">
+                                    <div class="box-line ys-flex-row-border">
+                                        <span class="left ys-col-100">Model</span>
+                                        <span class="right ys-flex-1"><strong>Detoxify</strong> <small class="ys-text-sm-gray">(toxicity annotations)</small></span>
+                                    </div>
+                                    <div class="box-line ys-flex-row-border">
+                                        <span class="left ys-col-100">Status</span>
+                                        <span class="right ys-flex-1">
+                                            <span id="detoxify-status-pill" class="tag {% if detoxify_download_state['status'] == 'ready' %}is-success{% elif detoxify_download_state['status'] == 'running' %}is-info{% elif detoxify_download_state['status'] == 'error' %}is-danger{% else %}is-light{% endif %}">
+                                                {{ detoxify_download_state['status'] | capitalize }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div class="box-line ys-flex-row-border">
+                                        <span class="left ys-col-100">Download Path</span>
+                                        <span class="right ys-flex-1">
+                                            <input
+                                                id="detoxify-download-path"
+                                                type="text"
+                                                name="download_path"
+                                                class="input"
+                                                value="{{ detoxify_model_path }}"
+                                                placeholder="/absolute/path/for/ysocial_models"
+                                                required
+                                            >
+                                        </span>
+                                    </div>
+                                    <div class="box-line ys-flex-row-border">
+                                        <span class="left ys-col-100">Current Model Path</span>
+                                        <span class="right ys-flex-1">
+                                            <small><code id="detoxify-current-path">{{ detoxify_download_state['path'] }}</code></small>
+                                        </span>
+                                    </div>
+                                    <div class="box-line ys-flex-row-pad">
+                                        <span class="left ys-col-100">Progress</span>
+                                        <span class="right ys-flex-1">
+                                            <div class="progress" style="height: 22px; width: 100%;">
+                                                <div
+                                                    id="detoxify-progress-bar"
+                                                    class="progress-bar progress-bar-striped progress_exp"
+                                                    role="progressbar"
+                                                    aria-valuenow="{{ detoxify_download_state['progress'] }}"
+                                                    aria-valuemin="0"
+                                                    aria-valuemax="100"
+                                                    style="width: {{ detoxify_download_state['progress'] }}%;"
+                                                >
+                                                    {{ detoxify_download_state['progress'] }}%
+                                                </div>
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div id="detoxify-status-message" class="ys-text-xs-mt">
+                                    {{ detoxify_download_state['message'] or 'The selected path will be reused automatically by new YSocial simulation processes.' }}
+                                </div>
+                                <div id="detoxify-ready-notice" class="notification is-success is-light ys-mt-15 {% if detoxify_download_state['status'] != 'ready' %}is-hidden{% endif %}">
+                                    Detoxify model ready. New simulations will reuse this local cache automatically.
+                                </div>
+                                <div id="detoxify-error-notice" class="notification is-danger is-light ys-mt-15 {% if detoxify_download_state['status'] != 'error' %}is-hidden{% endif %}">
+                                    {{ detoxify_download_state['message'] if detoxify_download_state['status'] == 'error' else '' }}
+                                </div>
+                                <div class="ys-flex-gap-mt">
+                                    <button id="detoxify-download-button" type="submit" class="button is-solid primary-button ys-flex-input-sm">
+                                        Download Model
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
                     <!-- About System Settings -->
                     <div class="misc-compact-box" id="box-about-system">
                         <h3>About System Settings</h3>
@@ -758,7 +835,10 @@
 <script>
 var YS_DATA_MISCELLANEA = {
     pullId: {{ (active_pulls[0][0] if active_pulls else none) | tojson }},
-    llmBackend: {{ llm_backend["backend"] | tojson }}
+    llmBackend: {{ llm_backend["backend"] | tojson }},
+    detoxifyStartUrl: {{ url_for("experiments.detoxify_download_start") | tojson }},
+    detoxifyStatusUrl: {{ url_for("experiments.detoxify_download_status") | tojson }},
+    detoxifyDownloadState: {{ detoxify_download_state | tojson }}
 };
 </script>
 <script src="{{ url_for('static', filename='assets/js/admin-miscellanea.js') }}"></script>

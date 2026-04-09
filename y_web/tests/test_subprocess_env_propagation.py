@@ -160,6 +160,38 @@ def test_subprocess_env_helper_strips_werkzeug_reloader_state(monkeypatch):
     assert env["Y_SERVER_SUBPROCESS"] == "1"
 
 
+def test_subprocess_env_helper_injects_persistent_model_cache(monkeypatch, tmp_path):
+    """Child processes must inherit a stable shared model cache configuration."""
+    monkeypatch.setenv("YSOCIAL_MODEL_CACHE_DIR", str(tmp_path / "model-cache"))
+
+    from y_web.src.simulation.subprocess_env import build_subprocess_env
+
+    env = build_subprocess_env()
+
+    assert env["YSOCIAL_MODEL_CACHE_DIR"] == str(tmp_path / "model-cache")
+    assert env["HF_HOME"].startswith(env["YSOCIAL_MODEL_CACHE_DIR"])
+    assert env["TRANSFORMERS_CACHE"].startswith(env["HF_HOME"])
+    assert env["HUGGINGFACE_HUB_CACHE"].startswith(env["HF_HOME"])
+    assert env["TORCH_HOME"].startswith(env["YSOCIAL_MODEL_CACHE_DIR"])
+
+
+def test_subprocess_env_helper_uses_persisted_model_cache_setting(monkeypatch, tmp_path):
+    """Saved model-cache settings must become the default for new subprocesses."""
+    monkeypatch.delenv("YSOCIAL_MODEL_CACHE_DIR", raising=False)
+
+    import y_web.src.system.model_cache as model_cache
+    from y_web.src.simulation.subprocess_env import build_subprocess_env
+
+    settings_path = tmp_path / "model_cache_settings.json"
+    monkeypatch.setattr(model_cache, "_settings_path", lambda: settings_path)
+
+    saved_root = model_cache.save_model_cache_path(tmp_path / "persisted-cache")
+    env = build_subprocess_env()
+
+    assert env["YSOCIAL_MODEL_CACHE_DIR"] == str(saved_root)
+    assert env["HF_HOME"].startswith(str(saved_root))
+
+
 def test_simulation_server_uses_sanitized_subprocess_env():
     """simulation/server.py must sanitize inherited Flask/Werkzeug env vars."""
     import y_web.src.simulation.server as mod

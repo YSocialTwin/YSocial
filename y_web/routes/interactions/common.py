@@ -6,7 +6,7 @@ These routes are shared across both microblogging and forum platforms.
 
 import uuid
 
-from flask import flash, redirect, request, url_for
+from flask import flash, jsonify, redirect, request, url_for
 from flask_login import current_user, login_required
 
 from y_web import db
@@ -252,15 +252,20 @@ def react(exp_id):
 @login_required
 def report_content(exp_id):
     """Report a post or comment using the shared reported table."""
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     post_id = request.args.get("post_id")
     report_type = str(request.args.get("type") or "offensive").strip().lower()
 
     if report_type not in {"offensive", "toxic"}:
+        if is_ajax:
+            return jsonify({"message": "Unsupported report type.", "status": 400}), 400
         flash("Unsupported report type.", "error")
         return redirect(request.referrer or url_for("main.index"))
 
     exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
     if not exp_user:
+        if is_ajax:
+            return jsonify({"message": "User not found in experiment", "status": 404}), 404
         flash("User not found in experiment", "error")
         return redirect(request.referrer or url_for("main.index"))
 
@@ -272,7 +277,27 @@ def report_content(exp_id):
     target_post = Post.query.filter_by(id=post_id_converted).first()
     current_round = Rounds.query.order_by(Rounds.id.desc()).first()
     if target_post is None or current_round is None:
+        if is_ajax:
+            return jsonify({"message": "Content not found.", "status": 404}), 404
         flash("Content not found.", "error")
+        return redirect(request.referrer or url_for("main.index"))
+
+    existing_report = Reported.query.filter_by(
+        to_post=target_post.id, from_uid=exp_user.id
+    ).first()
+    current_count = Reported.query.filter_by(to_post=target_post.id).count()
+    if existing_report is not None:
+        if is_ajax:
+            return jsonify(
+                {
+                    "message": "Content already reported.",
+                    "status": 200,
+                    "post_id": target_post.id,
+                    "report_count": current_count,
+                    "already_reported": True,
+                }
+            )
+        flash("Content already reported.", "info")
         return redirect(request.referrer or url_for("main.index"))
 
     report_kwargs = {
@@ -288,6 +313,17 @@ def report_content(exp_id):
     report = Reported(**report_kwargs)
     db.session.add(report)
     db.session.commit()
+    new_count = Reported.query.filter_by(to_post=target_post.id).count()
+    if is_ajax:
+        return jsonify(
+            {
+                "message": "Content reported.",
+                "status": 200,
+                "post_id": target_post.id,
+                "report_count": new_count,
+                "already_reported": False,
+            }
+        )
     flash("Content reported.", "success")
     return redirect(request.referrer or url_for("main.index"))
 

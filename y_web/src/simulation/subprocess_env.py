@@ -5,6 +5,8 @@ Helpers for building subprocess environments for simulation runtimes.
 import os
 from typing import Dict, Optional
 
+from y_web.src.system.model_cache import get_model_cache_env
+
 _STRIP_ENV_KEYS = (
     "WERKZEUG_RUN_MAIN",
     "WERKZEUG_SERVER_FD",
@@ -12,7 +14,6 @@ _STRIP_ENV_KEYS = (
     "WERKZEUG_DEBUG_TRAP",
     "FLASK_RUN_FROM_CLI",
 )
-
 
 def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
     """
@@ -27,6 +28,8 @@ def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, st
     env = os.environ.copy()
     for key in _STRIP_ENV_KEYS:
         env.pop(key, None)
+
+    env.update(get_model_cache_env())
 
     if extra:
         env.update(extra)

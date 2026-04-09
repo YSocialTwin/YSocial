@@ -91,6 +91,8 @@ class FeedPost:
     comments: List[Dict[str, Any]]
     comment_total: int
     is_moderation_comment: bool = False
+    is_reported: bool = False
+    report_count: int = 0
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -124,6 +126,8 @@ class FeedPost:
             "emotions": self.emotions,
             "topics": self.topics,
             "is_moderation_comment": bool(self.is_moderation_comment),
+            "is_reported": bool(self.is_reported),
+            "report_count": int(self.report_count),
         }
 
 

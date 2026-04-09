@@ -19,6 +19,7 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
+    get_report_count,
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
@@ -662,8 +663,12 @@ def get_thread(exp_id, post_id):
         ).first()
         is None,
         "is_shared": len(Post.query.filter_by(shared_from=posts[0].id).all()),
+        "report_count": get_report_count(posts[0].id),
         "emotions": get_elicited_emotions(posts[0].id),
         "topics": get_topics(posts[0].id, posts[0].user_id),
+        "is_moderation_comment": int(
+            getattr(posts[0], "is_moderation_comment", 0) or 0
+        ),
     }
 
     reverse_map = {posts[0].id: None}
@@ -731,8 +736,12 @@ def get_thread(exp_id, post_id):
             ).first()
             is None,
             "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+            "report_count": get_report_count(post.id),
             "emotions": get_elicited_emotions(post.id),
             "topics": get_topics(post.id, post.user_id),
+            "is_moderation_comment": int(
+                getattr(post, "is_moderation_comment", 0) or 0
+            ),
         }
 
         parent = post.comment_to

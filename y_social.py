@@ -1,8 +1,6 @@
 import os
 from argparse import ArgumentParser
 
-from y_web import create_app, db
-
 
 def start_app(
     db_type="sqlite",
@@ -17,6 +15,9 @@ def start_app(
 
     import nltk
     import requests
+
+    os.environ["YSOCIAL_REGISTER_ATEXIT_CLEANUP"] = "1"
+    from y_web import create_app, db
 
     # Download NLTK data only when not running from PyInstaller bundle
     # In PyInstaller mode, NLTK data is bundled and the runtime hook sets up the path

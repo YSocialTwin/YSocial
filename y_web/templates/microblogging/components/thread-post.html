@@ -1,9 +1,8 @@
-<div id="feed-post-{{ thread['post_id'] }}" class="card is-post" style="margin-bottom: 0.75rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);">
+<div id="feed-post-{{ thread['post_id'] }}" class="card is-post{% if thread.get('is_moderation_comment') %} moderation-thread-shellless{% endif %}" style="margin-bottom: 0.75rem; border-radius: 8px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);">
     <div class="comments-wrap">
  <div class="comments-body has-slimscroll ys-p-1rem">
 
-            <div class="media is-comment{% if thread.get('is_moderation_comment') %} moderation-comment{% endif %}"
-                 style="{% if thread.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
+            <div class="media is-comment{% if thread.get('is_moderation_comment') %} moderation-comment{% endif %}">
 
                 <div class="media-left">
                     <div class="image">
@@ -23,34 +22,68 @@
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
                     <span class="time">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>
+                    <div class="post-content-section is-threaded">
                     <p>
                         {{ thread["post"]|safe }}
                     </p>
+                    </div>
 
+                    {% if not thread.get('is_moderation_comment') %}
+ <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(thread['emotions']) > 0 %}
- <p class="ys-text-08rem-mr">Emotions</p>
-                            {% for em in thread['emotions'] %}
- <a class="mdi {{ em[1] }} ys-mr-half" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+ <span class="post-meta-label">Emotions</span>
+                            {% for em in thread['emotions'][:3] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
                             {% endfor %}
+                            {% if len(thread['emotions']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="thread-root-emotions-extra-{{ thread['post_id'] }}">
+                                {% for em in thread['emotions'][3:] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="thread-root-emotions-extra-{{ thread['post_id'] }}" data-label-more="+{{ len(thread['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(thread['emotions']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(thread['topics']) > 0 %}
- <p class="ys-text-08rem-mr">Topics</p>
-                            {% for tp in thread['topics'] %}
+ <span class="post-meta-label">Topics</span>
+                            {% for tp in thread['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
                                 {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
                                 {% endif %}
                              {% endfor %}
+                            {% if len(thread['topics']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="thread-root-topics-extra-{{ thread['post_id'] }}">
+                                {% for tp in thread['topics'][3:] %}
+                                    {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
+                                    {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
+                                    {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
+                                    {% endif %}
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="thread-root-topics-extra-{{ thread['post_id'] }}" data-label-more="+{{ len(thread['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(thread['topics']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
+                    </div>
+                    <div class="post-action-section is-threaded">
                     <div class="controls">
 
                         <div class="like-count" id="like-count-{{ thread['post_id'] }}">
@@ -61,78 +94,80 @@
  <i data-feather="thumbs-down" {% if not bool(thread["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
  <span {% if not bool(thread["is_disliked"]) %}class="ys-text-light-blue"{% endif %}>{{ thread["dislikes"] }}</span>
                 </div>
+                <div class="share-count" id="share-count-{{ thread['post_id'] }}">
+                    <a class="share-button" id="s{{ thread['post_id'] }}">
+ <i data-feather="repeat"></i>
+ <span>{{ thread["is_shared"] }}</span>
+ </a>
+                </div>
+                {% if thread['author_id'] != logged_id %}
+                <a
+                    href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
+                    class="report-count report-fab"
+                    title="Report this post"
+                    aria-label="Report this post"
+                >
+                    <i data-feather="flag"></i>
+                    <span>{{ thread.get("report_count", 0) }}</span>
+                </a>
+                {% endif %}
 
-            </div>
+                    </div>
+                    </div>
             {% if len(thread['children'])>0 %}
- <div class="reply text-start">
-                <a class="child_sub" val="{{ thread['post_id'] }}">Less</a>
-            </div>
+ <div class="post-thread-tools">
+                <button type="button" class="child_sub thread-toggle-button" val="{{ thread['post_id'] }}">Less</button>
+            {% else %}
+ <div class="post-thread-tools post-thread-tools--reply-only">
             {% endif %}
- <div class="reply text-end">
-                <a id='{{ thread["post_id"] }}' onClick="editLink(this.id)">Reply</a>
+                <button type="button" class="reply-toggle-button" id='{{ thread["post_id"] }}' onClick="return editLink(this.id)">
+ <i data-feather="corner-down-left" class="ys-icon-xs"></i>
+ <span>Reply</span>
+ </button>
             </div>
             <p id="message-{{ thread['post_id'] }}"></p>
- <form class="comment_form ys-mt-1rem" id="comment_form-{{ thread['post_id'] }}">
+ <form class="comment_form reply-form-shell ys-mt-1rem" id="comment_form-{{ thread['post_id'] }}">
  <textarea rows="3" class="reply_comment ys-textarea" id="comment-{{ thread['post_id'] }}">@{{ thread["author"] }} </textarea>
             <button
                     id="add_comment"
                     type="button"
-                    class="button is-solid accent-button is-fullwidth"
+                    class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                     val="{{ thread['post_id'] }}"
- class="ys-btn-rounded"
             >
             Comment
             </button>
             </form>
+                    {% endif %}
         </div>
 
         <div class="media-right">
-
+            {% if thread['author_id'] == logged_id %}
             <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">
-                <!--<div>
+                <div>
                     <div class="button">
                         <i data-feather="more-vertical"></i>
                     </div>
-                </div> -->
+                </div>
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-content">
 
                         {% if thread['author_id'] == logged_id %}
                         <a class="dropdown-item" id="delete_post" val="{{ thread['post_id'] }}">
                             <div class="media">
-                                <i data-feather="bell"></i>
+                                <i data-feather="trash-2"></i>
                                 <div class="media-content">
                                     <h3 val="{{ thread['post_id'] }}">Delete</h3>
-                                    <small></small>
+                                    <small>Remove this post</small>
                                 </div>
                             </div>
                         </a>
                      <!--   <hr class="dropdown-divider"/> -->
                         {% endif %}
 
-                        {% if thread['author_id'] != logged_id %}
-                        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive" class="dropdown-item">
-                            <div class="media">
-                                <i data-feather="flag"></i>
-                                <div class="media-content">
-                                    <h3>Report</h3>
-                                    <small>Report this comment.</small>
-                                </div>
-                            </div>
-                        </a>
-                        {% endif %}
-                      <!--  <a href="#" class="dropdown-item">
-                            <div class="media">
-                                <i data-feather="flag"></i>
-                                <div class="media-content">
-                                    <h3>Report</h3>
-                                    <small>Report this comment.</small>
-                                </div>
-                            </div>
-                        </a> -->
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
 
     </div>

@@ -94,6 +94,11 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
+from y_web.src.system.model_cache import (
+    get_model_cache_root,
+    refresh_detoxify_download_state,
+    start_detoxify_download,
+)
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
@@ -129,6 +134,42 @@ from ._helpers import (
     _normalize_forum_embedding_service,
     _read_forum_feed_health,
 )
+
+
+def _sync_detoxify_download_notification(admin_user, state):
+    notification_id = state.get("notification_id")
+    if not admin_user or not notification_id:
+        return
+
+    notification = DownloadNotification.query.filter_by(
+        id=notification_id, user_id=admin_user.id
+    ).first()
+    if not notification:
+        return
+
+    status = str(state.get("status") or "processing")
+    if status == "running":
+        notification.status = "processing"
+        notification.message = "Detoxify model download in progress."
+        notification.error_message = None
+        notification.is_read = False
+    elif status == "ready":
+        notification.status = "ready"
+        notification.message = (
+            f"Detoxify model is ready at {state.get('path')}. "
+            "Future simulations will reuse this local cache."
+        )[:500]
+        notification.error_message = None
+        notification.is_read = False
+    elif status == "error":
+        notification.status = "failed"
+        notification.message = "Detoxify model download failed."
+        notification.error_message = str(state.get("message") or "")[:500] or None
+        notification.is_read = False
+    else:
+        return
+
+    db.session.commit()
 
 
 @experiments.route("/admin/experiments_data")
@@ -776,6 +817,7 @@ def update_experiment_config(uid):
         with open(cfg_path, "r") as f:
             config = json.load(f)
 
+        config["toxicity_annotation"] = toxicity_enabled
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
@@ -1660,6 +1702,7 @@ def miscellanea():
     # Get active Ollama pulls
     ollama_pulls = Ollama_Pull.query.all()
     ollama_pulls = [(pull.model_name, float(pull.status)) for pull in ollama_pulls]
+    detoxify_download_state = refresh_detoxify_download_state()
 
     return render_template(
         "admin/miscellanea.html",
@@ -1668,8 +1711,67 @@ def miscellanea():
         llm_backend=llm_backend,
         models=models,
         active_pulls=ollama_pulls,
+        detoxify_model_path=str(get_model_cache_root()),
+        detoxify_download_state=detoxify_download_state,
         len=len,
     )
+
+
+@experiments.route("/admin/detoxify_download/status", methods=["GET"])
+@login_required
+def detoxify_download_status():
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        return jsonify({"error": "Access denied"}), 403
+
+    check_privileges(current_user.username)
+    state = refresh_detoxify_download_state()
+    _sync_detoxify_download_notification(user, state)
+    return jsonify(state)
+
+
+@experiments.route("/admin/detoxify_download/start", methods=["POST"])
+@login_required
+def detoxify_download_start():
+    user = Admin_users.query.filter_by(username=current_user.username).first()
+    if user.role != "admin":
+        return jsonify({"error": "Access denied"}), 403
+
+    check_privileges(current_user.username)
+
+    payload = request.get_json(silent=True) or request.form
+    target_dir = str(payload.get("download_path", "")).strip()
+    if not target_dir:
+        return jsonify({"error": "Download path is required."}), 400
+
+    notification = DownloadNotification(
+        user_id=user.id,
+        title="Detoxify Model Download",
+        message="Detoxify model download in progress.",
+        status="processing",
+        is_read=False,
+    )
+    db.session.add(notification)
+    db.session.commit()
+
+    try:
+        state = start_detoxify_download(target_dir, notification_id=notification.id)
+    except OSError as exc:
+        notification.status = "failed"
+        notification.message = "Detoxify model download failed."
+        notification.error_message = str(exc)[:500]
+        db.session.commit()
+        return (
+            jsonify(
+                {
+                    "error": f"Unable to start Detoxify download: {exc}",
+                }
+            ),
+            500,
+        )
+
+    _sync_detoxify_download_notification(user, state)
+    return jsonify(state)
 
 
 @experiments.route("/admin/languages_data")

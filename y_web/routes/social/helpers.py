@@ -24,6 +24,7 @@ from y_web.src.content.text_utils import process_reddit_post, strip_tags
 from y_web.src.data_access import (
     augment_text,
     get_elicited_emotions,
+    get_report_count,
     get_topics,
 )
 from y_web.src.experiment.context import get_current_experiment_id
@@ -225,8 +226,12 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     ).first()
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": topics,
+                    "is_moderation_comment": int(
+                        getattr(c, "is_moderation_comment", 0) or 0
+                    ),
                 }
             )
 
@@ -354,10 +359,14 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 ).first()
                 is None,
                 "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": topics,
+                "is_moderation_comment": int(
+                    getattr(post, "is_moderation_comment", 0) or 0
+                ),
                 "primary_community": primary_community,
             }
         )

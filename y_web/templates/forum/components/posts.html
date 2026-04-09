@@ -173,30 +173,53 @@
  <i data-feather="message-square" class="ys-icon-xs"></i>
                 <span><span data-role="comment-count">{{ item.get("t_comments", 0) }}</span> Comments</span>
             </a>
+            {% if item['author_id'] != logged_id %}
+            <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+               class="forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"
+               style="background: none; border: none; cursor: pointer; padding: 6px 8px; border-radius: 4px; color: #878a8c; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+ <i data-feather="flag" class="ys-icon-xs"></i>
+                <span>Report</span>
+                <span>{{ item.get("report_count", 0) }}</span>
+            </a>
+            {% endif %}
             
-            <!-- Topics and emotions (moved to right side, smaller) -->
-            <div style="margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 10px;">
+            {% if len(item['emotions']) > 0 or len(item['topics']) > 0 %}
+            <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
                 {% if len(item['emotions']) > 0 %}
-                <div style="display: flex; align-items: center; gap: 2px;">
+                <div class="forum-meta-group">
+                    <span class="forum-meta-label">Emotions</span>
                     {% for em in item['emotions'] %}
-                    <a class="mdi {{ em[1] }}" title="{{ em[0] }}" style="font-size: 0.7rem; color: #878a8c;" href="/{{exp_id}}/emotion/{{ em[2] }}/1" onclick="event.stopPropagation()"></a>
+                    <a class="forum-meta-chip forum-emotion-chip"
+                       href="/{{exp_id}}/emotion/{{ em[2] }}/1"
+                       onclick="event.stopPropagation()">
+                        <i class="mdi {{ em[1] }}"></i>
+                        <span>{{ em[0] }}</span>
+                    </a>
                     {% endfor %}
                 </div>
                 {% endif %}
                 {% if len(item['topics']) > 0 %}
-                <div style="display: flex; align-items: center; gap: 2px; flex-wrap: wrap;">
+                <div class="forum-meta-group">
+                    <span class="forum-meta-label">Topics</span>
                     {% for tp in item['topics'] %}
                         {% if tp[2] == 'positive' %}
-                            <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #0bc350; font-size: 0.6rem; border: #0bc350 1px solid; padding: 1px 3px; border-radius: 8px; text-decoration: none;" onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-positive"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
                         {% elif tp[2] == 'negative' %}
-                            <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #e60000; font-size: 0.6rem; border: #e60000 1px solid; padding: 1px 3px; border-radius: 8px; text-decoration: none;" onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-negative"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
                         {% else %}
-                            <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" style="color: #00b2ff; font-size: 0.6rem; border: #00b2ff 1px solid; padding: 1px 3px; border-radius: 8px; text-decoration: none;" onclick="event.stopPropagation()">{{ tp[1] }}</a>
+                        <a href="/{{exp_id}}/interest/{{ tp[0] }}/1"
+                           class="forum-meta-chip forum-topic-chip is-neutral"
+                           onclick="event.stopPropagation()">{{ tp[1] }}</a>
                         {% endif %}
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
+            {% endif %}
         </div>
         <!-- /Post footer -->
     </div>
@@ -225,25 +248,51 @@
  <div class="post-text ys-pre-wrap-lh">
                         {{ item["post"]|safe }}
                     </div>
+                    <div class="controls">
+                        <div class="like-count" id="like-count-{{ item['post_id'] }}">
+ <i data-feather="thumbs-up" {% if not bool(item["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(item["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ item["likes"] }}</span>
+                        </div>
+                        <div class="dislike-count" id="dislike-count-{{ item['post_id'] }}">
+ <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
+ <span {% if not bool(item["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ item["dislikes"] }}</span>
+                        </div>
+                        <div class="share-count" id="share-count-{{ item['post_id'] }}">
+                            <i data-feather="repeat"></i>
+                            <span>{{ item["is_shared"] }}</span>
+                        </div>
+                        {% if item['author_id'] != logged_id %}
+                        <a href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+                           class="report-count forum-report-button{% if item.get('is_reported') %} is-active{% endif %}"
+                           title="Report this post"
+                           aria-label="Report this post">
+                            <i data-feather="flag"></i>
+                            <span>{{ item.get("report_count", 0) }}</span>
+                        </a>
+                        {% endif %}
+                    </div>
  <div class="card-footer d-flex">
- <div class="likers-text d-inline">
+ <div class="forum-meta-group">
                             {% if len(item['emotions']) > 0 %}
-                            <p>Emotions</p>
+                            <span class="forum-meta-label">Emotions</span>
                             {% for em in item['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+                            <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+                                <i class="mdi {{ em[1] }}"></i>
+                                <span>{{ em[0] }}</span>
+                            </a>
                             {% endfor %}
                             {% endif %}
                         </div>
- <div class="likers-text d-inline">
+ <div class="forum-meta-group">
                             {% if len(item['topics']) > 0 %}
-                            <p>Topics</p>
+                            <span class="forum-meta-label">Topics</span>
                             {% for tp in item['topics'] %}
                                 {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-positive">{{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-negative">{{ tp[1] }}</a>
                                 {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-neutral">{{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}
@@ -293,24 +342,27 @@
                     </div>
                     <!-- Actions -->
  <div class="card-footer d-flex">
- <div class="likers-text d-inline">
+ <div class="forum-meta-group">
                             {% if len(cm['emotions']) > 0 %}
-                            <p>Emotions</p>
+                            <span class="forum-meta-label">Emotions</span>
                             {% for em in cm['emotions'] %}
-                            <a class="mdi {{ em[1] }}" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+                            <a class="forum-meta-chip forum-emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+                                <i class="mdi {{ em[1] }}"></i>
+                                <span>{{ em[0] }}</span>
+                            </a>
                             {% endfor %}
                             {% endif %}
                         </div>
- <div class="likers-text d-inline">
+ <div class="forum-meta-group">
                             {% if len(cm['topics']) > 0 %}
-                            <p>Topics</p>
+                            <span class="forum-meta-label">Topics</span>
                             {% for tp in cm['topics'] %}
                                 {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-positive">{{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-negative">{{ tp[1] }}</a>
                                 {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="forum-meta-chip forum-topic-chip is-neutral">{{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
                             {% endif %}
@@ -331,9 +383,13 @@
                             <span>{{ cm["is_shared"] }}</span>
                         </div>
                         {% if cm['author_id'] != logged_id %}
-                        <div class="share-count">
-                            <a href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive">Report</a>
-                        </div>
+                        <a href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive"
+                           class="report-count forum-report-button{% if cm.get('is_reported') %} is-active{% endif %}"
+                           title="Report this comment"
+                           aria-label="Report this comment">
+                            <i data-feather="flag"></i>
+                            <span>{{ cm.get("report_count", 0) }}</span>
+                        </a>
                         {% endif %}
 
  <!-- <div class="reply text-end">

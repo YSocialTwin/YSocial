@@ -1614,6 +1614,7 @@ def generate_standard_config(
     host,
     port,
     perspective_api,
+    toxicity_annotation,
     sentiment_annotation,
     emotion_annotation,
     db_uri,
@@ -1642,6 +1643,7 @@ def generate_standard_config(
         "perspective_api": (
             perspective_api if perspective_api and len(perspective_api) > 0 else None
         ),
+        "toxicity_annotation": toxicity_annotation,
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "opinion_dynamics_enabled": opinion_dynamics_enabled,
@@ -1667,6 +1669,7 @@ def generate_hpc_config(
     redis_password,
     redis_sliding_window_days,
     perspective_api,
+    toxicity_annotation,
     sentiment_annotation,
     emotion_annotation,
     topics,
@@ -1757,6 +1760,7 @@ def generate_hpc_config(
         },
         "platform_type": platform_type,
         "perspective_api": perspective_api,
+        "toxicity_annotation": toxicity_annotation,
         "sentiment_annotation": sentiment_annotation,
         "emotion_annotation": emotion_annotation,
         "opinion_dynamics_enabled": opinion_dynamics_enabled,
@@ -1896,8 +1900,6 @@ def create_experiment():
 
     if platform_type == "forum":
         opinion_dynamics_enabled = False
-        toxicity_annotation = False
-        perspective_api = None
         sentiment_annotation = False
         emotion_annotation = False
 
@@ -2068,6 +2070,7 @@ def create_experiment():
                 if perspective_api and len(perspective_api) > 0
                 else None
             ),
+            toxicity_annotation=toxicity_annotation,
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
             opinion_dynamics_enabled=opinion_dynamics_enabled,
@@ -2088,6 +2091,7 @@ def create_experiment():
                 if perspective_api and len(perspective_api) > 0
                 else None
             ),
+            toxicity_annotation=toxicity_annotation,
             sentiment_annotation=sentiment_annotation,
             emotion_annotation=emotion_annotation,
             opinion_dynamics_enabled=opinion_dynamics_enabled,

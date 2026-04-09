@@ -1,7 +1,7 @@
 {% for index, item in enumerate(items) %}
-<div id="feed-post-{{ item['post_id'] }}" class="card is-post" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease;">
+<div id="feed-post-{{ item['post_id'] }}" class="card is-post{% if item.get('is_moderation_comment') %} moderation-comment-card{% endif %}" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease;">
 
- <div class="content-wrap ys-p-1rem" id="post-{{ item['post_id'] }}">
+ <div class="content-wrap ys-p-1rem{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}" id="post-{{ item['post_id'] }}">
         <!-- Post header -->
         <div class="card-heading">
             <!-- User meta -->
@@ -72,7 +72,7 @@
         <!-- /Post header -->
 
         <!-- Post body -->
-        <div class="card-body">
+        <div class="card-body post-content-section">
             <!-- Post body text -->
             <div class="post-text">
                 {% if item["shared_from"] != -1 and (item["shared_from"][1] != 'Unknown' and item["shared_from"][0] != -1) %}
@@ -109,33 +109,60 @@
         <!-- /Post body -->
 
         <!-- Post footer -->
-        <div class="card-footer" style="display: flex; flex-wrap: wrap; align-items: center; padding: 1rem;">
-            <!-- Followers avatars -->
-
-            <!-- Followers text -->
- <div class="likers-text ys-flex-wrap-mr-1">
+        {% if not item.get('is_moderation_comment') %}
+        <div class="post-annotation-section">
+ <div class="post-meta-group">
                 {% if len(item['emotions']) > 0 %}
- <p class="ys-mr-half">Emotions</p>
-                {% for em in item['emotions'] %}
- <a class="mdi {{ em[1] }} ys-text-08rem-mr" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+ <span class="post-meta-label">Emotions</span>
+                {% for em in item['emotions'][:3] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
                 {% endfor %}
+                {% if len(item['emotions']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="post-emotions-extra-{{ item['post_id'] }}">
+                    {% for em in item['emotions'][3:] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
+                    {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="post-emotions-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['emotions']) - 3 }} more</button>
+                {% endif %}
                 {% endif %}
             </div>
- <div class="likers-text ys-flex-wrap-mr-1">
+ <div class="post-meta-group">
                 {% if len(item['topics']) > 0 %}
- <p class="ys-mr-half">Topics</p>
-                {% for tp in item['topics'] %}
+ <span class="post-meta-label">Topics</span>
+                {% for tp in item['topics'][:3] %}
                     {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
                     {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
                     {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
                     {% endif %}
                 {% endfor %}
+                {% if len(item['topics']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="post-topics-extra-{{ item['post_id'] }}">
+                    {% for tp in item['topics'][3:] %}
+                        {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
+                        {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
+                        {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
+                        {% endif %}
+                    {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="post-topics-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['topics']) - 3 }} more</button>
+                {% endif %}
                 {% endif %}
             </div>
-            <!-- Post statistics -->
+        </div>
+        <div class="post-action-section">
             <div class="social-count" style="display: flex; flex-wrap: wrap; margin-left: auto; align-items: center;">
 
  <div class="likes-count ys-mr-3" id="share-count-{{ item['post_id'] }}">
@@ -148,17 +175,17 @@
 
  <div class="likes-count ys-mr-3" id="likes-count-{{ item['post_id'] }}">
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
- <a class="like-button ys-bg-blue-light" id="l{{ item['post_id']}}" {% if not bool(item["is_liked"]) %} {% endif %}>
- <i data-feather="thumbs-up" {% if not bool(item['is_liked']) %}class="ys-stroke-white"{% endif %}></i>
- <span id="span-{{item['post_id']}}" {% if not bool(item['is_liked']) %}class="text-white"{% endif %}>{{ item['likes'] }}</span> </a>
+ <a class="like-button" id="l{{ item['post_id']}}">
+ <i data-feather="thumbs-up"></i>
+ <span id="span-{{item['post_id']}}">{{ item['likes'] }}</span> </a>
                     </div>
                 </div>
 
  <div class="likes-count ys-mr-3" id="dislikes-count-{{ item['post_id'] }}">
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
- <a class="dislike-button ys-bg-blue-light" id="d{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %} {% endif %}>
- <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %} class="ys-stroke-white" {% endif %}></i>
- <span id="span-{{ item['post_id'] }}" {% if not bool(item["is_disliked"]) %}class="text-white" {% endif %}>{{ item["dislikes"] }}</span>
+ <a class="dislike-button" id="d{{ item['post_id'] }}">
+ <i data-feather="thumbs-down"></i>
+ <span id="span-{{ item['post_id'] }}">{{ item["dislikes"] }}</span>
                         </a>
                     </div>
                 </div>
@@ -173,9 +200,22 @@
                     <a href="javascript:void(0);" class="small-fab"><i data-feather="message-circle"></i>
                         <span>{{  item["t_comments"]  }}</span></a>
                 </div>
-
+                {% if item['author_id'] != user_id %}
+                <div class="fab-wrapper">
+                    <a
+                        href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+                        class="small-fab report-fab"
+                        title="Report this post"
+                        aria-label="Report this post"
+                    >
+                        <i data-feather="flag"></i>
+                        <span>{{ item.get("report_count", 0) }}</span>
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
+        {% endif %}
         <!-- /Post footer -->
     </div>
     <!-- /Main wrap -->
@@ -195,62 +235,121 @@
         <!-- Comments body -->
         <div class="comments-body has-slimscroll">
             <!-- Comment -->
-            <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}"
-                 style="{% if item.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
+            <div class="original-post{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}">
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ item['author_id'] }}/recent/1">{{ item["author"] }}</a><br/>
                     <span class="time">Day {{ item["day"] }} - {{item["hour"]}}:00</span>
-                    <div class="post-text">
+                    <div class="post-text post-content-section is-threaded">
                         <p> {{ item["post"]|safe }}</p>
                     </div>
+                    {% if not item.get('is_moderation_comment') %}
+                    <div class="post-action-section is-threaded">
+                    <div class="controls">
+                        <div class="like-count" id="like-count-{{ item['post_id'] }}">
+                            <i data-feather="thumbs-up" {% if not bool(item["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
+                            <span {% if not bool(item["is_liked"]) %}class="ys-text-light-blue"{% endif %}>{{ item["likes"] }}</span>
+                        </div>
+                        <div class="dislike-count" id="dislike-count-{{ item['post_id'] }}">
+                            <i data-feather="thumbs-down" {% if not bool(item["is_disliked"]) %}class="ys-stroke-blue"{% endif %}></i>
+                            <span {% if not bool(item["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ item["dislikes"] }}</span>
+                        </div>
+                        <div class="share-count" id="share-count-{{ item['post_id'] }}">
+                            <i data-feather="repeat"></i>
+                            <span>{{ item["is_shared"] }}</span>
+                        </div>
+                        {% if item['author_id'] != logged_id %}
+                        <a
+                            href="/{{exp_id}}/report_content?post_id={{ item['post_id'] }}&type=offensive"
+                            class="report-count"
+                            title="Report this post"
+                            aria-label="Report this post"
+                        >
+                            <i data-feather="flag"></i>
+                            <span>{{ item.get("report_count", 0) }}</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                    </div>
+ <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(item['emotions']) > 0 %}
- <p class="ys-mr-half">Emotions</p>
-                            {% for em in item['emotions'] %}
- <a class="mdi {{ em[1] }} ys-mr-half" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+ <span class="post-meta-label">Emotions</span>
+                            {% for em in item['emotions'][:3] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
                             {% endfor %}
+                            {% if len(item['emotions']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="thread-emotions-extra-{{ item['post_id'] }}">
+                                {% for em in item['emotions'][3:] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="thread-emotions-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['emotions']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(item['topics']) > 0 %}
- <p class="ys-mr-half">Topics</p>
-                            {% for tp in item['topics'] %}
+ <span class="post-meta-label">Topics</span>
+                            {% for tp in item['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
                                 {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
+                            {% if len(item['topics']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="thread-topics-extra-{{ item['post_id'] }}">
+                                {% for tp in item['topics'][3:] %}
+                                    {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
+                                    {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
+                                    {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
+                                    {% endif %}
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="thread-topics-extra-{{ item['post_id'] }}" data-label-more="+{{ len(item['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(item['topics']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
+                    </div>
 
- <div class="reply text-end">
-                        <a id='{{ item["post_id"] }}' onClick="editLink(this.id)">Reply</a>
+ <div class="post-thread-tools">
+                        <button type="button" class="reply-toggle-button" id='{{ item["post_id"] }}' onClick="return editLink(this.id)">
+ <i data-feather="corner-down-left" class="ys-icon-xs"></i>
+ <span>Reply</span>
+ </button>
                     </div>
                     <p id="message-{{ item['post_id']}}"></p>
- <form class="comment_form ys-mt-1rem" id="comment_form-{{item['post_id']}}">
+ <form class="comment_form reply-form-shell ys-mt-1rem" id="comment_form-{{item['post_id']}}">
  <textarea rows="3" class="reply_comment ys-textarea" id="comment-{{ item['post_id'] }}">@{{ item["author"]}} </textarea>
                     <button
                             id="add_comment"
                             type="button"
-                            class="button is-solid accent-button is-fullwidth"
+                            class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                             val="{{ item['post_id'] }}"
- class="ys-btn-rounded"
                     >
                     Comment
                     </button>
                     </form>
+                    {% endif %}
 
                 </div>
                 <hr>
             </div>
             {% for id1, cm in enumerate(item["comments"]) %}
-            <div class="media is-comment{% if cm.get('is_moderation_comment') %} moderation-comment{% endif %}"
-                 style="{% if cm.get('is_moderation_comment') %}background: #fff4d6; border-left: 4px solid #f0b429; padding: 0.75rem; border-radius: 10px;{% endif %}">
+            <div class="media is-comment{% if cm.get('is_moderation_comment') %} moderation-comment{% endif %}">
                 <!-- User image -->
                 <div class="media-left">
                     <div class="image">
@@ -270,34 +369,68 @@
                 <div class="media-content">
                     <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
                     <span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>
+                    <div class="post-content-section is-threaded">
                     <p>
                         {{ cm["post"]|safe }}
                     </p>
+                    </div>
+                    {% if not cm.get('is_moderation_comment') %}
                     <!-- Actions -->
+ <div class="post-annotation-section is-threaded">
  <div class="card-footer ys-flex-wrap-py">
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(cm['emotions']) > 0 %}
- <p class="ys-mr-half">Emotions</p>
-                            {% for em in cm['emotions'] %}
- <a class="mdi {{ em[1] }} ys-mr-half" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1"></a>
+ <span class="post-meta-label">Emotions</span>
+                            {% for em in cm['emotions'][:3] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
                             {% endfor %}
+                            {% if len(cm['emotions']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="comment-emotions-extra-{{ cm['post_id'] }}">
+                                {% for em in cm['emotions'][3:] %}
+ <a class="post-meta-chip emotion-chip" title="{{ em[0] }}" href="/{{exp_id}}/emotion/{{ em[2] }}/1">
+ <i class="mdi {{ em[1] }}"></i>
+ <span>{{ em[0] }}</span>
+ </a>
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="comment-emotions-extra-{{ cm['post_id'] }}" data-label-more="+{{ len(cm['emotions']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(cm['emotions']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
- <div class="likers-text ys-flex-wrap-mr">
+ <div class="post-meta-group in-thread">
                             {% if len(cm['topics']) > 0 %}
- <p class="ys-mr-half">Topics</p>
-                            {% for tp in cm['topics'] %}
+ <span class="post-meta-label">Topics</span>
+                            {% for tp in cm['topics'][:3] %}
                                 {% if tp[2] == 'positive' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-green"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
                                 {% elif tp[2] == 'negative' %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-red"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
                                 {% else %}
- <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="ys-badge-blue"> {{ tp[1] }}</a>
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
                                 {% endif %}
                             {% endfor %}
+                            {% if len(cm['topics']) > 3 %}
+ <span class="post-meta-extra is-hidden" id="comment-topics-extra-{{ cm['post_id'] }}">
+                                {% for tp in cm['topics'][3:] %}
+                                    {% if tp[2] == 'positive' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-positive">{{ tp[1] }}</a>
+                                    {% elif tp[2] == 'negative' %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-negative">{{ tp[1] }}</a>
+                                    {% else %}
+ <a href="/{{exp_id}}/interest/{{ tp[0] }}/1" class="post-meta-chip topic-chip is-neutral">{{ tp[1] }}</a>
+                                    {% endif %}
+                                {% endfor %}
+ </span>
+ <button type="button" class="meta-chip-toggle" data-target="comment-topics-extra-{{ cm['post_id'] }}" data-label-more="+{{ len(cm['topics']) - 3 }} more" data-label-less="Show less" aria-expanded="false">+{{ len(cm['topics']) - 3 }} more</button>
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
+                    </div>
+                    <div class="post-action-section is-threaded">
                     <div class="controls">
                         <div class="like-count" id="like-count-{{cm['post_id']}}">
  <i data-feather="thumbs-up" {% if not bool(cm["is_liked"]) %}class="ys-stroke-blue"{% endif %}></i>
@@ -309,42 +442,48 @@
  <span {% if not bool(cm["is_disliked"]) %} class="ys-text-light-blue"{% endif %}>{{ cm["dislikes"] }}</span>
                         </div>
                         <div class="share-count" id="share-count-{{ cm['post_id'] }}">
-                            <i data-feather="repeat"></i>
-                            <span>{{ cm["is_shared"] }}</span>
+                            <a class="share-button" id="s{{ cm['post_id'] }}">
+ <i data-feather="repeat"></i>
+ <span>{{ cm["is_shared"] }}</span>
+ </a>
                         </div>
                         {% if cm['author_id'] != logged_id %}
-                        <div class="share-count">
-                            <a href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive">Report</a>
-                        </div>
+                        <a
+                            href="/{{exp_id}}/report_content?post_id={{ cm['post_id'] }}&type=offensive"
+                            class="report-count report-fab"
+                            title="Report this comment"
+                            aria-label="Report this comment"
+                        >
+                            <i data-feather="flag"></i>
+                            <span>{{ cm.get("report_count", 0) }}</span>
+                        </a>
                         {% endif %}
-
- <!-- <div class="reply text-end">
-                   <a href="#">Reply</a>
-                 </div> -->
-                <!-- <div class="edit">
-                  <a href="#">Edit</a>
-                </div> -->
-            </div>
- <div class="reply text-end">
-                <a id='{{ cm["post_id"] }}' onClick="editLink(this.id)">Reply</a>
+                    </div>
+                    </div>
+ <div class="post-thread-tools">
+                <button type="button" class="reply-toggle-button" id='{{ cm["post_id"] }}' onClick="return editLink(this.id)">
+ <i data-feather="corner-down-left" class="ys-icon-xs"></i>
+ <span>Reply</span>
+ </button>
             </div>
             <p id="message-{{ cm['post_id'] }}"></p>
- <form class="comment_form ys-mt-1rem" id="comment_form-{{cm['post_id']}}">
+ <form class="comment_form reply-form-shell ys-mt-1rem" id="comment_form-{{cm['post_id']}}">
  <textarea rows="3" class="reply_comment ys-textarea" id="comment-{{ cm['post_id'] }}">@{{ cm["author"] }} </textarea>
             <button
                     id="add_comment"
                     type="button"
-                    class="button is-solid accent-button is-fullwidth"
+                    class="button is-solid accent-button is-fullwidth add-comment-button ys-btn-rounded"
                     val="{{cm['post_id']}}"
- class="ys-btn-rounded"
             >
             Comment
             </button>
             </form>
+                    {% endif %}
         </div>
         <!-- Right side dropdown -->
         <div class="media-right">
             <!-- /partials/pages/feed/dropdowns/comment-dropdown.html -->
+            {% if cm['author_id'] == user_id %}
             <div class="dropdown is-spaced is-right is-neutral dropdown-trigger">
                 <div>
                     <div class="button">
@@ -353,28 +492,21 @@
                 </div>
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-content">
-                        <!-- <a class="dropdown-item">
-                           <div class="media">
-                             <i data-feather="x"></i>
-                             <div class="media-content">
-                               <h3>Hide</h3>
-                               <small>Hide this comment.</small>
-                             </div>
-                           </div>
-                         </a>
-                         <div class="dropdown-divider"></div> -->
-                        <!-- <a href="#" class="dropdown-item">
+                        {% if cm['author_id'] == user_id %}
+                        <a class="dropdown-item" id="delete_post" val="{{ cm['post_id'] }}">
                             <div class="media">
-                                <i data-feather="flag"></i>
+                                <i data-feather="trash-2"></i>
                                 <div class="media-content">
-                                    <h3>Report</h3>
-                                    <small>Report this comment.</small>
+                                    <h3 val="{{ cm['post_id'] }}">Delete</h3>
+                                    <small>Remove this comment</small>
                                 </div>
                             </div>
-                        </a> -->
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
             </div>
+            {% endif %}
         </div>
 
     </div>

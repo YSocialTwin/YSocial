@@ -39,6 +39,7 @@ def test_generate_standard_config_local_experiment():
         host="127.0.0.1",
         port=5000,
         perspective_api=None,
+        toxicity_annotation=True,
         sentiment_annotation=True,
         emotion_annotation=True,
         opinions_enabled=True,
@@ -55,6 +56,7 @@ def test_generate_standard_config_local_experiment():
     assert config["port"] == 5000
     assert config["is_remote"] is False
     assert config["modules"] == ["news", "voting", "image"]
+    assert config["toxicity_annotation"] is True
 
 
 def test_generate_standard_config_remote_experiment():
@@ -65,6 +67,7 @@ def test_generate_standard_config_remote_experiment():
         host="192.168.1.100",  # Remote host stored in host parameter
         port=8080,  # Remote port stored in port parameter
         perspective_api=None,
+        toxicity_annotation=True,
         sentiment_annotation=True,
         emotion_annotation=True,
         opinions_enabled=True,
@@ -83,6 +86,7 @@ def test_generate_standard_config_remote_experiment():
     assert config["host"] == "192.168.1.100"
     assert config["port"] == 8080
     assert config["modules"] == ["news", "voting", "image"]
+    assert config["toxicity_annotation"] is True
 
 
 def test_generate_hpc_config_local_experiment():
@@ -98,6 +102,7 @@ def test_generate_hpc_config_local_experiment():
         redis_password=None,
         redis_sliding_window_days=2,
         perspective_api=None,
+        toxicity_annotation=True,
         sentiment_annotation=True,
         emotion_annotation=True,
         topics=["topic1", "topic2"],
@@ -110,6 +115,7 @@ def test_generate_hpc_config_local_experiment():
     assert config["server_name"] == "Test HPC Experiment"
     assert config["platform_type"] == "microblogging"
     assert config["is_remote"] is False
+    assert config["toxicity_annotation"] is True
 
 
 def test_generate_hpc_config_remote_experiment():
@@ -125,6 +131,7 @@ def test_generate_hpc_config_remote_experiment():
         redis_password=None,
         redis_sliding_window_days=2,
         perspective_api=None,
+        toxicity_annotation=True,
         sentiment_annotation=True,
         emotion_annotation=True,
         topics=["topic1", "topic2"],
@@ -136,6 +143,7 @@ def test_generate_hpc_config_remote_experiment():
     # Verify basic config structure
     assert config["server_name"] == "Test Remote HPC Experiment"
     assert config["is_remote"] is True
+    assert config["toxicity_annotation"] is True
 
 
 def test_remote_experiment_validation():

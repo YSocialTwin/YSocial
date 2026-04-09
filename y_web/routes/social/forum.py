@@ -51,6 +51,7 @@ from y_web.src.models import (
     Images,
     Page,
     Post,
+    Reported,
     Reactions,
     ReplyInboxState,
     Rounds,
@@ -126,6 +127,11 @@ def _build_forum_sidebar_communities(items):
             )
 
     return communities
+
+
+def _forum_viewer_id():
+    viewer = _forum_logged_user()
+    return viewer.id if viewer is not None else current_user.id
 
 
 def _resolve_sidebar_community(items, community_slug):
@@ -211,6 +217,7 @@ def interview(exp_id):
 @main.get("/<int:exp_id>/rthread/<post_id>")
 @login_required
 def get_thread_reddit(exp_id, post_id):
+    viewer_id = _forum_viewer_id()
     try:
         post_id = int(post_id)
     except (ValueError, TypeError):
@@ -295,13 +302,18 @@ def get_thread_reddit(exp_id, post_id):
             list(Reactions.query.filter_by(post_id=posts[0].id, type="dislike").all())
         ),
         "is_liked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=current_user.id, type="like"
+            post_id=posts[0].id, user_id=viewer_id, type="like"
         ).first()
         is not None,
         "is_disliked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=current_user.id, type="dislike"
+            post_id=posts[0].id, user_id=viewer_id, type="dislike"
         ).first()
         is not None,
+        "is_reported": Reported.query.filter_by(
+            to_post=posts[0].id, from_uid=viewer_id
+        ).first()
+        is not None,
+        "report_count": Reported.query.filter_by(to_post=posts[0].id).count(),
         "is_shared": len(Post.query.filter_by(shared_from=posts[0].id).all()),
         "emotions": get_elicited_emotions(posts[0].id),
         "topics": get_topics(posts[0].id, posts[0].user_id),
@@ -360,13 +372,18 @@ def get_thread_reddit(exp_id, post_id):
                 list(Reactions.query.filter_by(post_id=post.id, type="dislike").all())
             ),
             "is_liked": Reactions.query.filter_by(
-                post_id=post.id, user_id=current_user.id, type="like"
+                post_id=post.id, user_id=viewer_id, type="like"
             ).first()
             is None,
             "is_disliked": Reactions.query.filter_by(
-                post_id=post.id, user_id=current_user.id, type="dislike"
+                post_id=post.id, user_id=viewer_id, type="dislike"
             ).first()
             is None,
+            "is_reported": Reported.query.filter_by(
+                to_post=post.id, from_uid=viewer_id
+            ).first()
+            is not None,
+            "report_count": Reported.query.filter_by(to_post=post.id).count(),
             "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
             "emotions": get_elicited_emotions(post.id),
             "topics": get_topics(post.id, post.user_id),
@@ -593,7 +610,7 @@ def feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=1):
     max_post_per_page = 10
     feed_type = request.args.get("feed_type", "new")
     page_obj = fetch_feed_page(
-        viewer_id=current_user.id,
+        viewer_id=_forum_viewer_id(),
         page=page,
         per_page=max_post_per_page,
         feed_type=feed_type,
@@ -667,7 +684,7 @@ def subforum_reddit(exp_id, community_slug):
     feed_type = request.args.get("feed_type", "new")
 
     page_obj = fetch_feed_page(
-        viewer_id=current_user.id,
+        viewer_id=_forum_viewer_id(),
         page=page,
         per_page=max_post_per_page,
         feed_type=feed_type,
@@ -761,7 +778,7 @@ def search_reddit(exp_id):
 
     if search_query:
         page_obj = fetch_feed_page(
-            viewer_id=current_user.id,
+            viewer_id=_forum_viewer_id(),
             page=page,
             per_page=per_page,
             feed_type=feed_type,
@@ -842,7 +859,7 @@ def api_feed_reddit(exp_id, user_id="all", timeline="timeline", mode="rf", page=
     community_slug = request.args.get("community_slug", "")
 
     page_obj = fetch_feed_page(
-        viewer_id=current_user.id,
+        viewer_id=_forum_viewer_id(),
         page=page,
         per_page=max_post_per_page,
         feed_user_id=None if user_id == "all" else int(user_id),

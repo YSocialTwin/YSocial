@@ -1493,6 +1493,41 @@
         $(document).on("click", ".open-thread-button", handleThreadOpen);
         $(document).on("click", ".post-text", handleThreadOpenFromContent);
         $(document).on("click", ".delete-post-trigger", handleDeletePost);
+        $(document).on("click", ".forum-report-button", handleForumReportClick);
+    }
+
+    function handleForumReportClick(event) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        var button = event.currentTarget;
+        if (!button || button.dataset.pending === "1" || button.dataset.reported === "1") {
+            return;
+        }
+
+        button.dataset.pending = "1";
+
+        $.ajax({
+            type: "GET",
+            url: button.getAttribute("href"),
+            headers: {
+                "X-Requested-With": "XMLHttpRequest",
+            },
+            success: function (response) {
+                var nextCount = parseInt(response && response.report_count, 10);
+                if (!Number.isNaN(nextCount)) {
+                    var spans = button.querySelectorAll("span");
+                    if (spans.length > 1) {
+                        spans[spans.length - 1].textContent = nextCount;
+                    }
+                }
+                button.dataset.reported = "1";
+                button.classList.add("is-active");
+            },
+            complete: function () {
+                delete button.dataset.pending;
+            },
+        });
     }
 
     function bindFeedTypeSelector() {
@@ -1641,11 +1676,15 @@
             : "2px solid transparent";
         var reportLinkHtml =
             comment.author_id !== loggedUserId
-                ? '<a href="' +
+                ? '<a class="forum-report-button' +
+                  (comment.is_reported ? ' is-active' : '') +
+                  '" href="' +
                   (window.EXP_PREFIX || "") +
                   '/report_content?post_id=' +
                   comment.post_id +
-                  '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 6px; font-size: 11px; font-weight: 700;">Report</a>'
+                  '&type=offensive" style="color: #7c7c7c; text-decoration: none; padding: 2px 4px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;"><i data-feather="flag" class="ys-icon-xxs"></i><span>Report</span><span>' +
+                  (comment.report_count || 0) +
+                  '</span></a>'
                 : "";
 
         var html = [

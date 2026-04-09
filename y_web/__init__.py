@@ -205,8 +205,22 @@ def _is_simulation_subprocess():
     )
 
 
-# Only register atexit handler for the main application process, not subprocesses.
-if not _is_simulation_subprocess():
+def _should_register_cleanup_handler():
+    """
+    Register shutdown cleanup only for the real top-level YSocial app process.
+
+    Importing ``y_web`` from tests, maintenance scripts, or ad hoc validation
+    helpers must not implicitly arm a global atexit hook that stops active
+    experiments.
+    """
+    return (
+        os.environ.get("YSOCIAL_REGISTER_ATEXIT_CLEANUP") == "1"
+        and not _is_simulation_subprocess()
+    )
+
+
+# Only register atexit handler for the opted-in main application process.
+if _should_register_cleanup_handler():
     atexit.register(cleanup_db_jupyter_with_new_app)
 
 

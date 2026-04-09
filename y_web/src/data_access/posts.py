@@ -24,6 +24,7 @@ from y_web.src.models import (
     Post_hashtags,
     Post_Sentiment,
     Post_topics,
+    Reported,
     Reactions,
     Rounds,
     User_mgmt,
@@ -223,6 +224,11 @@ def get_unanswered_mentions(username):
     )
 
 
+def get_report_count(post_id):
+    """Return how many report records exist for a given post or comment."""
+    return Reported.query.filter_by(to_post=post_id).count()
+
+
 def get_user_recent_posts(
     user_id, page, per_page=10, mode="rf", current_user=None, exp_id=None
 ):
@@ -420,6 +426,7 @@ def get_user_recent_posts(
                     ).first()
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": comment_topics,
                     "is_moderation_comment": int(
@@ -552,6 +559,7 @@ def get_user_recent_posts(
                 ).first()
                 is None,
                 "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,
@@ -669,7 +677,12 @@ def get_posts_associated_to_hashtags(
                     ).first()
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "report_count": get_report_count(c.id),
                     "emotions": emotions,
+                    "topics": get_topics(c.id, c.user_id),
+                    "is_moderation_comment": int(
+                        getattr(c, "is_moderation_comment", 0) or 0
+                    ),
                 }
             )
 
@@ -764,6 +777,7 @@ def get_posts_associated_to_hashtags(
                 ).first()
                 is None,
                 "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,
@@ -880,7 +894,12 @@ def get_posts_associated_to_interest(
                     ).first()
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
+                    "report_count": get_report_count(c.id),
                     "emotions": emotions,
+                    "topics": get_topics(c.id, c.user_id),
+                    "is_moderation_comment": int(
+                        getattr(c, "is_moderation_comment", 0) or 0
+                    ),
                 }
             )
 
@@ -975,6 +994,7 @@ def get_posts_associated_to_interest(
                 ).first()
                 is None,
                 "is_shared": len(Post.query.filter_by(shared_from=post.id).all()),
+                "report_count": get_report_count(post.id),
                 "comments": cms,
                 "t_comments": len(cms),
                 "emotions": emotions,
@@ -1092,6 +1112,11 @@ def get_posts_associated_to_emotion(
                     is None,
                     "is_shared": len(Post.query.filter_by(shared_from=c.id).all()),
                     "emotions": emotions,
+                    "topics": get_topics(c.id, c.user_id),
+                    "report_count": get_report_count(c.id),
+                    "is_moderation_comment": int(
+                        getattr(c, "is_moderation_comment", 0) or 0
+                    ),
                 }
             )
 

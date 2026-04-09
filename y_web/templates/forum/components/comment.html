@@ -78,8 +78,12 @@
             Reply
         </button>
         {% if thread['author_id'] != logged_id %}
-        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive" style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700; text-decoration: none;">
-            Report
+        <a href="/{{exp_id}}/report_content?post_id={{ thread['post_id'] }}&type=offensive"
+           class="forum-report-button{% if thread.get('is_reported') %} is-active{% endif %}"
+           style="background: none; border: none; color: #7c7c7c; cursor: pointer; padding: 2px 4px; border-radius: 2px; font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+ <i data-feather="flag" class="ys-icon-xxs"></i>
+            <span>Report</span>
+            <span>{{ thread.get("report_count", 0) }}</span>
         </a>
         {% endif %}
     </div>
