@@ -15,6 +15,7 @@ _STRIP_ENV_KEYS = (
     "FLASK_RUN_FROM_CLI",
 )
 
+
 def build_subprocess_env(extra: Optional[Dict[str, str]] = None) -> Dict[str, str]:
     """
     Return a sanitized child-process environment.

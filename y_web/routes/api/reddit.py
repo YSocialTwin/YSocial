@@ -76,8 +76,8 @@ from y_web.src.models import (
     Post_Sentiment,
     Post_topics,
     Post_Toxicity,
-    Reported,
     Reactions,
+    Reported,
     Rounds,
     User_mgmt,
 )
@@ -943,7 +943,9 @@ def _serialize_comment(comment: Post, skip_metadata: bool = False) -> dict:
         "is_disliked": False,
         "is_reported": bool(
             viewer_user
-            and Reported.query.filter_by(to_post=comment.id, from_uid=viewer_user.id).first()
+            and Reported.query.filter_by(
+                to_post=comment.id, from_uid=viewer_user.id
+            ).first()
         ),
         "report_count": int(Reported.query.filter_by(to_post=comment.id).count()),
         "emotions": emotions,

@@ -175,7 +175,9 @@ def test_subprocess_env_helper_injects_persistent_model_cache(monkeypatch, tmp_p
     assert env["TORCH_HOME"].startswith(env["YSOCIAL_MODEL_CACHE_DIR"])
 
 
-def test_subprocess_env_helper_uses_persisted_model_cache_setting(monkeypatch, tmp_path):
+def test_subprocess_env_helper_uses_persisted_model_cache_setting(
+    monkeypatch, tmp_path
+):
     """Saved model-cache settings must become the default for new subprocesses."""
     monkeypatch.delenv("YSOCIAL_MODEL_CACHE_DIR", raising=False)
 

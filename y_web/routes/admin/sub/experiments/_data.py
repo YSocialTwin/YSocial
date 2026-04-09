@@ -94,16 +94,16 @@ from y_web.src.simulation.execution_backend import (
 )
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
-from y_web.src.system.model_cache import (
-    get_model_cache_root,
-    refresh_detoxify_download_state,
-    start_detoxify_download,
-)
 from y_web.src.system.miscellanea import (
     check_privileges,
     llm_backend_status,
     ollama_status,
     reload_current_user,
+)
+from y_web.src.system.model_cache import (
+    get_model_cache_root,
+    refresh_detoxify_download_state,
+    start_detoxify_download,
 )
 from y_web.src.system.path_utils import get_resource_path
 

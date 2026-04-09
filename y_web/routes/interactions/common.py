@@ -16,8 +16,8 @@ from y_web.src.models import (
     Mentions,
     Post,
     Post_topics,
-    Reported,
     Reactions,
+    Reported,
     Rounds,
     User_mgmt,
 )
@@ -265,7 +265,10 @@ def report_content(exp_id):
     exp_user = User_mgmt.query.filter_by(username=current_user.username).first()
     if not exp_user:
         if is_ajax:
-            return jsonify({"message": "User not found in experiment", "status": 404}), 404
+            return (
+                jsonify({"message": "User not found in experiment", "status": 404}),
+                404,
+            )
         flash("User not found in experiment", "error")
         return redirect(request.referrer or url_for("main.index"))
 
