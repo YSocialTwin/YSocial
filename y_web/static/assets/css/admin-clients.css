@@ -79,6 +79,171 @@ details[open] summary::before {
     color: #6b7280;
 }
 
+.ys-adhoc-target-builder {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.ys-adhoc-agent-type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.ys-adhoc-agent-type-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    width: 100%;
+    min-height: 98px;
+    padding: 12px 14px;
+    border: 1px solid #dbe4f0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fbfcff 0%, #f5f8fd 100%);
+    color: #334155;
+    text-align: left;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.045);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+    cursor: pointer;
+}
+
+.ys-adhoc-agent-type-card:hover {
+    transform: translateY(-1px);
+    border-color: #a7c1ea;
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.08);
+}
+
+.ys-adhoc-agent-type-card:focus-visible {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+.ys-adhoc-agent-type-card.is-selected {
+    border-color: #3b82f6;
+    background: linear-gradient(180deg, #eef5ff 0%, #e7f0ff 100%);
+    box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
+}
+
+.ys-adhoc-agent-type-card-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: #23324d;
+}
+
+.ys-adhoc-agent-type-card-description {
+    font-size: 0.76rem;
+    line-height: 1.4;
+    color: #66758f;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.ys-adhoc-agent-type-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: auto;
+}
+
+.ys-adhoc-agent-type-pill {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: #ffffff;
+    border: 1px solid #d7e4f7;
+    color: #4a6488;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.ys-adhoc-target-builder-help {
+    font-size: 0.82rem;
+    color: #6b7280;
+    line-height: 1.45;
+}
+
+.ys-adhoc-target-row {
+    padding: 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fbfcfe;
+}
+
+.ys-adhoc-target-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+    align-items: start;
+}
+
+.ys-adhoc-target-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ys-adhoc-target-field label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #4b5563;
+}
+
+.ys-adhoc-target-field-wide {
+    grid-column: 1 / -1;
+}
+
+.ys-adhoc-target-field-action {
+    justify-content: end;
+}
+
+.ys-adhoc-target-row .select,
+.ys-adhoc-target-row .ys-adhoc-target-opinion,
+.ys-adhoc-target-row .button {
+    min-width: 0;
+}
+
+.ys-adhoc-target-row .select select,
+.ys-adhoc-target-row select.input,
+.ys-adhoc-target-row .input {
+    background-color: #ffffff;
+    color: #363636;
+    border: 1px solid #d8dee9;
+    box-shadow: none;
+}
+
+.ys-adhoc-target-row .select select option,
+.ys-adhoc-target-row select.input option {
+    color: #363636;
+    background-color: #ffffff;
+}
+
+.ys-adhoc-target-row .ys-adhoc-target-age-classes {
+    min-height: 96px;
+}
+
+@media (max-width: 900px) {
+    .ys-adhoc-agent-type-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ys-adhoc-target-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .ys-adhoc-target-field-wide {
+        grid-column: auto;
+    }
+}
+
 details[open] .details-arrow {
     transform: rotate(180deg);
 }
@@ -1471,4 +1636,3 @@ details[open] .details-arrow {
     border-color: #22c55e;
     box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
 }
-

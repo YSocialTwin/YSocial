@@ -262,6 +262,16 @@ def test_server_runner_importable():
         pytest.fail(f"server_runner import failed: {exc}")
 
 
+def test_adhoc_client_runner_passes_db_connection_into_agent_context():
+    """Ad hoc plugin runner must pass the live DB connection into AgentContext."""
+    import y_web.src.simulation.adhoc_client_runner as mod
+
+    src = inspect.getsource(mod)
+    assert (
+        "connection=connection" in src
+    ), "adhoc_client_runner must pass connection=connection into AgentContext"
+
+
 def test_client_runner_repo_root_on_sys_path():
     """client_runner._REPO_ROOT must appear on sys.path after import."""
     import y_web.src.simulation.client_runner as cr

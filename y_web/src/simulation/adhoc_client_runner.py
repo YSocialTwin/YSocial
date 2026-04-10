@@ -112,6 +112,14 @@ def run(config_path: Path, state_path: Path) -> int:
         settings=config.client.agent_settings,
         llm_client=llm,
     )
+    sqlite_path = config.database.sqlite_path
+    if sqlite_path is not None:
+        sqlite_path = Path(sqlite_path)
+        while not TERMINATE and not sqlite_path.exists():
+            time.sleep(config.database.poll_interval_seconds)
+        if TERMINATE:
+            return 0
+
     database = ExperimentDatabase(config.database.url)
     executor = ActionExecutor(database)
     scheduler = ActivityProfileScheduler(config.client.simulation)
@@ -133,7 +141,17 @@ def run(config_path: Path, state_path: Path) -> int:
 
     connection = database.connect()
     try:
-        current_round = database.get_current_round(connection)
+        while not TERMINATE:
+            try:
+                current_round = database.get_current_round(connection)
+                break
+            except RuntimeError as exc:
+                if "No rows found in rounds table" not in str(exc):
+                    raise
+                time.sleep(config.database.poll_interval_seconds)
+        else:
+            return 0
+
         agent.setup_database(database, connection)
         database.register_agents(connection, managed_agents, joined_on=current_round.id)
 
@@ -158,6 +176,7 @@ def run(config_path: Path, state_path: Path) -> int:
                         limit=config.client.recent_posts_limit,
                     ),
                     managed_agents=managed_agents,
+                    connection=connection,
                 )
 
                 logger.info(

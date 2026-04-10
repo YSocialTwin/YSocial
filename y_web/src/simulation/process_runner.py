@@ -112,6 +112,7 @@ import math
 import os
 import random
 import re
+import sqlite3
 import sys
 import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -204,6 +205,59 @@ def _repair_legacy_agent_file(agent_file_path, platform_type):
     if changed:
         with open(agent_file_path, "w", encoding="utf-8") as fh:
             json.dump(payload, fh, indent=4)
+
+
+def _load_population_usernames(population_filename):
+    """Return non-page usernames declared in a population JSON file."""
+    try:
+        with open(population_filename, "r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return []
+
+    usernames = []
+    for agent in payload.get("agents", []):
+        if int(agent.get("is_page", 0) or 0) == 1:
+            continue
+        username = str(agent.get("name") or "").strip()
+        if username:
+            usernames.append(username)
+    return usernames
+
+
+def _population_bootstrap_completed(experiment_db_path, population_filename):
+    """
+    Return whether all declared non-page population users are already registered.
+
+    A failed first boot can leave a Client_Execution row behind before the
+    underlying users exist in the experiment DB. In that case the next launch
+    must still be treated as a first run.
+    """
+    usernames = _load_population_usernames(population_filename)
+    if not usernames or not os.path.exists(experiment_db_path):
+        return False
+
+    try:
+        with sqlite3.connect(experiment_db_path) as connection:
+            tables = {
+                row[0]
+                for row in connection.execute(
+                    "select name from sqlite_master where type='table'"
+                ).fetchall()
+            }
+            if "user_mgmt" not in tables:
+                return False
+
+            placeholders = ",".join("?" for _ in usernames)
+            rows = connection.execute(
+                f"select username from user_mgmt where username in ({placeholders})",
+                usernames,
+            ).fetchall()
+    except Exception:
+        return False
+
+    registered = {str(row[0]) for row in rows}
+    return all(username in registered for username in usernames)
 
 
 def run_client_main():
@@ -411,8 +465,25 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 file=sys.stderr,
             )
 
-        if ce:
+        bootstrap_completed = _population_bootstrap_completed(
+            os.path.join(data_base_path, "database_server.db"),
+            filename,
+        )
+
+        if ce and bootstrap_completed:
             first_run = False
+        elif ce:
+            print(
+                "Detected stale client execution state before population bootstrap; "
+                "restarting as first run.",
+                file=sys.stderr,
+            )
+            ce.elapsed_time = 0
+            ce.last_active_hour = -1
+            ce.last_active_day = -1
+            session.add(ce)
+            session.commit()
+            first_run = True
         else:
             print(f"Client {cli.name} first execution.")
             first_run = True

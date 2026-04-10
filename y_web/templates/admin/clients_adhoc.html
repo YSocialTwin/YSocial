@@ -36,14 +36,32 @@
                                     <div class="box-line">
                                         <span class="left">Agent Type</span>
                                         <span class="right ys-w-70">
-                                            <div class="select is-fullwidth">
-                                                <select name="agent_type" id="adhoc_agent_type" class="input" required>
-                                                    <option value=""></option>
-                                                    {% for spec in adhoc_agent_specs %}
-                                                    <option value="{{ spec.slug }}">{{ spec.display_name }}</option>
-                                                    {% endfor %}
-                                                </select>
+                                            <input type="hidden" name="agent_type" id="adhoc_agent_type" value="">
+                                            <div class="ys-adhoc-agent-type-grid" role="radiogroup" aria-label="Agent Type">
+                                                {% for spec in adhoc_agent_specs %}
+                                                <button
+                                                    type="button"
+                                                    class="ys-adhoc-agent-type-card"
+                                                    data-agent-type="{{ spec.slug }}"
+                                                    role="radio"
+                                                    aria-checked="false"
+                                                >
+                                                    <span class="ys-adhoc-agent-type-card-title">{{ spec.display_name }}</span>
+                                                    {% if spec.description %}
+                                                    <span class="ys-adhoc-agent-type-card-description">{{ spec.description }}</span>
+                                                    {% endif %}
+                                                    <span class="ys-adhoc-agent-type-card-meta">
+                                                        {% if spec.requires_llm %}
+                                                        <span class="ys-adhoc-agent-type-pill">LLM</span>
+                                                        {% endif %}
+                                                        {% if spec.requires_opinion_dynamics %}
+                                                        <span class="ys-adhoc-agent-type-pill">Opinion Dynamics</span>
+                                                        {% endif %}
+                                                    </span>
+                                                </button>
+                                                {% endfor %}
                                             </div>
+                                            <small class="ys-hint-text">Select one of the installed ad hoc agent families.</small>
                                         </span>
                                     </div>
                                     <div class="box-line">
@@ -56,6 +74,14 @@
                                             </div>
                                             <small id="adhoc_population_hint" class="ys-hint-text">Select an agent type to load compatible populations.</small>
                                         </span>
+                                    </div>
+
+                                    <div id="adhoc_agent_settings_section" class="tutorial-section" style="display: none;">
+                                        <div class="form-section-header">Agent-Specific Configuration</div>
+                                        <div class="form-section-description">
+                                            Additional settings exposed by the selected plugin agent type.
+                                        </div>
+                                        <div id="adhoc_agent_settings_fields"></div>
                                     </div>
 
                                     <div id="section-simulation-params" class="tutorial-section">
@@ -191,7 +217,11 @@
 const YS_ADHOC_CLIENTS = {
     agentSpecs: {{ adhoc_agent_specs | tojson }},
     populationsByType: {{ adhoc_populations_by_type | tojson }},
-    llmDefaults: {{ exp_llm_defaults | tojson }}
+    llmDefaults: {{ exp_llm_defaults | tojson }},
+    experimentTopics: {{ adhoc_experiment_topics | tojson }},
+    opinionGroups: {{ adhoc_opinion_groups | tojson }},
+    ageClasses: {{ adhoc_age_classes | tojson }},
+    leanings: {{ adhoc_leanings | tojson }}
 };
 
 (function() {
@@ -201,6 +231,26 @@ const YS_ADHOC_CLIENTS = {
     function selectedSpec() {
         const slug = document.getElementById('adhoc_agent_type')?.value || '';
         return YS_ADHOC_CLIENTS.agentSpecs.find(spec => spec.slug === slug) || null;
+    }
+
+    function updateAgentTypeCards() {
+        const selected = document.getElementById('adhoc_agent_type')?.value || '';
+        document.querySelectorAll('.ys-adhoc-agent-type-card').forEach(card => {
+            const active = card.dataset.agentType === selected;
+            card.classList.toggle('is-selected', active);
+            card.setAttribute('aria-checked', active ? 'true' : 'false');
+        });
+    }
+
+    function selectAgentType(slug) {
+        const input = document.getElementById('adhoc_agent_type');
+        if (!input) return;
+        input.value = slug || '';
+        updateAgentTypeCards();
+        updatePopulationChoices();
+        renderAgentSettings();
+        updateLlmSection();
+        updateCreateButton();
     }
 
     function updatePopulationChoices() {
@@ -249,6 +299,232 @@ const YS_ADHOC_CLIENTS = {
         }
     }
 
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function renderAgentSettings() {
+        const spec = selectedSpec();
+        const section = document.getElementById('adhoc_agent_settings_section');
+        const container = document.getElementById('adhoc_agent_settings_fields');
+        if (!section || !container) return;
+        const parameters = spec ? (spec.client_parameters || []) : [];
+        const sections = spec ? (spec.client_parameter_sections || []) : [];
+        if (!spec || !parameters.length) {
+            section.style.display = 'none';
+            container.innerHTML = '';
+            return;
+        }
+
+        const groups = {};
+        parameters.forEach(parameter => {
+            const key = parameter.section || 'default';
+            if (!groups[key]) groups[key] = [];
+            groups[key].push(parameter);
+        });
+
+        const html = [];
+        sections.forEach(sectionMeta => {
+            const groupParameters = groups[sectionMeta.key] || [];
+            if (!groupParameters.length) return;
+            html.push(`
+                <div class="ys-adhoc-param-group">
+                    <div class="form-section-header">${escapeHtml(sectionMeta.label || sectionMeta.key)}</div>
+                    ${sectionMeta.description ? `<div class="form-section-description">${escapeHtml(sectionMeta.description)}</div>` : ''}
+                    ${groupParameters.map(renderParameterField).join('')}
+                </div>
+            `);
+        });
+
+        Object.keys(groups).forEach(key => {
+            if (sections.find(sectionMeta => sectionMeta.key === key)) return;
+            html.push(groups[key].map(renderParameterField).join(''));
+        });
+
+        container.innerHTML = html.join('');
+        section.style.display = 'block';
+        syncAllTopicTargets();
+    }
+
+    function renderParameterField(parameter) {
+        const name = parameter.name;
+        const label = name.replaceAll('_', ' ').replace(/\b\w/g, match => match.toUpperCase());
+        const description = parameter.description ? `<small class="ys-hint-text">${escapeHtml(parameter.description)}</small>` : '';
+        const required = parameter.required ? 'required' : '';
+        const defaultValue = parameter.default ?? '';
+        const type = String(parameter.type || 'string');
+
+        if (type.startsWith('enum[')) {
+            const values = type.slice(5, -1).split(',').map(item => item.trim()).filter(Boolean);
+            return `
+                <div class="box-line">
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        <div class="select is-fullwidth">
+                            <select name="agent_setting__${escapeHtml(name)}" class="input" ${required}>
+                                ${values.map(value => `<option value="${escapeHtml(value)}" ${String(defaultValue) === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}
+                            </select>
+                        </div>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
+        if (type === 'topic_targets') {
+            const options = (parameter.starting_opinion_options || []).map(value => `
+                <option value="${escapeHtml(value)}">${escapeHtml(value.replaceAll('_', ' '))}</option>
+            `).join('');
+            return `
+                <div class="box-line">
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="[]">
+                        <div class="ys-adhoc-target-builder" data-setting-name="${escapeHtml(name)}" data-starting-options="${escapeHtml(JSON.stringify(parameter.starting_opinion_options || []))}">
+                            <div class="ys-adhoc-target-builder-help">
+                                Add one row per persuasion campaign. Each row chooses a topic, the desired opinion category to move users toward, and optional filters on whom to target.
+                            </div>
+                            <div class="ys-adhoc-target-rows"></div>
+                            <button type="button" class="button is-light ys-adhoc-add-target">+ Add Topic</button>
+                        </div>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
+        const inputType = type === 'integer' || type === 'float' || type === 'number' ? 'number' : 'text';
+        const step = type === 'integer' ? '1' : (type === 'float' || type === 'number' ? '0.01' : null);
+        return `
+            <div class="box-line">
+                <span class="left">${escapeHtml(label)}</span>
+                <span class="right ys-w-70">
+                    <input type="${inputType}" name="agent_setting__${escapeHtml(name)}" class="input" value="${escapeHtml(defaultValue)}" ${step ? `step="${step}"` : ''} ${required}>
+                    ${description}
+                </span>
+            </div>
+        `;
+    }
+
+    function addTopicTargetRow(builder, initial = {}) {
+        const rows = builder.querySelector('.ys-adhoc-target-rows');
+        if (!rows) return;
+        const startingOptions = JSON.parse(builder.dataset.startingOptions || '[]');
+        const row = document.createElement('div');
+        row.className = 'mb-2 ys-adhoc-target-row';
+        row.innerHTML = `
+            <div class="ys-adhoc-target-grid">
+                <div class="ys-adhoc-target-field">
+                    <label>Topic</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-topic">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field">
+                    <label>Opinion Propaganda</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-opinion-group">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field">
+                    <label>Target Agent Opinion</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-agent-opinion-group">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field">
+                    <label>Political Leaning (optional)</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-leaning">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.leanings.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">
+                    <label>Age Classes (optional)</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-age-classes" multiple size="3">
+                            ${YS_ADHOC_CLIENTS.ageClasses.map(item => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)} (${item.age_start}-${item.age_end})</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
+                    <label>&nbsp;</label>
+                    <button type="button" class="button is-light ys-adhoc-remove-target">Remove</button>
+                </div>
+            </div>
+        `;
+        rows.appendChild(row);
+        const topicSelect = row.querySelector('.ys-adhoc-target-topic');
+        const opinionGroupSelect = row.querySelector('.ys-adhoc-target-opinion-group');
+        const targetAgentOpinionGroupSelect = row.querySelector('.ys-adhoc-target-agent-opinion-group');
+        const leaningSelect = row.querySelector('.ys-adhoc-target-leaning');
+        const ageClassesSelect = row.querySelector('.ys-adhoc-target-age-classes');
+        if (topicSelect && initial.topic_id != null) topicSelect.value = String(initial.topic_id);
+        if (opinionGroupSelect) opinionGroupSelect.value = String(initial.target_opinion_group || '');
+        if (targetAgentOpinionGroupSelect) targetAgentOpinionGroupSelect.value = String(initial.target_agent_opinion_group || '');
+        if (leaningSelect) leaningSelect.value = String(initial.target_leaning || '');
+        if (ageClassesSelect && Array.isArray(initial.target_age_classes)) {
+            Array.from(ageClassesSelect.options).forEach(option => {
+                option.selected = initial.target_age_classes.some(item => {
+                    if (typeof item === 'string') return item === option.value;
+                    return item && item.name === option.value;
+                });
+            });
+        }
+        syncTopicTargets(builder);
+    }
+
+    function syncTopicTargets(builder) {
+        const settingName = builder.dataset.settingName;
+        const hidden = document.getElementById(`agent_setting__${settingName}`);
+        if (!hidden) return;
+        const payload = Array.from(builder.querySelectorAll('.ys-adhoc-target-row')).map(row => {
+            const topicId = row.querySelector('.ys-adhoc-target-topic')?.value || '';
+            const targetOpinionGroup = row.querySelector('.ys-adhoc-target-opinion-group')?.value || '';
+            const targetAgentOpinionGroup = row.querySelector('.ys-adhoc-target-agent-opinion-group')?.value || '';
+            const targetLeaning = row.querySelector('.ys-adhoc-target-leaning')?.value || '';
+            const targetAgeClasses = Array.from(row.querySelector('.ys-adhoc-target-age-classes')?.selectedOptions || []).map(option => option.value);
+            if (!topicId || !targetOpinionGroup) return null;
+            const topic = YS_ADHOC_CLIENTS.experimentTopics.find(item => String(item.id) === String(topicId));
+            const opinionGroup = YS_ADHOC_CLIENTS.opinionGroups.find(item => String(item.name) === String(targetOpinionGroup));
+            return {
+                topic_id: Number(topicId),
+                topic_name: topic ? topic.name : String(topicId),
+                target_opinion_group: targetOpinionGroup,
+                target_opinion: opinionGroup ? Number(opinionGroup.value) : null,
+                target_agent_opinion_group: targetAgentOpinionGroup,
+                target_leaning: targetLeaning,
+                target_age_classes: targetAgeClasses
+            };
+        }).filter(Boolean);
+        hidden.value = JSON.stringify(payload);
+        updateCreateButton();
+    }
+
+    function syncAllTopicTargets() {
+        document.querySelectorAll('.ys-adhoc-target-builder').forEach(builder => {
+            const rows = builder.querySelector('.ys-adhoc-target-rows');
+            if (rows && !rows.children.length) addTopicTargetRow(builder);
+            syncTopicTargets(builder);
+        });
+    }
+
     function updateCreateButton() {
         const button = document.getElementById('create_client_button');
         const name = document.getElementById('adhoc_client_name')?.value.trim() || '';
@@ -256,8 +532,24 @@ const YS_ADHOC_CLIENTS = {
         const population = document.getElementById('adhoc_population_id')?.value || '';
         const spec = selectedSpec();
         const llmReady = !spec || !spec.requires_llm || (llmModelsFetched && llmModelSelected);
+        let settingsReady = true;
+        if (spec && (spec.client_parameters || []).length) {
+            settingsReady = (spec.client_parameters || []).every(parameter => {
+                const field = document.querySelector(`[name="agent_setting__${parameter.name}"]`);
+                if (!parameter.required) return true;
+                if (!field) return false;
+                if (parameter.type === 'topic_targets') {
+                    try {
+                        return JSON.parse(field.value || '[]').length > 0;
+                    } catch (_error) {
+                        return false;
+                    }
+                }
+                return String(field.value || '').trim() !== '';
+            });
+        }
         if (button) {
-            button.disabled = !(name && agentType && population && llmReady);
+            button.disabled = !(name && agentType && population && llmReady && settingsReady);
         }
     }
 
@@ -297,17 +589,9 @@ const YS_ADHOC_CLIENTS = {
 
     document.addEventListener('DOMContentLoaded', function() {
         const nameInput = document.getElementById('adhoc_client_name');
-        const agentTypeSelect = document.getElementById('adhoc_agent_type');
         const populationSelect = document.getElementById('adhoc_population_id');
         const modelSelect = document.getElementById('models_select_client');
         if (nameInput) nameInput.addEventListener('input', updateCreateButton);
-        if (agentTypeSelect) {
-            agentTypeSelect.addEventListener('change', function() {
-                updatePopulationChoices();
-                updateLlmSection();
-                updateCreateButton();
-            });
-        }
         if (populationSelect) populationSelect.addEventListener('change', updateCreateButton);
         if (modelSelect) {
             modelSelect.addEventListener('change', function() {
@@ -315,7 +599,38 @@ const YS_ADHOC_CLIENTS = {
                 updateCreateButton();
             });
         }
+        document.addEventListener('click', function(event) {
+            const agentTypeCard = event.target.closest('.ys-adhoc-agent-type-card');
+            if (agentTypeCard) {
+                selectAgentType(agentTypeCard.dataset.agentType || '');
+                return;
+            }
+            const addButton = event.target.closest('.ys-adhoc-add-target');
+            if (addButton) {
+                const builder = addButton.closest('.ys-adhoc-target-builder');
+                if (builder) addTopicTargetRow(builder);
+                return;
+            }
+            const removeButton = event.target.closest('.ys-adhoc-remove-target');
+            if (removeButton) {
+                const builder = removeButton.closest('.ys-adhoc-target-builder');
+                removeButton.closest('.ys-adhoc-target-row')?.remove();
+                if (builder) syncTopicTargets(builder);
+            }
+        });
+        document.addEventListener('input', function(event) {
+            const builder = event.target.closest('.ys-adhoc-target-builder');
+            if (builder) syncTopicTargets(builder);
+            updateCreateButton();
+        });
+        document.addEventListener('change', function(event) {
+            const builder = event.target.closest('.ys-adhoc-target-builder');
+            if (builder) syncTopicTargets(builder);
+            updateCreateButton();
+        });
+        updateAgentTypeCards();
         updatePopulationChoices();
+        renderAgentSettings();
         updateLlmSection();
         updateCreateButton();
     });

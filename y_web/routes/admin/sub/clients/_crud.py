@@ -44,6 +44,8 @@ from y_web.src.models import (
     Exp_Topic,
     Exps,
     Follow_Recsys,
+    Leanings,
+    OpinionGroup,
     Page,
     Page_Population,
     Population,
@@ -119,6 +121,13 @@ def _adhoc_agent_specs() -> list[dict]:
                     "requires_llm": bool(
                         entry.get("requires_llm", entry.get("llm_required", False))
                     ),
+                    "requires_opinion_dynamics": bool(
+                        entry.get("requires_opinion_dynamics", False)
+                    ),
+                    "client_parameter_sections": list(
+                        entry.get("client_parameter_sections") or []
+                    ),
+                    "client_parameters": list(entry.get("client_parameters") or []),
                     "repo_name": repo_dir.name,
                 }
             )
@@ -157,6 +166,176 @@ def _find_adhoc_agent_spec(agent_slug: str | None) -> dict | None:
     for spec in _adhoc_agent_specs():
         if agent_slug in spec["accepted_slugs"] or agent_slug == spec["slug"]:
             return spec
+    return None
+
+
+def _coerce_adhoc_client_setting(
+    parameter: dict,
+    raw_value,
+    *,
+    experiment_topic_ids: set[int],
+    experiment_topics_by_id: dict[int, str],
+    opinion_groups_by_name: dict[str, dict[str, float | str]],
+    age_classes_by_name: dict[str, dict[str, int | str]],
+    leaning_names: set[str],
+):
+    param_type = str(parameter.get("type") or "string").strip().lower()
+    if param_type == "topic_targets":
+        if raw_value in (None, ""):
+            return []
+        if isinstance(raw_value, str):
+            payload = json.loads(raw_value)
+        else:
+            payload = raw_value
+        if not isinstance(payload, list):
+            raise ValueError("Topic targets must be a list.")
+        normalized = []
+        for entry in payload:
+            if not isinstance(entry, dict):
+                raise ValueError("Each topic target must be an object.")
+            topic_id = int(entry.get("topic_id"))
+            if topic_id not in experiment_topic_ids:
+                raise ValueError("Selected topic is not part of this experiment.")
+            target_group_name = str(entry.get("target_opinion_group") or "").strip()
+            if target_group_name:
+                target_group = _lookup_named_option(opinion_groups_by_name, target_group_name)
+                if target_group is None:
+                    raise ValueError("Selected opinion target group is not valid.")
+                target_group_name = str(target_group["name"])
+                target_opinion = float(target_group["value"])
+            else:
+                target_opinion = float(entry.get("target_opinion"))
+            if target_opinion < 0.0 or target_opinion > 1.0:
+                raise ValueError("Target opinion must be in the [0, 1] range.")
+            target_agent_opinion_group = str(
+                entry.get("target_agent_opinion_group") or ""
+            ).strip()
+            target_agent_opinion_group_bounds = None
+            if target_agent_opinion_group:
+                target_agent_group = _lookup_named_option(
+                    opinion_groups_by_name, target_agent_opinion_group
+                )
+                if target_agent_group is None:
+                    raise ValueError("Selected target agent opinion group is not valid.")
+                target_agent_opinion_group = str(target_agent_group["name"])
+                target_agent_opinion_group_bounds = {
+                    "name": str(target_agent_group["name"]),
+                    "lower_bound": float(target_agent_group["lower_bound"]),
+                    "upper_bound": float(target_agent_group["upper_bound"]),
+                    "value": float(target_agent_group["value"]),
+                }
+            target_leaning = str(entry.get("target_leaning") or "").strip()
+            if target_leaning and _lookup_name(leaning_names, target_leaning) is None:
+                raise ValueError("Selected political leaning is not valid.")
+            if target_leaning:
+                target_leaning = _lookup_name(leaning_names, target_leaning) or target_leaning
+            target_age_classes = []
+            for age_name in entry.get("target_age_classes") or []:
+                normalized_age_name = str(age_name).strip()
+                age_class = _lookup_named_option(age_classes_by_name, normalized_age_name)
+                if age_class is None:
+                    raise ValueError("Selected age class is not valid.")
+                target_age_classes.append(age_class)
+            normalized.append(
+                {
+                    "topic_id": topic_id,
+                    "topic_name": experiment_topics_by_id.get(topic_id, str(topic_id)),
+                    "target_opinion": target_opinion,
+                    "target_opinion_group": target_group_name,
+                    "target_agent_opinion_group": target_agent_opinion_group,
+                    "target_agent_opinion_group_bounds": target_agent_opinion_group_bounds,
+                    "target_leaning": target_leaning,
+                    "target_age_classes": target_age_classes,
+                }
+            )
+        return normalized
+    if raw_value in (None, ""):
+        default = parameter.get("default")
+        if default not in (None, ""):
+            raw_value = default
+        elif parameter.get("required"):
+            raise ValueError(f"{parameter.get('name', 'Setting')} is required.")
+        else:
+            return None
+    if param_type in {"integer", "int"}:
+        return int(raw_value)
+    if param_type in {"float", "number"}:
+        return float(str(raw_value).replace(",", "."))
+    return str(raw_value)
+
+
+def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
+    topics = Exp_Topic.query.filter_by(exp_id=experiment.idexp).all()
+    topic_ids = [topic.topic_id for topic in topics]
+    topic_rows = (
+        db.session.query(Topic_List).filter(Topic_List.id.in_(topic_ids)).all()
+        if topic_ids
+        else []
+    )
+    experiment_topics_by_id = {int(topic.id): topic.name for topic in topic_rows}
+    experiment_topic_ids = set(experiment_topics_by_id)
+    opinion_groups_by_name = {
+        str(group.name): {
+            "name": str(group.name),
+            "lower_bound": float(group.lower_bound),
+            "upper_bound": float(group.upper_bound),
+            "value": (float(group.lower_bound) + float(group.upper_bound)) / 2.0,
+        }
+        for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+    }
+    age_classes_by_name = {
+        str(age_class.name): {
+            "name": str(age_class.name),
+            "age_start": int(age_class.age_start),
+            "age_end": int(age_class.age_end),
+        }
+        for age_class in AgeClass.query.order_by(AgeClass.age_start.asc()).all()
+    }
+    leaning_names = {
+        str(leaning.leaning)
+        for leaning in Leanings.query.order_by(Leanings.leaning.asc()).all()
+    }
+
+    settings: dict[str, object] = {}
+    for parameter in spec.get("client_parameters", []):
+        name = str(parameter.get("name") or "").strip()
+        if not name:
+            continue
+        raw_value = request.form.get(f"agent_setting__{name}")
+        value = _coerce_adhoc_client_setting(
+            parameter,
+            raw_value,
+            experiment_topic_ids=experiment_topic_ids,
+            experiment_topics_by_id=experiment_topics_by_id,
+            opinion_groups_by_name=opinion_groups_by_name,
+            age_classes_by_name=age_classes_by_name,
+            leaning_names=leaning_names,
+        )
+        if value in (None, ""):
+            continue
+        if parameter.get("type") == "topic_targets" and not value:
+            raise ValueError("Configure at least one propaganda topic target.")
+        settings[name] = value
+    return settings
+
+
+def _normalize_name_key(value: str) -> str:
+    return str(value or "").strip().casefold()
+
+
+def _lookup_named_option(options_by_name: dict[str, dict], raw_name: str):
+    normalized = _normalize_name_key(raw_name)
+    for name, value in options_by_name.items():
+        if _normalize_name_key(name) == normalized:
+            return value
+    return None
+
+
+def _lookup_name(options: set[str], raw_name: str) -> str | None:
+    normalized = _normalize_name_key(raw_name)
+    for value in options:
+        if _normalize_name_key(value) == normalized:
+            return value
     return None
 
 
@@ -637,6 +816,10 @@ def clients_adhoc(idexp):
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     agent_specs = _adhoc_agent_specs()
+    if not context["experiment_opinion_dynamics_enabled"]:
+        agent_specs = [
+            spec for spec in agent_specs if not spec.get("requires_opinion_dynamics")
+        ]
     if not agent_specs:
         flash("No ad hoc agent plugins are currently installed.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -645,6 +828,30 @@ def clients_adhoc(idexp):
         {
             "adhoc_agent_specs": agent_specs,
             "adhoc_populations_by_type": _adhoc_population_choices(idexp, agent_specs),
+            "adhoc_experiment_topics": context.get("topics", []),
+            "adhoc_opinion_groups": [
+                {
+                    "name": group.name,
+                    "lower_bound": group.lower_bound,
+                    "upper_bound": group.upper_bound,
+                    "value": (group.lower_bound + group.upper_bound) / 2.0,
+                }
+                for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+            ],
+            "adhoc_age_classes": [
+                {
+                    "name": age_class.name,
+                    "age_start": age_class.age_start,
+                    "age_end": age_class.age_end,
+                }
+                for age_class in AgeClass.query.order_by(AgeClass.age_start.asc()).all()
+            ],
+            "adhoc_leanings": [
+                {
+                    "name": leaning.leaning,
+                }
+                for leaning in Leanings.query.order_by(Leanings.leaning.asc()).all()
+            ],
         }
     )
     return render_template("admin/clients_adhoc.html", **context)
@@ -680,6 +887,12 @@ def create_adhoc_client():
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     if spec is None:
         flash("Select a valid ad hoc agent type.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+    if spec.get("requires_opinion_dynamics") and not _opinion_dynamics_enabled_for_client_creation(exp):
+        flash(
+            "The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment.",
+            "error",
+        )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
     population = Population.query.filter_by(id=population_id).first()
@@ -746,6 +959,11 @@ def create_adhoc_client():
         request.form.get("llm_temperature") or llm_defaults["llm_temperature"]
     )
     llm_model = (request.form.get("llm_agent") or "").strip()
+    try:
+        agent_settings = _build_adhoc_client_agent_settings(spec, exp)
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
 
     client_payload = {
         "database": {
@@ -802,7 +1020,7 @@ def create_adhoc_client():
                     request.form.get("max_length_thread_reading") or 10
                 ),
             },
-            "agent_settings": {},
+            "agent_settings": agent_settings,
             "recent_posts_limit": 25,
             "max_ticks": max_ticks,
             "metadata": {
