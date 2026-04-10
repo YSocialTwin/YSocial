@@ -27,7 +27,12 @@ def test_custom_agent_parameter_sections_preserve_defaults_and_visibility():
             {"key": "shadow_ban", "label": "Shadow Ban"},
         ],
         "parameters": [
-            {"name": "moderation_action_type", "type": "enum[one-fits-all, personalized]", "section": "moderation", "default": "one-fits-all"},
+            {
+                "name": "moderation_action_type",
+                "type": "enum[one-fits-all, personalized]",
+                "section": "moderation",
+                "default": "one-fits-all",
+            },
             {
                 "name": "shadow_ban_enabled",
                 "type": "enum[disabled, enabled]",
