@@ -149,7 +149,9 @@ def migrate_postgresql_server(host, port, database, user, password):
                 duration INTEGER
             )
             """)
-        cursor.execute("ALTER TABLE sys_messages ADD COLUMN IF NOT EXISTS duration INTEGER")
+        cursor.execute(
+            "ALTER TABLE sys_messages ADD COLUMN IF NOT EXISTS duration INTEGER"
+        )
         cursor.execute("""
             DO $$
             BEGIN

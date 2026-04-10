@@ -88,7 +88,9 @@ def _prepare_route(monkeypatch, existing_report=None, count_after=0):
     monkeypatch.setattr(
         common,
         "Rounds",
-        SimpleNamespace(id=SimpleNamespace(desc=lambda: None), query=_RoundsQuery(current_round)),
+        SimpleNamespace(
+            id=SimpleNamespace(desc=lambda: None), query=_RoundsQuery(current_round)
+        ),
         raising=False,
     )
     monkeypatch.setattr(

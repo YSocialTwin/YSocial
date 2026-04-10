@@ -45,8 +45,8 @@ from y_web.src.models import (
     Interests,
     Post,
     Post_topics,
-    Reported,
     Reactions,
+    Reported,
     Rounds,
     User_mgmt,
     Websites,
@@ -229,7 +229,9 @@ def _apply_community_filter(base_query, community_slug: Optional[str]):
     )
 
 
-def _fetch_viewer_report_map(viewer_id: Optional[int], post_ids: List[int]) -> Dict[int, bool]:
+def _fetch_viewer_report_map(
+    viewer_id: Optional[int], post_ids: List[int]
+) -> Dict[int, bool]:
     normalized_ids = [int(pid) for pid in post_ids if pid]
     if not viewer_id or not normalized_ids:
         return {}

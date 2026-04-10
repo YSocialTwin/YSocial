@@ -19,10 +19,10 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
-    get_report_count,
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
+    get_report_count,
     get_trending_emotions,
     get_trending_hashtags,
     get_trending_topics,

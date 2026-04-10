@@ -15,9 +15,7 @@ from typing import Dict, Optional
 from y_web.src.system.path_utils import get_resource_path, get_writable_path
 
 _DEFAULT_ROOT = Path.home() / ".cache" / "ysocial_models"
-_CHECKPOINT_RELATIVE_PATH = Path(
-    "torch/hub/checkpoints/toxic_original-c1212f89.ckpt"
-)
+_CHECKPOINT_RELATIVE_PATH = Path("torch/hub/checkpoints/toxic_original-c1212f89.ckpt")
 _CHECKPOINT_EXPECTED_BYTES = 418 * 1024 * 1024
 
 
@@ -213,7 +211,9 @@ def refresh_detoxify_download_state() -> Dict[str, object]:
                 state["pid"] = None
             else:
                 state["status"] = "error"
-                state["message"] = _tail_file(_stderr_log_path()) or "Model download failed."
+                state["message"] = (
+                    _tail_file(_stderr_log_path()) or "Model download failed."
+                )
                 state["finished_at"] = state.get("finished_at") or _utc_now()
                 state["pid"] = None
 
