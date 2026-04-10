@@ -190,7 +190,9 @@ def _parameter_default_value(parameter: dict):
 def _custom_agent_parameter_sections(spec: dict) -> list[dict]:
     section_defs = spec.get("parameter_sections") or []
     section_lookup = {str(section.get("key")): section for section in section_defs}
-    ordered_keys = [str(section.get("key")) for section in section_defs if section.get("key")]
+    ordered_keys = [
+        str(section.get("key")) for section in section_defs if section.get("key")
+    ]
     buckets = {}
 
     for parameter in spec.get("parameters", []):
@@ -199,7 +201,9 @@ def _custom_agent_parameter_sections(spec: dict) -> list[dict]:
             section_meta = section_lookup.get(section_key, {})
             buckets[section_key] = {
                 "key": section_key,
-                "label": str(section_meta.get("label") or section_key.replace("_", " ").title()),
+                "label": str(
+                    section_meta.get("label") or section_key.replace("_", " ").title()
+                ),
                 "description": str(section_meta.get("description") or "").strip(),
                 "parameters": [],
             }
