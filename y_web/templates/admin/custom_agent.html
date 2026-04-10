@@ -68,8 +68,26 @@
                                     <hr>
                                     <div class="tutorial-section">
                                         <b>{{ custom_spec.display_name }} Parameters</b>
-                                        {% for parameter in custom_spec.parameters %}
+                                        {% for section in custom_parameter_sections %}
+                                        <div class="custom-agent-parameter-section" style="margin-top: 18px;">
+                                            <div style="margin-bottom: 10px;">
+                                                <div style="font-weight: 600; color: #1f2937;">{{ section.label }}</div>
+                                                {% if section.description %}
+                                                <small style="color: #6b7280;">{{ section.description }}</small>
+                                                {% endif %}
+                                            </div>
+                                        {% for parameter in section.parameters %}
+                                        {% set form_value = request.form.get(parameter.name, parameter.default if parameter.default is not none else '') %}
+                                        {% set visible_if = parameter.visible_if if parameter.visible_if is defined else none %}
                                         <div class="box-line">
+                                            <div
+                                                class="ys-custom-agent-param"
+                                                {% if visible_if %}
+                                                data-visible-if-field="{{ visible_if.field }}"
+                                                data-visible-if-equals="{{ visible_if.equals }}"
+                                                {% endif %}
+                                                style="display: contents;"
+                                            ></div>
                                             <span class="left">
                                                 {{ parameter.name.replace('_', ' ').title() }}{% if parameter.required %} <small>(required)</small>{% endif %}
                                             </span>
@@ -79,7 +97,7 @@
                                                 <div class="select is-fullwidth">
                                                     <select name="activity_profile" class="input" {% if parameter.required %}required{% endif %}>
                                                         {% for profile in activity_profiles %}
-                                                        <option value="{{ profile.id }}">{{ profile.name }}</option>
+                                                        <option value="{{ profile.id }}" {% if form_value|string == profile.id|string %}selected{% endif %}>{{ profile.name }}</option>
                                                         {% endfor %}
                                                     </select>
                                                 </div>
@@ -90,21 +108,23 @@
                                                         <option value=""></option>
                                                         {% for option in enum_options %}
                                                         {% set option_value = option.strip() %}
-                                                        <option value="{{ option_value }}">{{ option_value }}</option>
+                                                        <option value="{{ option_value }}" {% if form_value|string == option_value|string %}selected{% endif %}>{{ option_value }}</option>
                                                         {% endfor %}
                                                     </select>
                                                 </div>
                                                 {% elif parameter_type == 'number' %}
-                                                <input type="number" name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>
+                                                <input type="number" step="any" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
                                                 {% elif parameter_type.startswith('array') %}
-                                                <textarea name="{{ parameter.name }}" class="textarea" placeholder="Comma-separated values" {% if parameter.required %}required{% endif %}></textarea>
+                                                <textarea name="{{ parameter.name }}" class="textarea" placeholder="Comma-separated values" {% if parameter.required %}required{% endif %}>{{ form_value }}</textarea>
                                                 {% else %}
-                                                <input type="text" name="{{ parameter.name }}" class="input" {% if parameter.required %}required{% endif %}>
+                                                <input type="text" name="{{ parameter.name }}" class="input" value="{{ form_value }}" {% if parameter.required %}required{% endif %}>
                                                 {% endif %}
                                                 {% if parameter.description %}
                                                 <small style="display: block; color: #6b7280; margin-top: 6px;">{{ parameter.description }}</small>
                                                 {% endif %}
                                             </span>
+                                        </div>
+                                        {% endfor %}
                                         </div>
                                         {% endfor %}
                                     </div>

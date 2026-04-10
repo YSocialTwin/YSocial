@@ -175,11 +175,41 @@ def _plugin_agent_specs() -> list[dict]:
                         entry.get("description") or "Plugin-defined agent type."
                     ),
                     "parameters": entry.get("parameters", []) or [],
+                    "parameter_sections": entry.get("parameter_sections", []) or [],
                     "repo_name": repo_name,
                     "manifest_path": str(manifest_path),
                 }
             )
     return specs
+
+
+def _parameter_default_value(parameter: dict):
+    return parameter.get("default")
+
+
+def _custom_agent_parameter_sections(spec: dict) -> list[dict]:
+    section_defs = spec.get("parameter_sections") or []
+    section_lookup = {str(section.get("key")): section for section in section_defs}
+    ordered_keys = [str(section.get("key")) for section in section_defs if section.get("key")]
+    buckets = {}
+
+    for parameter in spec.get("parameters", []):
+        section_key = str(parameter.get("section") or "general")
+        if section_key not in buckets:
+            section_meta = section_lookup.get(section_key, {})
+            buckets[section_key] = {
+                "key": section_key,
+                "label": str(section_meta.get("label") or section_key.replace("_", " ").title()),
+                "description": str(section_meta.get("description") or "").strip(),
+                "parameters": [],
+            }
+            if section_key not in ordered_keys:
+                ordered_keys.append(section_key)
+        enriched = dict(parameter)
+        enriched["default"] = _parameter_default_value(parameter)
+        buckets[section_key]["parameters"].append(enriched)
+
+    return [buckets[key] for key in ordered_keys if key in buckets]
 
 
 def _find_custom_agent_spec(agent_slug: Optional[str]):
@@ -362,6 +392,7 @@ def _render_custom_agent_builder(spec: dict):
     return render_template(
         "admin/custom_agent.html",
         custom_spec=spec,
+        custom_parameter_sections=_custom_agent_parameter_sections(spec),
         custom_populations=_custom_population_rows(
             spec["slug"], spec["accepted_slugs"]
         ),
@@ -471,6 +502,16 @@ def _normalize_custom_agent_parameter_value(parameter: dict, raw_value: str):
         normalized = value.replace(",", ".")
         return str(int(float(normalized)))
     return value
+
+
+def _custom_agent_form_value(parameter: dict):
+    raw_value = request.form.get(str(parameter.get("name") or ""))
+    if raw_value not in (None, ""):
+        return raw_value
+    default = parameter.get("default")
+    if default is None:
+        return ""
+    return str(default)
 
 
 def _delete_agent_ext(agent_id):
@@ -823,6 +864,8 @@ def create_custom_agent(agent_slug):
         if param_name in {"name", "activity_profile"}:
             continue
         raw_value = request.form.get(param_name)
+        if raw_value in (None, "") and parameter.get("default") not in (None, ""):
+            raw_value = str(parameter.get("default"))
         if raw_value in (None, ""):
             continue
         try:

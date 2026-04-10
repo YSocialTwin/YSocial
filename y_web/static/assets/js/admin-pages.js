@@ -392,6 +392,43 @@ var AdminPages = (function() {
         }).render(tableDiv);
     }
 
+    function initCustomAgentConditionalFields() {
+        var items = Array.from(document.querySelectorAll('.ys-custom-agent-param[data-visible-if-field]'));
+        if (!items.length) return;
+
+        function controllingInput(fieldName) {
+            return document.querySelector('[name="'+fieldName+'"]');
+        }
+
+        function syncItem(marker) {
+            var fieldName = marker.dataset.visibleIfField;
+            var expected = marker.dataset.visibleIfEquals;
+            var controller = controllingInput(fieldName);
+            var line = marker.closest('.box-line');
+            if (!controller || !line) return;
+            var current = (controller.value || '').trim();
+            line.style.display = current === expected ? '' : 'none';
+        }
+
+        var fields = new Set();
+        items.forEach(function(marker) {
+            fields.add(marker.dataset.visibleIfField);
+            syncItem(marker);
+        });
+
+        fields.forEach(function(fieldName) {
+            var controller = controllingInput(fieldName);
+            if (!controller) return;
+            controller.addEventListener('change', function() {
+                items.forEach(function(marker) {
+                    if (marker.dataset.visibleIfField === fieldName) {
+                        syncItem(marker);
+                    }
+                });
+            });
+        });
+    }
+
     return {
         initAgentsGrid: initAgentsGrid,
         initPagesGrid: initPagesGrid,
@@ -400,7 +437,8 @@ var AdminPages = (function() {
         initHelloPopulationsGrid: initHelloPopulationsGrid,
         initCustomPopulationAgentsGrid: initCustomPopulationAgentsGrid,
         initCustomPopulationsGrid: initCustomPopulationsGrid,
-        initCustomAgentsGrid: initCustomAgentsGrid
+        initCustomAgentsGrid: initCustomAgentsGrid,
+        initCustomAgentConditionalFields: initCustomAgentConditionalFields
     };
 })();
 
@@ -414,6 +452,7 @@ document.addEventListener('DOMContentLoaded', function() {
     AdminPages.initCustomPopulationAgentsGrid();
     AdminPages.initCustomPopulationsGrid();
     AdminPages.initCustomAgentsGrid();
+    AdminPages.initCustomAgentConditionalFields();
     if (document.querySelector('#table') && window.location.pathname.includes('/admin/pages')) {
         AdminPages.initPagesGrid();
     }
