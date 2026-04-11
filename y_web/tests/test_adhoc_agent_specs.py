@@ -158,4 +158,7 @@ def test_build_adhoc_client_initial_values_reads_existing_config():
     assert values["infinite_duration"] is False
     assert values["agent_settings"]["epsilon"] == 0.1
     assert values["agent_settings"]["propaganda_campaigns"][0]["topic_id"] == 7
-    assert values["agent_settings"]["propaganda_campaigns"][0]["target_opinion_group"] == "Supportive"
+    assert (
+        values["agent_settings"]["propaganda_campaigns"][0]["target_opinion_group"]
+        == "Supportive"
+    )

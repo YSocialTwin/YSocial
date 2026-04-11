@@ -7,10 +7,10 @@ use ``src.simulation`` server/client lifecycle helpers; HPC experiments use the
 ``src.hpc`` server/client helpers plus population backup handling.
 """
 
-from y_web.src.simulation.adhoc_client import stop_all_adhoc_clients
 from y_web.src.hpc.client import start_hpc_client, stop_hpc_client
 from y_web.src.hpc.population_backup import backup_population_for_hpc_client
 from y_web.src.hpc.server import start_hpc_server, stop_hpc_server
+from y_web.src.simulation.adhoc_client import stop_all_adhoc_clients
 from y_web.src.simulation.client import start_client, terminate_client
 from y_web.src.simulation.port_manager import terminate_process_on_port
 from y_web.src.simulation.server import start_server, terminate_server_process

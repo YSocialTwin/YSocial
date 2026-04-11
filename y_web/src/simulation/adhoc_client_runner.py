@@ -101,17 +101,29 @@ def _config_mtime(config_path: Path) -> float:
 
 def _apply_config_metadata_to_state(state: dict, config) -> dict:
     metadata = config.client.metadata or {}
-    state["name"] = str(metadata.get("name") or config.client.client_id or state.get("name") or "")
+    state["name"] = str(
+        metadata.get("name") or config.client.client_id or state.get("name") or ""
+    )
     state["description"] = str(metadata.get("description") or "")
     state["population_id"] = metadata.get("population_id")
     state["population_name"] = str(
-        metadata.get("population_name") or metadata.get("population") or state.get("population_name") or ""
+        metadata.get("population_name")
+        or metadata.get("population")
+        or state.get("population_name")
+        or ""
     )
-    state["agent_type_slug"] = str(metadata.get("agent_type_slug") or state.get("agent_type_slug") or "")
+    state["agent_type_slug"] = str(
+        metadata.get("agent_type_slug") or state.get("agent_type_slug") or ""
+    )
     state["agent_type_display"] = str(
-        metadata.get("agent_type_display") or config.client.agent_type or state.get("agent_type_display") or ""
+        metadata.get("agent_type_display")
+        or config.client.agent_type
+        or state.get("agent_type_display")
+        or ""
     )
-    state["agent_type_runtime"] = str(config.client.agent_type or state.get("agent_type_runtime") or "")
+    state["agent_type_runtime"] = str(
+        config.client.agent_type or state.get("agent_type_runtime") or ""
+    )
     return state
 
 
@@ -205,7 +217,10 @@ def run(config_path: Path, state_path: Path) -> int:
                 _write_state(state_path, state)
                 logger.info(
                     "Reloaded ad hoc client config",
-                    extra={"client_id": config.client.client_id, "config_path": str(config_path)},
+                    extra={
+                        "client_id": config.client.client_id,
+                        "config_path": str(config_path),
+                    },
                 )
 
             pending_rounds = database.get_rounds_after(connection, last_seen_round_id)

@@ -119,17 +119,16 @@ from ._helpers import (
     _load_forum_experiment_context,
     _load_memory_capable_experiment_context,
     _normalize_embedding_host,
-    _normalize_image_feed_item,
-    _normalize_rss_feed_item,
     _normalize_embedding_service,
+    _normalize_image_feed_item,
     _normalize_image_feeds_payload,
+    _normalize_rss_feed_item,
     _normalize_rss_feeds_payload,
     _normalize_subreddit_input,
     _parse_required_feed_limit,
     _read_experiment_embedding_settings,
     _read_feed_with_headers,
 )
-
 
 FORUM_IMAGE_FEED_INTERESTS = sorted(
     [
@@ -378,11 +377,15 @@ def update_rss_feeds(uid):
             continue
 
     resources = (
-        ForumRssFeedResource.query.filter(ForumRssFeedResource.id.in_(selected_ids)).all()
+        ForumRssFeedResource.query.filter(
+            ForumRssFeedResource.id.in_(selected_ids)
+        ).all()
         if selected_ids
         else []
     )
-    resource_order = {resource_id: index for index, resource_id in enumerate(selected_ids)}
+    resource_order = {
+        resource_id: index for index, resource_id in enumerate(selected_ids)
+    }
     resources = sorted(
         resources,
         key=lambda resource: resource_order.get(resource.id, len(resource_order)),
@@ -394,9 +397,10 @@ def update_rss_feeds(uid):
     with open(url_feeds_path, "w") as handle:
         handle.write("\n".join(urls))
 
-    if str(getattr(experiment, "platform_type", "")).lower() == "forum" and int(
-        getattr(experiment, "running", 0) or 0
-    ) == 1:
+    if (
+        str(getattr(experiment, "platform_type", "")).lower() == "forum"
+        and int(getattr(experiment, "running", 0) or 0) == 1
+    ):
         flash(
             "The updated forum feed assignment has been saved. Running clients will use the new feeds after they are restarted.",
             "info",
@@ -642,7 +646,9 @@ def create_forum_rss_resource():
     return redirect("/admin/forum_rss_resources")
 
 
-@experiments.route("/admin/delete_forum_rss_resource/<int:resource_id>", methods=["POST"])
+@experiments.route(
+    "/admin/delete_forum_rss_resource/<int:resource_id>", methods=["POST"]
+)
 @login_required
 def delete_forum_rss_resource(resource_id):
     """Delete a reusable forum RSS resource."""
@@ -715,9 +721,10 @@ def update_image_feeds(uid):
     )
     _write_experiment_image_feed_file(experiment_dir, resources)
 
-    if str(getattr(experiment, "platform_type", "")).lower() == "forum" and int(
-        getattr(experiment, "running", 0) or 0
-    ) == 1:
+    if (
+        str(getattr(experiment, "platform_type", "")).lower() == "forum"
+        and int(getattr(experiment, "running", 0) or 0) == 1
+    ):
         flash(
             "The updated image feed assignment has been saved. Running clients will use the new feeds after they are restarted.",
             "info",
@@ -866,7 +873,9 @@ def create_forum_image_resource():
     return redirect("/admin/forum_image_resources")
 
 
-@experiments.route("/admin/delete_forum_image_resource/<int:resource_id>", methods=["POST"])
+@experiments.route(
+    "/admin/delete_forum_image_resource/<int:resource_id>", methods=["POST"]
+)
 @login_required
 def delete_forum_image_resource(resource_id):
     """Delete a reusable forum image feed resource."""
