@@ -100,7 +100,7 @@ def _config_mtime(config_path: Path) -> float:
 
 
 def _apply_config_metadata_to_state(state: dict, config) -> dict:
-    metadata = config.client.metadata or {}
+    metadata = getattr(config.client, "metadata", None) or {}
     state["name"] = str(metadata.get("name") or config.client.client_id or state.get("name") or "")
     state["description"] = str(metadata.get("description") or "")
     state["population_id"] = metadata.get("population_id")

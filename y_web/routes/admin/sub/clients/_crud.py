@@ -183,6 +183,41 @@ def _coerce_adhoc_client_setting(
     leaning_names: set[str],
 ):
     param_type = str(parameter.get("type") or "string").strip().lower()
+    if param_type == "mop_targets":
+        if raw_value in (None, ""):
+            return []
+        if isinstance(raw_value, str):
+            payload = json.loads(raw_value)
+        else:
+            payload = raw_value
+        if not isinstance(payload, list):
+            raise ValueError("MoP targets must be a list.")
+        normalized = []
+        for entry in payload:
+            if not isinstance(entry, dict):
+                raise ValueError("Each MoP target must be an object.")
+            topic_id = int(entry.get("topic_id"))
+            if topic_id not in experiment_topic_ids:
+                raise ValueError("Selected topic is not part of this experiment.")
+            target_group_name = str(entry.get("target_opinion_group") or "").strip()
+            target_opinion = None
+            if target_group_name:
+                target_group = _lookup_named_option(
+                    opinion_groups_by_name, target_group_name
+                )
+                if target_group is None:
+                    raise ValueError("Selected opinion target group is not valid.")
+                target_group_name = str(target_group["name"])
+                target_opinion = float(target_group["value"])
+            normalized.append(
+                {
+                    "topic_id": topic_id,
+                    "topic_name": experiment_topics_by_id.get(topic_id, str(topic_id)),
+                    "target_opinion": target_opinion,
+                    "target_opinion_group": target_group_name,
+                }
+            )
+        return normalized
     if param_type == "topic_targets":
         if raw_value in (None, ""):
             return []
@@ -326,6 +361,8 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
             continue
         if parameter.get("type") == "topic_targets" and not value:
             raise ValueError("Configure at least one propaganda topic target.")
+        if parameter.get("type") == "mop_targets" and not value:
+            raise ValueError("Configure at least one MoP campaign target.")
         settings[name] = value
     return settings
 

@@ -281,6 +281,25 @@ def test_adhoc_client_runner_reloads_config_changes_between_rounds():
     assert "Reloaded ad hoc client config" in src
 
 
+def test_adhoc_client_runner_tolerates_missing_client_metadata():
+    """Legacy plugin configs without client.metadata must not crash state updates."""
+    import y_web.src.simulation.adhoc_client_runner as mod
+
+    config = SimpleNamespace(
+        client=SimpleNamespace(client_id="adhoc-1", agent_type="Moderator Agent")
+    )
+
+    state = mod._apply_config_metadata_to_state({}, config)
+
+    assert state["name"] == "adhoc-1"
+    assert state["description"] == ""
+    assert state["population_id"] is None
+    assert state["population_name"] == ""
+    assert state["agent_type_slug"] == ""
+    assert state["agent_type_display"] == "Moderator Agent"
+    assert state["agent_type_runtime"] == "Moderator Agent"
+
+
 def test_client_runner_repo_root_on_sys_path():
     """client_runner._REPO_ROOT must appear on sys.path after import."""
     import y_web.src.simulation.client_runner as cr

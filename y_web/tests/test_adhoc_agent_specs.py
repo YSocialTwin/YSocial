@@ -18,6 +18,18 @@ def test_adhoc_agent_specs_include_propaganda_client_settings():
     )
 
 
+def test_adhoc_agent_specs_include_mop_client_settings():
+    specs = _adhoc_agent_specs()
+
+    mop = next(spec for spec in specs if spec["agent_type"] == "master_of_puppets")
+
+    assert mop["requires_llm"] is True
+    assert any(
+        parameter["name"] == "mop_campaigns"
+        for parameter in mop["client_parameters"]
+    )
+
+
 def test_topic_target_client_setting_is_validated_against_experiment_topics():
     parameter = {
         "name": "propaganda_campaigns",
@@ -99,6 +111,46 @@ def test_topic_target_client_setting_normalizes_group_names():
 
     assert value[0]["target_opinion_group"] == "Supportive"
     assert value[0]["target_agent_opinion_group_bounds"]["name"] == "Supportive"
+
+
+def test_mop_target_setting_accepts_optional_opinion_group():
+    parameter = {
+        "name": "mop_campaigns",
+        "type": "mop_targets",
+        "required": True,
+    }
+
+    value = _coerce_adhoc_client_setting(
+        parameter,
+        '[{"topic_id": 7, "target_opinion_group": " supportive "}, {"topic_id": 8, "target_opinion_group": ""}]',
+        experiment_topic_ids={7, 8},
+        experiment_topics_by_id={7: "Climate", 8: "War"},
+        opinion_groups_by_name={
+            "Supportive": {
+                "name": "Supportive",
+                "lower_bound": 0.7,
+                "upper_bound": 0.9,
+                "value": 0.8,
+            }
+        },
+        age_classes_by_name={},
+        leaning_names=set(),
+    )
+
+    assert value == [
+        {
+            "topic_id": 7,
+            "topic_name": "Climate",
+            "target_opinion": 0.8,
+            "target_opinion_group": "Supportive",
+        },
+        {
+            "topic_id": 8,
+            "topic_name": "War",
+            "target_opinion": None,
+            "target_opinion_group": "",
+        },
+    ]
 
 
 def test_build_adhoc_client_initial_values_reads_existing_config():

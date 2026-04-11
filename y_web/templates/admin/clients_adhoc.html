@@ -418,6 +418,25 @@ const YS_ADHOC_CLIENTS = {
             `;
         }
 
+        if (type === 'mop_targets') {
+            return `
+                <div class="box-line">
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
+                        <div class="ys-adhoc-mop-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
+                            <div class="ys-adhoc-target-builder-help">
+                                Add one campaign row per topic the MoP network should push. The opinion objective is optional.
+                            </div>
+                            <div class="ys-adhoc-mop-rows"></div>
+                            <button type="button" class="button is-light ys-adhoc-add-mop-target">+ Add Goal</button>
+                        </div>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
         const inputType = type === 'integer' || type === 'float' || type === 'number' ? 'number' : 'text';
         const step = type === 'integer' ? '1' : (type === 'float' || type === 'number' ? '0.01' : null);
         return `
@@ -510,6 +529,45 @@ const YS_ADHOC_CLIENTS = {
         syncTopicTargets(builder);
     }
 
+    function addMopTargetRow(builder, initial = {}) {
+        const rows = builder.querySelector('.ys-adhoc-mop-rows');
+        if (!rows) return;
+        const row = document.createElement('div');
+        row.className = 'mb-2 ys-adhoc-target-row';
+        row.innerHTML = `
+            <div class="ys-adhoc-target-grid">
+                <div class="ys-adhoc-target-field">
+                    <label>Topic</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-mop-topic">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.experimentTopics.map(topic => `<option value="${escapeHtml(topic.id)}">${escapeHtml(topic.name)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field">
+                    <label>Opinion Goal (optional)</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-mop-opinion-group">
+                            <option value=""></option>
+                            ${YS_ADHOC_CLIENTS.opinionGroups.map(group => `<option value="${escapeHtml(group.name)}">${escapeHtml(group.name)} (${group.lower_bound.toFixed(2)}-${group.upper_bound.toFixed(2)})</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
+                    <label>&nbsp;</label>
+                    <button type="button" class="button is-light ys-adhoc-remove-mop-target">Remove</button>
+                </div>
+            </div>
+        `;
+        rows.appendChild(row);
+        const topicSelect = row.querySelector('.ys-adhoc-mop-topic');
+        const opinionGroupSelect = row.querySelector('.ys-adhoc-mop-opinion-group');
+        if (topicSelect && initial.topic_id != null) topicSelect.value = String(initial.topic_id);
+        if (opinionGroupSelect) opinionGroupSelect.value = String(initial.target_opinion_group || '');
+        syncMopTargets(builder);
+    }
+
     function syncTopicTargets(builder) {
         const settingName = builder.dataset.settingName;
         const hidden = document.getElementById(`agent_setting__${settingName}`);
@@ -537,6 +595,27 @@ const YS_ADHOC_CLIENTS = {
         updateCreateButton();
     }
 
+    function syncMopTargets(builder) {
+        const settingName = builder.dataset.settingName;
+        const hidden = document.getElementById(`agent_setting__${settingName}`);
+        if (!hidden) return;
+        const payload = Array.from(builder.querySelectorAll('.ys-adhoc-target-row')).map(row => {
+            const topicId = row.querySelector('.ys-adhoc-mop-topic')?.value || '';
+            const targetOpinionGroup = row.querySelector('.ys-adhoc-mop-opinion-group')?.value || '';
+            if (!topicId) return null;
+            const topic = YS_ADHOC_CLIENTS.experimentTopics.find(item => String(item.id) === String(topicId));
+            const opinionGroup = YS_ADHOC_CLIENTS.opinionGroups.find(item => String(item.name) === String(targetOpinionGroup));
+            return {
+                topic_id: Number(topicId),
+                topic_name: topic ? topic.name : String(topicId),
+                target_opinion_group: targetOpinionGroup,
+                target_opinion: opinionGroup ? Number(opinionGroup.value) : null
+            };
+        }).filter(Boolean);
+        hidden.value = JSON.stringify(payload);
+        updateCreateButton();
+    }
+
     function syncAllTopicTargets() {
         document.querySelectorAll('.ys-adhoc-target-builder').forEach(builder => {
             const rows = builder.querySelector('.ys-adhoc-target-rows');
@@ -555,6 +634,23 @@ const YS_ADHOC_CLIENTS = {
             }
             syncTopicTargets(builder);
         });
+        document.querySelectorAll('.ys-adhoc-mop-builder').forEach(builder => {
+            const rows = builder.querySelector('.ys-adhoc-mop-rows');
+            if (rows && !rows.children.length) {
+                let initialRows = [];
+                try {
+                    initialRows = JSON.parse(builder.dataset.initialValue || '[]');
+                } catch (_error) {
+                    initialRows = [];
+                }
+                if (Array.isArray(initialRows) && initialRows.length) {
+                    initialRows.forEach(item => addMopTargetRow(builder, item));
+                } else {
+                    addMopTargetRow(builder);
+                }
+            }
+            syncMopTargets(builder);
+        });
     }
 
     function updateCreateButton() {
@@ -571,6 +667,13 @@ const YS_ADHOC_CLIENTS = {
                 if (!parameter.required) return true;
                 if (!field) return false;
                 if (parameter.type === 'topic_targets') {
+                    try {
+                        return JSON.parse(field.value || '[]').length > 0;
+                    } catch (_error) {
+                        return false;
+                    }
+                }
+                if (parameter.type === 'mop_targets') {
                     try {
                         return JSON.parse(field.value || '[]').length > 0;
                     } catch (_error) {
@@ -665,21 +768,38 @@ const YS_ADHOC_CLIENTS = {
                 if (builder) addTopicTargetRow(builder);
                 return;
             }
+            const addMopButton = event.target.closest('.ys-adhoc-add-mop-target');
+            if (addMopButton) {
+                const builder = addMopButton.closest('.ys-adhoc-mop-builder');
+                if (builder) addMopTargetRow(builder);
+                return;
+            }
             const removeButton = event.target.closest('.ys-adhoc-remove-target');
             if (removeButton) {
                 const builder = removeButton.closest('.ys-adhoc-target-builder');
                 removeButton.closest('.ys-adhoc-target-row')?.remove();
                 if (builder) syncTopicTargets(builder);
+                return;
+            }
+            const removeMopButton = event.target.closest('.ys-adhoc-remove-mop-target');
+            if (removeMopButton) {
+                const builder = removeMopButton.closest('.ys-adhoc-mop-builder');
+                removeMopButton.closest('.ys-adhoc-target-row')?.remove();
+                if (builder) syncMopTargets(builder);
             }
         });
         document.addEventListener('input', function(event) {
             const builder = event.target.closest('.ys-adhoc-target-builder');
             if (builder) syncTopicTargets(builder);
+            const mopBuilder = event.target.closest('.ys-adhoc-mop-builder');
+            if (mopBuilder) syncMopTargets(mopBuilder);
             updateCreateButton();
         });
         document.addEventListener('change', function(event) {
             const builder = event.target.closest('.ys-adhoc-target-builder');
             if (builder) syncTopicTargets(builder);
+            const mopBuilder = event.target.closest('.ys-adhoc-mop-builder');
+            if (mopBuilder) syncMopTargets(mopBuilder);
             updateCreateButton();
         });
         if (agentTypeInput && agentTypeInput.value) {
