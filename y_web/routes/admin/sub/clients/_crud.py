@@ -201,7 +201,9 @@ def _coerce_adhoc_client_setting(
                 raise ValueError("Selected topic is not part of this experiment.")
             target_group_name = str(entry.get("target_opinion_group") or "").strip()
             if target_group_name:
-                target_group = _lookup_named_option(opinion_groups_by_name, target_group_name)
+                target_group = _lookup_named_option(
+                    opinion_groups_by_name, target_group_name
+                )
                 if target_group is None:
                     raise ValueError("Selected opinion target group is not valid.")
                 target_group_name = str(target_group["name"])
@@ -219,7 +221,9 @@ def _coerce_adhoc_client_setting(
                     opinion_groups_by_name, target_agent_opinion_group
                 )
                 if target_agent_group is None:
-                    raise ValueError("Selected target agent opinion group is not valid.")
+                    raise ValueError(
+                        "Selected target agent opinion group is not valid."
+                    )
                 target_agent_opinion_group = str(target_agent_group["name"])
                 target_agent_opinion_group_bounds = {
                     "name": str(target_agent_group["name"]),
@@ -231,11 +235,15 @@ def _coerce_adhoc_client_setting(
             if target_leaning and _lookup_name(leaning_names, target_leaning) is None:
                 raise ValueError("Selected political leaning is not valid.")
             if target_leaning:
-                target_leaning = _lookup_name(leaning_names, target_leaning) or target_leaning
+                target_leaning = (
+                    _lookup_name(leaning_names, target_leaning) or target_leaning
+                )
             target_age_classes = []
             for age_name in entry.get("target_age_classes") or []:
                 normalized_age_name = str(age_name).strip()
-                age_class = _lookup_named_option(age_classes_by_name, normalized_age_name)
+                age_class = _lookup_named_option(
+                    age_classes_by_name, normalized_age_name
+                )
                 if age_class is None:
                     raise ValueError("Selected age class is not valid.")
                 target_age_classes.append(age_class)
@@ -938,7 +946,9 @@ def clients_adhoc(idexp):
                     "upper_bound": group.upper_bound,
                     "value": (group.lower_bound + group.upper_bound) / 2.0,
                 }
-                for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+                for group in OpinionGroup.query.order_by(
+                    OpinionGroup.lower_bound.asc()
+                ).all()
             ],
             "adhoc_age_classes": [
                 {
@@ -1098,7 +1108,9 @@ def create_adhoc_client():
     if spec is None:
         flash("Select a valid ad hoc agent type.", "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
-    if spec.get("requires_opinion_dynamics") and not _opinion_dynamics_enabled_for_client_creation(exp):
+    if spec.get(
+        "requires_opinion_dynamics"
+    ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
             "The selected ad hoc agent type requires opinion dynamics to be enabled for this experiment.",
             "error",

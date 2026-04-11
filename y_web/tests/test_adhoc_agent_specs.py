@@ -19,7 +19,11 @@ def test_adhoc_agent_specs_include_propaganda_client_settings():
 
 
 def test_topic_target_client_setting_is_validated_against_experiment_topics():
-    parameter = {"name": "propaganda_campaigns", "type": "topic_targets", "required": True}
+    parameter = {
+        "name": "propaganda_campaigns",
+        "type": "topic_targets",
+        "required": True,
+    }
 
     value = _coerce_adhoc_client_setting(
         parameter,
@@ -70,7 +74,11 @@ def test_topic_target_client_setting_is_validated_against_experiment_topics():
 
 
 def test_topic_target_client_setting_normalizes_group_names():
-    parameter = {"name": "propaganda_campaigns", "type": "topic_targets", "required": True}
+    parameter = {
+        "name": "propaganda_campaigns",
+        "type": "topic_targets",
+        "required": True,
+    }
 
     value = _coerce_adhoc_client_setting(
         parameter,
