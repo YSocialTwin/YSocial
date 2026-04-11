@@ -58,9 +58,9 @@ from y_web.src.simulation.adhoc_client import (
     config_path_for_client,
     delete_adhoc_client,
     initialize_state_for_config,
-    read_json as read_adhoc_json,
-    write_json as write_adhoc_json,
 )
+from y_web.src.simulation.adhoc_client import read_json as read_adhoc_json
+from y_web.src.simulation.adhoc_client import write_json as write_adhoc_json
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
 
@@ -398,7 +398,9 @@ def _build_adhoc_client_initial_values(config: dict) -> dict:
     metadata = client.get("metadata", {}) if isinstance(client, dict) else {}
     servers = client.get("servers", {}) if isinstance(client, dict) else {}
     simulation = client.get("simulation", {}) if isinstance(client, dict) else {}
-    agent_settings = client.get("agent_settings", {}) if isinstance(client, dict) else {}
+    agent_settings = (
+        client.get("agent_settings", {}) if isinstance(client, dict) else {}
+    )
     days = int(simulation.get("days") or 30)
     infinite = bool(simulation.get("run_until_stopped"))
     llm_agents = client.get("agents", {}).get("llm_agents") or []
@@ -406,7 +408,9 @@ def _build_adhoc_client_initial_values(config: dict) -> dict:
     return {
         "name": str(metadata.get("name") or client.get("client_id") or ""),
         "descr": str(metadata.get("description") or ""),
-        "agent_type": str(metadata.get("agent_type_slug") or client.get("agent_type") or ""),
+        "agent_type": str(
+            metadata.get("agent_type_slug") or client.get("agent_type") or ""
+        ),
         "population_id": metadata.get("population_id"),
         "llm_backend": str(servers.get("llm_backend") or "ollama"),
         "llm": str(servers.get("llm") or ""),
@@ -445,8 +449,10 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
     simulation["days"] = config_days
     simulation["run_until_stopped"] = infinite_duration
     simulation["clock_mode"] = (
-        request.form.get("clock_mode") or simulation.get("clock_mode") or "simulated"
-    ).strip().lower()
+        (request.form.get("clock_mode") or simulation.get("clock_mode") or "simulated")
+        .strip()
+        .lower()
+    )
     simulation["clock_timezone"] = (
         request.form.get("clock_timezone")
         or simulation.get("clock_timezone")
@@ -465,7 +471,9 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
         current_llm_model = str(llm_agents[0] or "")
     llm_defaults = _adhoc_llm_defaults_for_experiment(exp.idexp)
     if spec.get("requires_llm"):
-        llm = (request.form.get("llm") or "").strip() or str(servers.get("llm") or llm_defaults["llm"])
+        llm = (request.form.get("llm") or "").strip() or str(
+            servers.get("llm") or llm_defaults["llm"]
+        )
         llm_api_key = (request.form.get("llm_api_key") or "").strip() or str(
             servers.get("llm_api_key") or llm_defaults["llm_api_key"]
         )
@@ -480,7 +488,9 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
             or llm_defaults["llm_temperature"]
         )
         llm_model = (request.form.get("llm_agent") or "").strip() or current_llm_model
-        llm_backend = (request.form.get("llm_backend") or servers.get("llm_backend") or "ollama").strip()
+        llm_backend = (
+            request.form.get("llm_backend") or servers.get("llm_backend") or "ollama"
+        ).strip()
         servers["llm"] = llm
         servers["llm_api_key"] = llm_api_key
         servers["llm_max_tokens"] = llm_max_tokens
@@ -1025,10 +1035,15 @@ def edit_adhoc_client(idexp, client_key):
         flash("Experiment not found.", "error")
         return redirect(url_for("experiments.settings"))
     if exp.is_remote == 1:
-        flash("Ad hoc agent clients are not available for remote experiments.", "warning")
+        flash(
+            "Ad hoc agent clients are not available for remote experiments.", "warning"
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if not _experiment_uses_llm_agents(exp):
-        flash("Ad hoc agent clients are not available for rule-based experiments.", "warning")
+        flash(
+            "Ad hoc agent clients are not available for rule-based experiments.",
+            "warning",
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
     if _experiment_configuration_update_required(exp):
         flash(
@@ -1064,7 +1079,10 @@ def edit_adhoc_client(idexp, client_key):
     population_choices = _adhoc_population_choices(idexp, agent_specs)
     if selected_population_id and spec:
         existing_choices = population_choices.get(spec["slug"], [])
-        if not any(str(item.get("id")) == str(selected_population_id) for item in existing_choices):
+        if not any(
+            str(item.get("id")) == str(selected_population_id)
+            for item in existing_choices
+        ):
             population = Population.query.filter_by(id=selected_population_id).first()
             if population is not None:
                 existing_choices.append(
@@ -1088,7 +1106,9 @@ def edit_adhoc_client(idexp, client_key):
                     "upper_bound": group.upper_bound,
                     "value": (group.lower_bound + group.upper_bound) / 2.0,
                 }
-                for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+                for group in OpinionGroup.query.order_by(
+                    OpinionGroup.lower_bound.asc()
+                ).all()
             ],
             "adhoc_age_classes": [
                 {
@@ -1306,7 +1326,9 @@ def create_adhoc_client():
     return redirect(url_for("experiments.experiment_details", uid=exp_id))
 
 
-@clientsr.route("/admin/update_adhoc_client/<int:idexp>/<path:client_key>", methods=["POST"])
+@clientsr.route(
+    "/admin/update_adhoc_client/<int:idexp>/<path:client_key>", methods=["POST"]
+)
 @login_required
 def update_adhoc_client(idexp, client_key):
     """Update an existing ad hoc client configuration in place."""
@@ -1344,22 +1366,31 @@ def update_adhoc_client(idexp, client_key):
     if spec is None:
         flash("The ad hoc agent type is no longer available.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
-    if spec.get("requires_opinion_dynamics") and not _opinion_dynamics_enabled_for_client_creation(exp):
+    if spec.get(
+        "requires_opinion_dynamics"
+    ) and not _opinion_dynamics_enabled_for_client_creation(exp):
         flash(
             "The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment.",
             "error",
         )
-        return redirect(url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key))
+        return redirect(
+            url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key)
+        )
 
     try:
         updated = _apply_adhoc_client_form_updates(config, spec, exp)
     except ValueError as exc:
         flash(str(exc), "error")
-        return redirect(url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key))
+        return redirect(
+            url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key)
+        )
 
     write_adhoc_json(config_path, updated)
     initialize_state_for_config(config_path)
-    flash("Ad hoc client settings updated. Running clients will pick up the changes on the next round.", "success")
+    flash(
+        "Ad hoc client settings updated. Running clients will pick up the changes on the next round.",
+        "success",
+    )
     return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 

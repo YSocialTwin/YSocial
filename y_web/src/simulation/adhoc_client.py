@@ -258,7 +258,10 @@ def _find_matching_adhoc_pids(config_path: Path) -> list[int]:
             if not cmdline:
                 continue
             joined = " ".join(cmdline)
-            if "adhoc_client_runner.py" not in joined and "--run-adhoc-client-subprocess" not in joined:
+            if (
+                "adhoc_client_runner.py" not in joined
+                and "--run-adhoc-client-subprocess" not in joined
+            ):
                 continue
             if target not in joined:
                 continue
