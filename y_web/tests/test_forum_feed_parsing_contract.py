@@ -40,6 +40,15 @@ def test_image_feeds_template_allows_reddit_urls():
     assert "https://www.reddit.com/r/memes/" in content
 
 
+def test_forum_image_resource_template_keeps_parse_preview_flow():
+    content = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "forum_image_resources.html"
+    ).read_text(encoding="utf-8")
+
+    assert 'onclick="parseSubreddit()"' in content
+    assert 'id="sample_images"' in content
+
+
 def test_rss_feed_parser_prefers_feed_metadata_link():
     content = (
         REPO_ROOT / "y_web" / "routes" / "admin" / "sub" / "experiments" / "_feeds.py"
@@ -47,6 +56,15 @@ def test_rss_feed_parser_prefers_feed_metadata_link():
 
     assert 'site_url = str(feed.feed.get("link") or "").strip()' in content
     assert '"url_site": site_url or site_host' in content
+
+
+def test_forum_rss_resource_template_mentions_json_and_direct_urls():
+    content = (
+        REPO_ROOT / "y_web" / "templates" / "admin" / "forum_rss_resources.html"
+    ).read_text(encoding="utf-8")
+
+    assert "Reddit JSON listing feeds" in content
+    assert "Direct article URLs remain experiment-specific" in content
 
 
 def test_parse_admin_feed_metadata_accepts_reddit_listing_json():

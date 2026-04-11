@@ -29,6 +29,8 @@ from y_web.src.models import (
     Content_Recsys,
     Education,
     Follow_Recsys,
+    ForumImageFeedResource,
+    ForumRssFeedResource,
     Languages,
     Leanings,
     Nationalities,
@@ -617,6 +619,8 @@ def agents_dashboard():
 
     synthetic_agent_count = Agent.query.count()
     page_count = Page.query.count()
+    forum_rss_feed_count = ForumRssFeedResource.query.count()
+    forum_image_feed_count = ForumImageFeedResource.query.count()
     population_count = Population.query.count()
     activity_profile_count = ActivityProfile.query.count()
     populations_with_agents = (
@@ -674,6 +678,51 @@ def agents_dashboard():
             }
         )
 
+    agent_resource_cards.extend(
+        [
+            {
+                "title": "Forum RSS Feeds",
+                "subtitle": "Built-in resource",
+                "icon": "rss",
+                "accent": "#c2410c",
+                "surface": "linear-gradient(135deg, #fff7ed 0%, #fffbeb 55%, #ffffff 100%)",
+                "border": "#fdba74",
+                "description": "Validate and register reusable RSS sources for forum simulations. Once saved, the same feed can be assigned across multiple experiments.",
+                "highlights": [
+                    f"{forum_rss_feed_count} reusable RSS feeds available",
+                    "Validation happens once in the dashboard workspace",
+                    "Forum experiments assign from the shared registry",
+                ],
+                "cta_label": "Manage RSS Resources",
+                "cta_href": "/admin/forum_rss_resources",
+                "secondary_label": "Create feed entries centrally, then reuse them across forum simulations without revalidating the same source each time.",
+                "meta": {},
+                "deployment_tags": ["forum"],
+                "is_plugin": False,
+            },
+            {
+                "title": "Forum Image Feeds",
+                "subtitle": "Built-in resource",
+                "icon": "image",
+                "accent": "#7c3aed",
+                "surface": "linear-gradient(135deg, #f5f3ff 0%, #faf5ff 55%, #ffffff 100%)",
+                "border": "#c4b5fd",
+                "description": "Register reusable subreddit-based image feeds for forum experiments, including interest tags used during image ingestion.",
+                "highlights": [
+                    f"{forum_image_feed_count} reusable image feeds available",
+                    "Subreddit validation is done before assignment",
+                    "The same subreddit definition can be reused safely",
+                ],
+                "cta_label": "Manage Image Resources",
+                "cta_href": "/admin/forum_image_resources",
+                "secondary_label": "Maintain the canonical image-feed catalog here and assign only the feeds needed by each forum simulation.",
+                "meta": {},
+                "deployment_tags": ["forum"],
+                "is_plugin": False,
+            },
+        ]
+    )
+
     agent_resource_cards.extend(plugin_agent_cards)
     agent_resource_groups = _group_agent_resource_cards(agent_resource_cards)
 
@@ -683,6 +732,8 @@ def agents_dashboard():
         agent_resources_summary={
             "total_agents": synthetic_agent_count,
             "total_pages": page_count,
+            "forum_rss_feeds": forum_rss_feed_count,
+            "forum_image_feeds": forum_image_feed_count,
             "total_populations": population_count,
             "activity_profiles": activity_profile_count,
             "plugin_agent_types": len(plugin_agent_cards),

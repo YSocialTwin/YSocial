@@ -87,7 +87,7 @@
                                         {% if llm_agents_enabled_effective %}
                                         <div class="exp-config-item">
                                             <label class="switch-small">
-                                                <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %}>
+                                                <input type="checkbox" id="toxicity_annotation_toggle_exp" name="toxicity_annotation" {% if toxicity_annotation_enabled %}checked{% endif %} {% if not detoxify_ready %}disabled{% endif %}>
                                                 <span class="slider-small round"></span>
                                             </label>
                                             <span>Toxicity</span>
@@ -125,9 +125,13 @@
                                         {% endif %}
                                     </div>
                                     {% if llm_agents_enabled_effective %}
-                                    <div id="perspective_api_field_exp" class="ys-mt-8">
-                                        <label style="font-size: 0.76rem; color: #6b7280; display: block; margin-bottom: 4px;">Perspective API Key (optional; Detoxify is used when empty)</label>
-                                        <input type="text" id="perspective_api_input_exp" class="input is-small" name="perspective_api" value="{{ current_perspective_api or '' }}" placeholder="AIza... (optional)" style="font-size: 0.84rem;">
+                                    {# Perspective API support has been discontinued. Keep Detoxify as the implicit toxicity backend. #}
+                                    <div class="ys-mt-8" style="font-size: 0.76rem; color: #6b7280;">
+                                        {% if detoxify_ready %}
+                                        When <b>Toxicity</b> is enabled, Detoxify is used automatically.
+                                        {% else %}
+                                        Install Detoxify first from <a href="{{ url_for('experiments.miscellanea') }}">Miscellanea</a> to enable toxicity annotation.
+                                        {% endif %}
                                     </div>
                                     {% else %}
                                     <div style="margin-top: 8px; font-size: 0.76rem; color: #6b7280;">
@@ -162,10 +166,10 @@
                                 </div>
                                 {% endif %}
                                 <div class="box-line">
-                                    <span class="left">Edit RSS Feeds</span>
+                                    <span class="left">Select RSS Feeds</span>
                                     <span class="right">
                                         {% if can_manage_experiment %}
-                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="Edit RSS Feeds">
+                                        <a class="link-tooltip" href="/admin/rss_feeds/{{ experiment.idexp }}" title="Select RSS Feeds">
  <i class="mdi mdi-rss-box ys-icon-lg"></i>
                                         </a>
                                         {% else %}
@@ -174,10 +178,10 @@
                                     </span>
                                 </div>
                                 <div class="box-line">
-                                    <span class="left">Edit Image Feeds</span>
+                                    <span class="left">Select Image Feeds</span>
                                     <span class="right">
                                         {% if can_manage_experiment %}
-                                        <a class="link-tooltip" href="/admin/image_feeds/{{ experiment.idexp }}" title="Edit Image Feeds">
+                                        <a class="link-tooltip" href="/admin/image_feeds/{{ experiment.idexp }}" title="Select Image Feeds">
  <i class="mdi mdi-image-multiple ys-icon-lg"></i>
                                         </a>
                                         {% else %}
@@ -604,7 +608,14 @@
                                     <div class="left" style="display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1 1 auto; overflow: hidden;">
                                         <i class="mdi mdi-puzzle-outline ys-icon-md-muted"></i>
                                         <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; overflow: hidden; flex: 1 1 auto;">
-                                            <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%;" title="{{ adhoc_client.name }}">{{ adhoc_client.name }}</span>
+                                            <div style="display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%;">
+                                                <span style="font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; flex: 1 1 auto;" title="{{ adhoc_client.name }}">{{ adhoc_client.name }}</span>
+                                                <span style="display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto;">
+                                                    <a href="/admin/edit_adhoc_client/{{ experiment.idexp }}/{{ adhoc_client.client_key }}" class="link-tooltip" title="Edit Client Settings">
+                                                        <i class="mdi mdi-tune ys-icon-md-brand"></i>
+                                                    </a>
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="right ys-value-col-55 ys-detail-progress-wrap" style="flex: 1 1 38%; min-width: 160px;">

@@ -31,6 +31,8 @@ from y_web.src.models.admin import (  # noqa: F401
     ExperimentScheduleLog,
     ExperimentScheduleStatus,
     Exps,
+    ForumImageFeedResource,
+    ForumRssFeedResource,
     HpcMonitorSettings,
     Jupyter_instances,
     LogFileOffset,

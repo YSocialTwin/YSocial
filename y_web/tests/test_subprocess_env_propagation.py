@@ -272,6 +272,15 @@ def test_adhoc_client_runner_passes_db_connection_into_agent_context():
     ), "adhoc_client_runner must pass connection=connection into AgentContext"
 
 
+def test_adhoc_client_runner_reloads_config_changes_between_rounds():
+    """Ad hoc runner must notice config file changes and reload live settings."""
+    import y_web.src.simulation.adhoc_client_runner as mod
+
+    src = inspect.getsource(mod)
+    assert "config_path.stat().st_mtime" in src or "_config_mtime(config_path)" in src
+    assert "Reloaded ad hoc client config" in src
+
+
 def test_client_runner_repo_root_on_sys_path():
     """client_runner._REPO_ROOT must appear on sys.path after import."""
     import y_web.src.simulation.client_runner as cr

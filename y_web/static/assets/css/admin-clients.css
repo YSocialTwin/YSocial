@@ -127,6 +127,14 @@ details[open] summary::before {
     box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1);
 }
 
+.ys-adhoc-agent-type-card.is-readonly {
+    cursor: default;
+}
+
+.ys-adhoc-agent-type-card.is-readonly:hover {
+    transform: none;
+}
+
 .ys-adhoc-agent-type-card-title {
     font-size: 0.92rem;
     font-weight: 600;

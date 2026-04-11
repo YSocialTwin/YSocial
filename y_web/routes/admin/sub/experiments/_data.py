@@ -529,6 +529,8 @@ def experiment_details(uid):
     forum_avatar_settings = dict(DEFAULT_FORUM_AVATAR_SETTINGS)
     forum_feed_health = None
     llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)
+    detoxify_download_state = refresh_detoxify_download_state()
+    detoxify_ready = detoxify_download_state.get("status") == "ready"
     try:
         installed_agent_plugins = [
             plugin
@@ -562,6 +564,8 @@ def experiment_details(uid):
         experiment
     )
     configuration_box_present = _experiment_configuration_box_present(experiment)
+    if not detoxify_ready:
+        toxicity_annotation_enabled = False
     try:
         from y_web.src.system.path_utils import get_writable_path
 
@@ -583,10 +587,9 @@ def experiment_details(uid):
                     for topic in config_topics
                     if str(topic).strip()
                 ]
-            current_perspective_api = (config.get("perspective_api") or "").strip()
             toxicity_annotation_enabled = bool(
                 config.get("toxicity_annotation", toxicity_annotation_enabled)
-            ) or bool(config.get("perspective_api"))
+            )
             sentiment_annotation_enabled = bool(
                 config.get("sentiment_annotation", sentiment_annotation_enabled)
             )
@@ -634,6 +637,8 @@ def experiment_details(uid):
                 )
     except Exception:
         current_perspective_api = ""
+    if not detoxify_ready:
+        toxicity_annotation_enabled = False
 
     has_agent_plugins_installed = (
         bool(installed_agent_plugin_names)
@@ -682,6 +687,8 @@ def experiment_details(uid):
         can_manage_experiment=user_can_manage_experiment(admin_user, experiment),
         llm_agents_enabled_effective=llm_agents_enabled_effective,
         current_perspective_api=current_perspective_api,
+        detoxify_ready=detoxify_ready,
+        detoxify_download_state=detoxify_download_state,
         toxicity_annotation_enabled=toxicity_annotation_enabled,
         sentiment_annotation_enabled=sentiment_annotation_enabled,
         emotion_annotation_enabled=emotion_annotation_enabled,
@@ -772,12 +779,20 @@ def update_experiment_config(uid):
     perspective_api = (request.form.get("perspective_api") or "").strip()
 
     llm_agents_enabled_effective = _experiment_uses_llm_agents(exp)
+    detoxify_download_state = refresh_detoxify_download_state()
+    detoxify_ready = detoxify_download_state.get("status") == "ready"
 
     if not llm_agents_enabled_effective:
         toxicity_enabled = False
         emotion_enabled = False
         sentiment_enabled = False
         perspective_api = ""
+    elif toxicity_enabled and not detoxify_ready:
+        toxicity_enabled = False
+        flash(
+            "Install Detoxify from Miscellanea before enabling toxicity annotation.",
+            "warning",
+        )
 
     memory_configuration_supported = bool(llm_agents_enabled_effective)
     if memory_configuration_supported:

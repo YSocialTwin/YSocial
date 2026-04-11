@@ -9,7 +9,7 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box">
-                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > Create New AdHoc Agent Client
+                        <a href="/admin/experiments">Experiments</a> > Simulation: <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> > {{ adhoc_form_breadcrumb or 'Create New AdHoc Agent Client' }}
                     </div>
                 </div>
             </div>
@@ -17,31 +17,31 @@
             <div class="columns">
                 <div class="column is-8">
                     <div class="dashboard-box" id="box-new-client">
-                        <h3 class="title is-5 is-thin">New AdHoc Agent Client</h3>
+                        <h3 class="title is-5 is-thin">{{ adhoc_form_title or 'New AdHoc Agent Client' }}</h3>
                         <div class="box-content">
-                            <form action="/admin/create_adhoc_client" method="POST" onsubmit="showLoading('Creating ad hoc client...');">
+                            <form action="{{ adhoc_form_action or '/admin/create_adhoc_client' }}" method="POST" onsubmit="showLoading('{{ 'Updating' if adhoc_form_mode == 'edit' else 'Creating' }} ad hoc client...');">
                                 <div class="box-lines">
                                     <input type="hidden" name="id_exp" value="{{ experiment.idexp }}">
 
                                     <div class="box-line">
                                         <span class="left">Name</span>
-                                        <span class="right ys-w-70"><input type="text" name="name" id="adhoc_client_name" class="input" required></span>
+                                        <span class="right ys-w-70"><input type="text" name="name" id="adhoc_client_name" class="input" value="{{ adhoc_initial_client.name if adhoc_initial_client else '' }}" {% if adhoc_form_readonly_identity %}readonly{% endif %} required></span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Description</span>
                                         <span class="right ys-w-70">
-                                            <textarea name="descr" class="textarea" rows="3"></textarea>
+                                            <textarea name="descr" class="textarea" rows="3">{{ adhoc_initial_client.descr if adhoc_initial_client else '' }}</textarea>
                                         </span>
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Agent Type</span>
                                         <span class="right ys-w-70">
-                                            <input type="hidden" name="agent_type" id="adhoc_agent_type" value="">
+                                            <input type="hidden" name="agent_type" id="adhoc_agent_type" value="{{ adhoc_initial_client.agent_type if adhoc_initial_client else '' }}">
                                             <div class="ys-adhoc-agent-type-grid" role="radiogroup" aria-label="Agent Type">
                                                 {% for spec in adhoc_agent_specs %}
                                                 <button
                                                     type="button"
-                                                    class="ys-adhoc-agent-type-card"
+                                                    class="ys-adhoc-agent-type-card{% if adhoc_form_readonly_identity %} is-readonly{% endif %}"
                                                     data-agent-type="{{ spec.slug }}"
                                                     role="radio"
                                                     aria-checked="false"
@@ -72,7 +72,7 @@
                                                     <option value=""></option>
                                                 </select>
                                             </div>
-                                            <small id="adhoc_population_hint" class="ys-hint-text">Select an agent type to load compatible populations.</small>
+                                            <small id="adhoc_population_hint" class="ys-hint-text">{% if adhoc_form_readonly_identity %}Population is fixed for an existing ad hoc client.{% else %}Select an agent type to load compatible populations.{% endif %}</small>
                                         </span>
                                     </div>
 
@@ -92,10 +92,10 @@
                                         <div class="box-line">
                                             <span class="left">Simulation Length (days)</span>
                                             <span class="right ys-value-col">
-                                                <input type="number" id="days_display" class="input" min="1" step="1" value="30">
-                                                <input type="hidden" name="days" id="days_input" value="30">
+                                                <input type="number" id="days_display" class="input" min="1" step="1" value="{{ adhoc_initial_client.days if adhoc_initial_client else 30 }}">
+                                                <input type="hidden" name="days" id="days_input" value="{{ adhoc_initial_client.days if adhoc_initial_client else 30 }}">
                                                 <label class="ys-flex-click-nowrap">
-                                                    <input type="checkbox" id="infinite_duration" name="infinite_duration" class="ys-pointer">
+                                                    <input type="checkbox" id="infinite_duration" name="infinite_duration" class="ys-pointer" {% if adhoc_initial_client and adhoc_initial_client.infinite_duration %}checked{% endif %}>
                                                     <span class="ys-text-brand">Run until stopped</span>
                                                 </label>
                                             </span>
@@ -105,7 +105,7 @@
                                             <span class="right ys-w-70">
                                                 <div class="select w-100">
                                                     <select name="clock_mode" class="input w-100">
-                                                        {% set selected_clock_mode = experiment_clock.get('mode', 'simulated') %}
+                                                        {% set selected_clock_mode = adhoc_initial_client.clock_mode if adhoc_initial_client else experiment_clock.get('mode', 'simulated') %}
                                                         <option value="simulated" {% if selected_clock_mode == 'simulated' %}selected{% endif %}>Simulated (run as fast as possible)</option>
                                                         <option value="real_time" {% if selected_clock_mode == 'real_time' %}selected{% endif %}>Real-time (one wall-clock hour per round)</option>
                                                     </select>
@@ -115,10 +115,10 @@
                                         <div class="box-line">
                                             <span class="left">Clock Timezone</span>
                                             <span class="right ys-w-70">
-                                                <input type="text" name="clock_timezone" class="input" value="{{ experiment_clock.get('timezone', 'Europe/Rome') }}" placeholder="Europe/Rome" required>
+                                                <input type="text" name="clock_timezone" class="input" value="{{ adhoc_initial_client.clock_timezone if adhoc_initial_client else experiment_clock.get('timezone', 'Europe/Rome') }}" placeholder="Europe/Rome" required>
                                             </span>
                                         </div>
-                                        <input type="hidden" name="clock_feed_refresh" value="{{ experiment_clock.get('feed_refresh', 'hourly') }}">
+                                        <input type="hidden" name="clock_feed_refresh" value="{{ adhoc_initial_client.clock_feed_refresh if adhoc_initial_client else experiment_clock.get('feed_refresh', 'hourly') }}">
                                     </div>
 
                                     <div id="adhoc_llm_section" class="tutorial-section" style="display: none;">
@@ -131,8 +131,8 @@
                                             <span class="right ys-w-70">
                                                 <div class="select is-fullwidth">
                                                     <select name="llm_backend" id="llm_backend" class="input">
-                                                        <option value="ollama">Ollama / OpenAI-compatible</option>
-                                                        <option value="vllm">vLLM</option>
+                                                        <option value="ollama" {% if adhoc_initial_client and adhoc_initial_client.llm_backend == 'ollama' %}selected{% endif %}>Ollama / OpenAI-compatible</option>
+                                                        <option value="vllm" {% if adhoc_initial_client and adhoc_initial_client.llm_backend == 'vllm' %}selected{% endif %}>vLLM</option>
                                                     </select>
                                                 </div>
                                             </span>
@@ -141,7 +141,7 @@
                                             <span class="left">LLM URL</span>
                                             <span class="right ys-w-70">
                                                 <div class="ys-flex-gap-8">
-                                                    <input type="text" id="custom_llm_url_client" name="llm" class="input ys-flex-1" value="{{ exp_llm_defaults.llm }}" placeholder="http://127.0.0.1:11434/v1">
+                                                    <input type="text" id="custom_llm_url_client" name="llm" class="input ys-flex-1" value="{{ adhoc_initial_client.llm if adhoc_initial_client else exp_llm_defaults.llm }}" placeholder="http://127.0.0.1:11434/v1">
                                                     <button type="button" class="button is-solid" onclick="fetchAdhocModelsForClient()">Fetch Models</button>
                                                 </div>
                                                 <div id="llm_url_status_client" class="ys-badge-min"></div>
@@ -153,27 +153,30 @@
                                                 <div class="select is-fullwidth">
                                                     <select name="llm_agent" id="models_select_client" class="input">
                                                         <option value=""></option>
+                                                        {% if adhoc_initial_client and adhoc_initial_client.llm_agent %}
+                                                        <option value="{{ adhoc_initial_client.llm_agent }}" selected>{{ adhoc_initial_client.llm_agent }}</option>
+                                                        {% endif %}
                                                     </select>
                                                 </div>
                                             </span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">API Key</span>
-                                            <span class="right ys-w-70"><input type="text" name="llm_api_key" class="input" value="{{ exp_llm_defaults.llm_api_key }}"></span>
+                                            <span class="right ys-w-70"><input type="text" name="llm_api_key" class="input" value="{{ adhoc_initial_client.llm_api_key if adhoc_initial_client else exp_llm_defaults.llm_api_key }}"></span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Max Tokens</span>
-                                            <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" value="{{ exp_llm_defaults.llm_max_tokens }}"></span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_max_tokens" class="input" value="{{ adhoc_initial_client.llm_max_tokens if adhoc_initial_client else exp_llm_defaults.llm_max_tokens }}"></span>
                                         </div>
                                         <div class="box-line">
                                             <span class="left">Temperature</span>
-                                            <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="2" step="0.1" value="{{ exp_llm_defaults.llm_temperature }}"></span>
+                                            <span class="right ys-w-70"><input type="number" name="llm_temperature" class="input" min="0" max="2" step="0.1" value="{{ adhoc_initial_client.llm_temperature if adhoc_initial_client else exp_llm_defaults.llm_temperature }}"></span>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="button-wrap">
                                     <button id="create_client_button" class="button is-solid primary-button is-fullwidth" disabled>
-                                        Create
+                                        {{ adhoc_submit_label or 'Create' }}
                                     </button>
                                 </div>
                             </form>
@@ -221,12 +224,24 @@ const YS_ADHOC_CLIENTS = {
     experimentTopics: {{ adhoc_experiment_topics | tojson }},
     opinionGroups: {{ adhoc_opinion_groups | tojson }},
     ageClasses: {{ adhoc_age_classes | tojson }},
-    leanings: {{ adhoc_leanings | tojson }}
+    leanings: {{ adhoc_leanings | tojson }},
+    mode: {{ (adhoc_form_mode or 'create') | tojson }},
+    readonlyIdentity: {{ (adhoc_form_readonly_identity or False) | tojson }},
+    initialClient: {{ adhoc_initial_client | tojson }}
 };
 
 (function() {
     let llmModelsFetched = false;
     let llmModelSelected = false;
+    const initialClient = YS_ADHOC_CLIENTS.initialClient || {};
+
+    function initialSettingValue(name, fallback = '') {
+        const settings = initialClient.agent_settings || initialClient.agentSettings || {};
+        if (Object.prototype.hasOwnProperty.call(settings, name)) {
+            return settings[name];
+        }
+        return fallback;
+    }
 
     function selectedSpec() {
         const slug = document.getElementById('adhoc_agent_type')?.value || '';
@@ -243,6 +258,7 @@ const YS_ADHOC_CLIENTS = {
     }
 
     function selectAgentType(slug) {
+        if (YS_ADHOC_CLIENTS.readonlyIdentity) return;
         const input = document.getElementById('adhoc_agent_type');
         if (!input) return;
         input.value = slug || '';
@@ -261,18 +277,24 @@ const YS_ADHOC_CLIENTS = {
 
         const spec = selectedSpec();
         const items = spec ? (YS_ADHOC_CLIENTS.populationsByType[spec.slug] || []) : [];
+        const initialPopulationId = String(initialClient.population_id || '');
         populationSelect.innerHTML = '<option value=""></option>';
 
         items.forEach(pop => {
             const option = document.createElement('option');
             option.value = String(pop.id);
             option.textContent = pop.name;
+            if (String(pop.id) === initialPopulationId) {
+                option.selected = true;
+            }
             populationSelect.appendChild(option);
         });
 
-        populationSelect.disabled = !spec || items.length === 0;
+        populationSelect.disabled = YS_ADHOC_CLIENTS.readonlyIdentity || !spec || items.length === 0;
         if (!spec) {
             hint.textContent = 'Select an agent type to load compatible populations.';
+        } else if (YS_ADHOC_CLIENTS.readonlyIdentity) {
+            hint.textContent = 'Population is fixed for an existing ad hoc client.';
         } else if (items.length === 0) {
             hint.textContent = 'No compatible populations are currently available for this agent type.';
         } else {
@@ -358,6 +380,7 @@ const YS_ADHOC_CLIENTS = {
         const required = parameter.required ? 'required' : '';
         const defaultValue = parameter.default ?? '';
         const type = String(parameter.type || 'string');
+        const initialValue = initialSettingValue(name, defaultValue);
 
         if (type.startsWith('enum[')) {
             const values = type.slice(5, -1).split(',').map(item => item.trim()).filter(Boolean);
@@ -367,7 +390,7 @@ const YS_ADHOC_CLIENTS = {
                     <span class="right ys-w-70">
                         <div class="select is-fullwidth">
                             <select name="agent_setting__${escapeHtml(name)}" class="input" ${required}>
-                                ${values.map(value => `<option value="${escapeHtml(value)}" ${String(defaultValue) === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}
+                                ${values.map(value => `<option value="${escapeHtml(value)}" ${String(initialValue) === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}
                             </select>
                         </div>
                         ${description}
@@ -377,15 +400,12 @@ const YS_ADHOC_CLIENTS = {
         }
 
         if (type === 'topic_targets') {
-            const options = (parameter.starting_opinion_options || []).map(value => `
-                <option value="${escapeHtml(value)}">${escapeHtml(value.replaceAll('_', ' '))}</option>
-            `).join('');
             return `
                 <div class="box-line">
                     <span class="left">${escapeHtml(label)}</span>
                     <span class="right ys-w-70">
-                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="[]">
-                        <div class="ys-adhoc-target-builder" data-setting-name="${escapeHtml(name)}" data-starting-options="${escapeHtml(JSON.stringify(parameter.starting_opinion_options || []))}">
+                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
+                        <div class="ys-adhoc-target-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
                             <div class="ys-adhoc-target-builder-help">
                                 Add one row per persuasion campaign. Each row chooses a topic, the desired opinion category to move users toward, and optional filters on whom to target.
                             </div>
@@ -404,7 +424,7 @@ const YS_ADHOC_CLIENTS = {
             <div class="box-line">
                 <span class="left">${escapeHtml(label)}</span>
                 <span class="right ys-w-70">
-                    <input type="${inputType}" name="agent_setting__${escapeHtml(name)}" class="input" value="${escapeHtml(defaultValue)}" ${step ? `step="${step}"` : ''} ${required}>
+                    <input type="${inputType}" name="agent_setting__${escapeHtml(name)}" class="input" value="${escapeHtml(initialValue)}" ${step ? `step="${step}"` : ''} ${required}>
                     ${description}
                 </span>
             </div>
@@ -520,7 +540,19 @@ const YS_ADHOC_CLIENTS = {
     function syncAllTopicTargets() {
         document.querySelectorAll('.ys-adhoc-target-builder').forEach(builder => {
             const rows = builder.querySelector('.ys-adhoc-target-rows');
-            if (rows && !rows.children.length) addTopicTargetRow(builder);
+            if (rows && !rows.children.length) {
+                let initialRows = [];
+                try {
+                    initialRows = JSON.parse(builder.dataset.initialValue || '[]');
+                } catch (_error) {
+                    initialRows = [];
+                }
+                if (Array.isArray(initialRows) && initialRows.length) {
+                    initialRows.forEach(item => addTopicTargetRow(builder, item));
+                } else {
+                    addTopicTargetRow(builder);
+                }
+            }
             syncTopicTargets(builder);
         });
     }
@@ -531,7 +563,7 @@ const YS_ADHOC_CLIENTS = {
         const agentType = document.getElementById('adhoc_agent_type')?.value || '';
         const population = document.getElementById('adhoc_population_id')?.value || '';
         const spec = selectedSpec();
-        const llmReady = !spec || !spec.requires_llm || (llmModelsFetched && llmModelSelected);
+        const llmReady = !spec || !spec.requires_llm || llmModelSelected || !!document.getElementById('models_select_client')?.value;
         let settingsReady = true;
         if (spec && (spec.client_parameters || []).length) {
             settingsReady = (spec.client_parameters || []).every(parameter => {
@@ -591,8 +623,29 @@ const YS_ADHOC_CLIENTS = {
         const nameInput = document.getElementById('adhoc_client_name');
         const populationSelect = document.getElementById('adhoc_population_id');
         const modelSelect = document.getElementById('models_select_client');
+        const agentTypeInput = document.getElementById('adhoc_agent_type');
+        const daysDisplay = document.getElementById('days_display');
+        const daysInput = document.getElementById('days_input');
+        const infiniteDuration = document.getElementById('infinite_duration');
         if (nameInput) nameInput.addEventListener('input', updateCreateButton);
         if (populationSelect) populationSelect.addEventListener('change', updateCreateButton);
+        if (daysDisplay && daysInput) {
+            const syncDays = () => {
+                const value = Math.max(1, Number(daysDisplay.value || daysInput.value || 30));
+                daysDisplay.value = String(value);
+                daysInput.value = String(value);
+            };
+            daysDisplay.addEventListener('input', syncDays);
+            daysDisplay.addEventListener('change', syncDays);
+            syncDays();
+        }
+        if (infiniteDuration && daysDisplay) {
+            const syncInfinite = () => {
+                daysDisplay.disabled = !!infiniteDuration.checked;
+            };
+            infiniteDuration.addEventListener('change', syncInfinite);
+            syncInfinite();
+        }
         if (modelSelect) {
             modelSelect.addEventListener('change', function() {
                 llmModelSelected = this.value !== '';
@@ -602,6 +655,7 @@ const YS_ADHOC_CLIENTS = {
         document.addEventListener('click', function(event) {
             const agentTypeCard = event.target.closest('.ys-adhoc-agent-type-card');
             if (agentTypeCard) {
+                if (YS_ADHOC_CLIENTS.readonlyIdentity) return;
                 selectAgentType(agentTypeCard.dataset.agentType || '');
                 return;
             }
@@ -628,10 +682,21 @@ const YS_ADHOC_CLIENTS = {
             if (builder) syncTopicTargets(builder);
             updateCreateButton();
         });
-        updateAgentTypeCards();
-        updatePopulationChoices();
-        renderAgentSettings();
-        updateLlmSection();
+        if (agentTypeInput && agentTypeInput.value) {
+            updateAgentTypeCards();
+            updatePopulationChoices();
+            renderAgentSettings();
+            updateLlmSection();
+        } else {
+            updateAgentTypeCards();
+            updatePopulationChoices();
+            renderAgentSettings();
+            updateLlmSection();
+        }
+        if (modelSelect && modelSelect.value) {
+            llmModelsFetched = true;
+            llmModelSelected = true;
+        }
         updateCreateButton();
     });
 

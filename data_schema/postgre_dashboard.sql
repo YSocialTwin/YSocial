@@ -183,6 +183,33 @@ CREATE TABLE page_population (
 );
 
 -- -----------------------------
+-- Reusable forum feed resources
+-- -----------------------------
+CREATE TABLE forum_rss_feed_resources (
+    id          SERIAL PRIMARY KEY,
+    name        VARCHAR(200) NOT NULL,
+    feed_url    VARCHAR(500) NOT NULL UNIQUE,
+    url_site    VARCHAR(500) NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
+    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_forum_rss_feed_resources_name
+    ON forum_rss_feed_resources(name);
+
+CREATE TABLE forum_image_feed_resources (
+    id         SERIAL PRIMARY KEY,
+    subreddit  VARCHAR(200) NOT NULL UNIQUE,
+    interests  TEXT NOT NULL DEFAULT '[]',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_forum_image_feed_resources_subreddit
+    ON forum_image_feed_resources(subreddit);
+
+-- -----------------------------
 -- Clients
 -- -----------------------------
 CREATE TABLE client (

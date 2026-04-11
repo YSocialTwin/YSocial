@@ -91,6 +91,7 @@ from y_web.src.simulation.execution_backend import (
     stop_client_for_experiment,
     stop_server_for_experiment,
 )
+from y_web.src.simulation.adhoc_client import stop_all_adhoc_clients
 from y_web.src.system.desktop_file_handler import send_file_desktop
 from y_web.src.system.jupyter_utils import stop_process
 from y_web.src.system.miscellanea import (
@@ -2472,6 +2473,7 @@ def stop_experiment(uid):
 
     # check if the experiment is already running
     if exp.running == 0:
+        stop_all_adhoc_clients(exp, pause=False)
         return experiment_details(uid)
 
     # Step 1 & 2: Stop all running clients attached to this experiment first

@@ -92,15 +92,40 @@ def _update_tick_state(
     _write_state(state_path, state)
 
 
+def _config_mtime(config_path: Path) -> float:
+    try:
+        return config_path.stat().st_mtime
+    except OSError:
+        return -1.0
+
+
+def _apply_config_metadata_to_state(state: dict, config) -> dict:
+    metadata = config.client.metadata or {}
+    state["name"] = str(metadata.get("name") or config.client.client_id or state.get("name") or "")
+    state["description"] = str(metadata.get("description") or "")
+    state["population_id"] = metadata.get("population_id")
+    state["population_name"] = str(
+        metadata.get("population_name") or metadata.get("population") or state.get("population_name") or ""
+    )
+    state["agent_type_slug"] = str(metadata.get("agent_type_slug") or state.get("agent_type_slug") or "")
+    state["agent_type_display"] = str(
+        metadata.get("agent_type_display") or config.client.agent_type or state.get("agent_type_display") or ""
+    )
+    state["agent_type_runtime"] = str(config.client.agent_type or state.get("agent_type_runtime") or "")
+    return state
+
+
 def run(config_path: Path, state_path: Path) -> int:
     logger = logging.getLogger("adhoc_client_runner")
     execution_logger = ExecutionLogger()
     config = AppConfig.from_file(config_path)
+    config_mtime = _config_mtime(config_path)
     state = _load_state(state_path)
     state["status"] = 1
     state["pid"] = state.get("pid") or None
     state["updated_at"] = _now_iso()
     state["error"] = None
+    state = _apply_config_metadata_to_state(state, config)
     _write_state(state_path, state)
 
     manifest = load_agent_type_manifest()
@@ -156,6 +181,33 @@ def run(config_path: Path, state_path: Path) -> int:
         database.register_agents(connection, managed_agents, joined_on=current_round.id)
 
         while not TERMINATE and (infinite or ticks < expected_rounds):
+            latest_config_mtime = _config_mtime(config_path)
+            if latest_config_mtime != config_mtime:
+                config = AppConfig.from_file(config_path)
+                config_mtime = latest_config_mtime
+                llm = LangChainTextGenerator.from_client_config(config.client)
+                agent = registry.create(
+                    config.client.agent_type,
+                    settings=config.client.agent_settings,
+                    llm_client=llm,
+                )
+                agent.setup_database(database, connection)
+                scheduler = ActivityProfileScheduler(config.client.simulation)
+                expected_rounds = int(config.client.max_ticks or 0)
+                infinite = config.client.max_ticks is None or bool(
+                    config.client.simulation.raw.get("run_until_stopped")
+                )
+                state = _load_state(state_path)
+                state = _apply_config_metadata_to_state(state, config)
+                state["infinite"] = infinite
+                state["expected_duration_rounds"] = -1 if infinite else expected_rounds
+                state["updated_at"] = _now_iso()
+                _write_state(state_path, state)
+                logger.info(
+                    "Reloaded ad hoc client config",
+                    extra={"client_id": config.client.client_id, "config_path": str(config_path)},
+                )
+
             pending_rounds = database.get_rounds_after(connection, last_seen_round_id)
             if not pending_rounds:
                 time.sleep(config.database.poll_interval_seconds)

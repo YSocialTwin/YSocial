@@ -55,8 +55,11 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.simulation.adhoc_client import (
+    config_path_for_client,
     delete_adhoc_client,
     initialize_state_for_config,
+    read_json as read_adhoc_json,
+    write_json as write_adhoc_json,
 )
 from y_web.src.system.miscellanea import check_privileges, get_db_type
 from y_web.src.system.path_utils import get_resource_path
@@ -343,6 +346,105 @@ def _sanitize_client_filename(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9._-]+", "_", (value or "").strip())
     cleaned = cleaned.strip("._")
     return cleaned or "adhoc_client"
+
+
+def _build_adhoc_client_initial_values(config: dict) -> dict:
+    client = config.get("client", {}) if isinstance(config, dict) else {}
+    metadata = client.get("metadata", {}) if isinstance(client, dict) else {}
+    servers = client.get("servers", {}) if isinstance(client, dict) else {}
+    simulation = client.get("simulation", {}) if isinstance(client, dict) else {}
+    agent_settings = client.get("agent_settings", {}) if isinstance(client, dict) else {}
+    days = int(simulation.get("days") or 30)
+    infinite = bool(simulation.get("run_until_stopped"))
+    llm_agents = client.get("agents", {}).get("llm_agents") or []
+    llm_model = llm_agents[0] if llm_agents else ""
+    return {
+        "name": str(metadata.get("name") or client.get("client_id") or ""),
+        "descr": str(metadata.get("description") or ""),
+        "agent_type": str(metadata.get("agent_type_slug") or client.get("agent_type") or ""),
+        "population_id": metadata.get("population_id"),
+        "llm_backend": str(servers.get("llm_backend") or "ollama"),
+        "llm": str(servers.get("llm") or ""),
+        "llm_api_key": str(servers.get("llm_api_key") or ""),
+        "llm_max_tokens": servers.get("llm_max_tokens"),
+        "llm_temperature": servers.get("llm_temperature"),
+        "llm_agent": str(llm_model or ""),
+        "days": days,
+        "infinite_duration": infinite,
+        "clock_mode": str(simulation.get("clock_mode") or "simulated"),
+        "clock_timezone": str(simulation.get("clock_timezone") or "Europe/Rome"),
+        "clock_feed_refresh": str(simulation.get("feed_refresh") or "hourly"),
+        "agent_settings": agent_settings if isinstance(agent_settings, dict) else {},
+    }
+
+
+def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
+    updated = json.loads(json.dumps(config))
+    client = updated.setdefault("client", {})
+    servers = client.setdefault("servers", {})
+    simulation = client.setdefault("simulation", {})
+    metadata = client.setdefault("metadata", {})
+    agents = client.setdefault("agents", {})
+
+    descr = (request.form.get("descr") or "").strip()
+    metadata["description"] = descr
+
+    infinite_duration = str(
+        request.form.get("infinite_duration", "")
+    ).strip().lower() in {"on", "true", "1", "yes"}
+    days = int(request.form.get("days") or simulation.get("days") or 30)
+    days = max(days, 1)
+    config_days = 365000 if infinite_duration else days
+    max_ticks = None if infinite_duration else config_days * 24
+
+    simulation["days"] = config_days
+    simulation["run_until_stopped"] = infinite_duration
+    simulation["clock_mode"] = (
+        request.form.get("clock_mode") or simulation.get("clock_mode") or "simulated"
+    ).strip().lower()
+    simulation["clock_timezone"] = (
+        request.form.get("clock_timezone")
+        or simulation.get("clock_timezone")
+        or "Europe/Rome"
+    ).strip()
+    simulation["feed_refresh"] = (
+        request.form.get("clock_feed_refresh")
+        or simulation.get("feed_refresh")
+        or "hourly"
+    ).strip()
+    client["max_ticks"] = max_ticks
+
+    current_llm_model = ""
+    llm_agents = agents.get("llm_agents") or []
+    if llm_agents:
+        current_llm_model = str(llm_agents[0] or "")
+    llm_defaults = _adhoc_llm_defaults_for_experiment(exp.idexp)
+    if spec.get("requires_llm"):
+        llm = (request.form.get("llm") or "").strip() or str(servers.get("llm") or llm_defaults["llm"])
+        llm_api_key = (request.form.get("llm_api_key") or "").strip() or str(
+            servers.get("llm_api_key") or llm_defaults["llm_api_key"]
+        )
+        llm_max_tokens = int(
+            request.form.get("llm_max_tokens")
+            or servers.get("llm_max_tokens")
+            or llm_defaults["llm_max_tokens"]
+        )
+        llm_temperature = float(
+            request.form.get("llm_temperature")
+            or servers.get("llm_temperature")
+            or llm_defaults["llm_temperature"]
+        )
+        llm_model = (request.form.get("llm_agent") or "").strip() or current_llm_model
+        llm_backend = (request.form.get("llm_backend") or servers.get("llm_backend") or "ollama").strip()
+        servers["llm"] = llm
+        servers["llm_api_key"] = llm_api_key
+        servers["llm_max_tokens"] = llm_max_tokens
+        servers["llm_temperature"] = llm_temperature
+        servers["llm_backend"] = llm_backend
+        agents["llm_agents"] = [llm_model] if llm_model else []
+
+    client["agent_settings"] = _build_adhoc_client_agent_settings(spec, exp)
+    return updated
 
 
 def _adhoc_activity_profiles_for_population(population_id: int) -> dict[str, str]:
@@ -852,6 +954,114 @@ def clients_adhoc(idexp):
                 }
                 for leaning in Leanings.query.order_by(Leanings.leaning.asc()).all()
             ],
+            "adhoc_form_mode": "create",
+            "adhoc_form_action": "/admin/create_adhoc_client",
+            "adhoc_submit_label": "Create",
+            "adhoc_form_title": "New AdHoc Agent Client",
+            "adhoc_form_breadcrumb": "Create New AdHoc Agent Client",
+            "adhoc_form_readonly_identity": False,
+            "adhoc_initial_client": None,
+        }
+    )
+    return render_template("admin/clients_adhoc.html", **context)
+
+
+@clientsr.route("/admin/edit_adhoc_client/<int:idexp>/<path:client_key>")
+@login_required
+def edit_adhoc_client(idexp, client_key):
+    """Render the edit form for an existing ad hoc agent client."""
+    check_privileges(current_user.username)
+
+    context = _build_client_creation_context(idexp, "Standard")
+    exp = context["experiment"]
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if exp.is_remote == 1:
+        flash("Ad hoc agent clients are not available for remote experiments.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if not _experiment_uses_llm_agents(exp):
+        flash("Ad hoc agent clients are not available for rule-based experiments.", "warning")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before modifying clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    try:
+        config_path = config_path_for_client(exp, client_key)
+    except FileNotFoundError:
+        flash("Ad hoc client configuration not found.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    config = read_adhoc_json(config_path)
+    if not isinstance(config, dict):
+        flash("Ad hoc client configuration is invalid.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    initial_client = _build_adhoc_client_initial_values(config)
+    selected_agent_type = str(initial_client.get("agent_type") or "")
+    selected_population_id = initial_client.get("population_id")
+    agent_specs = _adhoc_agent_specs()
+    if not context["experiment_opinion_dynamics_enabled"]:
+        agent_specs = [
+            spec for spec in agent_specs if not spec.get("requires_opinion_dynamics")
+        ]
+    spec = _find_adhoc_agent_spec(selected_agent_type)
+    if spec is None:
+        flash("The referenced ad hoc agent type is no longer available.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    population_choices = _adhoc_population_choices(idexp, agent_specs)
+    if selected_population_id and spec:
+        existing_choices = population_choices.get(spec["slug"], [])
+        if not any(str(item.get("id")) == str(selected_population_id) for item in existing_choices):
+            population = Population.query.filter_by(id=selected_population_id).first()
+            if population is not None:
+                existing_choices.append(
+                    {
+                        "id": population.id,
+                        "name": population.name,
+                        "descr": population.descr or "",
+                    }
+                )
+                population_choices[spec["slug"]] = existing_choices
+
+    context.update(
+        {
+            "adhoc_agent_specs": agent_specs,
+            "adhoc_populations_by_type": population_choices,
+            "adhoc_experiment_topics": context.get("topics", []),
+            "adhoc_opinion_groups": [
+                {
+                    "name": group.name,
+                    "lower_bound": group.lower_bound,
+                    "upper_bound": group.upper_bound,
+                    "value": (group.lower_bound + group.upper_bound) / 2.0,
+                }
+                for group in OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all()
+            ],
+            "adhoc_age_classes": [
+                {
+                    "name": age_class.name,
+                    "age_start": age_class.age_start,
+                    "age_end": age_class.age_end,
+                }
+                for age_class in AgeClass.query.order_by(AgeClass.age_start.asc()).all()
+            ],
+            "adhoc_leanings": [
+                {"name": leaning.leaning}
+                for leaning in Leanings.query.order_by(Leanings.leaning.asc()).all()
+            ],
+            "adhoc_form_mode": "edit",
+            "adhoc_form_action": f"/admin/update_adhoc_client/{idexp}/{client_key}",
+            "adhoc_submit_label": "Update",
+            "adhoc_form_title": "Update AdHoc Agent Client",
+            "adhoc_form_breadcrumb": "Update AdHoc Agent Client",
+            "adhoc_form_readonly_identity": True,
+            "adhoc_initial_client": initial_client,
         }
     )
     return render_template("admin/clients_adhoc.html", **context)
@@ -984,6 +1194,7 @@ def create_adhoc_client():
             "agent_type": spec["agent_type"],
             "agents_json_path": agents_filename,
             "servers": {
+                "llm_backend": (request.form.get("llm_backend") or "ollama").strip(),
                 "llm": llm,
                 "llm_api_key": llm_api_key,
                 "llm_max_tokens": llm_max_tokens,
@@ -1044,6 +1255,63 @@ def create_adhoc_client():
 
     flash(f"Ad hoc client configuration '{name}' saved.", "success")
     return redirect(url_for("experiments.experiment_details", uid=exp_id))
+
+
+@clientsr.route("/admin/update_adhoc_client/<int:idexp>/<path:client_key>", methods=["POST"])
+@login_required
+def update_adhoc_client(idexp, client_key):
+    """Update an existing ad hoc client configuration in place."""
+    check_privileges(current_user.username)
+
+    exp = Exps.query.filter_by(idexp=idexp).first()
+    if exp is None:
+        flash("Experiment not found.", "error")
+        return redirect(url_for("experiments.settings"))
+    if _experiment_configuration_update_required(exp):
+        flash(
+            "Update Experiment Configuration before modifying clients for this experiment.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    try:
+        config_path = config_path_for_client(exp, client_key)
+    except FileNotFoundError:
+        flash("Ad hoc client configuration not found.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    config = read_adhoc_json(config_path)
+    if not isinstance(config, dict):
+        flash("Ad hoc client configuration is invalid.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+
+    metadata = (config.get("client", {}) or {}).get("metadata", {}) or {}
+    agent_type_slug = str(
+        metadata.get("agent_type_slug")
+        or (config.get("client", {}) or {}).get("agent_type")
+        or ""
+    ).strip()
+    spec = _find_adhoc_agent_spec(agent_type_slug)
+    if spec is None:
+        flash("The ad hoc agent type is no longer available.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if spec.get("requires_opinion_dynamics") and not _opinion_dynamics_enabled_for_client_creation(exp):
+        flash(
+            "The selected ad hoc agent type requires opinion dynamics to remain enabled for this experiment.",
+            "error",
+        )
+        return redirect(url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key))
+
+    try:
+        updated = _apply_adhoc_client_form_updates(config, spec, exp)
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key))
+
+    write_adhoc_json(config_path, updated)
+    initialize_state_for_config(config_path)
+    flash("Ad hoc client settings updated. Running clients will pick up the changes on the next round.", "success")
+    return redirect(url_for("experiments.experiment_details", uid=idexp))
 
 
 def generate_hpc_client_config(

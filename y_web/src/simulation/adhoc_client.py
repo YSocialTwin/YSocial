@@ -9,6 +9,7 @@ import os
 import signal
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -142,6 +143,30 @@ def _initial_state_from_config(config_path: Path, config: dict) -> dict:
     }
 
 
+def _refresh_static_state_fields(state: dict, config_path: Path, config: dict) -> dict:
+    refreshed = dict(state)
+    baseline = _initial_state_from_config(config_path, config)
+    for key in (
+        "client_key",
+        "config_path",
+        "agents_path",
+        "name",
+        "description",
+        "population_id",
+        "population_name",
+        "agent_type_slug",
+        "agent_type_display",
+        "agent_type_runtime",
+        "infinite",
+        "expected_duration_rounds",
+        "stdout_log",
+        "stderr_log",
+        "client_log",
+    ):
+        refreshed[key] = baseline.get(key)
+    return refreshed
+
+
 def ensure_state_for_config(config_path: Path) -> dict:
     config = read_json(config_path) or {}
     state_path = state_path_for_config(config_path)
@@ -153,6 +178,7 @@ def ensure_state_for_config(config_path: Path) -> dict:
 
     merged = _initial_state_from_config(config_path, config)
     merged.update(state)
+    merged = _refresh_static_state_fields(merged, config_path, config)
     merged["config_path"] = str(config_path)
     merged["agents_path"] = str(
         (config.get("client", {}) or {}).get("agents_json_path")
@@ -214,6 +240,61 @@ def _is_running_adhoc_process(pid: int) -> bool:
             return True
         except OSError:
             return False
+
+
+def _find_matching_adhoc_pids(config_path: Path) -> list[int]:
+    try:
+        import psutil
+    except Exception:
+        return []
+
+    target = str(config_path)
+    matches: list[int] = []
+    for proc in psutil.process_iter(["pid", "cmdline", "status"]):
+        try:
+            if proc.info.get("status") == psutil.STATUS_ZOMBIE:
+                continue
+            cmdline = proc.info.get("cmdline") or []
+            if not cmdline:
+                continue
+            joined = " ".join(cmdline)
+            if "adhoc_client_runner.py" not in joined and "--run-adhoc-client-subprocess" not in joined:
+                continue
+            if target not in joined:
+                continue
+            matches.append(int(proc.info["pid"]))
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            continue
+        except Exception:
+            continue
+    return matches
+
+
+def _terminate_pid(pid: int, *, timeout_seconds: float = 3.0) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        return False
+
+    deadline = time.time() + timeout_seconds
+    while time.time() < deadline:
+        if not _is_running_adhoc_process(pid):
+            return True
+        time.sleep(0.1)
+
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+
+    deadline = time.time() + 1.0
+    while time.time() < deadline:
+        if not _is_running_adhoc_process(pid):
+            return True
+        time.sleep(0.05)
+    return not _is_running_adhoc_process(pid)
 
 
 def _runner_command(config_path: Path, state_path: Path) -> tuple[list[str], str]:
@@ -337,12 +418,14 @@ def stop_adhoc_client(experiment, client_key: str, *, pause: bool = True) -> boo
     state = ensure_state_for_config(config_path)
     _unregister_process(f"adhoc_client_{experiment.idexp}_{client_key}")
 
+    candidate_pids = set()
     pid = state.get("pid")
-    if pid and _is_running_adhoc_process(int(pid)):
-        try:
-            os.kill(int(pid), signal.SIGTERM)
-        except OSError:
-            pass
+    if pid:
+        candidate_pids.add(int(pid))
+    candidate_pids.update(_find_matching_adhoc_pids(config_path))
+
+    for candidate_pid in sorted(candidate_pids):
+        _terminate_pid(int(candidate_pid))
 
     state["status"] = 0
     state["pid"] = None
@@ -351,6 +434,17 @@ def stop_adhoc_client(experiment, client_key: str, *, pause: bool = True) -> boo
         state["error"] = None
     write_json(state_path, state)
     return True
+
+
+def stop_all_adhoc_clients(experiment, *, pause: bool = False) -> list[str]:
+    stopped: list[str] = []
+    for client_state in list_adhoc_clients(experiment):
+        client_key = str(client_state.get("client_key") or "")
+        if not client_key:
+            continue
+        stop_adhoc_client(experiment, client_key, pause=pause)
+        stopped.append(client_key)
+    return stopped
 
 
 def delete_adhoc_client(experiment, client_key: str) -> None:

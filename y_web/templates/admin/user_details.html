@@ -92,10 +92,6 @@
                                     <span class="left">LLM Server URL</span>
  <span class="right ys-word-break">{{ user.llm_url if user.llm_url else (llm_backend['url'] if llm_backend else 'Not configured') }}</span>
                                 </div>
-                                <div class="box-line">
-                                    <span class="left">Perspective API</span>
-                                    <span class="right">{% if user.perspective_api is none %} Not {% endif %} Configured </span>
-                                </div>
                             </div>
 
  <div class="buttons ys-flex-right">
@@ -156,7 +152,7 @@
                 </div>
             </div>
 
-            <!-- Row 2: Update Password, Update Email, Add Perspective API (3 columns) -->
+            <!-- Row 2: Update Password, Update Email -->
  <div class="columns is-multiline ys-align-stretch">
  <div class="column is-12-mobile is-4-tablet d-flex">
  <div class="dashboard-box ys-flex-col-1" id="box-update-password">
@@ -239,37 +235,6 @@
                     </div>
                 </div>
 
- <div class="column is-12-mobile is-4-tablet d-flex">
- <div class="dashboard-box ys-flex-col-1" id="box-perspective-api">
-                        <h3 class="title is-5 is-thin">Add Perspective API</h3>
- <p class="ys-text-small">
-                            Configure Google's Perspective API for text toxicity analysis.
-                        </p>
-                        <div class="box-content">
-                            <form action="/admin/set_perspective_api_user" enctype="multipart/form-data" method="POST">
-                                <div class="box-lines">
-                                    <div class="box-line">
-                                        <span class="left">
- <small class="ys-text-gray">
-                                            Personal API key for the <a href="https://www.perspectiveapi.com/" target="_blank">Perspective API</a>. <br><br>
-                                            ℹ️ This tool evaluates text toxicity and enables toxicity analysis in hybrid simulations.
-                                            </small>
-                                        </span>
-                                    </div>
-                                    <div class="box-line">
-                                        <input type="hidden" name="user_id" value="{{ user.id }}">
-                                        <input type="text" name="perspective_api" class="input">
-                                    </div>
-                                </div>
-                                <div class="button-wrap">
-                                    <button class="button is-solid primary-button is-fullwidth">
-                                        Update
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Row 3: Experiment Participation and Add to Experiment -->

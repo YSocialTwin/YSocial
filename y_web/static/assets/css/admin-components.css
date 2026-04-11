@@ -2464,33 +2464,53 @@ input:checked + .slider:before {
 /* Keep client names from painting underneath the progress bar/actions lane on
    experiment detail pages. */
 #simulation-clients-section .box-content .box-line.ys-cell-pad {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 46%);
+    display: flex;
     align-items: center;
-    column-gap: 12px;
+    gap: 14px;
+    flex-wrap: nowrap;
 }
 
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm {
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
     min-width: 0;
-    max-width: 100%;
+    flex: 1 1 auto;
     overflow: hidden;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left .ys-text-flex-sm {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+}
+
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left .ys-text-flex-sm > span:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
     white-space: nowrap;
+    overflow: hidden;
     text-overflow: ellipsis;
 }
 
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55,
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap {
-    width: auto !important;
-    min-width: 0;
-    max-width: 100%;
-    justify-content: flex-end;
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left .ys-text-flex-sm a,
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .left .ys-text-flex-sm i {
+    flex: 0 0 auto;
 }
 
+#simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55,
 #simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     column-gap: 10px;
+    width: auto !important;
+    flex: 1 1 38%;
+    min-width: 160px;
+    max-width: 100%;
     overflow: hidden;
 }
 
@@ -2508,6 +2528,7 @@ input:checked + .slider:before {
     align-items: center;
     gap: 8px;
     white-space: nowrap;
+    flex: 0 0 auto;
 }
 
 #simulation-clients-section .ys-detail-progress-track .ys-progress-bar,
@@ -2526,21 +2547,17 @@ input:checked + .slider:before {
 
 @media (max-width: 1023px) {
     #simulation-clients-section .box-content .box-line.ys-cell-pad {
-        grid-template-columns: 1fr;
-        row-gap: 10px;
+        flex-wrap: wrap;
     }
 
-    #simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm,
+    #simulation-clients-section .box-content .box-line.ys-cell-pad > .left,
     #simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-detail-progress-wrap,
     #simulation-clients-section .box-content .box-line.ys-cell-pad > .right.ys-value-col-55 {
-        max-width: 100%;
         min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        flex-basis: 100%;
     }
-}
-
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm a,
-#simulation-clients-section .box-content .box-line.ys-cell-pad > .left.ys-text-flex-sm i {
-    flex: 0 0 auto;
 }
 .ys-word-break { word-break: break-all; }
 

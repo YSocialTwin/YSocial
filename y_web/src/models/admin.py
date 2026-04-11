@@ -349,6 +349,44 @@ class Page(db.Model):
     )
 
 
+class ForumRssFeedResource(db.Model):
+    """Reusable RSS feed definitions for forum experiments."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "forum_rss_feed_resources"
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    feed_url = db.Column(db.String(500), nullable=False, unique=True)
+    url_site = db.Column(db.String(500), nullable=False, default="")
+    description = db.Column(db.Text, nullable=False, default="")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=db.func.now(),
+        onupdate=db.func.now(),
+    )
+
+
+class ForumImageFeedResource(db.Model):
+    """Reusable subreddit-backed image feed definitions for forum experiments."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "forum_image_feed_resources"
+
+    id = db.Column(db.Integer, primary_key=True)
+    subreddit = db.Column(db.String(200), nullable=False, unique=True)
+    interests = db.Column(db.Text, nullable=False, default="[]")
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.now())
+    updated_at = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=db.func.now(),
+        onupdate=db.func.now(),
+    )
+
+
 class Population_Experiment(db.Model):
     """Association table linking populations to experiments."""
 

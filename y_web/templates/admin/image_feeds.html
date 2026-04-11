@@ -15,136 +15,95 @@
 
             <div class="columns">
                 <div class="column is-8">
-
                     <div class="dashboard-box">
-                        <h3 class="title is-5 is-thin">Image Feed Configuration</h3>
- <p class="ys-text-small">
-                            Configure Reddit image subreddits for standalone image sharing during simulation. Images from these subreddits will be processed by the Vision Language Model and shared by agents.
+                        <h3 class="title is-5 is-thin">Forum Image Feed Assignment</h3>
+                        <p class="ys-text-small">
+                            Select which reusable subreddit image feeds should be assigned to this forum experiment. Validation and creation now live in the shared forum image resource workspace.
+                        </p>
+                        <p class="ys-label-hint">
+                            Shared image resources can still be created from a subreddit name, <code>r/name</code>, or a Reddit subreddit URL such as <code>https://www.reddit.com/r/memes/</code>.
                         </p>
 
-                        <div class="box-content">
-                            <h4 class="title is-6 is-thin">Add Subreddit</h4>
-                            <p class="ys-label-hint">
-                                Enter a subreddit name, <code>r/name</code>, or a Reddit subreddit URL to parse and preview images.
-                            </p>
+                        <form action="/admin/update_image_feeds/{{ experiment.idexp }}" method="POST" class="box-content">
                             <div class="box-line">
-                                <span class="left">Subreddit</span>
-                                <span class="right" style="width: 70%; display: flex; gap: 10px;">
- <input type="text" id="subreddit_name" class="input ys-flex-1" placeholder="memes or https://www.reddit.com/r/memes/">
-                                    <button type="button" class="button is-solid primary-button" onclick="parseSubreddit()">Parse</button>
+                                <span class="left">Reusable Image Resources</span>
+                                <span class="right ys-w-70">
+                                    <a href="/admin/forum_image_resources" class="button is-small">Manage Shared Image Resources</a>
                                 </span>
                             </div>
-                            <div id="parse_result" style="margin-bottom: 1em; display: none;">
-                                <div class="box-line">
-                                    <span class="left">Status</span>
- <span class="right ys-w-70" id="parse_status"></span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Sample Images</span>
- <span class="right ys-w-70">
-                                        <div id="sample_images" style="display: flex; gap: 5px; flex-wrap: wrap;"></div>
-                                    </span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left">Interests</span>
- <span class="right ys-w-70">
-                                        <select id="parsed_interests" class="input" multiple size="4" style="min-height: 100px;">
-                                            {% for interest in available_interests %}
-                                            <option value="{{ interest }}">{{ interest }}</option>
+
+                            {% if available_image_resources %}
+                            <div style="max-height: 420px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 14px; padding: 12px; margin-bottom: 1rem; background: linear-gradient(180deg, #fbfdff 0%, #ffffff 100%);">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+                                    {% for feed in available_image_resources %}
+                                    {% set is_selected = feed.id in selected_image_resource_ids %}
+                                    <label style="
+                                        display: grid;
+                                        gap: 10px;
+                                        padding: 12px 13px;
+                                        border-radius: 14px;
+                                        border: 1px solid {% if is_selected %}#93c5fd{% else %}#e5e7eb{% endif %};
+                                        background: {% if is_selected %}linear-gradient(135deg, #eff6ff 0%, #ffffff 100%){% else %}#ffffff{% endif %};
+                                        box-shadow: {% if is_selected %}0 10px 22px rgba(59, 130, 246, 0.10){% else %}0 6px 16px rgba(15, 23, 42, 0.04){% endif %};
+                                        cursor: pointer;
+                                        min-height: 118px;
+                                    ">
+                                        <span style="display: flex; justify-content: space-between; gap: 10px; align-items: flex-start;">
+                                            <span style="display: grid; gap: 4px;">
+                                                <span class="ys-text-sm-dark" style="font-weight: 700; line-height: 1.2;">r/{{ feed.subreddit }}</span>
+                                                <span class="ys-text-xs-hint">Reusable image source</span>
+                                            </span>
+                                            <input
+                                                type="checkbox"
+                                                name="image_feed_resource_ids"
+                                                value="{{ feed.id }}"
+                                                {% if is_selected %}checked{% endif %}
+                                                style="margin-top: 2px;"
+                                            >
+                                        </span>
+                                        <span style="display: flex; gap: 6px; flex-wrap: wrap; align-items: flex-start;">
+                                            {% for interest in feed.interests %}
+                                            <span class="tag is-info is-light" style="margin: 0;">{{ interest }}</span>
                                             {% endfor %}
-                                        </select>
-                                        <p style="font-size: 0.8em; color: #888; margin-top: 5px;">Hold Ctrl/Cmd to select multiple interests</p>
-                                    </span>
+                                            {% if not feed.interests %}
+                                            <span class="ys-text-xs-hint">No interests assigned</span>
+                                            {% endif %}
+                                        </span>
+                                    </label>
+                                    {% endfor %}
                                 </div>
- <div class="button-wrap ys-mt-10">
-                                    <button type="button" class="button is-solid primary-button" onclick="addParsedSubreddit()">Add Subreddit</button>
-                                </div>
                             </div>
-
-                            <hr>
-
-                            <h4 class="title is-6 is-thin">Bulk Upload</h4>
- <p class="ys-label-hint">
-                                Upload a JSON file with image feed definitions from another experiment.
-                            </p>
-                            <div class="box-line">
-                                <span class="left">JSON File</span>
- <span class="right ys-value-col">
-                                    <input type="file" id="image_upload_file" accept=".json" class="input">
- <select id="image_upload_mode" class="input ys-w-auto">
-                                        <option value="replace">Replace</option>
-                                        <option value="merge">Merge</option>
-                                    </select>
-                                    <button type="button" class="button is-solid primary-button" onclick="uploadImageFeeds()">Upload</button>
-                                </span>
+                            {% else %}
+                            <div class="notification is-light" style="margin-bottom: 1rem;">
+                                No reusable image resources are available yet. Create them first in
+                                <a href="/admin/forum_image_resources">Forum Image Resources</a>.
                             </div>
+                            {% endif %}
 
-                            <hr>
-
- <div class="ys-flex-between">
- <h4 class="title is-6 is-thin mb-0">Current Image Feeds (<span id="feed_count">{{ image_feeds|length }}</span>)</h4>
-                                <button type="button" class="button is-small" onclick="exportImageFeeds()" title="Export image feeds as JSON">
-                                    <i class="mdi mdi-download"></i> Export JSON
-                                </button>
+                            <div class="button-wrap ys-mt-1em">
+                                <button type="submit" class="button is-solid primary-button is-fullwidth">Save Image Feed Assignment</button>
                             </div>
-                            <div id="image_feeds_list" style="max-height: 400px; overflow-y: auto;">
-                                {% if image_feeds %}
- <table class="table is-fullwidth is-striped ys-text-090">
-                                    <thead>
-                                        <tr>
-                                            <th>Subreddit</th>
-                                            <th>Interests</th>
- <th class="ys-w-50px"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="feeds_table_body">
-                                        {% for feed in image_feeds %}
-                                        <tr data-index="{{ loop.index0 }}">
-                                            <td>r/{{ feed.subreddit }}</td>
-                                            <td>
-                                                {% for interest in feed.interests %}
-                                                <span class="tag is-info is-light" style="margin: 2px;">{{ interest }}</span>
-                                                {% endfor %}
-                                            </td>
- <td><a href="javascript:void(0)" onclick="removeFeed({{ loop.index0 }})"><i class="mdi mdi-delete ys-text-red"></i></a></td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                                {% else %}
- <p class="ys-text-light">No image feeds configured.</p>
-                                {% endif %}
-                            </div>
-
- <form id="feeds_save_form" action="/admin/update_image_feeds/{{ experiment.idexp }}" method="POST" class="ys-mt-1em">
-                                <input type="hidden" name="image_feeds_json" id="image_feeds_json" value='{{ image_feeds | tojson }}'>
-                                <div class="button-wrap">
-                                    <button type="submit" class="button is-solid primary-button is-fullwidth">Save Image Feeds</button>
-                                </div>
-                            </form>
-                        </div>
+                        </form>
                     </div>
                 </div>
 
                 <div class="column is-4">
                     <div class="dashboard-box is-compact">
-                        <h3 class="title is-5 is-thin">Quick Reference Guide</h3>
+                        <h3 class="title is-5 is-thin">Assignment Notes</h3>
                         <div class="help-block">
                             <p>
-                                <b>Image Feeds</b><br>
-                                Image feeds pull images from Reddit subreddits. The Vision Language Model analyzes each image and generates a description that agents use to create captions.<br><br>
-                                <em>Subreddit:</em> The subreddit name (for example "memes", "pics")<br>
-                                <em>Interests:</em> Agent interests that match this subreddit
+                                <b>Reusable subreddit resources</b><br>
+                                The dashboard database stores the canonical subreddit definitions, including their mapped interests.
                             </p>
                             <hr>
                             <p>
-                                <b>Interest Matching</b><br>
-                                Agents with matching interests are more likely to share images from that subreddit.
+                                <b>Runtime compatibility</b><br>
+                                Saving this page still writes the standard <code>image_feeds.json</code> experiment file, so forum execution keeps the same contract.
                             </p>
                             <hr>
                             <p>
-                                <b>NSFW Filtering</b><br>
-                                Posts marked as NSFW on Reddit are automatically filtered out during image ingestion.
+                                <b>Interest tagging</b><br>
+                                Interests remain part of the reusable resource so the same subreddit behaves consistently when reused across forum simulations.
                             </p>
                         </div>
                     </div>
@@ -154,7 +113,6 @@
     </div>
 </div>
 
-<script>var YS_DATA_FEEDS = { imageFeeds: {{ image_feeds | tojson }}, expId: {{ experiment.idexp }} };</script>
-
+<script>var YS_DATA_FEEDS = { imageFeeds: [], expId: {{ experiment.idexp }} };</script>
 <script src="{{ url_for('static', filename='assets/js/admin-feeds.js') }}"></script>
 {% include "admin/footer.html" %}
