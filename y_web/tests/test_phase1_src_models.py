@@ -70,6 +70,7 @@ class TestCanonicalExperimentImports:
             ReplyInboxState,
             Reported,
             Rounds,
+            StressReward,
             SysMessage,
             User_interest,
             User_mgmt,
@@ -102,6 +103,7 @@ class TestCanonicalExperimentImports:
             Post_Sentiment,
             Post_Toxicity,
             Agent_Opinion,
+            StressReward,
             SysMessage,
             Reported,
         ]
@@ -316,6 +318,7 @@ class TestLegacyShimBackwardCompatibility:
             Recommendations,
             ReplyInboxState,
             Rounds,
+            StressReward,
             User_interest,
             User_mgmt,
             Voting,

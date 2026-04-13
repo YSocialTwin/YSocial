@@ -92,6 +92,18 @@ def migrate_sqlite_server(db_path, quiet=False):
                 FOREIGN KEY(tid) REFERENCES rounds(id)
             )
             """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stress_reward (
+                id TEXT PRIMARY KEY,
+                uid INTEGER NOT NULL,
+                variable TEXT NOT NULL CHECK (variable IN ('stress', 'reward')),
+                value REAL NOT NULL CHECK (value >= 0 AND value <= 1),
+                type TEXT NOT NULL CHECK (type IN ('aggregate', 'variation')),
+                tid INTEGER NOT NULL,
+                FOREIGN KEY(uid) REFERENCES user_mgmt(id),
+                FOREIGN KEY(tid) REFERENCES rounds(id)
+            )
+            """)
         conn.commit()
         conn.close()
         return True
@@ -178,6 +190,16 @@ def migrate_postgresql_server(host, port, database, user, password):
                 to_uid INTEGER REFERENCES user_mgmt(id),
                 to_post INTEGER REFERENCES post(id),
                 from_uid INTEGER NOT NULL REFERENCES user_mgmt(id),
+                tid INTEGER NOT NULL REFERENCES rounds(id)
+            )
+            """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS stress_reward (
+                id VARCHAR(36) PRIMARY KEY,
+                uid INTEGER NOT NULL REFERENCES user_mgmt(id),
+                variable VARCHAR(16) NOT NULL CHECK (variable IN ('stress', 'reward')),
+                value DOUBLE PRECISION NOT NULL CHECK (value >= 0 AND value <= 1),
+                type VARCHAR(16) NOT NULL CHECK (type IN ('aggregate', 'variation')),
                 tid INTEGER NOT NULL REFERENCES rounds(id)
             )
             """)

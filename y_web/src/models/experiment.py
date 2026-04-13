@@ -500,3 +500,24 @@ class Agent_Opinion(db.Model):
     id_interacted_with = db.Column(db.Integer, nullable=False)
     id_post = db.Column(db.Integer, db.ForeignKey("post.id"), nullable=False)
     opinion = db.Column(db.REAL, nullable=False)
+
+
+class StressReward(db.Model):
+    __bind_key__ = "db_exp"
+    __tablename__ = "stress_reward"
+    __table_args__ = (
+        db.CheckConstraint(
+            "variable IN ('stress', 'reward')", name="ck_stress_reward_variable"
+        ),
+        db.CheckConstraint(
+            "type IN ('aggregate', 'variation')", name="ck_stress_reward_type"
+        ),
+        db.CheckConstraint("value >= 0 AND value <= 1", name="ck_stress_reward_value"),
+    )
+
+    id = db.Column(db.String(36), primary_key=True)
+    uid = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True)
+    variable = db.Column(db.String(16), nullable=False)
+    value = db.Column(db.Float, nullable=False)
+    type = db.Column(db.String(16), nullable=False)
+    tid = db.Column(db.Integer, db.ForeignKey("rounds.id"), nullable=False, index=True)

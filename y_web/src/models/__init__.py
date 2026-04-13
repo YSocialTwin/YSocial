@@ -95,6 +95,7 @@ from y_web.src.models.experiment import (  # noqa: F401
     ReplyInboxState,
     Reported,
     Rounds,
+    StressReward,
     SysMessage,
     User_interest,
     User_mgmt,

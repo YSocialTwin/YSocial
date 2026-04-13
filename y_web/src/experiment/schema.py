@@ -53,6 +53,16 @@ _SQLITE_TABLES = {
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     """,
+    "stress_reward": """
+        CREATE TABLE IF NOT EXISTS stress_reward (
+            id TEXT PRIMARY KEY,
+            uid INTEGER NOT NULL REFERENCES user_mgmt(id),
+            variable TEXT NOT NULL CHECK (variable IN ('stress', 'reward')),
+            value REAL NOT NULL CHECK (value >= 0 AND value <= 1),
+            type TEXT NOT NULL CHECK (type IN ('aggregate', 'variation')),
+            tid INTEGER NOT NULL REFERENCES rounds(id)
+        )
+    """,
 }
 
 _SQLITE_COLUMNS = {
@@ -119,6 +129,16 @@ _POSTGRES_TABLES = {
             content TEXT NOT NULL,
             meta_json TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    """,
+    "stress_reward": """
+        CREATE TABLE IF NOT EXISTS stress_reward (
+            id VARCHAR(36) PRIMARY KEY,
+            uid INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
+            variable VARCHAR(16) NOT NULL CHECK (variable IN ('stress', 'reward')),
+            value DOUBLE PRECISION NOT NULL CHECK (value >= 0 AND value <= 1),
+            type VARCHAR(16) NOT NULL CHECK (type IN ('aggregate', 'variation')),
+            tid INTEGER NOT NULL REFERENCES rounds(id) ON DELETE CASCADE
         )
     """,
 }
