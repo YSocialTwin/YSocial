@@ -521,6 +521,27 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run forum feed resource migration: {e}")
 
     # ------------------------------------------------------------------
+    # structured agent custom features table
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_agents_custom_features_table import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_agents_custom_features_table import (
+                migrate_postgresql,
+            )
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run agents_custom_features table migration: {e}")
+
+    # ------------------------------------------------------------------
     # population pop_type column
     # ------------------------------------------------------------------
     try:

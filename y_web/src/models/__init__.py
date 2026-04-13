@@ -17,6 +17,7 @@ from y_web.src.models.admin import (  # noqa: F401
     AdminInterviewMessage,
     AdminInterviewSession,
     Agent,
+    Agent_Custom_Feature,
     Agent_Ext,
     Agent_Population,
     Agent_Profile,

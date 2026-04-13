@@ -223,6 +223,30 @@
                                             </select>
                                         </div>
                                     </div>
+                                    <div class="box-line" style="align-items: flex-start;">
+                                        <span class="left">Interests & Opinions <small>(optional)</small></span>
+                                        <span class="right ys-w-70">
+                                            <div class="ys-flex-col-gap-8" id="agent-interest-features-container"></div>
+                                            <button type="button" class="button is-light is-small" id="add-agent-interest-feature">
+                                                Add Interest
+                                            </button>
+                                            <p class="ys-label-hint" style="margin-top: 8px;">
+                                                Add explicit interests for this agent. If an opinion group is selected, the related opinion value is stored too. Stubborn interests are exported with immutable opinion hints.
+                                            </p>
+                                        </span>
+                                    </div>
+                                    <div class="box-line" style="align-items: flex-start;">
+                                        <span class="left">Custom Fields <small>(optional)</small></span>
+                                        <span class="right ys-w-70">
+                                            <div class="ys-flex-col-gap-8" id="agent-custom-features-container"></div>
+                                            <button type="button" class="button is-light is-small" id="add-agent-custom-feature">
+                                                Add Custom Field
+                                            </button>
+                                            <p class="ys-label-hint" style="margin-top: 8px;">
+                                                Define additional key-value data such as <code>Class → Mage</code>. These fields are exported as <code>custom_features</code>.
+                                            </p>
+                                        </span>
+                                    </div>
                                     </div><!-- End section-thematic-characterization -->
                                     <hr>
 
@@ -386,4 +410,131 @@
 {% include "admin/tutorials/agents_tutorial.html" %}
 {% endif %}
 <script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
+{% if page_kind != 'hello' %}
+<script>
+(function () {
+  const interestContainer = document.getElementById('agent-interest-features-container');
+  const customContainer = document.getElementById('agent-custom-features-container');
+  const addInterestButton = document.getElementById('add-agent-interest-feature');
+  const addCustomButton = document.getElementById('add-agent-custom-feature');
+  if (!interestContainer || !customContainer || !addInterestButton || !addCustomButton) return;
+
+  const topicOptions = [{% for topic in interest_topics %}{ value: {{ topic.id|tojson }}, label: {{ topic.name|tojson }} }{% if not loop.last %},{% endif %}{% endfor %}];
+  const opinionOptions = [{% for group in opinion_groups %}{ value: {{ group.name|tojson }}, label: {{ group.name|tojson }} }{% if not loop.last %},{% endif %}{% endfor %}];
+  const topicDatalistId = 'agent-interest-topics-list';
+
+  if (!document.getElementById(topicDatalistId)) {
+    const datalist = document.createElement('datalist');
+    datalist.id = topicDatalistId;
+    topicOptions.forEach((option) => {
+      const el = document.createElement('option');
+      el.value = option.label;
+      datalist.appendChild(el);
+    });
+    document.body.appendChild(datalist);
+  }
+
+  function buildSelect(name, options, placeholder) {
+    const select = document.createElement('select');
+    select.name = name;
+    select.className = 'input';
+    const empty = document.createElement('option');
+    empty.value = '';
+    empty.textContent = placeholder;
+    select.appendChild(empty);
+    options.forEach((option) => {
+      const el = document.createElement('option');
+      el.value = option.label;
+      el.textContent = option.label;
+      select.appendChild(el);
+    });
+    return select;
+  }
+
+  function wrapField(labelText, inputElement) {
+    const field = document.createElement('div');
+    field.style.flex = '1 1 0';
+    const label = document.createElement('label');
+    label.className = 'ys-label-hint';
+    label.textContent = labelText;
+    label.style.display = 'block';
+    label.style.marginBottom = '4px';
+    field.appendChild(label);
+    field.appendChild(inputElement);
+    return field;
+  }
+
+  function buildInterestInput(name) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = name;
+    input.className = 'input';
+    input.placeholder = 'Select or type a new interest';
+    input.setAttribute('list', topicDatalistId);
+    return input;
+  }
+
+  function buildInterestRow() {
+    const row = document.createElement('div');
+    row.className = 'dashboard-box is-compact';
+    row.style.marginBottom = '8px';
+    row.innerHTML = '<div class="box-content"><div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;"></div></div>';
+    const inner = row.querySelector('div div');
+
+    const interestSelect = buildInterestInput('interest_feature_key[]');
+    const opinionSelect = buildSelect('interest_feature_opinion_group[]', opinionOptions, 'No explicit opinion');
+    const stubbornSelect = document.createElement('select');
+    stubbornSelect.name = 'interest_feature_stubborn[]';
+    stubbornSelect.className = 'input';
+    stubbornSelect.innerHTML = '<option value="0">Mutable</option><option value="1">Stubborn</option>';
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'button is-light is-small';
+    removeButton.textContent = 'Remove';
+    removeButton.addEventListener('click', () => row.remove());
+
+    inner.appendChild(wrapField('Interest', interestSelect));
+    inner.appendChild(wrapField('Opinion Group', opinionSelect));
+    inner.appendChild(wrapField('Opinion Behavior', stubbornSelect));
+    inner.appendChild(removeButton);
+    interestContainer.appendChild(row);
+  }
+
+  function buildCustomRow() {
+    const row = document.createElement('div');
+    row.className = 'dashboard-box is-compact';
+    row.style.marginBottom = '8px';
+    row.innerHTML = '<div class="box-content"><div style="display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap;"></div></div>';
+    const inner = row.querySelector('div div');
+
+    const keyInput = document.createElement('input');
+    keyInput.type = 'text';
+    keyInput.name = 'custom_feature_key[]';
+    keyInput.className = 'input';
+    keyInput.placeholder = 'Field name';
+
+    const valueInput = document.createElement('input');
+    valueInput.type = 'text';
+    valueInput.name = 'custom_feature_value[]';
+    valueInput.className = 'input';
+    valueInput.placeholder = 'Field value';
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.className = 'button is-light is-small';
+    removeButton.textContent = 'Remove';
+    removeButton.addEventListener('click', () => row.remove());
+
+    inner.appendChild(wrapField('Key', keyInput));
+    inner.appendChild(wrapField('Value', valueInput));
+    inner.appendChild(removeButton);
+    customContainer.appendChild(row);
+  }
+
+  addInterestButton.addEventListener('click', buildInterestRow);
+  addCustomButton.addEventListener('click', buildCustomRow);
+})();
+</script>
+{% endif %}
 {% include "admin/footer.html" %}

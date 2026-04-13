@@ -20,6 +20,7 @@ from flask import current_app, flash, redirect, render_template, request, url_fo
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
@@ -541,6 +542,7 @@ def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) 
     ext_map: dict[int, dict[str, str]] = {}
     for entry in ext_entries:
         ext_map.setdefault(entry.agent_id, {})[entry.feature_name] = entry.feature_value
+    feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
 
     payload = {"agents": []}
     for agent in agents:
@@ -559,20 +561,22 @@ def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) 
         parameters = {
             key: value for key, value in feature_values.items() if key != "daily_budget"
         }
-        payload["agents"].append(
-            {
-                "name": agent.name,
-                "username": agent.name,
-                "email": f"{agent.name}@ysocial.it",
-                "password": agent.name,
-                "agent_type": spec["agent_type"],
-                "activity_profile": activity_profile_name,
-                "daily_budget": float(daily_budget),
-                "language": agent.language or "en",
-                "owner": owner,
-                "parameters": parameters,
-            }
+        agent_payload = {
+            "name": agent.name,
+            "username": agent.name,
+            "email": f"{agent.name}@ysocial.it",
+            "password": agent.name,
+            "agent_type": spec["agent_type"],
+            "activity_profile": activity_profile_name,
+            "daily_budget": float(daily_budget),
+            "language": agent.language or "en",
+            "owner": owner,
+            "parameters": parameters,
+        }
+        _apply_structured_features_to_agent_payload(
+            agent_payload, feature_map.get(agent.id, {})
         )
+        payload["agents"].append(agent_payload)
     return payload
 
 
@@ -667,6 +671,22 @@ def _collect_population_agent_attributes(population_id):
             }
         ),
     }
+
+
+def _apply_structured_features_to_agent_payload(agent_payload: dict, structured: dict):
+    interests = list(structured.get("interests") or [])
+    if interests:
+        agent_payload["interests"] = [interests, len(interests)]
+    custom_features = dict(structured.get("custom_features") or {})
+    if custom_features:
+        agent_payload["custom_features"] = custom_features
+    opinions = dict(structured.get("opinions") or {})
+    if opinions:
+        agent_payload["opinions"] = opinions
+    stubborn_topics = dict(structured.get("stubborn_topics") or {})
+    if stubborn_topics:
+        agent_payload["stubborn_topics"] = stubborn_topics
+    return agent_payload
 
 
 def _apply_population_attributes_to_client_config(config, population_id):
@@ -2006,6 +2026,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         opinions_enabled = _opinion_dynamics_enabled_for_client_creation(exp)
 
     population_data = {"agents": []}
+    feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     for idx, agent in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=agent.id).first()
         custom_prompt = custom_prompt.profile if custom_prompt else None
@@ -2058,6 +2079,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             ),
             "llm": bool(exp.llm_agents_enabled),
         }
+        _apply_structured_features_to_agent_payload(
+            agent_data, feature_map.get(agent.id, {})
+        )
         population_data["agents"].append(agent_data)
 
     # Add pages to population data
@@ -3317,6 +3341,7 @@ def _create_standard_client_internal():
         archetype_assignments = [None] * num_agents
 
     res = {"agents": []}
+    feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     for idx, a in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=a.id).first()
 
@@ -3335,40 +3360,42 @@ def _create_standard_client_internal():
             activity_profile_obj.name if activity_profile_obj else "Always On"
         )
 
-        res["agents"].append(
-            {
-                "name": a.name,
-                "email": f"{a.name}@ysocial.it",
-                "password": f"{a.name}",
-                "age": a.age,
-                "type": user_type,  # ,a.ag_type,
-                "leaning": a.leaning,
-                "interests": ints,
-                "oe": a.oe,
-                "co": a.co,
-                "ex": a.ex,
-                "ag": a.ag,
-                "ne": a.ne,
-                "rec_sys": crecsys,
-                "frec_sys": frecsys,
-                "language": a.language,
-                "owner": exp.owner,
-                "education_level": a.education_level,
-                "round_actions": int(a.round_actions),
-                "gender": a.gender,
-                "nationality": a.nationality,
-                "toxicity": a.toxicity,
-                "is_page": 0,
-                "prompts": custom_prompt if custom_prompt else None,
-                "daily_activity_level": a.daily_activity_level,
-                "profession": a.profession,
-                "activity_profile": activity_profile_name,
-                "archetype": archetype_assignments[idx],
-                "opinions": (
-                    {i: random.random() for i in ints[0]} if opinions_enabled else None
-                ),  # @todo: check initial opinions
-            }
+        agent_payload = {
+            "name": a.name,
+            "email": f"{a.name}@ysocial.it",
+            "password": f"{a.name}",
+            "age": a.age,
+            "type": user_type,  # ,a.ag_type,
+            "leaning": a.leaning,
+            "interests": ints,
+            "oe": a.oe,
+            "co": a.co,
+            "ex": a.ex,
+            "ag": a.ag,
+            "ne": a.ne,
+            "rec_sys": crecsys,
+            "frec_sys": frecsys,
+            "language": a.language,
+            "owner": exp.owner,
+            "education_level": a.education_level,
+            "round_actions": int(a.round_actions),
+            "gender": a.gender,
+            "nationality": a.nationality,
+            "toxicity": a.toxicity,
+            "is_page": 0,
+            "prompts": custom_prompt if custom_prompt else None,
+            "daily_activity_level": a.daily_activity_level,
+            "profession": a.profession,
+            "activity_profile": activity_profile_name,
+            "archetype": archetype_assignments[idx],
+            "opinions": (
+                {i: random.random() for i in ints[0]} if opinions_enabled else None
+            ),  # @todo: check initial opinions
+        }
+        _apply_structured_features_to_agent_payload(
+            agent_payload, feature_map.get(a.id, {})
         )
+        res["agents"].append(agent_payload)
 
     # get the pages associated with the population
     pages = Page_Population.query.filter_by(population_id=population.id).all()
@@ -4582,6 +4609,7 @@ def _create_forum_client_internal():
         archetype_assignments = [None] * num_agents
 
     res = {"agents": []}
+    feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
     for idx, a in enumerate(agents):
         custom_prompt = Agent_Profile.query.filter_by(agent_id=a.id).first()
 
@@ -4600,42 +4628,44 @@ def _create_forum_client_internal():
             activity_profile_obj.name if activity_profile_obj else "Always On"
         )
 
-        res["agents"].append(
-            {
-                "name": a.name,
-                "email": f"{a.name}@ysocial.it",
-                "password": f"{a.name}",
-                "age": a.age,
-                "type": user_type,  # ,a.ag_type,
-                "leaning": a.leaning,
-                "interests": ints,
-                "oe": a.oe,
-                "co": a.co,
-                "ex": a.ex,
-                "ag": a.ag,
-                "ne": a.ne,
-                "rec_sys": crecsys,
-                "frec_sys": frecsys,
-                "language": a.language,
-                "owner": exp.owner,
-                "education_level": a.education_level,
-                "round_actions": int(a.round_actions),
-                "gender": a.gender,
-                "nationality": a.nationality,
-                "toxicity": a.toxicity,
-                "is_page": 0,
-                "prompts": custom_prompt if custom_prompt else None,
-                "daily_activity_level": a.daily_activity_level,
-                "profession": a.profession,
-                "activity_profile": activity_profile_name,
-                "archetype": archetype_assignments[idx],
-                "opinions": (
-                    {i: random.random() for i in ints[0]}
-                    if bool(opinions_enabled)
-                    else None
-                ),  # @todo: check initial opinions
-            }
+        agent_payload = {
+            "name": a.name,
+            "email": f"{a.name}@ysocial.it",
+            "password": f"{a.name}",
+            "age": a.age,
+            "type": user_type,  # ,a.ag_type,
+            "leaning": a.leaning,
+            "interests": ints,
+            "oe": a.oe,
+            "co": a.co,
+            "ex": a.ex,
+            "ag": a.ag,
+            "ne": a.ne,
+            "rec_sys": crecsys,
+            "frec_sys": frecsys,
+            "language": a.language,
+            "owner": exp.owner,
+            "education_level": a.education_level,
+            "round_actions": int(a.round_actions),
+            "gender": a.gender,
+            "nationality": a.nationality,
+            "toxicity": a.toxicity,
+            "is_page": 0,
+            "prompts": custom_prompt if custom_prompt else None,
+            "daily_activity_level": a.daily_activity_level,
+            "profession": a.profession,
+            "activity_profile": activity_profile_name,
+            "archetype": archetype_assignments[idx],
+            "opinions": (
+                {i: random.random() for i in ints[0]}
+                if bool(opinions_enabled)
+                else None
+            ),  # @todo: check initial opinions
+        }
+        _apply_structured_features_to_agent_payload(
+            agent_payload, feature_map.get(a.id, {})
         )
+        res["agents"].append(agent_payload)
 
     # get the pages associated with the population
     pages = Page_Population.query.filter_by(population_id=population.id).all()

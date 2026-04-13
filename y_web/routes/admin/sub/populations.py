@@ -19,6 +19,11 @@ from flask import (
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.agents.custom_features import (
+    feature_entries_from_population_agent_payload,
+    replace_agent_custom_features,
+    summarize_agent_custom_features_bulk,
+)
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,
@@ -915,6 +920,7 @@ def download_population(uid):
 
     # get population details
     population = Population.query.filter_by(id=uid).first()
+    feature_map = summarize_agent_custom_features_bulk([a[0].id for a in agents])
 
     res = {
         "population_data": {
@@ -928,6 +934,7 @@ def download_population(uid):
     }
 
     for a in agents:
+        structured = feature_map.get(a[0].id, {})
         # Get activity profile name if set
         activity_profile_name = None
         if a[0].activity_profile:
@@ -935,38 +942,47 @@ def download_population(uid):
             if activity_profile_obj:
                 activity_profile_name = activity_profile_obj.name
 
-        res["agents"].append(
-            {
-                "id": a[0].id,
-                "name": a[0].name,
-                "ag_type": a[0].ag_type,
-                "leaning": a[0].leaning,
-                "oe": a[0].oe,
-                "co": a[0].co,
-                "ex": a[0].ex,
-                "ag": a[0].ag,
-                "ne": a[0].ne,
-                "language": a[0].language,
-                "education": a[0].education_level,
-                "round_actions": a[0].round_actions,
-                "nationality": a[0].nationality,
-                "toxicity": a[0].toxicity,
-                "age": a[0].age,
-                "gender": a[0].gender,
-                "crecsys": a[0].crecsys,
-                "frecsys": a[0].frecsys,
-                "profile_pic": a[0].profile_pic,
-                "daily_activity_level": a[0].daily_activity_level,
-                "profession": a[0].profession,
-                "activity_profile": activity_profile_name,
-                "profile": (
-                    Agent_Profile.query.filter_by(agent_id=a[0].id).first().profile
-                    if Agent_Profile.query.filter_by(agent_id=a[0].id).first()
-                    is not None
-                    else None
-                ),
-            }
-        )
+        agent_row = {
+            "id": a[0].id,
+            "name": a[0].name,
+            "ag_type": a[0].ag_type,
+            "leaning": a[0].leaning,
+            "oe": a[0].oe,
+            "co": a[0].co,
+            "ex": a[0].ex,
+            "ag": a[0].ag,
+            "ne": a[0].ne,
+            "language": a[0].language,
+            "education": a[0].education_level,
+            "round_actions": a[0].round_actions,
+            "nationality": a[0].nationality,
+            "toxicity": a[0].toxicity,
+            "age": a[0].age,
+            "gender": a[0].gender,
+            "crecsys": a[0].crecsys,
+            "frecsys": a[0].frecsys,
+            "profile_pic": a[0].profile_pic,
+            "daily_activity_level": a[0].daily_activity_level,
+            "profession": a[0].profession,
+            "activity_profile": activity_profile_name,
+            "profile": (
+                Agent_Profile.query.filter_by(agent_id=a[0].id).first().profile
+                if Agent_Profile.query.filter_by(agent_id=a[0].id).first() is not None
+                else None
+            ),
+        }
+        if structured.get("interests"):
+            agent_row["interests"] = [
+                list(structured["interests"]),
+                len(structured["interests"]),
+            ]
+        if structured.get("opinions"):
+            agent_row["opinions"] = dict(structured["opinions"])
+        if structured.get("stubborn_topics"):
+            agent_row["stubborn_topics"] = dict(structured["stubborn_topics"])
+        if structured.get("custom_features"):
+            agent_row["custom_features"] = dict(structured["custom_features"])
+        res["agents"].append(agent_row)
 
     for p in pages:
         # Get activity profile name if set
@@ -1097,6 +1113,15 @@ def upload_population():
             if a.get("profile"):
                 agent_profile = Agent_Profile(agent_id=agent.id, profile=a["profile"])
                 db.session.add(agent_profile)
+                db.session.commit()
+            feature_entries = feature_entries_from_population_agent_payload(a)
+            if feature_entries:
+                replace_agent_custom_features(agent.id, feature_entries)
+                db.session.commit()
+        else:
+            feature_entries = feature_entries_from_population_agent_payload(a)
+            if feature_entries:
+                replace_agent_custom_features(agent.id, feature_entries)
                 db.session.commit()
 
         agent_population = Agent_Population(

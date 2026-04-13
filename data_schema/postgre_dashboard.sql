@@ -160,6 +160,20 @@ CREATE TABLE agent_population (
     population_id INTEGER NOT NULL REFERENCES population(id) ON DELETE CASCADE
 );
 
+CREATE TABLE agents_custom_features (
+    id           SERIAL PRIMARY KEY,
+    agent_id     INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+    feature_type VARCHAR(20) NOT NULL,
+    key          VARCHAR(200) NOT NULL,
+    value        TEXT
+);
+
+CREATE INDEX idx_agents_custom_features_agent_id
+    ON agents_custom_features(agent_id);
+
+CREATE INDEX idx_agents_custom_features_type
+    ON agents_custom_features(feature_type);
+
 -- -----------------------------
 -- Pages
 -- -----------------------------

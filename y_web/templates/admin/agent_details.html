@@ -172,6 +172,43 @@
                                 </div>
                                 {% endfor %}
                                 {% endif %}
+                                {% if agent_structured_features and (agent_structured_features.interests or agent_structured_features.custom_features) %}
+                                <hr>
+                                <h4><b>Structured Features</b></h4>
+                                <p class="ys-label-hint">Interests, opinion hints, and custom key-value data stored in the dashboard database.</p>
+                                {% if agent_structured_features.interests %}
+                                <div class="box-line" style="align-items: flex-start;">
+                                    <span class="left">Interests & Opinions</span>
+                                    <span class="right" style="text-align: right;">
+                                        {% for interest in agent_structured_features.interests %}
+                                        <div style="margin-bottom: 6px;">
+                                            <strong>{{ interest }}</strong>
+                                            {% if agent_structured_features.opinion_groups.get(interest) %}
+                                            <div class="ys-label-hint" style="margin-top: 2px;">
+                                                Opinion: {{ agent_structured_features.opinion_groups.get(interest) }}
+                                                {% if interest in agent_structured_features.stubborn_topics %}
+                                                · Stubborn
+                                                {% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if agent_structured_features.custom_features %}
+                                <div class="box-line" style="align-items: flex-start;">
+                                    <span class="left">Custom Fields</span>
+                                    <span class="right" style="text-align: right;">
+                                        {% for feature_name, feature_value in agent_structured_features.custom_features.items() %}
+                                        <div style="margin-bottom: 6px;">
+                                            <strong>{{ feature_name }}</strong>: {{ feature_value }}
+                                        </div>
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% endif %}
 
                                 {% if has_roleplay %}
                                 <hr>

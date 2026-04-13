@@ -16,6 +16,13 @@ from flask import Blueprint, flash, redirect, render_template, request
 from flask_login import current_user, login_required
 
 from y_web import db
+from y_web.src.agents.custom_features import (
+    delete_agent_custom_features,
+    encode_opinion_feature,
+    opinion_group_by_name,
+    replace_agent_custom_features,
+    summarize_agent_custom_features,
+)
 from y_web.src.agents.platform import normalize_population_username_type
 from y_web.src.external_runtime.registry import EXTERNAL_DIR, runtime_spec
 from y_web.src.llm.ollama_manager import get_ollama_models
@@ -37,7 +44,9 @@ from y_web.src.models import (
     Page,
     Page_Population,
     Population,
+    OpinionGroup,
     Profession,
+    Topic_List,
     Toxicity_Levels,
 )
 from y_web.src.system.miscellanea import (
@@ -288,6 +297,8 @@ def _agent_builder_context(**overrides):
         "education_levels": Education.query.all(),
         "leanings": Leanings.query.all(),
         "languages": Languages.query.all(),
+        "interest_topics": Topic_List.query.order_by(Topic_List.name.asc()).all(),
+        "opinion_groups": OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all(),
         "toxicity_levels": Toxicity_Levels.query.all(),
         "activity_profiles": ActivityProfile.query.all(),
         "page_kind": "standard",
@@ -523,6 +534,81 @@ def _custom_agent_form_value(parameter: dict):
 def _delete_agent_ext(agent_id):
     for ext_entry in Agent_Ext.query.filter_by(agent_id=agent_id).all():
         db.session.delete(ext_entry)
+
+
+def _parse_structured_agent_features_from_form() -> list[dict]:
+    opinion_groups = opinion_group_by_name()
+    entries: list[dict] = []
+
+    interest_keys = request.form.getlist("interest_feature_key[]")
+    opinion_group_names = request.form.getlist("interest_feature_opinion_group[]")
+    stubborn_flags = request.form.getlist("interest_feature_stubborn[]")
+
+    for idx, raw_interest in enumerate(interest_keys):
+        interest_name = str(raw_interest or "").strip()
+        if not interest_name:
+            continue
+        entries.append({"feature_type": "interest", "key": interest_name, "value": ""})
+        group_name = (
+            str(opinion_group_names[idx]).strip()
+            if idx < len(opinion_group_names)
+            else ""
+        )
+        if group_name:
+            opinion_group = opinion_groups.get(group_name)
+            if opinion_group is None:
+                raise ValueError(f"Unknown opinion group '{group_name}'.")
+            stubborn = idx < len(stubborn_flags) and str(stubborn_flags[idx]) == "1"
+            entries.append(
+                {
+                    "feature_type": "opinion",
+                    "key": interest_name,
+                    "value": encode_opinion_feature(
+                        group_name=group_name,
+                        opinion_value=(
+                            (float(opinion_group.lower_bound) + float(opinion_group.upper_bound))
+                            / 2.0
+                        ),
+                        stubborn=stubborn,
+                    ),
+                }
+            )
+
+    custom_keys = request.form.getlist("custom_feature_key[]")
+    custom_values = request.form.getlist("custom_feature_value[]")
+    for idx, raw_key in enumerate(custom_keys):
+        key = str(raw_key or "").strip()
+        if not key:
+            continue
+        value = str(custom_values[idx]).strip() if idx < len(custom_values) else ""
+        entries.append(
+            {
+                "feature_type": "custom",
+                "key": key,
+                "value": value,
+            }
+        )
+
+    return entries
+
+
+def _ensure_interest_topics_exist(feature_entries: list[dict]) -> None:
+    seen: set[str] = set()
+    for entry in feature_entries:
+        if entry.get("feature_type") != "interest":
+            continue
+        topic_name = str(entry.get("key") or "").strip()
+        if not topic_name:
+            continue
+        normalized = topic_name.casefold()
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        existing_topic = db.session.query(Topic_List).filter(
+            db.func.lower(Topic_List.name) == normalized
+        ).first()
+        if existing_topic is None:
+            db.session.add(Topic_List(name=topic_name))
 
 
 def _agent_listing_response(ag_type_filter, *, hello_mode=False):
@@ -829,6 +915,12 @@ def create_agent():
     daily_activity_level = request.form.get("daily_user_activity")
     profession = request.form.get("profession")
     activity_profile_id = request.form.get("activity_profile") or None
+    try:
+        structured_features = _parse_structured_agent_features_from_form()
+        _ensure_interest_topics_exist(structured_features)
+    except ValueError as exc:
+        flash(str(exc), "error")
+        return _agent_builder_for_type(user_type)
 
     # Validate that agent name is unique
     existing_agent = Agent.query.filter_by(name=name).first()
@@ -869,6 +961,9 @@ def create_agent():
     )
 
     db.session.add(agent)
+    db.session.flush()
+    db.session.commit()
+    replace_agent_custom_features(agent.id, structured_features)
     db.session.commit()
 
     if population != "none":
@@ -1008,6 +1103,7 @@ def agent_details(uid):
         ext.feature_name: ext.feature_value
         for ext in Agent_Ext.query.filter_by(agent_id=uid).all()
     }
+    structured_features = summarize_agent_custom_features(uid)
     back_href = (
         f"/admin/custom_agent/{custom_spec['slug']}" if custom_spec else "/admin/agents"
     )
@@ -1022,6 +1118,7 @@ def agent_details(uid):
         activity_profile=activity_profile,
         llm_backend=llm_backend,
         agent_ext_features=ext_features,
+        agent_structured_features=structured_features,
         agent_back_href=back_href,
         agent_back_label=back_label,
     )
@@ -1105,6 +1202,7 @@ def delete_agent(uid):
         db.session.delete(ap)
 
     _delete_agent_ext(uid)
+    delete_agent_custom_features(uid)
     db.session.commit()
 
     return _agent_builder_for_type(agent_type)
@@ -1132,6 +1230,7 @@ def delete_orphaned_agents():
             db.session.delete(profile)
 
         _delete_agent_ext(agent.id)
+        delete_agent_custom_features(agent.id)
 
         # Delete the agent
         db.session.delete(agent)

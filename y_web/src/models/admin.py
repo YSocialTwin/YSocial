@@ -302,6 +302,20 @@ class Agent_Ext(db.Model):
     feature_value = db.Column(db.Text, nullable=True)
 
 
+class Agent_Custom_Feature(db.Model):
+    """Stores structured agent interests, opinions, and custom key/value features."""
+
+    __bind_key__ = "db_admin"
+    __tablename__ = "agents_custom_features"
+    id = db.Column(db.Integer, primary_key=True)
+    agent_id = db.Column(
+        db.Integer, db.ForeignKey("agents.id"), nullable=False, index=True
+    )
+    feature_type = db.Column(db.String(20), nullable=False)
+    key = db.Column(db.String(200), nullable=False)
+    value = db.Column(db.Text, nullable=True)
+
+
 class Agent_Population(db.Model):
     """Association table linking agents to populations."""
 
