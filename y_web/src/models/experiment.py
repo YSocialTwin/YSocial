@@ -516,7 +516,9 @@ class StressReward(db.Model):
     )
 
     id = db.Column(db.String(36), primary_key=True)
-    uid = db.Column(db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True)
+    uid = db.Column(
+        db.Integer, db.ForeignKey("user_mgmt.id"), nullable=False, index=True
+    )
     variable = db.Column(db.String(16), nullable=False)
     value = db.Column(db.Float, nullable=False)
     type = db.Column(db.String(16), nullable=False)

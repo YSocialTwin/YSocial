@@ -20,11 +20,11 @@ from flask import current_app, flash, redirect, render_template, request, url_fo
 from flask_login import current_user, login_required
 
 from y_web import db
-from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
 )
+from y_web.src.agents.custom_features import summarize_agent_custom_features_bulk
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
     infer_population_username_type,

@@ -19,8 +19,7 @@ def migrate_sqlite(db_path):
     try:
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS agents_custom_features (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 agent_id INTEGER NOT NULL,
@@ -29,8 +28,7 @@ def migrate_sqlite(db_path):
                 value TEXT,
                 FOREIGN KEY (agent_id) REFERENCES agents(id) ON DELETE CASCADE
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_agents_custom_features_agent_id ON agents_custom_features(agent_id)"
         )
@@ -59,8 +57,7 @@ def migrate_postgresql(host, port, database, user, password):
             password=password,
         )
         cursor = conn.cursor()
-        cursor.execute(
-            """
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS agents_custom_features (
                 id SERIAL PRIMARY KEY,
                 agent_id INTEGER NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
@@ -68,8 +65,7 @@ def migrate_postgresql(host, port, database, user, password):
                 key VARCHAR(200) NOT NULL,
                 value TEXT
             )
-            """
-        )
+            """)
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_agents_custom_features_agent_id ON agents_custom_features(agent_id)"
         )

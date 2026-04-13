@@ -41,10 +41,10 @@ from y_web.src.models import (
     Languages,
     Leanings,
     Nationalities,
+    OpinionGroup,
     Page,
     Page_Population,
     Population,
-    OpinionGroup,
     Profession,
     Topic_List,
     Toxicity_Levels,
@@ -298,7 +298,9 @@ def _agent_builder_context(**overrides):
         "leanings": Leanings.query.all(),
         "languages": Languages.query.all(),
         "interest_topics": Topic_List.query.order_by(Topic_List.name.asc()).all(),
-        "opinion_groups": OpinionGroup.query.order_by(OpinionGroup.lower_bound.asc()).all(),
+        "opinion_groups": OpinionGroup.query.order_by(
+            OpinionGroup.lower_bound.asc()
+        ).all(),
         "toxicity_levels": Toxicity_Levels.query.all(),
         "activity_profiles": ActivityProfile.query.all(),
         "page_kind": "standard",
@@ -566,7 +568,10 @@ def _parse_structured_agent_features_from_form() -> list[dict]:
                     "value": encode_opinion_feature(
                         group_name=group_name,
                         opinion_value=(
-                            (float(opinion_group.lower_bound) + float(opinion_group.upper_bound))
+                            (
+                                float(opinion_group.lower_bound)
+                                + float(opinion_group.upper_bound)
+                            )
                             / 2.0
                         ),
                         stubborn=stubborn,
@@ -604,9 +609,11 @@ def _ensure_interest_topics_exist(feature_entries: list[dict]) -> None:
         if normalized in seen:
             continue
         seen.add(normalized)
-        existing_topic = db.session.query(Topic_List).filter(
-            db.func.lower(Topic_List.name) == normalized
-        ).first()
+        existing_topic = (
+            db.session.query(Topic_List)
+            .filter(db.func.lower(Topic_List.name) == normalized)
+            .first()
+        )
         if existing_topic is None:
             db.session.add(Topic_List(name=topic_name))
 

@@ -204,12 +204,12 @@ def feature_entries_from_population_agent_payload(agent_payload: dict) -> list[d
     if isinstance(raw_interests, list):
         if raw_interests and isinstance(raw_interests[0], list):
             interest_names = [
-                str(item).strip()
-                for item in raw_interests[0]
-                if str(item).strip()
+                str(item).strip() for item in raw_interests[0] if str(item).strip()
             ]
         else:
-            interest_names = [str(item).strip() for item in raw_interests if str(item).strip()]
+            interest_names = [
+                str(item).strip() for item in raw_interests if str(item).strip()
+            ]
 
     entries: list[dict] = [
         {"feature_type": "interest", "key": interest_name, "value": ""}
@@ -227,8 +227,14 @@ def feature_entries_from_population_agent_payload(agent_payload: dict) -> list[d
             group_name = ""
             stubborn = _truthy(stubborn_topics.get(key))
             if isinstance(opinion_payload, dict):
-                opinion_value = opinion_payload.get("value", opinion_payload.get("opinion"))
-                group_name = str(opinion_payload.get("group") or opinion_payload.get("group_name") or "").strip()
+                opinion_value = opinion_payload.get(
+                    "value", opinion_payload.get("opinion")
+                )
+                group_name = str(
+                    opinion_payload.get("group")
+                    or opinion_payload.get("group_name")
+                    or ""
+                ).strip()
                 stubborn = stubborn or _truthy(opinion_payload.get("stubborn"))
             else:
                 opinion_value = opinion_payload
@@ -242,7 +248,9 @@ def feature_entries_from_population_agent_payload(agent_payload: dict) -> list[d
                     "value": encode_opinion_feature(
                         group_name=group_name,
                         opinion_value=(
-                            None if opinion_value in (None, "") else float(opinion_value)
+                            None
+                            if opinion_value in (None, "")
+                            else float(opinion_value)
                         ),
                         stubborn=stubborn,
                     ),

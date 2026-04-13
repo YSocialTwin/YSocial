@@ -100,7 +100,9 @@ def test_feature_entries_from_population_agent_payload_supports_opinion_and_cust
             }
         )
 
-        by_type = {(entry["feature_type"], entry["key"]): entry["value"] for entry in entries}
+        by_type = {
+            (entry["feature_type"], entry["key"]): entry["value"] for entry in entries
+        }
         assert ("interest", "Climate") in by_type
         assert ("custom", "Class") in by_type
         assert '"group_name": "Supportive"' in by_type[("opinion", "Climate")]
@@ -121,5 +123,8 @@ def test_ensure_interest_topics_exist_creates_missing_topics_case_insensitively(
         )
         db.session.commit()
 
-        topics = [topic.name for topic in Topic_List.query.order_by(Topic_List.name.asc()).all()]
+        topics = [
+            topic.name
+            for topic in Topic_List.query.order_by(Topic_List.name.asc()).all()
+        ]
         assert topics == ["Climate", "New Topic"]
