@@ -25,8 +25,7 @@ def test_adhoc_agent_specs_include_mop_client_settings():
 
     assert mop["requires_llm"] is True
     assert any(
-        parameter["name"] == "mop_campaigns"
-        for parameter in mop["client_parameters"]
+        parameter["name"] == "mop_campaigns" for parameter in mop["client_parameters"]
     )
 
 
