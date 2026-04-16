@@ -375,7 +375,11 @@ def _custom_agent_rows(spec: dict) -> list[dict]:
             if param_name in {"name", "activity_profile"}:
                 continue
             value = ext_map.get(agent.id, {}).get(param_name, "")
-            if str(parameter.get("type") or "").startswith("array") and value:
+            parameter_type = str(parameter.get("type") or "")
+            if (
+                (parameter_type.startswith("array") or parameter_type.startswith("enum_multi["))
+                and value
+            ):
                 try:
                     parsed = json.loads(value)
                     if isinstance(parsed, list):
@@ -410,6 +414,7 @@ def _render_custom_agent_builder(spec: dict):
         "admin/custom_agent.html",
         custom_spec=spec,
         custom_parameter_sections=_custom_agent_parameter_sections(spec),
+        _custom_agent_form_value=_custom_agent_form_value,
         custom_populations=_custom_population_rows(
             spec["slug"], spec["accepted_slugs"]
         ),
@@ -507,8 +512,29 @@ def _upsert_agent_ext(agent_id, feature_name, feature_value):
         entry.feature_value = str(feature_value)
 
 
-def _normalize_custom_agent_parameter_value(parameter: dict, raw_value: str):
+def _normalize_custom_agent_parameter_value(parameter: dict, raw_value):
     param_type = str(parameter.get("type") or "").strip().lower()
+    if param_type.startswith("enum_multi[") and param_type.endswith("]"):
+        allowed = [
+            option.strip()
+            for option in param_type[len("enum_multi[") : -1].split(",")
+            if option.strip()
+        ]
+        if isinstance(raw_value, (list, tuple)):
+            items = raw_value
+        else:
+            items = [raw_value]
+        normalized = []
+        for item in items:
+            value = str(item or "").strip()
+            if not value:
+                continue
+            if value not in allowed:
+                raise ValueError(f"Unsupported value '{value}' for {parameter.get('name')}")
+            if value not in normalized:
+                normalized.append(value)
+        return json.dumps(normalized)
+
     value = str(raw_value).strip()
     if param_type.startswith("array"):
         return json.dumps([item.strip() for item in value.split(",") if item.strip()])
@@ -522,7 +548,20 @@ def _normalize_custom_agent_parameter_value(parameter: dict, raw_value: str):
 
 
 def _custom_agent_form_value(parameter: dict):
-    raw_value = request.form.get(str(parameter.get("name") or ""))
+    param_name = str(parameter.get("name") or "")
+    param_type = str(parameter.get("type") or "").strip().lower()
+    if param_type.startswith("enum_multi[") and param_type.endswith("]"):
+        raw_values = [str(value).strip() for value in request.form.getlist(param_name) if str(value).strip()]
+        if raw_values:
+            return raw_values
+        default = parameter.get("default")
+        if isinstance(default, list):
+            return [str(value).strip() for value in default if str(value).strip()]
+        if default is None:
+            return []
+        return [str(default).strip()]
+
+    raw_value = request.form.get(param_name)
     if raw_value not in (None, ""):
         return raw_value
     default = parameter.get("default")
@@ -1013,10 +1052,16 @@ def create_custom_agent(agent_slug):
         param_name = str(parameter.get("name") or "")
         if param_name in {"name", "activity_profile"}:
             continue
-        raw_value = request.form.get(param_name)
-        if raw_value in (None, "") and parameter.get("default") not in (None, ""):
-            raw_value = str(parameter.get("default"))
-        if raw_value in (None, ""):
+        parameter_type = str(parameter.get("type") or "").strip().lower()
+        if parameter_type.startswith("enum_multi[") and parameter_type.endswith("]"):
+            raw_value = request.form.getlist(param_name)
+            if not raw_value and isinstance(parameter.get("default"), list):
+                raw_value = parameter.get("default")
+        else:
+            raw_value = request.form.get(param_name)
+            if raw_value in (None, "") and parameter.get("default") not in (None, ""):
+                raw_value = str(parameter.get("default"))
+        if raw_value in (None, "", []):
             continue
         try:
             value = _normalize_custom_agent_parameter_value(parameter, raw_value)

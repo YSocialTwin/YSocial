@@ -20,6 +20,19 @@ def test_normalize_custom_agent_parameter_value_coerces_integer():
     assert value == "24"
 
 
+def test_normalize_custom_agent_parameter_value_coerces_enum_multi():
+    parameter = {
+        "name": "humor_styles",
+        "type": "enum_multi[dad_jokes, nerdy, wordplay]",
+    }
+
+    value = _normalize_custom_agent_parameter_value(
+        parameter, ["dad_jokes", "wordplay", "dad_jokes"]
+    )
+
+    assert value == '["dad_jokes", "wordplay"]'
+
+
 def test_custom_agent_parameter_sections_preserve_defaults_and_visibility():
     spec = {
         "parameter_sections": [

@@ -45,10 +45,8 @@ def test_adhoc_agent_specs_include_comic_relief_settings():
     comic_relief = next(spec for spec in specs if spec["agent_type"] == "comic_relief")
 
     assert comic_relief["requires_llm"] is True
-    assert any(
-        parameter["name"] == "humor_styles"
-        and str(parameter["type"]).startswith("enum_multi[")
-        for parameter in comic_relief["client_parameters"]
+    assert not any(
+        parameter["name"] == "humor_styles" for parameter in comic_relief["client_parameters"]
     )
     assert any(
         parameter["name"] == "opening_llm_prompt_override"
