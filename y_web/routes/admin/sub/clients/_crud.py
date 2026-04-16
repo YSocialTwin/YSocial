@@ -1946,6 +1946,9 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
     probability_of_secondary_follow = float(
         form_data.get("probability_of_secondary_follow", "0.1")
     )
+    probability_of_follow_back = float(
+        form_data.get("probability_of_follow_back", "0.0")
+    )
     attention_window = int(form_data.get("attention_window", "336"))
     visibility_rounds = int(form_data.get("visibility_rounds", "36"))
     batch_size = int(form_data.get("batch_size", "100"))
@@ -2322,6 +2325,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
         "attention_window": attention_window,
         "probability_of_daily_follow": probability_of_daily_follow,
         "probability_of_secondary_follow": probability_of_secondary_follow,
+        "probability_of_follow_back": probability_of_follow_back,
         "follow_action_decay": {
             "enabled": follow_decay_enabled,
             "decay_function": follow_decay_function,
@@ -2956,6 +2960,7 @@ def _create_standard_client_internal():
     probability_of_secondary_follow = request.form.get(
         "probability_of_secondary_follow"
     )
+    probability_of_follow_back = request.form.get("probability_of_follow_back")
     attention_window = request.form.get("attention_window")
     visibility_rounds = request.form.get("visibility_rounds")
     post = request.form.get("post", "0")
@@ -3228,6 +3233,11 @@ def _create_standard_client_internal():
     except (ValueError, TypeError):
         errors.append("Probability Secondary Follow must be a valid number")
         probability_of_secondary_follow = None
+    try:
+        probability_of_follow_back = float(probability_of_follow_back)
+    except (ValueError, TypeError):
+        errors.append("Probability Follow/Unfollow Back must be a valid number")
+        probability_of_follow_back = None
     action_probability_values = {
         "Post new content": post,
         "Comment a Post": comment,
@@ -3262,6 +3272,7 @@ def _create_standard_client_internal():
         "Timeline Follower Ratio": reading_from_follower_ratio,
         "Probability Daily Follow": probability_of_daily_follow,
         "Probability Secondary Follow": probability_of_secondary_follow,
+        "Probability Follow/Unfollow Back": probability_of_follow_back,
     }
     for field_name, value in probabilities.items():
         if value is not None and not (0 <= value <= 1):
@@ -3629,6 +3640,7 @@ def _create_standard_client_internal():
             "attention_window": int(attention_window),
             "probability_of_daily_follow": float(probability_of_daily_follow),
             "probability_of_secondary_follow": float(probability_of_secondary_follow),
+            "probability_of_follow_back": float(probability_of_follow_back),
             "age": {"min": 18, "max": 65},
             "political_leaning": [],
             "toxicity_levels": [],
@@ -4210,6 +4222,7 @@ def _create_forum_client_internal():
     probability_of_secondary_follow = request.form.get(
         "probability_of_secondary_follow"
     )
+    probability_of_follow_back = request.form.get("probability_of_follow_back")
     attention_window = request.form.get("attention_window")
     visibility_rounds = request.form.get("visibility_rounds")
     post = request.form.get("post", "0")
@@ -4482,6 +4495,11 @@ def _create_forum_client_internal():
     except (ValueError, TypeError):
         errors.append("Probability Secondary Follow must be a valid number")
         probability_of_secondary_follow = None
+    try:
+        probability_of_follow_back = float(probability_of_follow_back)
+    except (ValueError, TypeError):
+        errors.append("Probability Follow/Unfollow Back must be a valid number")
+        probability_of_follow_back = None
 
     action_probability_values = {
         "Post new content": post,
@@ -4524,6 +4542,7 @@ def _create_forum_client_internal():
         "Timeline Follower Ratio": reading_from_follower_ratio,
         "Probability Daily Follow": probability_of_daily_follow,
         "Probability Secondary Follow": probability_of_secondary_follow,
+        "Probability Follow/Unfollow Back": probability_of_follow_back,
     }
     for field_name, value in probabilities.items():
         if value is not None and not (0 <= value <= 1):
@@ -4859,6 +4878,7 @@ def _create_forum_client_internal():
             "attention_window": int(attention_window),
             "probability_of_daily_follow": float(probability_of_daily_follow),
             "probability_of_secondary_follow": float(probability_of_secondary_follow),
+            "probability_of_follow_back": float(probability_of_follow_back),
             "age": {"min": 18, "max": 65},
             "political_leaning": [],
             "toxicity_levels": [],

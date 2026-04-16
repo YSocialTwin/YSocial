@@ -180,3 +180,20 @@ class TestClientFormFields:
 
         except ImportError as e:
             pytest.skip(f"Could not import Flask: {e}")
+
+    def test_follow_back_field_is_wired_in_all_client_forms(self):
+        templates = [
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients.html",
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_forum.html",
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+        ]
+        crud_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/clients/_crud.py",
+            "r",
+        ).read()
+
+        for template_path in templates:
+            template_source = open(template_path, "r").read()
+            assert 'name="probability_of_follow_back"' in template_source
+
+        assert crud_source.count("probability_of_follow_back") >= 8
