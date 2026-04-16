@@ -57,6 +57,9 @@
                                                         {% if spec.requires_opinion_dynamics %}
                                                         <span class="ys-adhoc-agent-type-pill">Opinion Dynamics</span>
                                                         {% endif %}
+                                                        {% if spec.requires_stress_reward %}
+                                                        <span class="ys-adhoc-agent-type-pill">Stress/Reward</span>
+                                                        {% endif %}
                                                     </span>
                                                 </button>
                                                 {% endfor %}
@@ -465,6 +468,24 @@ const YS_ADHOC_CLIENTS = {
                         <div class="select is-fullwidth">
                             <select name="agent_setting__${escapeHtml(name)}" class="input" ${required}>
                                 ${values.map(value => `<option value="${escapeHtml(value)}" ${String(initialValue) === value ? 'selected' : ''}>${escapeHtml(value)}</option>`).join('')}
+                            </select>
+                        </div>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
+        if (type.startsWith('enum_multi[')) {
+            const values = type.slice(11, -1).split(',').map(item => item.trim()).filter(Boolean);
+            const selectedValues = Array.isArray(initialValue) ? initialValue.map(item => String(item)) : [];
+            return `
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        <div class="select is-multiple is-fullwidth">
+                            <select name="agent_setting__${escapeHtml(name)}" class="input" multiple size="${Math.min(Math.max(values.length, 4), 10)}" ${required}>
+                                ${values.map(value => `<option value="${escapeHtml(value)}" ${selectedValues.includes(value) ? 'selected' : ''}>${escapeHtml(value.replaceAll('_', ' ').replace(/\b\w/g, match => match.toUpperCase()))}</option>`).join('')}
                             </select>
                         </div>
                         ${description}
@@ -912,6 +933,9 @@ const YS_ADHOC_CLIENTS = {
                     } catch (_error) {
                         return false;
                     }
+                }
+                if (String(parameter.type || '').startsWith('enum_multi[')) {
+                    return Array.from(field.selectedOptions || []).length > 0;
                 }
                 return String(field.value || '').trim() !== '';
             });

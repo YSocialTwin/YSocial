@@ -146,6 +146,9 @@ def _adhoc_agent_specs() -> list[dict]:
                     "requires_opinion_dynamics": bool(
                         entry.get("requires_opinion_dynamics", False)
                     ),
+                    "requires_stress_reward": bool(
+                        entry.get("requires_stress_reward", agent_type == "stress_attacker")
+                    ),
                     "client_parameter_sections": client_parameter_sections,
                     "client_parameters": client_parameters,
                     "prompt_templates": list(entry.get("prompt_templates") or []),
@@ -167,6 +170,11 @@ def _adhoc_agent_specs() -> list[dict]:
             sections.append(prompt_section)
         spec["client_parameter_sections"] = sections
         parameters = list(spec.get("client_parameters") or [])
+        has_explicit_prompt_overrides = any(
+            str(param.get("name") or "").strip() == "llm_prompt_override"
+            or str(param.get("name") or "").strip().endswith("_llm_prompt_override")
+            for param in parameters
+        )
         if spec.get("agent_type") == "propaganda":
             legacy_override = next(
                 (param for param in parameters if param.get("name") == "llm_prompt_override"),
@@ -200,7 +208,7 @@ def _adhoc_agent_specs() -> list[dict]:
                         "description": "Optional full override for the reply propaganda system prompt.",
                     }
                 )
-        if spec.get("agent_type") != "propaganda" and not any(param.get("name") == "llm_prompt_override" for param in parameters):
+        if spec.get("agent_type") != "propaganda" and not has_explicit_prompt_overrides:
             prompt_override = {
                 "name": "llm_prompt_override",
                 "type": "multiline_string",
@@ -264,16 +272,15 @@ def _adhoc_population_filter_options(idexp: str, specs: list[dict]) -> dict[str,
         for item in populations
         if item.get("id") is not None
     }
+    global_options = _global_target_filter_options(idexp)
     return {
-        str(population_id): _population_target_filter_options(population_id)
+        str(population_id): global_options
         for population_id in sorted(population_ids)
     }
 
 
-def _population_target_filter_options(population_id: int) -> dict:
-    agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
-    agents = [Agent.query.filter_by(id=link.agent_id).first() for link in agent_links]
-    agents = [agent for agent in agents if agent is not None]
+def _global_target_filter_options(idexp: str) -> dict:
+    agents = Agent.query.order_by(Agent.id.asc()).all()
     feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
 
     def _sorted_values(values):
@@ -320,6 +327,30 @@ def _population_target_filter_options(population_id: int) -> dict:
         for agent in agents
         if str(agent.education_level or "").strip()
     )
+    gender_values = {
+        str(agent.gender).strip()
+        for agent in agents
+        if str(agent.gender or "").strip()
+    }
+    nationality_values = {
+        str(agent.nationality).strip()
+        for agent in agents
+        if str(agent.nationality or "").strip()
+    }
+    profession_values = {
+        str(agent.profession).strip()
+        for agent in agents
+        if str(agent.profession or "").strip()
+    }
+    exp_topics = Exp_Topic.query.filter_by(exp_id=idexp).all()
+    topic_ids = [int(topic.topic_id) for topic in exp_topics if topic.topic_id is not None]
+    topic_rows = (
+        Topic_List.query.filter(Topic_List.id.in_(topic_ids)).order_by(Topic_List.name.asc()).all()
+        if topic_ids
+        else Topic_List.query.order_by(Topic_List.name.asc()).all()
+    )
+    topic_values = {str(topic.name).strip() for topic in topic_rows if str(topic.name).strip()}
+    topic_values.update(interests)
 
     features = [
         {
@@ -335,10 +366,34 @@ def _population_target_filter_options(population_id: int) -> dict:
             "values": _sorted_values(language_values),
         },
         {
+            "key": "gender",
+            "label": "Gender",
+            "value_type": "enum",
+            "values": _sorted_values(gender_values),
+        },
+        {
+            "key": "nationality",
+            "label": "Nationality",
+            "value_type": "enum",
+            "values": _sorted_values(nationality_values),
+        },
+        {
             "key": "education_level",
             "label": "Education Level",
             "value_type": "enum",
             "values": _sorted_values(education_values),
+        },
+        {
+            "key": "profession",
+            "label": "Profession",
+            "value_type": "enum",
+            "values": _sorted_values(profession_values),
+        },
+        {
+            "key": "topic",
+            "label": "Topic",
+            "value_type": "enum",
+            "values": _sorted_values(topic_values),
         },
         {
             "key": "interest_contains",
@@ -410,6 +465,32 @@ def _coerce_adhoc_client_setting(
     population_filter_options: dict | None = None,
 ):
     param_type = str(parameter.get("type") or "string").strip().lower()
+    if param_type.startswith("enum_multi[") and param_type.endswith("]"):
+        allowed_values = {
+            item.strip()
+            for item in param_type[len("enum_multi[") : -1].split(",")
+            if item.strip()
+        }
+        if raw_value in (None, ""):
+            default = parameter.get("default")
+            raw_value = default if isinstance(default, list) else []
+        elif not isinstance(raw_value, list):
+            raw_value = [raw_value]
+        normalized = []
+        seen = set()
+        for item in raw_value:
+            value = str(item or "").strip()
+            if not value:
+                continue
+            if value not in allowed_values:
+                raise ValueError(f"Selected value '{value}' is not valid for {parameter.get('name', 'setting')}.")
+            if value in seen:
+                continue
+            normalized.append(value)
+            seen.add(value)
+        if not normalized and parameter.get("required"):
+            raise ValueError(f"{parameter.get('name', 'Setting')} requires at least one selection.")
+        return normalized
     if param_type == "target_filters":
         if raw_value in (None, ""):
             return []
@@ -624,7 +705,11 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
         name = str(parameter.get("name") or "").strip()
         if not name:
             continue
-        raw_value = request.form.get(f"agent_setting__{name}")
+        param_type = str(parameter.get("type") or "").strip().lower()
+        if param_type.startswith("enum_multi["):
+            raw_value = request.form.getlist(f"agent_setting__{name}")
+        else:
+            raw_value = request.form.get(f"agent_setting__{name}")
         value = _coerce_adhoc_client_setting(
             parameter,
             raw_value,

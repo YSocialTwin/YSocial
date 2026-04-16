@@ -39,6 +39,28 @@ def test_adhoc_agent_specs_include_propaganda_client_settings():
     assert propaganda["prompt_templates"]
 
 
+def test_adhoc_agent_specs_include_comic_relief_settings():
+    specs = _adhoc_agent_specs()
+
+    comic_relief = next(spec for spec in specs if spec["agent_type"] == "comic_relief")
+
+    assert comic_relief["requires_llm"] is True
+    assert any(
+        parameter["name"] == "humor_styles"
+        and str(parameter["type"]).startswith("enum_multi[")
+        for parameter in comic_relief["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "opening_llm_prompt_override"
+        for parameter in comic_relief["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "reply_llm_prompt_override"
+        for parameter in comic_relief["client_parameters"]
+    )
+    assert comic_relief["prompt_templates"]
+
+
 def test_adhoc_agent_specs_include_mop_client_settings():
     specs = _adhoc_agent_specs()
 
@@ -62,6 +84,7 @@ def test_adhoc_agent_specs_include_stress_attacker_settings():
     )
 
     assert stress_attacker["requires_llm"] is True
+    assert stress_attacker["requires_stress_reward"] is True
     assert any(
         parameter["name"] == "target_filters"
         for parameter in stress_attacker["client_parameters"]
@@ -141,7 +164,7 @@ def test_target_filters_client_setting_is_validated_against_population_features(
 
     value = _coerce_adhoc_client_setting(
         parameter,
-        '[{"feature": "leaning", "value": "Democrat"}, {"feature": "custom:Class", "value": "Mage"}, {"feature": "min_age", "value": "40"}]',
+        '[{"feature": "leaning", "value": "Democrat"}, {"feature": "gender", "value": "female"}, {"feature": "topic", "value": "Climate"}, {"feature": "custom:Class", "value": "Mage"}, {"feature": "min_age", "value": "40"}]',
         experiment_topic_ids=set(),
         experiment_topics_by_id={},
         opinion_groups_by_name={},
@@ -153,6 +176,16 @@ def test_target_filters_client_setting_is_validated_against_population_features(
                     "key": "leaning",
                     "value_type": "enum",
                     "values": [{"value": "Democrat", "label": "Democrat"}],
+                },
+                {
+                    "key": "gender",
+                    "value_type": "enum",
+                    "values": [{"value": "female", "label": "female"}],
+                },
+                {
+                    "key": "topic",
+                    "value_type": "enum",
+                    "values": [{"value": "Climate", "label": "Climate"}],
                 },
                 {
                     "key": "custom:Class",
@@ -170,9 +203,32 @@ def test_target_filters_client_setting_is_validated_against_population_features(
 
     assert value == [
         {"feature": "leaning", "value": "Democrat"},
+        {"feature": "gender", "value": "female"},
+        {"feature": "topic", "value": "Climate"},
         {"feature": "custom:Class", "value": "Mage"},
         {"feature": "min_age", "value": 40},
     ]
+
+
+def test_enum_multi_client_setting_normalizes_and_validates_values():
+    parameter = {
+        "name": "humor_styles",
+        "type": "enum_multi[dad_jokes, nerdy, wordplay]",
+        "required": True,
+    }
+
+    value = _coerce_adhoc_client_setting(
+        parameter,
+        ["dad_jokes", "wordplay", "dad_jokes"],
+        experiment_topic_ids=set(),
+        experiment_topics_by_id={},
+        opinion_groups_by_name={},
+        age_classes_by_name={},
+        leaning_names=set(),
+        population_filter_options={"features": []},
+    )
+
+    assert value == ["dad_jokes", "wordplay"]
 
 
 def test_stress_attacker_is_filtered_out_when_stress_reward_disabled(monkeypatch):
