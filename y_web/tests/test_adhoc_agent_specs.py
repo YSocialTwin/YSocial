@@ -1,7 +1,9 @@
 from y_web.routes.admin.sub.clients._crud import (
     _adhoc_agent_specs,
+    _adhoc_stress_reward_config_for_experiment,
     _build_adhoc_client_initial_values,
     _coerce_adhoc_client_setting,
+    _filter_adhoc_agent_specs_for_experiment,
 )
 
 
@@ -16,6 +18,25 @@ def test_adhoc_agent_specs_include_propaganda_client_settings():
         parameter["name"] == "propaganda_campaigns"
         for parameter in propaganda["client_parameters"]
     )
+    assert any(
+        parameter["name"] == "opening_llm_prompt_override"
+        for parameter in propaganda["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "reply_llm_prompt_override"
+        for parameter in propaganda["client_parameters"]
+    )
+    assert [section["key"] for section in propaganda["client_parameter_sections"]] == [
+        "campaign",
+        "conversation",
+        "opening_prompt",
+        "reply_prompt",
+    ]
+    assert not any(
+        parameter["name"] == "llm_prompt_override"
+        for parameter in propaganda["client_parameters"]
+    )
+    assert propaganda["prompt_templates"]
 
 
 def test_adhoc_agent_specs_include_mop_client_settings():
@@ -27,6 +48,177 @@ def test_adhoc_agent_specs_include_mop_client_settings():
     assert any(
         parameter["name"] == "mop_campaigns" for parameter in mop["client_parameters"]
     )
+    assert not any(
+        parameter["name"] == "llm_prompt_instructions"
+        for parameter in mop["client_parameters"]
+    )
+
+
+def test_adhoc_agent_specs_include_stress_attacker_settings():
+    specs = _adhoc_agent_specs()
+
+    stress_attacker = next(
+        spec for spec in specs if spec["agent_type"] == "stress_attacker"
+    )
+
+    assert stress_attacker["requires_llm"] is True
+    assert any(
+        parameter["name"] == "target_filters"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "report_burst_enabled"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "critical_comment_mode"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "critical_comment_text"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    assert any(
+        parameter["name"] == "llm_prompt_override"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    assert not any(
+        parameter["name"] == "llm_prompt_instructions"
+        for parameter in stress_attacker["client_parameters"]
+    )
+    prompt_override = next(
+        parameter
+        for parameter in stress_attacker["client_parameters"]
+        if parameter["name"] == "llm_prompt_override"
+    )
+    assert prompt_override["section"] == "comment_strategy"
+    assert prompt_override["visible_if"] == {
+        "setting": "critical_comment_mode",
+        "equals": "llm",
+    }
+    assert all(
+        section["key"] != "prompt_customization"
+        for section in stress_attacker["client_parameter_sections"]
+    )
+    assert stress_attacker["prompt_templates"]
+
+
+def test_adhoc_agent_specs_include_moderator_conditional_prompt_settings():
+    specs = _adhoc_agent_specs()
+
+    moderator = next(spec for spec in specs if spec["agent_type"] == "moderator")
+
+    assert any(
+        parameter["name"] == "standard_message"
+        for parameter in moderator["client_parameters"]
+    )
+    assert not any(
+        parameter["name"] == "llm_prompt_instructions"
+        for parameter in moderator["client_parameters"]
+    )
+    prompt_override = next(
+        parameter
+        for parameter in moderator["client_parameters"]
+        if parameter["name"] == "llm_prompt_override"
+    )
+    assert prompt_override["section"] == "moderation"
+    assert prompt_override["visible_if"] == {
+        "setting": "moderation_action_type",
+        "equals": "personalized",
+    }
+    assert all(
+        section["key"] != "prompt_customization"
+        for section in moderator["client_parameter_sections"]
+    )
+
+
+def test_target_filters_client_setting_is_validated_against_population_features():
+    parameter = {
+        "name": "target_filters",
+        "type": "target_filters",
+        "required": False,
+    }
+
+    value = _coerce_adhoc_client_setting(
+        parameter,
+        '[{"feature": "leaning", "value": "Democrat"}, {"feature": "custom:Class", "value": "Mage"}, {"feature": "min_age", "value": "40"}]',
+        experiment_topic_ids=set(),
+        experiment_topics_by_id={},
+        opinion_groups_by_name={},
+        age_classes_by_name={},
+        leaning_names=set(),
+        population_filter_options={
+            "features": [
+                {
+                    "key": "leaning",
+                    "value_type": "enum",
+                    "values": [{"value": "Democrat", "label": "Democrat"}],
+                },
+                {
+                    "key": "custom:Class",
+                    "value_type": "enum",
+                    "values": [{"value": "Mage", "label": "Mage"}],
+                },
+                {
+                    "key": "min_age",
+                    "value_type": "integer",
+                    "values": [],
+                },
+            ]
+        },
+    )
+
+    assert value == [
+        {"feature": "leaning", "value": "Democrat"},
+        {"feature": "custom:Class", "value": "Mage"},
+        {"feature": "min_age", "value": 40},
+    ]
+
+
+def test_stress_attacker_is_filtered_out_when_stress_reward_disabled(monkeypatch):
+    specs = _adhoc_agent_specs()
+
+    class DummyExp:
+        pass
+
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._crud._opinion_dynamics_enabled_for_client_creation",
+        lambda _exp: True,
+    )
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._crud._stress_reward_enabled_for_adhoc",
+        lambda _exp: False,
+    )
+
+    filtered = _filter_adhoc_agent_specs_for_experiment(DummyExp(), specs)
+
+    assert all(spec["agent_type"] != "stress_attacker" for spec in filtered)
+
+
+def test_adhoc_stress_reward_config_reads_hpc_server_config(tmp_path, monkeypatch):
+    exp_dir = tmp_path / "y_web" / "experiments" / "exp_hpc"
+    exp_dir.mkdir(parents=True)
+    (exp_dir / "server_config.json").write_text(
+        '{"stress_reward": {"enabled": true, "backward_rounds": 12}}',
+        encoding="utf-8",
+    )
+
+    class DummyExp:
+        simulator_type = "HPC"
+
+    monkeypatch.setattr(
+        "y_web.src.system.path_utils.get_writable_path",
+        lambda: str(tmp_path),
+    )
+    monkeypatch.setattr(
+        "y_web.routes.admin.sub.clients._crud._get_experiment_folder_name",
+        lambda _exp: "exp_hpc",
+    )
+
+    config = _adhoc_stress_reward_config_for_experiment(DummyExp())
+
+    assert config["enabled"] is True
+    assert config["backward_rounds"] == 12
 
 
 def test_topic_target_client_setting_is_validated_against_experiment_topics():

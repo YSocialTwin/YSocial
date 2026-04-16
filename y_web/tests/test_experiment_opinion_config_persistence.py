@@ -3,6 +3,32 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def test_stress_reward_client_sync_preserves_structured_system_config():
+    from y_web.routes.admin.sub.experiments._helpers import (
+        sync_stress_reward_client_config,
+    )
+
+    client_config = {"simulation": {"name": "demo"}}
+    stress_reward_config = {
+        "enabled": True,
+        "backward_rounds": 18,
+        "system": {
+            "coupling": {"reward_buffers_stress_alpha": 0.12},
+            "churn": {"enabled": True, "bias": -1.3},
+            "events": {"reaction": {"like": {"stress": -0.01, "reward": 0.05}}},
+        },
+    }
+
+    updated = sync_stress_reward_client_config(client_config, stress_reward_config)
+
+    assert updated["stress_reward"]["enabled"] is True
+    assert updated["stress_reward"]["backward_rounds"] == 18
+    assert updated["stress_reward"]["system"]["coupling"]["reward_buffers_stress_alpha"] == 0.12
+    assert updated["stress_reward"]["system"]["churn"]["enabled"] is True
+    assert updated["stress_reward"]["system"]["churn"]["bias"] == -1.3
+    assert updated["stress_reward"]["system"]["events"]["reaction"]["like"]["reward"] == 0.05
+
+
 def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
     source = open(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_crud.py",
@@ -10,6 +36,7 @@ def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():
     ).read()
     assert '"opinion_dynamics_enabled": opinion_dynamics_enabled' in source
     assert '"memory": {"enabled": False}' in source
+    assert '"stress_reward": default_stress_reward_config()' in source
     assert '"opinions_enabled": opinions_enabled' not in source
     assert "generate_hpc_config(" in source
     assert "opinion_dynamics_enabled=opinion_dynamics_enabled" in source
@@ -76,6 +103,18 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
     assert "if memory_configuration_supported:" in data_source
     assert 'memory_enabled = _is_checked("memory_enabled")' in data_source
     assert 'memory_config["enabled"] = bool(memory_enabled)' in data_source
+    assert 'stress_reward_enabled = _is_checked("stress_reward_enabled")' in data_source
+    assert 'config["stress_reward"] = stress_reward_config' in data_source
+    assert (
+        'if getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}:'
+        in data_source
+    )
+    assert "if exp.simulator_type == \"HPC\":" in data_source
+    assert "client_config = sync_stress_reward_client_config(" in data_source
+    assert 'def stress_reward_settings(uid):' in data_source
+    assert 'def update_stress_reward_settings(uid):' in data_source
+    assert 'stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")' in data_source
+    assert 'field_name = f"sr_event_{family}_{subtype}_{variable}"' in data_source
     assert "def _memory_enabled_for_client_creation(experiment):" in clients_source
     assert (
         "experiment_memory_enabled = _memory_enabled_for_client_creation(exp)"

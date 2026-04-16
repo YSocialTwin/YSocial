@@ -155,6 +155,10 @@ def test_stop_server_for_forum_uses_standard_termination(monkeypatch):
         "y_web.src.simulation.execution_backend.terminate_server_process", mock_standard
     )
     monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.stop_all_adhoc_clients",
+        MagicMock(),
+    )
+    monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.stop_hpc_server", mock_hpc
     )
     monkeypatch.setattr(
@@ -179,6 +183,10 @@ def test_stop_server_for_forum_falls_back_to_port_termination(monkeypatch):
         "y_web.src.simulation.execution_backend.terminate_server_process", mock_standard
     )
     monkeypatch.setattr(
+        "y_web.src.simulation.execution_backend.stop_all_adhoc_clients",
+        MagicMock(),
+    )
+    monkeypatch.setattr(
         "y_web.src.simulation.execution_backend.terminate_process_on_port",
         mock_port_fallback,
     )
@@ -186,3 +194,13 @@ def test_stop_server_for_forum_falls_back_to_port_termination(monkeypatch):
     assert stop_server_for_experiment(exp) is False
     mock_standard.assert_called_once_with(exp.idexp)
     mock_port_fallback.assert_called_once_with(exp.port)
+
+
+def test_server_watchdog_syncs_stress_reward_for_forum_clients():
+    source = open(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/src/simulation/server.py",
+        "r",
+    ).read()
+
+    assert '{"microblogging", "forum", "hpc"}' in source
+    assert "Watchdog: Synchronized stress_reward into" in source

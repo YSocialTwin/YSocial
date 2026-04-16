@@ -14,6 +14,37 @@ import pytest
 pytestmark = pytest.mark.unit
 
 
+def test_hpc_client_stress_reward_sync_uses_server_config(tmp_path):
+    from y_web.src.hpc.client import _sync_stress_reward_into_hpc_client_config
+
+    exp_dir = tmp_path / "exp"
+    exp_dir.mkdir()
+    (exp_dir / "server_config.json").write_text(
+        json.dumps(
+            {
+                "stress_reward": {
+                    "enabled": True,
+                    "backward_rounds": 18,
+                    "system": {"churn": {"enabled": True, "bias": -1.7}},
+                }
+            }
+        )
+    )
+    client_path = exp_dir / "client_demo-pop.json"
+    client_path.write_text(json.dumps({"simulation": {"days": 7}}))
+
+    changed = _sync_stress_reward_into_hpc_client_config(
+        str(exp_dir), str(client_path)
+    )
+
+    updated = json.loads(client_path.read_text())
+    assert changed is True
+    assert updated["stress_reward"]["enabled"] is True
+    assert updated["stress_reward"]["backward_rounds"] == 18
+    assert updated["stress_reward"]["system"]["churn"]["enabled"] is True
+    assert updated["stress_reward"]["system"]["churn"]["bias"] == -1.7
+
+
 def test_hpc_experiment_detection_logic():
     """Test logic for detecting HPC vs Standard experiments."""
 

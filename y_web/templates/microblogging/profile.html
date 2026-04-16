@@ -134,6 +134,39 @@
             <div class="columns">
 
                 <div id="profile-timeline-widgets" class="column is-4">
+                    {% if stress_reward_active and is_page != 1 %}
+                    <div class="box-heading">
+                        <h4>Stress / Reward</h4>
+                    </div>
+
+                    <div class="basic-infos-wrapper">
+                        <div class="card is-profile-info">
+                            <div class="info-row">
+                                <div>
+                                    <span>Recognition</span>
+                                    <div class="is-inverted" aria-label="Current reward level">
+                                        {% for idx in range(5) %}
+                                        <i class="mdi {% if idx < stress_reward_indicator['reward']['level'] %}mdi-star{% else %}mdi-star-outline{% endif %}" {% if idx < stress_reward_indicator['reward']['level'] %}style="color: #d4a017;"{% endif %}></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <i class="mdi mdi-star-circle"></i>
+                            </div>
+                            <div class="info-row">
+                                <div>
+                                    <span>Stress</span>
+                                    <div class="is-inverted" aria-label="Current stress level">
+                                        {% for idx in range(5) %}
+                                        <i class="mdi {% if idx < stress_reward_indicator['stress']['level'] %}mdi-alert-circle{% else %}mdi-alert-circle-outline{% endif %}" {% if idx < stress_reward_indicator['stress']['level'] %}style="color: #d64545;"{% endif %}></i>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <i class="mdi mdi-heart-pulse"></i>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <!-- Basic Infos widget -->
                     <!-- html/partials/pages/profile/timeline/widgets/basic-infos-widget.html -->
                     {% if is_page != 1 %}
@@ -202,6 +235,15 @@
                                 </div>
                                 <i class="mdi mdi-heart"></i>
                             </div>
+                            {% for custom_key, custom_value in agent_custom_features.items() %}
+                            <div class="info-row">
+                                <div>
+                                    <span>{{ custom_key }}</span>
+                                    <a class="is-muted">{{ custom_value }}</a>
+                                </div>
+                                <i class="mdi mdi-tag-outline"></i>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
                     {% endif %}

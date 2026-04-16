@@ -220,6 +220,7 @@
 const YS_ADHOC_CLIENTS = {
     agentSpecs: {{ adhoc_agent_specs | tojson }},
     populationsByType: {{ adhoc_populations_by_type | tojson }},
+    populationFilterOptions: {{ adhoc_population_filter_options | tojson }},
     llmDefaults: {{ exp_llm_defaults | tojson }},
     experimentTopics: {{ adhoc_experiment_topics | tojson }},
     opinionGroups: {{ adhoc_opinion_groups | tojson }},
@@ -246,6 +247,14 @@ const YS_ADHOC_CLIENTS = {
     function selectedSpec() {
         const slug = document.getElementById('adhoc_agent_type')?.value || '';
         return YS_ADHOC_CLIENTS.agentSpecs.find(spec => spec.slug === slug) || null;
+    }
+
+    function selectedPopulationId() {
+        return document.getElementById('adhoc_population_id')?.value || '';
+    }
+
+    function targetFilterDefinitions() {
+        return (YS_ADHOC_CLIENTS.populationFilterOptions[selectedPopulationId()] || {}).features || [];
     }
 
     function updateAgentTypeCards() {
@@ -306,7 +315,7 @@ const YS_ADHOC_CLIENTS = {
         const spec = selectedSpec();
         const section = document.getElementById('adhoc_llm_section');
         const llmInputs = section ? section.querySelectorAll('input, select') : [];
-        const enabled = !!(spec && spec.requires_llm);
+        const enabled = llmRequiredForCurrentSelection(spec);
         if (section) {
             section.style.display = enabled ? 'block' : 'none';
         }
@@ -319,6 +328,56 @@ const YS_ADHOC_CLIENTS = {
             llmModelsFetched = false;
             llmModelSelected = false;
         }
+    }
+
+    function selectedSettingValue(settingName) {
+        const field = document.querySelector(`[name="agent_setting__${settingName}"]`);
+        if (!field) return '';
+        return String(field.value ?? '').trim();
+    }
+
+    function visibleByRule(rule) {
+        if (!rule || typeof rule !== 'object') return true;
+        const setting = String(rule.setting || rule.field || '').trim();
+        if (!setting) return true;
+        const currentValue = selectedSettingValue(setting);
+        if (Object.prototype.hasOwnProperty.call(rule, 'equals')) {
+            return currentValue === String(rule.equals ?? '');
+        }
+        if (Array.isArray(rule.in)) {
+            return rule.in.map(item => String(item ?? '')).includes(currentValue);
+        }
+        return true;
+    }
+
+    function llmRequiredForCurrentSelection(spec = selectedSpec()) {
+        if (!(spec && spec.requires_llm)) return false;
+        if (spec.agent_type === 'stress_attacker') {
+            return selectedSettingValue('critical_comment_mode') === 'llm';
+        }
+        if (spec.agent_type === 'moderator') {
+            return selectedSettingValue('moderation_action_type') === 'personalized';
+        }
+        return true;
+    }
+
+    function updateConditionalAgentSettingsVisibility() {
+        const section = document.getElementById('adhoc_agent_settings_section');
+        if (!section) return;
+        const spec = selectedSpec();
+        const currentParameters = new Set((spec?.client_parameters || []).map(parameter => parameter.name));
+        const currentSections = new Set((spec?.client_parameter_sections || []).map(sectionMeta => sectionMeta.key));
+        section.querySelectorAll('[data-visible-if-setting]').forEach(node => {
+            const parameterName = node.dataset.settingName || '';
+            const sectionKey = node.dataset.sectionKey || '';
+            if (parameterName && !currentParameters.has(parameterName)) return;
+            if (sectionKey && !currentSections.has(sectionKey)) return;
+            const visible = visibleByRule({
+                setting: node.dataset.visibleIfSetting || '',
+                equals: node.dataset.visibleIfEquals || '',
+            });
+            node.style.display = visible ? '' : 'none';
+        });
     }
 
     function escapeHtml(value) {
@@ -355,9 +414,14 @@ const YS_ADHOC_CLIENTS = {
             const groupParameters = groups[sectionMeta.key] || [];
             if (!groupParameters.length) return;
             html.push(`
-                <div class="ys-adhoc-param-group">
+                <div
+                    class="ys-adhoc-param-group"
+                    data-section-key="${escapeHtml(sectionMeta.key || '')}"
+                    ${sectionMeta.visible_if ? `data-visible-if-setting="${escapeHtml(sectionMeta.visible_if.setting || sectionMeta.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(sectionMeta.visible_if.equals || '')}"` : ''}
+                >
                     <div class="form-section-header">${escapeHtml(sectionMeta.label || sectionMeta.key)}</div>
                     ${sectionMeta.description ? `<div class="form-section-description">${escapeHtml(sectionMeta.description)}</div>` : ''}
+                    ${sectionMeta.key === 'prompt_customization' ? renderPromptTemplates(spec) : ''}
                     ${groupParameters.map(renderParameterField).join('')}
                 </div>
             `);
@@ -371,9 +435,11 @@ const YS_ADHOC_CLIENTS = {
         container.innerHTML = html.join('');
         section.style.display = 'block';
         syncAllTopicTargets();
+        updateConditionalAgentSettingsVisibility();
     }
 
     function renderParameterField(parameter) {
+        const spec = selectedSpec();
         const name = parameter.name;
         const label = name.replaceAll('_', ' ').replace(/\b\w/g, match => match.toUpperCase());
         const description = parameter.description ? `<small class="ys-hint-text">${escapeHtml(parameter.description)}</small>` : '';
@@ -381,11 +447,19 @@ const YS_ADHOC_CLIENTS = {
         const defaultValue = parameter.default ?? '';
         const type = String(parameter.type || 'string');
         const initialValue = initialSettingValue(name, defaultValue);
+        let inlinePromptPreview = '';
+        if (name === 'llm_prompt_override' && (spec?.agent_type === 'moderator' || spec?.agent_type === 'stress_attacker')) {
+            inlinePromptPreview = renderPromptTemplates(spec);
+        } else if (spec?.agent_type === 'propaganda' && name === 'opening_llm_prompt_override') {
+            inlinePromptPreview = renderPromptTemplates(spec, 'Opening Propaganda System Prompt');
+        } else if (spec?.agent_type === 'propaganda' && name === 'reply_llm_prompt_override') {
+            inlinePromptPreview = renderPromptTemplates(spec, 'Reply Propaganda System Prompt');
+        }
 
         if (type.startsWith('enum[')) {
             const values = type.slice(5, -1).split(',').map(item => item.trim()).filter(Boolean);
             return `
-                <div class="box-line">
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
                     <span class="left">${escapeHtml(label)}</span>
                     <span class="right ys-w-70">
                         <div class="select is-fullwidth">
@@ -401,7 +475,7 @@ const YS_ADHOC_CLIENTS = {
 
         if (type === 'topic_targets') {
             return `
-                <div class="box-line">
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
                     <span class="left">${escapeHtml(label)}</span>
                     <span class="right ys-w-70">
                         <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
@@ -420,7 +494,7 @@ const YS_ADHOC_CLIENTS = {
 
         if (type === 'mop_targets') {
             return `
-                <div class="box-line">
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
                     <span class="left">${escapeHtml(label)}</span>
                     <span class="right ys-w-70">
                         <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
@@ -437,15 +511,66 @@ const YS_ADHOC_CLIENTS = {
             `;
         }
 
+        if (type === 'target_filters') {
+            return `
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        <input type="hidden" name="agent_setting__${escapeHtml(name)}" id="agent_setting__${escapeHtml(name)}" value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
+                        <div class="ys-adhoc-target-filter-builder" data-setting-name="${escapeHtml(name)}" data-initial-value="${escapeHtml(JSON.stringify(Array.isArray(initialValue) ? initialValue : []))}">
+                            <div class="ys-adhoc-target-builder-help">
+                                Add one row per demographic filter. Select a feature first, then choose one of the known values when available.
+                            </div>
+                            <div class="ys-adhoc-target-filter-rows"></div>
+                            <button type="button" class="button is-light ys-adhoc-add-target-filter">+ Add Filter</button>
+                        </div>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
+        if (type === 'multiline_string') {
+            return `
+                <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
+                    <span class="left">${escapeHtml(label)}</span>
+                    <span class="right ys-w-70">
+                        ${inlinePromptPreview}
+                        <textarea name="agent_setting__${escapeHtml(name)}" class="textarea" rows="4" ${required}>${escapeHtml(initialValue)}</textarea>
+                        ${description}
+                    </span>
+                </div>
+            `;
+        }
+
         const inputType = type === 'integer' || type === 'float' || type === 'number' ? 'number' : 'text';
         const step = type === 'integer' ? '1' : (type === 'float' || type === 'number' ? '0.01' : null);
         return `
-            <div class="box-line">
+            <div class="box-line" data-setting-name="${escapeHtml(name)}" ${parameter.visible_if ? `data-visible-if-setting="${escapeHtml(parameter.visible_if.setting || parameter.visible_if.field || '')}" data-visible-if-equals="${escapeHtml(parameter.visible_if.equals || '')}"` : ''}>
                 <span class="left">${escapeHtml(label)}</span>
                 <span class="right ys-w-70">
                     <input type="${inputType}" name="agent_setting__${escapeHtml(name)}" class="input" value="${escapeHtml(initialValue)}" ${step ? `step="${step}"` : ''} ${required}>
                     ${description}
                 </span>
+            </div>
+        `;
+    }
+
+    function renderPromptTemplates(spec, filterTitle = null) {
+        let templates = Array.isArray(spec?.prompt_templates) ? spec.prompt_templates : [];
+        if (filterTitle) {
+            templates = templates.filter(template => String(template?.title || '') === String(filterTitle));
+        }
+        if (!templates.length) return '';
+        return `
+            <div class="ys-adhoc-current-prompts">
+                <div class="ys-adhoc-target-builder-help">Current built-in prompts passed to this agent:</div>
+                ${templates.map(template => `
+                    <div class="dashboard-box is-compact" style="margin: 8px 0;">
+                        <div class="form-section-header" style="margin-bottom: 6px;">${escapeHtml(template.title || 'Prompt')}</div>
+                        <pre style="white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 0.9rem;">${escapeHtml(template.body || '')}</pre>
+                    </div>
+                `).join('')}
             </div>
         `;
     }
@@ -568,6 +693,74 @@ const YS_ADHOC_CLIENTS = {
         syncMopTargets(builder);
     }
 
+    function featureMeta(featureKey) {
+        return targetFilterDefinitions().find(item => item.key === featureKey) || null;
+    }
+
+    function renderTargetFilterValueControl(row, featureKey, rawValue) {
+        const container = row.querySelector('.ys-adhoc-target-filter-value');
+        if (!container) return;
+        const meta = featureMeta(featureKey);
+        if (!meta) {
+            container.innerHTML = '<input type="text" class="input ys-adhoc-target-filter-value-input" value="">';
+            return;
+        }
+        const valueType = String(meta.value_type || 'string');
+        const safeValue = rawValue == null ? '' : String(rawValue);
+        if (valueType === 'enum' && Array.isArray(meta.values) && meta.values.length) {
+            container.innerHTML = `
+                <div class="select is-fullwidth">
+                    <select class="input ys-adhoc-target-filter-value-input">
+                        <option value=""></option>
+                        ${meta.values.map(item => `<option value="${escapeHtml(item.value)}" ${String(item.value) === safeValue ? 'selected' : ''}>${escapeHtml(item.label || item.value)}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+            return;
+        }
+        const inputType = valueType === 'integer' || valueType === 'float' || valueType === 'number' ? 'number' : 'text';
+        const step = valueType === 'integer' ? '1' : (valueType === 'float' || valueType === 'number' ? '0.01' : null);
+        container.innerHTML = `
+            <input type="${inputType}" class="input ys-adhoc-target-filter-value-input" value="${escapeHtml(safeValue)}" ${step ? `step="${step}"` : ''}>
+        `;
+    }
+
+    function addTargetFilterRow(builder, initial = {}) {
+        const rows = builder.querySelector('.ys-adhoc-target-filter-rows');
+        if (!rows) return;
+        const definitions = targetFilterDefinitions();
+        const row = document.createElement('div');
+        row.className = 'mb-2 ys-adhoc-target-row';
+        row.innerHTML = `
+            <div class="ys-adhoc-target-grid">
+                <div class="ys-adhoc-target-field">
+                    <label>Feature</label>
+                    <div class="select is-fullwidth">
+                        <select class="input ys-adhoc-target-filter-feature">
+                            <option value=""></option>
+                            ${definitions.map(item => `<option value="${escapeHtml(item.key)}">${escapeHtml(item.label || item.key)}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="ys-adhoc-target-field ys-adhoc-target-field-wide">
+                    <label>Value</label>
+                    <div class="ys-adhoc-target-filter-value"></div>
+                </div>
+                <div class="ys-adhoc-target-field ys-adhoc-target-field-action">
+                    <label>&nbsp;</label>
+                    <button type="button" class="button is-light ys-adhoc-remove-target-filter">Remove</button>
+                </div>
+            </div>
+        `;
+        rows.appendChild(row);
+        const featureSelect = row.querySelector('.ys-adhoc-target-filter-feature');
+        if (featureSelect && initial.feature != null) {
+            featureSelect.value = String(initial.feature);
+        }
+        renderTargetFilterValueControl(row, featureSelect?.value || '', initial.value);
+        syncTargetFilters(builder);
+    }
+
     function syncTopicTargets(builder) {
         const settingName = builder.dataset.settingName;
         const hidden = document.getElementById(`agent_setting__${settingName}`);
@@ -616,6 +809,20 @@ const YS_ADHOC_CLIENTS = {
         updateCreateButton();
     }
 
+    function syncTargetFilters(builder) {
+        const settingName = builder.dataset.settingName;
+        const hidden = document.getElementById(`agent_setting__${settingName}`);
+        if (!hidden) return;
+        const payload = Array.from(builder.querySelectorAll('.ys-adhoc-target-row')).map(row => {
+            const feature = row.querySelector('.ys-adhoc-target-filter-feature')?.value || '';
+            const value = row.querySelector('.ys-adhoc-target-filter-value-input')?.value || '';
+            if (!feature || String(value).trim() === '') return null;
+            return { feature, value };
+        }).filter(Boolean);
+        hidden.value = JSON.stringify(payload);
+        updateCreateButton();
+    }
+
     function syncAllTopicTargets() {
         document.querySelectorAll('.ys-adhoc-target-builder').forEach(builder => {
             const rows = builder.querySelector('.ys-adhoc-target-rows');
@@ -651,6 +858,24 @@ const YS_ADHOC_CLIENTS = {
             }
             syncMopTargets(builder);
         });
+        document.querySelectorAll('.ys-adhoc-target-filter-builder').forEach(builder => {
+            const rows = builder.querySelector('.ys-adhoc-target-filter-rows');
+            if (rows) {
+                rows.innerHTML = '';
+                let initialRows = [];
+                try {
+                    initialRows = JSON.parse(builder.dataset.initialValue || '[]');
+                } catch (_error) {
+                    initialRows = [];
+                }
+                if (Array.isArray(initialRows) && initialRows.length) {
+                    initialRows.forEach(item => addTargetFilterRow(builder, item));
+                } else if (targetFilterDefinitions().length) {
+                    addTargetFilterRow(builder);
+                }
+            }
+            syncTargetFilters(builder);
+        });
     }
 
     function updateCreateButton() {
@@ -659,11 +884,12 @@ const YS_ADHOC_CLIENTS = {
         const agentType = document.getElementById('adhoc_agent_type')?.value || '';
         const population = document.getElementById('adhoc_population_id')?.value || '';
         const spec = selectedSpec();
-        const llmReady = !spec || !spec.requires_llm || llmModelSelected || !!document.getElementById('models_select_client')?.value;
+        const llmReady = !llmRequiredForCurrentSelection(spec) || llmModelSelected || !!document.getElementById('models_select_client')?.value;
         let settingsReady = true;
         if (spec && (spec.client_parameters || []).length) {
             settingsReady = (spec.client_parameters || []).every(parameter => {
                 const field = document.querySelector(`[name="agent_setting__${parameter.name}"]`);
+                if (!visibleByRule(parameter.visible_if)) return true;
                 if (!parameter.required) return true;
                 if (!field) return false;
                 if (parameter.type === 'topic_targets') {
@@ -674,6 +900,13 @@ const YS_ADHOC_CLIENTS = {
                     }
                 }
                 if (parameter.type === 'mop_targets') {
+                    try {
+                        return JSON.parse(field.value || '[]').length > 0;
+                    } catch (_error) {
+                        return false;
+                    }
+                }
+                if (parameter.type === 'target_filters') {
                     try {
                         return JSON.parse(field.value || '[]').length > 0;
                     } catch (_error) {
@@ -732,6 +965,7 @@ const YS_ADHOC_CLIENTS = {
         const infiniteDuration = document.getElementById('infinite_duration');
         if (nameInput) nameInput.addEventListener('input', updateCreateButton);
         if (populationSelect) populationSelect.addEventListener('change', updateCreateButton);
+        if (populationSelect) populationSelect.addEventListener('change', syncAllTopicTargets);
         if (daysDisplay && daysInput) {
             const syncDays = () => {
                 const value = Math.max(1, Number(daysDisplay.value || daysInput.value || 30));
@@ -774,6 +1008,12 @@ const YS_ADHOC_CLIENTS = {
                 if (builder) addMopTargetRow(builder);
                 return;
             }
+            const addTargetFilterButton = event.target.closest('.ys-adhoc-add-target-filter');
+            if (addTargetFilterButton) {
+                const builder = addTargetFilterButton.closest('.ys-adhoc-target-filter-builder');
+                if (builder) addTargetFilterRow(builder);
+                return;
+            }
             const removeButton = event.target.closest('.ys-adhoc-remove-target');
             if (removeButton) {
                 const builder = removeButton.closest('.ys-adhoc-target-builder');
@@ -786,6 +1026,13 @@ const YS_ADHOC_CLIENTS = {
                 const builder = removeMopButton.closest('.ys-adhoc-mop-builder');
                 removeMopButton.closest('.ys-adhoc-target-row')?.remove();
                 if (builder) syncMopTargets(builder);
+                return;
+            }
+            const removeTargetFilterButton = event.target.closest('.ys-adhoc-remove-target-filter');
+            if (removeTargetFilterButton) {
+                const builder = removeTargetFilterButton.closest('.ys-adhoc-target-filter-builder');
+                removeTargetFilterButton.closest('.ys-adhoc-target-row')?.remove();
+                if (builder) syncTargetFilters(builder);
             }
         });
         document.addEventListener('input', function(event) {
@@ -793,6 +1040,10 @@ const YS_ADHOC_CLIENTS = {
             if (builder) syncTopicTargets(builder);
             const mopBuilder = event.target.closest('.ys-adhoc-mop-builder');
             if (mopBuilder) syncMopTargets(mopBuilder);
+            const targetFilterBuilder = event.target.closest('.ys-adhoc-target-filter-builder');
+            if (targetFilterBuilder) syncTargetFilters(targetFilterBuilder);
+            updateConditionalAgentSettingsVisibility();
+            updateLlmSection();
             updateCreateButton();
         });
         document.addEventListener('change', function(event) {
@@ -800,6 +1051,16 @@ const YS_ADHOC_CLIENTS = {
             if (builder) syncTopicTargets(builder);
             const mopBuilder = event.target.closest('.ys-adhoc-mop-builder');
             if (mopBuilder) syncMopTargets(mopBuilder);
+            const targetFilterBuilder = event.target.closest('.ys-adhoc-target-filter-builder');
+            if (targetFilterBuilder) {
+                if (event.target.classList.contains('ys-adhoc-target-filter-feature')) {
+                    const row = event.target.closest('.ys-adhoc-target-row');
+                    renderTargetFilterValueControl(row, event.target.value, '');
+                }
+                syncTargetFilters(targetFilterBuilder);
+            }
+            updateConditionalAgentSettingsVisibility();
+            updateLlmSection();
             updateCreateButton();
         });
         if (agentTypeInput && agentTypeInput.value) {

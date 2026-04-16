@@ -284,6 +284,21 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
             # Round_actions max is set for each agent by sampling from a user defined distribution.
             # Execute at least "lower" actions per user (to guarantee the activity level distribution).
 
+        churned = False
+        churned_id = None
+        try:
+            if not getattr(g, "is_page", 0) and g.evaluate_stress_reward_churn(
+                tid, rng=local_random
+            ):
+                churned = True
+                churned_id = int(getattr(g, "user_id", 0) or 0)
+        except Exception:
+            churned = False
+            churned_id = None
+
+        if churned:
+            return (g.name, True, churned_id)
+
         for _ in range(rounds):
             # sample two elements from a list with replacement
             if len(acts) > 1:
@@ -319,8 +334,8 @@ def process_agent(g, archetypes, cl, exp, tid, FakeAgent, local_random):
                 print(traceback.format_exc())
                 pass
 
-        return (g.name, True)
+        return (g.name, True, None)
     except Exception as e:
         print(f"Error processing agent {g.name}: {e}", file=sys.stderr)
         print(traceback.format_exc(), file=sys.stderr)
-        return (g.name, False)
+        return (g.name, False, None)

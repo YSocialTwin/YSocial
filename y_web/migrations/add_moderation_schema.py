@@ -97,13 +97,21 @@ def migrate_sqlite_server(db_path, quiet=False):
                 id TEXT PRIMARY KEY,
                 uid INTEGER NOT NULL,
                 variable TEXT NOT NULL CHECK (variable IN ('stress', 'reward')),
-                value REAL NOT NULL CHECK (value >= 0 AND value <= 1),
+                value REAL NOT NULL CHECK (
+                    (type = 'aggregate' AND value >= 0 AND value <= 1)
+                    OR (type = 'variation' AND value >= -1 AND value <= 1)
+                ),
                 type TEXT NOT NULL CHECK (type IN ('aggregate', 'variation')),
+                action TEXT,
                 tid INTEGER NOT NULL,
                 FOREIGN KEY(uid) REFERENCES user_mgmt(id),
                 FOREIGN KEY(tid) REFERENCES rounds(id)
             )
             """)
+        cursor.execute("PRAGMA table_info(stress_reward)")
+        stress_reward_columns = [column[1] for column in cursor.fetchall()]
+        if "action" not in stress_reward_columns:
+            cursor.execute("ALTER TABLE stress_reward ADD COLUMN action TEXT")
         conn.commit()
         conn.close()
         return True
@@ -198,11 +206,18 @@ def migrate_postgresql_server(host, port, database, user, password):
                 id VARCHAR(36) PRIMARY KEY,
                 uid INTEGER NOT NULL REFERENCES user_mgmt(id),
                 variable VARCHAR(16) NOT NULL CHECK (variable IN ('stress', 'reward')),
-                value DOUBLE PRECISION NOT NULL CHECK (value >= 0 AND value <= 1),
+                value DOUBLE PRECISION NOT NULL CHECK (
+                    (type = 'aggregate' AND value >= 0 AND value <= 1)
+                    OR (type = 'variation' AND value >= -1 AND value <= 1)
+                ),
                 type VARCHAR(16) NOT NULL CHECK (type IN ('aggregate', 'variation')),
+                action VARCHAR(64),
                 tid INTEGER NOT NULL REFERENCES rounds(id)
             )
             """)
+        cursor.execute(
+            "ALTER TABLE stress_reward ADD COLUMN IF NOT EXISTS action VARCHAR(64)"
+        )
         conn.commit()
         conn.close()
         return True

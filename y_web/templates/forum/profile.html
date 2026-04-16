@@ -40,7 +40,31 @@
         </div>
 
         <div class="forum-profile-layout{% if forum_memory_enabled %} has-chat{% endif %}">
-            <aside>
+            <aside class="forum-profile-sidebar">
+                {% if stress_reward_active and is_page != 1 %}
+                <div class="forum-profile-card">
+                    <h3>Stress / Reward</h3>
+                    <div class="forum-profile-about">
+                        <div class="forum-profile-about-row forum-profile-scale-row">
+                            <span>Recognition</span>
+                            <span class="forum-profile-scale" aria-label="Current reward level">
+                                {% for idx in range(5) %}
+                                <span class="forum-profile-scale-dot reward {% if idx < stress_reward_indicator['reward']['level'] %}is-active{% endif %}"></span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                        <div class="forum-profile-about-row forum-profile-scale-row">
+                            <span>Stress</span>
+                            <span class="forum-profile-scale" aria-label="Current stress level">
+                                {% for idx in range(5) %}
+                                <span class="forum-profile-scale-dot stress {% if idx < stress_reward_indicator['stress']['level'] %}is-active{% endif %}"></span>
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
                 <div class="forum-profile-card">
                     <h3>About</h3>
                     <div class="forum-profile-about">
@@ -52,13 +76,16 @@
                         <div class="forum-profile-about-row"><span>Education</span><span>{{ user['user_data']['education_level'] or 'n/a' }}</span></div>
                         <div class="forum-profile-about-row"><span>Profession</span><span>{{ user['user_data']['profession'] or 'n/a' }}</span></div>
                         <div class="forum-profile-about-row"><span>Political Leaning</span><span>{{ user['user_data']['leaning'] or 'n/a' }}</span></div>
+                        {% for custom_key, custom_value in agent_custom_features.items() %}
+                        <div class="forum-profile-about-row"><span>{{ custom_key }}</span><span>{{ custom_value }}</span></div>
+                        {% endfor %}
                         {% else %}
                         <div class="forum-profile-empty">This page represents a forum community page.</div>
                         {% endif %}
                     </div>
                 </div>
 
- <div class="forum-profile-card ys-mt-1rem">
+                <div class="forum-profile-card">
                     <h3>Interests</h3>
                     {% if interests %}
                     <div class="forum-profile-interest-list">

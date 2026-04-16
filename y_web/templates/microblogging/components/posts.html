@@ -169,7 +169,7 @@
                     <div class="like-wrapper" id="share-{{ item['post_id'] }}">
                         <a class="share-button" id="s{{ item['post_id']}}" >
                         <i data-feather="repeat"></i>
-                        <span id="span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
+                        <span id="share-span-{{item['post_id']}}">{{ item['is_shared'] }}</span> </a>
                     </div>
                 </div>
 
@@ -177,7 +177,7 @@
                     <div class="like-wrapper" id="like-{{ item['post_id'] }}">
  <a class="like-button" id="l{{ item['post_id']}}">
  <i data-feather="thumbs-up"></i>
- <span id="span-{{item['post_id']}}">{{ item['likes'] }}</span> </a>
+ <span id="like-span-{{item['post_id']}}">{{ item['likes'] }}</span> </a>
                     </div>
                 </div>
 
@@ -185,7 +185,7 @@
                     <div class="dislike-wrapper" id="dislike-{{ item['post_id'] }}">
  <a class="dislike-button" id="d{{ item['post_id'] }}">
  <i data-feather="thumbs-down"></i>
- <span id="span-{{ item['post_id'] }}">{{ item["dislikes"] }}</span>
+ <span id="dislike-span-{{ item['post_id'] }}">{{ item["dislikes"] }}</span>
                         </a>
                     </div>
                 </div>

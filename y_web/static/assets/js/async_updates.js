@@ -136,13 +136,18 @@ $(document).on('click','.share-button',function(e) {
 
 $(document).on('click','.like-button',function(e)
                    {
+      e.preventDefault();
+      var button = e.currentTarget || e.target.closest('.like-button');
+      if (!button || !button.getAttribute('id')) {
+          return;
+      }
 
-      var col = rgbToHex(e.target.style.background);
+      var col = rgbToHex(button.style.background);
 
-      if (rgbToHex(e.target.style.background) !== "#6aa3e7"){
-          var elem_id = e.target.getAttribute('id').slice(1);
-          e.target.style.background = '#6aa3e7';
-          e.target.style.color = '#ffffff';
+      if (rgbToHex(button.style.background) !== "#6aa3e7"){
+          var elem_id = button.getAttribute('id').slice(1);
+          button.style.background = '#6aa3e7';
+          button.style.color = '#ffffff';
 
           var p = document.getElementById(`likes-count-${elem_id}`);
           p.firstElementChild.firstElementChild.firstElementChild.style.stroke = "#ffffff";
@@ -167,7 +172,6 @@ $(document).on('click','.like-button',function(e)
               count_opp.textContent = opp_currentValue;
           }
         }
-      e.preventDefault();
       $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/react_to_content',
@@ -181,12 +185,17 @@ $(document).on('click','.like-button',function(e)
 
 $(document).on('click','.dislike-button',function(e)
                    {
+      e.preventDefault();
+      var button = e.currentTarget || e.target.closest('.dislike-button');
+      if (!button || !button.getAttribute('id')) {
+          return;
+      }
 
-      if (rgbToHex(e.target.style.background) !== "#6aa3e7"){
-          var elem_id = e.target.getAttribute('id').slice(1);
+      if (rgbToHex(button.style.background) !== "#6aa3e7"){
+          var elem_id = button.getAttribute('id').slice(1);
 
-          e.target.style.background = '#6aa3e7';
-          e.target.style.color = '#ffffff';
+          button.style.background = '#6aa3e7';
+          button.style.color = '#ffffff';
 
           var p = document.getElementById(`dislikes-count-${elem_id}`);
           p.firstElementChild.firstElementChild.firstElementChild.style.stroke = "#ffffff";
@@ -210,7 +219,6 @@ $(document).on('click','.dislike-button',function(e)
               count_opp.textContent = opp_currentValue;
           }
         }
-      e.preventDefault();
       $.ajax({
         type:'GET',
         url:(window.EXP_PREFIX || '') + '/react_to_content',

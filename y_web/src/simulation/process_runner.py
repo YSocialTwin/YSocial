@@ -17,6 +17,7 @@ Both legacy modules are kept as thin shims for backward compatibility.
 # ============================================================
 
 import argparse
+from copy import deepcopy
 import json
 import os
 import sys
@@ -123,6 +124,35 @@ from y_web.src.simulation.agent_sampler import (
     process_agent,
     sample_agents,
 )
+
+
+def _sync_experiment_stress_reward_into_client_config(
+    client_config: dict, server_config: dict, platform_type: str
+) -> tuple[dict, bool]:
+    if platform_type not in {"microblogging", "forum", "hpc"}:
+        return client_config, False
+    if not isinstance(client_config, dict) or not isinstance(server_config, dict):
+        return client_config, False
+
+    server_sr = server_config.get("stress_reward")
+    if not isinstance(server_sr, dict):
+        enabled = bool(
+            server_config.get(
+                "stress_reward_enabled",
+                server_config.get("stress_reward_annotation", False),
+            )
+        )
+        server_sr = {"enabled": enabled, "backward_rounds": 24}
+
+    client_sr = client_config.get("stress_reward")
+    normalized_server_sr = deepcopy(server_sr)
+    normalized_server_sr["enabled"] = bool(server_sr.get("enabled", False))
+    normalized_server_sr["backward_rounds"] = int(server_sr.get("backward_rounds", 24) or 24)
+    if client_sr == normalized_server_sr:
+        return client_config, False
+
+    client_config["stress_reward"] = normalized_server_sr
+    return client_config, True
 
 # Number of days to run an infinite client per iteration before checking for termination
 # Infinite clients run for this many days, then loop back to continue running
@@ -451,6 +481,27 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
                 )
 
         config_file = json.load(open(client_config_path))
+        server_config_path = os.path.join(data_base_path, "config_server.json")
+        if os.path.exists(server_config_path):
+            try:
+                with open(server_config_path, "r") as handle:
+                    server_config = json.load(handle)
+                config_file, changed = _sync_experiment_stress_reward_into_client_config(
+                    config_file, server_config, exp.platform_type
+                )
+                if changed:
+                    with open(client_config_path, "w") as handle:
+                        json.dump(config_file, handle, indent=4)
+                    print(
+                        f"Synchronized stress_reward from experiment config into {os.path.basename(client_config_path)}",
+                        file=sys.stderr,
+                    )
+            except Exception:
+                print(
+                    f"Warning: failed to synchronize stress_reward into {client_config_path}",
+                    file=sys.stderr,
+                )
+                traceback.print_exc(file=sys.stderr)
 
         print("Starting client process...", file=sys.stderr)
 
@@ -686,10 +737,15 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
 
                     # Collect results as they complete
                     # Track all agents in daily_active, not just successful ones (preserves original behavior)
+                    churned_ids = []
                     for future in as_completed(future_to_agent):
-                        agent_name, success = future.result()
+                        agent_name, success, churned_id = future.result()
                         # Add to daily_active regardless of success to maintain original behavior
                         daily_active[agent_name] = None
+                        if churned_id:
+                            churned_ids.append(int(churned_id))
+                    if churned_ids:
+                        cl.agents.remove_agent_by_ids(churned_ids)
 
             # increment slot
             cl.sim_clock.increment_slot()
@@ -810,6 +866,12 @@ def run_simulation(cl, cli_id, agent_file, exp, population, db_type):
             # Evaluating new friendship ties
             for agent in da:
                 if agent not in cl.pages:
+                    try:
+                        if agent.evaluate_stress_reward_churn(tid):
+                            cl.agents.remove_agent_by_ids([agent.user_id])
+                            continue
+                    except Exception:
+                        pass
                     llm_agents = cl.config.get("agents", {}).get("llm_agents")
                     if (
                         FakeAgent is not None

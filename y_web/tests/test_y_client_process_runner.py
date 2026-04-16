@@ -4,6 +4,7 @@ import pytest
 
 from y_web.src.simulation.process_runner import (
     _get_client_archetypes,
+    _sync_experiment_stress_reward_into_client_config,
     process_agent,
 )
 
@@ -69,7 +70,7 @@ def test_process_agent_binds_shared_sim_clock():
         __import__("random").Random(1),
     )
 
-    assert result == ("alice", True)
+    assert result == ("alice", True, None)
     assert calls
     assert all(call[2] is sim_clock for call in calls)
 
@@ -111,7 +112,7 @@ def test_process_agent_validator_keeps_forum_share_aliases():
         __import__("random").Random(1),
     )
 
-    assert result == ("alice", True)
+    assert result == ("alice", True, None)
     assert any(
         action in selected_actions
         for action in ("READ", "NEWS", "SHARE_LINK", "SHARE_IMAGE")
@@ -122,3 +123,36 @@ def test_process_agent_validator_keeps_forum_share_aliases():
         or "NEWS" in selected_actions
     )
     assert "POST" not in selected_actions
+
+
+@pytest.mark.parametrize("platform_type", ["microblogging", "forum", "hpc"])
+def test_stress_reward_sync_applies_to_supported_platforms(platform_type):
+    client_config = {"simulation": {}}
+    server_config = {
+        "stress_reward": {
+            "enabled": True,
+            "backward_rounds": 18,
+            "system": {"churn": {"enabled": False}},
+        }
+    }
+
+    updated, changed = _sync_experiment_stress_reward_into_client_config(
+        client_config, server_config, platform_type
+    )
+
+    assert changed is True
+    assert updated["stress_reward"]["enabled"] is True
+    assert updated["stress_reward"]["backward_rounds"] == 18
+    assert updated["stress_reward"]["system"]["churn"]["enabled"] is False
+
+
+def test_stress_reward_sync_skips_unsupported_platforms():
+    client_config = {"simulation": {}}
+    server_config = {"stress_reward": {"enabled": True, "backward_rounds": 18}}
+
+    updated, changed = _sync_experiment_stress_reward_into_client_config(
+        client_config, server_config, "unknown"
+    )
+
+    assert changed is False
+    assert "stress_reward" not in updated

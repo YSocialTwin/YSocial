@@ -24,6 +24,7 @@ from y_web.src.agents.custom_features import summarize_agent_custom_features_bul
 from y_web.routes.admin.sub.experiments._helpers import (
     _experiment_configuration_update_required,
     _experiment_uses_llm_agents,
+    normalize_stress_reward_config,
 )
 from y_web.src.agents.platform import (
     ensure_population_username_type_column,
@@ -42,9 +43,11 @@ from y_web.src.models import (
     Client,
     Client_Execution,
     Content_Recsys,
+    Education,
     Exp_Topic,
     Exps,
     Follow_Recsys,
+    Languages,
     Leanings,
     OpinionGroup,
     Page,
@@ -115,6 +118,21 @@ def _adhoc_agent_specs() -> list[dict]:
             accepted_slugs = {slug, agent_type}
             if slug == "hworld":
                 accepted_slugs.add("hword")
+            client_parameter_sections = list(entry.get("client_parameter_sections") or [])
+            client_parameters = list(entry.get("client_parameters") or [])
+            if not client_parameters:
+                client_parameter_sections = [
+                    section
+                    for section in list(entry.get("parameter_sections") or [])
+                    if str(section.get("key") or "").strip() != "core"
+                ]
+                client_parameters = [
+                    parameter
+                    for parameter in list(entry.get("parameters") or [])
+                    if str(parameter.get("section") or "").strip() != "core"
+                    and str(parameter.get("name") or "").strip()
+                    not in {"name", "activity_profile", "daily_budget"}
+                ]
             specs.append(
                 {
                     "slug": slug,
@@ -128,13 +146,87 @@ def _adhoc_agent_specs() -> list[dict]:
                     "requires_opinion_dynamics": bool(
                         entry.get("requires_opinion_dynamics", False)
                     ),
-                    "client_parameter_sections": list(
-                        entry.get("client_parameter_sections") or []
-                    ),
-                    "client_parameters": list(entry.get("client_parameters") or []),
+                    "client_parameter_sections": client_parameter_sections,
+                    "client_parameters": client_parameters,
+                    "prompt_templates": list(entry.get("prompt_templates") or []),
                     "repo_name": repo_dir.name,
                 }
             )
+    for spec in specs:
+        if not spec.get("requires_llm"):
+            continue
+        sections = list(spec.get("client_parameter_sections") or [])
+        if spec.get("agent_type") not in {"moderator", "stress_attacker", "propaganda"} and not any(
+            section.get("key") == "prompt_customization" for section in sections
+        ):
+            prompt_section = {
+                "key": "prompt_customization",
+                "label": "Prompt Customization",
+                "description": "Review the current built-in prompts and optionally append instructions or fully override the system prompt.",
+            }
+            sections.append(prompt_section)
+        spec["client_parameter_sections"] = sections
+        parameters = list(spec.get("client_parameters") or [])
+        if spec.get("agent_type") == "propaganda":
+            legacy_override = next(
+                (param for param in parameters if param.get("name") == "llm_prompt_override"),
+                None,
+            )
+            if legacy_override is not None:
+                parameters = [
+                    param
+                    for param in parameters
+                    if param.get("name") != "llm_prompt_override"
+                ]
+            if not any(param.get("name") == "opening_llm_prompt_override" for param in parameters):
+                parameters.append(
+                    {
+                        "name": "opening_llm_prompt_override",
+                        "type": "multiline_string",
+                        "required": False,
+                        "default": "",
+                        "section": "opening_prompt",
+                        "description": "Optional full override for the opening propaganda system prompt.",
+                    }
+                )
+            if not any(param.get("name") == "reply_llm_prompt_override" for param in parameters):
+                parameters.append(
+                    {
+                        "name": "reply_llm_prompt_override",
+                        "type": "multiline_string",
+                        "required": False,
+                        "default": "",
+                        "section": "reply_prompt",
+                        "description": "Optional full override for the reply propaganda system prompt.",
+                    }
+                )
+        if spec.get("agent_type") != "propaganda" and not any(param.get("name") == "llm_prompt_override" for param in parameters):
+            prompt_override = {
+                "name": "llm_prompt_override",
+                "type": "multiline_string",
+                "required": False,
+                "default": "",
+                "section": (
+                    "moderation"
+                    if spec.get("agent_type") == "moderator"
+                    else "comment_strategy"
+                    if spec.get("agent_type") == "stress_attacker"
+                    else "prompt_customization"
+                ),
+                "description": "Optional full system-prompt override. When set, it replaces the built-in system prompt used by this ad hoc client.",
+            }
+            if spec.get("agent_type") == "stress_attacker":
+                prompt_override["visible_if"] = {
+                    "setting": "critical_comment_mode",
+                    "equals": "llm",
+                }
+            elif spec.get("agent_type") == "moderator":
+                prompt_override["visible_if"] = {
+                    "setting": "moderation_action_type",
+                    "equals": "personalized",
+                }
+            parameters.append(prompt_override)
+        spec["client_parameters"] = parameters
     return specs
 
 
@@ -164,6 +256,121 @@ def _adhoc_population_choices(idexp: str, specs: list[dict]) -> dict[str, list[d
     return choices
 
 
+def _adhoc_population_filter_options(idexp: str, specs: list[dict]) -> dict[str, dict]:
+    choices = _adhoc_population_choices(idexp, specs)
+    population_ids = {
+        int(item["id"])
+        for populations in choices.values()
+        for item in populations
+        if item.get("id") is not None
+    }
+    return {
+        str(population_id): _population_target_filter_options(population_id)
+        for population_id in sorted(population_ids)
+    }
+
+
+def _population_target_filter_options(population_id: int) -> dict:
+    agent_links = Agent_Population.query.filter_by(population_id=population_id).all()
+    agents = [Agent.query.filter_by(id=link.agent_id).first() for link in agent_links]
+    agents = [agent for agent in agents if agent is not None]
+    feature_map = summarize_agent_custom_features_bulk([agent.id for agent in agents])
+
+    def _sorted_values(values):
+        return [
+            {"value": value, "label": value}
+            for value in sorted({str(value).strip() for value in values if str(value).strip()})
+        ]
+
+    interests = []
+    custom_feature_values: dict[str, set[str]] = {}
+    for agent in agents:
+        structured = feature_map.get(agent.id, {})
+        interests.extend(structured.get("interests") or [])
+        for key, value in (structured.get("custom_features") or {}).items():
+            normalized_key = str(key).strip()
+            normalized_value = str(value).strip()
+            if not normalized_key or not normalized_value:
+                continue
+            custom_feature_values.setdefault(normalized_key, set()).add(normalized_value)
+
+    leaning_values = {
+        str(item.leaning).strip()
+        for item in Leanings.query.order_by(Leanings.leaning.asc()).all()
+        if str(item.leaning).strip()
+    }
+    leaning_values.update(
+        str(agent.leaning).strip() for agent in agents if str(agent.leaning or "").strip()
+    )
+    language_values = {
+        str(item.language).strip()
+        for item in Languages.query.order_by(Languages.language.asc()).all()
+        if str(item.language).strip()
+    }
+    language_values.update(
+        str(agent.language).strip() for agent in agents if str(agent.language or "").strip()
+    )
+    education_values = {
+        str(item.education_level).strip()
+        for item in Education.query.order_by(Education.education_level.asc()).all()
+        if str(item.education_level).strip()
+    }
+    education_values.update(
+        str(agent.education_level).strip()
+        for agent in agents
+        if str(agent.education_level or "").strip()
+    )
+
+    features = [
+        {
+            "key": "leaning",
+            "label": "Political Leaning",
+            "value_type": "enum",
+            "values": _sorted_values(leaning_values),
+        },
+        {
+            "key": "language",
+            "label": "Language",
+            "value_type": "enum",
+            "values": _sorted_values(language_values),
+        },
+        {
+            "key": "education_level",
+            "label": "Education Level",
+            "value_type": "enum",
+            "values": _sorted_values(education_values),
+        },
+        {
+            "key": "interest_contains",
+            "label": "Interest",
+            "value_type": "enum",
+            "values": _sorted_values(interests),
+        },
+        {
+            "key": "min_age",
+            "label": "Minimum Age",
+            "value_type": "integer",
+            "values": [],
+        },
+        {
+            "key": "max_age",
+            "label": "Maximum Age",
+            "value_type": "integer",
+            "values": [],
+        },
+    ]
+    for custom_key in sorted(custom_feature_values):
+        features.append(
+            {
+                "key": f"custom:{custom_key}",
+                "label": f"Custom Feature: {custom_key}",
+                "value_type": "enum",
+                "values": _sorted_values(custom_feature_values[custom_key]),
+            }
+        )
+    return {"features": features}
+
+
 def _find_adhoc_agent_spec(agent_slug: str | None) -> dict | None:
     if not agent_slug:
         return None
@@ -171,6 +378,24 @@ def _find_adhoc_agent_spec(agent_slug: str | None) -> dict | None:
         if agent_slug in spec["accepted_slugs"] or agent_slug == spec["slug"]:
             return spec
     return None
+
+
+def _stress_reward_enabled_for_adhoc(exp) -> bool:
+    stress_reward_cfg = _adhoc_stress_reward_config_for_experiment(exp)
+    return bool(stress_reward_cfg.get("enabled", False))
+
+
+def _filter_adhoc_agent_specs_for_experiment(exp, specs: list[dict]) -> list[dict]:
+    filtered = list(specs)
+    if not _opinion_dynamics_enabled_for_client_creation(exp):
+        filtered = [
+            spec for spec in filtered if not spec.get("requires_opinion_dynamics")
+        ]
+    if not _stress_reward_enabled_for_adhoc(exp):
+        filtered = [
+            spec for spec in filtered if spec.get("agent_type") != "stress_attacker"
+        ]
+    return filtered
 
 
 def _coerce_adhoc_client_setting(
@@ -182,8 +407,53 @@ def _coerce_adhoc_client_setting(
     opinion_groups_by_name: dict[str, dict[str, float | str]],
     age_classes_by_name: dict[str, dict[str, int | str]],
     leaning_names: set[str],
+    population_filter_options: dict | None = None,
 ):
     param_type = str(parameter.get("type") or "string").strip().lower()
+    if param_type == "target_filters":
+        if raw_value in (None, ""):
+            return []
+        if isinstance(raw_value, str):
+            payload = json.loads(raw_value)
+        else:
+            payload = raw_value
+        if not isinstance(payload, list):
+            raise ValueError("Target filters must be a list.")
+        known_features = {
+            str(item.get("key")): item
+            for item in (population_filter_options or {}).get("features", [])
+            if item.get("key")
+        }
+        normalized_by_feature: dict[str, dict] = {}
+        for entry in payload:
+            if not isinstance(entry, dict):
+                raise ValueError("Each target filter must be an object.")
+            feature = str(entry.get("feature") or "").strip()
+            value = entry.get("value")
+            if not feature or value in (None, ""):
+                continue
+            feature_meta = known_features.get(feature)
+            if feature_meta is None:
+                raise ValueError("Selected target filter is not valid for this population.")
+            value_type = str(feature_meta.get("value_type") or "string").strip().lower()
+            if value_type == "integer":
+                normalized_value = int(value)
+            elif value_type in {"float", "number"}:
+                normalized_value = float(value)
+            elif value_type == "enum":
+                allowed = {
+                    str(item.get("value")): item
+                    for item in feature_meta.get("values", [])
+                    if item.get("value") not in (None, "")
+                }
+                matched = allowed.get(str(value))
+                if matched is None:
+                    raise ValueError("Selected target filter value is not valid.")
+                normalized_value = str(matched["value"])
+            else:
+                normalized_value = str(value).strip()
+            normalized_by_feature[feature] = {"feature": feature, "value": normalized_value}
+        return list(normalized_by_feature.values())
     if param_type == "mop_targets":
         if raw_value in (None, ""):
             return []
@@ -342,6 +612,12 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
         str(leaning.leaning)
         for leaning in Leanings.query.order_by(Leanings.leaning.asc()).all()
     }
+    population_id = request.form.get("population_id")
+    population_filter_options = (
+        _population_target_filter_options(int(population_id))
+        if population_id not in (None, "")
+        else {"features": []}
+    )
 
     settings: dict[str, object] = {}
     for parameter in spec.get("client_parameters", []):
@@ -357,6 +633,7 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
             opinion_groups_by_name=opinion_groups_by_name,
             age_classes_by_name=age_classes_by_name,
             leaning_names=leaning_names,
+            population_filter_options=population_filter_options,
         )
         if value in (None, ""):
             continue
@@ -402,6 +679,40 @@ def _build_adhoc_client_initial_values(config: dict) -> dict:
     agent_settings = (
         client.get("agent_settings", {}) if isinstance(client, dict) else {}
     )
+    if isinstance(agent_settings, dict) and "target_filters" not in agent_settings:
+        legacy_filters = []
+        requested_types = [
+            chunk.strip()
+            for chunk in str(agent_settings.get("target_user_types", "") or "").split(",")
+            if chunk.strip()
+        ]
+        for requested_type in requested_types:
+            legacy_filters.append({"feature": "user_type", "value": requested_type})
+        for legacy_key, feature in (
+            ("target_leaning", "leaning"),
+            ("target_language", "language"),
+            ("target_education_level", "education_level"),
+            ("target_interest_contains", "interest_contains"),
+            ("target_min_age", "min_age"),
+            ("target_max_age", "max_age"),
+        ):
+            value = agent_settings.get(legacy_key)
+            if value not in (None, ""):
+                legacy_filters.append({"feature": feature, "value": value})
+        if legacy_filters:
+            agent_settings = dict(agent_settings)
+            agent_settings["target_filters"] = legacy_filters
+    agent_type = str(metadata.get("agent_type_slug") or client.get("agent_type") or "")
+    if (
+        isinstance(agent_settings, dict)
+        and agent_type == "propaganda"
+        and "llm_prompt_override" in agent_settings
+    ):
+        shared_override = str(agent_settings.get("llm_prompt_override") or "").strip()
+        if shared_override:
+            agent_settings = dict(agent_settings)
+            agent_settings.setdefault("opening_llm_prompt_override", shared_override)
+            agent_settings.setdefault("reply_llm_prompt_override", shared_override)
     days = int(simulation.get("days") or 30)
     infinite = bool(simulation.get("run_until_stopped"))
     llm_agents = client.get("agents", {}).get("llm_agents") or []
@@ -409,9 +720,7 @@ def _build_adhoc_client_initial_values(config: dict) -> dict:
     return {
         "name": str(metadata.get("name") or client.get("client_id") or ""),
         "descr": str(metadata.get("description") or ""),
-        "agent_type": str(
-            metadata.get("agent_type_slug") or client.get("agent_type") or ""
-        ),
+        "agent_type": agent_type,
         "population_id": metadata.get("population_id"),
         "llm_backend": str(servers.get("llm_backend") or "ollama"),
         "llm": str(servers.get("llm") or ""),
@@ -500,6 +809,7 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
         agents["llm_agents"] = [llm_model] if llm_model else []
 
     client["agent_settings"] = _build_adhoc_client_agent_settings(spec, exp)
+    client["stress_reward"] = _adhoc_stress_reward_config_for_experiment(exp)
     return updated
 
 
@@ -627,6 +937,48 @@ def _adhoc_llm_defaults_for_experiment(idexp):
         }
     )
     return defaults
+
+
+def _adhoc_stress_reward_config_for_experiment(exp) -> dict:
+    from y_web.src.system.path_utils import get_writable_path
+
+    exp_folder = os.path.join(
+        get_writable_path(), "y_web", "experiments", _get_experiment_folder_name(exp)
+    )
+    preferred_config_name = (
+        "server_config.json"
+        if getattr(exp, "simulator_type", "Standard") == "HPC"
+        else "config_server.json"
+    )
+    candidate_paths = [
+        os.path.join(exp_folder, preferred_config_name),
+        os.path.join(
+            exp_folder,
+            "config_server.json"
+            if preferred_config_name == "server_config.json"
+            else "server_config.json",
+        ),
+    ]
+    payload = {}
+    for config_path in candidate_paths:
+        if not os.path.exists(config_path):
+            continue
+        try:
+            with open(config_path, "r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+            break
+        except (OSError, json.JSONDecodeError):
+            payload = {}
+    stress_reward_cfg = payload.get("stress_reward") if isinstance(payload, dict) else None
+    if isinstance(stress_reward_cfg, dict) and "enabled" not in stress_reward_cfg:
+        stress_reward_cfg = dict(stress_reward_cfg)
+        stress_reward_cfg["enabled"] = bool(
+            payload.get(
+                "stress_reward_enabled",
+                payload.get("stress_reward_annotation", False),
+            )
+        )
+    return normalize_stress_reward_config(stress_reward_cfg)
 
 
 def _collect_population_agent_attributes(population_id):
@@ -992,11 +1344,7 @@ def clients_adhoc(idexp):
         )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
-    agent_specs = _adhoc_agent_specs()
-    if not context["experiment_opinion_dynamics_enabled"]:
-        agent_specs = [
-            spec for spec in agent_specs if not spec.get("requires_opinion_dynamics")
-        ]
+    agent_specs = _filter_adhoc_agent_specs_for_experiment(exp, _adhoc_agent_specs())
     if not agent_specs:
         flash("No ad hoc agent plugins are currently installed.", "warning")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
@@ -1005,6 +1353,7 @@ def clients_adhoc(idexp):
         {
             "adhoc_agent_specs": agent_specs,
             "adhoc_populations_by_type": _adhoc_population_choices(idexp, agent_specs),
+            "adhoc_population_filter_options": _adhoc_population_filter_options(idexp, agent_specs),
             "adhoc_experiment_topics": context.get("topics", []),
             "adhoc_opinion_groups": [
                 {
@@ -1086,14 +1435,16 @@ def edit_adhoc_client(idexp, client_key):
     initial_client = _build_adhoc_client_initial_values(config)
     selected_agent_type = str(initial_client.get("agent_type") or "")
     selected_population_id = initial_client.get("population_id")
-    agent_specs = _adhoc_agent_specs()
-    if not context["experiment_opinion_dynamics_enabled"]:
-        agent_specs = [
-            spec for spec in agent_specs if not spec.get("requires_opinion_dynamics")
-        ]
+    agent_specs = _filter_adhoc_agent_specs_for_experiment(exp, _adhoc_agent_specs())
     spec = _find_adhoc_agent_spec(selected_agent_type)
     if spec is None:
         flash("The referenced ad hoc agent type is no longer available.", "error")
+        return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if spec.get("agent_type") == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
+        flash(
+            "Stress Attacker requires stress/reward to be enabled for this experiment.",
+            "warning",
+        )
         return redirect(url_for("experiments.experiment_details", uid=idexp))
 
     population_choices = _adhoc_population_choices(idexp, agent_specs)
@@ -1118,6 +1469,7 @@ def edit_adhoc_client(idexp, client_key):
         {
             "adhoc_agent_specs": agent_specs,
             "adhoc_populations_by_type": population_choices,
+            "adhoc_population_filter_options": _adhoc_population_filter_options(idexp, agent_specs),
             "adhoc_experiment_topics": context.get("topics", []),
             "adhoc_opinion_groups": [
                 {
@@ -1184,6 +1536,12 @@ def create_adhoc_client():
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     if spec is None:
         flash("Select a valid ad hoc agent type.", "error")
+        return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
+    if spec.get("agent_type") == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
+        flash(
+            "Stress Attacker requires stress/reward to be enabled for this experiment.",
+            "error",
+        )
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     if spec.get(
         "requires_opinion_dynamics"
@@ -1321,6 +1679,7 @@ def create_adhoc_client():
                 ),
             },
             "agent_settings": agent_settings,
+            "stress_reward": _adhoc_stress_reward_config_for_experiment(exp),
             "recent_posts_limit": 25,
             "max_ticks": max_ticks,
             "metadata": {
@@ -1386,6 +1745,14 @@ def update_adhoc_client(idexp, client_key):
     if spec is None:
         flash("The ad hoc agent type is no longer available.", "error")
         return redirect(url_for("experiments.experiment_details", uid=idexp))
+    if spec.get("agent_type") == "stress_attacker" and not _stress_reward_enabled_for_adhoc(exp):
+        flash(
+            "Stress Attacker requires stress/reward to remain enabled for this experiment.",
+            "error",
+        )
+        return redirect(
+            url_for("clientsr.edit_adhoc_client", idexp=idexp, client_key=client_key)
+        )
     if spec.get(
         "requires_opinion_dynamics"
     ) and not _opinion_dynamics_enabled_for_client_creation(exp):

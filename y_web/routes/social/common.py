@@ -5,6 +5,8 @@ Routes: index, profile, profile_logged, edit_profile, update_profile_data,
         update_password.
 """
 
+import json
+import math
 import os
 
 from flask import (
@@ -29,6 +31,8 @@ from y_web.routes.social.helpers import (
     _forum_profile_pic,
     is_admin,
 )
+from y_web.src.agents.custom_features import summarize_agent_custom_features
+from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.data_access import (
     count_followees,
     count_followers,
@@ -50,6 +54,7 @@ from y_web.src.models import (
     Post_emotions,
     Post_hashtags,
     Reactions,
+    StressReward,
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_users
@@ -63,6 +68,90 @@ def _latest_follow_action(*, follower_id, user_id):
         .first()
     )
     return str(getattr(follow_event, "action", "") or "").strip().lower()
+
+
+def _experiment_server_config(exp):
+    if not exp or getattr(exp, "platform_type", "") not in {"forum", "microblogging"}:
+        return {}
+
+    uid = get_experiment_uid_from_db_name(
+        str(getattr(exp, "db_name", "") or "").replace("\\", "/")
+    )
+    if not uid:
+        return {}
+
+    config_path = os.path.join(
+        get_writable_path(),
+        "y_web",
+        "experiments",
+        str(uid),
+        (
+            "server_config.json"
+            if getattr(exp, "simulator_type", "Standard") == "HPC"
+            else "config_server.json"
+        ),
+    )
+    if not os.path.exists(config_path):
+        return {}
+
+    try:
+        with open(config_path, "r", encoding="utf-8") as handle:
+            return json.load(handle) or {}
+    except Exception:
+        return {}
+
+
+def _stress_reward_enabled_for_exp(exp):
+    if not exp or getattr(exp, "platform_type", "") not in {"microblogging", "forum"}:
+        return False
+
+    config = _experiment_server_config(exp)
+    stress_reward_cfg = config.get("stress_reward")
+    if isinstance(stress_reward_cfg, dict):
+        return bool(
+            stress_reward_cfg.get(
+                "enabled",
+                config.get(
+                    "stress_reward_enabled", config.get("stress_reward_annotation", False)
+                ),
+            )
+        )
+
+    return bool(
+        config.get("stress_reward_enabled", config.get("stress_reward_annotation", False))
+    )
+
+
+def _stress_reward_scale_level(value):
+    try:
+        numeric = float(value or 0.0)
+    except (TypeError, ValueError):
+        numeric = 0.0
+    numeric = max(0.0, min(1.0, numeric))
+    if numeric <= 0.0:
+        return 0
+    return max(1, min(5, int(math.ceil(numeric * 5))))
+
+
+def _latest_stress_reward_indicator(user_id):
+    indicator = {
+        "stress": {"value": 0.0, "level": 0},
+        "reward": {"value": 0.0, "level": 0},
+    }
+
+    for variable in ("stress", "reward"):
+        row = (
+            StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")
+            .order_by(StressReward.tid.desc())
+            .first()
+        )
+        value = float(getattr(row, "value", 0.0) or 0.0)
+        indicator[variable] = {
+            "value": value,
+            "level": _stress_reward_scale_level(value),
+        }
+
+    return indicator
 
 
 @main.get("/uploads/<path:relative_path>")
@@ -249,12 +338,32 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
                 admin = Admin_users.query.filter_by(username=user.username).first()
                 profile_pic = admin.profile_pic if admin else ""
 
+    agent_custom_features = {}
+    dashboard_agent = Agent.query.filter_by(name=user.username).first()
+    if dashboard_agent is not None:
+        try:
+            agent_custom_features = (
+                summarize_agent_custom_features(dashboard_agent.id).get("custom_features") or {}
+            )
+        except Exception:
+            agent_custom_features = {}
+
     # Other functions as before
     rp = get_user_recent_posts(user_id, page, 10, mode, logged_id, exp_id)
     mutual_friends = get_mutual_friends(user_id, current_user.id)
     hashtags_top = get_top_user_hashtags(user_id, 5)
     interests = get_user_recent_interests(user_id, 5)
     mentions = get_unanswered_mentions(current_user.id)
+
+    stress_reward_active = _stress_reward_enabled_for_exp(exp)
+    stress_reward_indicator = (
+        _latest_stress_reward_indicator(user.id)
+        if stress_reward_active
+        else {
+            "stress": {"value": 0.0, "level": 0},
+            "reward": {"value": 0.0, "level": 0},
+        }
+    )
 
     common_context = dict(
         is_page=user.is_page,
@@ -288,6 +397,9 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         mentions=mentions,
         is_admin=is_admin(current_user.username),
         exp_id=exp_id,
+        agent_custom_features=agent_custom_features,
+        stress_reward_active=stress_reward_active,
+        stress_reward_indicator=stress_reward_indicator,
     )
 
     if getattr(exp, "platform_type", "") == "forum":

@@ -119,6 +119,7 @@ from ._helpers import *  # noqa: F401,F403
 from ._helpers import (
     _current_admin_user_or_none,
     _experiment_configuration_update_required,
+    default_stress_reward_config,
 )
 
 
@@ -1654,6 +1655,7 @@ def generate_standard_config(
         "is_remote": is_remote,
         "experiment_configuration_confirmed": False,
         "memory": {"enabled": False},
+        "stress_reward": default_stress_reward_config(),
     }
 
     return config

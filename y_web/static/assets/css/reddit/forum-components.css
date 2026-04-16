@@ -198,6 +198,11 @@
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
     gap: 1rem;
 }
+.forum-profile-sidebar {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+}
 .forum-profile-layout.has-chat {
     grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) minmax(300px, 360px);
     align-items: start;
@@ -242,6 +247,40 @@
 .forum-profile-about-row span:last-child {
     color: #111827;
     text-align: right;
+}
+.forum-profile-scale-row {
+    align-items: center;
+}
+.forum-profile-scale {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    justify-content: flex-end;
+}
+.forum-profile-scale-dot {
+    display: inline-block;
+    flex: 0 0 auto;
+    background: #e2e8f0;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+}
+.forum-profile-scale-dot.reward {
+    width: 0.95rem;
+    height: 0.55rem;
+    border-radius: 999px;
+}
+.forum-profile-scale-dot.stress {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 999px;
+}
+.forum-profile-scale-dot.reward.is-active {
+    background: #f4c430;
+    border-color: #d4a017;
+}
+.forum-profile-scale-dot.stress.is-active {
+    background: #e05555;
+    border-color: #c63d3d;
 }
 .forum-profile-interest-list {
     display: flex;

@@ -244,14 +244,19 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert "Update Configuration" in forum
     assert 'name="opinion_dynamics_enabled"' in standard
     assert 'name="opinion_dynamics_enabled"' in forum
+    assert 'name="stress_reward_enabled"' in standard
+    assert 'name="stress_reward_enabled"' in forum
+    assert "Additional Configuration" in standard
+    assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in standard
+    assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in forum
+    assert 'name="sr_churn_enabled"' not in standard
     assert 'name="memory_enabled"' in standard
     assert 'name="memory_enabled"' in forum
     assert 'name="toxicity_annotation"' in forum
     assert 'name="emotion_annotation"' in forum
     assert 'name="sentiment_annotation"' in forum
-    assert 'name="perspective_api"' in forum
-    assert "Detoxify is used when empty" in standard
-    assert "Detoxify is used when empty" in forum
+    assert "Detoxify is used automatically" in standard
+    assert "Detoxify is used automatically" in forum
     assert "/admin/opinion_configuration_forum/" in forum
     assert "/admin/opinion_evolution/" in forum
     assert (
@@ -262,6 +267,23 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
         "llm_agents_enabled_effective = _experiment_uses_llm_agents(experiment)"
         in route_source
     )
+
+
+def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/stress_reward_settings.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_data.py"
+    ).read_text(encoding="utf-8")
+
+    assert "Stress / Reward Settings" in template
+    assert 'action="/admin/update_stress_reward_settings/{{ experiment.idexp }}"' in template
+    assert 'name="sr_churn_enabled"' in template
+    assert 'name="sr_coupling_reward_buffers_stress_alpha"' in template
+    assert 'name="sr_event_{{ family }}_{{ subtype }}_stress"' in template
+    assert '"/admin/stress_reward_settings/<int:uid>"' in route_source
+    assert '"/admin/update_stress_reward_settings/<int:uid>"' in route_source
 
 
 def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle():

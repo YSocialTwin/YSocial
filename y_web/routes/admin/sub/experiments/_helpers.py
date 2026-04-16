@@ -17,6 +17,7 @@ import threading
 import time
 import uuid
 from collections import defaultdict
+from copy import deepcopy
 from datetime import datetime, timedelta
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
@@ -113,6 +114,95 @@ from ._blueprint import (
     _schedule_check_lock,
     experiments,
 )
+
+DEFAULT_STRESS_REWARD_SYSTEM = {
+    "coupling": {
+        "reward_buffers_stress_alpha": 0.30,
+        "stress_reduces_reward_beta": 0.20,
+    },
+    "churn": {
+        "enabled": False,
+        "stress_weight": 1.5,
+        "reward_weight": 1.0,
+        "bias": -2.2,
+        "temperature": 0.35,
+        "min_probability": 0.0,
+        "max_probability": 0.95,
+    },
+    "events": {
+        "reaction": {
+            "like": {"stress": -0.005, "reward": 0.03},
+            "dislike": {"stress": 0.03, "reward": -0.02},
+        },
+        "comment": {
+            "positive": {"stress": -0.02, "reward": 0.07},
+            "neutral": {"stress": 0.0, "reward": 0.01},
+            "critical": {"stress": 0.03, "reward": -0.01},
+            "hostile": {"stress": 0.10, "reward": -0.05},
+            "supportive": {"stress": -0.05, "reward": 0.08},
+        },
+        "share": {
+            "positive": {"stress": -0.01, "reward": 0.08},
+            "hostile": {"stress": 0.12, "reward": -0.06},
+        },
+        "moderation": {
+            "protected": {"stress": -0.08, "reward": 0.03},
+            "sanctioned": {"stress": 0.05, "reward": -0.06},
+        },
+    },
+}
+
+
+def _deep_update_dict(base, updates):
+    result = deepcopy(base)
+    for key, value in (updates or {}).items():
+        if isinstance(result.get(key), dict) and isinstance(value, dict):
+            result[key] = _deep_update_dict(result[key], value)
+        else:
+            result[key] = deepcopy(value)
+    return result
+
+
+def default_stress_reward_config():
+    return {
+        "enabled": False,
+        "backward_rounds": 24,
+        "system": deepcopy(DEFAULT_STRESS_REWARD_SYSTEM),
+    }
+
+
+def normalize_stress_reward_config(raw_config):
+    normalized = default_stress_reward_config()
+    if not isinstance(raw_config, dict):
+        return normalized
+
+    normalized["enabled"] = bool(raw_config.get("enabled", normalized["enabled"]))
+    try:
+        normalized["backward_rounds"] = int(
+            raw_config.get("backward_rounds", normalized["backward_rounds"]) or 24
+        )
+    except Exception:
+        normalized["backward_rounds"] = 24
+    normalized["system"] = _deep_update_dict(
+        normalized["system"], raw_config.get("system") or {}
+    )
+    normalized["system"]["churn"]["enabled"] = bool(
+        normalized["system"].get("churn", {}).get("enabled", False)
+    )
+    return normalized
+
+
+def sync_stress_reward_client_config(client_config, stress_reward_config):
+    """Write normalized stress/reward settings into a client config dict."""
+    if not isinstance(client_config, dict):
+        client_config = {}
+    normalized = normalize_stress_reward_config(stress_reward_config)
+    client_config["stress_reward"] = {
+        "enabled": bool(normalized.get("enabled", False)),
+        "backward_rounds": int(normalized.get("backward_rounds", 24) or 24),
+        "system": deepcopy(normalized.get("system") or {}),
+    }
+    return client_config
 
 
 def _get_database_type():
@@ -564,6 +654,58 @@ def _load_memory_capable_experiment_context(uid, require_manage=True):
 
     experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
     os.makedirs(experiment_dir, exist_ok=True)
+    return experiment, experiment_dir, None
+
+
+def _load_stress_reward_experiment_context(uid, require_manage=True):
+    """Load a stress/reward-enabled experiment and its directory."""
+    check_privileges(current_user.username)
+
+    experiment = Exps.query.filter_by(idexp=uid).first()
+    if not experiment:
+        flash("Experiment not found", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if require_manage and not user_can_manage_experiment(admin_user, experiment):
+        flash("You do not have permission to manage this experiment.", "error")
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
+    if getattr(experiment, "platform_type", "") not in {"microblogging", "forum", "hpc"}:
+        flash(
+            "Stress/reward settings are available only for microblogging, forum, and HPC experiments.",
+            "error",
+        )
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
+    from y_web.src.system.path_utils import get_writable_path
+
+    base_dir = get_writable_path()
+    exp_folder = get_experiment_uid_from_db_name(experiment.db_name)
+    if not exp_folder:
+        flash("Invalid experiment database configuration", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    experiment_dir = os.path.join(base_dir, "y_web", "experiments", exp_folder)
+    os.makedirs(experiment_dir, exist_ok=True)
+
+    config_path = os.path.join(
+        experiment_dir,
+        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+    )
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as handle:
+                config = json.load(handle) or {}
+        except Exception:
+            config = {}
+
+    stress_reward_cfg = normalize_stress_reward_config(config.get("stress_reward"))
+    if not bool(stress_reward_cfg.get("enabled", False)):
+        flash("Enable stress/reward in Experiment Configuration first.", "warning")
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
     return experiment, experiment_dir, None
 
 

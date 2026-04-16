@@ -58,8 +58,12 @@ _SQLITE_TABLES = {
             id TEXT PRIMARY KEY,
             uid INTEGER NOT NULL REFERENCES user_mgmt(id),
             variable TEXT NOT NULL CHECK (variable IN ('stress', 'reward')),
-            value REAL NOT NULL CHECK (value >= 0 AND value <= 1),
+            value REAL NOT NULL CHECK (
+                (type = 'aggregate' AND value >= 0 AND value <= 1)
+                OR (type = 'variation' AND value >= -1 AND value <= 1)
+            ),
             type TEXT NOT NULL CHECK (type IN ('aggregate', 'variation')),
+            action TEXT,
             tid INTEGER NOT NULL REFERENCES rounds(id)
         )
     """,
@@ -136,8 +140,12 @@ _POSTGRES_TABLES = {
             id VARCHAR(36) PRIMARY KEY,
             uid INTEGER NOT NULL REFERENCES user_mgmt(id) ON DELETE CASCADE,
             variable VARCHAR(16) NOT NULL CHECK (variable IN ('stress', 'reward')),
-            value DOUBLE PRECISION NOT NULL CHECK (value >= 0 AND value <= 1),
+            value DOUBLE PRECISION NOT NULL CHECK (
+                (type = 'aggregate' AND value >= 0 AND value <= 1)
+                OR (type = 'variation' AND value >= -1 AND value <= 1)
+            ),
             type VARCHAR(16) NOT NULL CHECK (type IN ('aggregate', 'variation')),
+            action VARCHAR(64),
             tid INTEGER NOT NULL REFERENCES rounds(id) ON DELETE CASCADE
         )
     """,
@@ -184,6 +192,10 @@ def ensure_sqlite_experiment_schema(db_path: str) -> None:
                         f"ALTER TABLE {table} ADD COLUMN {column_name} {column_def}"
                     )
 
+        stress_reward_columns = _sqlite_existing_columns(conn, "stress_reward")
+        if stress_reward_columns and "action" not in stress_reward_columns:
+            conn.execute("ALTER TABLE stress_reward ADD COLUMN action TEXT")
+
         if "created_at" in _sqlite_existing_columns(conn, "post"):
             conn.execute(
                 "UPDATE post SET created_at = CURRENT_TIMESTAMP WHERE created_at IS NULL"
@@ -227,6 +239,14 @@ def ensure_postgresql_experiment_schema(db_uri: str) -> None:
                                 f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column_name} {column_def}"
                             )
                         )
+
+            stress_reward_columns = _postgres_existing_columns(conn, "stress_reward")
+            if stress_reward_columns and "action" not in stress_reward_columns:
+                conn.execute(
+                    text(
+                        "ALTER TABLE stress_reward ADD COLUMN IF NOT EXISTS action VARCHAR(64)"
+                    )
+                )
 
             existing = _postgres_existing_columns(conn, "post")
             if "created_at" in existing:

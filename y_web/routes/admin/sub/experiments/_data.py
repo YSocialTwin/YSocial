@@ -126,13 +126,17 @@ from ._helpers import (
     _experiment_configuration_update_required,
     _experiment_has_started_once,
     _experiment_uses_llm_agents,
+    _load_stress_reward_experiment_context,
+    default_stress_reward_config,
     _get_database_type,
     _get_experiment_folder,
     _normalize_embedding_host,
     _normalize_embedding_service,
     _normalize_forum_embedding_host,
     _normalize_forum_embedding_service,
+    normalize_stress_reward_config,
     _read_forum_feed_health,
+    sync_stress_reward_client_config,
 )
 
 
@@ -152,7 +156,6 @@ def _sync_detoxify_download_notification(admin_user, state):
         notification.status = "processing"
         notification.message = "Detoxify model download in progress."
         notification.error_message = None
-        notification.is_read = False
     elif status == "ready":
         notification.status = "ready"
         notification.message = (
@@ -169,7 +172,18 @@ def _sync_detoxify_download_notification(admin_user, state):
     else:
         return
 
+    notification.is_read = False
     db.session.commit()
+
+
+def _form_float(field_name, default):
+    raw_value = request.form.get(field_name)
+    if raw_value in (None, ""):
+        return float(default)
+    try:
+        return float(raw_value)
+    except (TypeError, ValueError):
+        return float(default)
 
 
 @experiments.route("/admin/experiments_data")
@@ -560,6 +574,8 @@ def experiment_details(uid):
     opinion_dynamics_enabled = bool(
         experiment.annotations and "opinions" in experiment.annotations
     )
+    stress_reward_enabled = False
+    stress_reward_config = default_stress_reward_config()
     configuration_update_required = _experiment_configuration_update_required(
         experiment
     )
@@ -602,6 +618,18 @@ def experiment_details(uid):
                     config.get("opinions_enabled", opinion_dynamics_enabled),
                 )
             )
+            stress_reward_cfg = config.get("stress_reward")
+            if isinstance(stress_reward_cfg, dict):
+                stress_reward_config = normalize_stress_reward_config(stress_reward_cfg)
+                stress_reward_enabled = bool(stress_reward_config.get("enabled", False))
+            else:
+                stress_reward_enabled = bool(
+                    config.get(
+                        "stress_reward_enabled",
+                        config.get("stress_reward_annotation", stress_reward_enabled),
+                    )
+                )
+                stress_reward_config["enabled"] = stress_reward_enabled
             configuration_update_required = configuration_box_present and not bool(
                 config.get("experiment_configuration_confirmed")
             )
@@ -693,6 +721,8 @@ def experiment_details(uid):
         sentiment_annotation_enabled=sentiment_annotation_enabled,
         emotion_annotation_enabled=emotion_annotation_enabled,
         opinion_dynamics_enabled=opinion_dynamics_enabled,
+        stress_reward_enabled=stress_reward_enabled,
+        stress_reward_config=stress_reward_config,
         configuration_box_present=configuration_box_present,
         configuration_update_required=configuration_update_required,
         memory_configuration_supported=memory_configuration_supported,
@@ -775,6 +805,8 @@ def update_experiment_config(uid):
     emotion_enabled = _is_checked("emotion_annotation")
     sentiment_enabled = _is_checked("sentiment_annotation")
     opinion_dynamics_enabled = _is_checked("opinion_dynamics_enabled")
+    stress_reward_enabled = False
+    stress_reward_config = default_stress_reward_config()
     memory_enabled = None
     perspective_api = (request.form.get("perspective_api") or "").strip()
 
@@ -799,6 +831,9 @@ def update_experiment_config(uid):
         memory_enabled = _is_checked("memory_enabled")
     else:
         memory_enabled = False
+
+    if getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}:
+        stress_reward_enabled = _is_checked("stress_reward_enabled")
 
     existing = [a.strip() for a in (exp.annotations or "").split(",") if a.strip()]
     annotation_set = set(existing)
@@ -836,6 +871,10 @@ def update_experiment_config(uid):
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
+        stress_reward_config = normalize_stress_reward_config(config.get("stress_reward"))
+        stress_reward_config["enabled"] = bool(stress_reward_enabled)
+        config["stress_reward"] = stress_reward_config
+        config["stress_reward_enabled"] = bool(stress_reward_enabled)
         config["perspective_api"] = (
             perspective_api if (toxicity_enabled and perspective_api) else None
         )
@@ -899,6 +938,9 @@ def update_experiment_config(uid):
                         client_config["agents"] = {}
                     if not memory_enabled:
                         client_config["agents"]["memory_enabled"] = False
+                    client_config = sync_stress_reward_client_config(
+                        client_config, stress_reward_config
+                    )
                 else:
                     if not isinstance(client_config.get("simulation"), dict):
                         client_config["simulation"] = {}
@@ -909,6 +951,14 @@ def update_experiment_config(uid):
                     client_config["simulation"]["opinion_dynamics"][
                         "enabled"
                     ] = opinion_dynamics_enabled
+                    if getattr(exp, "platform_type", "") in {
+                        "microblogging",
+                        "forum",
+                        "hpc",
+                    }:
+                        client_config = sync_stress_reward_client_config(
+                            client_config, stress_reward_config
+                        )
 
                 with open(client_config_file, "w") as f:
                     json.dump(client_config, f, indent=4)
@@ -925,6 +975,134 @@ def update_experiment_config(uid):
         flash(f"Failed to update configuration: {str(exc)}", "error")
 
     return redirect(url_for("experiments.experiment_details", uid=uid))
+
+
+@experiments.route("/admin/stress_reward_settings/<int:uid>", methods=["GET"])
+@login_required
+def stress_reward_settings(uid):
+    """Display stress/reward configuration for a microblogging experiment."""
+    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(uid)
+    if error_response is not None:
+        return error_response
+
+    config_path = os.path.join(
+        experiment_dir,
+        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+    )
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as handle:
+                config = json.load(handle) or {}
+        except Exception:
+            config = {}
+
+    return render_template(
+        "admin/stress_reward_settings.html",
+        experiment=experiment,
+        stress_reward_config=normalize_stress_reward_config(config.get("stress_reward")),
+    )
+
+
+@experiments.route("/admin/update_stress_reward_settings/<int:uid>", methods=["POST"])
+@login_required
+def update_stress_reward_settings(uid):
+    """Persist stress/reward settings and propagate them into client configs."""
+    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(uid)
+    if error_response is not None:
+        return error_response
+
+    config_path = os.path.join(
+        experiment_dir,
+        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+    )
+
+    try:
+        config = {}
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as handle:
+                config = json.load(handle) or {}
+
+        stress_reward_config = normalize_stress_reward_config(config.get("stress_reward"))
+        stress_reward_config["system"]["coupling"]["reward_buffers_stress_alpha"] = _form_float(
+            "sr_coupling_reward_buffers_stress_alpha",
+            stress_reward_config["system"]["coupling"]["reward_buffers_stress_alpha"],
+        )
+        stress_reward_config["system"]["coupling"]["stress_reduces_reward_beta"] = _form_float(
+            "sr_coupling_stress_reduces_reward_beta",
+            stress_reward_config["system"]["coupling"]["stress_reduces_reward_beta"],
+        )
+        stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")
+
+        for family, subtype, variable in [
+            ("reaction", "like", "stress"),
+            ("reaction", "like", "reward"),
+            ("reaction", "dislike", "stress"),
+            ("reaction", "dislike", "reward"),
+            ("comment", "positive", "stress"),
+            ("comment", "positive", "reward"),
+            ("comment", "neutral", "stress"),
+            ("comment", "neutral", "reward"),
+            ("comment", "critical", "stress"),
+            ("comment", "critical", "reward"),
+            ("comment", "hostile", "stress"),
+            ("comment", "hostile", "reward"),
+            ("comment", "supportive", "stress"),
+            ("comment", "supportive", "reward"),
+            ("share", "positive", "stress"),
+            ("share", "positive", "reward"),
+            ("share", "hostile", "stress"),
+            ("share", "hostile", "reward"),
+            ("moderation", "protected", "stress"),
+            ("moderation", "protected", "reward"),
+            ("moderation", "sanctioned", "stress"),
+            ("moderation", "sanctioned", "reward"),
+        ]:
+            field_name = f"sr_event_{family}_{subtype}_{variable}"
+            stress_reward_config["system"]["events"][family][subtype][variable] = _form_float(
+                field_name,
+                stress_reward_config["system"]["events"][family][subtype][variable],
+            )
+
+        config["stress_reward"] = stress_reward_config
+        with open(config_path, "w", encoding="utf-8") as handle:
+            json.dump(config, handle, indent=4)
+
+        clients = Client.query.filter_by(id_exp=uid).all()
+        for client in clients:
+            population = Population.query.filter_by(id=client.population_id).first()
+            if not population:
+                continue
+            pop_name = population.name
+            pop_name_compact = population.name.replace(" ", "")
+            client_config_candidates = [
+                os.path.join(experiment_dir, f"client_{client.name}-{pop_name}.json"),
+                os.path.join(experiment_dir, f"client_{client.name}-{pop_name_compact}.json"),
+                os.path.join(experiment_dir, f"{client.name}_config.json"),
+            ]
+            client_config_file = next((p for p in client_config_candidates if os.path.exists(p)), None)
+            if not client_config_file:
+                continue
+
+            try:
+                with open(client_config_file, "r", encoding="utf-8") as handle:
+                    client_config = json.load(handle) or {}
+                client_config = sync_stress_reward_client_config(
+                    client_config, stress_reward_config
+                )
+                with open(client_config_file, "w", encoding="utf-8") as handle:
+                    json.dump(client_config, handle, indent=4)
+            except Exception:
+                current_app.logger.warning(
+                    f"Failed to align client config: {client_config_file}",
+                    exc_info=True,
+                )
+
+        flash("Stress/reward settings updated.", "success")
+    except Exception as exc:
+        flash(f"Failed to update stress/reward settings: {str(exc)}", "error")
+
+    return redirect(url_for("experiments.stress_reward_settings", uid=uid))
 
 
 @experiments.route("/admin/update_experiment_topics/<int:uid>", methods=["POST"])

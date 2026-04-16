@@ -114,6 +114,15 @@
                                                 </label>
                                                 <span>Opinion Dynamics</span>
                                             </div>
+                                            {% if experiment.platform_type in ["microblogging", "hpc"] %}
+                                            <div class="exp-config-item">
+                                                <label class="switch-small">
+                                                    <input type="checkbox" name="stress_reward_enabled" {% if stress_reward_enabled %}checked{% endif %}>
+                                                    <span class="slider-small round"></span>
+                                                </label>
+                                                <span>Stress/Reward</span>
+                                            </div>
+                                            {% endif %}
                                             {% if memory_configuration_supported %}
                                             <div class="exp-config-item">
                                                 <label class="switch-small">
@@ -199,6 +208,20 @@
                                     {% else %}
                                     Not configured. Semantic memory falls back to lexical retrieval.
                                     {% endif %}
+                                </div>
+                                {% endif %}
+                                {% if stress_reward_enabled %}
+                                <div class="box-line">
+                                    <span class="left">Stress / Reward Settings</span>
+                                    <span class="right">
+                                        {% if can_manage_experiment %}
+                                        <a class="link-tooltip" href="/admin/stress_reward_settings/{{ experiment.idexp }}" title="Configure Stress / Reward">
+                                            <i class="mdi mdi-tune ys-icon-lg"></i>
+                                        </a>
+                                        {% else %}
+                                        <i class="mdi mdi-lock ys-icon-muted" title="Only owner/admin/shared researchers can edit stress/reward settings"></i>
+                                        {% endif %}
+                                    </span>
                                 </div>
                                 {% endif %}
                                     </div>

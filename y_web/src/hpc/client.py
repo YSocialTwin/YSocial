@@ -10,12 +10,53 @@ import signal
 import subprocess
 import sys
 import time
+import json
+from copy import deepcopy
 from pathlib import Path
 
 from y_web import db
 from y_web.src.models import Client_Execution
 from y_web.src.simulation.subprocess_env import build_subprocess_env
 from y_web.src.system.path_utils import get_base_path, get_writable_path
+
+
+def _sync_stress_reward_into_hpc_client_config(exp_folder, client_config_path):
+    """Keep HPC client stress/reward settings aligned with server_config.json."""
+    if not exp_folder or not client_config_path:
+        return False
+
+    server_config_path = os.path.join(exp_folder, "server_config.json")
+    if not os.path.exists(server_config_path) or not os.path.exists(client_config_path):
+        return False
+
+    try:
+        with open(server_config_path, "r", encoding="utf-8") as handle:
+            server_config = json.load(handle)
+        with open(client_config_path, "r", encoding="utf-8") as handle:
+            client_config = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return False
+
+    server_sr = server_config.get("stress_reward")
+    if not isinstance(server_sr, dict):
+        enabled = bool(
+            server_config.get(
+                "stress_reward_enabled",
+                server_config.get("stress_reward_annotation", False),
+            )
+        )
+        server_sr = {"enabled": enabled, "backward_rounds": 24}
+
+    desired_sr = deepcopy(server_sr)
+    desired_sr["enabled"] = bool(server_sr.get("enabled", False))
+    desired_sr["backward_rounds"] = int(server_sr.get("backward_rounds", 24) or 24)
+    if client_config.get("stress_reward") == desired_sr:
+        return False
+
+    client_config["stress_reward"] = desired_sr
+    with open(client_config_path, "w", encoding="utf-8") as handle:
+        json.dump(client_config, handle, indent=4)
+    return True
 
 
 def start_hpc_client(exp, cli, population):
@@ -73,6 +114,11 @@ def start_hpc_client(exp, cli, population):
                 f"{file_name.capitalize()} file not found: {file_path}\n"
                 f"Please ensure the HPC experiment is properly configured."
             )
+
+    try:
+        _sync_stress_reward_into_hpc_client_config(exp_folder, client_config)
+    except Exception as exc:
+        print(f"Warning: failed to synchronize HPC stress_reward config: {exc}")
 
     # Validate ray_config.temp exists (required for HPC client startup)
     # Wait up to 60 seconds (6 attempts x 10 seconds) for the file to appear
