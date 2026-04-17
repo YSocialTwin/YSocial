@@ -671,7 +671,11 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
         flash("You do not have permission to manage this experiment.", "error")
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
-    if getattr(experiment, "platform_type", "") not in {"microblogging", "forum", "hpc"}:
+    if getattr(experiment, "platform_type", "") not in {
+        "microblogging",
+        "forum",
+        "hpc",
+    }:
         flash(
             "Stress/reward settings are available only for microblogging, forum, and HPC experiments.",
             "error",
@@ -691,7 +695,11 @@ def _load_stress_reward_experiment_context(uid, require_manage=True):
 
     config_path = os.path.join(
         experiment_dir,
-        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+        (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        ),
     )
     config = {}
     if os.path.exists(config_path):

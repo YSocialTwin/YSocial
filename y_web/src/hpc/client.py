@@ -5,12 +5,12 @@ Provides functions for starting and stopping HPC client processes,
 extracted from y_web.utils.external_processes.
 """
 
+import json
 import os
 import signal
 import subprocess
 import sys
 import time
-import json
 from copy import deepcopy
 from pathlib import Path
 

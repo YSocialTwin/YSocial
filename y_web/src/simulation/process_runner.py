@@ -17,10 +17,10 @@ Both legacy modules are kept as thin shims for backward compatibility.
 # ============================================================
 
 import argparse
-from copy import deepcopy
 import json
 import os
 import sys
+from copy import deepcopy
 
 
 def run_server_main():
@@ -147,12 +147,15 @@ def _sync_experiment_stress_reward_into_client_config(
     client_sr = client_config.get("stress_reward")
     normalized_server_sr = deepcopy(server_sr)
     normalized_server_sr["enabled"] = bool(server_sr.get("enabled", False))
-    normalized_server_sr["backward_rounds"] = int(server_sr.get("backward_rounds", 24) or 24)
+    normalized_server_sr["backward_rounds"] = int(
+        server_sr.get("backward_rounds", 24) or 24
+    )
     if client_sr == normalized_server_sr:
         return client_config, False
 
     client_config["stress_reward"] = normalized_server_sr
     return client_config, True
+
 
 # Number of days to run an infinite client per iteration before checking for termination
 # Infinite clients run for this many days, then loop back to continue running
@@ -486,8 +489,10 @@ def start_client_process(exp, cli, population, resume=True, db_type="sqlite"):
             try:
                 with open(server_config_path, "r") as handle:
                     server_config = json.load(handle)
-                config_file, changed = _sync_experiment_stress_reward_into_client_config(
-                    config_file, server_config, exp.platform_type
+                config_file, changed = (
+                    _sync_experiment_stress_reward_into_client_config(
+                        config_file, server_config, exp.platform_type
+                    )
                 )
                 if changed:
                     with open(client_config_path, "w") as handle:

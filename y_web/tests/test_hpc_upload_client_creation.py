@@ -33,9 +33,7 @@ def test_hpc_client_stress_reward_sync_uses_server_config(tmp_path):
     client_path = exp_dir / "client_demo-pop.json"
     client_path.write_text(json.dumps({"simulation": {"days": 7}}))
 
-    changed = _sync_stress_reward_into_hpc_client_config(
-        str(exp_dir), str(client_path)
-    )
+    changed = _sync_stress_reward_into_hpc_client_config(str(exp_dir), str(client_path))
 
     updated = json.loads(client_path.read_text())
     assert changed is True

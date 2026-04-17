@@ -46,7 +46,10 @@ def test_profile_route_wires_latest_stress_reward_aggregate_context():
     ).read_text(encoding="utf-8")
 
     assert "def _stress_reward_enabled_for_exp(exp):" in source
-    assert 'StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")' in source
+    assert (
+        'StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")'
+        in source
+    )
     assert "stress_reward_active=stress_reward_active" in source
     assert "stress_reward_indicator=stress_reward_indicator" in source
 
@@ -59,7 +62,10 @@ def test_profile_about_me_supports_agent_custom_feature_rows():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
-    assert "{% for custom_key, custom_value in agent_custom_features.items() %}" in template
+    assert (
+        "{% for custom_key, custom_value in agent_custom_features.items() %}"
+        in template
+    )
     assert "mdi-tag-outline" in template
     assert "summarize_agent_custom_features(dashboard_agent.id)" in source
     assert "agent_custom_features=agent_custom_features" in source
