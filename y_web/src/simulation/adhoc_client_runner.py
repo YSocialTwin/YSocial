@@ -99,10 +99,19 @@ def _config_mtime(config_path: Path) -> float:
         return -1.0
 
 
+def _client_field(config, field_name: str, default=None):
+    client = getattr(config, "client", None)
+    if isinstance(client, dict):
+        return client.get(field_name, default)
+    return getattr(client, field_name, default)
+
+
 def _apply_config_metadata_to_state(state: dict, config) -> dict:
-    metadata = config.client.metadata or {}
+    metadata = _client_field(config, "metadata", {}) or {}
+    client_id = _client_field(config, "client_id", "") or ""
+    agent_type = _client_field(config, "agent_type", "") or ""
     state["name"] = str(
-        metadata.get("name") or config.client.client_id or state.get("name") or ""
+        metadata.get("name") or client_id or state.get("name") or ""
     )
     state["description"] = str(metadata.get("description") or "")
     state["population_id"] = metadata.get("population_id")
@@ -117,12 +126,12 @@ def _apply_config_metadata_to_state(state: dict, config) -> dict:
     )
     state["agent_type_display"] = str(
         metadata.get("agent_type_display")
-        or config.client.agent_type
+        or agent_type
         or state.get("agent_type_display")
         or ""
     )
     state["agent_type_runtime"] = str(
-        config.client.agent_type or state.get("agent_type_runtime") or ""
+        agent_type or state.get("agent_type_runtime") or ""
     )
     return state
 
