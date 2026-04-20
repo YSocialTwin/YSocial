@@ -695,7 +695,7 @@ def _build_adhoc_client_agent_settings(spec: dict, experiment) -> dict:
     }
     population_id = request.form.get("population_id")
     population_filter_options = (
-        _population_target_filter_options(int(population_id))
+        _global_target_filter_options(str(experiment.idexp))
         if population_id not in (None, "")
         else {"features": []}
     )
