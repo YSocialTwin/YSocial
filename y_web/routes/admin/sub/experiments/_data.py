@@ -1012,6 +1012,9 @@ def update_stress_reward_settings(uid):
     if error_response is not None:
         return error_response
 
+    def _is_checked(field_name):
+        return request.form.get(field_name) == "on"
+
     config_path = os.path.join(
         experiment_dir,
         "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
