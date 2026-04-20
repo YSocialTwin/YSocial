@@ -24,6 +24,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
+from sqlalchemy.exc import OperationalError
 
 pytestmark = pytest.mark.unit
 
@@ -298,6 +299,46 @@ def test_adhoc_client_runner_tolerates_missing_client_metadata():
     assert state["agent_type_slug"] == ""
     assert state["agent_type_display"] == "Moderator Agent"
     assert state["agent_type_runtime"] == "Moderator Agent"
+
+
+def test_adhoc_client_runner_retries_transient_sqlite_locks(monkeypatch):
+    """Ad hoc runner must retry transient SQLite lock errors."""
+    import sqlite3
+
+    import y_web.src.simulation.adhoc_client_runner as mod
+
+    class DummyConnection:
+        def __init__(self):
+            self.rollbacks = 0
+
+        def rollback(self):
+            self.rollbacks += 1
+
+    attempts = {"count": 0}
+
+    def flaky():
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            raise OperationalError(
+                "insert into post ...",
+                {},
+                sqlite3.OperationalError("database is locked"),
+            )
+        return "ok"
+
+    monkeypatch.setattr(mod.time, "sleep", lambda _delay: None)
+    connection = DummyConnection()
+
+    result = mod._run_with_sqlite_retry(
+        logger=SimpleNamespace(warning=lambda *args, **kwargs: None),
+        connection=connection,
+        label="execute:CREATE_POST",
+        fn=flaky,
+    )
+
+    assert result == "ok"
+    assert attempts["count"] == 3
+    assert connection.rollbacks == 2
 
 
 def test_client_runner_repo_root_on_sys_path():

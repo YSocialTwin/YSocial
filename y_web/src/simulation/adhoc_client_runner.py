@@ -13,6 +13,8 @@ import sys
 import time
 from pathlib import Path
 
+from sqlalchemy.exc import OperationalError
+
 ROOT = Path(__file__).resolve().parents[3]
 PLUGIN_SRC = ROOT / "external" / "y_agents_plugins" / "src"
 for candidate in (ROOT, PLUGIN_SRC):
@@ -32,6 +34,8 @@ from y_agents_plugins.runtime.manifest import load_agent_type_manifest  # noqa: 
 from y_agents_plugins.runtime.scheduler import ActivityProfileScheduler  # noqa: E402
 
 TERMINATE = False
+SQLITE_LOCK_MAX_RETRIES = 6
+SQLITE_LOCK_RETRY_DELAY_SECONDS = 0.5
 
 
 def _now_iso() -> str:
@@ -136,6 +140,45 @@ def _apply_config_metadata_to_state(state: dict, config) -> dict:
     return state
 
 
+def _is_sqlite_lock_error(exc: Exception) -> bool:
+    if not isinstance(exc, OperationalError):
+        return False
+    return "database is locked" in str(exc).lower()
+
+
+def _run_with_sqlite_retry(logger, connection, label: str, fn):
+    delay = SQLITE_LOCK_RETRY_DELAY_SECONDS
+    last_error = None
+    for attempt in range(1, SQLITE_LOCK_MAX_RETRIES + 1):
+        try:
+            return fn()
+        except Exception as exc:
+            if not _is_sqlite_lock_error(exc) or attempt == SQLITE_LOCK_MAX_RETRIES:
+                raise
+            last_error = exc
+            try:
+                connection.rollback()
+            except Exception:
+                logger.warning(
+                    "Rollback failed after transient SQLite lock",
+                    extra={"operation": label},
+                    exc_info=True,
+                )
+            logger.warning(
+                "Retrying SQLite-locked ad hoc operation",
+                extra={
+                    "operation": label,
+                    "attempt": attempt,
+                    "max_retries": SQLITE_LOCK_MAX_RETRIES,
+                    "delay_seconds": delay,
+                },
+            )
+            time.sleep(delay)
+            delay *= 2
+    if last_error is not None:
+        raise last_error
+
+
 def run(config_path: Path, state_path: Path) -> int:
     logger = logging.getLogger("adhoc_client_runner")
     execution_logger = ExecutionLogger()
@@ -199,7 +242,14 @@ def run(config_path: Path, state_path: Path) -> int:
             return 0
 
         agent.setup_database(database, connection)
-        database.register_agents(connection, managed_agents, joined_on=current_round.id)
+        _run_with_sqlite_retry(
+            logger,
+            connection,
+            "register_agents",
+            lambda: database.register_agents(
+                connection, managed_agents, joined_on=current_round.id
+            ),
+        )
 
         while not TERMINATE and (infinite or ticks < expected_rounds):
             latest_config_mtime = _config_mtime(config_path)
@@ -273,11 +323,16 @@ def run(config_path: Path, state_path: Path) -> int:
                     try:
                         actions = agent.on_tick(context, managed_agent)
                         for action in actions:
-                            executor.execute(
+                            _run_with_sqlite_retry(
+                                logger,
                                 connection,
-                                context=context,
-                                agent=managed_agent,
-                                action=action,
+                                f"execute:{action.action_type}",
+                                lambda action=action: executor.execute(
+                                    connection,
+                                    context=context,
+                                    agent=managed_agent,
+                                    action=action,
+                                ),
                             )
                     except Exception as exc:
                         success = False
