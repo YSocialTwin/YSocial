@@ -222,6 +222,61 @@ class TestHPCExecutionLogMonitoring:
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
 
+    def test_parse_client_log_incremental_does_not_complete_infinite_client(
+        self, app
+    ):
+        """Infinite HPC clients must not be auto-stopped from progress parsing."""
+        from y_web.src.hpc.log_parser import parse_client_log_incremental
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix="_client.log", delete=False) as f:
+            log_path = f.name
+            f.write(
+                json.dumps(
+                    {
+                        "time": "2026-04-21 08:18:28",
+                        "summary_type": "hourly",
+                        "day": 2,
+                        "slot": 1,
+                        "total_execution_time_seconds": 1.5,
+                        "actions_by_method": {"comment": 3},
+                    }
+                )
+                + "\n"
+            )
+
+        try:
+            with app.app_context():
+                mock_exec = MagicMock()
+                mock_exec.expected_duration_rounds = -1
+                mock_exec.elapsed_time = 0
+                mock_exec.last_active_day = None
+                mock_exec.last_active_hour = None
+
+                mock_client = MagicMock()
+                mock_client.status = 1
+                mock_client.id_exp = 99
+
+                with patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit, patch(
+                    "y_web.src.hpc.log_parser.Client_Execution.query"
+                ) as mock_exec_query, patch(
+                    "y_web.src.hpc.log_parser.Client.query"
+                ) as mock_client_query:
+                    mock_exec_query.filter_by.return_value.first.return_value = mock_exec
+                    mock_client_query.filter_by.return_value.first.return_value = mock_client
+
+                    new_offset, metrics = parse_client_log_incremental(
+                        log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True
+                    )
+                    assert new_offset > 0
+                    assert "hourly" in metrics
+                    assert mock_exec.elapsed_time == 50
+                    assert mock_exec.last_active_day == 2
+                    assert mock_exec.last_active_hour == 1
+                    assert mock_client.status == 1
+                    mock_commit.assert_called()
+        finally:
+            os.unlink(log_path)
+
     @patch("y_web.src.hpc.server.stop_hpc_server")
     def test_check_and_terminate_all_clients_completed(self, mock_stop, app, db):
         """Test terminating experiment when all clients are completed."""

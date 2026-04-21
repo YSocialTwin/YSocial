@@ -34,6 +34,22 @@ from y_web.src.models import (
 from .trends import _compute_last_round  # noqa: F401 — re-used by augment_text
 
 
+_ADHOC_AGENT_BADGE_LABELS = {
+    "hello_world": "Hello World",
+    "moderator": "Moderator Agent",
+    "propaganda": "Propaganda Agent",
+    "master_of_puppets": "Master of Puppets",
+    "mop_puppet": "MoP Puppet",
+    "stress_attacker": "Stress Attacker",
+    "comic_relief": "Comic Relief Agent",
+}
+
+
+def _adhoc_agent_badge(user) -> str | None:
+    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
+    return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
+
+
 def _get_text_utils():
     """Lazy loader for text_utils to avoid triggering faker at import time.
 
@@ -429,6 +445,7 @@ def get_user_recent_posts(
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": comment_topics,
+                    "adhoc_agent_badge": _adhoc_agent_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -564,6 +581,7 @@ def get_user_recent_posts(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": topics,
+                "adhoc_agent_badge": _adhoc_agent_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -680,6 +698,7 @@ def get_posts_associated_to_hashtags(
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
+                    "adhoc_agent_badge": _adhoc_agent_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -782,6 +801,7 @@ def get_posts_associated_to_hashtags(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "adhoc_agent_badge": _adhoc_agent_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -897,6 +917,7 @@ def get_posts_associated_to_interest(
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
+                    "adhoc_agent_badge": _adhoc_agent_badge(c_user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -999,6 +1020,7 @@ def get_posts_associated_to_interest(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "adhoc_agent_badge": _adhoc_agent_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),
@@ -1114,6 +1136,7 @@ def get_posts_associated_to_emotion(
                     "emotions": emotions,
                     "topics": get_topics(c.id, c.user_id),
                     "report_count": get_report_count(c.id),
+                    "adhoc_agent_badge": _adhoc_agent_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -1215,6 +1238,7 @@ def get_posts_associated_to_emotion(
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": get_topics(post.id, post.user_id),
+                "adhoc_agent_badge": _adhoc_agent_badge(author),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),

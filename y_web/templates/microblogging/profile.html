@@ -135,12 +135,14 @@
 
                 <div id="profile-timeline-widgets" class="column is-4">
                     {% if stress_reward_active and is_page != 1 %}
-                    <div class="box-heading">
-                        <h4>Stress / Reward</h4>
-                    </div>
-
-                    <div class="basic-infos-wrapper">
-                        <div class="card is-profile-info">
+                    <div class="basic-infos-wrapper ys-profile-panel-wrap">
+                        <div class="card is-profile-info ys-profile-panel-card ys-profile-info-card">
+                            <div class="card-heading is-bordered ys-profile-panel-head">
+                                <div>
+                                    <h4 class="ys-heading-tight">Stress / Reward</h4>
+                                    <p class="ys-profile-section-heading__subtitle">Latest aggregate social state.</p>
+                                </div>
+                            </div>
                             <div class="info-row">
                                 <div>
                                     <span>Recognition</span>
@@ -170,12 +172,14 @@
                     <!-- Basic Infos widget -->
                     <!-- html/partials/pages/profile/timeline/widgets/basic-infos-widget.html -->
                     {% if is_page != 1 %}
-                    <div class="box-heading">
-                        <h4>About Me</h4>
-                    </div>
-
-                    <div class="basic-infos-wrapper">
-                        <div class="card is-profile-info">
+                    <div class="basic-infos-wrapper ys-profile-panel-wrap">
+                        <div class="card is-profile-info ys-profile-panel-card ys-profile-info-card">
+                            <div class="card-heading is-bordered ys-profile-panel-head">
+                                <div>
+                                    <h4 class="ys-heading-tight">About Me</h4>
+                                    <p class="ys-profile-section-heading__subtitle">Background and profile attributes shaping this account.</p>
+                                </div>
+                            </div>
                             <div class="info-row">
                                 <div>
                                     <span>Age</span>
@@ -250,46 +254,51 @@
 
                     <!-- Star friends widget -->
                     <!-- html/partials/pages/profile/timeline/widgets/star-friends-widget.html -->
-                    {% if username != logged_username and is_page!=1 %}
-                    <div class="box-heading">
-                        <h4>Mutual Friends</h4>
-                        <div class="dropdown is-neutral is-spaced is-right dropdown-trigger">
-                            <div>
-                                <div class="button">
-                                    <i data-feather="more-vertical"></i>
+                    {% if username != logged_username and is_page!=1 and mutual %}
+                    <div class="friend-cards-list ys-profile-panel-wrap">
+                        <div class="card is-friend-card ys-suggestion-card ys-profile-panel-card">
+                            <div class="card-heading is-bordered ys-profile-panel-head">
+                                <div>
+                                    <h4 class="ys-heading-tight">Mutual Friends</h4>
+                                    <p class="ys-profile-section-heading__subtitle">Shared contacts between you and this profile.</p>
                                 </div>
-                            </div>
-                            <div class="dropdown-menu" role="menu">
-                                <div class="dropdown-content">
-                                    <a class="dropdown-item">
-                                        <div class="media">
-                                            <i data-feather="users"></i>
-                                            <div class="media-content">
-                                                <h3>All Friends</h3>
-                                                <small>View all friends.</small>
-                                            </div>
+                                <div class="dropdown is-neutral is-spaced is-right dropdown-trigger">
+                                    <div>
+                                        <div class="button">
+                                            <i data-feather="more-vertical"></i>
                                         </div>
-                                    </a>
+                                    </div>
+                                    <div class="dropdown-menu" role="menu">
+                                        <div class="dropdown-content">
+                                            <a class="dropdown-item">
+                                                <div class="media">
+                                                    <i data-feather="users"></i>
+                                                    <div class="media-content">
+                                                        <h3>All Friends</h3>
+                                                        <small>View all friends.</small>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="friend-cards-list">
-                        <div class="card is-friend-card">
 
                             {% for suser in mutual %}
-                            <div class="friend-item">
+                            <div class="friend-item ys-suggestion-row">
                                 <img
+                                        class="ys-suggestion-avatar"
                                         {% if profile_pic =="" %}
                                             data-demo-src="{{ url_for('static', filename='assets/img/users/'+ user_id|user_image_id +'.png') }}"
                                         {% else %}
                                             data-demo-src="{{ profile_pic }}"
                                         {% endif %}
-                                         alt=""
+                                        alt=""
                                         data-user-popover="1"
                                 />
-                                <div class="text-content">
-                                    <a href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
+                                <div class="text-content ys-suggestion-copy">
+                                    <a class="ys-suggestion-name" href="/{{exp_id}}/profile/{{ suser['id'] }}/recent/1">{{ suser['username'] }}</a>
+                                    <span class="ys-suggestion-meta">Mutual contact</span>
                                 </div>
                             </div>
                             {% endfor %}
@@ -301,74 +310,60 @@
                     <!-- Star Hashtags widget -->
                     <!-- html/partials/pages/profile/timeline/widgets/star-friends-widget.html -->
                     {% if len(hashtags) > 0 %}
-                    <div class="box-heading">
-                        <h4>Frequently used Hashtags</h4>
-                        <div class="dropdown is-neutral is-spaced is-right dropdown-trigger">
-                            <div>
-                                <!-- <div class="button">
-                                    <i data-feather="more-vertical"></i>
-                                </div> -->
-                            </div>
-                            <!-- <div class="dropdown-menu" role="menu">
-                                <div class="dropdown-content">
-                                    <a class="dropdown-item">
-                                        <div class="media">
-                                            <i data-feather="users"></i>
-                                            <div class="media-content">
-                                                <h3>All Hashtags</h3>
-                                                <small>View all hashtags.</small>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                            </div> -->
-                        </div>
-                    </div>
-                    <div class="friend-cards-list">
-
-                        <div class="card">
-
-                            <div class="card-body no-padding">
-                                <!-- Hashtag block -->
-                                {% for ht in hashtags %}
-                                <div class="story-block">
-                                    <div class="story-meta">
-                                        <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1">{{ ht['hashtag'] }}</a></span>
-                                        <span>({{ ht['count'] }})</span>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                        </div>
-                    </div>
+                    {% set ranked_card_title = "Frequently Used Hashtags" %}
+                    {% set ranked_card_subtitle = "Recurring tags in this profile's activity." %}
+                    {% set ranked_card_items = hashtags %}
+                    {% set ranked_card_href_prefix = "hashtag_posts" %}
+                    {% set ranked_card_label_key = "hashtag" %}
+                    {% set ranked_card_meta_label = "uses" %}
+                    {% set ranked_card_prefix = "#" %}
+                    {% set ranked_card_empty = "No hashtags yet." %}
+                    {% include "microblogging/components/sidebar_ranked_list_card.html" %}
                     {% endif %}
                 </div>
 
                 <div class="column is-8">
-                    <div id="profile-timeline-posts" class="box-heading">
-                        <h4>Activity</h4>
-                        <div class="button-wrap">
-
-
-                            <button type="button" class="button {% if mode == 'recent' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1';">
+                    <div id="profile-timeline-posts" class="ys-profile-section-heading ys-profile-section-heading--activity">
+                        <div class="button-wrap ys-profile-activity-tabs" role="tablist" aria-label="Profile activity filters">
+                            <button
+                                    type="button"
+                                    class="button ys-profile-activity-tab {% if mode == 'recent' %}is-active{% endif %}"
+                                    data-profile-mode="recent"
+                                    data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/recent/1"
+                                    aria-pressed="{% if mode == 'recent' %}true{% else %}false{% endif %}">
                                 Posts
                             </button>
                             {% if is_page != 1 %}
-                            <button type="button" class="button {% if mode == 'comments' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1';">
+                            <button
+                                    type="button"
+                                    class="button ys-profile-activity-tab {% if mode == 'comments' %}is-active{% endif %}"
+                                    data-profile-mode="comments"
+                                    data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/comments/1"
+                                    aria-pressed="{% if mode == 'comments' %}true{% else %}false{% endif %}">
                                 Comments
                             </button>
-                            <button type="button" class="button {% if mode == 'shares' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/shares/1';">
+                            <button
+                                    type="button"
+                                    class="button ys-profile-activity-tab {% if mode == 'shares' %}is-active{% endif %}"
+                                    data-profile-mode="shares"
+                                    data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/shares/1"
+                                    aria-pressed="{% if mode == 'shares' %}true{% else %}false{% endif %}">
                                 Shares
                             </button>
-                            <button type="button" class="button {% if mode == 'liked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/{{ exp_id }}/profile/{{ user['user_data']['id'] }}/liked/1';">
+                            <button
+                                    type="button"
+                                    class="button ys-profile-activity-tab {% if mode == 'liked' %}is-active{% endif %}"
+                                    data-profile-mode="liked"
+                                    data-profile-url="/{{ exp_id }}/profile/{{ user['user_data']['id'] }}/liked/1"
+                                    aria-pressed="{% if mode == 'liked' %}true{% else %}false{% endif %}">
                                 Likes
                             </button>
-                            <button type="button" class="button {% if mode == 'disliked' %}is-active{% endif %}"
-                                    onclick="window.location.href = '/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1';">
+                            <button
+                                    type="button"
+                                    class="button ys-profile-activity-tab {% if mode == 'disliked' %}is-active{% endif %}"
+                                    data-profile-mode="disliked"
+                                    data-profile-url="/{{exp_id}}/profile/{{ user['user_data']['id'] }}/disliked/1"
+                                    aria-pressed="{% if mode == 'disliked' %}true{% else %}false{% endif %}">
                                 Dilikes
                             </button>
                             {% endif %}

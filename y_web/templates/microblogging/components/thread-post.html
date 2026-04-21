@@ -19,7 +19,12 @@
                     </div>
                 </div>
 
-                <div class="media-content">
+                <div class="media-content" style="position: relative;">
+                    {% if thread.get('adhoc_agent_badge') %}
+                    <span style="position: absolute; top: 0; right: 3rem; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
+                        {{ thread['adhoc_agent_badge'] }}
+                    </span>
+                    {% endif %}
                     <a href="/{{exp_id}}/profile/{{ thread['author_id'] }}/recent/1">{{ thread["author"] }}</a>
                     <span class="time">Day {{ thread["day"] }} - {{thread["hour"]}}:00</span>
                     <div class="post-content-section is-threaded">

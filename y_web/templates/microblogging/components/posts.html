@@ -1,8 +1,13 @@
 {% for index, item in enumerate(items) %}
 <div id="feed-post-{{ item['post_id'] }}" class="card is-post{% if item.get('is_moderation_comment') %} moderation-comment-card{% endif %}" style="margin-bottom: 1.5rem; border-radius: 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); transition: box-shadow 0.3s ease;">
 
- <div class="content-wrap ys-p-1rem{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}" id="post-{{ item['post_id'] }}">
+ <div class="content-wrap ys-p-1rem{% if item.get('is_moderation_comment') %} moderation-comment{% endif %}" id="post-{{ item['post_id'] }}" style="position: relative;">
         <!-- Post header -->
+        {% if item.get('adhoc_agent_badge') %}
+        <span style="position: absolute; top: 1rem; right: 3.75rem; z-index: 2; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
+            {{ item['adhoc_agent_badge'] }}
+        </span>
+        {% endif %}
         <div class="card-heading">
             <!-- User meta -->
             <div class="user-block">
@@ -366,7 +371,12 @@
                     </div>
                 </div>
                 <!-- Content -->
-                <div class="media-content">
+                <div class="media-content" style="position: relative;">
+                    {% if cm.get('adhoc_agent_badge') %}
+                    <span style="position: absolute; top: 0; right: 0; display: inline-flex; align-items: center; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.03em; text-transform: uppercase; color: #2b6cb0; background: #ebf4ff; border: 1px solid #bee3f8;">
+                        {{ cm['adhoc_agent_badge'] }}
+                    </span>
+                    {% endif %}
                     <a href="/{{exp_id}}/profile/{{ cm['author_id'] }}/recent/1">{{ cm["author"] }}</a>
                     <span class="time">Day {{ cm["day"] }} - {{cm["hour"]}}:00</span>
                     <div class="post-content-section is-threaded">

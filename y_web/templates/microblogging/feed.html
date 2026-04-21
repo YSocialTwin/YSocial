@@ -264,131 +264,17 @@
  <div class="column is-3 is-hidden-mobile ys-px-half">
                     <!-- Weather widget -->
                     <!-- /partials/widgets/weather-widget.html -->
-                    {% if username != "" %}
-                    <div
-                            class="card is-weather-card"
- class="ys-card-mb"
-                    >
-                        <div class="card-heading">
+                    {% include "microblogging/components/sidebar_user_card.html" %}
 
-                        </div>
- <div class="card-body ys-p-15rem">
-
- <div class="text-center">
-                                <div class="temperature">
-                                        <span>{{ username }}</span>
-                                    </div>
-
-                                <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
-                                     <div class="avatar ys-sidebar-avatar">
-                                        <img
-                                                id="user-avatar"
-                                                class="avatar-image ys-sidebar-avatar-image"
-                                                {% if profile_pic_feed =="" %}
-                                                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ user_id|user_image_id +'.png') }}"
-                                                {% else %}
-                                                    data-demo-src="{{ profile_pic_feed }}"
-                                                {% endif %}
-                                                alt=""
-                                                width="50%"
-
-                                        />
-
-                                     </div>
-
-
-
-                                </a>
-
-                                <!-- <a href="profile-about.html" class="button has-min-width">About</a> -->
-                            </div>
-                            <!--
-                          <div class="weather-icon">
-                            <div>
-                              <i data-feather="sun"></i>
-                              <h4>Sunny</h4>
-                              <div class="details">
-                                <span>Real Feel: 78° </span>
-                                <span>Rain Chance: 5%</span>
-                              </div>
-                            </div>
-                          </div>
-                         <div class="previsions">
-                            <div class="day">
-                              <span>Mon</span>
-                              <i data-feather="sun"></i>
-                              <span>69°</span>
-                            </div>
-                            <div class="day">
-                              <span>Tue</span>
-                              <i data-feather="cloud-lightning"></i>
-                              <span>74°</span>
-                            </div>
-                            <div class="day">
-                              <span>Wed</span>
-                              <i data-feather="cloud-lightning"></i>
-                              <span>73°</span>
-                            </div>
-                            <div class="day">
-                              <span>Thu</span>
-                              <i data-feather="sun"></i>
-                              <span>68°</span>
-                            </div>
-                            <div class="day">
-                              <span>Fri</span>
-                              <i data-feather="cloud-drizzle"></i>
-                              <span>55°</span>
-                            </div>
-                            <div class="day">
-                              <span>Sat</span>
-                              <i data-feather="cloud-rain"></i>
-                              <span>58°</span>
-                            </div>
-                            <div class="day">
-                              <span>Sun</span>
-                              <i data-feather="sun"></i>
-                              <span>64°</span>
-                            </div>
-                          </div> -->
-                            <div class="current-date-location has-text-centered">
-                                <!--<span class="location">
-                                <i data-feather="map-pin"></i>
-                                  Welcome Back on Y!</span> -->
-                                <span class="location"></span>
-                                <span class="date" id="date"></span>
-                                <script>
-                                    // Get current date and time
-                                    var now = new Date();
-                                    var datetime = now.toLocaleString();
-
-                                    // Insert date and time into HTML
-                                    document.getElementById("date").innerHTML = datetime;
-                                </script>
-
-
-                            </div>
-                        </div>
-
-                    </div>
-                    {% endif %}
-
- <div class="card ys-card-mb">
- <div class="card-heading is-bordered ys-p-1rem">
- <h4 class="ys-heading-tight">Trending Hashtags</h4>
-
-                        </div>
-                        <div class="card-body no-padding">
-                            <!-- Hashtag block -->
-                            {% for ht in trending_ht %}
- <div class="story-block ys-list-item">
- <div class="story-meta ys-flex-between">
- <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" class="ys-link-blue">{{ ht['hashtag'] }}</a></span>
- <span class="ys-text-mid-sm">({{ ht['count'] }})</span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    {% set ranked_card_title = "Trending Hashtags" %}
+                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% set ranked_card_items = trending_ht %}
+                    {% set ranked_card_href_prefix = "hashtag_posts" %}
+                    {% set ranked_card_label_key = "hashtag" %}
+                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_prefix = "#" %}
+                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% include "microblogging/components/sidebar_ranked_list_card.html" %}
 
                 </div>
                 <!-- /Left side column -->

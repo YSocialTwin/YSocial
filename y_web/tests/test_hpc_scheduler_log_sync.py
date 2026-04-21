@@ -148,7 +148,7 @@ def test_completion_detection():
     """
     Test the logic for detecting when a client has completed its simulation.
 
-    Verifies the condition: current_round >= expected_duration_rounds
+    Verifies finite clients complete on round threshold while infinite clients do not.
     """
     # 7-day simulation: expected_duration_rounds = 7 * 24 = 168
     expected_duration_rounds = 168
@@ -171,8 +171,8 @@ def test_completion_detection():
     # Infinite simulation (-1 means run forever)
     expected_duration_rounds = -1
     current_round = 1000
-    is_complete = current_round >= expected_duration_rounds
-    assert is_complete == True, "Any positive round >= -1"
+    is_complete = expected_duration_rounds > 0 and current_round >= expected_duration_rounds
+    assert is_complete == False, "Infinite clients must never auto-complete from progress"
 
     print("✓ Completion detection test passed")
 

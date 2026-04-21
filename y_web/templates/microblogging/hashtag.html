@@ -266,78 +266,18 @@
  <div class="column is-3 is-hidden-mobile ys-px-half">
                     <!-- Weather widget -->
                     <!-- /partials/widgets/weather-widget.html -->
-                    <div
-                            class="card is-weather-card"
- class="ys-card-mb"
-                    >
-                        <div class="card-heading">
-
-                        </div>
- <div class="card-body ys-p-15rem">
-                            <div class="temperature">
-                                <span>{{ username }}</span>
-                            </div>
- <div class="text-center">
-
-                                    <a href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
-                                     <div class="avatar ys-sidebar-avatar">
-                                        <img
-                                                id="user-avatar"
-                                                class="avatar-image ys-sidebar-avatar-image"
-                                                {% if profile_pic =="" %}
-                                                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ user_id|user_image_id +'.png') }}"
-                                                {% else %}
-                                                    data-demo-src="{{ profile_pic }}"
-                                                {% endif %}
-                                                alt=""
-                                                width="50%"
-
-                                        />
-
-                                     </div>
+                    {% include "microblogging/components/sidebar_user_card.html" %}
 
 
-
-                                </a>
-
-                            </div>
-
-                            <div class="current-date-location has-text-centered">
-                                <span class="location"></span>
-                                <span class="date" id="date"></span>
-                                <script>
-                                    // Get current date and time
-                                    var now = new Date();
-                                    var datetime = now.toLocaleString();
-
-                                    // Insert date and time into HTML
-                                    document.getElementById("date").innerHTML = datetime;
-                                </script>
-
-
-                            </div>
-                        </div>
-
-                    </div>
-
-
- <div class="card ys-card-mb">
- <div class="card-heading is-bordered ys-p-1rem">
- <h4 class="ys-heading-tight">Trending Hashtags</h4>
-
-                        </div>
-                        <div class="card-body no-padding">
-                            <!-- Hashtag block -->
-                            {% for ht in trending_ht %}
- <div class="story-block ys-list-item">
- <div class="story-meta ys-flex-between">
- <span class="ys-text-mid-sm">({{ ht['count'] }})</span>
- <span><a href="/{{exp_id}}/hashtag_posts/{{ ht['id'] }}/1" class="ys-link-blue">{{ ht['hashtag'] }}</a></span>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
+                    {% set ranked_card_title = "Trending Hashtags" %}
+                    {% set ranked_card_subtitle = "Live signals from the current conversation" %}
+                    {% set ranked_card_items = trending_ht %}
+                    {% set ranked_card_href_prefix = "hashtag_posts" %}
+                    {% set ranked_card_label_key = "hashtag" %}
+                    {% set ranked_card_meta_label = "mentions" %}
+                    {% set ranked_card_prefix = "#" %}
+                    {% set ranked_card_empty = "No hashtags are trending yet." %}
+                    {% include "microblogging/components/sidebar_ranked_list_card.html" %}
 
                 </div>
                 <!-- /Left side column -->
@@ -349,9 +289,11 @@
                     <!-- Post 1 -->
                     <!-- /partials/pages/feed/posts/feed-post1.html -->
                     <!-- POST #1 -->
- <div class="page_head_topic ys-hero-banner ys-link-white"> Let's see what are we saying about <a>{{ current_hashtag }}</a>
-                        today...
-                    </div>
+                    {% set hero_eyebrow = "Hashtag Focus" %}
+                    {% set hero_prefix = "Let's see what we are saying about" %}
+                    {% set hero_focus = current_hashtag %}
+                    {% set hero_suffix = "today." %}
+                    {% include "microblogging/components/context_hero_card.html" %}
 
                     <div class="profile-timeline" id="posts-container">
                         {% include "microblogging/components/posts.html" %}

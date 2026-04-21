@@ -45,6 +45,22 @@ from y_web.src.models import (
 from y_web.src.system.path_utils import get_writable_path
 
 
+_ADHOC_AGENT_BADGE_LABELS = {
+    "hello_world": "Hello World",
+    "moderator": "Moderator Agent",
+    "propaganda": "Propaganda Agent",
+    "master_of_puppets": "Master of Puppets",
+    "mop_puppet": "MoP Puppet",
+    "stress_attacker": "Stress Attacker",
+    "comic_relief": "Comic Relief Agent",
+}
+
+
+def get_adhoc_agent_badge(user) -> str | None:
+    user_type = str(getattr(user, "user_type", "") or "").strip().lower()
+    return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
+
+
 def get_safe_profile_pic(username, is_page=0):
     """
     Safely retrieve profile picture URL for a user or page.
@@ -229,6 +245,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                     "report_count": get_report_count(c.id),
                     "emotions": emotions,
                     "topics": topics,
+                    "adhoc_agent_badge": get_adhoc_agent_badge(user),
                     "is_moderation_comment": int(
                         getattr(c, "is_moderation_comment", 0) or 0
                     ),
@@ -364,6 +381,7 @@ def _get_discussions(posts, username, page, exp_id, exp_user_id=None):
                 "t_comments": len(cms),
                 "emotions": emotions,
                 "topics": topics,
+                "adhoc_agent_badge": get_adhoc_agent_badge(aa),
                 "is_moderation_comment": int(
                     getattr(post, "is_moderation_comment", 0) or 0
                 ),

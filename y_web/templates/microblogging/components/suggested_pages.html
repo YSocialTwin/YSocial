@@ -1,54 +1,18 @@
 <!-- Suggested friends widget -->
 <!-- /partials/widgets/suggested-friends-1-widget.html -->
 {% if len(spages)>0 %}
-<div class="card ys-card-mb">
- <div class="card-heading is-bordered ys-p-1rem">
+<div class="card ys-card-mb ys-suggestion-card">
+ <div class="card-heading is-bordered ys-p-1rem ys-suggestion-card__header">
+ <div>
  <h4 class="ys-heading-tight">Suggested Pages</h4>
-        <div class="dropdown is-spaced is-right dropdown-trigger">
-            <div>
-                <!--<div class="button">
-                    <i data-feather="more-vertical"></i>
-                </div> -->
-            </div>
-         <!--   <div class="dropdown-menu" role="menu">
-                <div class="dropdown-content">
-                    <a href="#" class="dropdown-item">
-                        <div class="media">
-                            <i data-feather="users"></i>
-                            <div class="media-content">
-                                <h3>All Suggestions</h3>
-                                <small>View all friend suggestions.</small>
-                            </div>
-                        </div>
-                    </a>
-                    <a class="dropdown-item">
-                        <div class="media">
-                            <i data-feather="settings"></i>
-                            <div class="media-content">
-                                <h3>Settings</h3>
-                                <small>Access widget settings.</small>
-                            </div>
-                        </div>
-                    </a>
-                    <hr class="dropdown-divider"/>
-                    <a href="#" class="dropdown-item">
-                        <div class="media">
-                            <i data-feather="trash-2"></i>
-                            <div class="media-content">
-                                <h3>Remove</h3>
-                                <small>Removes this widget from your feed.</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div> -->
-        </div>
+ <p class="ys-suggestion-card__subtitle">Pages aligned with your feed</p>
+ </div>
     </div>
     <div class="card-body no-padding">
         <!-- Suggested friend -->
         {% for page in spages %}
 
- <div class="add-friend-block transition-block ys-list-row">
+ <div class="add-friend-block transition-block ys-suggestion-row">
             <img
                     src="https://via.placeholder.com/300x300"
                     {% if page['profile_pic'] %}
@@ -58,10 +22,11 @@
                     {% endif %}
                     data-user-popover="9"
                     alt=""
- class="ys-avatar-md"
+ class="ys-avatar-md ys-suggestion-avatar"
             />
- <div class="page-meta ys-flex-1-mr">
- <span><a href="/{{exp_id}}/profile/{{ page['id'] }}/recent/1" class="ys-link-dark">{{ page['username']|safe }}</a></span>
+ <div class="page-meta ys-flex-1-mr ys-suggestion-copy">
+ <span><a href="/{{exp_id}}/profile/{{ page['id'] }}/recent/1" class="ys-link-dark ys-suggestion-name">{{ page['username']|safe }}</a></span>
+ <span class="ys-suggestion-meta">Suggested page</span>
             </div>
             <div class="add-friend add-transition">
  <a href="/{{exp_id}}/follow/{{ page['id'] }}/{{ user_id }}" class="ys-icon-circle-blue"><i data-feather="user-plus"></i></a>

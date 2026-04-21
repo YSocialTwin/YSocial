@@ -589,9 +589,12 @@ def parse_client_log_incremental(
                     f"elapsed_time={client_exec.elapsed_time}, expected={client_exec.expected_duration_rounds}"
                 )
 
-                # Check if simulation is complete
+                # Check if simulation is complete.
+                # expected_duration_rounds <= 0 means an infinite client and must
+                # never trigger auto-stop from progress parsing.
                 current_round = client_exec.elapsed_time
-                if current_round >= client_exec.expected_duration_rounds:
+                expected_rounds = client_exec.expected_duration_rounds or 0
+                if expected_rounds > 0 and current_round >= expected_rounds:
                     # Get the client and mark as stopped
                     client = Client.query.filter_by(id=client_id).first()
                     if client and client.status == 1:

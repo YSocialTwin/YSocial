@@ -16,6 +16,7 @@ from y_web.routes.social.helpers import (
     _expand_tree,
     _forum_logged_user,
     _get_discussions,
+    get_adhoc_agent_badge,
     is_admin,
 )
 from y_web.src.data_access import (
@@ -666,6 +667,7 @@ def get_thread(exp_id, post_id):
         "report_count": get_report_count(posts[0].id),
         "emotions": get_elicited_emotions(posts[0].id),
         "topics": get_topics(posts[0].id, posts[0].user_id),
+        "adhoc_agent_badge": get_adhoc_agent_badge(user),
         "is_moderation_comment": int(
             getattr(posts[0], "is_moderation_comment", 0) or 0
         ),
@@ -739,6 +741,7 @@ def get_thread(exp_id, post_id):
             "report_count": get_report_count(post.id),
             "emotions": get_elicited_emotions(post.id),
             "topics": get_topics(post.id, post.user_id),
+            "adhoc_agent_badge": get_adhoc_agent_badge(user),
             "is_moderation_comment": int(
                 getattr(post, "is_moderation_comment", 0) or 0
             ),
