@@ -126,16 +126,16 @@ from ._helpers import (
     _experiment_configuration_update_required,
     _experiment_has_started_once,
     _experiment_uses_llm_agents,
-    _load_stress_reward_experiment_context,
-    default_stress_reward_config,
     _get_database_type,
     _get_experiment_folder,
+    _load_stress_reward_experiment_context,
     _normalize_embedding_host,
     _normalize_embedding_service,
     _normalize_forum_embedding_host,
     _normalize_forum_embedding_service,
-    normalize_stress_reward_config,
     _read_forum_feed_health,
+    default_stress_reward_config,
+    normalize_stress_reward_config,
     sync_stress_reward_client_config,
 )
 
@@ -871,7 +871,9 @@ def update_experiment_config(uid):
         config["emotion_annotation"] = emotion_enabled
         config["sentiment_annotation"] = sentiment_enabled
         config["opinion_dynamics_enabled"] = opinion_dynamics_enabled
-        stress_reward_config = normalize_stress_reward_config(config.get("stress_reward"))
+        stress_reward_config = normalize_stress_reward_config(
+            config.get("stress_reward")
+        )
         stress_reward_config["enabled"] = bool(stress_reward_enabled)
         config["stress_reward"] = stress_reward_config
         config["stress_reward_enabled"] = bool(stress_reward_enabled)
@@ -981,13 +983,19 @@ def update_experiment_config(uid):
 @login_required
 def stress_reward_settings(uid):
     """Display stress/reward configuration for a microblogging experiment."""
-    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(
+        uid
+    )
     if error_response is not None:
         return error_response
 
     config_path = os.path.join(
         experiment_dir,
-        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+        (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        ),
     )
     config = {}
     if os.path.exists(config_path):
@@ -1000,7 +1008,9 @@ def stress_reward_settings(uid):
     return render_template(
         "admin/stress_reward_settings.html",
         experiment=experiment,
-        stress_reward_config=normalize_stress_reward_config(config.get("stress_reward")),
+        stress_reward_config=normalize_stress_reward_config(
+            config.get("stress_reward")
+        ),
     )
 
 
@@ -1008,7 +1018,9 @@ def stress_reward_settings(uid):
 @login_required
 def update_stress_reward_settings(uid):
     """Persist stress/reward settings and propagate them into client configs."""
-    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(uid)
+    experiment, experiment_dir, error_response = _load_stress_reward_experiment_context(
+        uid
+    )
     if error_response is not None:
         return error_response
 
@@ -1017,7 +1029,11 @@ def update_stress_reward_settings(uid):
 
     config_path = os.path.join(
         experiment_dir,
-        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+        (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        ),
     )
 
     try:
@@ -1026,16 +1042,28 @@ def update_stress_reward_settings(uid):
             with open(config_path, "r", encoding="utf-8") as handle:
                 config = json.load(handle) or {}
 
-        stress_reward_config = normalize_stress_reward_config(config.get("stress_reward"))
-        stress_reward_config["system"]["coupling"]["reward_buffers_stress_alpha"] = _form_float(
-            "sr_coupling_reward_buffers_stress_alpha",
-            stress_reward_config["system"]["coupling"]["reward_buffers_stress_alpha"],
+        stress_reward_config = normalize_stress_reward_config(
+            config.get("stress_reward")
         )
-        stress_reward_config["system"]["coupling"]["stress_reduces_reward_beta"] = _form_float(
-            "sr_coupling_stress_reduces_reward_beta",
-            stress_reward_config["system"]["coupling"]["stress_reduces_reward_beta"],
+        stress_reward_config["system"]["coupling"]["reward_buffers_stress_alpha"] = (
+            _form_float(
+                "sr_coupling_reward_buffers_stress_alpha",
+                stress_reward_config["system"]["coupling"][
+                    "reward_buffers_stress_alpha"
+                ],
+            )
         )
-        stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")
+        stress_reward_config["system"]["coupling"]["stress_reduces_reward_beta"] = (
+            _form_float(
+                "sr_coupling_stress_reduces_reward_beta",
+                stress_reward_config["system"]["coupling"][
+                    "stress_reduces_reward_beta"
+                ],
+            )
+        )
+        stress_reward_config["system"]["churn"]["enabled"] = _is_checked(
+            "sr_churn_enabled"
+        )
 
         for family, subtype, variable in [
             ("reaction", "like", "stress"),
@@ -1062,9 +1090,11 @@ def update_stress_reward_settings(uid):
             ("moderation", "sanctioned", "reward"),
         ]:
             field_name = f"sr_event_{family}_{subtype}_{variable}"
-            stress_reward_config["system"]["events"][family][subtype][variable] = _form_float(
-                field_name,
-                stress_reward_config["system"]["events"][family][subtype][variable],
+            stress_reward_config["system"]["events"][family][subtype][variable] = (
+                _form_float(
+                    field_name,
+                    stress_reward_config["system"]["events"][family][subtype][variable],
+                )
             )
 
         config["stress_reward"] = stress_reward_config
@@ -1080,10 +1110,14 @@ def update_stress_reward_settings(uid):
             pop_name_compact = population.name.replace(" ", "")
             client_config_candidates = [
                 os.path.join(experiment_dir, f"client_{client.name}-{pop_name}.json"),
-                os.path.join(experiment_dir, f"client_{client.name}-{pop_name_compact}.json"),
+                os.path.join(
+                    experiment_dir, f"client_{client.name}-{pop_name_compact}.json"
+                ),
                 os.path.join(experiment_dir, f"{client.name}_config.json"),
             ]
-            client_config_file = next((p for p in client_config_candidates if os.path.exists(p)), None)
+            client_config_file = next(
+                (p for p in client_config_candidates if os.path.exists(p)), None
+            )
             if not client_config_file:
                 continue
 

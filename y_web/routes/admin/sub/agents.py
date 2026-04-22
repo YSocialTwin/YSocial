@@ -379,9 +379,9 @@ def _custom_agent_rows(spec: dict) -> list[dict]:
             value = ext_map.get(agent.id, {}).get(param_name, "")
             parameter_type = str(parameter.get("type") or "")
             if (
-                (parameter_type.startswith("array") or parameter_type.startswith("enum_multi["))
-                and value
-            ):
+                parameter_type.startswith("array")
+                or parameter_type.startswith("enum_multi[")
+            ) and value:
                 try:
                     parsed = json.loads(value)
                     if isinstance(parsed, list):
@@ -532,7 +532,9 @@ def _normalize_custom_agent_parameter_value(parameter: dict, raw_value):
             if not value:
                 continue
             if value not in allowed:
-                raise ValueError(f"Unsupported value '{value}' for {parameter.get('name')}")
+                raise ValueError(
+                    f"Unsupported value '{value}' for {parameter.get('name')}"
+                )
             if value not in normalized:
                 normalized.append(value)
         return json.dumps(normalized)
@@ -553,7 +555,11 @@ def _custom_agent_form_value(parameter: dict):
     param_name = str(parameter.get("name") or "")
     param_type = str(parameter.get("type") or "").strip().lower()
     if param_type.startswith("enum_multi[") and param_type.endswith("]"):
-        raw_values = [str(value).strip() for value in request.form.getlist(param_name) if str(value).strip()]
+        raw_values = [
+            str(value).strip()
+            for value in request.form.getlist(param_name)
+            if str(value).strip()
+        ]
         if raw_values:
             return raw_values
         default = parameter.get("default")

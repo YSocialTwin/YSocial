@@ -28,7 +28,10 @@ def test_forum_profile_template_renders_agent_custom_feature_rows():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
-    assert "{% for custom_key, custom_value in agent_custom_features.items() %}" in template
+    assert (
+        "{% for custom_key, custom_value in agent_custom_features.items() %}"
+        in template
+    )
     assert "agent_custom_features=agent_custom_features" in source
     assert "summarize_agent_custom_features(dashboard_agent.id)" in source
 
@@ -38,7 +41,9 @@ def test_forum_profile_route_allows_stress_reward_context():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/common.py"
     ).read_text(encoding="utf-8")
 
-    assert 'getattr(exp, "platform_type", "") not in {"microblogging", "forum"}' in source
+    assert (
+        'getattr(exp, "platform_type", "") not in {"microblogging", "forum"}' in source
+    )
     assert "stress_reward_active=stress_reward_active" in source
     assert "stress_reward_indicator=stress_reward_indicator" in source
 

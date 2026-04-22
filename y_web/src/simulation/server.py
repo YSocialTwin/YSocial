@@ -436,16 +436,19 @@ def _update_server_port_in_configs(exp, new_port):
                                 json.dump(client_config, f, indent=4)
 
                             print(f"Watchdog: Updated {item} with new port")
-                        if (
-                            getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}
-                            and isinstance(server_config.get("stress_reward"), dict)
-                        ):
+                        if getattr(exp, "platform_type", "") in {
+                            "microblogging",
+                            "forum",
+                            "hpc",
+                        } and isinstance(server_config.get("stress_reward"), dict):
                             desired_sr = deepcopy(server_config["stress_reward"])
                             desired_sr["enabled"] = bool(
                                 server_config["stress_reward"].get("enabled", False)
                             )
                             desired_sr["backward_rounds"] = int(
-                                server_config["stress_reward"].get("backward_rounds", 24)
+                                server_config["stress_reward"].get(
+                                    "backward_rounds", 24
+                                )
                                 or 24
                             )
                             if client_config.get("stress_reward") != desired_sr:

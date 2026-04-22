@@ -32,7 +32,6 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features
-from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.data_access import (
     count_followees,
     count_followers,
@@ -42,6 +41,7 @@ from y_web.src.data_access import (
     get_user_recent_interests,
     get_user_recent_posts,
 )
+from y_web.src.experiment.helpers import get_experiment_uid_from_db_name
 from y_web.src.models import (
     Admin_users,
     Agent,
@@ -112,13 +112,16 @@ def _stress_reward_enabled_for_exp(exp):
             stress_reward_cfg.get(
                 "enabled",
                 config.get(
-                    "stress_reward_enabled", config.get("stress_reward_annotation", False)
+                    "stress_reward_enabled",
+                    config.get("stress_reward_annotation", False),
                 ),
             )
         )
 
     return bool(
-        config.get("stress_reward_enabled", config.get("stress_reward_annotation", False))
+        config.get(
+            "stress_reward_enabled", config.get("stress_reward_annotation", False)
+        )
     )
 
 
@@ -141,7 +144,9 @@ def _latest_stress_reward_indicator(user_id):
 
     for variable in ("stress", "reward"):
         row = (
-            StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")
+            StressReward.query.filter_by(
+                uid=user_id, variable=variable, type="aggregate"
+            )
             .order_by(StressReward.tid.desc())
             .first()
         )
@@ -343,7 +348,10 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
     if dashboard_agent is not None:
         try:
             agent_custom_features = (
-                summarize_agent_custom_features(dashboard_agent.id).get("custom_features") or {}
+                summarize_agent_custom_features(dashboard_agent.id).get(
+                    "custom_features"
+                )
+                or {}
             )
         except Exception:
             agent_custom_features = {}
