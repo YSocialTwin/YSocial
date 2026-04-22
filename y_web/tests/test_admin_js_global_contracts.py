@@ -249,6 +249,18 @@ def test_experiment_details_pages_expose_configuration_block_consistently():
     assert "Additional Configuration" in standard
     assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in standard
     assert '/admin/stress_reward_settings/{{ experiment.idexp }}' in forum
+    assert '/admin/stress_reward_evolution/{{ experiment.idexp }}' in standard
+    assert '/admin/stress_reward_evolution/{{ experiment.idexp }}' in forum
+    assert '/admin/network_analysis/{{ experiment.idexp }}' in standard
+    assert '/admin/network_analysis/{{ experiment.idexp }}' in forum
+    assert '/admin/topic_evolution/{{ experiment.idexp }}' in standard
+    assert '/admin/topic_evolution/{{ experiment.idexp }}' in forum
+    assert '/admin/toxicity_evolution/{{ experiment.idexp }}' in standard
+    assert '/admin/toxicity_evolution/{{ experiment.idexp }}' in forum
+    assert '/admin/sentiment_evolution/{{ experiment.idexp }}' in standard
+    assert '/admin/sentiment_evolution/{{ experiment.idexp }}' in forum
+    assert '/admin/emotion_statistics/{{ experiment.idexp }}' in standard
+    assert '/admin/emotion_statistics/{{ experiment.idexp }}' in forum
     assert 'name="sr_churn_enabled"' not in standard
     assert 'name="memory_enabled"' in standard
     assert 'name="memory_enabled"' in forum
@@ -284,6 +296,107 @@ def test_stress_reward_settings_page_exists_as_dedicated_admin_view():
     assert 'name="sr_event_{{ family }}_{{ subtype }}_stress"' in template
     assert '"/admin/stress_reward_settings/<int:uid>"' in route_source
     assert '"/admin/update_stress_reward_settings/<int:uid>"' in route_source
+
+
+def test_stress_reward_evolution_page_exists_as_dedicated_admin_view():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/stress_reward_evolution.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+    ).read_text(encoding="utf-8")
+    script = (
+        STATIC_JS_DIR / "admin-stress-reward.js"
+    ).read_text(encoding="utf-8")
+
+    assert "Stress / Reward Evolution" in template
+    assert 'id="stressDistributionChart"' in template
+    assert 'id="rewardDistributionChart"' in template
+    assert 'id="stressRewardTrendChart"' in template
+    assert "YS_DATA_STRESS_REWARD" in template
+    assert "sr-sa-target-panel" in template
+    assert "sr-sa-target-select" in template
+    assert "srSaTargetTrendChart" in template
+    assert "assets/js/admin-stress-reward.js" in template
+    assert '"/admin/stress_reward_evolution/<int:expid>"' in route_source
+    assert '"/admin/stress_reward_evolution_data/<int:expid>"' in route_source
+    assert "_build_stress_attacker_target_panel" in route_source
+    assert "sa_targets" in route_source
+    assert "sr-sa-target-select" in script
+    assert "srSaTargetTrendChart" in script
+    assert "function fetchStressRewardData(day, hour)" in script
+    assert "document.getElementById('stressDistributionChart')" in script
+
+
+def test_annotation_analytics_pages_exist_as_dedicated_admin_views():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/annotation_analytics.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+    ).read_text(encoding="utf-8")
+    script = (
+        STATIC_JS_DIR / "admin-annotation-analytics.js"
+    ).read_text(encoding="utf-8")
+
+    assert "YS_DATA_ANNOTATION_ANALYTICS" in template
+    assert 'id="annotationDistributionChart"' in template
+    assert 'id="annotationTrendChart"' in template
+    assert 'id="annotationSecondaryChart"' in template
+    assert 'id="annotation-summary-table"' in template
+    assert "assets/js/admin-annotation-analytics.js" in template
+    assert '"/admin/toxicity_evolution/<int:expid>"' in route_source
+    assert '"/admin/toxicity_evolution_data/<int:expid>"' in route_source
+    assert '"/admin/sentiment_evolution/<int:expid>"' in route_source
+    assert '"/admin/sentiment_evolution_data/<int:expid>"' in route_source
+    assert '"/admin/emotion_statistics/<int:expid>"' in route_source
+    assert '"/admin/emotion_statistics_data/<int:expid>"' in route_source
+    assert "_build_toxicity_analytics_payload" in route_source
+    assert "_build_sentiment_analytics_payload" in route_source
+    assert "_build_emotion_analytics_payload" in route_source
+    assert "annotationDistributionChart" in script
+    assert "annotationTrendChart" in script
+    assert "annotationSecondaryChart" in script
+
+
+def test_opinion_evolution_page_exposes_propaganda_target_drilldown():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-opinion.js").read_text(encoding="utf-8")
+
+    assert "Propaganda Target Drill-down" in template
+    assert 'id="propaganda-target-panel"' in template
+    assert 'id="propaganda-target-select"' in template
+    assert 'id="propagandaTargetTrendChart"' in template
+    assert "propagandaTargets" in template
+    assert "_build_propaganda_target_panel" in route_source
+    assert '"propaganda_targets": propaganda_targets' in route_source
+    assert "propaganda-target-select" in script
+    assert "propagandaTargetTrendChart" in script
+
+
+def test_opinion_evolution_page_exposes_mop_target_drilldown():
+    template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/opinion_evolution.html"
+    ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/experiments/_opinion.py"
+    ).read_text(encoding="utf-8")
+    script = (STATIC_JS_DIR / "admin-opinion.js").read_text(encoding="utf-8")
+
+    assert "Master of Puppets Target Drill-down" in template
+    assert 'id="mop-target-panel"' in template
+    assert 'id="mop-target-select"' in template
+    assert 'id="mopTargetTrendChart"' in template
+    assert "mopTargets" in template
+    assert "_build_mop_target_panel" in route_source
+    assert '"mop_targets": mop_targets' in route_source
+    assert "mop-target-select" in script
+    assert "mopTargetTrendChart" in script
 
 
 def test_forum_experiment_details_uses_supported_switch_markup_for_avatar_toggle():

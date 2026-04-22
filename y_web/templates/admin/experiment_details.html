@@ -672,20 +672,53 @@
                         </div>
                     </div>
 
-                    {% if experiment.annotations and 'opinions' in experiment.annotations and experiment.is_remote == 0 %}
-                    <!--Opinion Evolution Box-->
+                    {% set has_analytics_pages = experiment.is_remote == 0 %}
+                    {% if has_analytics_pages %}
                     <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
-                        <h3 class="title is-5 is-thin">Opinion Evolution</h3>
- <div class="box-content ys-flex-1">
+                        <h3 class="title is-5 is-thin">Analytics Pages</h3>
+                        <div class="box-content ys-flex-1">
                             <p style="font-size: 0.9em; margin-bottom: 1em;">
-                                Visualize how agent opinions evolve over time across different topics.
+                                Open the analytics dashboards available for the experiment features that are currently active.
                             </p>
- <div class="text-center">
-                                <a href="/admin/opinion_evolution/{{ experiment.idexp }}" 
-                                   class="button is-info is-fullwidth ys-flex-center-gap">
-                                    <i class="mdi mdi-chart-line"></i>
-                                    <span>View Opinion Evolution</span>
-                                </a>
+                            <div class="box-lines">
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-graph-outline"></i><span>Network Analysis</span></span></span>
+                                    <span class="right"><a href="/admin/network_analysis/{{ experiment.idexp }}" class="button is-small is-link ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-shape-outline"></i><span>Topic Evolution</span></span></span>
+                                    <span class="right"><a href="/admin/topic_evolution/{{ experiment.idexp }}" class="button is-small is-primary ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% if experiment.annotations and 'opinions' in experiment.annotations %}
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-chart-line"></i><span>Opinion Evolution</span></span></span>
+                                    <span class="right"><a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="button is-small is-info ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% endif %}
+                                {% if stress_reward_enabled %}
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-heart-pulse"></i><span>Stress / Reward Evolution</span></span></span>
+                                    <span class="right"><a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="button is-small is-danger ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% endif %}
+                                {% if toxicity_annotation_enabled %}
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-alert-octagon-outline"></i><span>Toxicity Evolution</span></span></span>
+                                    <span class="right"><a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="button is-small is-danger ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% endif %}
+                                {% if sentiment_annotation_enabled %}
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-chart-bell-curve"></i><span>Sentiment Evolution</span></span></span>
+                                    <span class="right"><a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="button is-small is-success ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% endif %}
+                                {% if emotion_annotation_enabled %}
+                                <div class="box-line">
+                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-emoticon-outline"></i><span>Emotion Statistics</span></span></span>
+                                    <span class="right"><a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="button is-small is-warning ys-flex-center-gap"><span>Open</span></a></span>
+                                </div>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

@@ -121,6 +121,14 @@ def test_opinion_module_has_key_functions():
     for fn_name in [
         "opinion_evolution",
         "opinion_evolution_data",
+        "stress_reward_evolution",
+        "stress_reward_evolution_data",
+        "toxicity_evolution",
+        "toxicity_analytics_data",
+        "sentiment_evolution",
+        "sentiment_analytics_data",
+        "emotion_statistics",
+        "emotion_statistics_data",
         "opinion_groups_data",
         "generate_group_trends_data",
     ]:

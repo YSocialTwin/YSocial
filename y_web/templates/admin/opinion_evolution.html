@@ -162,6 +162,210 @@
                 </div>
             </div>
 
+            {% if propaganda_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Propaganda Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    For the currently selected topic, inspect targeted agents and compare their opinion trajectory with the timing of propaganda interactions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">
+                                <div class="stat-value"><span id="propaganda-deployed">{{ propaganda_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed Propaganda Agents</div>
+                            </div>
+                        </div>
+
+                        <div id="propaganda-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="propaganda-target-select">Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="propaganda-target-select">
+                                            {% for option in propaganda_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == propaganda_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.interaction_count }} interactions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="propaganda-target-name">{{ propaganda_targets.selected_username or '—' }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #b45309 0%, #92400e 100%);">
+                                            <div class="stat-value" id="propaganda-interaction-count">{{ propaganda_targets.interaction_count }}</div>
+                                            <div class="stat-label">Interactions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="propaganda-attacker-names">{{ propaganda_targets.attacker_usernames|join(', ') if propaganda_targets.attacker_usernames else '—' }}</div>
+                                            <div class="stat-label">Propaganda Agents</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="propaganda-empty-state" class="message is-info" style="margin-top: 16px; {% if propaganda_targets.options %}display: none;{% endif %}">
+                                <div class="message-body">
+                                    Propaganda agents are deployed, but no target interactions have been recorded for the selected topic up to the selected time.
+                                    {% if propaganda_targets.active_topics %}
+                                    Active propaganda topics in this experiment:
+                                    <strong>{{ propaganda_targets.active_topics | map(attribute='topic_name') | join(', ') }}</strong>.
+                                    {% endif %}
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="propaganda-chart-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Target Opinion Trend</h3>
+                                        <div class="chart-container">
+                                            <canvas id="propagandaTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Topic-specific target opinion over time, with propaganda interaction volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="propaganda-events-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent Propaganda Interactions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Count</th>
+                                                    <th>Attackers</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="propaganda-events-body">
+                                                {% for event in propaganda_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.interaction_count }}</td>
+                                                    <td>{{ event.attacker_usernames|join(', ') if event.attacker_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if mop_targets.available %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-5 is-thin ys-mb-10">Master of Puppets Target Drill-down</h3>
+                                <p style="margin: 0; color: #6b7280;">
+                                    For the currently selected topic, inspect agents targeted by MoP campaigns and compare their opinion trajectory with the timing of MoP interactions.
+                                </p>
+                            </div>
+                            <div class="stat-box" style="min-width: 180px; background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                <div class="stat-value"><span id="mop-deployed">{{ mop_targets.deployed_agents }}</span></div>
+                                <div class="stat-label">Deployed MoP Agents</div>
+                            </div>
+                        </div>
+
+                        <div id="mop-target-panel" style="margin-top: 20px;">
+                            <div class="columns">
+                                <div class="column is-4">
+                                    <label class="label" for="mop-target-select">Target</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="mop-target-select">
+                                            {% for option in mop_targets.options %}
+                                            <option value="{{ option.uid }}" {% if option.uid == mop_targets.selected_uid %}selected{% endif %}>
+                                                {{ option.username }} ({{ option.interaction_count }} interactions)
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="column is-8">
+                                    <div class="stats-row" style="margin-top: 0;">
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #334155 0%, #1e293b 100%);">
+                                            <div class="stat-value" id="mop-target-name">{{ mop_targets.selected_username or '—' }}</div>
+                                            <div class="stat-label">Selected Target</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #0f766e 0%, #115e59 100%);">
+                                            <div class="stat-value" id="mop-interaction-count">{{ mop_targets.interaction_count }}</div>
+                                            <div class="stat-label">Interactions</div>
+                                        </div>
+                                        <div class="stat-box" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);">
+                                            <div class="stat-value" id="mop-attacker-names">{{ mop_targets.attacker_usernames|join(', ') if mop_targets.attacker_usernames else '—' }}</div>
+                                            <div class="stat-label">MoP Accounts</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <article id="mop-empty-state" class="message is-info" style="margin-top: 16px; {% if mop_targets.options %}display: none;{% endif %}">
+                                <div class="message-body">
+                                    Master of Puppets agents are deployed, but no topic-matched target interactions have been recorded up to the selected time.
+                                </div>
+                            </article>
+
+                            <div class="columns">
+                                <div class="column is-7" id="mop-chart-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Target Opinion Trend</h3>
+                                        <div class="chart-container">
+                                            <canvas id="mopTargetTrendChart" height="280"></canvas>
+                                        </div>
+                                        <p class="ys-text-xs-center-mt">
+                                            Topic-specific target opinion over time, with MoP interaction volume shown on the secondary axis.
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="column is-5" id="mop-events-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
+                                    <div class="dashboard-box" style="margin-bottom: 0;">
+                                        <h3 class="title is-6 is-thin ys-mb-15">Recent MoP Interactions</h3>
+                                        <div style="max-height: 360px; overflow-y: auto;">
+                                            <table class="table is-fullwidth is-striped is-hoverable is-size-7">
+                                                <thead>
+                                                <tr>
+                                                    <th>When</th>
+                                                    <th>Type</th>
+                                                    <th>Count</th>
+                                                    <th>Accounts</th>
+                                                </tr>
+                                                </thead>
+                                                <tbody id="mop-events-body">
+                                                {% for event in mop_targets.interaction_events %}
+                                                <tr>
+                                                    <td>Day {{ event.day }}, Hour {{ event.hour }}</td>
+                                                    <td>{{ event.interaction_type|capitalize }}</td>
+                                                    <td>{{ event.interaction_count }}</td>
+                                                    <td>{{ event.attacker_usernames|join(', ') if event.attacker_usernames else '—' }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
         </div>
     </div>
 </div>
@@ -178,6 +382,8 @@
   chartValues: {{ chart_values | tojson }},
   groupTrendsData: {{ group_trends_data | tojson }},
   timeseriesData: {{ timeseries_data | tojson }},
+  propagandaTargets: {{ propaganda_targets | tojson }},
+  mopTargets: {{ mop_targets | tojson }},
   filterTopicId: {{ filter_topic_id | tojson if filter_topic_id else 'null' }},
   maxTick: {{ max_day * 24 + max_hour }},
   maxDay: {{ max_day }},

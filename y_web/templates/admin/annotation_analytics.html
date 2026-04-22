@@ -1,0 +1,340 @@
+{% include "admin/head.html" %}
+<link rel="stylesheet" href="{{ url_for('static', filename='assets/css/admin-components.css') }}"/>
+
+<div class="view-wrapper is-dashboard">
+    <div id="creator-dashboard" class="dashboard-container">
+        {% include "admin/dash_head.html" %}
+
+        <div class="dashboard-body">
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <a href="/admin/experiments">Experiments</a> >
+                        <a href="/admin/experiment_details/{{ experiment.idexp }}">{{ experiment.exp_name }}</a> >
+                        {{ page_title }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin ys-mb-15">Temporal Controls</h3>
+                        <div class="filter-section">
+                            {% if page_key == "network" %}
+                            <div class="annotation-control-row ys-mb-15">
+                                <div class="annotation-control-group">
+                                    <label class="annotation-control-label" for="annotation-network-type-select">Network Type</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="annotation-network-type-select">
+                                            {% for option in analytics.network_type_options %}
+                                            <option value="{{ option.value }}" {% if option.value == analytics.network_type %}selected{% endif %}>
+                                                {{ option.label }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="annotation-control-group">
+                                    <label class="annotation-control-label" for="annotation-network-granularity-select">Temporal Granularity</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="annotation-network-granularity-select">
+                                            {% for option in analytics.granularity_options %}
+                                            <option value="{{ option.value }}" {% if option.value == analytics.granularity %}selected{% endif %}>
+                                                {{ option.label }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {% elif page_key == "topic" %}
+                            <div class="annotation-control-row ys-mb-15">
+                                <div class="annotation-control-group">
+                                    <label class="annotation-control-label" for="annotation-topic-select">Topics to Visualize</label>
+                                    <div class="annotation-topic-select-wrapper">
+                                        <select id="annotation-topic-select" class="annotation-topic-select" multiple size="8">
+                                            {% for option in analytics.topic_options %}
+                                            <option value="{{ option.topic_id }}" {% if option.topic_id in analytics.selected_topic_ids %}selected{% endif %}>
+                                                {{ option.topic_name }} ({{ option.total_volume }})
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <p class="ys-text-xs-center-mt" style="text-align: left; margin-top: 6px;">
+                                        Hold <b>Cmd</b>/<b>Ctrl</b> to select multiple topics.
+                                    </p>
+                                </div>
+                                <div class="annotation-control-group ys-topic-trend-mode-group">
+                                    <label class="annotation-control-label" for="annotation-topic-trend-mode-select">Trend Mode</label>
+                                    <div class="select is-fullwidth">
+                                        <select id="annotation-topic-trend-mode-select">
+                                            {% for option in analytics.trend_mode_options %}
+                                            <option value="{{ option.value }}" {% if option.value == analytics.trend_mode %}selected{% endif %}>
+                                                {{ option.label }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="slider-container">
+                                <div class="slider-label">
+                                    <label>Time Period</label>
+                                    <div class="annotation-granularity-controls">
+                                        <button class="annotation-granularity-button active" data-granularity="hourly" type="button">
+                                            Hourly
+                                        </button>
+                                        <button class="annotation-granularity-button" data-granularity="daily" type="button">
+                                            Daily
+                                        </button>
+                                        <button class="annotation-granularity-button" data-granularity="weekly" type="button">
+                                            Weekly
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="slider-controls">
+                                    <button id="annotation-play-button" class="play-button" title="Play">
+                                        <i class="mdi mdi-play"></i>
+                                    </button>
+                                    <input type="range" id="annotation-time-slider" class="time-slider"
+                                           min="0" max="{{ max_day * 24 + max_hour }}"
+                                           step="1"
+                                           value="{{ filter_day * 24 + filter_hour }}">
+                                    <div class="speed-controls">
+                                        <button id="annotation-speed-down" class="speed-button" title="Slower">
+                                            <i class="mdi mdi-minus"></i>
+                                        </button>
+                                        <span class="speed-display" id="annotation-speed-display">1x</span>
+                                        <button id="annotation-speed-up" class="speed-button" title="Faster">
+                                            <i class="mdi mdi-plus"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="stats-row" id="annotation-stats-row">
+                                {% for stat in analytics.stats %}
+                                <div class="stat-box" style="background: {{ stat.color }};">
+                                    <div class="stat-value"><span id="annotation-stat-{{ stat.key }}">{{ stat.value }}</span></div>
+                                    <div class="stat-label">{{ stat.label }}</div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if page_key == "network" %}
+            <div class="columns">
+                <div class="column is-6">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
+                        <div class="chart-container">
+                            <canvas id="annotationDistributionChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-distribution-description">
+                            {{ analytics.distribution.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-6">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
+                        <div class="chart-container">
+                            <canvas id="annotationTrendChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-trend-description">
+                            {{ analytics.trend.description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
+                        <div class="chart-container">
+                            <canvas id="annotationSecondaryChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-secondary-description">
+                            {{ analytics.secondary.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-component-title">{{ analytics.component_share.title }}</h3>
+                        <div class="chart-container ys-network-component-chart-container">
+                            <canvas id="annotationComponentShareChart" height="260"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-component-description">
+                            {{ analytics.component_share.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-network-structure-title">{{ analytics.network_structure.title }}</h3>
+                        <div class="chart-container ys-network-component-chart-container">
+                            <canvas id="annotationNetworkStructureChart" height="260"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-network-structure-description">
+                            {{ analytics.network_structure.description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            <div class="columns">
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
+                        <div class="chart-container">
+                            <canvas id="annotationDistributionChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-distribution-description">
+                            {{ analytics.distribution.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
+                        <div class="chart-container">
+                            <canvas id="annotationTrendChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-trend-description">
+                            {{ analytics.trend.description }}
+                        </p>
+                    </div>
+                </div>
+                <div class="column is-4">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
+                        {% if page_key == "toxicity" %}
+                        <div class="annotation-threshold-control ys-mb-15">
+                            <label for="annotation-toxicity-threshold" class="annotation-threshold-label">Category Threshold</label>
+                            <input type="number"
+                                   id="annotation-toxicity-threshold"
+                                   class="input ys-input-sm annotation-threshold-input"
+                                   min="0"
+                                   max="1"
+                                   step="0.01"
+                                   value="{{ '%.2f'|format(threshold or 0.1) }}">
+                        </div>
+                        {% endif %}
+                        <div class="chart-container">
+                            <canvas id="annotationSecondaryChart" height="250"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-secondary-description">
+                            {{ analytics.secondary.description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% if page_key == "topic" %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box chart-box-container">
+                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-topic-lifecycle-title">{{ analytics.topic_lifecycle.title }}</h3>
+                        <div class="chart-container ys-topic-lifecycle-chart-container">
+                            <canvas id="annotationTopicLifecycleChart" height="190"></canvas>
+                        </div>
+                        <p class="ys-text-xs-center-mt" id="annotation-topic-lifecycle-description">
+                            {{ analytics.topic_lifecycle.description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if page_key != "network" %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box">
+                        <h3 class="title is-5 is-thin ys-mb-15" id="annotation-summary-title">{{ analytics.summary.title }}</h3>
+                        <div style="max-height: 360px; overflow-y: auto;">
+                            <table class="table is-fullwidth is-striped is-hoverable is-size-7" id="annotation-summary-table">
+                                <thead>
+                                <tr id="annotation-summary-head">
+                                    {% for column in analytics.summary.columns %}
+                                    <th>{{ column }}</th>
+                                    {% endfor %}
+                                </tr>
+                                </thead>
+                                <tbody id="annotation-summary-body">
+                                {% for row in analytics.summary.rows %}
+                                <tr>
+                                    {% for cell in row %}
+                                    <td>{{ cell }}</td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <article id="annotation-summary-empty" class="message is-info" {% if analytics.summary.rows %}style="display:none;"{% endif %}>
+                                <div class="message-body">{{ analytics.summary.empty_message }}</div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if page_key == "network" %}
+            <div class="columns">
+                <div class="column is-12">
+                    <div class="dashboard-box chart-box-container">
+                        <div class="ys-flex-between-center ys-mb-15" style="gap: 12px; flex-wrap: wrap;">
+                            <div>
+                                <h3 class="title is-6 is-thin" id="annotation-ego-title" style="margin-bottom: 4px;">{{ analytics.ego_network.title }}</h3>
+                                <p class="ys-text-xs-center-mt" id="annotation-ego-description" style="margin-top: 0; text-align: left;">
+                                    {{ analytics.ego_network.description }}
+                                </p>
+                            </div>
+                            <div class="select">
+                                <select id="annotation-network-ego-select">
+                                    {% for option in analytics.ego_network.options %}
+                                    <option value="{{ option.uid }}" {% if option.uid == analytics.ego_network.selected_uid %}selected{% endif %}>
+                                        {{ option.username }} (deg {{ option.degree }})
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container ys-network-ego-chart-container">
+                            <canvas id="annotationEgoNetworkChart" height="320"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div id="annotation-loading-overlay" class="loading-overlay">
+    <div class="spinner"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+var YS_DATA_ANNOTATION_ANALYTICS = {
+  expId: {{ experiment.idexp }},
+  pageKey: {{ page_key | tojson }},
+  pageTitle: {{ page_title | tojson }},
+  maxTick: {{ max_day * 24 + max_hour }},
+  filterDay: {{ filter_day }},
+  filterHour: {{ filter_hour }},
+  threshold: {{ threshold|default(0.1) }},
+  analytics: {{ analytics | tojson }},
+  dataUrl: {{ data_url | tojson }}
+};
+</script>
+<script src="{{ url_for('static', filename='assets/js/admin-annotation-analytics.js') }}"></script>
+{% include "admin/footer.html" %}

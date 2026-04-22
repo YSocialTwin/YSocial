@@ -27,6 +27,10 @@ def test_stress_reward_client_sync_preserves_structured_system_config():
     assert updated["stress_reward"]["system"]["churn"]["enabled"] is True
     assert updated["stress_reward"]["system"]["churn"]["bias"] == -1.3
     assert updated["stress_reward"]["system"]["events"]["reaction"]["like"]["reward"] == 0.05
+    assert (
+        updated["stress_reward"]["system"]["events"]["report"]["mass_report"]["stress"]
+        == 0.12
+    )
 
 
 def test_standard_and_hpc_experiment_configs_persist_opinion_toggle():

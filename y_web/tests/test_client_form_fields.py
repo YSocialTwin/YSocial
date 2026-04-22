@@ -197,3 +197,13 @@ class TestClientFormFields:
             assert 'name="probability_of_follow_back"' in template_source
 
         assert crud_source.count("probability_of_follow_back") >= 8
+
+    def test_hpc_follow_defaults_enable_network_growth(self):
+        template_source = open(
+            "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/clients_hpc.html",
+            "r",
+        ).read()
+
+        assert 'name="probability_of_daily_follow"' in template_source
+        assert 'value="0.1"' in template_source
+        assert 'input type="hidden" name="follow" id="follow" value="1"' in template_source

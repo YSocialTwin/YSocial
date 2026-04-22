@@ -34,6 +34,7 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
+import networkx as nx
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -114,6 +115,7 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
+from ._helpers import _current_admin_user_or_none, _load_stress_reward_experiment_context
 
 
 def _resolve_opinion_evolution_topics(expid):
@@ -164,6 +166,771 @@ def _opinion_group_contains(group, opinion_value):
     upper_bound = float(group.upper_bound)
     numeric_value = float(opinion_value)
     return lower_bound <= numeric_value <= upper_bound
+
+
+def _build_propaganda_target_opinion_trend(
+    db_path, filter_day, filter_hour, topic_id, target_uid
+):
+    """Return topic-specific opinion trends for one propaganda target."""
+    if topic_id in (None, "", "null") or target_uid in (None, "", "null"):
+        return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        display_rounds = _get_stress_reward_display_rounds(conn, filter_day)
+        if not display_rounds:
+            return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+        opinion_rows = conn.execute(
+            """
+            SELECT
+                ao.rowid AS row_order,
+                ao.opinion,
+                r.day,
+                r.hour
+            FROM agent_opinion ao
+            JOIN rounds r
+              ON ao.tid = r.id
+            WHERE ao.agent_id = ?
+              AND ao.topic_id = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ORDER BY r.day, r.hour, row_order
+            """,
+            (target_uid, str(topic_id), filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        interaction_rows = conn.execute(
+            """
+            SELECT
+                r.day,
+                COUNT(*) AS interaction_count
+            FROM propaganda_activity pa
+            JOIN rounds r
+              ON r.id = pa.discussion_round_id
+            WHERE pa.target_uid = ?
+              AND pa.topic_id = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day
+            ORDER BY r.day
+            """,
+            (target_uid, str(topic_id), filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    interactions_by_day = {
+        int(row["day"]): int(row["interaction_count"]) for row in interaction_rows
+    }
+    latest_opinion = None
+    current_index = 0
+    sorted_rows = list(opinion_rows)
+    timestamps = []
+    timestamp_mapping = {}
+    opinion_series = []
+    interaction_series = []
+
+    for round_row in display_rounds:
+        target_day = int(round_row["day"])
+        target_hour = int(round_row["hour"])
+
+        while current_index < len(sorted_rows):
+            row = sorted_rows[current_index]
+            if row["day"] > target_day or (
+                row["day"] == target_day and row["hour"] > target_hour
+            ):
+                break
+            latest_opinion = float(row["opinion"])
+            current_index += 1
+
+        timestamps.append(float(target_day))
+        timestamp_mapping[float(target_day)] = {
+            "day": target_day,
+            "hour": target_hour,
+            "absolute": target_day * 24 + target_hour,
+        }
+        opinion_series.append(
+            float(latest_opinion) if latest_opinion is not None else None
+        )
+        interaction_series.append(int(interactions_by_day.get(target_day, 0)))
+
+    return {
+        "timestamps": timestamps,
+        "timestamp_mapping": timestamp_mapping,
+        "datasets": [
+            {"label": "Target Opinion", "data": opinion_series},
+            {"label": "Propaganda Interactions", "data": interaction_series},
+        ],
+    }
+
+
+def _build_propaganda_target_panel(
+    db_path, filter_day, filter_hour, topic_id, selected_target_uid=None
+):
+    """Return propaganda target options and selected-target analytics."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        propaganda_count = (
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM user_mgmt
+                WHERE user_type = 'propaganda'
+                """
+            ).fetchone()[0]
+            or 0
+        )
+        has_activity_table = (
+            conn.execute(
+                """
+                SELECT 1
+                FROM sqlite_master
+                WHERE type = 'table' AND name = 'propaganda_activity'
+                """
+            ).fetchone()
+            is not None
+        )
+        if propaganda_count <= 0 or not has_activity_table:
+            return {
+                "available": False,
+                "deployed_agents": int(propaganda_count),
+                "active_topics": [],
+                "selected_topic_has_data": False,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        if topic_id in (None, "", "null"):
+            active_topic_rows = conn.execute(
+                """
+                SELECT DISTINCT pa.topic_id AS topic_id, COALESCE(i.interest, pa.topic_id) AS topic_name
+                FROM propaganda_activity pa
+                LEFT JOIN interests i
+                  ON i.iid = pa.topic_id
+                ORDER BY topic_name ASC
+                """
+            ).fetchall()
+            return {
+                "available": True,
+                "deployed_agents": int(propaganda_count),
+                "active_topics": [
+                    {"topic_id": str(row["topic_id"]), "topic_name": row["topic_name"]}
+                    for row in active_topic_rows
+                ],
+                "selected_topic_has_data": False,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        active_topic_rows = conn.execute(
+            """
+            SELECT DISTINCT pa.topic_id AS topic_id, COALESCE(i.interest, pa.topic_id) AS topic_name
+            FROM propaganda_activity pa
+            LEFT JOIN interests i
+              ON i.iid = pa.topic_id
+            ORDER BY topic_name ASC
+            """
+        ).fetchall()
+        active_topics = [
+            {"topic_id": str(row["topic_id"]), "topic_name": row["topic_name"]}
+            for row in active_topic_rows
+        ]
+
+        option_rows = conn.execute(
+            """
+            SELECT
+                pa.target_uid AS uid,
+                tu.username AS username,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT pu.username) AS attacker_usernames
+            FROM propaganda_activity pa
+            JOIN rounds r
+              ON r.id = pa.discussion_round_id
+            JOIN user_mgmt tu
+              ON tu.id = pa.target_uid
+            JOIN user_mgmt pu
+              ON pu.id = pa.propaganda_agent_uid
+            WHERE pa.topic_id = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY pa.target_uid, tu.username
+            ORDER BY interaction_count DESC, tu.username ASC
+            """,
+            (str(topic_id), filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        options = [
+            {
+                "uid": str(row["uid"]),
+                "username": row["username"],
+                "interaction_count": int(row["interaction_count"] or 0),
+                "attacker_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["attacker_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in option_rows
+            if row["uid"] is not None
+        ]
+
+        if not options:
+            return {
+                "available": True,
+                "deployed_agents": int(propaganda_count),
+                "active_topics": active_topics,
+                "selected_topic_has_data": False,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        valid_target_ids = {option["uid"] for option in options}
+        if selected_target_uid not in valid_target_ids:
+            selected_target_uid = options[0]["uid"]
+
+        selected_option = next(
+            option for option in options if option["uid"] == selected_target_uid
+        )
+        event_rows = conn.execute(
+            """
+            SELECT
+                r.day,
+                r.hour,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT pu.username) AS attacker_usernames
+            FROM propaganda_activity pa
+            JOIN rounds r
+              ON r.id = pa.discussion_round_id
+            JOIN user_mgmt pu
+              ON pu.id = pa.propaganda_agent_uid
+            WHERE pa.topic_id = ?
+              AND pa.target_uid = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day, r.hour
+            ORDER BY r.day DESC, r.hour DESC
+            LIMIT 50
+            """,
+            (str(topic_id), selected_target_uid, filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    interaction_events = [
+        {
+            "day": int(row["day"]),
+            "hour": int(row["hour"]),
+            "interaction_count": int(row["interaction_count"] or 0),
+            "attacker_usernames": sorted(
+                {
+                    item.strip()
+                    for item in str(row["attacker_usernames"] or "").split(",")
+                    if item and item.strip()
+                }
+            ),
+        }
+        for row in event_rows
+    ]
+
+    return {
+        "available": True,
+        "deployed_agents": int(propaganda_count),
+        "active_topics": active_topics,
+        "selected_topic_has_data": True,
+        "options": options,
+        "selected_uid": selected_option["uid"],
+        "selected_username": selected_option["username"],
+        "attacker_usernames": selected_option["attacker_usernames"],
+        "interaction_count": selected_option["interaction_count"],
+        "trend_data": _build_propaganda_target_opinion_trend(
+            db_path, filter_day, filter_hour, topic_id, selected_option["uid"]
+        ),
+        "interaction_events": interaction_events,
+    }
+
+
+def _build_mop_target_opinion_trend(
+    db_path, filter_day, filter_hour, topic_id, target_uid
+):
+    """Return topic-specific opinion trends for one MoP target."""
+    if topic_id in (None, "", "null") or target_uid in (None, "", "null"):
+        return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        display_rounds = _get_stress_reward_display_rounds(conn, filter_day)
+        if not display_rounds:
+            return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+        opinion_rows = conn.execute(
+            """
+            SELECT
+                ao.rowid AS row_order,
+                ao.opinion,
+                r.day,
+                r.hour
+            FROM agent_opinion ao
+            JOIN rounds r
+              ON ao.tid = r.id
+            WHERE ao.agent_id = ?
+              AND ao.topic_id = ?
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ORDER BY r.day, r.hour, row_order
+            """,
+            (target_uid, str(topic_id), filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        interaction_rows = conn.execute(
+            """
+            WITH mop_users AS (
+                SELECT id, username
+                FROM user_mgmt
+                WHERE user_type IN ('master_of_puppets', 'mop_puppet')
+            ),
+            mop_interactions AS (
+                SELECT
+                    m.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'mention' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM mentions m
+                JOIN post p
+                  ON p.id = m.post_id
+                JOIN mop_users au
+                  ON au.id = p.user_id
+                JOIN rounds r
+                  ON r.id = p.round
+                JOIN post_topics pt
+                  ON pt.post_id = p.id
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    target_post.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'reaction' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reactions rr
+                JOIN mop_users au
+                  ON au.id = rr.user_id
+                JOIN post target_post
+                  ON target_post.id = rr.post_id
+                JOIN rounds r
+                  ON r.id = rr.round
+                JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    COALESCE(rep.to_uid, target_post.user_id) AS target_uid,
+                    au.username AS attacker_username,
+                    'report' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reported rep
+                JOIN mop_users au
+                  ON au.id = rep.from_uid
+                JOIN rounds r
+                  ON r.id = rep.tid
+                LEFT JOIN post target_post
+                  ON target_post.id = rep.to_post
+                LEFT JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE COALESCE(rep.to_uid, target_post.user_id) IS NOT NULL
+                  AND pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            )
+            SELECT day, COUNT(*) AS interaction_count
+            FROM mop_interactions
+            WHERE target_uid = ?
+            GROUP BY day
+            ORDER BY day
+            """,
+            (
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                target_uid,
+            ),
+        ).fetchall()
+
+    interactions_by_day = {
+        int(row["day"]): int(row["interaction_count"]) for row in interaction_rows
+    }
+    latest_opinion = None
+    current_index = 0
+    sorted_rows = list(opinion_rows)
+    timestamps = []
+    timestamp_mapping = {}
+    opinion_series = []
+    interaction_series = []
+
+    for round_row in display_rounds:
+        target_day = int(round_row["day"])
+        target_hour = int(round_row["hour"])
+
+        while current_index < len(sorted_rows):
+            row = sorted_rows[current_index]
+            if row["day"] > target_day or (
+                row["day"] == target_day and row["hour"] > target_hour
+            ):
+                break
+            latest_opinion = float(row["opinion"])
+            current_index += 1
+
+        timestamps.append(float(target_day))
+        timestamp_mapping[float(target_day)] = {
+            "day": target_day,
+            "hour": target_hour,
+            "absolute": target_day * 24 + target_hour,
+        }
+        opinion_series.append(
+            float(latest_opinion) if latest_opinion is not None else None
+        )
+        interaction_series.append(int(interactions_by_day.get(target_day, 0)))
+
+    return {
+        "timestamps": timestamps,
+        "timestamp_mapping": timestamp_mapping,
+        "datasets": [
+            {"label": "Target Opinion", "data": opinion_series},
+            {"label": "MoP Interactions", "data": interaction_series},
+        ],
+    }
+
+
+def _build_mop_target_panel(
+    db_path, filter_day, filter_hour, topic_id, selected_target_uid=None
+):
+    """Return MoP target options and selected-target analytics."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        mop_count = (
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM user_mgmt
+                WHERE user_type = 'master_of_puppets'
+                """
+            ).fetchone()[0]
+            or 0
+        )
+        if mop_count <= 0:
+            return {
+                "available": False,
+                "deployed_agents": 0,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        if topic_id in (None, "", "null"):
+            return {
+                "available": True,
+                "deployed_agents": int(mop_count),
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        option_rows = conn.execute(
+            """
+            WITH mop_users AS (
+                SELECT id, username
+                FROM user_mgmt
+                WHERE user_type IN ('master_of_puppets', 'mop_puppet')
+            ),
+            mop_interactions AS (
+                SELECT
+                    m.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'mention' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM mentions m
+                JOIN post p
+                  ON p.id = m.post_id
+                JOIN mop_users au
+                  ON au.id = p.user_id
+                JOIN rounds r
+                  ON r.id = p.round
+                JOIN post_topics pt
+                  ON pt.post_id = p.id
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    target_post.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'reaction' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reactions rr
+                JOIN mop_users au
+                  ON au.id = rr.user_id
+                JOIN post target_post
+                  ON target_post.id = rr.post_id
+                JOIN rounds r
+                  ON r.id = rr.round
+                JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    COALESCE(rep.to_uid, target_post.user_id) AS target_uid,
+                    au.username AS attacker_username,
+                    'report' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reported rep
+                JOIN mop_users au
+                  ON au.id = rep.from_uid
+                JOIN rounds r
+                  ON r.id = rep.tid
+                LEFT JOIN post target_post
+                  ON target_post.id = rep.to_post
+                LEFT JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE COALESCE(rep.to_uid, target_post.user_id) IS NOT NULL
+                  AND pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            )
+            SELECT
+                mi.target_uid AS uid,
+                tu.username AS username,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT mi.attacker_username) AS attacker_usernames
+            FROM mop_interactions mi
+            JOIN user_mgmt tu
+              ON tu.id = mi.target_uid
+            WHERE tu.user_type NOT IN (
+                'master_of_puppets',
+                'mop_puppet',
+                'propaganda',
+                'stress_attacker',
+                'comic_relief'
+            )
+            GROUP BY mi.target_uid, tu.username
+            ORDER BY interaction_count DESC, tu.username ASC
+            """,
+            (
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+            ),
+        ).fetchall()
+
+        options = [
+            {
+                "uid": str(row["uid"]),
+                "username": row["username"],
+                "interaction_count": int(row["interaction_count"] or 0),
+                "attacker_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["attacker_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in option_rows
+            if row["uid"] is not None
+        ]
+
+        if not options:
+            return {
+                "available": True,
+                "deployed_agents": int(mop_count),
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        valid_target_ids = {option["uid"] for option in options}
+        if selected_target_uid not in valid_target_ids:
+            selected_target_uid = options[0]["uid"]
+
+        selected_option = next(
+            option for option in options if option["uid"] == selected_target_uid
+        )
+        event_rows = conn.execute(
+            """
+            WITH mop_users AS (
+                SELECT id, username
+                FROM user_mgmt
+                WHERE user_type IN ('master_of_puppets', 'mop_puppet')
+            ),
+            mop_interactions AS (
+                SELECT
+                    m.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'mention' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM mentions m
+                JOIN post p
+                  ON p.id = m.post_id
+                JOIN mop_users au
+                  ON au.id = p.user_id
+                JOIN rounds r
+                  ON r.id = p.round
+                JOIN post_topics pt
+                  ON pt.post_id = p.id
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    target_post.user_id AS target_uid,
+                    au.username AS attacker_username,
+                    'reaction' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reactions rr
+                JOIN mop_users au
+                  ON au.id = rr.user_id
+                JOIN post target_post
+                  ON target_post.id = rr.post_id
+                JOIN rounds r
+                  ON r.id = rr.round
+                JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+                UNION ALL
+
+                SELECT
+                    COALESCE(rep.to_uid, target_post.user_id) AS target_uid,
+                    au.username AS attacker_username,
+                    'report' AS interaction_type,
+                    r.day AS day,
+                    r.hour AS hour
+                FROM reported rep
+                JOIN mop_users au
+                  ON au.id = rep.from_uid
+                JOIN rounds r
+                  ON r.id = rep.tid
+                LEFT JOIN post target_post
+                  ON target_post.id = rep.to_post
+                LEFT JOIN post_topics pt
+                  ON pt.post_id = COALESCE(target_post.thread_id, target_post.id)
+                WHERE COALESCE(rep.to_uid, target_post.user_id) IS NOT NULL
+                  AND pt.topic_id = ?
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            )
+            SELECT
+                day,
+                hour,
+                interaction_type,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT attacker_username) AS attacker_usernames
+            FROM mop_interactions
+            WHERE target_uid = ?
+            GROUP BY day, hour, interaction_type
+            ORDER BY day DESC, hour DESC, interaction_type ASC
+            LIMIT 50
+            """,
+            (
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                str(topic_id),
+                filter_day,
+                filter_day,
+                filter_hour,
+                selected_target_uid,
+            ),
+        ).fetchall()
+
+    interaction_events = [
+        {
+            "day": int(row["day"]),
+            "hour": int(row["hour"]),
+            "interaction_type": row["interaction_type"],
+            "interaction_count": int(row["interaction_count"] or 0),
+            "attacker_usernames": sorted(
+                {
+                    item.strip()
+                    for item in str(row["attacker_usernames"] or "").split(",")
+                    if item and item.strip()
+                }
+            ),
+        }
+        for row in event_rows
+    ]
+
+    return {
+        "available": True,
+        "deployed_agents": int(mop_count),
+        "options": options,
+        "selected_uid": selected_option["uid"],
+        "selected_username": selected_option["username"],
+        "attacker_usernames": selected_option["attacker_usernames"],
+        "interaction_count": selected_option["interaction_count"],
+        "trend_data": _build_mop_target_opinion_trend(
+            db_path, filter_day, filter_hour, topic_id, selected_option["uid"]
+        ),
+        "interaction_events": interaction_events,
+    }
 
 
 def _resolve_opinion_experiment_db_name(experiment):
@@ -1779,6 +2546,7 @@ def opinion_evolution(expid):
 
     bind_key = f"db_exp_{expid}"
     opinion_db_name = _resolve_opinion_experiment_db_name(experiment)
+    opinion_db_path = _resolve_experiment_db_path(experiment)
     register_experiment_database(current_app, expid, opinion_db_name)
 
     # Temporarily switch to experiment database
@@ -1810,6 +2578,36 @@ def opinion_evolution(expid):
                 unique_agents=0,
                 group_trends_data=[],
                 timeseries_data=[],
+                propaganda_targets={
+                    "available": False,
+                    "deployed_agents": 0,
+                    "options": [],
+                    "selected_uid": None,
+                    "selected_username": None,
+                    "attacker_usernames": [],
+                    "interaction_count": 0,
+                    "trend_data": {
+                        "timestamps": [],
+                        "timestamp_mapping": {},
+                        "datasets": [],
+                    },
+                    "interaction_events": [],
+                },
+                mop_targets={
+                    "available": False,
+                    "deployed_agents": 0,
+                    "options": [],
+                    "selected_uid": None,
+                    "selected_username": None,
+                    "attacker_usernames": [],
+                    "interaction_count": 0,
+                    "trend_data": {
+                        "timestamps": [],
+                        "timestamp_mapping": {},
+                        "datasets": [],
+                    },
+                    "interaction_events": [],
+                },
             )
 
         _invalidate_stale_opinion_evolution_cache(expid)
@@ -1847,6 +2645,12 @@ def opinion_evolution(expid):
                 filter_topic_id = filter_topic_id_str  # Keep as string for UUID
         else:
             filter_topic_id = default_topic_id
+        propaganda_target_uid = (
+            str(request.args.get("propaganda_target_uid", "") or "").strip() or None
+        )
+        mop_target_uid = (
+            str(request.args.get("mop_target_uid", "") or "").strip() or None
+        )
 
         # Find all rounds up to the specified day/hour
         # Rounds where (day < filter_day) OR (day == filter_day AND hour <= filter_hour)
@@ -1961,6 +2765,20 @@ def opinion_evolution(expid):
         timeseries_data = generate_agent_timeseries_data(
             expid, filter_day, filter_hour, filter_topic_id, sample_percentage
         )
+        propaganda_targets = _build_propaganda_target_panel(
+            opinion_db_path,
+            filter_day,
+            filter_hour,
+            filter_topic_id,
+            selected_target_uid=propaganda_target_uid,
+        )
+        mop_targets = _build_mop_target_panel(
+            opinion_db_path,
+            filter_day,
+            filter_hour,
+            filter_topic_id,
+            selected_target_uid=mop_target_uid,
+        )
 
     finally:
         # Restore old bind if it existed, otherwise remove the temporary bind
@@ -1986,6 +2804,8 @@ def opinion_evolution(expid):
         unique_agents=unique_agents,
         group_trends_data=group_trends_data,
         timeseries_data=timeseries_data,
+        propaganda_targets=propaganda_targets,
+        mop_targets=mop_targets,
     )
 
 
@@ -2014,6 +2834,7 @@ def opinion_evolution_data(expid):
 
     bind_key = f"db_exp_{expid}"
     opinion_db_name = _resolve_opinion_experiment_db_name(experiment)
+    opinion_db_path = _resolve_experiment_db_path(experiment)
     register_experiment_database(current_app, expid, opinion_db_name)
 
     # Temporarily switch to experiment database
@@ -2059,6 +2880,12 @@ def opinion_evolution_data(expid):
                 filter_topic_id = int(filter_topic_id_str)
             except (ValueError, TypeError):
                 filter_topic_id = filter_topic_id_str
+        propaganda_target_uid = (
+            str(request.args.get("propaganda_target_uid", "") or "").strip() or None
+        )
+        mop_target_uid = (
+            str(request.args.get("mop_target_uid", "") or "").strip() or None
+        )
 
         # Use caching for statistics computation
         stats = get_or_compute_opinion_stats(
@@ -2094,6 +2921,20 @@ def opinion_evolution_data(expid):
         timeseries_data = generate_agent_timeseries_data(
             expid, filter_day, filter_hour, filter_topic_id, sample_percentage
         )
+        propaganda_targets = _build_propaganda_target_panel(
+            opinion_db_path,
+            filter_day,
+            filter_hour,
+            filter_topic_id,
+            selected_target_uid=propaganda_target_uid,
+        )
+        mop_targets = _build_mop_target_panel(
+            opinion_db_path,
+            filter_day,
+            filter_hour,
+            filter_topic_id,
+            selected_target_uid=mop_target_uid,
+        )
 
         return jsonify(
             {
@@ -2106,6 +2947,8 @@ def opinion_evolution_data(expid):
                 "filter_hour": filter_hour,
                 "group_trends_data": group_trends_data,
                 "timeseries_data": timeseries_data,
+                "propaganda_targets": propaganda_targets,
+                "mop_targets": mop_targets,
             }
         )
 
@@ -2115,3 +2958,2819 @@ def opinion_evolution_data(expid):
             current_app.config["SQLALCHEMY_BINDS"]["db_exp"] = old_bind
         else:
             current_app.config["SQLALCHEMY_BINDS"].pop("db_exp", None)
+
+
+_STRESS_REWARD_LEVELS = [
+    ("None", 0.0, 0.2),
+    ("Low", 0.2, 0.4),
+    ("Moderate", 0.4, 0.6),
+    ("High", 0.6, 0.8),
+    ("Extreme", 0.8, 1.0000001),
+]
+
+
+def _resolve_experiment_db_path(experiment):
+    """Return the absolute sqlite path for experiment analytics views."""
+    db_name = _resolve_opinion_experiment_db_name(experiment)
+    if os.path.isabs(db_name):
+        return db_name
+    return os.path.join(get_writable_path(), "y_web", db_name)
+
+
+def _experiment_db_has_required_stress_reward_tables(db_path):
+    """Check whether the experiment DB exposes stress/reward analytics tables."""
+    if not db_path or not os.path.exists(db_path):
+        return False
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            tables = {
+                row[0]
+                for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+    except sqlite3.Error:
+        return False
+
+    return {"stress_reward", "rounds"}.issubset(tables)
+
+
+def _get_stress_reward_max_round(db_path):
+    """Return the latest available round coordinates for stress/reward analytics."""
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT day, hour FROM rounds ORDER BY day DESC, hour DESC LIMIT 1"
+        ).fetchone()
+    if not row:
+        return 1, 1
+    return int(row[0]), int(row[1])
+
+
+def _get_stress_reward_display_rounds(conn, filter_day):
+    """Return representative rounds for timeline display."""
+    rows = conn.execute(
+        """
+        SELECT id, day, hour
+        FROM rounds
+        WHERE hour = 0 AND day <= ?
+        ORDER BY day, hour
+        """,
+        (filter_day,),
+    ).fetchall()
+    if rows:
+        return rows
+
+    return conn.execute(
+        """
+        SELECT r.id, r.day, r.hour
+        FROM rounds r
+        JOIN (
+            SELECT day, MIN(hour) AS min_hour
+            FROM rounds
+            WHERE day <= ?
+            GROUP BY day
+        ) picked
+          ON r.day = picked.day AND r.hour = picked.min_hour
+        ORDER BY r.day, r.hour
+        """,
+        (filter_day,),
+    ).fetchall()
+
+
+def _stress_reward_level_label(value):
+    """Map an aggregate value to a named stress/reward level."""
+    numeric_value = float(value)
+    for label, lower, upper in _STRESS_REWARD_LEVELS:
+        if lower <= numeric_value < upper:
+            return label
+    return _STRESS_REWARD_LEVELS[-1][0]
+
+
+def _build_stress_reward_snapshot(db_path, filter_day, filter_hour):
+    """Aggregate latest stress/reward values up to the requested time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(
+            """
+            SELECT uid, variable, value
+            FROM (
+                SELECT
+                    sr.uid AS uid,
+                    sr.variable,
+                    sr.value,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY sr.uid, sr.variable
+                        ORDER BY r.day DESC, r.hour DESC, sr.rowid DESC
+                    ) AS rn
+                FROM stress_reward sr
+                JOIN rounds r
+                  ON sr.tid = r.id
+                WHERE sr.type = 'aggregate'
+                  AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ) latest
+            WHERE rn = 1
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    latest_aggregates = {
+        (str(row["uid"]), row["variable"]): float(row["value"]) for row in rows
+    }
+    unique_agents = {str(row["uid"]) for row in rows}
+
+    distributions = {
+        "stress": {label: 0 for label, _, _ in _STRESS_REWARD_LEVELS},
+        "reward": {label: 0 for label, _, _ in _STRESS_REWARD_LEVELS},
+    }
+    averages = {"stress": 0.0, "reward": 0.0}
+
+    for variable in ("stress", "reward"):
+        values = [
+            value
+            for (uid, current_variable), value in latest_aggregates.items()
+            if current_variable == variable
+        ]
+        if values:
+            averages[variable] = sum(values) / len(values)
+        for value in values:
+            distributions[variable][_stress_reward_level_label(value)] += 1
+
+    return {
+        "stress_labels": [label for label, _, _ in _STRESS_REWARD_LEVELS],
+        "stress_values": [
+            distributions["stress"][label] for label, _, _ in _STRESS_REWARD_LEVELS
+        ],
+        "reward_labels": [label for label, _, _ in _STRESS_REWARD_LEVELS],
+        "reward_values": [
+            distributions["reward"][label] for label, _, _ in _STRESS_REWARD_LEVELS
+        ],
+        "average_stress": averages["stress"],
+        "average_reward": averages["reward"],
+        "aggregate_rows": len(rows),
+        "unique_agents": len(unique_agents),
+    }
+
+
+def _build_stress_reward_trends(db_path, filter_day, filter_hour):
+    """Return average aggregate stress/reward values over time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        display_rounds = _get_stress_reward_display_rounds(conn, filter_day)
+        if not display_rounds:
+            return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+        all_rows = conn.execute(
+            """
+            SELECT
+                sr.rowid AS row_order,
+                sr.uid AS uid,
+                sr.variable,
+                sr.value,
+                sr.type,
+                r.day,
+                r.hour
+            FROM stress_reward sr
+            JOIN rounds r
+              ON sr.tid = r.id
+            WHERE sr.type = 'aggregate'
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ORDER BY r.day, r.hour, row_order
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    latest_aggregates = {}
+    current_index = 0
+    sorted_rows = list(all_rows)
+    timestamps = []
+    timestamp_mapping = {}
+    stress_series = []
+    reward_series = []
+
+    for round_row in display_rounds:
+        target_day = int(round_row["day"])
+        target_hour = int(round_row["hour"])
+
+        while current_index < len(sorted_rows):
+            row = sorted_rows[current_index]
+            if row["day"] > target_day or (
+                row["day"] == target_day and row["hour"] > target_hour
+            ):
+                break
+            latest_aggregates[(str(row["uid"]), row["variable"])] = float(
+                row["value"]
+            )
+            current_index += 1
+
+        stress_values = [
+            value
+            for (uid, variable), value in latest_aggregates.items()
+            if variable == "stress"
+        ]
+        reward_values = [
+            value
+            for (uid, variable), value in latest_aggregates.items()
+            if variable == "reward"
+        ]
+
+        timestamps.append(float(target_day))
+        timestamp_mapping[float(target_day)] = {
+            "day": target_day,
+            "hour": target_hour,
+            "absolute": target_day * 24 + target_hour,
+        }
+        stress_series.append(
+            (sum(stress_values) / len(stress_values)) if stress_values else 0.0
+        )
+        reward_series.append(
+            (sum(reward_values) / len(reward_values)) if reward_values else 0.0
+        )
+
+    return {
+        "timestamps": timestamps,
+        "timestamp_mapping": timestamp_mapping,
+        "datasets": [
+            {"label": "Average Stress", "data": stress_series},
+            {"label": "Average Reward", "data": reward_series},
+        ],
+    }
+
+
+def _stress_reward_sa_interaction_cte():
+    """Return the shared CTE used to resolve Stress Attacker interactions."""
+    return """
+        WITH sa_users AS (
+            SELECT id, username
+            FROM user_mgmt
+            WHERE user_type = 'stress_attacker'
+        ),
+        sa_interactions AS (
+            SELECT
+                parent.user_id AS target_uid,
+                sa.username AS attacker_username,
+                'comment' AS interaction_type,
+                r.day AS day,
+                r.hour AS hour
+            FROM post p
+            JOIN sa_users sa
+              ON sa.id = p.user_id
+            JOIN post parent
+              ON parent.id = p.comment_to
+            JOIN rounds r
+              ON r.id = p.round
+            WHERE parent.user_id IS NOT NULL
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+            UNION ALL
+
+            SELECT
+                COALESCE(rep.to_uid, target_post.user_id) AS target_uid,
+                sa.username AS attacker_username,
+                'report' AS interaction_type,
+                r.day AS day,
+                r.hour AS hour
+            FROM reported rep
+            JOIN sa_users sa
+              ON sa.id = rep.from_uid
+            JOIN rounds r
+              ON r.id = rep.tid
+            LEFT JOIN post target_post
+              ON target_post.id = rep.to_post
+            WHERE COALESCE(rep.to_uid, target_post.user_id) IS NOT NULL
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+
+            UNION ALL
+
+            SELECT
+                target_post.user_id AS target_uid,
+                sa.username AS attacker_username,
+                'reaction' AS interaction_type,
+                r.day AS day,
+                r.hour AS hour
+            FROM reactions rr
+            JOIN sa_users sa
+              ON sa.id = rr.user_id
+            JOIN post target_post
+              ON target_post.id = rr.post_id
+            JOIN rounds r
+              ON r.id = rr.round
+            WHERE target_post.user_id IS NOT NULL
+              AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+        )
+    """
+
+
+def _build_sa_target_trend(conn, target_uid, filter_day, filter_hour):
+    """Return aggregate-only stress/reward trends for one SA target."""
+    display_rounds = _get_stress_reward_display_rounds(conn, filter_day)
+    if not display_rounds or not target_uid:
+        return {"timestamps": [], "timestamp_mapping": {}, "datasets": []}
+
+    rows = conn.execute(
+        """
+        SELECT
+            sr.rowid AS row_order,
+            sr.variable,
+            sr.value,
+            r.day,
+            r.hour
+        FROM stress_reward sr
+        JOIN rounds r
+          ON sr.tid = r.id
+        WHERE sr.type = 'aggregate'
+          AND sr.uid = ?
+          AND (r.day < ? OR (r.day = ? AND r.hour <= ?))
+        ORDER BY r.day, r.hour, row_order
+        """,
+        (target_uid, filter_day, filter_day, filter_hour),
+    ).fetchall()
+
+    interaction_rows = conn.execute(
+        _stress_reward_sa_interaction_cte()
+        + """
+        SELECT day, COUNT(*) AS interaction_count
+        FROM sa_interactions
+        WHERE target_uid = ?
+        GROUP BY day
+        ORDER BY day
+        """,
+        (filter_day, filter_day, filter_hour) * 3 + (target_uid,),
+    ).fetchall()
+    interactions_by_day = {
+        int(row["day"]): int(row["interaction_count"]) for row in interaction_rows
+    }
+
+    latest_aggregates = {}
+    current_index = 0
+    sorted_rows = list(rows)
+    timestamps = []
+    timestamp_mapping = {}
+    stress_series = []
+    reward_series = []
+    interaction_series = []
+
+    for round_row in display_rounds:
+        target_day = int(round_row["day"])
+        target_hour = int(round_row["hour"])
+
+        while current_index < len(sorted_rows):
+            row = sorted_rows[current_index]
+            if row["day"] > target_day or (
+                row["day"] == target_day and row["hour"] > target_hour
+            ):
+                break
+            latest_aggregates[row["variable"]] = float(row["value"])
+            current_index += 1
+
+        timestamps.append(float(target_day))
+        timestamp_mapping[float(target_day)] = {
+            "day": target_day,
+            "hour": target_hour,
+            "absolute": target_day * 24 + target_hour,
+        }
+        stress_series.append(float(latest_aggregates.get("stress", 0.0)))
+        reward_series.append(float(latest_aggregates.get("reward", 0.0)))
+        interaction_series.append(int(interactions_by_day.get(target_day, 0)))
+
+    return {
+        "timestamps": timestamps,
+        "timestamp_mapping": timestamp_mapping,
+        "datasets": [
+            {"label": "Target Stress", "data": stress_series},
+            {"label": "Target Reward", "data": reward_series},
+            {"label": "SA Interactions", "data": interaction_series},
+        ],
+    }
+
+
+def _build_stress_attacker_target_panel(
+    db_path, filter_day, filter_hour, selected_target_uid=None
+):
+    """Return Stress Attacker target options and selected-target analytics."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        stress_attacker_count = (
+            conn.execute(
+                """
+                SELECT COUNT(*)
+                FROM user_mgmt
+                WHERE user_type = 'stress_attacker'
+                """
+            ).fetchone()[0]
+            or 0
+        )
+        if stress_attacker_count <= 0:
+            return {
+                "available": False,
+                "deployed_agents": 0,
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        option_rows = conn.execute(
+            _stress_reward_sa_interaction_cte()
+            + """
+            SELECT
+                i.target_uid AS uid,
+                u.username AS username,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT i.attacker_username) AS attacker_usernames
+            FROM sa_interactions i
+            JOIN user_mgmt u
+              ON u.id = i.target_uid
+            GROUP BY i.target_uid, u.username
+            ORDER BY interaction_count DESC, u.username ASC
+            """,
+            (filter_day, filter_day, filter_hour) * 3,
+        ).fetchall()
+
+        options = [
+            {
+                "uid": str(row["uid"]),
+                "username": row["username"],
+                "interaction_count": int(row["interaction_count"] or 0),
+                "attacker_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["attacker_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in option_rows
+            if row["uid"] is not None
+        ]
+
+        if not options:
+            return {
+                "available": True,
+                "deployed_agents": int(stress_attacker_count),
+                "options": [],
+                "selected_uid": None,
+                "selected_username": None,
+                "attacker_usernames": [],
+                "interaction_count": 0,
+                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "interaction_events": [],
+            }
+
+        valid_target_ids = {option["uid"] for option in options}
+        if selected_target_uid not in valid_target_ids:
+            selected_target_uid = options[0]["uid"]
+
+        selected_option = next(
+            option for option in options if option["uid"] == selected_target_uid
+        )
+        interaction_rows = conn.execute(
+            _stress_reward_sa_interaction_cte()
+            + """
+            SELECT
+                day,
+                hour,
+                interaction_type,
+                COUNT(*) AS interaction_count,
+                GROUP_CONCAT(DISTINCT attacker_username) AS attacker_usernames
+            FROM sa_interactions
+            WHERE target_uid = ?
+            GROUP BY day, hour, interaction_type
+            ORDER BY day DESC, hour DESC, interaction_type ASC
+            LIMIT 50
+            """,
+            (filter_day, filter_day, filter_hour) * 3 + (selected_target_uid,),
+        ).fetchall()
+
+        interaction_events = [
+            {
+                "day": int(row["day"]),
+                "hour": int(row["hour"]),
+                "interaction_type": row["interaction_type"],
+                "interaction_count": int(row["interaction_count"] or 0),
+                "attacker_usernames": sorted(
+                    {
+                        item.strip()
+                        for item in str(row["attacker_usernames"] or "").split(",")
+                        if item and item.strip()
+                    }
+                ),
+            }
+            for row in interaction_rows
+        ]
+
+        return {
+            "available": True,
+            "deployed_agents": int(stress_attacker_count),
+            "options": options,
+            "selected_uid": selected_option["uid"],
+            "selected_username": selected_option["username"],
+            "attacker_usernames": selected_option["attacker_usernames"],
+            "interaction_count": selected_option["interaction_count"],
+            "trend_data": _build_sa_target_trend(
+                conn, selected_option["uid"], filter_day, filter_hour
+            ),
+            "interaction_events": interaction_events,
+        }
+
+
+@experiments.route("/admin/stress_reward_evolution/<int:expid>")
+@login_required
+def stress_reward_evolution(expid):
+    """Display stress/reward evolution analytics for a stress-enabled experiment."""
+    experiment, _experiment_dir, error_response = _load_stress_reward_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    db_path = _resolve_experiment_db_path(experiment)
+    if not _experiment_db_has_required_stress_reward_tables(db_path):
+        flash(
+            "The current experiment database does not contain stress/reward evolution tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_stress_reward_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    selected_target_uid = str(request.args.get("target_uid", "") or "").strip() or None
+    snapshot = _build_stress_reward_snapshot(db_path, filter_day, filter_hour)
+    trend_data = _build_stress_reward_trends(db_path, filter_day, filter_hour)
+    sa_targets = _build_stress_attacker_target_panel(
+        db_path, filter_day, filter_hour, selected_target_uid=selected_target_uid
+    )
+
+    return render_template(
+        "admin/stress_reward_evolution.html",
+        experiment=experiment,
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        snapshot=snapshot,
+        trend_data=trend_data,
+        sa_targets=sa_targets,
+    )
+
+
+@experiments.route("/admin/stress_reward_evolution_data/<int:expid>")
+@login_required
+def stress_reward_evolution_data(expid):
+    """Return stress/reward evolution analytics for a selected simulation time."""
+    experiment, _experiment_dir, error_response = _load_stress_reward_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": "Stress/reward analytics not available"}), 400
+
+    db_path = _resolve_experiment_db_path(experiment)
+    if not _experiment_db_has_required_stress_reward_tables(db_path):
+        return (
+            jsonify(
+                {
+                    "error": "The current experiment database does not contain stress/reward evolution tables."
+                }
+            ),
+            400,
+        )
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    selected_target_uid = str(request.args.get("target_uid", "") or "").strip() or None
+    snapshot = _build_stress_reward_snapshot(db_path, filter_day, filter_hour)
+    trend_data = _build_stress_reward_trends(db_path, filter_day, filter_hour)
+    sa_targets = _build_stress_attacker_target_panel(
+        db_path, filter_day, filter_hour, selected_target_uid=selected_target_uid
+    )
+
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "snapshot": snapshot,
+            "trend_data": trend_data,
+            "sa_targets": sa_targets,
+        }
+    )
+
+
+def _load_annotation_experiment_context(
+    uid, annotation_key, annotation_label, require_manage=False
+):
+    """Load an experiment where a specific annotation is enabled."""
+    check_privileges(current_user.username)
+
+    experiment = Exps.query.filter_by(idexp=uid).first()
+    if not experiment:
+        flash("Experiment not found", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if require_manage and not user_can_manage_experiment(admin_user, experiment):
+        flash("You do not have permission to manage this experiment.", "error")
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
+    db_path = _resolve_experiment_db_path(experiment)
+    config_path = os.path.join(
+        os.path.dirname(db_path),
+        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+    )
+    config = {}
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as handle:
+                config = json.load(handle) or {}
+        except Exception:
+            config = {}
+
+    enabled = bool(config.get(f"{annotation_key}_annotation"))
+    if not enabled:
+        enabled = bool(experiment.annotations and annotation_key in experiment.annotations)
+
+    if not enabled:
+        flash(f"Enable {annotation_label} annotation in Experiment Configuration first.", "warning")
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
+    return experiment, db_path, None
+
+
+def _load_network_experiment_context(uid, require_manage=False):
+    """Load an experiment for network analytics."""
+    check_privileges(current_user.username)
+
+    experiment = Exps.query.filter_by(idexp=uid).first()
+    if not experiment:
+        flash("Experiment not found", "error")
+        return None, None, redirect(url_for("experiments.settings"))
+
+    admin_user = _current_admin_user_or_none()
+    if require_manage and not user_can_manage_experiment(admin_user, experiment):
+        flash("You do not have permission to manage this experiment.", "error")
+        return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
+
+    return experiment, _resolve_experiment_db_path(experiment), None
+
+
+def _experiment_db_has_required_tables(db_path, required_tables):
+    """Check whether the experiment DB exposes a given set of tables."""
+    if not db_path or not os.path.exists(db_path):
+        return False
+
+    try:
+        with sqlite3.connect(db_path) as conn:
+            tables = {
+                row[0]
+                for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                ).fetchall()
+            }
+    except sqlite3.Error:
+        return False
+
+    return set(required_tables).issubset(tables)
+
+
+def _get_annotation_max_round(db_path):
+    """Return the latest round coordinates available in the experiment DB."""
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT day, hour FROM rounds ORDER BY day DESC, hour DESC LIMIT 1"
+        ).fetchone()
+    if not row:
+        return 1, 1
+    return int(row[0]), int(row[1])
+
+
+def _build_annotation_time_condition(round_alias="r"):
+    return f"({round_alias}.day < ? OR ({round_alias}.day = ? AND {round_alias}.hour <= ?))"
+
+
+def _safe_float(value, digits=3):
+    if value in (None, ""):
+        return 0.0
+    return round(float(value), digits)
+
+
+def _safe_int(value):
+    if value in (None, ""):
+        return 0
+    return int(value)
+
+
+def _truncate_text(text, max_len=96):
+    cleaned = " ".join(str(text or "").split())
+    if len(cleaned) <= max_len:
+        return cleaned
+    return cleaned[: max_len - 1].rstrip() + "…"
+
+
+def _safe_ratio(numerator, denominator, digits=4):
+    if not denominator:
+        return 0.0
+    return round(float(numerator) / float(denominator), digits)
+
+
+def _degree_bin_label(lower, upper=None):
+    if upper is None:
+        return f"{lower}+"
+    if lower == upper:
+        return str(lower)
+    return f"{lower}-{upper}"
+
+
+def _degree_bin_spec(max_degree):
+    bins = [(0, 0), (1, 1), (2, 2), (3, 3), (4, 4), (5, 9), (10, 19)]
+    if max_degree >= 20:
+        bins.append((20, None))
+    return bins
+
+
+def _histogram_from_degrees(degrees, bin_spec):
+    counts = []
+    for lower, upper in bin_spec:
+        if upper is None:
+            counts.append(sum(1 for degree in degrees if degree >= lower))
+        else:
+            counts.append(sum(1 for degree in degrees if lower <= degree <= upper))
+    return counts
+
+
+def _ccdf_from_degrees(degrees):
+    positive_degrees = [int(degree) for degree in degrees if int(degree) > 0]
+    if not positive_degrees:
+        return [1], [0.0001]
+
+    max_degree = max(positive_degrees)
+    x_values = list(range(1, max_degree + 1))
+    total = len(degrees)
+    y_values = [
+        round(sum(1 for degree in degrees if int(degree) >= x_value) / total, 4)
+        for x_value in x_values
+    ]
+    return x_values, y_values
+
+
+def _follow_round_column(conn):
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(follow)").fetchall()}
+    if "round" in columns:
+        return "round"
+    if "tid" in columns:
+        return "tid"
+    return None
+
+
+def _table_round_column(conn, table_name):
+    columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
+    if "round" in columns:
+        return "round"
+    if "tid" in columns:
+        return "tid"
+    return None
+
+
+def _network_graph_metrics(graph):
+    node_count = graph.number_of_nodes()
+    edge_count = graph.number_of_edges()
+    active_nodes = sum(1 for node in graph.nodes if graph.degree(node) > 0)
+    isolates = nx.number_of_isolates(graph) if node_count else 0
+    density = nx.density(graph) if node_count > 1 else 0.0
+    weak_components = list(nx.weakly_connected_components(graph)) if node_count else []
+    component_count = len(weak_components)
+    largest_component_size = max((len(component) for component in weak_components), default=0)
+    largest_component_share = _safe_ratio(largest_component_size, node_count, digits=4)
+    reciprocity = nx.reciprocity(graph)
+    reciprocity = 0.0 if reciprocity is None else round(float(reciprocity), 4)
+    undirected = graph.to_undirected()
+    clustering = (
+        round(float(nx.transitivity(undirected)), 4)
+        if undirected.number_of_nodes() > 2 and undirected.number_of_edges() > 0
+        else 0.0
+    )
+    avg_out_degree = round(edge_count / node_count, 4) if node_count else 0.0
+    avg_in_degree = round(edge_count / node_count, 4) if node_count else 0.0
+
+    return {
+        "node_count": node_count,
+        "active_nodes": active_nodes,
+        "edge_count": edge_count,
+        "density": round(float(density), 4),
+        "component_count": component_count,
+        "largest_component_size": largest_component_size,
+        "largest_component_share": largest_component_share,
+        "isolates": isolates,
+        "reciprocity": reciprocity,
+        "clustering": clustering,
+        "avg_out_degree": avg_out_degree,
+        "avg_in_degree": avg_in_degree,
+    }
+
+
+def _available_network_analysis_types(db_path):
+    available = []
+    with sqlite3.connect(db_path) as conn:
+        table_names = {
+            row["name"] if isinstance(row, sqlite3.Row) else row[0]
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+    if "follow" in table_names:
+        available.append("follow")
+    if "mentions" in table_names and "post" in table_names:
+        available.append("mention")
+    return available
+
+
+def _build_network_analytics_payload(
+    db_path,
+    filter_day,
+    filter_hour,
+    selected_uid=None,
+    network_type="follow",
+    granularity="day",
+):
+    """Build network analytics up to the selected simulation time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        network_type = str(network_type or "follow").strip().lower()
+        if network_type not in {"follow", "mention"}:
+            network_type = "follow"
+        granularity = str(granularity or "day").strip().lower()
+        if granularity not in {"day", "hour"}:
+            granularity = "day"
+
+        user_rows = conn.execute(
+            "SELECT id, username FROM user_mgmt ORDER BY username ASC"
+        ).fetchall()
+        user_ids = [str(row["id"]) for row in user_rows]
+        usernames = {str(row["id"]): row["username"] for row in user_rows}
+
+        graph = nx.DiGraph()
+        graph.add_nodes_from(user_ids)
+        if granularity == "hour":
+            timeline_points = [
+                (int(row["day"]), int(row["hour"]))
+                for row in conn.execute(
+                    """
+                    SELECT day, hour
+                    FROM rounds
+                    WHERE (day < ? OR (day = ? AND hour <= ?))
+                    ORDER BY day ASC, hour ASC
+                    """,
+                    (filter_day, filter_day, filter_hour),
+                ).fetchall()
+            ]
+        else:
+            timeline_points = [
+                (int(row["day"]), None)
+                for row in conn.execute(
+                    """
+                    SELECT DISTINCT day
+                    FROM rounds
+                    WHERE (day < ? OR (day = ? AND hour <= ?))
+                    ORDER BY day ASC
+                    """,
+                    (filter_day, filter_day, filter_hour),
+                ).fetchall()
+            ]
+
+        if network_type == "follow":
+            round_column = _table_round_column(conn, "follow")
+        else:
+            round_column = _table_round_column(conn, "mentions")
+
+        if not round_column:
+            metrics = _network_graph_metrics(graph)
+            events = []
+            all_events = []
+            snapshots = [(point, dict(metrics)) for point in timeline_points]
+        else:
+            if network_type == "follow":
+                events = conn.execute(
+                    f"""
+                    SELECT
+                        f.rowid AS event_order,
+                        CAST(f.user_id AS TEXT) AS user_id,
+                        CAST(f.follower_id AS TEXT) AS follower_id,
+                        LOWER(COALESCE(f.action, 'follow')) AS action,
+                        r.day AS day,
+                        r.hour AS hour
+                    FROM follow f
+                    JOIN rounds r ON r.id = f.{round_column}
+                    WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                    ORDER BY r.day ASC, r.hour ASC, f.rowid ASC
+                    """,
+                    (filter_day, filter_day, filter_hour),
+                ).fetchall()
+                all_events = conn.execute(
+                    f"""
+                    SELECT
+                        f.rowid AS event_order,
+                        CAST(f.user_id AS TEXT) AS user_id,
+                        CAST(f.follower_id AS TEXT) AS follower_id,
+                        LOWER(COALESCE(f.action, 'follow')) AS action,
+                        r.day AS day,
+                        r.hour AS hour
+                    FROM follow f
+                    JOIN rounds r ON r.id = f.{round_column}
+                    ORDER BY r.day ASC, r.hour ASC, f.rowid ASC
+                    """
+                ).fetchall()
+            else:
+                events = conn.execute(
+                    f"""
+                    SELECT
+                        m.rowid AS event_order,
+                        CAST(m.user_id AS TEXT) AS user_id,
+                        CAST(p.user_id AS TEXT) AS follower_id,
+                        'mention' AS action,
+                        r.day AS day,
+                        r.hour AS hour
+                    FROM mentions m
+                    JOIN post p ON p.id = m.post_id
+                    JOIN rounds r ON r.id = m.{round_column}
+                    WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                    ORDER BY r.day ASC, r.hour ASC, m.rowid ASC
+                    """,
+                    (filter_day, filter_day, filter_hour),
+                ).fetchall()
+                all_events = conn.execute(
+                    f"""
+                    SELECT
+                        m.rowid AS event_order,
+                        CAST(m.user_id AS TEXT) AS user_id,
+                        CAST(p.user_id AS TEXT) AS follower_id,
+                        'mention' AS action,
+                        r.day AS day,
+                        r.hour AS hour
+                    FROM mentions m
+                    JOIN post p ON p.id = m.post_id
+                    JOIN rounds r ON r.id = m.{round_column}
+                    ORDER BY r.day ASC, r.hour ASC, m.rowid ASC
+                    """
+                ).fetchall()
+
+            events_by_point = {}
+            for event in events:
+                event_day = int(event["day"] or 0)
+                event_hour = int(event["hour"] or 0)
+                event_point = (event_day, event_hour) if granularity == "hour" else (event_day, None)
+                events_by_point.setdefault(event_point, []).append(event)
+
+            snapshots = []
+            for point in timeline_points:
+                for event in events_by_point.get(point, []):
+                    source = str(event["follower_id"])
+                    target = str(event["user_id"])
+                    action = str(event["action"] or "follow").lower()
+                    if source not in graph:
+                        graph.add_node(source)
+                    if target not in graph:
+                        graph.add_node(target)
+
+                    if action == "unfollow":
+                        if graph.has_edge(source, target):
+                            graph.remove_edge(source, target)
+                    else:
+                        graph.add_edge(source, target)
+                snapshots.append((point, _network_graph_metrics(graph)))
+
+            metrics = _network_graph_metrics(graph)
+
+        full_graph = nx.DiGraph()
+        full_graph.add_nodes_from(user_ids)
+        for event in all_events:
+            source = str(event["follower_id"])
+            target = str(event["user_id"])
+            action = str(event["action"] or "follow").lower()
+            if source not in full_graph:
+                full_graph.add_node(source)
+            if target not in full_graph:
+                full_graph.add_node(target)
+            if action == "unfollow":
+                if full_graph.has_edge(source, target):
+                    full_graph.remove_edge(source, target)
+            else:
+                full_graph.add_edge(source, target)
+
+        in_degrees = dict(graph.in_degree())
+        out_degrees = dict(graph.out_degree())
+        total_degrees = dict(graph.degree())
+        degree_x_values, in_degree_ccdf = _ccdf_from_degrees(list(in_degrees.values()))
+        _, out_degree_ccdf = _ccdf_from_degrees(list(out_degrees.values()))
+
+        ego_candidates = sorted(
+            (
+                node
+                for node in graph.nodes()
+                if total_degrees.get(node, 0) > 0
+            ),
+            key=lambda node: (
+                total_degrees.get(node, 0),
+                usernames.get(node, str(node)).lower(),
+            ),
+            reverse=True,
+        )
+        selected_uid = str(selected_uid or "").strip() or None
+        if selected_uid and selected_uid not in graph:
+            selected_uid = None
+        if not selected_uid and ego_candidates:
+            selected_uid = ego_candidates[0]
+
+        active_neighbors = set()
+        appeared_neighbors_current = set()
+        appeared_neighbors_full = set()
+        if selected_uid:
+            for event in events:
+                source = str(event["follower_id"])
+                target = str(event["user_id"])
+                if source == selected_uid:
+                    appeared_neighbors_current.add(target)
+                elif target == selected_uid:
+                    appeared_neighbors_current.add(source)
+            for event in all_events:
+                source = str(event["follower_id"])
+                target = str(event["user_id"])
+                if source == selected_uid:
+                    appeared_neighbors_full.add(target)
+                elif target == selected_uid:
+                    appeared_neighbors_full.add(source)
+
+            active_neighbors.update(str(node) for node in graph.successors(selected_uid))
+            active_neighbors.update(str(node) for node in graph.predecessors(selected_uid))
+
+        ego_nodes_full = [selected_uid] if selected_uid else []
+        ego_nodes_full.extend(
+            [
+                node
+                for node in appeared_neighbors_full
+                if node in usernames and node != selected_uid
+            ]
+        )
+        layout_graph = nx.Graph()
+        if selected_uid:
+            ego_node_set_full = set(ego_nodes_full)
+            layout_graph.add_nodes_from(ego_node_set_full)
+            for source, target in full_graph.edges():
+                if source in ego_node_set_full and target in ego_node_set_full:
+                    layout_graph.add_edge(source, target)
+            if layout_graph.number_of_nodes() > 1:
+                ego_positions = nx.spring_layout(
+                    layout_graph,
+                    seed=42,
+                    pos={selected_uid: (0.0, 0.0)},
+                    fixed=[selected_uid],
+                )
+            else:
+                ego_positions = {selected_uid: (0.0, 0.0)}
+        else:
+            ego_positions = {}
+
+        ego_nodes_payload = []
+        if selected_uid:
+            appeared_now = {selected_uid} | appeared_neighbors_current
+            for node in ego_nodes_full:
+                if node not in appeared_now:
+                    continue
+                x_pos, y_pos = ego_positions.get(node, (0.0, 0.0))
+                ego_nodes_payload.append(
+                    {
+                        "id": node,
+                        "label": usernames.get(node, str(node)),
+                        "x": round(float(x_pos), 5),
+                        "y": round(float(y_pos), 5),
+                        "is_ego": node == selected_uid,
+                        "is_active": node == selected_uid or node in active_neighbors,
+                    }
+                )
+
+        ego_edges_payload = []
+        if selected_uid:
+            visible_nodes = {node["id"] for node in ego_nodes_payload}
+            position_lookup = {node["id"]: node for node in ego_nodes_payload}
+            active_edge_pairs = set()
+            for source, target in graph.edges():
+                if source in visible_nodes and target in visible_nodes:
+                    edge_key = tuple(sorted((source, target)))
+                    active_edge_pairs.add(edge_key)
+            for source, target in sorted(active_edge_pairs):
+                source_node = position_lookup.get(source)
+                target_node = position_lookup.get(target)
+                if not source_node or not target_node:
+                    continue
+                ego_edges_payload.append(
+                    {
+                        "source": source,
+                        "target": target,
+                        "x1": source_node["x"],
+                        "y1": source_node["y"],
+                        "x2": target_node["x"],
+                        "y2": target_node["y"],
+                    }
+                )
+
+    snapshots = locals().get("snapshots", [])
+    timestamps = [
+        (f"Day {point[0]}, Hour {point[1]}" if point[1] is not None else f"Day {point[0]}")
+        for point, _ in snapshots
+    ]
+    trend_metrics = [metric for _, metric in snapshots]
+
+    network_label = "follow" if network_type == "follow" else "mention"
+    network_title = "Follow Network" if network_type == "follow" else "Mention Network"
+    edge_label = "Edges" if network_type == "follow" else "Mention Edges"
+    structure_description = (
+        "Daily evolution of density and transitivity in the follow network."
+        if network_type == "follow"
+        else "Daily evolution of density and transitivity in the mention network."
+    )
+    size_description = (
+        "Daily evolution of active nodes and directed follow edges."
+        if network_type == "follow"
+        else "Daily evolution of active nodes and directed mention edges."
+    )
+    ego_description = (
+        "Select an account to inspect its evolving one-hop ego follow network. Nodes keep their layout once they appear; the selected account stays highlighted."
+        if network_type == "follow"
+        else "Select an account to inspect its evolving one-hop ego mention network. Nodes keep their layout once they appear; the selected account stays highlighted."
+    )
+
+    stats = [
+        {
+            "key": "node_count",
+            "label": "Nodes",
+            "value": metrics["node_count"],
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "edge_count",
+            "label": "Edges",
+            "value": metrics["edge_count"],
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "density",
+            "label": "Density",
+            "value": f"{metrics['density']:.4f}",
+            "color": "linear-gradient(135deg, #14b8a6 0%, #0f766e 100%)",
+        },
+        {
+            "key": "component_count",
+            "label": "Components",
+            "value": metrics["component_count"],
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+        {
+            "key": "largest_component_size",
+            "label": "Largest Component",
+            "value": metrics["largest_component_size"],
+            "color": "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Network Analysis",
+        "title": "Network Analysis",
+        "description": f"Track how the {network_label} network evolves across the experiment.",
+        "network_type": network_type,
+        "granularity": granularity,
+        "network_type_options": [
+            {"value": "follow", "label": "Follow Network"},
+            {"value": "mention", "label": "Mention Network"},
+        ],
+        "granularity_options": [
+            {"value": "day", "label": "Daily"},
+            {"value": "hour", "label": "Hourly"},
+        ],
+        "stats": stats,
+        "distribution": {
+            "title": "In-Degree CCDF",
+            "description": f"Current in-degree complementary cumulative distribution in log-log scale for the {network_label} network.",
+            "type": "line",
+            "labels": [str(value) for value in degree_x_values],
+            "datasets": [
+                {
+                    "label": "In-Degree CCDF",
+                    "data": in_degree_ccdf,
+                    "borderColor": "#60a5fa",
+                    "fill": False,
+                    "tension": 0.15,
+                },
+            ],
+            "options": {
+                "beginAtZero": False,
+                "min": 0.0001,
+                "max": 1,
+                "xType": "logarithmic",
+                "yType": "logarithmic",
+            },
+        },
+        "trend": {
+            "title": "Out-Degree CCDF",
+            "description": f"Current out-degree complementary cumulative distribution in log-log scale for the {network_label} network.",
+            "type": "line",
+            "labels": [str(value) for value in degree_x_values],
+            "datasets": [
+                {
+                    "label": "Out-Degree CCDF",
+                    "data": out_degree_ccdf,
+                    "borderColor": "#a78bfa",
+                    "fill": False,
+                    "tension": 0.15,
+                },
+            ],
+            "options": {
+                "beginAtZero": False,
+                "min": 0.0001,
+                "max": 1,
+                "xType": "logarithmic",
+                "yType": "logarithmic",
+            },
+        },
+        "secondary": {
+            "title": "Network Size Over Time",
+            "description": size_description,
+            "type": "line",
+            "labels": timestamps,
+            "datasets": [
+                {
+                    "label": "Active Nodes",
+                    "data": [metric["active_nodes"] for metric in trend_metrics],
+                    "borderColor": "#2563eb",
+                    "fill": False,
+                    "tension": 0.25,
+                },
+                {
+                    "label": edge_label,
+                    "data": [metric["edge_count"] for metric in trend_metrics],
+                    "borderColor": "#7c3aed",
+                    "fill": False,
+                    "tension": 0.25,
+                },
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "component_share": {
+            "title": "Largest Component Share Over Time",
+            "description": "Share of nodes contained in the largest weakly connected component by day.",
+            "type": "line",
+            "labels": timestamps,
+            "datasets": [
+                {
+                    "label": "Largest Component Share",
+                    "data": [metric["largest_component_share"] for metric in trend_metrics],
+                    "borderColor": "#0ea5e9",
+                    "fill": False,
+                    "tension": 0.25,
+                }
+            ],
+            "options": {"beginAtZero": True, "max": 1},
+        },
+        "network_structure": {
+            "title": "Structural Metrics Over Time",
+            "description": structure_description,
+            "type": "line",
+            "labels": timestamps,
+            "datasets": [
+                {
+                    "label": "Density",
+                    "data": [metric["density"] for metric in trend_metrics],
+                    "borderColor": "#14b8a6",
+                    "fill": False,
+                    "tension": 0.25,
+                },
+                {
+                    "label": "Transitivity",
+                    "data": [metric["clustering"] for metric in trend_metrics],
+                    "borderColor": "#ec4899",
+                    "fill": False,
+                    "tension": 0.25,
+                },
+            ],
+            "options": {"beginAtZero": True, "max": 1},
+        },
+        "ego_network": {
+            "title": f"{network_title} Ego Network Over Time",
+            "description": ego_description,
+            "selected_uid": selected_uid,
+            "selected_username": usernames.get(selected_uid, "—") if selected_uid else "—",
+            "options": [
+                {
+                    "uid": node,
+                    "username": usernames.get(node, str(node)),
+                    "degree": total_degrees.get(node, 0),
+                }
+                for node in ego_candidates[:250]
+            ],
+            "nodes": ego_nodes_payload,
+            "edges": ego_edges_payload,
+        },
+        "summary": {
+            "title": "",
+            "columns": [],
+            "rows": [],
+            "empty_message": "",
+        },
+    }
+
+
+def _topic_name_mapping(expid, conn):
+    topic_names = {}
+    table_names = {
+        row["name"] if isinstance(row, sqlite3.Row) else row[0]
+        for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+    }
+    if "interests" in table_names:
+        for row in conn.execute("SELECT iid, interest FROM interests").fetchall():
+            topic_names[str(row["iid"])] = row["interest"]
+
+    for topic in _resolve_opinion_evolution_topics(expid):
+        topic_id = str(topic.get("iid"))
+        topic_name = topic.get("interest")
+        if topic_id and topic_name and topic_id not in topic_names:
+            topic_names[topic_id] = topic_name
+
+    return topic_names
+
+
+def _build_topic_evolution_payload(
+    expid, db_path, filter_day, filter_hour, selected_topic_ids=None, trend_mode="daily"
+):
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        topic_names = _topic_name_mapping(expid, conn)
+        table_names = {
+            row["name"] if isinstance(row, sqlite3.Row) else row[0]
+            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+        }
+        reported_round_column = _table_round_column(conn, "reported") if "reported" in table_names else None
+        total_population = _safe_int(
+            conn.execute("SELECT COUNT(*) AS c FROM user_mgmt").fetchone()["c"]
+        )
+
+        event_queries = [
+            """
+            SELECT
+                pt.topic_id AS topic_id,
+                p.user_id AS actor_id,
+                r.day AS day,
+                r.hour AS hour,
+                'content' AS event_type
+            FROM post_topics pt
+            JOIN post p ON p.id = pt.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            """
+        ]
+        params = [filter_day, filter_day, filter_hour]
+
+        if "reactions" in table_names:
+            event_queries.append(
+                """
+                SELECT
+                    pt.topic_id AS topic_id,
+                    re.user_id AS actor_id,
+                    r.day AS day,
+                    r.hour AS hour,
+                    'reaction' AS event_type
+                FROM post_topics pt
+                JOIN reactions re ON re.post_id = pt.post_id
+                JOIN rounds r ON r.id = re.round
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                """
+            )
+            params.extend([filter_day, filter_day, filter_hour])
+
+        if "reported" in table_names and reported_round_column:
+            event_queries.append(
+                f"""
+                SELECT
+                    pt.topic_id AS topic_id,
+                    rp.from_uid AS actor_id,
+                    r.day AS day,
+                    r.hour AS hour,
+                    'report' AS event_type
+                FROM post_topics pt
+                JOIN reported rp ON rp.to_post = pt.post_id
+                JOIN rounds r ON r.id = rp.{reported_round_column}
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                """
+            )
+            params.extend([filter_day, filter_day, filter_hour])
+
+        topic_events_sql = " UNION ALL ".join(event_queries)
+
+        current_volume_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            )
+            SELECT topic_id, COUNT(*) AS total_volume
+            FROM topic_events
+            GROUP BY topic_id
+            ORDER BY total_volume DESC, topic_id ASC
+            """,
+            tuple(params),
+        ).fetchall()
+
+        topic_options = [
+            {
+                "topic_id": str(row["topic_id"]),
+                "topic_name": topic_names.get(str(row["topic_id"]), str(row["topic_id"])),
+                "total_volume": _safe_int(row["total_volume"]),
+            }
+            for row in current_volume_rows
+        ]
+
+        selected_topic_ids = [
+            str(topic_id)
+            for topic_id in (selected_topic_ids or [])
+            if str(topic_id) in {option["topic_id"] for option in topic_options}
+        ]
+        if not selected_topic_ids:
+            selected_topic_ids = [option["topic_id"] for option in topic_options[:5]]
+
+        if selected_topic_ids:
+            placeholders = ",".join(["?"] * len(selected_topic_ids))
+            selected_clause = f" WHERE topic_id IN ({placeholders}) "
+            selected_params = tuple(selected_topic_ids)
+        else:
+            selected_clause = " WHERE 1 = 0 "
+            selected_params = tuple()
+
+        selected_volume_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            )
+            SELECT topic_id, day, COUNT(*) AS total_volume
+            FROM topic_events
+            {selected_clause}
+            GROUP BY topic_id, day
+            ORDER BY day ASC, topic_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        participant_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            )
+            SELECT topic_id, day, COUNT(DISTINCT actor_id) AS participants
+            FROM topic_events
+            {selected_clause}
+            GROUP BY topic_id, day
+            ORDER BY day ASC, topic_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        actor_day_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            )
+            SELECT DISTINCT topic_id, actor_id, day
+            FROM topic_events
+            {selected_clause}
+            ORDER BY day ASC, topic_id ASC
+            """,
+            tuple(params) + selected_params,
+        ).fetchall()
+
+        lifecycle_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            ),
+            daily AS (
+                SELECT topic_id, day, COUNT(*) AS total_volume
+                FROM topic_events
+                GROUP BY topic_id, day
+            ),
+            first_last AS (
+                SELECT topic_id, MIN(day) AS first_day, MAX(day) AS last_day
+                FROM daily
+                GROUP BY topic_id
+            )
+            SELECT
+                d.day AS day,
+                COUNT(DISTINCT d.topic_id) AS active_topics,
+                SUM(CASE WHEN fl.first_day = d.day THEN 1 ELSE 0 END) AS new_topics,
+                SUM(CASE WHEN fl.last_day = d.day THEN 1 ELSE 0 END) AS vanished_topics
+            FROM daily d
+            JOIN first_last fl ON fl.topic_id = d.topic_id
+            GROUP BY d.day
+            ORDER BY d.day ASC
+            """,
+            tuple(params),
+        ).fetchall()
+
+        summary_rows = conn.execute(
+            f"""
+            WITH topic_events AS (
+                {topic_events_sql}
+            ),
+            daily AS (
+                SELECT topic_id, day, COUNT(*) AS total_volume
+                FROM topic_events
+                GROUP BY topic_id, day
+            )
+            SELECT
+                te.topic_id AS topic_id,
+                COUNT(*) AS total_volume,
+                COUNT(DISTINCT te.actor_id) AS participants,
+                MIN(te.day) AS first_day,
+                MAX(te.day) AS last_day,
+                SUM(CASE WHEN te.day = ? THEN 1 ELSE 0 END) AS current_day_volume
+            FROM topic_events te
+            {selected_clause}
+            GROUP BY te.topic_id
+            ORDER BY total_volume DESC, te.topic_id ASC
+            """,
+            tuple(params) + ((filter_day,) + selected_params),
+        ).fetchall()
+
+    trend_mode = str(trend_mode or "daily").strip().lower()
+    if trend_mode not in {"daily", "cumulative"}:
+        trend_mode = "daily"
+
+    days = sorted({int(row["day"]) for row in lifecycle_rows} | {int(row["day"]) for row in selected_volume_rows})
+    volume_by_topic_day = defaultdict(dict)
+    for row in selected_volume_rows:
+        volume_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(row["total_volume"])
+    participants_by_topic_day = defaultdict(dict)
+    for row in participant_rows:
+        participants_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(row["participants"])
+
+    if trend_mode == "cumulative":
+        for topic_id in selected_topic_ids:
+            running_volume = 0
+            for day in days:
+                running_volume += volume_by_topic_day[topic_id].get(day, 0)
+                volume_by_topic_day[topic_id][day] = running_volume
+        seen_by_topic = defaultdict(set)
+        for row in actor_day_rows:
+            topic_id = str(row["topic_id"])
+            seen_by_topic[topic_id].add(str(row["actor_id"]))
+            participants_by_topic_day[topic_id][int(row["day"])] = len(seen_by_topic[topic_id])
+        for topic_id in selected_topic_ids:
+            last_value = 0
+            for day in days:
+                if day in participants_by_topic_day[topic_id]:
+                    last_value = participants_by_topic_day[topic_id][day]
+                participants_by_topic_day[topic_id][day] = last_value
+
+    active_topic_count = max((_safe_int(row["active_topics"]) for row in lifecycle_rows), default=0)
+    new_topic_count = sum(_safe_int(row["new_topics"]) for row in lifecycle_rows)
+    vanished_topic_count = sum(_safe_int(row["vanished_topics"]) for row in lifecycle_rows)
+
+    topic_palette = [
+        "#2563eb",
+        "#7c3aed",
+        "#0f766e",
+        "#ea580c",
+        "#db2777",
+        "#0891b2",
+        "#65a30d",
+        "#b45309",
+    ]
+
+    def _topic_color(topic_id):
+        if topic_id in selected_topic_ids:
+            return topic_palette[selected_topic_ids.index(topic_id) % len(topic_palette)]
+        return topic_palette[0]
+
+    stats = [
+        {
+            "key": "selected_topics",
+            "label": "Selected Topics",
+            "value": len(selected_topic_ids),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "active_topics",
+            "label": "Active Topics",
+            "value": active_topic_count,
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "emerged_topics",
+            "label": "Emerging Topics",
+            "value": new_topic_count,
+            "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        },
+        {
+            "key": "vanished_topics",
+            "label": "Vanishing Topics",
+            "value": vanished_topic_count,
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Topic Evolution",
+        "title": "Topic Evolution",
+        "description": "Track topic diffusion, emergence, and disappearance through content and interaction activity.",
+        "stats": stats,
+        "trend_mode": trend_mode,
+        "trend_mode_options": [
+            {"value": "daily", "label": "Daily"},
+            {"value": "cumulative", "label": "Cumulative"},
+        ],
+        "selected_topic_ids": selected_topic_ids,
+        "topic_options": topic_options,
+        "distribution": {
+            "title": "Topic Footprint at Selected Time",
+            "description": "Cumulative topic-related volume up to the selected time, including content and downstream interactions.",
+            "type": "bar",
+            "labels": [
+                next(
+                    (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                    topic_id,
+                )
+                for topic_id in selected_topic_ids
+            ],
+            "datasets": [
+                {
+                    "label": "Total Volume",
+                    "data": [
+                        next(
+                            (option["total_volume"] for option in topic_options if option["topic_id"] == topic_id),
+                            0,
+                        )
+                        for topic_id in selected_topic_ids
+                    ],
+                    "backgroundColor": [
+                        _topic_color(topic_id) for topic_id in selected_topic_ids
+                    ],
+                    "borderRadius": 8,
+                    "maxBarThickness": 24,
+                }
+            ],
+            "options": {"beginAtZero": True, "indexAxis": "y", "legendDisplay": False},
+        },
+        "trend": {
+            "title": "Topic Volume Over Time",
+            "description": (
+                "Cumulative topic-related activity volume for the selected topics."
+                if trend_mode == "cumulative"
+                else "Daily topic-related activity volume for the selected topics, combining posts/comments and interactions."
+            ),
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": next(
+                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                        topic_id,
+                    ),
+                    "data": [volume_by_topic_day[topic_id].get(day, 0) for day in days],
+                    "borderColor": _topic_color(topic_id),
+                    "backgroundColor": "transparent",
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.5,
+                    "tension": 0.28,
+                }
+                for topic_id in selected_topic_ids
+            ],
+            "options": {"beginAtZero": True, "legendPosition": "bottom"},
+        },
+        "secondary": {
+            "title": "Population Reach Over Time",
+            "description": (
+                "Cumulative share of the population that has been involved with each selected topic."
+                if trend_mode == "cumulative"
+                else "Daily share of the population involved with each selected topic."
+            ),
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": next(
+                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                        topic_id,
+                    ),
+                    "data": [
+                        round(
+                            100.0 * participants_by_topic_day[topic_id].get(day, 0) / max(total_population, 1),
+                            2,
+                        )
+                        for day in days
+                    ],
+                    "borderColor": _topic_color(topic_id),
+                    "backgroundColor": (
+                        "rgba(37, 99, 235, 0.10)"
+                        if _topic_color(topic_id) == "#2563eb"
+                        else None
+                    ),
+                    "fill": False,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.25,
+                    "tension": 0.28,
+                }
+                for topic_id in selected_topic_ids
+            ],
+            "options": {"beginAtZero": True, "max": 100, "legendPosition": "bottom"},
+        },
+        "topic_lifecycle": {
+            "title": "Topic Lifecycle Over Time",
+            "description": "Compact view of how many topics remain active, emerge, and disappear across the observed horizon.",
+            "type": "line",
+            "labels": [f"Day {int(row['day'])}" for row in lifecycle_rows],
+            "datasets": [
+                {
+                    "label": "Active Topics",
+                    "data": [_safe_int(row["active_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#8b5cf6",
+                    "backgroundColor": "rgba(124, 58, 237, 0.10)",
+                    "fill": True,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.5,
+                    "tension": 0.28,
+                },
+                {
+                    "label": "New Topics",
+                    "data": [_safe_int(row["new_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#10b981",
+                    "backgroundColor": "transparent",
+                    "borderDash": [6, 4],
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                },
+                {
+                    "label": "Vanished Topics",
+                    "data": [_safe_int(row["vanished_topics"]) for row in lifecycle_rows],
+                    "borderColor": "#f59e0b",
+                    "backgroundColor": "transparent",
+                    "borderDash": [3, 3],
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2,
+                    "tension": 0.25,
+                },
+            ],
+            "options": {"beginAtZero": True, "legendPosition": "bottom"},
+        },
+        "summary": {
+            "title": "Selected Topic Summary",
+            "columns": [
+                "Topic",
+                "First Seen",
+                "Last Seen",
+                "Total Volume",
+                "Distinct Participants",
+                "Population Share",
+                "Current Day Volume",
+            ],
+            "rows": [
+                [
+                    next(
+                        (option["topic_name"] for option in topic_options if option["topic_id"] == str(row["topic_id"])),
+                        str(row["topic_id"]),
+                    ),
+                    f"Day {_safe_int(row['first_day'])}",
+                    f"Day {_safe_int(row['last_day'])}",
+                    _safe_int(row["total_volume"]),
+                    _safe_int(row["participants"]),
+                    f"{round(100.0 * _safe_int(row['participants']) / max(total_population, 1), 2)}%",
+                    _safe_int(row["current_day_volume"]),
+                ]
+                for row in summary_rows
+            ],
+            "empty_message": "No topic activity has been recorded up to the selected time.",
+        },
+    }
+
+
+def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshold=0.1):
+    """Aggregate toxicity annotations up to a selected simulation time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        time_condition = _build_annotation_time_condition("r")
+        toxicity_columns = [
+            row["name"]
+            for row in conn.execute("PRAGMA table_info(post_toxicity)").fetchall()
+            if row["name"] not in {"id", "post_id"}
+        ]
+        preferred_order = [
+            "toxicity",
+            "severe_toxicity",
+            "identity_attack",
+            "insult",
+            "profanity",
+            "threat",
+            "sexually_explicit",
+            "flirtation",
+        ]
+        toxicity_columns = [
+            column for column in preferred_order if column in set(toxicity_columns)
+        ] or toxicity_columns
+
+        snapshot = conn.execute(
+            f"""
+            WITH selected AS (
+                SELECT pt.post_id, pt.toxicity
+                FROM post_toxicity pt
+                JOIN post p ON p.id = pt.post_id
+                JOIN rounds r ON r.id = p.round
+                WHERE {time_condition}
+            )
+            SELECT
+                COUNT(*) AS annotated_posts,
+                AVG(toxicity) AS average_toxicity,
+                MAX(toxicity) AS peak_toxicity
+            FROM selected
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchone()
+
+        trend_sql = ",\n                ".join(
+            [f"AVG(pt.{column}) AS avg_{column}" for column in toxicity_columns]
+        )
+        trend_rows = conn.execute(
+            f"""
+            SELECT
+                r.day AS day,
+                {trend_sql}
+            FROM post_toxicity pt
+            JOIN post p ON p.id = pt.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day
+            ORDER BY r.day
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        category_trend_sql = ",\n                ".join(
+            [
+                f"100.0 * AVG(CASE WHEN pt.{column} >= ? THEN 1.0 ELSE 0.0 END) AS pct_{column}"
+                for column in toxicity_columns
+            ]
+        )
+        category_trend_rows = conn.execute(
+            f"""
+            SELECT
+                r.day AS day,
+                COUNT(*) AS annotated_posts,
+                {category_trend_sql}
+            FROM post_toxicity pt
+            JOIN post p ON p.id = pt.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day
+            ORDER BY r.day
+            """,
+            (*([threshold] * len(toxicity_columns)), filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        distribution_rows = conn.execute(
+            f"""
+            WITH selected AS (
+                SELECT
+                    CASE
+                        WHEN pt.toxicity >= 1.0 THEN 9
+                        ELSE CAST(pt.toxicity * 10 AS INT)
+                    END AS bucket
+                FROM post_toxicity pt
+                JOIN post p ON p.id = pt.post_id
+                JOIN rounds r ON r.id = p.round
+                WHERE {time_condition}
+            )
+            SELECT bucket, COUNT(*) AS bucket_count
+            FROM selected
+            GROUP BY bucket
+            ORDER BY bucket
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        top_rows = conn.execute(
+            """
+            SELECT
+                u.username,
+                p.tweet,
+                pt.toxicity,
+                r.day,
+                r.hour
+            FROM post_toxicity pt
+            JOIN post p ON p.id = pt.post_id
+            JOIN user_mgmt u ON u.id = p.user_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            ORDER BY pt.toxicity DESC, r.day DESC, r.hour DESC
+            LIMIT 10
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    snapshot = snapshot or {}
+    bucket_counts = [0] * 10
+    for row in distribution_rows:
+        bucket_index = max(0, min(9, int(row["bucket"] or 0)))
+        bucket_counts[bucket_index] = _safe_int(row["bucket_count"])
+    non_empty_bucket_indices = [
+        index for index, count in enumerate(bucket_counts) if count > 0
+    ]
+    if not non_empty_bucket_indices:
+        non_empty_bucket_indices = [0]
+
+    distribution_labels = [
+        f"{index / 10:.1f}-{(index + 1) / 10:.1f}"
+        for index in non_empty_bucket_indices
+    ]
+    distribution_data = [bucket_counts[index] for index in non_empty_bucket_indices]
+
+    max_average_toxicity = max(
+        [
+            _safe_float(row[f"avg_{column}"], digits=6)
+            for row in trend_rows
+            for column in toxicity_columns
+        ]
+        or [0.0]
+    )
+    average_y_max = min(1.0, max(0.05, max_average_toxicity + 0.02))
+    max_category_percentage = max(
+        [
+            _safe_float(row[f"pct_{column}"], digits=6)
+            for row in category_trend_rows
+            for column in toxicity_columns
+        ]
+        or [0.0]
+    )
+    category_y_max = max(1.0, max_category_percentage)
+    category_palette = [
+        "#dc2626",
+        "#7c3aed",
+        "#0ea5e9",
+        "#f97316",
+        "#eab308",
+        "#14b8a6",
+        "#ec4899",
+        "#64748b",
+    ]
+    category_labels = {
+        "toxicity": "Toxicity",
+        "severe_toxicity": "Severe Toxicity",
+        "identity_attack": "Identity Attack",
+        "insult": "Insult",
+        "profanity": "Profanity",
+        "threat": "Threat",
+        "sexually_explicit": "Sexually Explicit",
+        "flirtation": "Flirtation",
+    }
+    stats = [
+        {
+            "key": "annotated_posts",
+            "label": "Annotated Posts",
+            "value": _safe_int(snapshot["annotated_posts"]),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "average_toxicity",
+            "label": "Average Toxicity",
+            "value": f"{_safe_float(snapshot['average_toxicity']):.3f}",
+            "color": "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+        },
+        {
+            "key": "peak_toxicity",
+            "label": "Peak Toxicity",
+            "value": f"{_safe_float(snapshot['peak_toxicity']):.3f}",
+            "color": "linear-gradient(135deg, #7c2d12 0%, #9a3412 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Toxicity Evolution",
+        "title": "Toxicity Evolution",
+        "description": "Track how toxic content annotations accumulate over time.",
+        "stats": stats,
+        "distribution": {
+            "title": "Toxicity Distribution",
+            "description": "Current toxicity score distribution across annotated posts, using 0.1 bins.",
+            "type": "bar",
+            "labels": distribution_labels,
+            "datasets": [
+                {
+                    "label": "Posts",
+                    "data": distribution_data,
+                    "backgroundColor": [
+                        "#93c5fd" if bucket_index < 3
+                        else "#fbbf24" if bucket_index < 6
+                        else "#fb7185" if bucket_index < 8
+                        else "#b91c1c"
+                        for bucket_index in non_empty_bucket_indices
+                    ],
+                    "borderColor": "#ffffff",
+                    "borderWidth": 1,
+                }
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "trend": {
+            "title": "Average Toxicity Trend",
+            "description": "Daily average score for each toxicity category up to the selected time.",
+            "type": "line",
+            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "datasets": [
+                {
+                    "label": category_labels.get(column, column.replace("_", " ").title()),
+                    "data": [
+                        _safe_float(row[f"avg_{column}"])
+                        for row in trend_rows
+                    ],
+                    "borderColor": category_palette[index % len(category_palette)],
+                    "fill": False,
+                    "tension": 0.25,
+                }
+                for index, column in enumerate(toxicity_columns)
+            ],
+            "options": {"beginAtZero": True, "max": average_y_max},
+        },
+        "secondary": {
+            "title": "Toxicity Category Trends",
+            "description": f"Daily percentage of annotated posts crossing the {threshold:.1f} threshold for each toxicity category.",
+            "type": "line",
+            "labels": [f"Day {int(row['day'])}" for row in category_trend_rows],
+            "datasets": [
+                {
+                    "label": category_labels.get(column, column.replace("_", " ").title()),
+                    "data": [
+                        _safe_float(row[f"pct_{column}"])
+                        for row in category_trend_rows
+                    ],
+                    "borderColor": category_palette[index % len(category_palette)],
+                    "fill": False,
+                    "tension": 0.25,
+                }
+                for index, column in enumerate(toxicity_columns)
+            ],
+            "options": {"beginAtZero": True, "max": category_y_max},
+        },
+        "summary": {
+            "title": "Most Toxic Posts",
+            "columns": ["Author", "Toxicity", "When", "Content"],
+            "rows": [
+                [
+                    row["username"],
+                    f"{_safe_float(row['toxicity']):.3f}",
+                    f"Day {row['day']}, Hour {row['hour']}",
+                    _truncate_text(row["tweet"]),
+                ]
+                for row in top_rows
+            ],
+            "empty_message": "No toxicity annotations have been recorded up to the selected time.",
+        },
+    }
+
+
+def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
+    """Aggregate sentiment annotations up to a selected simulation time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        time_condition = _build_annotation_time_condition("r")
+
+        snapshot = conn.execute(
+            f"""
+            WITH post_sentiment_dedup AS (
+                SELECT
+                    ps.post_id,
+                    AVG(ps.compound) AS compound
+                FROM post_sentiment ps
+                JOIN rounds r ON r.id = ps.round
+                WHERE {time_condition}
+                GROUP BY ps.post_id
+            )
+            SELECT
+                COUNT(*) AS annotated_posts,
+                AVG(compound) AS average_compound,
+                SUM(CASE WHEN compound > 0.05 THEN 1 ELSE 0 END) AS positive_count,
+                SUM(CASE WHEN compound < -0.05 THEN 1 ELSE 0 END) AS negative_count,
+                SUM(CASE WHEN compound >= -0.05 AND compound <= 0.05 THEN 1 ELSE 0 END) AS neutral_count
+            FROM post_sentiment_dedup
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchone()
+
+        trend_rows = conn.execute(
+            """
+            WITH per_post AS (
+                SELECT
+                    r.day AS day,
+                    ps.post_id,
+                    AVG(ps.compound) AS compound
+                FROM post_sentiment ps
+                JOIN rounds r ON r.id = ps.round
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                GROUP BY r.day, ps.post_id
+            )
+            SELECT
+                day,
+                AVG(compound) AS average_compound,
+                SUM(CASE WHEN compound > 0.05 THEN 1 ELSE 0 END) AS positive_count,
+                SUM(CASE WHEN compound < -0.05 THEN 1 ELSE 0 END) AS negative_count,
+                SUM(CASE WHEN compound >= -0.05 AND compound <= 0.05 THEN 1 ELSE 0 END) AS neutral_count
+            FROM per_post
+            GROUP BY day
+            ORDER BY day
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        extreme_rows = conn.execute(
+            """
+            WITH post_sentiment_dedup AS (
+                SELECT
+                    ps.post_id,
+                    AVG(ps.compound) AS compound
+                FROM post_sentiment ps
+                JOIN rounds r ON r.id = ps.round
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                GROUP BY ps.post_id
+            )
+            SELECT
+                u.username,
+                p.tweet,
+                d.compound,
+                r.day,
+                r.hour
+            FROM post_sentiment_dedup d
+            JOIN post p ON p.id = d.post_id
+            JOIN user_mgmt u ON u.id = p.user_id
+            JOIN rounds r ON r.id = p.round
+            ORDER BY ABS(d.compound) DESC, r.day DESC, r.hour DESC
+            LIMIT 10
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    snapshot = snapshot or {}
+    stats = [
+        {
+            "key": "annotated_posts",
+            "label": "Annotated Posts",
+            "value": _safe_int(snapshot["annotated_posts"]),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "average_compound",
+            "label": "Average Compound",
+            "value": f"{_safe_float(snapshot['average_compound']):.3f}",
+            "color": "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
+        },
+        {
+            "key": "positive_count",
+            "label": "Positive Posts",
+            "value": _safe_int(snapshot["positive_count"]),
+            "color": "linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Sentiment Evolution",
+        "title": "Sentiment Evolution",
+        "description": "Inspect how sentiment annotations evolve across the experiment.",
+        "stats": stats,
+        "distribution": {
+            "title": "Sentiment Distribution",
+            "description": "Current polarity breakdown across annotated posts.",
+            "type": "doughnut",
+            "labels": ["Positive", "Neutral", "Negative"],
+            "datasets": [
+                {
+                    "label": "Posts",
+                    "data": [
+                        _safe_int(snapshot["positive_count"]),
+                        _safe_int(snapshot["neutral_count"]),
+                        _safe_int(snapshot["negative_count"]),
+                    ],
+                    "backgroundColor": ["#22c55e", "#94a3b8", "#ef4444"],
+                }
+            ],
+            "options": {},
+        },
+        "trend": {
+            "title": "Average Compound Trend",
+            "description": "Average sentiment compound by day up to the selected time.",
+            "type": "line",
+            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "datasets": [
+                {
+                    "label": "Average Compound",
+                    "data": [_safe_float(row["average_compound"]) for row in trend_rows],
+                    "borderColor": "#2563eb",
+                    "backgroundColor": "rgba(37, 99, 235, 0.16)",
+                    "fill": True,
+                    "tension": 0.3,
+                }
+            ],
+            "options": {"min": -1, "max": 1},
+        },
+        "secondary": {
+            "title": "Sentiment Mix Over Time",
+            "description": "Positive, neutral, and negative post counts by day.",
+            "type": "bar",
+            "labels": [f"Day {int(row['day'])}" for row in trend_rows],
+            "datasets": [
+                {
+                    "label": "Positive",
+                    "data": [_safe_int(row["positive_count"]) for row in trend_rows],
+                    "backgroundColor": "#22c55e",
+                },
+                {
+                    "label": "Neutral",
+                    "data": [_safe_int(row["neutral_count"]) for row in trend_rows],
+                    "backgroundColor": "#94a3b8",
+                },
+                {
+                    "label": "Negative",
+                    "data": [_safe_int(row["negative_count"]) for row in trend_rows],
+                    "backgroundColor": "#ef4444",
+                },
+            ],
+            "options": {"beginAtZero": True, "stacked": True},
+        },
+        "summary": {
+            "title": "Most Polarized Posts",
+            "columns": ["Author", "Compound", "When", "Content"],
+            "rows": [
+                [
+                    row["username"],
+                    f"{_safe_float(row['compound']):.3f}",
+                    f"Day {row['day']}, Hour {row['hour']}",
+                    _truncate_text(row["tweet"]),
+                ]
+                for row in extreme_rows
+            ],
+            "empty_message": "No sentiment annotations have been recorded up to the selected time.",
+        },
+    }
+
+
+def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
+    """Aggregate emotion statistics up to a selected simulation time."""
+    with sqlite3.connect(db_path) as conn:
+        conn.row_factory = sqlite3.Row
+        time_condition = _build_annotation_time_condition("r")
+
+        distribution_rows = conn.execute(
+            f"""
+            SELECT
+                e.emotion,
+                COUNT(*) AS emotion_count
+            FROM post_emotions pe
+            JOIN emotions e ON e.id = pe.emotion_id
+            JOIN post p ON p.id = pe.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE {time_condition}
+            GROUP BY e.emotion
+            ORDER BY emotion_count DESC, e.emotion ASC
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+        stats_row = conn.execute(
+            f"""
+            SELECT
+                COUNT(*) AS total_tags,
+                COUNT(DISTINCT pe.post_id) AS annotated_posts,
+                COUNT(DISTINCT pe.emotion_id) AS unique_emotions
+            FROM post_emotions pe
+            JOIN post p ON p.id = pe.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE {time_condition}
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchone()
+
+        top_emotions = [row["emotion"] for row in distribution_rows[:5]]
+        placeholders = ",".join("?" for _ in top_emotions) if top_emotions else ""
+        trend_rows = []
+        if top_emotions:
+            trend_rows = conn.execute(
+                f"""
+                SELECT
+                    r.day AS day,
+                    e.emotion,
+                    COUNT(*) AS emotion_count
+                FROM post_emotions pe
+                JOIN emotions e ON e.id = pe.emotion_id
+                JOIN post p ON p.id = pe.post_id
+                JOIN rounds r ON r.id = p.round
+                WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+                  AND e.emotion IN ({placeholders})
+                GROUP BY r.day, e.emotion
+                ORDER BY r.day, e.emotion
+                """,
+                (filter_day, filter_day, filter_hour, *top_emotions),
+            ).fetchall()
+
+        secondary_rows = conn.execute(
+            """
+            SELECT
+                r.day AS day,
+                COUNT(*) AS emotion_tags,
+                COUNT(DISTINCT pe.post_id) AS annotated_posts
+            FROM post_emotions pe
+            JOIN post p ON p.id = pe.post_id
+            JOIN rounds r ON r.id = p.round
+            WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
+            GROUP BY r.day
+            ORDER BY r.day
+            """,
+            (filter_day, filter_day, filter_hour),
+        ).fetchall()
+
+    stats_row = stats_row or {}
+    top_emotion = distribution_rows[0]["emotion"] if distribution_rows else "—"
+    trend_by_emotion = defaultdict(dict)
+    days = []
+    for row in trend_rows:
+        day = int(row["day"])
+        if day not in days:
+            days.append(day)
+        trend_by_emotion[row["emotion"]][day] = int(row["emotion_count"] or 0)
+
+    stats = [
+        {
+            "key": "annotated_posts",
+            "label": "Annotated Posts",
+            "value": _safe_int(stats_row["annotated_posts"]),
+            "color": "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+        },
+        {
+            "key": "total_tags",
+            "label": "Emotion Tags",
+            "value": _safe_int(stats_row["total_tags"]),
+            "color": "linear-gradient(135deg, #ec4899 0%, #db2777 100%)",
+        },
+        {
+            "key": "top_emotion",
+            "label": "Top Emotion",
+            "value": top_emotion,
+            "color": "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+        },
+        {
+            "key": "current_day",
+            "label": "Current Day",
+            "value": f"Day {filter_day}",
+            "color": "linear-gradient(135deg, #10b981 0%, #059669 100%)",
+        },
+        {
+            "key": "current_hour",
+            "label": "Current Hour",
+            "value": f"Hour {filter_hour}",
+            "color": "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+        },
+    ]
+
+    return {
+        "page_title": "Emotion Statistics",
+        "title": "Emotion Statistics",
+        "description": "Track which emotions are being annotated in experiment content.",
+        "stats": stats,
+        "distribution": {
+            "title": "Emotion Distribution",
+            "description": "Current distribution of annotated emotions.",
+            "type": "bar",
+            "labels": [row["emotion"] for row in distribution_rows[:10]],
+            "datasets": [
+                {
+                    "label": "Emotion Tags",
+                    "data": [int(row["emotion_count"] or 0) for row in distribution_rows[:10]],
+                    "backgroundColor": "#8b5cf6",
+                }
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "trend": {
+            "title": "Top Emotions Over Time",
+            "description": "Daily counts for the most frequent emotions so far.",
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": emotion,
+                    "data": [trend_by_emotion[emotion].get(day, 0) for day in days],
+                    "tension": 0.3,
+                }
+                for emotion in top_emotions
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "secondary": {
+            "title": "Annotation Volume",
+            "description": "Total emotion tags versus distinct annotated posts per day.",
+            "type": "bar",
+            "labels": [f"Day {int(row['day'])}" for row in secondary_rows],
+            "datasets": [
+                {
+                    "label": "Emotion Tags",
+                    "data": [_safe_int(row["emotion_tags"]) for row in secondary_rows],
+                    "backgroundColor": "#c084fc",
+                },
+                {
+                    "label": "Annotated Posts",
+                    "data": [_safe_int(row["annotated_posts"]) for row in secondary_rows],
+                    "backgroundColor": "#60a5fa",
+                },
+            ],
+            "options": {"beginAtZero": True},
+        },
+        "summary": {
+            "title": "Top Emotions",
+            "columns": ["Emotion", "Tags"],
+            "rows": [
+                [row["emotion"], _safe_int(row["emotion_count"])]
+                for row in distribution_rows[:15]
+            ],
+            "empty_message": "No emotion annotations have been recorded up to the selected time.",
+        },
+    }
+
+
+_ANNOTATION_ANALYTICS_REGISTRY = {
+    "toxicity": {
+        "label": "toxicity",
+        "title": "Toxicity Evolution",
+        "required_tables": {"post_toxicity", "post", "rounds"},
+        "builder": _build_toxicity_analytics_payload,
+    },
+    "sentiment": {
+        "label": "sentiment",
+        "title": "Sentiment Evolution",
+        "required_tables": {"post_sentiment", "rounds"},
+        "builder": _build_sentiment_analytics_payload,
+    },
+    "emotion": {
+        "label": "emotion",
+        "title": "Emotion Statistics",
+        "required_tables": {"post_emotions", "emotions", "post", "rounds"},
+        "builder": _build_emotion_analytics_payload,
+    },
+}
+
+
+def _render_annotation_analytics_page(expid, annotation_key):
+    config = _ANNOTATION_ANALYTICS_REGISTRY[annotation_key]
+    experiment, db_path, error_response = _load_annotation_experiment_context(
+        expid, annotation_key, config["label"], require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    if not _experiment_db_has_required_tables(db_path, config["required_tables"]):
+        flash(
+            f"The current experiment database does not contain {config['title'].lower()} tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_annotation_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    threshold = request.args.get("threshold", type=float, default=0.1)
+    if annotation_key == "toxicity":
+        threshold = max(0.0, min(1.0, threshold))
+        analytics = config["builder"](db_path, filter_day, filter_hour, threshold)
+    else:
+        analytics = config["builder"](db_path, filter_day, filter_hour)
+
+    return render_template(
+        "admin/annotation_analytics.html",
+        experiment=experiment,
+        page_key=annotation_key,
+        page_title=config["title"],
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        threshold=threshold,
+        analytics=analytics,
+        data_url=url_for(f"experiments.{annotation_key}_analytics_data", expid=expid),
+    )
+
+
+def _annotation_analytics_json(expid, annotation_key):
+    config = _ANNOTATION_ANALYTICS_REGISTRY[annotation_key]
+    experiment, db_path, error_response = _load_annotation_experiment_context(
+        expid, annotation_key, config["label"], require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": f"{config['title']} not available"}), 400
+
+    if not _experiment_db_has_required_tables(db_path, config["required_tables"]):
+        return jsonify({"error": f"{config['title']} tables not available"}), 400
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    threshold = request.args.get("threshold", type=float, default=0.1)
+    if annotation_key == "toxicity":
+        threshold = max(0.0, min(1.0, threshold))
+        analytics = config["builder"](db_path, filter_day, filter_hour, threshold)
+    else:
+        analytics = config["builder"](db_path, filter_day, filter_hour)
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "threshold": threshold,
+            "analytics": analytics,
+        }
+    )
+
+
+@experiments.route("/admin/toxicity_evolution/<int:expid>")
+@login_required
+def toxicity_evolution(expid):
+    return _render_annotation_analytics_page(expid, "toxicity")
+
+
+@experiments.route("/admin/toxicity_evolution_data/<int:expid>")
+@login_required
+def toxicity_analytics_data(expid):
+    return _annotation_analytics_json(expid, "toxicity")
+
+
+@experiments.route("/admin/sentiment_evolution/<int:expid>")
+@login_required
+def sentiment_evolution(expid):
+    return _render_annotation_analytics_page(expid, "sentiment")
+
+
+@experiments.route("/admin/sentiment_evolution_data/<int:expid>")
+@login_required
+def sentiment_analytics_data(expid):
+    return _annotation_analytics_json(expid, "sentiment")
+
+
+@experiments.route("/admin/emotion_statistics/<int:expid>")
+@login_required
+def emotion_statistics(expid):
+    return _render_annotation_analytics_page(expid, "emotion")
+
+
+@experiments.route("/admin/emotion_statistics_data/<int:expid>")
+@login_required
+def emotion_analytics_data(expid):
+    return _annotation_analytics_json(expid, "emotion")
+
+
+def emotion_statistics_data(expid):
+    return emotion_analytics_data(expid)
+
+
+@experiments.route("/admin/topic_evolution/<int:expid>")
+@login_required
+def topic_evolution(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    required_tables = {"post_topics", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        flash(
+            "The current experiment database does not contain topic-evolution tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_annotation_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    trend_mode = str(request.args.get("trend_mode", "daily") or "").strip().lower()
+    selected_topic_ids = [
+        str(topic_id)
+        for topic_id in request.args.getlist("topic_ids")
+        if str(topic_id).strip()
+    ]
+    analytics = _build_topic_evolution_payload(
+        expid,
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_topic_ids=selected_topic_ids,
+        trend_mode=trend_mode,
+    )
+
+    return render_template(
+        "admin/annotation_analytics.html",
+        experiment=experiment,
+        page_key="topic",
+        page_title="Topic Evolution",
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        threshold=0.1,
+        analytics=analytics,
+        data_url=url_for("experiments.topic_evolution_data", expid=expid),
+    )
+
+
+@experiments.route("/admin/topic_evolution_data/<int:expid>")
+@login_required
+def topic_evolution_data(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": "Topic evolution not available"}), 400
+
+    required_tables = {"post_topics", "post", "rounds", "user_mgmt"}
+    if not _experiment_db_has_required_tables(db_path, required_tables):
+        return jsonify({"error": "Topic-evolution tables not available"}), 400
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    trend_mode = str(request.args.get("trend_mode", "daily") or "").strip().lower()
+    selected_topic_ids = [
+        str(topic_id)
+        for topic_id in request.args.getlist("topic_ids")
+        if str(topic_id).strip()
+    ]
+    analytics = _build_topic_evolution_payload(
+        expid,
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_topic_ids=selected_topic_ids,
+        trend_mode=trend_mode,
+    )
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "threshold": 0.1,
+            "analytics": analytics,
+        }
+    )
+
+
+@experiments.route("/admin/network_analysis/<int:expid>")
+@login_required
+def network_analysis(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return error_response
+
+    required_tables = {"rounds", "user_mgmt"}
+    available_network_types = _available_network_analysis_types(db_path)
+    if (not _experiment_db_has_required_tables(db_path, required_tables)) or (
+        not available_network_types
+    ):
+        flash(
+            "The current experiment database does not contain supported network-analysis tables.",
+            "warning",
+        )
+        return redirect(url_for("experiments.experiment_details", uid=expid))
+
+    max_day, max_hour = _get_annotation_max_round(db_path)
+    filter_day = request.args.get("day", type=int, default=max_day)
+    filter_hour = request.args.get("hour", type=int, default=max_hour)
+    selected_uid = str(request.args.get("target_uid", "") or "").strip() or None
+    network_type = str(request.args.get("network_type", available_network_types[0]) or "").strip().lower()
+    granularity = str(request.args.get("granularity", "day") or "").strip().lower()
+    if network_type not in available_network_types:
+        network_type = available_network_types[0]
+    if granularity not in {"day", "hour"}:
+        granularity = "day"
+    analytics = _build_network_analytics_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_uid=selected_uid,
+        network_type=network_type,
+        granularity=granularity,
+    )
+    analytics["network_type_options"] = [
+        option
+        for option in analytics.get("network_type_options", [])
+        if option["value"] in available_network_types
+    ]
+
+    return render_template(
+        "admin/annotation_analytics.html",
+        experiment=experiment,
+        page_key="network",
+        page_title="Network Analysis",
+        max_day=max_day,
+        max_hour=max_hour,
+        filter_day=filter_day,
+        filter_hour=filter_hour,
+        threshold=0.1,
+        analytics=analytics,
+        data_url=url_for("experiments.network_analysis_data", expid=expid),
+    )
+
+
+@experiments.route("/admin/network_analysis_data/<int:expid>")
+@login_required
+def network_analysis_data(expid):
+    experiment, db_path, error_response = _load_network_experiment_context(
+        expid, require_manage=False
+    )
+    if error_response is not None:
+        return jsonify({"error": "Network analysis not available"}), 400
+
+    required_tables = {"rounds", "user_mgmt"}
+    available_network_types = _available_network_analysis_types(db_path)
+    if (not _experiment_db_has_required_tables(db_path, required_tables)) or (
+        not available_network_types
+    ):
+        return jsonify({"error": "Network-analysis tables not available"}), 400
+
+    filter_day = request.args.get("day", type=int, default=1)
+    filter_hour = request.args.get("hour", type=int, default=1)
+    selected_uid = str(request.args.get("target_uid", "") or "").strip() or None
+    network_type = str(request.args.get("network_type", available_network_types[0]) or "").strip().lower()
+    granularity = str(request.args.get("granularity", "day") or "").strip().lower()
+    if network_type not in available_network_types:
+        network_type = available_network_types[0]
+    if granularity not in {"day", "hour"}:
+        granularity = "day"
+    analytics = _build_network_analytics_payload(
+        db_path,
+        filter_day,
+        filter_hour,
+        selected_uid=selected_uid,
+        network_type=network_type,
+        granularity=granularity,
+    )
+    analytics["network_type_options"] = [
+        option
+        for option in analytics.get("network_type_options", [])
+        if option["value"] in available_network_types
+    ]
+    return jsonify(
+        {
+            "filter_day": filter_day,
+            "filter_hour": filter_hour,
+            "threshold": 0.1,
+            "analytics": analytics,
+        }
+    )

@@ -1398,6 +1398,90 @@
     gap: 6px;
 }
 
+.annotation-control-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.annotation-granularity-controls {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.annotation-granularity-button {
+    padding: 2px 6px;
+    font-size: 0.7em;
+    border: 1px solid #d1d5db;
+    border-radius: 3px;
+    background: #ffffff;
+    color: #374151;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.annotation-granularity-button.active {
+    background: #039be5;
+    color: #ffffff;
+    border-color: #039be5;
+}
+
+.annotation-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 220px;
+    flex: 1 1 240px;
+}
+
+.ys-topic-trend-mode-group {
+    flex: 0 1 220px;
+    min-width: 180px;
+}
+
+.annotation-control-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
+    letter-spacing: 0.01em;
+}
+
+.annotation-control-group .select,
+.annotation-control-group .select select {
+    width: 100%;
+}
+
+.annotation-topic-select-wrapper {
+    border: 1px solid #dbe2ea;
+    border-radius: 10px;
+    background: #ffffff;
+    padding: 6px;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.annotation-topic-select {
+    width: 100%;
+    min-height: 188px;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: #1f2937;
+    font-size: 0.9rem;
+}
+
+.annotation-topic-select option {
+    padding: 8px 10px;
+    border-radius: 8px;
+}
+
+.annotation-topic-select option:checked {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1d4ed8;
+    font-weight: 600;
+}
+
 .time-slider {
     flex: 1;
     height: 5px;
@@ -1598,6 +1682,50 @@
 
 .chart-box-container canvas {
     flex: 1;
+}
+
+.ys-network-component-chart-container {
+    position: relative;
+    height: 320px;
+    min-height: 320px;
+    max-height: 320px;
+    overflow: hidden;
+    flex: 0 0 auto !important;
+}
+
+.ys-network-ego-chart-container {
+    position: relative;
+    height: 380px;
+    min-height: 380px;
+    max-height: 380px;
+    overflow: hidden;
+    flex: 0 0 auto !important;
+}
+
+.ys-network-component-chart-container canvas,
+.ys-network-ego-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    flex: 0 0 auto;
+}
+
+.ys-topic-lifecycle-chart-container {
+    position: relative;
+    height: 220px;
+    min-height: 220px;
+    max-height: 220px;
+    overflow: hidden;
+    flex: 0 0 auto !important;
+}
+
+.ys-topic-lifecycle-chart-container canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    flex: 0 0 auto;
 }
 
 .stat-box {
@@ -2307,6 +2435,29 @@ input:checked + .slider:before {
 .ys-info-card { margin: 20px 0; padding: 15px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb; }
 .ys-inline-flex-gap { display: inline-flex; align-items: center; gap: 8px; }
 .ys-input-sm { font-size: 0.9em; padding: 6px; }
+.annotation-threshold-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-left: auto;
+    padding: 8px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #f8fafc;
+}
+.annotation-threshold-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #64748b;
+    white-space: nowrap;
+}
+.annotation-threshold-input {
+    width: 88px;
+    min-width: 88px;
+    text-align: right;
+    border-radius: 8px;
+}
 .ys-invisible { display: none; visibility: hidden; }
 .ys-item-sm { margin: 5px 0; font-size: 0.9em; }
 .ys-item-sm-break { margin: 5px 0; font-size: 0.85em; word-break: break-all; }

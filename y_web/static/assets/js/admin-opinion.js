@@ -386,6 +386,8 @@ var AdminOpinion = (function() {
     var _evoChartValues = [];
     var _currentGroupTrendsData = null;
     var _currentTimeseriesData = null;
+    var _propagandaTargetChartInstance = null;
+    var _mopTargetChartInstance = null;
 
     function generateChartColors(count) {
         var colors = [], borderColors = [];
@@ -505,18 +507,31 @@ var AdminOpinion = (function() {
         document.getElementById('unique-agents').textContent = data.unique_agents;
         document.getElementById('current-day').textContent = data.filter_day;
         document.getElementById('current-hour').textContent = data.filter_hour;
+
+        if (data.propaganda_targets) {
+            updatePropagandaTargetSection(data.propaganda_targets);
+        }
+        if (data.mop_targets) {
+            updateMopTargetSection(data.mop_targets);
+        }
     }
 
     function fetchOpinionData(day, hour, topicId, skipTrends) {
         if (skipTrends === undefined) skipTrends = true;
         var config = window.YS_DATA_EVOLUTION || {};
         var expId = config.expId;
+        var propagandaTargetSelect = document.getElementById('propaganda-target-select');
+        var propagandaTargetUid = propagandaTargetSelect ? propagandaTargetSelect.value : '';
+        var mopTargetSelect = document.getElementById('mop-target-select');
+        var mopTargetUid = mopTargetSelect ? mopTargetSelect.value : '';
         _loadingTimeout = setTimeout(function() {
             document.getElementById('loading-overlay').classList.add('active');
         }, 200);
 
         var url = '/admin/opinion_evolution_data/' + expId + '?day=' + day + '&hour=' + hour + '&sample_percentage=' + _currentSamplePercentage;
         if (topicId && topicId !== '') url += '&topic_id=' + topicId;
+        if (propagandaTargetUid) url += '&propaganda_target_uid=' + encodeURIComponent(propagandaTargetUid);
+        if (mopTargetUid) url += '&mop_target_uid=' + encodeURIComponent(mopTargetUid);
         if (skipTrends) url += '&skip_trends=true';
 
         fetch(url)
@@ -589,12 +604,323 @@ var AdminOpinion = (function() {
         _playInterval = setInterval(function() { playStep(timeSlider, playButton, playIcon); }, getCurrentInterval());
     }
 
+    function buildPropagandaTargetChart(targetData) {
+        var ctx = document.getElementById('propagandaTargetTrendChart').getContext('2d');
+        return new Chart(ctx, {
+            data: {
+                labels: targetData.timestamps || [],
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Target Opinion',
+                        data: ((targetData.datasets || [])[0] || {}).data || [],
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.16)',
+                        fill: false,
+                        tension: 0.25,
+                        spanGaps: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Propaganda Interactions',
+                        data: ((targetData.datasets || [])[1] || {}).data || [],
+                        borderColor: 'rgba(249, 115, 22, 1)',
+                        backgroundColor: 'rgba(249, 115, 22, 0.4)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: { duration: 0 },
+                plugins: {
+                    legend: { display: true, position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                var key = context[0].label;
+                                var mapping = (targetData.timestamp_mapping || {})[key];
+                                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
+                                return 'Step ' + key;
+                            },
+                            label: function(context) {
+                                if (context.dataset.label === 'Propaganda Interactions') {
+                                    return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
+                                }
+                                return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 1,
+                        title: { display: true, text: 'Opinion Value' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { precision: 0 },
+                        title: { display: true, text: 'Interactions' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Simulation Days' }
+                    }
+                }
+            }
+        });
+    }
+
+    function updatePropagandaTargetSection(propagandaTargets) {
+        var panel = document.getElementById('propaganda-target-panel');
+        if (!panel) return;
+
+        var options = propagandaTargets.options || [];
+        var select = document.getElementById('propaganda-target-select');
+        var emptyState = document.getElementById('propaganda-empty-state');
+        var chartColumn = document.getElementById('propaganda-chart-column');
+        var eventsColumn = document.getElementById('propaganda-events-column');
+        var deployed = document.getElementById('propaganda-deployed');
+        if (deployed) deployed.textContent = propagandaTargets.deployed_agents || 0;
+        if (!select) return;
+
+        var hasOptions = options.length > 0;
+        select.disabled = !hasOptions;
+        if (emptyState) emptyState.style.display = hasOptions ? 'none' : '';
+        if (emptyState) {
+            var activeTopics = (propagandaTargets.active_topics || []).map(function(topic) {
+                return topic.topic_name;
+            });
+            var message = 'Propaganda agents are deployed, but no target interactions have been recorded for the selected topic up to the selected time.';
+            if (activeTopics.length) {
+                message += ' Active propaganda topics in this experiment: ' + activeTopics.join(', ') + '.';
+            }
+            var body = emptyState.querySelector('.message-body');
+            if (body) body.textContent = message;
+        }
+        if (chartColumn) chartColumn.style.display = hasOptions ? '' : 'none';
+        if (eventsColumn) eventsColumn.style.display = hasOptions ? '' : 'none';
+
+        var currentSelection = propagandaTargets.selected_uid || '';
+        select.innerHTML = options.map(function(option) {
+            var selected = option.uid === currentSelection ? ' selected' : '';
+            return '<option value="' + option.uid + '"' + selected + '>' +
+                option.username + ' (' + option.interaction_count + ' interactions)</option>';
+        }).join('');
+
+        var targetName = document.getElementById('propaganda-target-name');
+        var interactionCount = document.getElementById('propaganda-interaction-count');
+        var attackerNames = document.getElementById('propaganda-attacker-names');
+        if (targetName) targetName.textContent = hasOptions ? (propagandaTargets.selected_username || '—') : '—';
+        if (interactionCount) interactionCount.textContent = hasOptions ? (propagandaTargets.interaction_count || 0) : 0;
+        if (attackerNames) attackerNames.textContent = hasOptions ? ((propagandaTargets.attacker_usernames || []).join(', ') || '—') : '—';
+
+        var eventsBody = document.getElementById('propaganda-events-body');
+        if (eventsBody) {
+            var events = propagandaTargets.interaction_events || [];
+            eventsBody.innerHTML = events.length
+                ? events.map(function(event) {
+                    return '<tr>' +
+                        '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
+                        '<td>' + (event.interaction_count || 0) + '</td>' +
+                        '<td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td>' +
+                        '</tr>';
+                }).join('')
+                : '<tr><td colspan=\"3\">No propaganda interactions recorded up to the selected time.</td></tr>';
+        }
+
+        var targetData = propagandaTargets.trend_data || { timestamps: [], datasets: [], timestamp_mapping: {} };
+        if (!hasOptions && _propagandaTargetChartInstance) {
+            _propagandaTargetChartInstance.data.labels = [];
+            _propagandaTargetChartInstance.data.datasets[0].data = [];
+            _propagandaTargetChartInstance.data.datasets[1].data = [];
+            _propagandaTargetChartInstance.update('none');
+            return;
+        }
+        if (!hasOptions) return;
+
+        if (!_propagandaTargetChartInstance && document.getElementById('propagandaTargetTrendChart')) {
+            _propagandaTargetChartInstance = buildPropagandaTargetChart(targetData);
+            return;
+        }
+        if (!_propagandaTargetChartInstance) return;
+
+        _propagandaTargetChartInstance.data.labels = targetData.timestamps || [];
+        _propagandaTargetChartInstance.data.datasets[0].data = ((targetData.datasets || [])[0] || {}).data || [];
+        _propagandaTargetChartInstance.data.datasets[1].data = ((targetData.datasets || [])[1] || {}).data || [];
+        _propagandaTargetChartInstance.options.plugins.tooltip.callbacks.title = function(context) {
+            var key = context[0].label;
+            var mapping = (targetData.timestamp_mapping || {})[key];
+            if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
+            return 'Step ' + key;
+        };
+        _propagandaTargetChartInstance.update('none');
+    }
+
+    function buildMopTargetChart(targetData) {
+        var ctx = document.getElementById('mopTargetTrendChart').getContext('2d');
+        return new Chart(ctx, {
+            data: {
+                labels: targetData.timestamps || [],
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Target Opinion',
+                        data: ((targetData.datasets || [])[0] || {}).data || [],
+                        borderColor: 'rgba(20, 184, 166, 1)',
+                        backgroundColor: 'rgba(20, 184, 166, 0.16)',
+                        fill: false,
+                        tension: 0.25,
+                        spanGaps: true,
+                        yAxisID: 'y'
+                    },
+                    {
+                        type: 'bar',
+                        label: 'MoP Interactions',
+                        data: ((targetData.datasets || [])[1] || {}).data || [],
+                        borderColor: 'rgba(124, 58, 237, 1)',
+                        backgroundColor: 'rgba(124, 58, 237, 0.35)',
+                        borderWidth: 1,
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                animation: { duration: 0 },
+                plugins: {
+                    legend: { display: true, position: 'bottom' },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                var key = context[0].label;
+                                var mapping = (targetData.timestamp_mapping || {})[key];
+                                if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
+                                return 'Step ' + key;
+                            },
+                            label: function(context) {
+                                if (context.dataset.label === 'MoP Interactions') {
+                                    return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(0);
+                                }
+                                return context.dataset.label + ': ' + Number(context.parsed.y || 0).toFixed(3);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 1,
+                        title: { display: true, text: 'Opinion Value' }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: { drawOnChartArea: false },
+                        ticks: { precision: 0 },
+                        title: { display: true, text: 'Interactions' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Simulation Days' }
+                    }
+                }
+            }
+        });
+    }
+
+    function updateMopTargetSection(mopTargets) {
+        var panel = document.getElementById('mop-target-panel');
+        if (!panel) return;
+
+        var options = mopTargets.options || [];
+        var select = document.getElementById('mop-target-select');
+        var emptyState = document.getElementById('mop-empty-state');
+        var chartColumn = document.getElementById('mop-chart-column');
+        var eventsColumn = document.getElementById('mop-events-column');
+        var deployed = document.getElementById('mop-deployed');
+        if (deployed) deployed.textContent = mopTargets.deployed_agents || 0;
+        if (!select) return;
+
+        var hasOptions = options.length > 0;
+        select.disabled = !hasOptions;
+        if (emptyState) emptyState.style.display = hasOptions ? 'none' : '';
+        if (chartColumn) chartColumn.style.display = hasOptions ? '' : 'none';
+        if (eventsColumn) eventsColumn.style.display = hasOptions ? '' : 'none';
+
+        var currentSelection = mopTargets.selected_uid || '';
+        select.innerHTML = options.map(function(option) {
+            var selected = option.uid === currentSelection ? ' selected' : '';
+            return '<option value="' + option.uid + '"' + selected + '>' +
+                option.username + ' (' + option.interaction_count + ' interactions)</option>';
+        }).join('');
+
+        var targetName = document.getElementById('mop-target-name');
+        var interactionCount = document.getElementById('mop-interaction-count');
+        var attackerNames = document.getElementById('mop-attacker-names');
+        if (targetName) targetName.textContent = hasOptions ? (mopTargets.selected_username || '—') : '—';
+        if (interactionCount) interactionCount.textContent = hasOptions ? (mopTargets.interaction_count || 0) : 0;
+        if (attackerNames) attackerNames.textContent = hasOptions ? ((mopTargets.attacker_usernames || []).join(', ') || '—') : '—';
+
+        var eventsBody = document.getElementById('mop-events-body');
+        if (eventsBody) {
+            var events = mopTargets.interaction_events || [];
+            eventsBody.innerHTML = events.length
+                ? events.map(function(event) {
+                    var type = String(event.interaction_type || '');
+                    return '<tr>' +
+                        '<td>Day ' + event.day + ', Hour ' + event.hour + '</td>' +
+                        '<td>' + type.charAt(0).toUpperCase() + type.slice(1) + '</td>' +
+                        '<td>' + (event.interaction_count || 0) + '</td>' +
+                        '<td>' + ((event.attacker_usernames || []).join(', ') || '—') + '</td>' +
+                        '</tr>';
+                }).join('')
+                : '<tr><td colspan=\"4\">No MoP interactions recorded up to the selected time.</td></tr>';
+        }
+
+        var targetData = mopTargets.trend_data || { timestamps: [], datasets: [], timestamp_mapping: {} };
+        if (!hasOptions && _mopTargetChartInstance) {
+            _mopTargetChartInstance.data.labels = [];
+            _mopTargetChartInstance.data.datasets[0].data = [];
+            _mopTargetChartInstance.data.datasets[1].data = [];
+            _mopTargetChartInstance.update('none');
+            return;
+        }
+        if (!hasOptions) return;
+
+        if (!_mopTargetChartInstance && document.getElementById('mopTargetTrendChart')) {
+            _mopTargetChartInstance = buildMopTargetChart(targetData);
+            return;
+        }
+        if (!_mopTargetChartInstance) return;
+
+        _mopTargetChartInstance.data.labels = targetData.timestamps || [];
+        _mopTargetChartInstance.data.datasets[0].data = ((targetData.datasets || [])[0] || {}).data || [];
+        _mopTargetChartInstance.data.datasets[1].data = ((targetData.datasets || [])[1] || {}).data || [];
+        _mopTargetChartInstance.options.plugins.tooltip.callbacks.title = function(context) {
+            var key = context[0].label;
+            var mapping = (targetData.timestamp_mapping || {})[key];
+            if (mapping) return 'Day ' + mapping.day + ', Hour ' + mapping.hour;
+            return 'Step ' + key;
+        };
+        _mopTargetChartInstance.update('none');
+    }
+
     function initOpinionEvolution() {
         var config = window.YS_DATA_EVOLUTION || {};
         var chartLabels = config.chartLabels || [];
         var chartValues = config.chartValues || [];
         var groupTrendsData = config.groupTrendsData || { groups: [], timestamps: [], timestamp_mapping: {} };
         var timeseriesData = config.timeseriesData || { agents: [], timestamps: [] };
+        var propagandaTargets = config.propagandaTargets || null;
+        var mopTargets = config.mopTargets || null;
         _currentTopicId = config.filterTopicId || null;
         _maxTimeValue = config.maxTick || ((config.maxDay || 0) * 24 + (config.maxHour || 0));
 
@@ -737,6 +1063,13 @@ var AdminOpinion = (function() {
             }
         });
 
+        if (propagandaTargets && propagandaTargets.available && document.getElementById('propagandaTargetTrendChart')) {
+            updatePropagandaTargetSection(propagandaTargets);
+        }
+        if (mopTargets && mopTargets.available && document.getElementById('mopTargetTrendChart')) {
+            updateMopTargetSection(mopTargets);
+        }
+
         var initialSlider = document.getElementById('time-slider');
         if (_evoGroupTrendsChartInstance && initialSlider) {
             var initialValue = parseInt(initialSlider.value, 10);
@@ -798,6 +1131,26 @@ var AdminOpinion = (function() {
                 fetchOpinionData(day, hour, _currentTopicId, false);
             });
         });
+
+        var propagandaTargetSelect = document.getElementById('propaganda-target-select');
+        if (propagandaTargetSelect) {
+            propagandaTargetSelect.addEventListener('change', function() {
+                var totalHours = parseInt(timeSlider.value);
+                var day = Math.floor(totalHours / 24);
+                var hour = totalHours % 24;
+                fetchOpinionData(day, hour, _currentTopicId);
+            });
+        }
+
+        var mopTargetSelect = document.getElementById('mop-target-select');
+        if (mopTargetSelect) {
+            mopTargetSelect.addEventListener('change', function() {
+                var totalHours = parseInt(timeSlider.value);
+                var day = Math.floor(totalHours / 24);
+                var hour = totalHours % 24;
+                fetchOpinionData(day, hour, _currentTopicId);
+            });
+        }
 
         playButton.addEventListener('click', function() {
             if (_isPlaying) {

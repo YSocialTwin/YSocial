@@ -132,13 +132,16 @@ DEFAULT_STRESS_REWARD_SYSTEM = {
     "events": {
         "reaction": {
             "like": {"stress": -0.005, "reward": 0.03},
-            "dislike": {"stress": 0.03, "reward": -0.02},
+            "dislike": {"stress": 0.05, "reward": -0.03},
+        },
+        "report": {
+            "mass_report": {"stress": 0.12, "reward": -0.05},
         },
         "comment": {
             "positive": {"stress": -0.02, "reward": 0.07},
             "neutral": {"stress": 0.0, "reward": 0.01},
-            "critical": {"stress": 0.03, "reward": -0.01},
-            "hostile": {"stress": 0.10, "reward": -0.05},
+            "critical": {"stress": 0.06, "reward": -0.02},
+            "hostile": {"stress": 0.14, "reward": -0.07},
             "supportive": {"stress": -0.05, "reward": 0.08},
         },
         "share": {
