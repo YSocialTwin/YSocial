@@ -13,7 +13,7 @@ from flask_login import current_user, login_required
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    _expand_tree,
+    build_thread_tree,
     _forum_logged_user,
     _get_discussions,
     get_adhoc_agent_badge,
@@ -564,25 +564,25 @@ def get_thread(exp_id, post_id):
         return redirect(url_for("main.index"))
     exp_user_id = logged_user.id
 
-    # Get the root post first
-    root_post = Post.query.filter_by(id=post_id).first()
-    if not root_post:
+    requested_post = Post.query.filter_by(id=post_id).first()
+    if not requested_post:
         flash("Post not found", "error")
         return redirect(url_for("main.index"))
 
+    thread_root_id = getattr(requested_post, "thread_id", None) or requested_post.id
+    root_post = Post.query.filter_by(id=thread_root_id).first() or requested_post
+    thread_root_id = root_post.id
+
     # Get all comments with this thread_id
     comment_posts = (
-        Post.query.filter_by(thread_id=post_id).order_by(Post.id.asc()).all()
+        Post.query.filter(Post.thread_id == thread_root_id, Post.id != thread_root_id)
+        .order_by(Post.created_at.asc(), Post.id.asc())
+        .all()
     )
 
-    # Combine root post and comments
-    posts = [root_post] + comment_posts
+    root = root_post.id
 
-    print(posts)
-
-    root = posts[0].id
-
-    c = Rounds.query.filter_by(id=posts[0].round).first()
+    c = Rounds.query.filter_by(id=root_post.round).first()
     if c is None:
         day = "None"
         hour = "00"
@@ -591,15 +591,15 @@ def get_thread(exp_id, post_id):
         hour = c.hour
 
     root_display_time = _format_display_time_from_created_at(
-        getattr(posts[0], "created_at", None)
+        getattr(root_post, "created_at", None)
     ) or _format_display_time(
         str(day),
         f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
     )
 
-    image = Images.query.filter_by(id=posts[0].image_id).first()
+    image = Images.query.filter_by(id=root_post.image_id).first()
 
-    user = User_mgmt.query.filter_by(id=posts[0].user_id).first()
+    user = User_mgmt.query.filter_by(id=root_post.user_id).first()
     profile_pic = ""
     if user.is_page == 1:
         pg = Page.query.filter_by(name=user.username).first()
@@ -619,66 +619,65 @@ def get_thread(exp_id, post_id):
             profile_pic = ""
 
     # Get shared post info safely - handle both int and UUID shared_from
-    if posts[0].shared_from == -1:
+    if root_post.shared_from in (-1, "-1", None, ""):
         shared_from_info = -1
     else:
         shared_user = (
             db.session.query(User_mgmt)
             .join(Post, User_mgmt.id == Post.user_id)
-            .filter(Post.id == posts[0].shared_from)
+            .filter(Post.id == root_post.shared_from)
             .first()
         )
         shared_from_info = (
-            (posts[0].shared_from, shared_user.username)
+            (root_post.shared_from, shared_user.username)
             if shared_user
-            else (posts[0].shared_from, "Unknown")
+            else (root_post.shared_from, "Unknown")
         )
 
     from y_web.src.data_access import augment_text, get_elicited_emotions, get_topics
 
     discussion_tree = {
-        "post": augment_text(posts[0].tweet, exp_id),
+        "post": augment_text(root_post.tweet, exp_id),
         "profile_pic": profile_pic,
         "image": image,
         "shared_from": shared_from_info,
-        "post_id": posts[0].id,
+        "post_id": root_post.id,
         "author": user.username,
-        "author_id": posts[0].user_id,
+        "author_id": root_post.user_id,
         "day": day,
         "hour": hour,
         "display_time": root_display_time,
-        posts[0].id: None,
         "children": [],
         "likes": len(
-            list(Reactions.query.filter_by(post_id=posts[0].id, type="like").all())
+            list(Reactions.query.filter_by(post_id=root_post.id, type="like").all())
         ),
         "dislikes": len(
-            list(Reactions.query.filter_by(post_id=posts[0].id, type="dislike").all())
+            list(
+                Reactions.query.filter_by(post_id=root_post.id, type="dislike").all()
+            )
         ),
         "is_liked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=exp_user_id, type="like"
+            post_id=root_post.id, user_id=exp_user_id, type="like"
         ).first()
         is None,
         "is_disliked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=exp_user_id, type="dislike"
+            post_id=root_post.id, user_id=exp_user_id, type="dislike"
         ).first()
         is None,
-        "is_shared": len(Post.query.filter_by(shared_from=posts[0].id).all()),
-        "report_count": get_report_count(posts[0].id),
-        "emotions": get_elicited_emotions(posts[0].id),
-        "topics": get_topics(posts[0].id, posts[0].user_id),
+        "is_shared": len(Post.query.filter_by(shared_from=root_post.id).all()),
+        "report_count": get_report_count(root_post.id),
+        "emotions": get_elicited_emotions(root_post.id),
+        "topics": get_topics(root_post.id, root_post.user_id),
         "adhoc_agent_badge": get_adhoc_agent_badge(user),
         "is_moderation_comment": int(
-            getattr(posts[0], "is_moderation_comment", 0) or 0
+            getattr(root_post, "is_moderation_comment", 0) or 0
         ),
     }
 
-    reverse_map = {posts[0].id: None}
-    post_to_child = {posts[0].id: []}
-    post_to_data = {posts[0].id: discussion_tree}
-    parent_id = posts[0].id
+    parent_lookup = {root_post.id: None}
+    post_to_data = {root_post.id: discussion_tree}
 
-    for post in posts[1:]:
+    for post in comment_posts:
         c = Rounds.query.filter_by(id=post.round).first()
         if c is None:
             day = "None"
@@ -748,16 +747,10 @@ def get_thread(exp_id, post_id):
         }
 
         parent = post.comment_to
-        reverse_map[post.id] = parent
+        parent_lookup[post.id] = parent
+        post_to_data[post.id] = data
 
-        if parent != -1:
-            if parent in post_to_child:
-                post_to_child[parent].append(post.id)
-                post_to_child[post.id] = []
-                post_to_data[post.id] = data
-
-    tree = _expand_tree(post_to_child, post_to_data)
-    discussion_tree = tree[root]
+    discussion_tree = build_thread_tree(root, post_to_data, parent_lookup)
     trending_ht = get_trending_hashtags()
     mentions = get_unanswered_mentions(exp_user_id)
 

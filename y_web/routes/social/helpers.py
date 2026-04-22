@@ -128,6 +128,28 @@ def _expand_tree(post_to_child, post_to_data):
     return post_to_data
 
 
+def build_thread_tree(root_id, post_to_data, parent_lookup):
+    """Build a thread tree without depending on row ordering."""
+    post_to_child = {pid: [] for pid in post_to_data.keys()}
+    post_to_child.setdefault(root_id, [])
+
+    for post_id, parent_id in parent_lookup.items():
+        if post_id == root_id:
+            continue
+
+        normalized_parent = parent_id
+        if normalized_parent in (None, "", -1, "-1"):
+            normalized_parent = root_id
+
+        if normalized_parent not in post_to_data:
+            normalized_parent = root_id
+
+        post_to_child.setdefault(normalized_parent, []).append(post_id)
+
+    tree = _expand_tree(post_to_child, post_to_data)
+    return tree[root_id]
+
+
 def recursive_visit(data):
     """Handle recursive visit operation."""
     if len(data["children"]) == 0:

@@ -1195,6 +1195,114 @@
   margin: 0;
 }
 
+.ys-profile-hero-shell {
+  position: relative;
+  margin-top: 0.75rem;
+  padding: 2.3rem 0 0.2rem;
+}
+
+.ys-profile-hero-actions-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  transform: translateY(-50%);
+}
+
+.ys-profile-hero-actions-left,
+.ys-profile-hero-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+
+.ys-profile-hero-action-btn {
+  min-height: 32px;
+  padding: 0 0.85rem;
+  border-radius: 12px;
+  border: 1px solid #dbe5f1;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+  color: #44536c;
+  font-size: 0.84rem;
+  font-weight: 600;
+  box-shadow: 0 8px 18px rgba(105, 135, 188, 0.08);
+}
+
+.ys-profile-hero-action-btn:hover,
+.ys-profile-hero-action-btn:focus-visible {
+  color: #294b82;
+  border-color: #c3d3ea;
+  box-shadow: 0 12px 24px rgba(105, 135, 188, 0.13);
+}
+
+.ys-profile-hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.02rem;
+}
+
+.ys-profile-hero-stat--right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.ys-profile-hero-stat__value {
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 700;
+  color: #2f4468;
+}
+
+.ys-profile-hero-stat__label {
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #91a0b6;
+}
+
+.ys-profile-hero-subheader {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  margin-bottom: 0.05rem;
+}
+
+.ys-profile-hero-subheader .subheader-start,
+.ys-profile-hero-subheader .subheader-end {
+  width: 100%;
+}
+
+.ys-profile-hero-subheader .subheader-start {
+  justify-self: start;
+}
+
+.ys-profile-hero-subheader .subheader-end {
+  justify-self: end;
+}
+
+.ys-profile-hero-center {
+  text-align: center;
+}
+
+.ys-profile-hero-center h2 {
+  margin: 0;
+  font-family: "Montserrat",sans-serif;
+  font-size: 1.55rem;
+  line-height: 1.1;
+  font-weight: 600;
+  color: #393a4f;
+}
+
 .profile-menu .button.ys-profile-follow-menu-btn {
   background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
   color: #1d4ed8;
@@ -1207,6 +1315,50 @@
   border-color: rgba(148, 163, 184, 0.28);
 }
 
+.ys-feed-refresh-notice {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 1rem;
+}
+
+.ys-feed-refresh-notice[hidden] {
+  display: none !important;
+}
+
+.ys-feed-refresh-notice__button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: #1d4ed8;
+  border-radius: 999px;
+  padding: 0.7rem 1.1rem;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.ys-feed-refresh-notice__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.16);
+  background: linear-gradient(135deg, #e0edff 0%, #d1e4ff 100%);
+}
+
+.ys-feed-refresh-notice__button:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.ys-feed-refresh-notice__button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.25px;
+}
+
 @media (max-width: 1215px) {
   .microblog-chat-panel {
     right: 16px;
@@ -1216,5 +1368,33 @@
 
   .microblog-chat-card {
     border-radius: 22px;
+  }
+
+  .ys-profile-hero-actions-row {
+    position: static;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 0.1rem;
+  }
+
+  .ys-profile-hero-actions-left,
+  .ys-profile-hero-actions-right {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .ys-profile-hero-stat,
+  .ys-profile-hero-stat--right {
+    align-items: center;
+  }
+
+  .ys-profile-hero-subheader {
+    grid-template-columns: 1fr;
+    margin-bottom: 0.15rem;
+  }
+
+  .ys-profile-hero-stat,
+  .ys-profile-hero-stat--right {
+    align-items: center;
   }
 }

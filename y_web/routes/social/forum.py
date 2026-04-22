@@ -17,7 +17,7 @@ from sqlalchemy.sql.expression import func
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    _expand_tree,
+    build_thread_tree,
     _experiment_memory_enabled,
     _forum_current_profile_pic,
     _forum_logged_user,
@@ -223,37 +223,43 @@ def get_thread_reddit(exp_id, post_id):
     except (ValueError, TypeError):
         pass
 
-    root_post = Post.query.filter_by(id=post_id).first()
+    requested_post = Post.query.filter_by(id=post_id).first()
+    if requested_post is None:
+        flash("Thread not found.")
+        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+
+    thread_id = getattr(requested_post, "thread_id", None) or requested_post.id
+    root_post = Post.query.filter_by(id=thread_id).first() or requested_post
+    thread_id = root_post.id
+    posts = (
+        Post.query.filter(Post.thread_id == thread_id, Post.id != thread_id)
+        .order_by(Post.created_at.asc(), Post.id.asc())
+        .all()
+    )
     if root_post is None:
         flash("Thread not found.")
         return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
 
-    thread_id = root_post.thread_id
-    posts = Post.query.filter_by(thread_id=thread_id).order_by(Post.id.asc()).all()
-    if not posts:
-        flash("Thread not found.")
-        return redirect(f"/{exp_id}/rfeed/all/feed/rf/1?feed_type=new")
+    root = root_post.id
 
-    root = posts[0].id
-
-    c = Rounds.query.filter_by(id=posts[0].round).first()
+    c = Rounds.query.filter_by(id=root_post.round).first()
     day = c.day if c is not None else "None"
     hour = c.hour if c is not None else "00"
     root_display_time = _format_display_time_from_created_at(
-        getattr(posts[0], "created_at", None)
+        getattr(root_post, "created_at", None)
     ) or _format_display_time(
         str(day),
         f"{int(hour):02d}" if str(hour).isdigit() else str(hour),
     )
 
-    image = Images.query.filter_by(id=posts[0].image_id).first()
-    user = User_mgmt.query.filter_by(id=posts[0].user_id).first()
+    image = Images.query.filter_by(id=root_post.image_id).first()
+    user = User_mgmt.query.filter_by(id=root_post.user_id).first()
     root_profile_pic = _forum_profile_pic(user)
 
-    title, content = process_reddit_post(posts[0].tweet)
+    title, content = process_reddit_post(root_post.tweet)
     processed_content = augment_text(content, exp_id) if content else ""
 
-    article = Articles.query.filter_by(id=posts[0].news_id).first()
+    article = Articles.query.filter_by(id=root_post.news_id).first()
     if article is None:
         art = 0
     else:
@@ -265,19 +271,19 @@ def get_thread_reddit(exp_id, post_id):
             "source": website.name if website is not None else "",
         }
 
-    if posts[0].shared_from == -1:
+    if root_post.shared_from in (-1, "-1", None, ""):
         shared_from_info = -1
     else:
         shared_user = (
             db.session.query(User_mgmt)
             .join(Post, User_mgmt.id == Post.user_id)
-            .filter(Post.id == posts[0].shared_from)
+            .filter(Post.id == root_post.shared_from)
             .first()
         )
         shared_from_info = (
-            (posts[0].shared_from, shared_user.username)
+            (root_post.shared_from, shared_user.username)
             if shared_user
-            else (posts[0].shared_from, "Unknown")
+            else (root_post.shared_from, "Unknown")
         )
 
     discussion_tree = {
@@ -286,43 +292,42 @@ def get_thread_reddit(exp_id, post_id):
         "profile_pic": root_profile_pic,
         "image": image,
         "shared_from": shared_from_info,
-        "post_id": posts[0].id,
+        "post_id": root_post.id,
         "author": user.username if user is not None else "Unknown",
-        "author_id": posts[0].user_id,
+        "author_id": root_post.user_id,
         "day": day,
         "hour": hour,
         "display_time": root_display_time,
         "article": art,
-        posts[0].id: None,
         "children": [],
         "likes": len(
-            list(Reactions.query.filter_by(post_id=posts[0].id, type="like").all())
+            list(Reactions.query.filter_by(post_id=root_post.id, type="like").all())
         ),
         "dislikes": len(
-            list(Reactions.query.filter_by(post_id=posts[0].id, type="dislike").all())
+            list(Reactions.query.filter_by(post_id=root_post.id, type="dislike").all())
         ),
         "is_liked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=viewer_id, type="like"
+            post_id=root_post.id, user_id=viewer_id, type="like"
         ).first()
         is not None,
         "is_disliked": Reactions.query.filter_by(
-            post_id=posts[0].id, user_id=viewer_id, type="dislike"
+            post_id=root_post.id, user_id=viewer_id, type="dislike"
         ).first()
         is not None,
         "is_reported": Reported.query.filter_by(
-            to_post=posts[0].id, from_uid=viewer_id
+            to_post=root_post.id, from_uid=viewer_id
         ).first()
         is not None,
-        "report_count": Reported.query.filter_by(to_post=posts[0].id).count(),
-        "is_shared": len(Post.query.filter_by(shared_from=posts[0].id).all()),
-        "emotions": get_elicited_emotions(posts[0].id),
-        "topics": get_topics(posts[0].id, posts[0].user_id),
+        "report_count": Reported.query.filter_by(to_post=root_post.id).count(),
+        "is_shared": len(Post.query.filter_by(shared_from=root_post.id).all()),
+        "emotions": get_elicited_emotions(root_post.id),
+        "topics": get_topics(root_post.id, root_post.user_id),
     }
 
-    post_to_child = {posts[0].id: []}
-    post_to_data = {posts[0].id: discussion_tree}
+    parent_lookup = {root_post.id: None}
+    post_to_data = {root_post.id: discussion_tree}
 
-    for post in posts[1:]:
+    for post in posts:
         c = Rounds.query.filter_by(id=post.round).first()
         day = c.day if c is not None else "None"
         hour = c.hour if c is not None else "00"
@@ -389,14 +394,10 @@ def get_thread_reddit(exp_id, post_id):
             "topics": get_topics(post.id, post.user_id),
         }
 
-        parent = post.comment_to
-        if parent != -1 and parent in post_to_child:
-            post_to_child[parent].append(post.id)
-            post_to_child[post.id] = []
-            post_to_data[post.id] = data
+        parent_lookup[post.id] = post.comment_to
+        post_to_data[post.id] = data
 
-    tree = _expand_tree(post_to_child, post_to_data)
-    discussion_tree = tree[root]
+    discussion_tree = build_thread_tree(root, post_to_data, parent_lookup)
     trending_ht = get_trending_hashtags()
     logged_user = _forum_logged_user()
     mention_user_id = logged_user.id if logged_user is not None else None

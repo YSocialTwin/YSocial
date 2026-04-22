@@ -23,10 +23,19 @@ def test_profile_follow_button_targets_viewed_user():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/profile.html"
     ).read_text(encoding="utf-8")
+    css = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+    ).read_text(encoding="utf-8")
     assert 'method="post"' in template
     assert 'action="/{{exp_id}}/follow/{{ user_id }}/{{ logged_id }}"' in template
     assert "ys-profile-follow-menu-form" in template
     assert "ys-profile-follow-menu-btn" in template
+    assert "ys-profile-hero-shell" in template
+    assert "ys-profile-hero-actions-row" in template
+    assert ".ys-profile-hero-actions-row" in css
+    assert ".ys-profile-hero-stat__value" in css
+    assert '.ys-profile-hero-actions-row {\n  position: absolute;' in css
+    assert "ys-profile-hero-kicker" not in template
     assert "Unfollow" in template
     assert "Follow" in template
 
@@ -218,6 +227,9 @@ def test_context_hero_is_shared_and_styled():
     component = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/components/context_hero_card.html"
     ).read_text(encoding="utf-8")
+    thread_template = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/thread.html"
+    ).read_text(encoding="utf-8")
     hashtag_template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/microblogging/hashtag.html"
     ).read_text(encoding="utf-8")
@@ -231,6 +243,7 @@ def test_context_hero_is_shared_and_styled():
         "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
     ).read_text(encoding="utf-8")
 
+    assert '{% include "microblogging/components/context_hero_card.html" %}' in thread_template
     assert '{% include "microblogging/components/context_hero_card.html" %}' in hashtag_template
     assert '{% include "microblogging/components/context_hero_card.html" %}' in interest_template
     assert '{% include "microblogging/components/context_hero_card.html" %}' in emotions_template
@@ -248,3 +261,51 @@ def test_infinite_scroll_supports_profile_mode_reset():
     assert "destroyInfiniteScroll" in js
     assert "window.InfiniteScroll = {" in js
     assert "destroy: destroyInfiniteScroll" in js
+
+
+def test_microblog_feed_supports_live_refresh_with_existing_recsys_api():
+    js = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/js/mb-feed.js"
+    ).read_text(encoding="utf-8")
+    css = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/static/assets/css/social-components.css"
+    ).read_text(encoding="utf-8")
+
+    assert "function probeForNewPosts()" in js
+    assert "function startAutoRefresh()" in js
+    assert "state.liveRefreshEnabled = Number(config.page || 1) === 1;" in js
+    assert "return '/' + config.expId + '/api/feed/' + config.userId + '/' + config.timeline + '/' + config.mode;" in js
+    assert "InfiniteScroll.init({" in js
+    assert "ys-feed-refresh-notice" in js
+    assert ".ys-feed-refresh-notice" in css
+    assert ".ys-feed-refresh-notice__button" in css
+
+
+def test_build_thread_tree_handles_uuid_out_of_order_replies():
+    source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/social/helpers.py"
+    ).read_text(encoding="utf-8")
+    expand_start = source.index("def _expand_tree(")
+    recursive_start = source.index("def recursive_visit(")
+    helper_scope = {}
+    exec(source[expand_start:recursive_start], helper_scope)
+    build_thread_tree = helper_scope["build_thread_tree"]
+
+    root_id = "root"
+    parent_lookup = {
+        "root": None,
+        "child-b": "child-a",
+        "child-a": "root",
+        "child-c": "missing-parent",
+    }
+    post_to_data = {
+        "root": {"post_id": "root", "children": []},
+        "child-a": {"post_id": "child-a", "children": []},
+        "child-b": {"post_id": "child-b", "children": []},
+        "child-c": {"post_id": "child-c", "children": []},
+    }
+
+    tree = build_thread_tree(root_id, post_to_data, parent_lookup)
+
+    assert [child["post_id"] for child in tree["children"]] == ["child-a", "child-c"]
+    assert [child["post_id"] for child in tree["children"][0]["children"]] == ["child-b"]

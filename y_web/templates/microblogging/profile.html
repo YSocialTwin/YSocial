@@ -80,53 +80,58 @@
                         </div>
                     </div>
 
-                    <div class="profile-menu is-hidden-mobile">
-                        <div class="menu-start">
-                            <a href="/{{exp_id}}/{{ url_for('main.feeed_logged')}}/{{ user['user_data']['id'] }}/feeds/rf/1"
-                               class="button has-min-width">Feeds</a>
-                        </div>
-                        <div class="menu-end">
-                            {% if logged_id != user_id %}
-                            <form
-                                    method="post"
-                                    action="/{{exp_id}}/follow/{{ user_id }}/{{ logged_id }}"
-                                    class="ys-profile-follow-menu-form"
-                            >
-                                <button
-                                        type="submit"
-                                        class="button has-min-width ys-profile-follow-menu-btn {% if is_following %}is-following{% endif %}"
-                                >{% if is_following %}Unfollow{% else %}Follow{% endif %}</button>
-                            </form>
-                            {% endif %}
-                            <a
-                                    id="profile-friends-link"
-                                    href="/{{exp_id}}/friends/{{ user_id }}/1"
-                                    class="button has-min-width"
-                            >Contacts</a
-                            >
-                        </div>
-                    </div>
+                    <div class="ys-profile-hero-shell">
+                        <div class="profile-subheader ys-profile-hero-subheader">
+                            <div class="subheader-start is-hidden-mobile">
+                                <div class="ys-profile-hero-stat">
+                                    <span class="ys-profile-hero-stat__value">{{ user['total_followers']}}</span>
+                                    <span class="ys-profile-hero-stat__label">Followers</span>
+                                </div>
+                            </div>
 
-                    <div class="profile-subheader">
-                        <div class="subheader-start is-hidden-mobile">
-                            <span>{{ user['total_followers']}}</span>
-                            <span>Followers</span>
-                        </div>
+                            <div class="subheader-middle ys-profile-hero-center">
+                                <div class="ys-profile-header-row">
+                                    <h2>{{ user["user_data"]["username"] }}</h2>
+                                </div>
+                            </div>
 
-                        <div class="subheader-middle">
-                            <div class="ys-profile-header-row">
-                                <h2>{{ user["user_data"]["username"] }}</h2>
+
+                            <div class="subheader-end is-hidden-mobile">
+                                <div class="ys-profile-hero-stat ys-profile-hero-stat--right">
+                                    {% if is_page != 1 %}
+                                    <span class="ys-profile-hero-stat__value">{{ user['total_followee']}}</span>
+                                    <span class="ys-profile-hero-stat__label">Followee</span>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
 
-
-                        <div class="subheader-end is-hidden-mobile">
-                            {% if is_page != 1 %}
-                            <span>{{ user['total_followee']}}</span>
-                            <span>Followee</span>
-                            {% endif %}
+                        <div class="profile-menu is-hidden-mobile ys-profile-hero-actions-row">
+                            <div class="menu-start ys-profile-hero-actions-left">
+                                <a href="/{{exp_id}}/{{ url_for('main.feeed_logged')}}/{{ user['user_data']['id'] }}/feeds/rf/1"
+                                   class="button has-min-width ys-profile-hero-action-btn">Feeds</a>
+                            </div>
+                            <div class="menu-end ys-profile-hero-actions-right">
+                                {% if logged_id != user_id %}
+                                <form
+                                        method="post"
+                                        action="/{{exp_id}}/follow/{{ user_id }}/{{ logged_id }}"
+                                        class="ys-profile-follow-menu-form"
+                                >
+                                    <button
+                                            type="submit"
+                                            class="button has-min-width ys-profile-follow-menu-btn ys-profile-hero-action-btn {% if is_following %}is-following{% endif %}"
+                                    >{% if is_following %}Unfollow{% else %}Follow{% endif %}</button>
+                                </form>
+                                {% endif %}
+                                <a
+                                        id="profile-friends-link"
+                                        href="/{{exp_id}}/friends/{{ user_id }}/1"
+                                        class="button has-min-width ys-profile-hero-action-btn"
+                                >Contacts</a
+                                >
+                            </div>
                         </div>
-
                     </div>
                 </div>
             </div>

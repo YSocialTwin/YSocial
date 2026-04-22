@@ -284,7 +284,11 @@
 
                 <!-- Middle column -->
  <div class="column is-8 ys-px-half">
-                    <div class="page_head_topic" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); font-weight: 500;"> Are you looking for the full discussion thread?</div>
+                    {% set hero_eyebrow = "Thread Focus" %}
+                    {% set hero_prefix = "Following the" %}
+                    {% set hero_focus = "full discussion thread" %}
+                    {% set hero_suffix = "in context." %}
+                    {% include "microblogging/components/context_hero_card.html" %}
 
                     <div class="profile-timeline">
 
