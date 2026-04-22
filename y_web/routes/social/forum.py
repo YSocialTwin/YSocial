@@ -17,7 +17,6 @@ from sqlalchemy.sql.expression import func
 from y_web import db
 from y_web.routes.social._blueprint import main
 from y_web.routes.social.helpers import (
-    build_thread_tree,
     _experiment_memory_enabled,
     _forum_current_profile_pic,
     _forum_logged_user,
@@ -25,6 +24,7 @@ from y_web.routes.social.helpers import (
     _forum_profile_pic,
     _forum_resolve_back_url,
     _get_discussions,
+    build_thread_tree,
     is_admin,
 )
 from y_web.src.content.text_utils import process_reddit_post, strip_tags

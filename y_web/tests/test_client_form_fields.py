@@ -206,4 +206,6 @@ class TestClientFormFields:
 
         assert 'name="probability_of_daily_follow"' in template_source
         assert 'value="0.1"' in template_source
-        assert 'input type="hidden" name="follow" id="follow" value="1"' in template_source
+        assert (
+            'input type="hidden" name="follow" id="follow" value="1"' in template_source
+        )

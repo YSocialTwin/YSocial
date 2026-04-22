@@ -171,8 +171,12 @@ def test_completion_detection():
     # Infinite simulation (-1 means run forever)
     expected_duration_rounds = -1
     current_round = 1000
-    is_complete = expected_duration_rounds > 0 and current_round >= expected_duration_rounds
-    assert is_complete == False, "Infinite clients must never auto-complete from progress"
+    is_complete = (
+        expected_duration_rounds > 0 and current_round >= expected_duration_rounds
+    )
+    assert (
+        is_complete == False
+    ), "Infinite clients must never auto-complete from progress"
 
     print("✓ Completion detection test passed")
 

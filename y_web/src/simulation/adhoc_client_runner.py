@@ -114,9 +114,7 @@ def _apply_config_metadata_to_state(state: dict, config) -> dict:
     metadata = _client_field(config, "metadata", {}) or {}
     client_id = _client_field(config, "client_id", "") or ""
     agent_type = _client_field(config, "agent_type", "") or ""
-    state["name"] = str(
-        metadata.get("name") or client_id or state.get("name") or ""
-    )
+    state["name"] = str(metadata.get("name") or client_id or state.get("name") or "")
     state["description"] = str(metadata.get("description") or "")
     state["population_id"] = metadata.get("population_id")
     state["population_name"] = str(

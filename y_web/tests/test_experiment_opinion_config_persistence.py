@@ -23,10 +23,16 @@ def test_stress_reward_client_sync_preserves_structured_system_config():
 
     assert updated["stress_reward"]["enabled"] is True
     assert updated["stress_reward"]["backward_rounds"] == 18
-    assert updated["stress_reward"]["system"]["coupling"]["reward_buffers_stress_alpha"] == 0.12
+    assert (
+        updated["stress_reward"]["system"]["coupling"]["reward_buffers_stress_alpha"]
+        == 0.12
+    )
     assert updated["stress_reward"]["system"]["churn"]["enabled"] is True
     assert updated["stress_reward"]["system"]["churn"]["bias"] == -1.3
-    assert updated["stress_reward"]["system"]["events"]["reaction"]["like"]["reward"] == 0.05
+    assert (
+        updated["stress_reward"]["system"]["events"]["reaction"]["like"]["reward"]
+        == 0.05
+    )
     assert (
         updated["stress_reward"]["system"]["events"]["report"]["mass_report"]["stress"]
         == 0.12
@@ -113,11 +119,14 @@ def test_memory_support_is_resolved_and_enforced_across_experiment_and_client_ro
         'if getattr(exp, "platform_type", "") in {"microblogging", "forum", "hpc"}:'
         in data_source
     )
-    assert "if exp.simulator_type == \"HPC\":" in data_source
+    assert 'if exp.simulator_type == "HPC":' in data_source
     assert "client_config = sync_stress_reward_client_config(" in data_source
-    assert 'def stress_reward_settings(uid):' in data_source
-    assert 'def update_stress_reward_settings(uid):' in data_source
-    assert 'stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")' in data_source
+    assert "def stress_reward_settings(uid):" in data_source
+    assert "def update_stress_reward_settings(uid):" in data_source
+    assert (
+        'stress_reward_config["system"]["churn"]["enabled"] = _is_checked("sr_churn_enabled")'
+        in data_source
+    )
     assert 'field_name = f"sr_event_{family}_{subtype}_{variable}"' in data_source
     assert "def _memory_enabled_for_client_creation(experiment):" in clients_source
     assert (

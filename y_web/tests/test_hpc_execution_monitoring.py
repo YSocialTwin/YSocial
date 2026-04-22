@@ -222,13 +222,13 @@ class TestHPCExecutionLogMonitoring:
             updated_client = Client.query.filter_by(id=client.id).first()
             assert updated_client.status == 0
 
-    def test_parse_client_log_incremental_does_not_complete_infinite_client(
-        self, app
-    ):
+    def test_parse_client_log_incremental_does_not_complete_infinite_client(self, app):
         """Infinite HPC clients must not be auto-stopped from progress parsing."""
         from y_web.src.hpc.log_parser import parse_client_log_incremental
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix="_client.log", delete=False) as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix="_client.log", delete=False
+        ) as f:
             log_path = f.name
             f.write(
                 json.dumps(
@@ -256,13 +256,19 @@ class TestHPCExecutionLogMonitoring:
                 mock_client.status = 1
                 mock_client.id_exp = 99
 
-                with patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit, patch(
-                    "y_web.src.hpc.log_parser.Client_Execution.query"
-                ) as mock_exec_query, patch(
-                    "y_web.src.hpc.log_parser.Client.query"
-                ) as mock_client_query:
-                    mock_exec_query.filter_by.return_value.first.return_value = mock_exec
-                    mock_client_query.filter_by.return_value.first.return_value = mock_client
+                with (
+                    patch("y_web.src.hpc.log_parser._commit_with_retry") as mock_commit,
+                    patch(
+                        "y_web.src.hpc.log_parser.Client_Execution.query"
+                    ) as mock_exec_query,
+                    patch("y_web.src.hpc.log_parser.Client.query") as mock_client_query,
+                ):
+                    mock_exec_query.filter_by.return_value.first.return_value = (
+                        mock_exec
+                    )
+                    mock_client_query.filter_by.return_value.first.return_value = (
+                        mock_client
+                    )
 
                     new_offset, metrics = parse_client_log_incremental(
                         log_path, exp_id=1, client_id=1, start_offset=0, is_hpc=True

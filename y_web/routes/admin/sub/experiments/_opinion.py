@@ -23,6 +23,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urlparse
 from urllib.request import Request, urlopen
 
+import networkx as nx
 from flask import (
     Blueprint,
     current_app,
@@ -34,7 +35,6 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required, login_user
-import networkx as nx
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
@@ -115,7 +115,10 @@ from ._blueprint import (
     experiments,
 )
 from ._helpers import *  # noqa: F401,F403
-from ._helpers import _current_admin_user_or_none, _load_stress_reward_experiment_context
+from ._helpers import (
+    _current_admin_user_or_none,
+    _load_stress_reward_experiment_context,
+)
 
 
 def _resolve_opinion_evolution_topics(expid):
@@ -267,26 +270,16 @@ def _build_propaganda_target_panel(
     """Return propaganda target options and selected-target analytics."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        propaganda_count = (
-            conn.execute(
-                """
+        propaganda_count = conn.execute("""
                 SELECT COUNT(*)
                 FROM user_mgmt
                 WHERE user_type = 'propaganda'
-                """
-            ).fetchone()[0]
-            or 0
-        )
-        has_activity_table = (
-            conn.execute(
-                """
+                """).fetchone()[0] or 0
+        has_activity_table = conn.execute("""
                 SELECT 1
                 FROM sqlite_master
                 WHERE type = 'table' AND name = 'propaganda_activity'
-                """
-            ).fetchone()
-            is not None
-        )
+                """).fetchone() is not None
         if propaganda_count <= 0 or not has_activity_table:
             return {
                 "available": False,
@@ -298,20 +291,22 @@ def _build_propaganda_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
         if topic_id in (None, "", "null"):
-            active_topic_rows = conn.execute(
-                """
+            active_topic_rows = conn.execute("""
                 SELECT DISTINCT pa.topic_id AS topic_id, COALESCE(i.interest, pa.topic_id) AS topic_name
                 FROM propaganda_activity pa
                 LEFT JOIN interests i
                   ON i.iid = pa.topic_id
                 ORDER BY topic_name ASC
-                """
-            ).fetchall()
+                """).fetchall()
             return {
                 "available": True,
                 "deployed_agents": int(propaganda_count),
@@ -325,19 +320,21 @@ def _build_propaganda_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
-        active_topic_rows = conn.execute(
-            """
+        active_topic_rows = conn.execute("""
             SELECT DISTINCT pa.topic_id AS topic_id, COALESCE(i.interest, pa.topic_id) AS topic_name
             FROM propaganda_activity pa
             LEFT JOIN interests i
               ON i.iid = pa.topic_id
             ORDER BY topic_name ASC
-            """
-        ).fetchall()
+            """).fetchall()
         active_topics = [
             {"topic_id": str(row["topic_id"]), "topic_name": row["topic_name"]}
             for row in active_topic_rows
@@ -393,7 +390,11 @@ def _build_propaganda_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
@@ -631,16 +632,11 @@ def _build_mop_target_panel(
     """Return MoP target options and selected-target analytics."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        mop_count = (
-            conn.execute(
-                """
+        mop_count = conn.execute("""
                 SELECT COUNT(*)
                 FROM user_mgmt
                 WHERE user_type = 'master_of_puppets'
-                """
-            ).fetchone()[0]
-            or 0
-        )
+                """).fetchone()[0] or 0
         if mop_count <= 0:
             return {
                 "available": False,
@@ -650,7 +646,11 @@ def _build_mop_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
@@ -663,7 +663,11 @@ def _build_mop_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
@@ -794,7 +798,11 @@ def _build_mop_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
@@ -3158,9 +3166,7 @@ def _build_stress_reward_trends(db_path, filter_day, filter_hour):
                 row["day"] == target_day and row["hour"] > target_hour
             ):
                 break
-            latest_aggregates[(str(row["uid"]), row["variable"])] = float(
-                row["value"]
-            )
+            latest_aggregates[(str(row["uid"]), row["variable"])] = float(row["value"])
             current_index += 1
 
         stress_values = [
@@ -3287,8 +3293,7 @@ def _build_sa_target_trend(conn, target_uid, filter_day, filter_hour):
     ).fetchall()
 
     interaction_rows = conn.execute(
-        _stress_reward_sa_interaction_cte()
-        + """
+        _stress_reward_sa_interaction_cte() + """
         SELECT day, COUNT(*) AS interaction_count
         FROM sa_interactions
         WHERE target_uid = ?
@@ -3350,16 +3355,11 @@ def _build_stress_attacker_target_panel(
     """Return Stress Attacker target options and selected-target analytics."""
     with sqlite3.connect(db_path) as conn:
         conn.row_factory = sqlite3.Row
-        stress_attacker_count = (
-            conn.execute(
-                """
+        stress_attacker_count = conn.execute("""
                 SELECT COUNT(*)
                 FROM user_mgmt
                 WHERE user_type = 'stress_attacker'
-                """
-            ).fetchone()[0]
-            or 0
-        )
+                """).fetchone()[0] or 0
         if stress_attacker_count <= 0:
             return {
                 "available": False,
@@ -3369,13 +3369,16 @@ def _build_stress_attacker_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
         option_rows = conn.execute(
-            _stress_reward_sa_interaction_cte()
-            + """
+            _stress_reward_sa_interaction_cte() + """
             SELECT
                 i.target_uid AS uid,
                 u.username AS username,
@@ -3416,7 +3419,11 @@ def _build_stress_attacker_target_panel(
                 "selected_username": None,
                 "attacker_usernames": [],
                 "interaction_count": 0,
-                "trend_data": {"timestamps": [], "timestamp_mapping": {}, "datasets": []},
+                "trend_data": {
+                    "timestamps": [],
+                    "timestamp_mapping": {},
+                    "datasets": [],
+                },
                 "interaction_events": [],
             }
 
@@ -3428,8 +3435,7 @@ def _build_stress_attacker_target_panel(
             option for option in options if option["uid"] == selected_target_uid
         )
         interaction_rows = conn.execute(
-            _stress_reward_sa_interaction_cte()
-            + """
+            _stress_reward_sa_interaction_cte() + """
             SELECT
                 day,
                 hour,
@@ -3481,8 +3487,8 @@ def _build_stress_attacker_target_panel(
 @login_required
 def stress_reward_evolution(expid):
     """Display stress/reward evolution analytics for a stress-enabled experiment."""
-    experiment, _experiment_dir, error_response = _load_stress_reward_experiment_context(
-        expid, require_manage=False
+    experiment, _experiment_dir, error_response = (
+        _load_stress_reward_experiment_context(expid, require_manage=False)
     )
     if error_response is not None:
         return error_response
@@ -3522,8 +3528,8 @@ def stress_reward_evolution(expid):
 @login_required
 def stress_reward_evolution_data(expid):
     """Return stress/reward evolution analytics for a selected simulation time."""
-    experiment, _experiment_dir, error_response = _load_stress_reward_experiment_context(
-        expid, require_manage=False
+    experiment, _experiment_dir, error_response = (
+        _load_stress_reward_experiment_context(expid, require_manage=False)
     )
     if error_response is not None:
         return jsonify({"error": "Stress/reward analytics not available"}), 400
@@ -3578,7 +3584,11 @@ def _load_annotation_experiment_context(
     db_path = _resolve_experiment_db_path(experiment)
     config_path = os.path.join(
         os.path.dirname(db_path),
-        "server_config.json" if experiment.simulator_type == "HPC" else "config_server.json",
+        (
+            "server_config.json"
+            if experiment.simulator_type == "HPC"
+            else "config_server.json"
+        ),
     )
     config = {}
     if os.path.exists(config_path):
@@ -3590,10 +3600,15 @@ def _load_annotation_experiment_context(
 
     enabled = bool(config.get(f"{annotation_key}_annotation"))
     if not enabled:
-        enabled = bool(experiment.annotations and annotation_key in experiment.annotations)
+        enabled = bool(
+            experiment.annotations and annotation_key in experiment.annotations
+        )
 
     if not enabled:
-        flash(f"Enable {annotation_label} annotation in Experiment Configuration first.", "warning")
+        flash(
+            f"Enable {annotation_label} annotation in Experiment Configuration first.",
+            "warning",
+        )
         return None, None, redirect(url_for("experiments.experiment_details", uid=uid))
 
     return experiment, db_path, None
@@ -3725,7 +3740,9 @@ def _follow_round_column(conn):
 
 
 def _table_round_column(conn, table_name):
-    columns = {row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()}
+    columns = {
+        row[1] for row in conn.execute(f"PRAGMA table_info({table_name})").fetchall()
+    }
     if "round" in columns:
         return "round"
     if "tid" in columns:
@@ -3741,7 +3758,9 @@ def _network_graph_metrics(graph):
     density = nx.density(graph) if node_count > 1 else 0.0
     weak_components = list(nx.weakly_connected_components(graph)) if node_count else []
     component_count = len(weak_components)
-    largest_component_size = max((len(component) for component in weak_components), default=0)
+    largest_component_size = max(
+        (len(component) for component in weak_components), default=0
+    )
     largest_component_share = _safe_ratio(largest_component_size, node_count, digits=4)
     reciprocity = nx.reciprocity(graph)
     reciprocity = 0.0 if reciprocity is None else round(float(reciprocity), 4)
@@ -3867,8 +3886,7 @@ def _build_network_analytics_payload(
                     """,
                     (filter_day, filter_day, filter_hour),
                 ).fetchall()
-                all_events = conn.execute(
-                    f"""
+                all_events = conn.execute(f"""
                     SELECT
                         f.rowid AS event_order,
                         CAST(f.user_id AS TEXT) AS user_id,
@@ -3879,8 +3897,7 @@ def _build_network_analytics_payload(
                     FROM follow f
                     JOIN rounds r ON r.id = f.{round_column}
                     ORDER BY r.day ASC, r.hour ASC, f.rowid ASC
-                    """
-                ).fetchall()
+                    """).fetchall()
             else:
                 events = conn.execute(
                     f"""
@@ -3899,8 +3916,7 @@ def _build_network_analytics_payload(
                     """,
                     (filter_day, filter_day, filter_hour),
                 ).fetchall()
-                all_events = conn.execute(
-                    f"""
+                all_events = conn.execute(f"""
                     SELECT
                         m.rowid AS event_order,
                         CAST(m.user_id AS TEXT) AS user_id,
@@ -3912,14 +3928,17 @@ def _build_network_analytics_payload(
                     JOIN post p ON p.id = m.post_id
                     JOIN rounds r ON r.id = m.{round_column}
                     ORDER BY r.day ASC, r.hour ASC, m.rowid ASC
-                    """
-                ).fetchall()
+                    """).fetchall()
 
             events_by_point = {}
             for event in events:
                 event_day = int(event["day"] or 0)
                 event_hour = int(event["hour"] or 0)
-                event_point = (event_day, event_hour) if granularity == "hour" else (event_day, None)
+                event_point = (
+                    (event_day, event_hour)
+                    if granularity == "hour"
+                    else (event_day, None)
+                )
                 events_by_point.setdefault(event_point, []).append(event)
 
             snapshots = []
@@ -3965,11 +3984,7 @@ def _build_network_analytics_payload(
         _, out_degree_ccdf = _ccdf_from_degrees(list(out_degrees.values()))
 
         ego_candidates = sorted(
-            (
-                node
-                for node in graph.nodes()
-                if total_degrees.get(node, 0) > 0
-            ),
+            (node for node in graph.nodes() if total_degrees.get(node, 0) > 0),
             key=lambda node: (
                 total_degrees.get(node, 0),
                 usernames.get(node, str(node)).lower(),
@@ -4001,8 +4016,12 @@ def _build_network_analytics_payload(
                 elif target == selected_uid:
                     appeared_neighbors_full.add(source)
 
-            active_neighbors.update(str(node) for node in graph.successors(selected_uid))
-            active_neighbors.update(str(node) for node in graph.predecessors(selected_uid))
+            active_neighbors.update(
+                str(node) for node in graph.successors(selected_uid)
+            )
+            active_neighbors.update(
+                str(node) for node in graph.predecessors(selected_uid)
+            )
 
         ego_nodes_full = [selected_uid] if selected_uid else []
         ego_nodes_full.extend(
@@ -4076,7 +4095,11 @@ def _build_network_analytics_payload(
 
     snapshots = locals().get("snapshots", [])
     timestamps = [
-        (f"Day {point[0]}, Hour {point[1]}" if point[1] is not None else f"Day {point[0]}")
+        (
+            f"Day {point[0]}, Hour {point[1]}"
+            if point[1] is not None
+            else f"Day {point[0]}"
+        )
         for point, _ in snapshots
     ]
     trend_metrics = [metric for _, metric in snapshots]
@@ -4235,7 +4258,9 @@ def _build_network_analytics_payload(
             "datasets": [
                 {
                     "label": "Largest Component Share",
-                    "data": [metric["largest_component_share"] for metric in trend_metrics],
+                    "data": [
+                        metric["largest_component_share"] for metric in trend_metrics
+                    ],
                     "borderColor": "#0ea5e9",
                     "fill": False,
                     "tension": 0.25,
@@ -4270,7 +4295,9 @@ def _build_network_analytics_payload(
             "title": f"{network_title} Ego Network Over Time",
             "description": ego_description,
             "selected_uid": selected_uid,
-            "selected_username": usernames.get(selected_uid, "—") if selected_uid else "—",
+            "selected_username": (
+                usernames.get(selected_uid, "—") if selected_uid else "—"
+            ),
             "options": [
                 {
                     "uid": node,
@@ -4295,7 +4322,9 @@ def _topic_name_mapping(expid, conn):
     topic_names = {}
     table_names = {
         row["name"] if isinstance(row, sqlite3.Row) else row[0]
-        for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+        for row in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table'"
+        ).fetchall()
     }
     if "interests" in table_names:
         for row in conn.execute("SELECT iid, interest FROM interests").fetchall():
@@ -4318,15 +4347,18 @@ def _build_topic_evolution_payload(
         topic_names = _topic_name_mapping(expid, conn)
         table_names = {
             row["name"] if isinstance(row, sqlite3.Row) else row[0]
-            for row in conn.execute("SELECT name FROM sqlite_master WHERE type = 'table'").fetchall()
+            for row in conn.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
         }
-        reported_round_column = _table_round_column(conn, "reported") if "reported" in table_names else None
+        reported_round_column = (
+            _table_round_column(conn, "reported") if "reported" in table_names else None
+        )
         total_population = _safe_int(
             conn.execute("SELECT COUNT(*) AS c FROM user_mgmt").fetchone()["c"]
         )
 
-        event_queries = [
-            """
+        event_queries = ["""
             SELECT
                 pt.topic_id AS topic_id,
                 p.user_id AS actor_id,
@@ -4337,13 +4369,11 @@ def _build_topic_evolution_payload(
             JOIN post p ON p.id = pt.post_id
             JOIN rounds r ON r.id = p.round
             WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-            """
-        ]
+            """]
         params = [filter_day, filter_day, filter_hour]
 
         if "reactions" in table_names:
-            event_queries.append(
-                """
+            event_queries.append("""
                 SELECT
                     pt.topic_id AS topic_id,
                     re.user_id AS actor_id,
@@ -4354,13 +4384,11 @@ def _build_topic_evolution_payload(
                 JOIN reactions re ON re.post_id = pt.post_id
                 JOIN rounds r ON r.id = re.round
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-                """
-            )
+                """)
             params.extend([filter_day, filter_day, filter_hour])
 
         if "reported" in table_names and reported_round_column:
-            event_queries.append(
-                f"""
+            event_queries.append(f"""
                 SELECT
                     pt.topic_id AS topic_id,
                     rp.from_uid AS actor_id,
@@ -4371,8 +4399,7 @@ def _build_topic_evolution_payload(
                 JOIN reported rp ON rp.to_post = pt.post_id
                 JOIN rounds r ON r.id = rp.{reported_round_column}
                 WHERE (r.day < ? OR (r.day = ? AND r.hour <= ?))
-                """
-            )
+                """)
             params.extend([filter_day, filter_day, filter_hour])
 
         topic_events_sql = " UNION ALL ".join(event_queries)
@@ -4393,7 +4420,9 @@ def _build_topic_evolution_payload(
         topic_options = [
             {
                 "topic_id": str(row["topic_id"]),
-                "topic_name": topic_names.get(str(row["topic_id"]), str(row["topic_id"])),
+                "topic_name": topic_names.get(
+                    str(row["topic_id"]), str(row["topic_id"])
+                ),
                 "total_volume": _safe_int(row["total_volume"]),
             }
             for row in current_volume_rows
@@ -4513,13 +4542,20 @@ def _build_topic_evolution_payload(
     if trend_mode not in {"daily", "cumulative"}:
         trend_mode = "daily"
 
-    days = sorted({int(row["day"]) for row in lifecycle_rows} | {int(row["day"]) for row in selected_volume_rows})
+    days = sorted(
+        {int(row["day"]) for row in lifecycle_rows}
+        | {int(row["day"]) for row in selected_volume_rows}
+    )
     volume_by_topic_day = defaultdict(dict)
     for row in selected_volume_rows:
-        volume_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(row["total_volume"])
+        volume_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(
+            row["total_volume"]
+        )
     participants_by_topic_day = defaultdict(dict)
     for row in participant_rows:
-        participants_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(row["participants"])
+        participants_by_topic_day[str(row["topic_id"])][int(row["day"])] = _safe_int(
+            row["participants"]
+        )
 
     if trend_mode == "cumulative":
         for topic_id in selected_topic_ids:
@@ -4531,7 +4567,9 @@ def _build_topic_evolution_payload(
         for row in actor_day_rows:
             topic_id = str(row["topic_id"])
             seen_by_topic[topic_id].add(str(row["actor_id"]))
-            participants_by_topic_day[topic_id][int(row["day"])] = len(seen_by_topic[topic_id])
+            participants_by_topic_day[topic_id][int(row["day"])] = len(
+                seen_by_topic[topic_id]
+            )
         for topic_id in selected_topic_ids:
             last_value = 0
             for day in days:
@@ -4539,9 +4577,13 @@ def _build_topic_evolution_payload(
                     last_value = participants_by_topic_day[topic_id][day]
                 participants_by_topic_day[topic_id][day] = last_value
 
-    active_topic_count = max((_safe_int(row["active_topics"]) for row in lifecycle_rows), default=0)
+    active_topic_count = max(
+        (_safe_int(row["active_topics"]) for row in lifecycle_rows), default=0
+    )
     new_topic_count = sum(_safe_int(row["new_topics"]) for row in lifecycle_rows)
-    vanished_topic_count = sum(_safe_int(row["vanished_topics"]) for row in lifecycle_rows)
+    vanished_topic_count = sum(
+        _safe_int(row["vanished_topics"]) for row in lifecycle_rows
+    )
 
     topic_palette = [
         "#2563eb",
@@ -4556,7 +4598,9 @@ def _build_topic_evolution_payload(
 
     def _topic_color(topic_id):
         if topic_id in selected_topic_ids:
-            return topic_palette[selected_topic_ids.index(topic_id) % len(topic_palette)]
+            return topic_palette[
+                selected_topic_ids.index(topic_id) % len(topic_palette)
+            ]
         return topic_palette[0]
 
     stats = [
@@ -4616,7 +4660,11 @@ def _build_topic_evolution_payload(
             "type": "bar",
             "labels": [
                 next(
-                    (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                    (
+                        option["topic_name"]
+                        for option in topic_options
+                        if option["topic_id"] == topic_id
+                    ),
                     topic_id,
                 )
                 for topic_id in selected_topic_ids
@@ -4626,7 +4674,11 @@ def _build_topic_evolution_payload(
                     "label": "Total Volume",
                     "data": [
                         next(
-                            (option["total_volume"] for option in topic_options if option["topic_id"] == topic_id),
+                            (
+                                option["total_volume"]
+                                for option in topic_options
+                                if option["topic_id"] == topic_id
+                            ),
                             0,
                         )
                         for topic_id in selected_topic_ids
@@ -4652,7 +4704,11 @@ def _build_topic_evolution_payload(
             "datasets": [
                 {
                     "label": next(
-                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                        (
+                            option["topic_name"]
+                            for option in topic_options
+                            if option["topic_id"] == topic_id
+                        ),
                         topic_id,
                     ),
                     "data": [volume_by_topic_day[topic_id].get(day, 0) for day in days],
@@ -4679,12 +4735,18 @@ def _build_topic_evolution_payload(
             "datasets": [
                 {
                     "label": next(
-                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+                        (
+                            option["topic_name"]
+                            for option in topic_options
+                            if option["topic_id"] == topic_id
+                        ),
                         topic_id,
                     ),
                     "data": [
                         round(
-                            100.0 * participants_by_topic_day[topic_id].get(day, 0) / max(total_population, 1),
+                            100.0
+                            * participants_by_topic_day[topic_id].get(day, 0)
+                            / max(total_population, 1),
                             2,
                         )
                         for day in days
@@ -4735,7 +4797,9 @@ def _build_topic_evolution_payload(
                 },
                 {
                     "label": "Vanished Topics",
-                    "data": [_safe_int(row["vanished_topics"]) for row in lifecycle_rows],
+                    "data": [
+                        _safe_int(row["vanished_topics"]) for row in lifecycle_rows
+                    ],
                     "borderColor": "#f59e0b",
                     "backgroundColor": "transparent",
                     "borderDash": [3, 3],
@@ -4761,7 +4825,11 @@ def _build_topic_evolution_payload(
             "rows": [
                 [
                     next(
-                        (option["topic_name"] for option in topic_options if option["topic_id"] == str(row["topic_id"])),
+                        (
+                            option["topic_name"]
+                            for option in topic_options
+                            if option["topic_id"] == str(row["topic_id"])
+                        ),
                         str(row["topic_id"]),
                     ),
                     f"Day {_safe_int(row['first_day'])}",
@@ -4857,7 +4925,12 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
             GROUP BY r.day
             ORDER BY r.day
             """,
-            (*([threshold] * len(toxicity_columns)), filter_day, filter_day, filter_hour),
+            (
+                *([threshold] * len(toxicity_columns)),
+                filter_day,
+                filter_day,
+                filter_hour,
+            ),
         ).fetchall()
 
         distribution_rows = conn.execute(
@@ -4912,8 +4985,7 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
         non_empty_bucket_indices = [0]
 
     distribution_labels = [
-        f"{index / 10:.1f}-{(index + 1) / 10:.1f}"
-        for index in non_empty_bucket_indices
+        f"{index / 10:.1f}-{(index + 1) / 10:.1f}" for index in non_empty_bucket_indices
     ]
     distribution_data = [bucket_counts[index] for index in non_empty_bucket_indices]
 
@@ -5003,10 +5075,15 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
                     "label": "Posts",
                     "data": distribution_data,
                     "backgroundColor": [
-                        "#93c5fd" if bucket_index < 3
-                        else "#fbbf24" if bucket_index < 6
-                        else "#fb7185" if bucket_index < 8
-                        else "#b91c1c"
+                        (
+                            "#93c5fd"
+                            if bucket_index < 3
+                            else (
+                                "#fbbf24"
+                                if bucket_index < 6
+                                else "#fb7185" if bucket_index < 8 else "#b91c1c"
+                            )
+                        )
                         for bucket_index in non_empty_bucket_indices
                     ],
                     "borderColor": "#ffffff",
@@ -5022,11 +5099,10 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
             "labels": [f"Day {int(row['day'])}" for row in trend_rows],
             "datasets": [
                 {
-                    "label": category_labels.get(column, column.replace("_", " ").title()),
-                    "data": [
-                        _safe_float(row[f"avg_{column}"])
-                        for row in trend_rows
-                    ],
+                    "label": category_labels.get(
+                        column, column.replace("_", " ").title()
+                    ),
+                    "data": [_safe_float(row[f"avg_{column}"]) for row in trend_rows],
                     "borderColor": category_palette[index % len(category_palette)],
                     "fill": False,
                     "tension": 0.25,
@@ -5042,10 +5118,11 @@ def _build_toxicity_analytics_payload(db_path, filter_day, filter_hour, threshol
             "labels": [f"Day {int(row['day'])}" for row in category_trend_rows],
             "datasets": [
                 {
-                    "label": category_labels.get(column, column.replace("_", " ").title()),
+                    "label": category_labels.get(
+                        column, column.replace("_", " ").title()
+                    ),
                     "data": [
-                        _safe_float(row[f"pct_{column}"])
-                        for row in category_trend_rows
+                        _safe_float(row[f"pct_{column}"]) for row in category_trend_rows
                     ],
                     "borderColor": category_palette[index % len(category_palette)],
                     "fill": False,
@@ -5217,7 +5294,9 @@ def _build_sentiment_analytics_payload(db_path, filter_day, filter_hour):
             "datasets": [
                 {
                     "label": "Average Compound",
-                    "data": [_safe_float(row["average_compound"]) for row in trend_rows],
+                    "data": [
+                        _safe_float(row["average_compound"]) for row in trend_rows
+                    ],
                     "borderColor": "#2563eb",
                     "backgroundColor": "rgba(37, 99, 235, 0.16)",
                     "fill": True,
@@ -5397,7 +5476,9 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
             "datasets": [
                 {
                     "label": "Emotion Tags",
-                    "data": [int(row["emotion_count"] or 0) for row in distribution_rows[:10]],
+                    "data": [
+                        int(row["emotion_count"] or 0) for row in distribution_rows[:10]
+                    ],
                     "backgroundColor": "#8b5cf6",
                 }
             ],
@@ -5431,7 +5512,9 @@ def _build_emotion_analytics_payload(db_path, filter_day, filter_hour):
                 },
                 {
                     "label": "Annotated Posts",
-                    "data": [_safe_int(row["annotated_posts"]) for row in secondary_rows],
+                    "data": [
+                        _safe_int(row["annotated_posts"]) for row in secondary_rows
+                    ],
                     "backgroundColor": "#60a5fa",
                 },
             ],
@@ -5693,7 +5776,11 @@ def network_analysis(expid):
     filter_day = request.args.get("day", type=int, default=max_day)
     filter_hour = request.args.get("hour", type=int, default=max_hour)
     selected_uid = str(request.args.get("target_uid", "") or "").strip() or None
-    network_type = str(request.args.get("network_type", available_network_types[0]) or "").strip().lower()
+    network_type = (
+        str(request.args.get("network_type", available_network_types[0]) or "")
+        .strip()
+        .lower()
+    )
     granularity = str(request.args.get("granularity", "day") or "").strip().lower()
     if network_type not in available_network_types:
         network_type = available_network_types[0]
@@ -5747,7 +5834,11 @@ def network_analysis_data(expid):
     filter_day = request.args.get("day", type=int, default=1)
     filter_hour = request.args.get("hour", type=int, default=1)
     selected_uid = str(request.args.get("target_uid", "") or "").strip() or None
-    network_type = str(request.args.get("network_type", available_network_types[0]) or "").strip().lower()
+    network_type = (
+        str(request.args.get("network_type", available_network_types[0]) or "")
+        .strip()
+        .lower()
+    )
     granularity = str(request.args.get("granularity", "day") or "").strip().lower()
     if network_type not in available_network_types:
         network_type = available_network_types[0]
