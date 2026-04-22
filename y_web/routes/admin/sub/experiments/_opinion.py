@@ -152,6 +152,20 @@ def _resolve_opinion_evolution_topics(expid):
     return []
 
 
+def _get_ordered_opinion_groups():
+    """Return opinion groups sorted by numeric lower bound."""
+    groups = OpinionGroup.query.all()
+    return sorted(groups, key=lambda group: float(group.lower_bound))
+
+
+def _opinion_group_contains(group, opinion_value):
+    """Check whether an opinion value falls within a group's numeric bounds."""
+    lower_bound = float(group.lower_bound)
+    upper_bound = float(group.upper_bound)
+    numeric_value = float(opinion_value)
+    return lower_bound <= numeric_value <= upper_bound
+
+
 def _resolve_opinion_experiment_db_name(experiment):
     """Resolve the sqlite database path that should back opinion evolution."""
     db_name = (
@@ -765,7 +779,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
     from y_web.src.models import Agent_Opinion, Rounds
 
     # Get opinion groups from dashboard database for binning
-    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups = _get_ordered_opinion_groups()
 
     # Find all rounds up to the specified day/hour for x-axis display
     # We'll filter to hour==0 (day boundaries) for cleaner x-axis labels
@@ -940,7 +954,7 @@ def generate_group_trends_data(expid, filter_day, filter_hour, filter_topic_id):
         for opinion_value in latest_at_time.values():
             matched = False
             for group in opinion_groups:
-                if group.lower_bound <= opinion_value <= group.upper_bound:
+                if _opinion_group_contains(group, opinion_value):
                     binned_counts[group.name] += 1
                     matched = True
                     break
@@ -1267,7 +1281,7 @@ def generate_agent_timeseries_data(
         }
 
     # Get opinion groups for color coding
-    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups = _get_ordered_opinion_groups()
 
     # Define color palette matching the opinion distribution chart
     color_palette = [
@@ -1303,7 +1317,7 @@ def generate_agent_timeseries_data(
 
         if first_opinion is not None:
             for idx, group in enumerate(opinion_groups):
-                if group.lower_bound <= first_opinion <= group.upper_bound:
+                if _opinion_group_contains(group, first_opinion):
                     initial_group = group.name
                     # Use color from palette if available
                     if idx < len(color_palette):
@@ -1669,12 +1683,12 @@ def get_or_compute_opinion_stats(expid, filter_day, filter_hour, filter_topic_id
     unique_agents = len(set(key[0] for key in latest_opinions.keys()))
 
     # Get opinion groups and bin the data
-    opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+    opinion_groups = _get_ordered_opinion_groups()
     binned_data = {group.name: 0 for group in opinion_groups}
 
     for opinion_value in opinion_data:
         for group in opinion_groups:
-            if group.lower_bound <= opinion_value <= group.upper_bound:
+            if _opinion_group_contains(group, opinion_value):
                 binned_data[group.name] += 1
                 break
 
@@ -1874,6 +1888,7 @@ def opinion_evolution(expid):
         # Latest means highest (day, hour) combination
         latest_opinions = {}
         for (
+            row_id,
             agent_id,
             topic_id,
             tid,
@@ -1881,7 +1896,6 @@ def opinion_evolution(expid):
             id_interacted_with,
             day,
             hour,
-            row_id,
         ) in all_opinions:
             key = (agent_id, topic_id)
             if key not in latest_opinions or (day, hour, tid, row_id) > (
@@ -1912,7 +1926,7 @@ def opinion_evolution(expid):
         )  # key[0] is agent_id
 
         # Get opinion groups from dashboard database for binning
-        opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+        opinion_groups = _get_ordered_opinion_groups()
 
         # Bin the opinions according to opinion_groups
         binned_data = {group.name: 0 for group in opinion_groups}
@@ -1922,7 +1936,7 @@ def opinion_evolution(expid):
             # Find which bin this opinion belongs to
             matched = False
             for group in opinion_groups:
-                if group.lower_bound <= opinion_value <= group.upper_bound:
+                if _opinion_group_contains(group, opinion_value):
                     binned_data[group.name] += 1
                     matched = True
                     break
@@ -2052,7 +2066,7 @@ def opinion_evolution_data(expid):
         )
 
         # Get opinion groups from dashboard database for binning
-        opinion_groups = OpinionGroup.query.order_by(OpinionGroup.lower_bound).all()
+        opinion_groups = _get_ordered_opinion_groups()
 
         # Prepare data for chart
         chart_labels = [group.name for group in opinion_groups]
