@@ -1,286 +1,87 @@
-{%  include "microblogging/header.html" %}
-
+{% include "microblogging/header.html" %}
 
 <div class="view-wrapper">
-
-    <div class="options-nav no-shadow">
-        <div class="container is-fluid">
-            <div class="nav-inner is-friends">
-
-                <div class="option-tabs is-friends">
-                    <a class="option-tab is-active" href="/{{exp_id}}/profile/{{ user_id }}/recent/1"><span>Profile</span></a>
-
-
-                    <a class="option-tab is-active" data-tab="all-friends">
-                        <span>Followers</span>
+    <div class="container is-fluid">
+        <div id="friends-page" class="ys-friends-page">
+            <section class="ys-friends-hero-card">
+                <div class="ys-friends-hero-main">
+                    <a class="ys-friends-back-link" href="/{{exp_id}}/profile/{{ user_id }}/recent/1">
+                        <i class="mdi mdi-arrow-left"></i>
+                        <span>Back to profile</span>
                     </a>
-                    <a class="option-tab" data-tab="starred-friends">
-                        <span>Followee</span>
-                    </a>
-                    <!--<a class="option-tab" data-tab="starred-Pages">
-                        <span>Pages</span>
-                    </a>-->
-                    <!--<div class="option-naver"></div>-->
-
-                </div>
-                <div class="end-group">
-                    <div class="nav-item is-friend-count"> Followers {{ number_followers }} - Followee {{
-                        number_followees }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="subloader is-grey is-active">
-            <div class="loader is-loading"></div>
-        </div>
-
-        <div id="friends-page" class="friends-wrapper main-container">
-
-            <div id="all-friends" class="card-row-wrap is-active">
-                <div class="card-row-placeholder is-hidden">No matching results</div>
-                <div class="card-row">
-
-                    <!--Friend-->
-                    {% if len(followers) > 0 %}
-                    {% for follower in followers %}
-                    <div class="card-flex friend-card">
-                        <div class="img-container">
-
+                    <div class="ys-friends-hero-identity">
+                        <div class="ys-friends-hero-avatar">
                             <img
-                                    id="user-avatar"
-                                    {% if profile_pic_follower[follower['id']] %}
-                                        data-demo-src="{{ profile_pic_follower[follower['id']] }}"
-                                    {% else %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ (follower['id']|user_image_id) +'.png') }}"
-                                    {% endif %}
-                                    alt=""
-
+                                src="https://via.placeholder.com/300x300"
+                                {% if viewed_profile_pic %}
+                                    data-demo-src="{{ viewed_profile_pic }}"
+                                {% else %}
+                                    data-demo-src="{{ url_for('static', filename='assets/img/users/'+ (user_id|user_image_id) +'.png') }}"
+                                {% endif %}
+                                alt=""
                             />
-
                         </div>
-                        <div class="friend-info">
-                            <h3><a href="/{{exp_id}}/profile/{{ follower['id'] }}/recent/1">{{ follower['username'] }}</a></h3>
-                        </div>
-                        <div class="friend-stats">
-                            <div class="stat-block">
-                                <label>Followers</label>
-                                <div class="stat-number">{{ follower['number_followers'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Followee</label>
-                                <div class="stat-number">{{ follower['number_followees'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Reactions</label>
-                                <div class="stat-number">{{ follower['number_reactions'] }}</div>
-                            </div>
+                        <div class="ys-friends-hero-copy">
+                            <span class="ys-friends-hero-kicker">Connections</span>
+                            <h1>{{ viewed_username }}</h1>
+                            <p>Explore the active social graph around this profile.</p>
                         </div>
                     </div>
-                    {% endfor %}
-                    {% else %}
- <div class="ys-text-center-w100">
-                        <div class="img-container">
-
- <img src="{{ url_for('static', filename='assets/img/robots/alone.png') }}" class="ys-w-40-rounded">
-                        <p>Looks like you're all alone here... Time to connect and make some friends!</p>
-                        </div>
-                    </div>
-                    {% endif %}
                 </div>
-            </div>
-
-            <!--Second tab-->
-            <div id="starred-friends" class="card-row-wrap">
-                <div class="card-row-placeholder is-hidden">No matching results</div>
-                <div class="card-row">
-
-                    <!--Friend-->
-                    {% if len(followees) > 0 %}
-                    {% for followee in followees %}
-                    <div class="card-flex friend-card">
-
-                        <div class="img-container">
-                            <img
-                                    id="user-avatar"
-                                    {% if profile_pic_followee[followee['id']] %}
-                                        data-demo-src="{{ profile_pic_followee[followee['id']] }}"
-                                    {% else %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ (followee['id']|user_image_id) +'.png') }}"
-                                    {% endif %}
-                                    alt=""
-
-                            />
-
-                        </div>
-                        <div class="friend-info">
-                            <h3><a href="/{{exp_id}}/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
-                        </div>
-                        <div class="friend-stats">
-                            <div class="stat-block">
-                                <label>Followers</label>
-                                <div class="stat-number">{{ followee['number_followers'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Followee</label>
-                                <div class="stat-number">{{ followee['number_followees'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Reactions</label>
-                                <div class="stat-number">{{ followee['number_reactions'] }}</div>
-                            </div>
-                        </div>
+                <div class="ys-friends-stats-row">
+                    <div class="ys-friends-stat-card is-followers">
+                        <span class="ys-friends-stat-card__value">{{ number_followers }}</span>
+                        <span class="ys-friends-stat-card__label">People Following Me</span>
                     </div>
-                    {% endfor %}
-                    {% else %}
- <div class="ys-text-center-w100">
-                        <div class="img-container">
-
- <img src="{{ url_for('static', filename='assets/img/robots/alone.png') }}" class="ys-w-40-rounded">
-                        <p>Looks like you're all alone here... Time to connect and make some friends!</p>
-                        </div>
+                    <div class="ys-friends-stat-card is-followees">
+                        <span class="ys-friends-stat-card__value">{{ number_followees }}</span>
+                        <span class="ys-friends-stat-card__label">People I Follow</span>
                     </div>
-                    {% endif %}
                 </div>
+            </section>
 
-
-            </div>
-
-           <!-- <div id="starred-pages" class="card-row-wrap">
-                <div class="card-row-placeholder is-hidden">No matching results</div>
-                <div class="card-row">
-
-
-                    {% if len(followees) > 0 %}
-                    {% for followee in followees %}
-                    <div class="card-flex friend-card">
-
-                        <div class="img-container">
-                            <img
-                                    id="user-avatar"
-                                    {% if profile_pic_followee[followee['id']] %}
-                                        data-demo-src="{{ profile_pic_followee[followee['id']] }}"
-                                    {% else %}
-                                        data-demo-src="{{ url_for('static', filename='assets/img/users/'+ (followee['id']|user_image_id) +'.png') }}"
-                                    {% endif %}
-                                    alt=""
-
-                            />
-
-                        </div>
-                        <div class="friend-info">
-                            <h3><a href="/{{exp_id}}/profile/{{ followee['id'] }}/recent/1">{{ followee['username'] }}</a></h3>
-                        </div>
-                        <div class="friend-stats">
-                            <div class="stat-block">
-                                <label>Followers</label>
-                                <div class="stat-number">{{ followee['number_followers'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Followee</label>
-                                <div class="stat-number">{{ followee['number_followees'] }}</div>
-                            </div>
-                            <div class="stat-block">
-                                <label>Reactions</label>
-                                <div class="stat-number">{{ followee['number_reactions'] }}</div>
-                            </div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                    {% endif %}
+            <section class="ys-friends-list-card">
+                <div
+                    id="friends-panel"
+                    data-friends-api="/{{exp_id}}/api/friends/{{ user_id }}"
+                >
+                    {% include "microblogging/components/friends_panel.html" %}
                 </div>
-
-
-            </div> -->
-
-        </div>
-
-        <div class="load-more-wrap narrow-top has-text-centered">
-            {% if page-1>0 %}
-            <a href="#" class="load-more-button"
-               onclick="window.location.href = '/friends/{{ user_id }}/{{ page-1 }}';">Previous Page</a>
-            {% endif %}
-            <a href="#" class="load-more-button"
-               onclick="window.location.href = '/friends/{{ user_id }}/{{ page+1 }}';">Next Page</a>
+            </section>
         </div>
     </div>
-
 </div>
 
 {% if experiment_memory_enabled %}
 {% include "microblogging/components/chat_panel.html" %}
 {% endif %}
-<!-- Experiment context -->
 <script>
     window.EXP_ID = {{ exp_id if exp_id else 'null' }};
     window.EXP_PREFIX = window.EXP_ID ? '/' + window.EXP_ID : '';
 </script>
 
-<!-- Concatenated js plugins and jQuery -->
-
 <script src="{{ url_for('static', filename='assets/js/app.js') }}"></script>
 <script src="https://js.stripe.com/v3/"></script>
-
-<!-- Core js -->
 <script src="{{ url_for('static', filename='assets/js/global.js') }}"></script>
-
-<!-- Navigation options js -->
 <script src="{{ url_for('static', filename='assets/js/navbar-v1.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-v2.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-mobile.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/navbar-options.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/sidebar-v1.js') }}"></script>
-
-<!-- Core instance js -->
 <script src="{{ url_for('static', filename='assets/js/main.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/chat.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/touch.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/tour.js') }}"></script>
-
-<!-- Components js -->
 <script src="{{ url_for('static', filename='assets/js/explorer.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/widgets.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/modal-uploader.js') }}"></script>
-<!-- <script src="{{ url_for('static', filename='assets/js/popovers-users.js') }}"></script> -->
 <script src="{{ url_for('static', filename='assets/js/popovers-pages.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/lightbox.js') }}"></script>
-
-<!-- Landing page js -->
-
-<!-- Signup page js -->
-
-<!-- Feed pages js -->
 <script src="{{ url_for('static', filename='assets/js/feed.js') }}"></script>
-
-<!-- profile js -->
 <script src="{{ url_for('static', filename='assets/js/profile.js') }}"></script>
-
-<!-- stories js -->
-
-<!-- friends js -->
-<script src="{{ url_for('static', filename='assets/js/friends.js') }}"></script>
-
-<!-- questions js -->
-
-<!-- video js -->
-
-<!-- events js -->
-
-<!-- news js -->
-
-<!-- shop js -->
-
-<!-- inbox js -->
-
-<!-- settings js -->
-
-<!-- map page js -->
-
-<!-- elements page js -->
-
+<script src="{{ url_for('static', filename='assets/js/mb-friends.js') }}"></script>
 {% if experiment_memory_enabled %}
 <script src="{{ url_for('static', filename='assets/js/microblog-chat.js') }}"></script>
 {% endif %}
 </body>
-
 </html>

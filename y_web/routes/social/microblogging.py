@@ -20,6 +20,7 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.data_access import (
+    get_safe_profile_pic,
     get_posts_associated_to_emotion,
     get_posts_associated_to_hashtags,
     get_posts_associated_to_interest,
@@ -50,6 +51,69 @@ from y_web.src.models import (
     User_mgmt,
 )
 from y_web.src.recsys import get_suggested_posts, get_suggested_users
+
+
+def _build_friends_view_model(user_id, page, active_tab):
+    followers, followees, number_followers, number_followees = get_user_friends(
+        user_id, limit=12, page=page
+    )
+
+    profile_pic_follower = {}
+    for f in followers:
+        u = User_mgmt.query.filter_by(id=f["id"]).first()
+        if u is None:
+            continue
+        if u.is_page == 1:
+            pg = Page.query.filter_by(name=f["username"]).first()
+            if pg is not None:
+                profile_pic_follower[f["id"]] = pg.logo
+        else:
+            ag = Agent.query.filter_by(name=f["username"]).first()
+            profile_pic_follower[f["id"]] = (
+                ag.profile_pic if ag is not None and ag.profile_pic is not None else ""
+            )
+
+    profile_pic_followee = {}
+    for f in followees:
+        u = User_mgmt.query.filter_by(id=f["id"]).first()
+        if u is None:
+            continue
+        if u.is_page == 1:
+            pg = Page.query.filter_by(name=f["username"]).first()
+            if pg is not None:
+                profile_pic_followee[f["id"]] = pg.logo
+        else:
+            ag = Agent.query.filter_by(name=f["username"]).first()
+            profile_pic_followee[f["id"]] = (
+                ag.profile_pic if ag is not None and ag.profile_pic is not None else ""
+            )
+
+    active_cards = followers if active_tab == "followers" else followees
+    active_total = number_followers if active_tab == "followers" else number_followees
+    total_pages = max(1, (active_total + 11) // 12) if active_total else 1
+    current_page = min(max(page, 1), total_pages)
+    has_prev_page = current_page > 1
+    has_next_page = current_page < total_pages
+    page_start = ((current_page - 1) * 12) + 1 if active_total else 0
+    page_end = min(current_page * 12, active_total) if active_total else 0
+
+    return {
+        "followers": followers,
+        "followees": followees,
+        "profile_pic_follower": profile_pic_follower,
+        "profile_pic_followee": profile_pic_followee,
+        "active_cards": active_cards,
+        "active_total": active_total,
+        "number_followers": number_followers,
+        "number_followees": number_followees,
+        "total_pages": total_pages,
+        "page": current_page,
+        "has_prev_page": has_prev_page,
+        "has_next_page": has_next_page,
+        "page_start": page_start,
+        "page_end": page_end,
+        "active_tab": active_tab,
+    }
 
 
 @main.get("/feed")
@@ -468,80 +532,100 @@ def get_friends(exp_id, user_id, page=1):
     except (ValueError, TypeError):
         # Keep as string if it's a UUID
         pass
-    followers, followees, number_followers, number_followees = get_user_friends(
-        user_id, limit=12, page=page
-    )
+    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    if active_tab not in {"followers", "followees"}:
+        active_tab = "followers"
+
+    view_model = _build_friends_view_model(user_id, page, active_tab)
     mentions = get_unanswered_mentions(current_user.id)
 
     cu = User_mgmt.query.filter_by(username=current_user.username).first()
+    viewed_user = User_mgmt.query.filter_by(id=user_id).first()
 
-    profile_pic_follower = {}
-
-    for f in followers:
-        u = User_mgmt.query.filter_by(id=f["id"]).first()
-
-        if u.is_page == 1:
-            pg = Page.query.filter_by(name=f["username"]).first()
-            if pg is not None:
-                profile_pic_follower[f["id"]] = pg.logo
-        else:
-            try:
-                ag = Agent.query.filter_by(name=f["username"]).first()
-                profile_pic_follower[f["id"]] = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else ""
-                )
-            except:
-                profile_pic_follower[f["id"]] = ""
-
-    profile_pic_followee = {}
-
-    for f in followees:
-        u = User_mgmt.query.filter_by(id=f["id"]).first()
-
-        if u.is_page == 1:
-            pg = Page.query.filter_by(name=f["username"]).first()
-            if pg is not None:
-                profile_pic_followee[f["id"]] = pg.logo
-        else:
-            try:
-                ag = Agent.query.filter_by(name=f["username"]).first()
-                profile_pic_followee[f["id"]] = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else ""
-                )
-            except:
-                profile_pic_followee[f["id"]] = ""
-
-    us = Admin_users.query.filter_by(username=cu.username).first()
     profile_pic = (
-        us.profile_pic if us is not None and us.profile_pic is not None else ""
+        get_safe_profile_pic(cu.username, getattr(cu, "is_page", 0) or 0) if cu else ""
     )
 
-    logged_id = cu.id
+    logged_id = cu.id if cu else current_user.id
+    viewed_profile_pic = (
+        get_safe_profile_pic(viewed_user.username, getattr(viewed_user, "is_page", 0) or 0)
+        if viewed_user
+        else ""
+    )
+    viewed_username = viewed_user.username if viewed_user else str(user_id)
 
     return render_template(
         "microblogging/friends.html",
-        followers=followers,
+        followers=view_model["followers"],
         profile_pic=profile_pic,
-        profile_pic_follower=profile_pic_follower,
-        followees=followees,
-        profile_pic_followee=profile_pic_followee,
-        page=page,
-        username=cu.username,
+        profile_pic_follower=view_model["profile_pic_follower"],
+        followees=view_model["followees"],
+        profile_pic_followee=view_model["profile_pic_followee"],
+        page=view_model["page"],
+        exp_id=exp_id,
+        username=cu.username if cu else current_user.username,
+        viewed_username=viewed_username,
+        viewed_profile_pic=viewed_profile_pic,
         enumerate=enumerate,
         len=len,
-        logged_username=cu.username,
+        logged_username=cu.username if cu else current_user.username,
         logged_id=logged_id,
         user_id=user_id,
-        number_followers=number_followers,
-        number_followees=number_followees,
+        active_tab=view_model["active_tab"],
+        active_cards=view_model["active_cards"],
+        active_total=view_model["active_total"],
+        total_pages=view_model["total_pages"],
+        has_prev_page=view_model["has_prev_page"],
+        has_next_page=view_model["has_next_page"],
+        page_start=view_model["page_start"],
+        page_end=view_model["page_end"],
+        number_followers=view_model["number_followers"],
+        number_followees=view_model["number_followees"],
         str=str,
         bool=bool,
         mentions=mentions,
         is_admin=is_admin(current_user.username),
+    )
+
+
+@main.get("/<int:exp_id>/api/friends/<user_id>/<int:page>")
+@login_required
+def api_friends(exp_id, user_id, page=1):
+    try:
+        user_id = int(user_id)
+    except (ValueError, TypeError):
+        pass
+
+    active_tab = str(request.args.get("tab", "followers") or "followers").strip().lower()
+    if active_tab not in {"followers", "followees"}:
+        active_tab = "followers"
+
+    view_model = _build_friends_view_model(user_id, page, active_tab)
+    html = render_template(
+        "microblogging/components/friends_panel.html",
+        exp_id=exp_id,
+        user_id=user_id,
+        active_tab=view_model["active_tab"],
+        active_cards=view_model["active_cards"],
+        active_total=view_model["active_total"],
+        page=view_model["page"],
+        total_pages=view_model["total_pages"],
+        has_prev_page=view_model["has_prev_page"],
+        has_next_page=view_model["has_next_page"],
+        page_start=view_model["page_start"],
+        page_end=view_model["page_end"],
+        number_followers=view_model["number_followers"],
+        number_followees=view_model["number_followees"],
+        profile_pic_follower=view_model["profile_pic_follower"],
+        profile_pic_followee=view_model["profile_pic_followee"],
+    )
+    return jsonify(
+        {
+            "html": html,
+            "page": view_model["page"],
+            "total_pages": view_model["total_pages"],
+            "active_tab": view_model["active_tab"],
+        }
     )
 
 

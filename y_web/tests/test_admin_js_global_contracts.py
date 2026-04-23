@@ -204,12 +204,22 @@ def test_agents_grid_bootstrap_uses_data_attributes_instead_of_route_matching():
     template = Path(
         "/Users/rossetti/PycharmProjects/YWeb/y_web/templates/admin/agents.html"
     ).read_text(encoding="utf-8")
+    route_source = Path(
+        "/Users/rossetti/PycharmProjects/YWeb/y_web/routes/admin/sub/agents.py"
+    ).read_text(encoding="utf-8")
     script = (STATIC_JS_DIR / "admin-pages.js").read_text(encoding="utf-8")
 
     assert (
         "data-list-endpoint=\"{{ list_endpoint|default('/admin/agents_data') }}\""
         in template
     )
+    assert "available_profile_pics" in template
+    assert "available_cover_images" in template
+    assert "data-admin-profile-pic-gallery" in template
+    assert "data-admin-cover-image-gallery" in template
+    assert "mountPicker({" in template
+    assert '"available_profile_pics": available_profile_pics' in route_source
+    assert '"available_cover_images": available_cover_images' in route_source
     assert "document.querySelector('#table[data-list-endpoint]')" in script
 
 

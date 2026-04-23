@@ -94,8 +94,13 @@
             <div class="columns">
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15">Stress Distribution</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Stress Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="stressDistributionChartContainer" data-chart-filename="stress-distribution">
                             <canvas id="stressDistributionChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt">
@@ -105,8 +110,13 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15">Reward Distribution</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Reward Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="rewardDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="rewardDistributionChartContainer" data-chart-filename="reward-distribution">
                             <canvas id="rewardDistributionChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt">
@@ -116,8 +126,13 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15">Average Aggregate Trends</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin">Average Aggregate Trends</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="stressRewardTrendChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="stressRewardTrendChartContainer" data-chart-filename="stress-reward-trends">
                             <canvas id="stressRewardTrendChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt">
@@ -185,8 +200,13 @@
                             <div class="columns">
                                 <div class="column is-7" id="sr-sa-chart-column" {% if not sa_targets.options %}style="display: none;"{% endif %}>
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
-                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Target Trend</h3>
-                                        <div class="chart-container">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="srSaTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="srSaTargetTrendChartContainer" data-chart-filename="stress-attacker-target-trend">
                                             <canvas id="srSaTargetTrendChart" height="280"></canvas>
                                         </div>
                                         <p class="ys-text-xs-center-mt">
@@ -237,6 +257,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 var YS_DATA_STRESS_REWARD = {
   expId: {{ experiment.idexp }},
@@ -248,5 +269,6 @@ var YS_DATA_STRESS_REWARD = {
   filterHour: {{ filter_hour }}
 };
 </script>
+<script src="{{ url_for('static', filename='assets/js/admin-chart-fullscreen.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/admin-stress-reward.js') }}"></script>
 {% include "admin/footer.html" %}

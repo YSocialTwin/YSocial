@@ -7,6 +7,7 @@ settings.
 """
 
 import json
+import os
 import random
 import re
 from pathlib import Path
@@ -23,6 +24,7 @@ from y_web.src.agents.custom_features import (
     replace_agent_custom_features,
     summarize_agent_custom_features,
 )
+from y_web.src.content.cover_images import available_cover_image_urls
 from y_web.src.agents.platform import normalize_population_username_type
 from y_web.src.external_runtime.registry import EXTERNAL_DIR, runtime_spec
 from y_web.src.llm.ollama_manager import get_ollama_models
@@ -288,6 +290,35 @@ def _discover_plugin_agent_types() -> list[dict]:
 
 
 def _agent_builder_context(**overrides):
+    available_profile_pics = []
+    available_cover_images = []
+    try:
+        users_img_dir = os.path.join(
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+            ),
+            "static",
+            "assets",
+            "img",
+            "users",
+        )
+        available_profile_pics = sorted(
+            [
+                filename
+                for filename in os.listdir(users_img_dir)
+                if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+            ]
+        )
+    except Exception:
+        available_profile_pics = []
+
+    try:
+        available_cover_images = [
+            os.path.basename(path) for path in available_cover_image_urls()
+        ]
+    except Exception:
+        available_cover_images = []
+
     context = {
         "populations": Population.query.filter(Population.pop_type.is_(None)).all(),
         "models": get_llm_models(),
@@ -325,6 +356,8 @@ def _agent_builder_context(**overrides):
             },
         ],
         "hello_populations": [],
+        "available_profile_pics": available_profile_pics,
+        "available_cover_images": available_cover_images,
     }
     context.update(overrides)
     return context
@@ -964,6 +997,7 @@ def create_agent():
     toxicity = request.form.get("toxicity")
     alt_profile = request.form.get("alt_profile")
     profile_pic = request.form.get("profile_pic")
+    cover_image = request.form.get("cover_image")
     daily_activity_level = request.form.get("daily_user_activity")
     profession = request.form.get("profession")
     activity_profile_id = request.form.get("activity_profile") or None
@@ -1007,6 +1041,7 @@ def create_agent():
         nationality=nationality,
         gender=gender,
         profile_pic=profile_pic,
+        cover_image=cover_image,
         daily_activity_level=int(daily_activity_level),
         profession=profession,
         activity_profile=int(activity_profile_id) if activity_profile_id else None,

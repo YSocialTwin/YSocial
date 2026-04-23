@@ -6,6 +6,8 @@ augmenting post text with HTML links, fetching elicited emotions, topic
 sentiment, and unanswered @-mentions.
 """
 
+from typing import Optional
+
 from sqlalchemy import desc
 
 from y_web import db
@@ -32,6 +34,7 @@ from y_web.src.models import (
 )
 
 from .trends import _compute_last_round  # noqa: F401 — re-used by augment_text
+from .profiles import get_safe_profile_pic
 
 
 _ADHOC_AGENT_BADGE_LABELS = {
@@ -45,7 +48,16 @@ _ADHOC_AGENT_BADGE_LABELS = {
 }
 
 
-def _adhoc_agent_badge(user) -> str | None:
+def _safe_author_profile_pic(author) -> str:
+    if author is None:
+        return ""
+    return get_safe_profile_pic(
+        getattr(author, "username", "") or "",
+        getattr(author, "is_page", 0) or 0,
+    )
+
+
+def _adhoc_agent_badge(user) -> Optional[str]:
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
 
@@ -351,20 +363,7 @@ def get_user_recent_posts(
                 text = c.tweet.split(":")[-1]
 
             user = User_mgmt.query.filter_by(username=author).first()
-            profile_pic = ""
-            if user.is_page == 1:
-                pg = Page.query.filter_by(name=user.username).first()
-                if pg is not None:
-                    profile_pic = pg.logo
-            else:
-                ag = Agent.query.filter_by(name=user.username).first()
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=user.username)
-                    .first()
-                    .profile_pic
-                )
+            profile_pic = _safe_author_profile_pic(user)
 
             comment_round = Rounds.query.filter_by(id=c.round).first()
             comment_day = comment_round.day if comment_round is not None else "None"
@@ -492,20 +491,7 @@ def get_user_recent_posts(
 
         author = User_mgmt.query.filter_by(id=post.user_id).first()
 
-        profile_pic = ""
-        if author.is_page == 1:
-            pg = Page.query.filter_by(name=author.username).first()
-            if pg is not None:
-                profile_pic = pg.logo
-        else:
-            ag = Agent.query.filter_by(name=author.username).first()
-            profile_pic = (
-                ag.profile_pic
-                if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=author.username)
-                .first()
-                .profile_pic
-            )
+        profile_pic = _safe_author_profile_pic(author)
         topics = get_topics(post.id, post.user_id)
         if len(topics) == 0:
             topics = []
@@ -637,20 +623,7 @@ def get_posts_associated_to_hashtags(
 
             user = User_mgmt.query.filter_by(id=c.user_id).first()
 
-            profile_pic = ""
-            if user.is_page == 1:
-                pg = Page.query.filter_by(name=user.username).first()
-                if pg is not None:
-                    profile_pic = pg.logo
-            else:
-                ag = Agent.query.filter_by(name=user.username).first()
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=user.username)
-                    .first()
-                    .profile_pic
-                )
+            profile_pic = _safe_author_profile_pic(user)
 
             cms.append(
                 {
@@ -731,20 +704,7 @@ def get_posts_associated_to_hashtags(
 
         author = User_mgmt.query.filter_by(id=post.user_id).first()
 
-        profile_pic = ""
-        if author.is_page == 1:
-            pg = Page.query.filter_by(name=author.username).first()
-            if pg is not None:
-                profile_pic = pg.logo
-        else:
-            ag = Agent.query.filter_by(name=author.username).first()
-            profile_pic = (
-                ag.profile_pic
-                if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=author.username)
-                .first()
-                .profile_pic
-            )
+        profile_pic = _safe_author_profile_pic(author)
 
         res.append(
             {
@@ -856,20 +816,7 @@ def get_posts_associated_to_interest(
 
             c_user = User_mgmt.query.filter_by(id=c.user_id).first()
 
-            profile_pic = ""
-            if c_user.is_page == 1:
-                pg = Page.query.filter_by(name=c_user.username).first()
-                if pg is not None:
-                    profile_pic = pg.logo
-            else:
-                ag = Agent.query.filter_by(name=c_user.username).first()
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=c_user.username)
-                    .first()
-                    .profile_pic
-                )
+            profile_pic = _safe_author_profile_pic(c_user)
 
             cms.append(
                 {
@@ -950,20 +897,7 @@ def get_posts_associated_to_interest(
 
         author = User_mgmt.query.filter_by(id=post.user_id).first()
 
-        profile_pic = ""
-        if author.is_page == 1:
-            pg = Page.query.filter_by(name=author.username).first()
-            if pg is not None:
-                profile_pic = pg.logo
-        else:
-            ag = Agent.query.filter_by(name=author.username).first()
-            profile_pic = (
-                ag.profile_pic
-                if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=author.username)
-                .first()
-                .profile_pic
-            )
+        profile_pic = _safe_author_profile_pic(author)
 
         res.append(
             {
@@ -1075,20 +1009,7 @@ def get_posts_associated_to_emotion(
 
             user = User_mgmt.query.filter_by(username=author).first()
 
-            profile_pic = ""
-            if user.is_page == 1:
-                pg = Page.query.filter_by(name=user.username).first()
-                if pg is not None:
-                    profile_pic = pg.logo
-            else:
-                ag = Agent.query.filter_by(name=user.username).first()
-                profile_pic = (
-                    ag.profile_pic
-                    if ag is not None and ag.profile_pic is not None
-                    else Admin_users.query.filter_by(username=user.username)
-                    .first()
-                    .profile_pic
-                )
+            profile_pic = _safe_author_profile_pic(user)
 
             cms.append(
                 {
@@ -1169,20 +1090,7 @@ def get_posts_associated_to_emotion(
 
         author = User_mgmt.query.filter_by(id=post.user_id).first()
 
-        profile_pic = ""
-        if author.is_page == 1:
-            pg = Page.query.filter_by(name=author.username).first()
-            if pg is not None:
-                profile_pic = pg.logo
-        else:
-            ag = Agent.query.filter_by(name=author.username).first()
-            profile_pic = (
-                ag.profile_pic
-                if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=author.username)
-                .first()
-                .profile_pic
-            )
+        profile_pic = _safe_author_profile_pic(author)
 
         res.append(
             {

@@ -33,6 +33,7 @@ from y_web import db
 from y_web.routes.admin.sub.experiments import get_suggested_port
 from y_web.src.agents.platform import ensure_population_username_type_column
 from y_web.src.agents.population import generate_population
+from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     ActivityProfile,
     Admin_users,
@@ -489,10 +490,10 @@ def create_tutorial_experiment():
                     stmt = text("""
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
-                                               round_actions, toxicity, is_page, daily_activity_level)
+                                               round_actions, toxicity, is_page, daily_activity_level, cover_image)
                         VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                 :language, :owner, :joined_on, :frecsys_type,
-                                :round_actions, :toxicity, :is_page, :daily_activity_level)
+                                :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
                         """)
                     dummy_conn.execute(
                         stmt,
@@ -511,6 +512,7 @@ def create_tutorial_experiment():
                             "toxicity": "none",
                             "is_page": 0,
                             "daily_activity_level": 1,
+                            "cover_image": random_cover_image_url(),
                         },
                     )
 

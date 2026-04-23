@@ -23,9 +23,7 @@ from y_web.src.models import (
 )
 
 
-@user.route(
-    "/<int:exp_id>/follow/<int:user_id>/<int:follower_id>", methods=["GET", "POST"]
-)
+@user.route("/<int:exp_id>/follow/<user_id>/<follower_id>", methods=["GET", "POST"])
 @login_required
 def follow(exp_id, user_id, follower_id):
     """
@@ -58,7 +56,7 @@ def follow(exp_id, user_id, follower_id):
 
     # check
     followed = (
-        Follow.query.filter_by(user_id=user_id, follower_id=follower_id_converted)
+        Follow.query.filter_by(user_id=follower_id_converted, follower_id=user_id)
         .order_by(Follow.id.desc())
         .first()
     )
@@ -67,8 +65,8 @@ def follow(exp_id, user_id, follower_id):
         if followed.action == "follow":
             try:
                 new_follow = Follow(
-                    follower_id=follower_id_converted,
-                    user_id=user_id,
+                    follower_id=user_id,
+                    user_id=follower_id_converted,
                     action="unfollow",
                     round=current_round.id,
                 )
@@ -78,8 +76,8 @@ def follow(exp_id, user_id, follower_id):
                 db.session.rollback()
                 new_follow = Follow(
                     id=str(uuid.uuid4()),
-                    follower_id=follower_id_converted,
-                    user_id=user_id,
+                    follower_id=user_id,
+                    user_id=follower_id_converted,
                     action="unfollow",
                     round=current_round.id,
                 )
@@ -90,8 +88,8 @@ def follow(exp_id, user_id, follower_id):
     # add the user to the Follow table
     try:
         new_follow = Follow(
-            follower_id=follower_id_converted,
-            user_id=user_id,
+            follower_id=user_id,
+            user_id=follower_id_converted,
             action="follow",
             round=current_round.id,
         )
@@ -101,8 +99,8 @@ def follow(exp_id, user_id, follower_id):
         db.session.rollback()
         new_follow = Follow(
             id=str(uuid.uuid4()),
-            follower_id=follower_id_converted,
-            user_id=user_id,
+            follower_id=user_id,
+            user_id=follower_id_converted,
             action="follow",
             round=current_round.id,
         )

@@ -31,6 +31,7 @@ from y_web.src.agents.platform import (
     infer_population_username_type,
     population_matches_platform,
 )
+from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.external_runtime.registry import EXTERNAL_DIR
 from y_web.src.llm.vllm_manager import get_llm_models, is_vllm_installed
 from y_web.src.models import (
@@ -2582,6 +2583,7 @@ def create_hpc_client(exp, name, descr, population_id, form_data):
             "daily_activity_level": agent.daily_activity_level,
             "profession": agent.profession,
             "activity_profile": activity_profile_name,
+            "cover_image": agent.cover_image or random_cover_image_url(),
             "archetype": archetype_assignments[idx],
             "opinions": (
                 {i: random.random() for i in interests}

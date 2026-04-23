@@ -4559,6 +4559,122 @@ def _build_topic_evolution_payload(
             return topic_palette[selected_topic_ids.index(topic_id) % len(topic_palette)]
         return topic_palette[0]
 
+    topic_labels = [
+        next(
+            (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
+            topic_id,
+        )
+        for topic_id in selected_topic_ids
+    ]
+
+    if trend_mode == "cumulative":
+        trend_definition = {
+            "title": "Topic Volume Cumulative Trend",
+            "description": "Cumulative topic-related activity volume for the selected topics.",
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": topic_labels[index],
+                    "data": [volume_by_topic_day[topic_id].get(day, 0) for day in days],
+                    "borderColor": _topic_color(topic_id),
+                    "backgroundColor": "transparent",
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.5,
+                    "tension": 0.28,
+                }
+                for index, topic_id in enumerate(selected_topic_ids)
+            ],
+            "options": {"beginAtZero": True, "legendPosition": "bottom"},
+        }
+        secondary_definition = {
+            "title": "Population Reach Cumulative Trend",
+            "description": "Cumulative share of the population that has been involved with each selected topic.",
+            "type": "line",
+            "labels": [f"Day {day}" for day in days],
+            "datasets": [
+                {
+                    "label": topic_labels[index],
+                    "data": [
+                        round(
+                            100.0 * participants_by_topic_day[topic_id].get(day, 0) / max(total_population, 1),
+                            2,
+                        )
+                        for day in days
+                    ],
+                    "borderColor": _topic_color(topic_id),
+                    "backgroundColor": "transparent",
+                    "fill": False,
+                    "pointRadius": 0,
+                    "pointHoverRadius": 4,
+                    "borderWidth": 2.25,
+                    "tension": 0.28,
+                }
+                for index, topic_id in enumerate(selected_topic_ids)
+            ],
+            "options": {"beginAtZero": True, "max": 100, "legendPosition": "bottom"},
+        }
+    else:
+        trend_cells = []
+        secondary_cells = []
+        for row_index, topic_id in enumerate(selected_topic_ids):
+            row_daily_values = [volume_by_topic_day[topic_id].get(day, 0) for day in days]
+            row_max = max(row_daily_values) if row_daily_values else 0
+            for col_index, day in enumerate(days):
+                actual_volume = volume_by_topic_day[topic_id].get(day, 0)
+                participants = participants_by_topic_day[topic_id].get(day, 0)
+                reach_pct = round(100.0 * participants / max(total_population, 1), 2)
+                trend_cells.append(
+                    {
+                        "x": col_index,
+                        "y": row_index,
+                        "actual": actual_volume,
+                        "intensity": round(actual_volume / row_max, 4) if row_max else 0.0,
+                        "topic_label": topic_labels[row_index],
+                        "time_label": f"Day {day}",
+                    }
+                )
+                secondary_cells.append(
+                    {
+                        "x": col_index,
+                        "y": row_index,
+                        "actual": participants,
+                        "percent": reach_pct,
+                        "intensity": round(reach_pct / 100.0, 4),
+                        "topic_label": topic_labels[row_index],
+                        "time_label": f"Day {day}",
+                    }
+                )
+        trend_definition = {
+            "title": "Topic Volume Heatmap",
+            "description": "Each row is a selected topic, each column is a day, and color depth is normalized within each topic row. Tooltips report actual daily volume.",
+            "type": "heatmap",
+            "labels": [f"Day {day}" for day in days],
+            "row_labels": topic_labels,
+            "cells": trend_cells,
+            "options": {
+                "colorStart": [239, 246, 255],
+                "colorEnd": [37, 99, 235],
+                "legendDisplay": False,
+                "tooltipMode": "volume",
+            },
+        }
+        secondary_definition = {
+            "title": "Population Reach Heatmap",
+            "description": "Each row is a selected topic, each column is a day, and color depth reflects the share of the population reached that day.",
+            "type": "heatmap",
+            "labels": [f"Day {day}" for day in days],
+            "row_labels": topic_labels,
+            "cells": secondary_cells,
+            "options": {
+                "colorStart": [240, 253, 244],
+                "colorEnd": [21, 128, 61],
+                "legendDisplay": False,
+                "tooltipMode": "reach",
+            },
+        }
+
     stats = [
         {
             "key": "selected_topics",
@@ -4605,8 +4721,8 @@ def _build_topic_evolution_payload(
         "stats": stats,
         "trend_mode": trend_mode,
         "trend_mode_options": [
-            {"value": "daily", "label": "Daily"},
-            {"value": "cumulative", "label": "Cumulative"},
+            {"value": "daily", "label": "Daily Heatmap"},
+            {"value": "cumulative", "label": "Cumulative Trends"},
         ],
         "selected_topic_ids": selected_topic_ids,
         "topic_options": topic_options,
@@ -4640,71 +4756,8 @@ def _build_topic_evolution_payload(
             ],
             "options": {"beginAtZero": True, "indexAxis": "y", "legendDisplay": False},
         },
-        "trend": {
-            "title": "Topic Volume Over Time",
-            "description": (
-                "Cumulative topic-related activity volume for the selected topics."
-                if trend_mode == "cumulative"
-                else "Daily topic-related activity volume for the selected topics, combining posts/comments and interactions."
-            ),
-            "type": "line",
-            "labels": [f"Day {day}" for day in days],
-            "datasets": [
-                {
-                    "label": next(
-                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
-                        topic_id,
-                    ),
-                    "data": [volume_by_topic_day[topic_id].get(day, 0) for day in days],
-                    "borderColor": _topic_color(topic_id),
-                    "backgroundColor": "transparent",
-                    "pointRadius": 0,
-                    "pointHoverRadius": 4,
-                    "borderWidth": 2.5,
-                    "tension": 0.28,
-                }
-                for topic_id in selected_topic_ids
-            ],
-            "options": {"beginAtZero": True, "legendPosition": "bottom"},
-        },
-        "secondary": {
-            "title": "Population Reach Over Time",
-            "description": (
-                "Cumulative share of the population that has been involved with each selected topic."
-                if trend_mode == "cumulative"
-                else "Daily share of the population involved with each selected topic."
-            ),
-            "type": "line",
-            "labels": [f"Day {day}" for day in days],
-            "datasets": [
-                {
-                    "label": next(
-                        (option["topic_name"] for option in topic_options if option["topic_id"] == topic_id),
-                        topic_id,
-                    ),
-                    "data": [
-                        round(
-                            100.0 * participants_by_topic_day[topic_id].get(day, 0) / max(total_population, 1),
-                            2,
-                        )
-                        for day in days
-                    ],
-                    "borderColor": _topic_color(topic_id),
-                    "backgroundColor": (
-                        "rgba(37, 99, 235, 0.10)"
-                        if _topic_color(topic_id) == "#2563eb"
-                        else None
-                    ),
-                    "fill": False,
-                    "pointRadius": 0,
-                    "pointHoverRadius": 4,
-                    "borderWidth": 2.25,
-                    "tension": 0.28,
-                }
-                for topic_id in selected_topic_ids
-            ],
-            "options": {"beginAtZero": True, "max": 100, "legendPosition": "bottom"},
-        },
+        "trend": trend_definition,
+        "secondary": secondary_definition,
         "topic_lifecycle": {
             "title": "Topic Lifecycle Over Time",
             "description": "Compact view of how many topics remain active, emerge, and disappear across the observed horizon.",

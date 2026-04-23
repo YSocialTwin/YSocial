@@ -8,6 +8,8 @@ the first time the application runs against a fresh PostgreSQL server.
 
 import os
 
+from y_web.src.content.cover_images import random_cover_image_url
+
 
 def create_postgresql_db(app):
     """
@@ -134,13 +136,13 @@ def create_postgresql_db(app):
 
             # Insert initial admin user
             stmt = text("""
-                        INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
-                                               language, owner, joined_on, frecsys_type,
-                                               round_actions, toxicity, is_page, daily_activity_level)
-                        VALUES (:username, :email, :password, :user_type, :leaning, :age,
-                                :language, :owner, :joined_on, :frecsys_type,
-                                :round_actions, :toxicity, :is_page, :daily_activity_level)
-                        """)
+                INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
+                                       language, owner, joined_on, frecsys_type,
+                                       round_actions, toxicity, is_page, daily_activity_level, cover_image)
+                VALUES (:username, :email, :password, :user_type, :leaning, :age,
+                        :language, :owner, :joined_on, :frecsys_type,
+                        :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
+                """)
 
             dummy_conn.execute(
                 stmt,
@@ -156,11 +158,12 @@ def create_postgresql_db(app):
                     "joined_on": 0,
                     "frecsys_type": "default",
                     "round_actions": 3,
-                    "toxicity": "none",
-                    "is_page": 0,
-                    "daily_activity_level": 1,
-                },
-            )
+                            "toxicity": "none",
+                            "is_page": 0,
+                            "daily_activity_level": 1,
+                            "cover_image": random_cover_image_url(),
+                        },
+                    )
 
         dummy_engine.dispose()
 

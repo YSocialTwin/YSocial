@@ -70,6 +70,9 @@ _SQLITE_TABLES = {
 }
 
 _SQLITE_COLUMNS = {
+    "user_mgmt": {
+        "cover_image": "VARCHAR(400) DEFAULT ''",
+    },
     "post": {
         "image_post_id": "INTEGER",
         "dedupe_key": "VARCHAR(64)",
@@ -152,6 +155,9 @@ _POSTGRES_TABLES = {
 }
 
 _POSTGRES_COLUMNS = {
+    "user_mgmt": {
+        "cover_image": "VARCHAR(400) DEFAULT ''",
+    },
     "post": {
         "image_post_id": "INTEGER",
         "dedupe_key": "VARCHAR(64)",

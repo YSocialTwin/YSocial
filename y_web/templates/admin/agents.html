@@ -139,9 +139,68 @@
                                     </div>
                                     <div class="box-line">
                                         <span class="left">Profile Picture URL <small>(optional)</small></span>
- <span class="right ys-w-70"><input type="text" name="profile_pic"
-                                                                                       class="input"></span>
+                                        <span class="right ys-w-70">
+                                            <input
+                                                type="text"
+                                                name="profile_pic"
+                                                class="input"
+                                                id="admin-agent-profile-pic-input"
+                                            >
+                                        </span>
                                     </div>
+                                    {% if available_profile_pics %}
+                                    <div class="box-line ys-admin-agent-picker-line">
+                                        <span class="left">Available Profile Pictures</span>
+                                        <div class="right ys-w-70">
+                                            <div class="ys-admin-avatar-picker">
+                                                <div class="ys-admin-avatar-picker__preview">
+                                                    <img
+                                                        id="admin-agent-profile-pic-preview"
+                                                        src="https://via.placeholder.com/300x300"
+                                                        data-demo-src="{{ url_for('static', filename='assets/img/users/' + available_profile_pics[0]) }}"
+                                                        alt=""
+                                                    />
+                                                </div>
+                                                <div
+                                                    class="ys-admin-avatar-picker__gallery"
+                                                    data-admin-profile-pic-gallery
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    <div class="box-line">
+                                        <span class="left">Header Image URL <small>(optional)</small></span>
+                                        <span class="right ys-w-70">
+                                            <input
+                                                type="text"
+                                                name="cover_image"
+                                                class="input"
+                                                id="admin-agent-cover-image-input"
+                                            >
+                                        </span>
+                                    </div>
+                                    {% if available_cover_images %}
+                                    <div class="box-line ys-admin-agent-picker-line">
+                                        <span class="left">Available Header Images</span>
+                                        <div class="right ys-w-70">
+                                            <div class="ys-admin-cover-picker">
+                                                <div class="ys-admin-cover-picker__preview">
+                                                    <img
+                                                        id="admin-agent-cover-image-preview"
+                                                        src="https://via.placeholder.com/1600x460"
+                                                        data-demo-src="{{ url_for('static', filename='assets/img/demo/bg/' + available_cover_images[0]) }}"
+                                                        alt=""
+                                                    />
+                                                </div>
+                                                <div
+                                                    class="ys-admin-avatar-picker__gallery ys-admin-cover-picker__gallery"
+                                                    data-admin-cover-image-gallery
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                     <div class="box-line">
                                         <span class="left">Age</span>
                                         <div class="slider-timeline">
@@ -410,6 +469,111 @@
 {% include "admin/tutorials/agents_tutorial.html" %}
 {% endif %}
 <script src="{{ url_for('static', filename='assets/js/admin-pages.js') }}"></script>
+{% if page_kind != 'hello' and (available_profile_pics or available_cover_images) %}
+<script>
+(function () {
+  const availableProfilePics = [{% for avatar_filename in available_profile_pics %}"{{ url_for('static', filename='assets/img/users/' + avatar_filename) }}"{% if not loop.last %},{% endif %}{% endfor %}];
+  const availableCoverImages = [{% for cover_filename in available_cover_images %}"{{ url_for('static', filename='assets/img/demo/bg/' + cover_filename) }}"{% if not loop.last %},{% endif %}{% endfor %}];
+
+  function mountPicker(config) {
+    const input = config.input;
+    const preview = config.preview;
+    const gallery = config.gallery;
+    const optionAttribute = config.optionAttribute;
+    const availableImages = config.availableImages || [];
+    const minCellWidth = config.minCellWidth || 64;
+    let renderedCount = 0;
+
+    if (!input || !gallery) return;
+
+    function syncPreview(value) {
+      if (!preview || !value) return;
+      preview.setAttribute('data-demo-src', value);
+      preview.setAttribute('src', value);
+    }
+
+    function syncSelection(value) {
+      gallery.querySelectorAll('[' + optionAttribute + ']').forEach((button) => {
+        button.classList.toggle(
+          'is-selected',
+          (button.getAttribute(optionAttribute) || '') === value
+        );
+      });
+    }
+
+    function renderNextBatch() {
+      const computedStyles = window.getComputedStyle(gallery);
+      const gap = parseFloat(computedStyles.columnGap || computedStyles.gap || '0') || 0;
+      const columns = Math.max(1, Math.floor((gallery.clientWidth + gap) / (minCellWidth + gap)));
+      const nextItems = availableImages.slice(renderedCount, renderedCount + columns);
+
+      nextItems.forEach((value) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'ys-admin-avatar-picker__option';
+        button.setAttribute(optionAttribute, value);
+        button.setAttribute('aria-label', config.ariaLabel);
+
+        const img = document.createElement('img');
+        img.src = value;
+        img.alt = '';
+        button.appendChild(img);
+
+        button.addEventListener('click', () => {
+          input.value = value;
+          syncSelection(value);
+          syncPreview(value);
+        });
+
+        gallery.appendChild(button);
+      });
+
+      renderedCount += nextItems.length;
+      syncSelection(input.value);
+    }
+
+    gallery.addEventListener('scroll', () => {
+      if (renderedCount >= availableImages.length) return;
+      const remaining = gallery.scrollHeight - gallery.scrollTop - gallery.clientHeight;
+      if (remaining < 80) renderNextBatch();
+    });
+
+    if (availableImages.length) {
+      renderNextBatch();
+      while (renderedCount < availableImages.length && gallery.scrollHeight <= gallery.clientHeight) {
+        renderNextBatch();
+      }
+      if (!input.value) syncPreview(availableImages[0]);
+    }
+
+    input.addEventListener('input', () => {
+      syncSelection(input.value);
+      syncPreview(input.value);
+    });
+  }
+
+  mountPicker({
+    input: document.getElementById('admin-agent-profile-pic-input'),
+    preview: document.getElementById('admin-agent-profile-pic-preview'),
+    gallery: document.querySelector('[data-admin-profile-pic-gallery]'),
+    optionAttribute: 'data-admin-profile-pic-option',
+    availableImages: availableProfilePics,
+    minCellWidth: 64,
+    ariaLabel: 'Use selected profile picture'
+  });
+
+  mountPicker({
+    input: document.getElementById('admin-agent-cover-image-input'),
+    preview: document.getElementById('admin-agent-cover-image-preview'),
+    gallery: document.querySelector('[data-admin-cover-image-gallery]'),
+    optionAttribute: 'data-admin-cover-image-option',
+    availableImages: availableCoverImages,
+    minCellWidth: 112,
+    ariaLabel: 'Use selected header image'
+  });
+})();
+</script>
+{% endif %}
 {% if page_kind != 'hello' %}
 <script>
 (function () {

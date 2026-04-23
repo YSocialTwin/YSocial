@@ -99,11 +99,28 @@ def test_topic_evolution_tracks_volume_population_share_and_lifecycle(tmp_path, 
 
     assert analytics["distribution"]["labels"] == ["Climate", "Robotics"]
     assert analytics["distribution"]["datasets"][0]["data"] == [5, 1]
+    assert analytics["trend_mode"] == "daily"
+    assert analytics["trend"]["type"] == "heatmap"
+    assert analytics["secondary"]["type"] == "heatmap"
     assert analytics["trend"]["labels"] == ["Day 1", "Day 2", "Day 3"]
-    assert analytics["trend"]["datasets"][0]["data"] == [2, 3, 0]
-    assert analytics["trend"]["datasets"][1]["data"] == [0, 0, 1]
-    assert analytics["secondary"]["datasets"][0]["data"] == [50.0, 75.0, 0.0]
-    assert analytics["secondary"]["datasets"][1]["data"] == [0.0, 0.0, 25.0]
+    assert analytics["trend"]["row_labels"] == ["Climate", "Robotics"]
+    climate_day_2 = next(
+        cell for cell in analytics["trend"]["cells"]
+        if cell["topic_label"] == "Climate" and cell["time_label"] == "Day 2"
+    )
+    robotics_day_3 = next(
+        cell for cell in analytics["trend"]["cells"]
+        if cell["topic_label"] == "Robotics" and cell["time_label"] == "Day 3"
+    )
+    assert climate_day_2["actual"] == 3
+    assert climate_day_2["intensity"] == 1.0
+    assert robotics_day_3["actual"] == 1
+    reach_day_2 = next(
+        cell for cell in analytics["secondary"]["cells"]
+        if cell["topic_label"] == "Climate" and cell["time_label"] == "Day 2"
+    )
+    assert reach_day_2["actual"] == 3
+    assert reach_day_2["percent"] == 75.0
     assert analytics["topic_lifecycle"]["labels"] == ["Day 1", "Day 2", "Day 3"]
     assert analytics["topic_lifecycle"]["datasets"][0]["data"] == [1, 1, 1]
     assert analytics["topic_lifecycle"]["datasets"][1]["data"] == [1, 0, 1]

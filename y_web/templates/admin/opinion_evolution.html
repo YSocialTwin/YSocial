@@ -108,9 +108,13 @@
             <div class="columns">
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
- <h3 class="title is-6 is-thin ys-mb-15">Opinion Distribution</h3>
-                        
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+ <h3 class="title is-6 is-thin">Opinion Distribution</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="opinionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="opinionChartContainer" data-chart-filename="opinion-distribution">
                             <canvas id="opinionChart" height="250"></canvas>
                         </div>
                         
@@ -123,9 +127,13 @@
                 <!-- Opinion Group Trends Chart -->
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
- <h3 class="title is-6 is-thin ys-mb-15">Opinion Group Trends</h3>
-                        
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+ <h3 class="title is-6 is-thin">Opinion Group Trends</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="groupTrendsChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="groupTrendsChartContainer" data-chart-filename="opinion-group-trends">
                             <canvas id="groupTrendsChart" height="250"></canvas>
                         </div>
                         
@@ -138,20 +146,23 @@
                 <!-- Agent Opinion Time Series Chart -->
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div class="annotation-chart-head ys-mb-15">
  <h3 class="title is-6 is-thin mb-0">Agent Opinion Evolution</h3>
                             
                             <!-- Sample size text input in upper right corner -->
- <div class="ys-flex-gap-8">
+ <div class="ys-flex-gap-8" style="align-items: center;">
                                 <label style="font-size: 0.85em; font-weight: 600; color: #374151;">Sample Size:</label>
                                 <input type="number" id="sample-input" 
                                        min="1" max="100" value="50"
                                        style="width: 60px; padding: 4px 8px; border: 1px solid #d1d5db; border-radius: 4px; font-size: 0.85em;">
                                 <span style="font-size: 0.85em; color: #6b7280;">%</span>
+                                <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="timeseriesChartContainer" title="Expand plot">
+                                    <i class="mdi mdi-fullscreen"></i>
+                                </button>
                             </div>
                         </div>
                         
-                        <div class="chart-container">
+                        <div class="chart-container ys-chart-fullscreen-target" id="timeseriesChartContainer" data-chart-filename="agent-opinion-evolution">
                             <canvas id="timeseriesChart" height="250"></canvas>
                         </div>
                         
@@ -224,8 +235,13 @@
                             <div class="columns">
                                 <div class="column is-7" id="propaganda-chart-column" {% if not propaganda_targets.options %}style="display: none;"{% endif %}>
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
-                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Target Opinion Trend</h3>
-                                        <div class="chart-container">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Opinion Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="propagandaTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="propagandaTargetTrendChartContainer" data-chart-filename="propaganda-target-trend">
                                             <canvas id="propagandaTargetTrendChart" height="280"></canvas>
                                         </div>
                                         <p class="ys-text-xs-center-mt">
@@ -323,8 +339,13 @@
                             <div class="columns">
                                 <div class="column is-7" id="mop-chart-column" {% if not mop_targets.options %}style="display: none;"{% endif %}>
                                     <div class="dashboard-box chart-box-container" style="margin-bottom: 0;">
-                                        <h3 class="title is-6 is-thin ys-mb-15">Selected Target Opinion Trend</h3>
-                                        <div class="chart-container">
+                                        <div class="annotation-chart-head ys-mb-15">
+                                            <h3 class="title is-6 is-thin">Selected Target Opinion Trend</h3>
+                                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="mopTargetTrendChartContainer" title="Expand plot">
+                                                <i class="mdi mdi-fullscreen"></i>
+                                            </button>
+                                        </div>
+                                        <div class="chart-container ys-chart-fullscreen-target" id="mopTargetTrendChartContainer" data-chart-filename="mop-target-trend">
                                             <canvas id="mopTargetTrendChart" height="280"></canvas>
                                         </div>
                                         <p class="ys-text-xs-center-mt">
@@ -376,6 +397,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>var YS_DATA_EVOLUTION = {
   expId: {{ experiment.idexp }},
   chartLabels: {{ chart_labels | tojson }},
@@ -390,5 +412,6 @@
   maxHour: {{ max_hour }}
 };</script>
 
+<script src="{{ url_for('static', filename='assets/js/admin-chart-fullscreen.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/admin-opinion.js') }}"></script>
 {% include "admin/footer.html" %}

@@ -32,6 +32,12 @@ from y_web.routes.social.helpers import (
     is_admin,
 )
 from y_web.src.agents.custom_features import summarize_agent_custom_features
+from y_web.src.content.cover_images import (
+    DEFAULT_COVER_IMAGE_PATH,
+    available_cover_image_urls,
+    normalize_cover_image_url,
+    random_cover_image_url,
+)
 from y_web.src.data_access import (
     count_followees,
     count_followers,
@@ -54,6 +60,7 @@ from y_web.src.models import (
     Post_emotions,
     Post_hashtags,
     Reactions,
+    Rounds,
     StressReward,
     User_mgmt,
 )
@@ -63,8 +70,10 @@ from y_web.src.system.path_utils import get_writable_path
 
 def _latest_follow_action(*, follower_id, user_id):
     follow_event = (
-        Follow.query.filter_by(follower_id=follower_id, user_id=user_id)
-        .order_by(Follow.id.desc())
+        db.session.query(Follow)
+        .outerjoin(Rounds, Follow.round == Rounds.id)
+        .filter(Follow.user_id == follower_id, Follow.follower_id == user_id)
+        .order_by(Rounds.day.desc(), Rounds.hour.desc(), Follow.id.desc())
         .first()
     )
     return str(getattr(follow_event, "action", "") or "").strip().lower()
@@ -144,9 +153,7 @@ def _latest_stress_reward_indicator(user_id):
 
     for variable in ("stress", "reward"):
         row = (
-            StressReward.query.filter_by(
-                uid=user_id, variable=variable, type="aggregate"
-            )
+            StressReward.query.filter_by(uid=user_id, variable=variable, type="aggregate")
             .order_by(StressReward.tid.desc())
             .first()
         )
@@ -157,6 +164,38 @@ def _latest_stress_reward_indicator(user_id):
         }
 
     return indicator
+
+
+def _default_cover_image_url():
+    return DEFAULT_COVER_IMAGE_PATH
+
+
+def _get_user_cover_image(user_id):
+    default_cover = _default_cover_image_url()
+    try:
+        user = User_mgmt.query.filter_by(id=user_id).first()
+    except Exception:
+        return default_cover
+
+    cover_image = str(getattr(user, "cover_image", "") or "").strip() if user else ""
+    if cover_image:
+        return cover_image
+
+    if user is not None:
+        user.cover_image = random_cover_image_url()
+        try:
+            db.session.commit()
+            return user.cover_image
+        except Exception:
+            db.session.rollback()
+
+    return default_cover
+
+
+def _set_user_cover_image(user_id, cover_image):
+    user = User_mgmt.query.filter_by(id=user_id).first()
+    if user is not None:
+        user.cover_image = normalize_cover_image_url(cover_image)
 
 
 @main.get("/uploads/<path:relative_path>")
@@ -372,6 +411,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
             "reward": {"value": 0.0, "level": 0},
         }
     )
+    cover_image = _get_user_cover_image(user.id)
 
     common_context = dict(
         is_page=user.is_page,
@@ -408,6 +448,7 @@ def profile_logged(exp_id, user_id, page=1, mode="recent"):
         agent_custom_features=agent_custom_features,
         stress_reward_active=stress_reward_active,
         stress_reward_indicator=stress_reward_indicator,
+        cover_image=cover_image,
     )
 
     if getattr(exp, "platform_type", "") == "forum":
@@ -473,11 +514,11 @@ def edit_profile(exp_id, user_id):
             profile_pic = pg.logo
     else:
         ag = Agent.query.filter_by(name=user.username).first()
-        profile_pic = (
-            ag.profile_pic
-            if ag is not None and ag.profile_pic is not None
-            else Admin_users.query.filter_by(username=user.username).first().profile_pic
-        )
+        if ag is not None and ag.profile_pic is not None:
+            profile_pic = ag.profile_pic
+        else:
+            admin_user = Admin_users.query.filter_by(username=user.username).first()
+            profile_pic = admin_user.profile_pic if admin_user else ""
 
     # Get experiment user (not admin user)
     logged_user = User_mgmt.query.filter_by(username=current_user.username).first()
@@ -486,10 +527,35 @@ def edit_profile(exp_id, user_id):
         return redirect(url_for("main.index"))
     logged_id = logged_user.id
 
+    available_profile_pics = []
+    try:
+        users_img_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "static",
+            "assets",
+            "img",
+            "users",
+        )
+        available_profile_pics = sorted(
+            [
+                filename
+                for filename in os.listdir(users_img_dir)
+                if filename.lower().endswith((".png", ".jpg", ".jpeg", ".webp"))
+            ]
+        )
+    except Exception:
+        available_profile_pics = []
+    available_cover_images = [
+        os.path.basename(path) for path in available_cover_image_urls()
+    ]
+
     return render_template(
         "microblogging/edit_profile.html",
         user=user,
         profile_pic=profile_pic,
+        available_profile_pics=available_profile_pics,
+        cover_image=_get_user_cover_image(user.id),
+        available_cover_images=available_cover_images,
         is_page=user.is_page,
         enumerate=enumerate,
         username=user.username,
@@ -526,10 +592,22 @@ def update_profile_data(exp_id, user_id):
     user.frecsys_type = request.form.get("frecsys_type")
     user.age = int(request.form.get("age"))
     profile_pic = request.form.get("profile_pic")
+    cover_image = request.form.get("cover_image") or random_cover_image_url()
 
-    Admin_users.query.filter_by(username=user.username).first().profile_pic = (
-        profile_pic
-    )
+    if user.is_page == 1:
+        page = Page.query.filter_by(name=user.username).first()
+        if page is not None:
+            page.logo = profile_pic
+    else:
+        agent = Agent.query.filter_by(name=user.username).first()
+        if agent is not None:
+            agent.profile_pic = profile_pic
+
+    admin_user = Admin_users.query.filter_by(username=user.username).first()
+    if admin_user is not None:
+        admin_user.profile_pic = profile_pic
+
+    _set_user_cover_image(user.id, cover_image)
 
     db.session.commit()
 

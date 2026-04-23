@@ -24,6 +24,7 @@ from flask_login import current_user, login_required
 from werkzeug.security import generate_password_hash
 
 from y_web import db  # , app
+from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.llm.vllm_manager import get_llm_models
 from y_web.src.models import Admin_users, Exps, User_Experiment, User_mgmt
 from y_web.src.system.miscellanea import (
@@ -412,6 +413,7 @@ def add_user_to_experiment():
                 round_actions=1,
                 toxicity="no",
                 joined_on=0,
+                cover_image=random_cover_image_url(),
             )
             db.session.add(new_user)
             db.session.commit()
@@ -893,6 +895,7 @@ def bulk_assign_users():
                             round_actions=1,
                             toxicity="no",
                             joined_on=0,
+                            cover_image=random_cover_image_url(),
                         )
                         db.session.add(new_user_mgmt)
                         db.session.commit()

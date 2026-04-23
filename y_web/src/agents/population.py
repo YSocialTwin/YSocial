@@ -16,6 +16,7 @@ import numpy as np
 from sqlalchemy.sql import func
 
 from y_web import db
+from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.models import (
     AgeClass,
     Agent,
@@ -437,6 +438,7 @@ def generate_population(
             daily_activity_level=daily_activity_level,
             profession=profession.profession,
             activity_profile=assigned_profile_id,
+            cover_image=random_cover_image_url(),
         )
 
         agents_to_insert.append(agent)

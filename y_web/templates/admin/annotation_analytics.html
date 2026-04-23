@@ -50,31 +50,37 @@
                             </div>
                             {% elif page_key == "topic" %}
                             <div class="annotation-control-row ys-mb-15">
-                                <div class="annotation-control-group">
-                                    <label class="annotation-control-label" for="annotation-topic-select">Topics to Visualize</label>
-                                    <div class="annotation-topic-select-wrapper">
-                                        <select id="annotation-topic-select" class="annotation-topic-select" multiple size="8">
-                                            {% for option in analytics.topic_options %}
-                                            <option value="{{ option.topic_id }}" {% if option.topic_id in analytics.selected_topic_ids %}selected{% endif %}>
-                                                {{ option.topic_name }} ({{ option.total_volume }})
-                                            </option>
-                                            {% endfor %}
-                                        </select>
+                                <div class="annotation-control-group ys-topic-select-group">
+                                    <div class="annotation-compact-control">
+                                        <div class="annotation-compact-control-head">
+                                            <label class="annotation-control-label" for="annotation-topic-select">Topics to Visualize</label>
+                                            <span class="annotation-control-hint">Cmd/Ctrl for multi-select</span>
+                                        </div>
+                                        <div class="annotation-topic-select-wrapper">
+                                            <select id="annotation-topic-select" class="annotation-topic-select" multiple size="6">
+                                                {% for option in analytics.topic_options %}
+                                                <option value="{{ option.topic_id }}" {% if option.topic_id in analytics.selected_topic_ids %}selected{% endif %}>
+                                                    {{ option.topic_name }} ({{ option.total_volume }})
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <p class="ys-text-xs-center-mt" style="text-align: left; margin-top: 6px;">
-                                        Hold <b>Cmd</b>/<b>Ctrl</b> to select multiple topics.
-                                    </p>
                                 </div>
                                 <div class="annotation-control-group ys-topic-trend-mode-group">
-                                    <label class="annotation-control-label" for="annotation-topic-trend-mode-select">Trend Mode</label>
-                                    <div class="select is-fullwidth">
-                                        <select id="annotation-topic-trend-mode-select">
-                                            {% for option in analytics.trend_mode_options %}
-                                            <option value="{{ option.value }}" {% if option.value == analytics.trend_mode %}selected{% endif %}>
-                                                {{ option.label }}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
+                                    <div class="annotation-compact-control">
+                                        <div class="annotation-compact-control-head">
+                                            <label class="annotation-control-label" for="annotation-topic-trend-mode-select">Visualization Mode</label>
+                                        </div>
+                                        <div class="select is-fullwidth">
+                                            <select id="annotation-topic-trend-mode-select">
+                                                {% for option in analytics.trend_mode_options %}
+                                                <option value="{{ option.value }}" {% if option.value == analytics.trend_mode %}selected{% endif %}>
+                                                    {{ option.label }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -130,8 +136,13 @@
             <div class="columns">
                 <div class="column is-6">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="annotationDistributionChartContainer" data-chart-filename="network-distribution">
                             <canvas id="annotationDistributionChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-distribution-description">
@@ -141,8 +152,13 @@
                 </div>
                 <div class="column is-6">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTrendChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="annotationTrendChartContainer" data-chart-filename="network-degree-ccdf">
                             <canvas id="annotationTrendChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-trend-description">
@@ -155,8 +171,13 @@
             <div class="columns">
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationSecondaryChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="annotationSecondaryChartContainer" data-chart-filename="network-secondary">
                             <canvas id="annotationSecondaryChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-secondary-description">
@@ -166,8 +187,13 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-component-title">{{ analytics.component_share.title }}</h3>
-                        <div class="chart-container ys-network-component-chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-component-title">{{ analytics.component_share.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationComponentShareChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-network-component-chart-container ys-chart-fullscreen-target" id="annotationComponentShareChartContainer" data-chart-filename="largest-component-share">
                             <canvas id="annotationComponentShareChart" height="260"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-component-description">
@@ -177,8 +203,13 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-network-structure-title">{{ analytics.network_structure.title }}</h3>
-                        <div class="chart-container ys-network-component-chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-network-structure-title">{{ analytics.network_structure.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationNetworkStructureChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-network-component-chart-container ys-chart-fullscreen-target" id="annotationNetworkStructureChartContainer" data-chart-filename="network-structure">
                             <canvas id="annotationNetworkStructureChart" height="260"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-network-structure-description">
@@ -192,8 +223,13 @@
             <div class="columns">
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-distribution-title">{{ analytics.distribution.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationDistributionChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target" id="annotationDistributionChartContainer" data-chart-filename="{{ page_key }}-distribution">
                             <canvas id="annotationDistributionChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-distribution-description">
@@ -203,8 +239,16 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
-                        <div class="chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-trend-title">{{ analytics.trend.title }}</h3>
+                            <button class="annotation-chart-expand-button"
+                                    type="button"
+                                    data-fullscreen-target="annotationTrendChartContainer"
+                                    title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationTrendChartContainer" data-chart-filename="{{ page_key }}-trend">
                             <canvas id="annotationTrendChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-trend-description">
@@ -214,7 +258,15 @@
                 </div>
                 <div class="column is-4">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-secondary-title">{{ analytics.secondary.title }}</h3>
+                            <button class="annotation-chart-expand-button"
+                                    type="button"
+                                    data-fullscreen-target="annotationSecondaryChartContainer"
+                                    title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
                         {% if page_key == "toxicity" %}
                         <div class="annotation-threshold-control ys-mb-15">
                             <label for="annotation-toxicity-threshold" class="annotation-threshold-label">Category Threshold</label>
@@ -227,7 +279,7 @@
                                    value="{{ '%.2f'|format(threshold or 0.1) }}">
                         </div>
                         {% endif %}
-                        <div class="chart-container">
+                        <div class="chart-container ys-chart-fullscreen-target{% if page_key == 'topic' %} ys-topic-heatmap-chart-container{% endif %}" id="annotationSecondaryChartContainer" data-chart-filename="{{ page_key }}-secondary">
                             <canvas id="annotationSecondaryChart" height="250"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-secondary-description">
@@ -240,8 +292,13 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box chart-box-container">
-                        <h3 class="title is-6 is-thin ys-mb-15" id="annotation-topic-lifecycle-title">{{ analytics.topic_lifecycle.title }}</h3>
-                        <div class="chart-container ys-topic-lifecycle-chart-container">
+                        <div class="annotation-chart-head ys-mb-15">
+                            <h3 class="title is-6 is-thin" id="annotation-topic-lifecycle-title">{{ analytics.topic_lifecycle.title }}</h3>
+                            <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationTopicLifecycleChartContainer" title="Expand plot">
+                                <i class="mdi mdi-fullscreen"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container ys-topic-lifecycle-chart-container ys-chart-fullscreen-target" id="annotationTopicLifecycleChartContainer" data-chart-filename="topic-lifecycle">
                             <canvas id="annotationTopicLifecycleChart" height="190"></canvas>
                         </div>
                         <p class="ys-text-xs-center-mt" id="annotation-topic-lifecycle-description">
@@ -290,24 +347,35 @@
             <div class="columns">
                 <div class="column is-12">
                     <div class="dashboard-box chart-box-container">
-                        <div class="ys-flex-between-center ys-mb-15" style="gap: 12px; flex-wrap: wrap;">
-                            <div>
-                                <h3 class="title is-6 is-thin" id="annotation-ego-title" style="margin-bottom: 4px;">{{ analytics.ego_network.title }}</h3>
-                                <p class="ys-text-xs-center-mt" id="annotation-ego-description" style="margin-top: 0; text-align: left;">
+                        <div class="annotation-ego-head ys-mb-15">
+                            <div class="annotation-ego-copy">
+                                <h3 class="title is-6 is-thin" id="annotation-ego-title">{{ analytics.ego_network.title }}</h3>
+                                <p class="ys-text-xs-center-mt annotation-ego-description" id="annotation-ego-description">
                                     {{ analytics.ego_network.description }}
                                 </p>
+                                <div class="annotation-ego-legend" aria-hidden="true">
+                                    <span class="annotation-ego-legend-chip is-ego">Selected Agent</span>
+                                    <span class="annotation-ego-legend-chip is-active">Active Alter</span>
+                                    <span class="annotation-ego-legend-chip is-inactive">Inactive Alter</span>
+                                    <span class="annotation-ego-legend-chip is-edge">Visible Tie</span>
+                                </div>
                             </div>
-                            <div class="select">
-                                <select id="annotation-network-ego-select">
-                                    {% for option in analytics.ego_network.options %}
-                                    <option value="{{ option.uid }}" {% if option.uid == analytics.ego_network.selected_uid %}selected{% endif %}>
-                                        {{ option.username }} (deg {{ option.degree }})
-                                    </option>
-                                    {% endfor %}
-                                </select>
+                            <div class="annotation-ego-actions">
+                                <div class="select annotation-ego-select-wrap">
+                                    <select id="annotation-network-ego-select">
+                                        {% for option in analytics.ego_network.options %}
+                                        <option value="{{ option.uid }}" {% if option.uid == analytics.ego_network.selected_uid %}selected{% endif %}>
+                                            {{ option.username }} (deg {{ option.degree }})
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button class="annotation-chart-expand-button" type="button" data-fullscreen-target="annotationEgoNetworkChartContainer" title="Expand plot">
+                                    <i class="mdi mdi-fullscreen"></i>
+                                </button>
                             </div>
                         </div>
-                        <div class="chart-container ys-network-ego-chart-container">
+                        <div class="chart-container ys-network-ego-chart-container ys-chart-fullscreen-target" id="annotationEgoNetworkChartContainer" data-chart-filename="ego-network">
                             <canvas id="annotationEgoNetworkChart" height="320"></canvas>
                         </div>
                     </div>
@@ -323,6 +391,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script>
 var YS_DATA_ANNOTATION_ANALYTICS = {
   expId: {{ experiment.idexp }},
@@ -336,5 +405,6 @@ var YS_DATA_ANNOTATION_ANALYTICS = {
   dataUrl: {{ data_url | tojson }}
 };
 </script>
+<script src="{{ url_for('static', filename='assets/js/admin-chart-fullscreen.js') }}"></script>
 <script src="{{ url_for('static', filename='assets/js/admin-annotation-analytics.js') }}"></script>
 {% include "admin/footer.html" %}

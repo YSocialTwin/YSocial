@@ -50,6 +50,7 @@ class User_mgmt(UserMixin, db.Model):
     profession = db.Column(db.String(50), default="")
     activity_profile = db.Column(db.String(50), default="Always On")
     archetype = db.Column(db.String(50), nullable=True, default=None)
+    cover_image = db.Column(db.String(400), nullable=False, default="")
 
     posts = db.relationship("Post", backref="author", lazy=True)
     liked = db.relationship("Reactions", backref="liked_by", lazy=True)

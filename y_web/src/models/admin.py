@@ -282,6 +282,7 @@ class Agent(db.Model):
     crecsys = db.Column(db.String(50))
     frecsys = db.Column(db.String(50))
     profile_pic = db.Column(db.String(400), default="")
+    cover_image = db.Column(db.String(400), default="")
     daily_activity_level = db.Column(db.Integer, default=1)
     profession = db.Column(db.String(50), default="")
     activity_profile = db.Column(

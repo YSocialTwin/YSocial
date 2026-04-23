@@ -11,6 +11,7 @@ route module at import-time to prevent circular imports.
 
 import json
 import os
+from typing import Optional
 
 from flask import request
 from flask_login import current_user
@@ -56,7 +57,7 @@ _ADHOC_AGENT_BADGE_LABELS = {
 }
 
 
-def get_adhoc_agent_badge(user) -> str | None:
+def get_adhoc_agent_badge(user) -> Optional[str]:
     user_type = str(getattr(user, "user_type", "") or "").strip().lower()
     return _ADHOC_AGENT_BADGE_LABELS.get(user_type)
 

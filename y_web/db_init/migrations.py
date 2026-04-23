@@ -336,6 +336,50 @@ def _run_all_migrations(app, db_type, db):
         print(f"Failed to run agent archetype field migration: {e}")
 
     # ------------------------------------------------------------------
+    # user cover image field (user_mgmt table in experiment databases)
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_user_cover_image_field import (
+                migrate_experiment_databases as migrate_cover_image_experiment_databases,
+            )
+            from y_web.migrations.add_user_cover_image_field import (
+                migrate_sqlite_server as migrate_cover_image_sqlite_server,
+            )
+
+            if dummy_db_path:
+                migrate_cover_image_sqlite_server(dummy_db_path, quiet=True)
+
+            from y_web.src.system.path_utils import get_writable_path
+
+            experiments_dir = os.path.join(get_writable_path(), "y_web", "experiments")
+            if os.path.exists(experiments_dir):
+                print("Migrating cover image field for experiment databases...")
+                success, total = migrate_cover_image_experiment_databases(
+                    experiments_dir, quiet=False
+                )
+                if total > 0:
+                    print(f"✓ Migrated {success}/{total} experiment databases")
+        elif db_type == "postgresql":
+            from y_web.migrations.add_user_cover_image_field import (
+                migrate_postgresql_server as migrate_cover_image_postgresql_server,
+            )
+
+            if pg["password"]:
+                pg_dummy_db = os.getenv("PG_DBNAME_DUMMY", "dummy")
+                migrate_cover_image_postgresql_server(
+                    {
+                        "host": pg["host"],
+                        "port": pg["port"],
+                        "database": pg_dummy_db,
+                        "user": pg["user"],
+                        "password": pg["password"],
+                    }
+                )
+    except Exception as e:
+        print(f"Failed to run user cover image field migration: {e}")
+
+    # ------------------------------------------------------------------
     # moderation schema in experiment databases
     # ------------------------------------------------------------------
     try:
@@ -437,6 +481,25 @@ def _run_all_migrations(app, db_type, db):
                 )
     except Exception as e:
         print(f"Failed to run follow action column migration: {e}")
+
+    # ------------------------------------------------------------------
+    # agent cover image column
+    # ------------------------------------------------------------------
+    try:
+        if db_type == "sqlite":
+            from y_web.migrations.add_agent_cover_image_column import migrate_sqlite
+
+            if dashboard_db_path:
+                migrate_sqlite(dashboard_db_path)
+        elif db_type == "postgresql":
+            from y_web.migrations.add_agent_cover_image_column import migrate_postgresql
+
+            if pg["password"]:
+                migrate_postgresql(
+                    pg["host"], pg["port"], pg["database"], pg["user"], pg["password"]
+                )
+    except Exception as e:
+        print(f"Failed to run agent cover image migration: {e}")
 
     # ------------------------------------------------------------------
     # recsys columns (group + enabled)

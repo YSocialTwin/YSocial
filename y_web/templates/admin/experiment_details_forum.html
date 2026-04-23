@@ -742,47 +742,75 @@
                     <div class="dashboard-box is-compact" style="flex: 0 0 auto; display: flex; flex-direction: column; margin-top: 1.5rem;">
                         <h3 class="title is-5 is-thin">Analytics Pages</h3>
                         <div class="box-content ys-flex-1">
-                            <p style="font-size: 0.9em; margin-bottom: 1em;">
-                                Open the analytics dashboards available for the experiment features that are currently active.
+                            <p class="ys-analytics-pages-intro">
+                                Open the active experiment dashboards from a single compact panel.
                             </p>
-                            <div class="box-lines">
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-graph-outline"></i><span>Network Analysis</span></span></span>
-                                    <span class="right"><a href="/admin/network_analysis/{{ experiment.idexp }}" class="button is-small is-link ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-shape-outline"></i><span>Topic Evolution</span></span></span>
-                                    <span class="right"><a href="/admin/topic_evolution/{{ experiment.idexp }}" class="button is-small is-primary ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                            <div class="ys-analytics-pages-grid">
+                                <a href="/admin/network_analysis/{{ experiment.idexp }}" class="ys-analytics-page-card is-link">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-graph-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Network Analysis</span>
+                                        <span class="ys-analytics-page-meta">Structure, density, components</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
+                                <a href="/admin/topic_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-primary">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-shape-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Topic Evolution</span>
+                                        <span class="ys-analytics-page-meta">Diffusion, emergence, reach</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% if opinion_dynamics_enabled %}
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-chart-line"></i><span>Opinion Evolution</span></span></span>
-                                    <span class="right"><a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="button is-small is-info ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                                <a href="/admin/opinion_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-info">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-line"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Opinion Evolution</span>
+                                        <span class="ys-analytics-page-meta">Opinion groups and agent trends</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% endif %}
                                 {% if stress_reward_enabled %}
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-heart-pulse"></i><span>Stress / Reward Evolution</span></span></span>
-                                    <span class="right"><a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="button is-small is-danger ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                                <a href="/admin/stress_reward_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-heart-pulse"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Stress / Reward Evolution</span>
+                                        <span class="ys-analytics-page-meta">Aggregate state and attacker effects</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% endif %}
                                 {% if toxicity_annotation_enabled %}
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-alert-octagon-outline"></i><span>Toxicity Evolution</span></span></span>
-                                    <span class="right"><a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="button is-small is-danger ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                                <a href="/admin/toxicity_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-danger">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-alert-octagon-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Toxicity Evolution</span>
+                                        <span class="ys-analytics-page-meta">Scores, trends, high-toxicity content</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% endif %}
                                 {% if sentiment_annotation_enabled %}
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-chart-bell-curve"></i><span>Sentiment Evolution</span></span></span>
-                                    <span class="right"><a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="button is-small is-success ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                                <a href="/admin/sentiment_evolution/{{ experiment.idexp }}" class="ys-analytics-page-card is-success">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-chart-bell-curve"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Sentiment Evolution</span>
+                                        <span class="ys-analytics-page-meta">Polarity mix and compound trends</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% endif %}
                                 {% if emotion_annotation_enabled %}
-                                <div class="box-line">
-                                    <span class="left"><span class="ys-flex-center-gap"><i class="mdi mdi-emoticon-outline"></i><span>Emotion Statistics</span></span></span>
-                                    <span class="right"><a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="button is-small is-warning ys-flex-center-gap"><span>Open</span></a></span>
-                                </div>
+                                <a href="/admin/emotion_statistics/{{ experiment.idexp }}" class="ys-analytics-page-card is-warning">
+                                    <span class="ys-analytics-page-icon"><i class="mdi mdi-emoticon-outline"></i></span>
+                                    <span class="ys-analytics-page-body">
+                                        <span class="ys-analytics-page-title">Emotion Statistics</span>
+                                        <span class="ys-analytics-page-meta">Emotion tags and dominant patterns</span>
+                                    </span>
+                                    <span class="ys-analytics-page-action">Open</span>
+                                </a>
                                 {% endif %}
                             </div>
                         </div>

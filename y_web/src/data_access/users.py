@@ -23,26 +23,54 @@ from y_web.src.models import (
 )
 
 
+def _normalize_user_key(user_id):
+    if user_id is None:
+        return ""
+    return str(user_id).strip()
+
+
+def _lookup_user_by_id(user_id):
+    user = User_mgmt.query.filter_by(id=user_id).first()
+    if user is not None:
+        return user
+
+    user_key = _normalize_user_key(user_id)
+    if user_key.isdigit():
+        try:
+            return User_mgmt.query.filter_by(id=int(user_key)).first()
+        except Exception:
+            return None
+    return None
+
+
 def _reduce_latest_follow_map(events, *, source_attr: str, target_attr: str):
     latest = {}
-    for event in events or []:
+    for event_order, event in enumerate(events or []):
         try:
-            source_id = int(getattr(event, source_attr))
-            target_id = int(getattr(event, target_attr))
-            event_id = int(getattr(event, "id"))
+            source_id = _normalize_user_key(getattr(event, source_attr))
+            target_id = _normalize_user_key(getattr(event, target_attr))
         except Exception:
             continue
+
+        if not source_id or not target_id:
+            continue
+
         current = latest.get((source_id, target_id))
-        if current is None or event_id > current[0]:
+        if current is None or event_order > current[0]:
             latest[(source_id, target_id)] = (
-                event_id,
+                event_order,
                 str(getattr(event, "action", "") or "").strip().lower(),
             )
     return latest
 
 
 def _active_follow_pairs():
-    events = Follow.query.order_by(Follow.id.asc()).all()
+    events = (
+        db.session.query(Follow)
+        .outerjoin(Rounds, Follow.round == Rounds.id)
+        .order_by(Rounds.day.asc(), Rounds.hour.asc(), Follow.id.asc())
+        .all()
+    )
     latest = _reduce_latest_follow_map(
         events, source_attr="user_id", target_attr="follower_id"
     )
@@ -55,12 +83,14 @@ def _active_follow_pairs():
 
 def count_followees(user_id):
     active_pairs = _active_follow_pairs()
-    return sum(1 for source_id, _target_id in active_pairs if source_id == int(user_id))
+    user_key = _normalize_user_key(user_id)
+    return sum(1 for source_id, _target_id in active_pairs if source_id == user_key)
 
 
 def count_followers(user_id):
     active_pairs = _active_follow_pairs()
-    return sum(1 for _source_id, target_id in active_pairs if target_id == int(user_id))
+    user_key = _normalize_user_key(user_id)
+    return sum(1 for _source_id, target_id in active_pairs if target_id == user_key)
 
 
 def get_mutual_friends(user_a, user_b, limit=10):
@@ -75,18 +105,22 @@ def get_mutual_friends(user_a, user_b, limit=10):
         List of dicts with keys ``id``, ``username``, ``profile_pic``
     """
     active_pairs = _active_follow_pairs()
+    user_a_key = _normalize_user_key(user_a)
+    user_b_key = _normalize_user_key(user_b)
     friends_a = {
-        target_id for source_id, target_id in active_pairs if source_id == int(user_a)
+        target_id for source_id, target_id in active_pairs if source_id == user_a_key
     }
     friends_b = {
-        target_id for source_id, target_id in active_pairs if source_id == int(user_b)
+        target_id for source_id, target_id in active_pairs if source_id == user_b_key
     }
     mutual_friends = list(friends_a & friends_b)
 
     res = []
     added = {}
     for uid in mutual_friends[:limit]:
-        user = User_mgmt.query.filter_by(id=uid).first()
+        user = _lookup_user_by_id(uid)
+        if user is None:
+            continue
         profile_pic = ""
         if user.is_page == 1:
             page = Page.query.filter_by(name=user.username).first()
@@ -94,13 +128,11 @@ def get_mutual_friends(user_a, user_b, limit=10):
                 profile_pic = page.logo
         else:
             ag = Agent.query.filter_by(name=user.username).first()
-            profile_pic = (
-                ag.profile_pic
-                if ag is not None and ag.profile_pic is not None
-                else Admin_users.query.filter_by(username=user.username)
-                .first()
-                .profile_pic
-            )
+            if ag is not None and ag.profile_pic is not None:
+                profile_pic = ag.profile_pic
+            else:
+                admin_user = Admin_users.query.filter_by(username=user.username).first()
+                profile_pic = admin_user.profile_pic if admin_user else ""
 
         if user.id not in added:
             res.append(
@@ -126,20 +158,13 @@ def get_user_friends(user_id, limit=12, page=1):
         page = 1
 
     active_pairs = _active_follow_pairs()
+    user_key = _normalize_user_key(user_id)
     followee_ids = sorted(
-        [
-            target_id
-            for source_id, target_id in active_pairs
-            if source_id == int(user_id)
-        ],
+        [target_id for source_id, target_id in active_pairs if source_id == user_key],
         reverse=True,
     )
     follower_ids = sorted(
-        [
-            source_id
-            for source_id, target_id in active_pairs
-            if target_id == int(user_id)
-        ],
+        [source_id for source_id, target_id in active_pairs if target_id == user_key],
         reverse=True,
     )
 
@@ -159,7 +184,7 @@ def get_user_friends(user_id, limit=12, page=1):
 
     if start < number_followees:
         for uid_f in followee_ids[start:end]:
-            f = User_mgmt.query.filter_by(id=uid_f).first()
+            f = _lookup_user_by_id(uid_f)
             if f is None:
                 continue
             followee_list.append(
@@ -176,7 +201,7 @@ def get_user_friends(user_id, limit=12, page=1):
 
     if start < number_followers:
         for uid_f in follower_ids[start:end]:
-            f = User_mgmt.query.filter_by(id=uid_f).first()
+            f = _lookup_user_by_id(uid_f)
             if f is None:
                 continue
             followers_list.append(

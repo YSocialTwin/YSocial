@@ -6,6 +6,7 @@
     currentDay: Number(config.filterDay || 1),
     currentHour: Number(config.filterHour || 1),
     maxTick: Number(config.maxTick || 24),
+    currentAnalytics: config.analytics || {},
     currentGranularity: 'hourly',
     playing: false,
     speedIndex: 0,
@@ -21,6 +22,32 @@
   var egoNetworkChart = null;
   var topicLifecycleChart = null;
 
+  function allCharts() {
+    return [
+      distributionChart,
+      trendChart,
+      secondaryChart,
+      componentShareChart,
+      networkStructureChart,
+      egoNetworkChart,
+      topicLifecycleChart
+    ].filter(Boolean);
+  }
+
+  function resizeAllCharts() {
+    allCharts().forEach(function (chart) {
+      try { chart.resize(); } catch (e) {}
+    });
+  }
+
+  function mixHeatColor(start, end, intensity) {
+    var t = Math.max(0, Math.min(1, Number(intensity || 0)));
+    var r = Math.round(start[0] + (end[0] - start[0]) * t);
+    var g = Math.round(start[1] + (end[1] - start[1]) * t);
+    var b = Math.round(start[2] + (end[2] - start[2]) * t);
+    return 'rgba(' + r + ', ' + g + ', ' + b + ', 0.96)';
+  }
+
   var egoEdgePlugin = {
     id: 'ysEgoEdgePlugin',
     beforeDatasetsDraw: function (chart, args, pluginOptions) {
@@ -29,20 +56,119 @@
       var yScale = chart.scales.y;
       if (!xScale || !yScale) return;
       var ctx = chart.ctx;
+      var nodeLookup = pluginOptions.nodeLookup || {};
       ctx.save();
-      ctx.strokeStyle = pluginOptions.color || 'rgba(148, 163, 184, 0.65)';
-      ctx.lineWidth = pluginOptions.lineWidth || 1.2;
       (pluginOptions.edges || []).forEach(function (edge) {
+        var sourceNode = nodeLookup[edge.source] || {};
+        var targetNode = nodeLookup[edge.target] || {};
+        var touchesEgo = !!sourceNode.is_ego || !!targetNode.is_ego;
+        var activeEdge = !!sourceNode.is_active && !!targetNode.is_active;
+        var controlX = (edge.x1 + edge.x2) / 2;
+        var controlY = (edge.y1 + edge.y2) / 2;
+        if (!touchesEgo) {
+          var dx = edge.x2 - edge.x1;
+          var dy = edge.y2 - edge.y1;
+          var magnitude = Math.sqrt((dx * dx) + (dy * dy)) || 1;
+          controlX += (-dy / magnitude) * 0.08;
+          controlY += (dx / magnitude) * 0.08;
+        }
+        ctx.beginPath();
+        ctx.strokeStyle = touchesEgo
+          ? (activeEdge ? 'rgba(59, 130, 246, 0.44)' : 'rgba(148, 163, 184, 0.3)')
+          : (activeEdge ? 'rgba(148, 163, 184, 0.5)' : 'rgba(203, 213, 225, 0.28)');
+        ctx.lineWidth = touchesEgo ? 2.1 : 1.35;
+        ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(xScale.getPixelForValue(edge.x1), yScale.getPixelForValue(edge.y1));
-        ctx.lineTo(xScale.getPixelForValue(edge.x2), yScale.getPixelForValue(edge.y2));
+        ctx.quadraticCurveTo(
+          xScale.getPixelForValue(controlX),
+          yScale.getPixelForValue(controlY),
+          xScale.getPixelForValue(edge.x2),
+          yScale.getPixelForValue(edge.y2)
+        );
         ctx.stroke();
+      });
+      ctx.restore();
+    }
+  };
+  var egoLabelPlugin = {
+    id: 'ysEgoLabelPlugin',
+    afterDatasetsDraw: function (chart, args, pluginOptions) {
+      if (!pluginOptions || !pluginOptions.nodes || !pluginOptions.nodes.length) return;
+      var xScale = chart.scales.x;
+      var yScale = chart.scales.y;
+      if (!xScale || !yScale) return;
+      var ctx = chart.ctx;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      (pluginOptions.nodes || []).forEach(function (node) {
+        var label = String(node.label || '');
+        if (!label) return;
+        var x = xScale.getPixelForValue(Number(node.x || 0));
+        var y = yScale.getPixelForValue(Number(node.y || 0));
+        var text = label.length > 18 ? (label.slice(0, 17) + '…') : label;
+        ctx.font = (node.is_ego ? '600 11px Inter, system-ui, sans-serif' : '500 10px Inter, system-ui, sans-serif');
+        var metrics = ctx.measureText(text);
+        var paddingX = node.is_ego ? 9 : 7;
+        var paddingY = node.is_ego ? 6 : 5;
+        var width = metrics.width + (paddingX * 2);
+        var height = (node.is_ego ? 24 : 21);
+        var rectX = x - (width / 2);
+        var rectY = y + (node.is_ego ? 18 : 15);
+        ctx.fillStyle = node.is_ego ? 'rgba(255, 245, 245, 0.96)' : 'rgba(255, 255, 255, 0.92)';
+        ctx.strokeStyle = node.is_ego ? 'rgba(239, 68, 68, 0.34)' : 'rgba(203, 213, 225, 0.9)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.roundRect(rectX, rectY, width, height, 999);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = node.is_ego ? '#991b1b' : '#475569';
+        ctx.fillText(text, x, rectY + (height / 2) + 0.5);
+      });
+      ctx.restore();
+    }
+  };
+  var heatmapCellPlugin = {
+    id: 'ysHeatmapCellPlugin',
+    beforeDatasetsDraw: function (chart, args, pluginOptions) {
+      if (!pluginOptions || !pluginOptions.enabled) return;
+      var xScale = chart.scales.x;
+      var yScale = chart.scales.y;
+      var dataset = (((chart.data || {}).datasets || [])[0]) || null;
+      if (!xScale || !yScale || !dataset) return;
+      var ctx = chart.ctx;
+      var rowCount = Math.max(Number(pluginOptions.rowCount || 0), 1);
+      var colCount = Math.max(Number(pluginOptions.colCount || 0), 1);
+      var chartArea = chart.chartArea;
+      if (!chartArea) return;
+      var colWidth = (chartArea.right - chartArea.left) / colCount;
+      var rowHeight = (chartArea.bottom - chartArea.top) / rowCount;
+      var xGap = Math.min(0.9, colWidth * 0.06);
+      var yGap = Math.min(4, Math.max(1.25, rowHeight * 0.18));
+
+      ctx.save();
+      (dataset.data || []).forEach(function (raw) {
+        var centerX = xScale.getPixelForValue(Number(raw.x || 0));
+        var centerY = yScale.getPixelForValue(Number(raw.y || 0));
+        var fill = typeof pluginOptions.getBackgroundColor === 'function'
+          ? pluginOptions.getBackgroundColor(raw)
+          : 'rgba(37, 99, 235, 0.9)';
+        ctx.fillStyle = fill;
+        ctx.fillRect(
+          centerX - (colWidth / 2) + (xGap / 2),
+          centerY - (rowHeight / 2) + (yGap / 2),
+          Math.max(1, colWidth - xGap),
+          Math.max(1, rowHeight - yGap)
+        );
       });
       ctx.restore();
     }
   };
   if (typeof Chart !== 'undefined') {
     try { Chart.register(egoEdgePlugin); } catch (e) {}
+    try { Chart.register(egoLabelPlugin); } catch (e) {}
+    try { Chart.register(heatmapCellPlugin); } catch (e) {}
   }
 
   function withAlpha(color, alpha) {
@@ -162,12 +288,145 @@
     return renderChart(topicLifecycleChart, 'annotationTopicLifecycleChart', definition);
   }
 
+  function renderHeatmapChart(instance, canvasId, definition) {
+    var canvas = document.getElementById(canvasId);
+    if (!canvas || !definition) return instance;
+    if (instance) instance.destroy();
+
+    var rowLabels = definition.row_labels || [];
+    var colLabels = definition.labels || [];
+    var cells = definition.cells || [];
+    var options = definition.options || {};
+    var colorStart = options.colorStart || [239, 246, 255];
+    var colorEnd = options.colorEnd || [37, 99, 235];
+    var yAxisWidth = Math.min(260, Math.max(132, rowLabels.reduce(function (max, label) {
+      return Math.max(max, String(label || '').length);
+    }, 0) * 7.2));
+
+    return new Chart(canvas, {
+      type: 'scatter',
+      data: {
+        datasets: [{
+          label: definition.title || '',
+          data: cells.map(function (cell) {
+            return {
+              x: Number(cell.x),
+              y: Number(cell.y),
+              actual: cell.actual,
+              percent: cell.percent,
+              topic_label: cell.topic_label,
+              time_label: cell.time_label,
+              intensity: cell.intensity
+            };
+          }),
+          pointStyle: 'rect',
+          pointRadius: 0.01,
+          pointHoverRadius: 0.01,
+          pointHitRadius: function (context) {
+            var chart = context.chart;
+            var chartArea = chart.chartArea;
+            if (!chartArea) return 8;
+            var colWidth = (chartArea.right - chartArea.left) / Math.max(colLabels.length, 1);
+            var rowHeight = (chartArea.bottom - chartArea.top) / Math.max(rowLabels.length, 1);
+            return Math.max(6, Math.min(colWidth, rowHeight) / 2);
+          },
+          pointBackgroundColor: function (context) {
+            var raw = context.raw || {};
+            return mixHeatColor(colorStart, colorEnd, raw.intensity || 0.08);
+          },
+          pointBorderColor: 'rgba(255,255,255,0)',
+          pointBorderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 180 },
+        plugins: {
+          legend: { display: false },
+          ysHeatmapCellPlugin: {
+            enabled: true,
+            rowCount: rowLabels.length,
+            colCount: colLabels.length,
+            getBackgroundColor: function (raw) {
+              return mixHeatColor(colorStart, colorEnd, raw.intensity || 0.08);
+            }
+          },
+          tooltip: {
+            callbacks: {
+              title: function (items) {
+                var raw = (items[0] || {}).raw || {};
+                return raw.topic_label + ' · ' + raw.time_label;
+              },
+              label: function (context) {
+                var raw = context.raw || {};
+                if (options.tooltipMode === 'reach') {
+                  return 'Reached: ' + String(raw.actual || 0) + ' agents (' + Number(raw.percent || 0).toFixed(2) + '%)';
+                }
+                return 'Volume: ' + String(raw.actual || 0);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            type: 'linear',
+            min: -0.5,
+            max: Math.max(colLabels.length - 0.5, 0.5),
+            afterBuildTicks: function (scale) {
+              scale.ticks = colLabels.map(function (_, index) {
+                return { value: index };
+              });
+            },
+            ticks: {
+              callback: function (value) {
+                var index = Math.round(Number(value));
+                return Math.abs(Number(value) - index) < 0.001 && colLabels[index] ? colLabels[index] : '';
+              },
+              maxRotation: 0,
+              autoSkip: true
+            },
+            grid: { display: false }
+          },
+          y: {
+            type: 'linear',
+            reverse: true,
+            min: -0.5,
+            max: Math.max(rowLabels.length - 0.5, 0.5),
+            afterBuildTicks: function (scale) {
+              scale.ticks = rowLabels.map(function (_, index) {
+                return { value: index };
+              });
+            },
+            afterFit: function (scale) {
+              scale.width = yAxisWidth;
+            },
+            ticks: {
+              autoSkip: false,
+              font: {
+                size: rowLabels.length > 16 ? 10 : 11
+              },
+              padding: 10,
+              callback: function (value) {
+                var index = Math.round(Number(value));
+                return Math.abs(Number(value) - index) < 0.001 && rowLabels[index] ? rowLabels[index] : '';
+              }
+            },
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+
   function renderEgoNetwork(egoData) {
     var canvas = document.getElementById('annotationEgoNetworkChart');
     if (!canvas || !egoData) return egoNetworkChart;
     if (egoNetworkChart) egoNetworkChart.destroy();
 
     var nodes = egoData.nodes || [];
+    var nodeLookup = {};
+    nodes.forEach(function (node) { nodeLookup[node.id] = node; });
     var others = nodes.filter(function (node) { return !node.is_ego; });
     var ego = nodes.filter(function (node) { return node.is_ego; });
     var xValues = nodes.map(function (node) { return Number(node.x || 0); });
@@ -185,35 +444,41 @@
             label: 'Neighbors',
             data: others.map(function (node) {
               return {
+                id: node.id,
                 x: Number(node.x || 0),
                 y: Number(node.y || 0),
                 label: node.label,
-                isActive: !!node.is_active
+                isActive: !!node.is_active,
+                isEgo: false
               };
             }),
             backgroundColor: others.map(function (node) {
-              return node.is_active ? 'rgba(59, 130, 246, 0.95)' : 'rgba(148, 163, 184, 0.55)';
+              return node.is_active ? 'rgba(59, 130, 246, 0.88)' : 'rgba(203, 213, 225, 0.9)';
             }),
             borderColor: others.map(function (node) {
-              return node.is_active ? 'rgba(37, 99, 235, 1)' : 'rgba(100, 116, 139, 0.9)';
+              return node.is_active ? 'rgba(29, 78, 216, 1)' : 'rgba(100, 116, 139, 0.78)';
             }),
-            pointRadius: others.map(function (node) { return node.is_active ? 6 : 4; }),
-            pointHoverRadius: 7
+            pointBorderWidth: others.map(function (node) { return node.is_active ? 2 : 1.4; }),
+            pointRadius: others.map(function (node) { return node.is_active ? 7 : 5.5; }),
+            pointHoverRadius: 8
           },
           {
             label: 'Selected Agent',
             data: ego.map(function (node) {
               return {
+                id: node.id,
                 x: Number(node.x || 0),
                 y: Number(node.y || 0),
                 label: node.label,
-                isActive: true
+                isActive: true,
+                isEgo: true
               };
             }),
-            backgroundColor: 'rgba(239, 68, 68, 0.95)',
-            borderColor: 'rgba(185, 28, 28, 1)',
-            pointRadius: 8,
-            pointHoverRadius: 9
+            backgroundColor: 'rgba(239, 68, 68, 0.94)',
+            borderColor: 'rgba(153, 27, 27, 1)',
+            pointBorderWidth: 3,
+            pointRadius: 10.5,
+            pointHoverRadius: 11.5
           }
         ]
       },
@@ -222,17 +487,22 @@
         maintainAspectRatio: false,
         animation: { duration: 0 },
         plugins: {
-          legend: { display: true, position: 'bottom' },
+          legend: { display: false },
           tooltip: {
             callbacks: {
               label: function (context) {
                 var raw = context.raw || {};
-                return raw.label + (context.dataset.label === 'Neighbors' ? (raw.isActive ? ' (active)' : ' (inactive)') : '');
+                if (raw.isEgo) return raw.label + ' (selected agent)';
+                return raw.label + (raw.isActive ? ' (active alter)' : ' (inactive alter)');
               }
             }
           },
           ysEgoEdgePlugin: {
-            edges: egoData.edges || []
+            edges: egoData.edges || [],
+            nodeLookup: nodeLookup
+          },
+          ysEgoLabelPlugin: {
+            nodes: nodes
           }
         },
         scales: {
@@ -291,12 +561,39 @@
     });
   }
 
+  function computeTopicHeatmapHeight(rowCount) {
+    return Math.max(240, Math.min(680, 80 + (Number(rowCount || 0) * 34)));
+  }
+
+  function syncTopicHeatmapContainers(analytics) {
+    if (config.pageKey !== 'topic') return;
+    var rowCount = Math.max(
+      (((analytics || {}).trend || {}).row_labels || []).length,
+      (((analytics || {}).secondary || {}).row_labels || []).length,
+      1
+    );
+    var targetHeight = computeTopicHeatmapHeight(rowCount);
+    ['annotationTrendChartContainer', 'annotationSecondaryChartContainer'].forEach(function (id) {
+      var node = document.getElementById(id);
+      if (!node || node.classList.contains('is-fullscreen')) return;
+      node.style.height = targetHeight + 'px';
+      node.style.minHeight = targetHeight + 'px';
+    });
+  }
+
   function renderAnalytics(analytics) {
+    syncTopicHeatmapContainers(analytics);
     renderTexts(analytics);
     renderStats(analytics.stats || []);
-    distributionChart = renderChart(distributionChart, 'annotationDistributionChart', analytics.distribution);
-    trendChart = renderChart(trendChart, 'annotationTrendChart', analytics.trend);
-    secondaryChart = renderChart(secondaryChart, 'annotationSecondaryChart', analytics.secondary);
+    distributionChart = analytics.distribution && analytics.distribution.type === 'heatmap'
+      ? renderHeatmapChart(distributionChart, 'annotationDistributionChart', analytics.distribution)
+      : renderChart(distributionChart, 'annotationDistributionChart', analytics.distribution);
+    trendChart = analytics.trend && analytics.trend.type === 'heatmap'
+      ? renderHeatmapChart(trendChart, 'annotationTrendChart', analytics.trend)
+      : renderChart(trendChart, 'annotationTrendChart', analytics.trend);
+    secondaryChart = analytics.secondary && analytics.secondary.type === 'heatmap'
+      ? renderHeatmapChart(secondaryChart, 'annotationSecondaryChart', analytics.secondary)
+      : renderChart(secondaryChart, 'annotationSecondaryChart', analytics.secondary);
     if (config.pageKey === 'network') {
       componentShareChart = renderComponentShareChart(analytics.component_share || null);
       networkStructureChart = renderNetworkStructureChart(analytics.network_structure || null);
@@ -348,6 +645,7 @@
       }
     }
     renderSummary(analytics.summary || { columns: [], rows: [], empty_message: '' });
+    resizeAllCharts();
   }
 
   function setLoading(isLoading) {
@@ -425,10 +723,11 @@
         if (payload.error) throw new Error(payload.error);
         state.currentDay = Number(payload.filter_day || day);
         state.currentHour = Number(payload.filter_hour || hour);
+        state.currentAnalytics = payload.analytics || {};
         if (thresholdInput && typeof payload.threshold === 'number') {
           thresholdInput.value = payload.threshold.toFixed(2);
         }
-        renderAnalytics(payload.analytics || {});
+        renderAnalytics(state.currentAnalytics);
         updateTimeLabels();
       })
       .catch(function (error) {
@@ -569,10 +868,12 @@
         }
       });
     });
+
   }
 
   bindControls();
   updateSpeedDisplay();
   updateGranularityButtons();
-  renderAnalytics(config.analytics || {});
+  renderAnalytics(state.currentAnalytics);
+  window.addEventListener('resize', resizeAllCharts);
 })();

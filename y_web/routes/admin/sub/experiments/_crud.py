@@ -36,6 +36,7 @@ from flask_login import current_user, login_required, login_user
 
 from y_web import db  # , app
 from y_web.src.content.avatars import normalize_forum_avatar_mode
+from y_web.src.content.cover_images import random_cover_image_url
 from y_web.src.experiment.access import (
     get_visible_experiment_query,
     user_can_manage_experiment,
@@ -699,6 +700,7 @@ def change_active_experiment(exp_id):
                                 round_actions=1,
                                 toxicity="no",
                                 joined_on=int(time.time()),
+                                cover_image=random_cover_image_url(),
                             )
                             db.session.add(new_user)
                             db.session.commit()
@@ -964,10 +966,10 @@ def upload_experiment():
                     stmt = text("""
                         INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                language, owner, joined_on, frecsys_type,
-                                               round_actions, toxicity, is_page, daily_activity_level)
+                                               round_actions, toxicity, is_page, daily_activity_level, cover_image)
                         VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                 :language, :owner, :joined_on, :frecsys_type,
-                                :round_actions, :toxicity, :is_page, :daily_activity_level)
+                                :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
                         """)
 
                     dummy_conn.execute(
@@ -987,6 +989,7 @@ def upload_experiment():
                             "toxicity": "none",
                             "is_page": 0,
                             "daily_activity_level": 1,
+                            "cover_image": random_cover_image_url(),
                         },
                     )
 
@@ -1317,6 +1320,7 @@ def upload_experiment():
                         crecsys=agent["rec_sys"],
                         frecsys=agent["frec_sys"],
                         profile_pic="",
+                        cover_image=random_cover_image_url(),
                         daily_activity_level=agent["daily_activity_level"],
                         profession=agent["profession"] if "profession" in agent else "",
                         activity_profile=activity_profile_id,
@@ -1996,10 +2000,10 @@ def create_experiment():
                     stmt = text("""
                                 INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                                        language, owner, joined_on, frecsys_type,
-                                                       round_actions, toxicity, is_page, daily_activity_level)
+                                                       round_actions, toxicity, is_page, daily_activity_level, cover_image)
                                 VALUES (:username, :email, :password, :user_type, :leaning, :age,
                                         :language, :owner, :joined_on, :frecsys_type,
-                                        :round_actions, :toxicity, :is_page, :daily_activity_level)
+                                        :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
                                 """)
 
                     dummy_conn.execute(
@@ -2019,6 +2023,7 @@ def create_experiment():
                             "toxicity": "none",
                             "is_page": 0,
                             "daily_activity_level": 1,
+                            "cover_image": random_cover_image_url(),
                         },
                     )
 
@@ -3050,10 +3055,10 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
                 stmt = text("""
                     INSERT INTO user_mgmt (username, email, password, user_type, leaning, age,
                                            language, owner, joined_on, frecsys_type,
-                                           round_actions, toxicity, is_page, daily_activity_level)
+                                           round_actions, toxicity, is_page, daily_activity_level, cover_image)
                     VALUES (:username, :email, :password, :user_type, :leaning, :age,
                             :language, :owner, :joined_on, :frecsys_type,
-                            :round_actions, :toxicity, :is_page, :daily_activity_level)
+                            :round_actions, :toxicity, :is_page, :daily_activity_level, :cover_image)
                     """)
                 conn.execute(
                     stmt,
@@ -3072,6 +3077,7 @@ def _create_single_experiment_copy(source_exp, new_exp_name, exp_group=""):
                         "toxicity": "none",
                         "is_page": 0,
                         "daily_activity_level": 1,
+                        "cover_image": random_cover_image_url(),
                     },
                 )
 

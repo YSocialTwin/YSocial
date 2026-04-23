@@ -14,7 +14,7 @@
                         <img
                                 class="cover-image"
                                 src="https://via.placeholder.com/1600x460"
-                                data-demo-src="{{ url_for('static', filename='assets/img/demo/bg/4.png') }}"
+                                data-demo-src="{{ cover_image if cover_image else url_for('static', filename='assets/img/demo/bg/4.png') }}"
                                 alt=""
                         />
                         <div class="avatar" style="background-color: white">
@@ -85,7 +85,7 @@
                             <div class="subheader-start is-hidden-mobile">
                                 <div class="ys-profile-hero-stat">
                                     <span class="ys-profile-hero-stat__value">{{ user['total_followers']}}</span>
-                                    <span class="ys-profile-hero-stat__label">Followers</span>
+                                    <span class="ys-profile-hero-stat__label">People Following Me</span>
                                 </div>
                             </div>
 
@@ -100,7 +100,7 @@
                                 <div class="ys-profile-hero-stat ys-profile-hero-stat--right">
                                     {% if is_page != 1 %}
                                     <span class="ys-profile-hero-stat__value">{{ user['total_followee']}}</span>
-                                    <span class="ys-profile-hero-stat__label">Followee</span>
+                                    <span class="ys-profile-hero-stat__label">People I Follow</span>
                                     {% endif %}
                                 </div>
                             </div>
