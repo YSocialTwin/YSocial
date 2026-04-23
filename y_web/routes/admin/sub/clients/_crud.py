@@ -910,7 +910,11 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
     llm_required = _adhoc_population_requires_llm_model(
         spec,
         {"agents": []},
-        client.get("agent_settings", {}) if isinstance(client.get("agent_settings", {}), dict) else {},
+        (
+            client.get("agent_settings", {})
+            if isinstance(client.get("agent_settings", {}), dict)
+            else {}
+        ),
     )
     if llm_required:
         llm = (request.form.get("llm") or "").strip() or str(
@@ -934,7 +938,9 @@ def _apply_adhoc_client_form_updates(config: dict, spec: dict, exp) -> dict:
             request.form.get("llm_backend") or servers.get("llm_backend") or "ollama"
         ).strip()
         if not llm_model:
-            raise ValueError("This ad hoc client requires an LLM model to support the selected agent behavior.")
+            raise ValueError(
+                "This ad hoc client requires an LLM model to support the selected agent behavior."
+            )
         servers["llm"] = llm
         servers["llm_api_key"] = llm_api_key
         servers["llm_max_tokens"] = llm_max_tokens
@@ -1024,17 +1030,24 @@ def _export_adhoc_population_json(population, spec: dict, *, owner: str | None) 
     return payload
 
 
-def _adhoc_population_requires_llm_model(spec: dict, population_payload: dict, agent_settings: dict) -> bool:
+def _adhoc_population_requires_llm_model(
+    spec: dict, population_payload: dict, agent_settings: dict
+) -> bool:
     if not spec.get("requires_llm"):
         return False
     agent_type = str(spec.get("agent_type") or "").strip()
     if agent_type == "moderator":
-        shared_strategy = str(agent_settings.get("moderation_action_type") or "").strip()
+        shared_strategy = str(
+            agent_settings.get("moderation_action_type") or ""
+        ).strip()
         if shared_strategy == "personalized":
             return True
         for agent in population_payload.get("agents", []):
             parameters = agent.get("parameters") if isinstance(agent, dict) else {}
-            if str((parameters or {}).get("moderation_action_type") or "").strip() == "personalized":
+            if (
+                str((parameters or {}).get("moderation_action_type") or "").strip()
+                == "personalized"
+            ):
                 return True
         return False
     return True
@@ -1784,7 +1797,9 @@ def create_adhoc_client():
         flash(str(exc), "error")
         return redirect(url_for("clientsr.clients_adhoc", idexp=exp_id))
     llm_required = _adhoc_population_requires_llm_model(
-        spec, population_payload, agent_settings if isinstance(agent_settings, dict) else {}
+        spec,
+        population_payload,
+        agent_settings if isinstance(agent_settings, dict) else {},
     )
     if llm_required and not llm_model:
         flash(

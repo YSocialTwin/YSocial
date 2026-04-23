@@ -440,7 +440,9 @@ def test_experiment_details_quick_guide_mentions_current_page_sections():
 
     assert "<b>Experiment Overview</b>" in standard
     assert "<b>Server, Clients, and Analytics</b>" in standard
-    assert "Use <b>Request Logs Analysis</b> and <b>Client Logs Analysis</b>" in standard
+    assert (
+        "Use <b>Request Logs Analysis</b> and <b>Client Logs Analysis</b>" in standard
+    )
 
     assert "<b>Experiment Overview</b>" in forum
     assert "<b>Server, Clients, and Analytics</b>" in forum

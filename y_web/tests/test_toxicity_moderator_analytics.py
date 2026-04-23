@@ -2,8 +2,9 @@ import sqlite3
 
 import pytest
 
-from y_web.routes.admin.sub.experiments._opinion import _build_toxicity_analytics_payload
-
+from y_web.routes.admin.sub.experiments._opinion import (
+    _build_toxicity_analytics_payload,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -105,4 +106,6 @@ def test_toxicity_analytics_exposes_moderator_target_drilldown(tmp_path):
     assert moderator_targets["trend_data"]["datasets"][1]["data"] == [0.2, 0.6, 0.0]
     assert moderator_targets["trend_data"]["datasets"][2]["data"] == [1, 1, 0]
     assert moderator_targets["interaction_events"][0]["day"] == 2
-    assert moderator_targets["interaction_events"][0]["moderation_type"] == "personalized"
+    assert (
+        moderator_targets["interaction_events"][0]["moderation_type"] == "personalized"
+    )
