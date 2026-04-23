@@ -5,7 +5,6 @@ Helpers for profile cover/header image selection.
 import os
 import random
 
-
 DEFAULT_COVER_IMAGE_PATH = "/static/assets/img/demo/bg/4.png"
 _STATIC_PREFIX = "/static/assets/img/demo/bg/"
 

@@ -8,14 +8,12 @@ def test_migrate_sqlite_server_adds_cover_image_column(tmp_path):
     db_path = tmp_path / "experiment.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE user_mgmt (
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL
         )
-        """
-    )
+        """)
     cursor.execute("INSERT INTO user_mgmt (id, username) VALUES (1, 'alice')")
     conn.commit()
     conn.close()
@@ -36,14 +34,12 @@ def test_ensure_sqlite_experiment_schema_adds_cover_image_column(tmp_path):
     db_path = tmp_path / "experiment_schema.db"
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    cursor.execute(
-        """
+    cursor.execute("""
         CREATE TABLE user_mgmt (
             id INTEGER PRIMARY KEY,
             username TEXT NOT NULL
         )
-        """
-    )
+        """)
     cursor.execute("INSERT INTO user_mgmt (id, username) VALUES (1, 'alice')")
     conn.commit()
     conn.close()
